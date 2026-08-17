@@ -22,6 +22,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { OrgAccessGuard, type OrgScopedRequest } from '../auth/org-access.guard';
 import { requireInternalApiSecret } from '../auth/jwt-secret';
 import { BanorteReconciliationService } from './banorte-reconciliation.service';
+import { EventCancellationService } from './event-cancellation.service';
 import { PaymentService } from './payment.service';
 
 /** Petición ya resuelta por `OrgAccessGuard`: `scopedOrganizationId` es el tenant efectivo. */
@@ -59,7 +60,72 @@ export class PaymentController {
   constructor(
     private paymentService: PaymentService,
     private reconciliation: BanorteReconciliationService,
+    private cancellations: EventCancellationService,
   ) {}
+
+  /**
+   * Cancelación de evento con las devoluciones que exige la LFPC art. 92 Bis.
+   *
+   * `dryRun: true` (por defecto) proyecta el impacto sin mover un peso: cuántas
+   * órdenes, cuánto se devuelve y cuánta bonificación sale. Cancelar un evento
+   * es irreversible y mueve todo el dinero de un aforo, así que ejecutar exige
+   * pedirlo explícitamente con `dryRun: false`.
+   */
+  @Post('events/:eventId/cancel')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cancel an event and refund every paid order (LFPC art. 92 Bis)' })
+  async cancelEvent(
+    @Param('eventId') eventId: string,
+    @Request() req: ScopedRequest,
+    @CurrentUser() user: { email?: string; sub?: string },
+    @Body()
+    dto: {
+      reason: string;
+      attributable: boolean;
+      justification?: string;
+      compensationRate?: number;
+      dryRun?: boolean;
+    },
+  ) {
+    return await this.cancellations.cancelEvent({
+      eventId,
+      organizationId: requireScope(req) ?? undefined,
+      reason: dto.reason,
+      attributable: dto.attributable,
+      justification: dto.justification,
+      compensationRate: dto.compensationRate,
+      requestedBy: user?.email || user?.sub || 'staff',
+      // Se ejecuta SOLO si lo piden a propósito.
+      dryRun: dto.dryRun !== false,
+    });
+  }
+
+  /** Reprogramación: avisa y deja elegir al comprador, no devuelve por su cuenta. */
+  @Post('events/:eventId/reschedule')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reschedule an event and notify buyers of their options' })
+  async rescheduleEvent(
+    @Param('eventId') eventId: string,
+    @Request() req: ScopedRequest,
+    @CurrentUser() user: { email?: string; sub?: string },
+    @Body() dto: { newStartsAt: string; reason: string },
+  ) {
+    const newStartsAt = new Date(dto.newStartsAt);
+    if (Number.isNaN(newStartsAt.getTime())) {
+      throw new BadRequestException('newStartsAt inválido (ISO 8601)');
+    }
+    return await this.cancellations.rescheduleEvent({
+      eventId,
+      organizationId: requireScope(req) ?? undefined,
+      newStartsAt,
+      reason: dto.reason,
+      requestedBy: user?.email || user?.sub || 'staff',
+    });
+  }
 
   @Get('config')
   @ApiOperation({ summary: 'Public payment config (Banorte direct)' })
