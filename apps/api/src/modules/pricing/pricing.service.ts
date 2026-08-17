@@ -1,4 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { SERVICE_FEE_RATE, TAX_RATE } from '../../common/pricing-rates';
 import { PrismaService } from '../prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
 
@@ -78,13 +79,23 @@ export class PricingService {
       }
     }
 
-    // 3. Apply time-based pricing (closer to event = higher price)
-    const daysUntilEvent =
-      (event.startsAt.getTime() - (ctx.timestamp?.getTime() ?? Date.now())) / (1000 * 60 * 60 * 24);
-    const timeMultiplier = this.calculateTimeMultiplier(daysUntilEvent);
-    if (timeMultiplier !== 1.0) {
-      dynamicMultiplier *= timeMultiplier;
-      appliedRules.push(`Time-based pricing: ${daysUntilEvent.toFixed(0)} days until event`);
+    // 3. Precio por cercanía de la fecha.
+    //
+    // Va DENTRO de `enableDynamic`, igual que el surge. Antes se aplicaba
+    // siempre: un evento con el precio dinámico explícitamente desactivado veía
+    // su precio moverse con el calendario, en silencio y sin que el promotor lo
+    // hubiera pedido. Peor: rompía la promesa del catálogo, porque el «desde»
+    // anunciado dejaba de ser el que se cobraba en el checkout — que es
+    // exactamente la práctica que la ley obliga a evitar.
+    if (event.enableDynamic) {
+      const daysUntilEvent =
+        (event.startsAt.getTime() - (ctx.timestamp?.getTime() ?? Date.now())) /
+        (1000 * 60 * 60 * 24);
+      const timeMultiplier = this.calculateTimeMultiplier(daysUntilEvent);
+      if (timeMultiplier !== 1.0) {
+        dynamicMultiplier *= timeMultiplier;
+        appliedRules.push(`Time-based pricing: ${daysUntilEvent.toFixed(0)} days until event`);
+      }
     }
 
     // 4. Apply customer segment pricing
@@ -114,8 +125,10 @@ export class PricingService {
     // 6. Calculate final prices
     const adjustedPrice = new Decimal(basePrice * dynamicMultiplier);
     const subtotal = new Decimal(basePrice * dynamicMultiplier * ctx.quantity - discountAmount);
-    const fees = subtotal.mul(0.1); // 10% service fees
-    const taxes = subtotal.mul(0.16); // 16% tax (regional variation in production)
+    // Mismas tarifas que alimentan el precio «desde» del catálogo: lo anunciado
+    // y lo cobrado no pueden salir de dos sitios distintos.
+    const fees = subtotal.mul(SERVICE_FEE_RATE);
+    const taxes = subtotal.mul(TAX_RATE);
     const total = subtotal.plus(fees).plus(taxes);
 
     this.logger.log(

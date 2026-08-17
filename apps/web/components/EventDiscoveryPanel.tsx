@@ -14,6 +14,8 @@ import { EventPosterArt } from './EventPosterArt';
 import styles from './EventDiscoveryPanel.module.scss';
 
 export type EventHit = {
+  /** Precio final al comprador, cargos e IVA incluidos. Es el que se anuncia. */
+  minPriceAllIn?: number;
   id: string;
   slug: string;
   title: string;

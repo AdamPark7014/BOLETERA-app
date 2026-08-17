@@ -65,6 +65,7 @@ export function EventPurchaseClient({
   mapData,
   offers,
   minPrice = 0,
+  minPriceAllIn,
   currency = 'MXN',
   focusZone = null,
 }: {
@@ -77,6 +78,8 @@ export function EventPurchaseClient({
   mapData: unknown;
   offers: Offer[];
   minPrice?: number;
+  /** Precio final al comprador (cargos e IVA incluidos). */
+  minPriceAllIn?: number;
   currency?: string;
   focusZone?: string | null;
 }) {
@@ -591,7 +594,7 @@ export function EventPurchaseClient({
             {buyMode === 'map'
               ? selected.length
                 ? `Total $${estimate.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`
-                : `Desde $${minPrice.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`
+                : `Desde $${(minPriceAllIn ?? minPrice).toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`
               : `Total $${bestEstimate.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`}
           </p>
         </div>

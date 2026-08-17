@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { allInPrice, priceBreakdown } from '../../common/pricing-rates';
 import { EventCategory, EventStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -121,7 +122,11 @@ export class DiscoveryService {
         category: e.category,
         genre: e.genre,
         currency: e.currency ?? 'MXN',
+        /** @deprecated Precio base sin cargos. No mostrarlo como «desde». */
         minPrice,
+        /** Precio final al comprador: es el que debe anunciarse. */
+        minPriceAllIn: allInPrice(minPrice),
+        minPriceBreakdown: priceBreakdown(minPrice),
         maxPrice: e.maxPrice != null ? Number(e.maxPrice) : null,
         venue: e.venue,
         organization: e.organization,
@@ -131,6 +136,9 @@ export class DiscoveryService {
           name: o.name,
           zone: o.zone,
           basePrice: o.basePrice,
+          /** Lo que se paga por esta zona, cargos e IVA incluidos. */
+          allInPrice: allInPrice(Number(o.basePrice)),
+          priceBreakdown: priceBreakdown(Number(o.basePrice)),
           remainingQuantity: o.remainingQuantity,
           isAvailable: o.isAvailable,
         })),
@@ -151,7 +159,25 @@ export class DiscoveryService {
     if (!event) throw new NotFoundException('Event not found');
     const posterAspect =
       ((event.metadata as { posterAspect?: string } | null)?.posterAspect) ?? undefined;
-    return { ...event, posterAspect };
+
+    // El precio anunciado tiene que ser el que se cobra: `basePrice` deja fuera
+    // cargos e IVA, que con las tarifas actuales son un 26% más.
+    const offerPrices = event.offers
+      .map((o) => Number(o.basePrice))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    const cheapest = offerPrices.length ? Math.min(...offerPrices) : 0;
+
+    return {
+      ...event,
+      posterAspect,
+      minPriceAllIn: allInPrice(cheapest),
+      minPriceBreakdown: priceBreakdown(cheapest),
+      offers: event.offers.map((o) => ({
+        ...o,
+        allInPrice: allInPrice(Number(o.basePrice)),
+        priceBreakdown: priceBreakdown(Number(o.basePrice)),
+      })),
+    };
   }
 
   /** Lightweight typeahead rows for discovery search. */

@@ -11,6 +11,8 @@ import { api } from '@/lib/api';
 import styles from './event.module.scss';
 
 type EventDetail = {
+  /** Precio final al comprador, cargos e IVA incluidos. */
+  minPriceAllIn?: number;
   id: string;
   slug: string;
   title: string;
@@ -50,6 +52,8 @@ type EventHit = {
   title: string;
   startsAt: string;
   minPrice: number | string;
+  /** Precio final al comprador, cargos e IVA incluidos. */
+  minPriceAllIn?: number;
   currency: string;
   category?: string | null;
   image?: string | null;
@@ -342,6 +346,7 @@ export default async function EventPage({
                     mapData={event.seatMap?.snapshotData}
                     offers={event.offers}
                     minPrice={minPrice}
+                    minPriceAllIn={event.minPriceAllIn}
                     currency={event.currency || 'MXN'}
                     focusZone={zone ?? null}
                   />

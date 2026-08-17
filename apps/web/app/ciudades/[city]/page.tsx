@@ -80,8 +80,10 @@ export default async function CiudadPage({
                     </span>
                   </div>
                   <em>
-                    {Number(e.minPrice) > 0
-                      ? `$${Number(e.minPrice).toLocaleString('es-MX', {
+                    {/* Precio FINAL con cargos e IVA: anunciar el base sería
+                        publicitar un 26% menos de lo que se cobra. */}
+                    {Number(e.minPriceAllIn ?? e.minPrice) > 0
+                      ? `$${Number(e.minPriceAllIn ?? e.minPrice).toLocaleString('es-MX', {
                           maximumFractionDigits: 0,
                         })}`
                       : 'Consultar'}
