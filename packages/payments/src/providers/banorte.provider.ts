@@ -4,6 +4,7 @@ import type {
   PaymentContext,
   PaymentIntentResult,
   PaymentProvider,
+  PaymentStatusResult,
   RefundResult,
   WebhookResult,
 } from '../types';
@@ -11,6 +12,9 @@ import { getBanorteConfig } from '../banorte/config';
 import {
   buildPayworksRedirectUrl,
   buildSpeiReference,
+  classifyBanorteResponse,
+  parseSettlementAmount,
+  parseSettlementCurrency,
   queryBanorteTransactionStatus,
   verifyBanorteWebhookSignature,
 } from '../banorte/payworks';
@@ -138,7 +142,8 @@ export class BanorteProvider implements PaymentProvider {
     };
   }
 
-  async getPaymentStatus(externalId: string): Promise<{ status: 'completed' | 'pending' | 'failed' }> {
+  /** Devuelve además el importe liquidado: sin él no hay conciliación posible (F1-05). */
+  async getPaymentStatus(externalId: string): Promise<PaymentStatusResult> {
     const cfg = getBanorteConfig();
     if (cfg.isDemo) return { status: 'pending' };
     return queryBanorteTransactionStatus(cfg, externalId);
@@ -180,23 +185,32 @@ export class BanorteProvider implements PaymentProvider {
         ? (payload as Record<string, string>)
         : (JSON.parse(raw) as Record<string, string>);
 
-    const status = (body.status ?? body.ESTATUS ?? body.response ?? '').toLowerCase();
     const orderId = body.orderId ?? body.REFERENCIA ?? body.metadata_orderId;
     const intentId = body.intentId ?? body.transaction_id;
 
-    const approved =
-      status === 'approved' ||
-      status === 'aprobada' ||
-      status === 'success' ||
-      status === '00' ||
-      body.resultado === 'A';
+    // Mismo criterio que la consulta de estado: código explícito, sin subcadenas.
+    const fields: Record<string, string> = {};
+    for (const [key, value] of Object.entries(body)) {
+      if (value === null || value === undefined || typeof value === 'object') continue;
+      const upper = key.toUpperCase();
+      if (!(upper in fields)) fields[upper] = String(value);
+    }
 
-    if (approved) {
-      return { orderId, intentId, status: 'completed' };
-    }
-    if (status === 'declined' || status === 'rechazada' || status === 'failed') {
-      return { orderId, intentId, status: 'failed' };
-    }
-    return { orderId, intentId, status: 'pending' };
+    const { status, rawCode } = classifyBanorteResponse(fields);
+
+    /*
+     * F1-05: el IPN traía el importe y se descartaba. Sin él nadie podía
+     * comparar lo cobrado contra lo debido y la conciliación era imposible por
+     * construcción. Los nombres de campo (IMPORTE / MONEDA) siguen el formato
+     * Payworks documentado; confírmalos contra el manual de la afiliación.
+     */
+    const amount = parseSettlementAmount(
+      body.IMPORTE ?? body.amount ?? body.monto ?? body.MONTO ?? body.importe,
+    );
+    const currency = parseSettlementCurrency(
+      body.MONEDA ?? body.currency ?? body.moneda ?? body.CURRENCY,
+    );
+
+    return { orderId, intentId, status, amount, currency, rawCode };
   }
 }

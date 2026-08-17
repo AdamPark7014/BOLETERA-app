@@ -442,6 +442,8 @@ exports.Prisma.OrderScalarFieldEnum = {
   expiresAt: 'expiresAt',
   completedAt: 'completedAt',
   refundedAt: 'refundedAt',
+  accessTokenHash: 'accessTokenHash',
+  accessTokenAt: 'accessTokenAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -728,6 +730,18 @@ exports.Prisma.ApiKeyScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.OrgInvitationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  email: 'email',
+  role: 'role',
+  invitedById: 'invitedById',
+  expiresAt: 'expiresAt',
+  acceptedAt: 'acceptedAt',
+  acceptedByUserId: 'acceptedByUserId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.FiscalProfileScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -955,7 +969,8 @@ exports.OrderStatus = exports.$Enums.OrderStatus = {
   FAILED: 'FAILED',
   REFUNDED: 'REFUNDED',
   CANCELLED: 'CANCELLED',
-  PARTIALLY_REFUNDED: 'PARTIALLY_REFUNDED'
+  PARTIALLY_REFUNDED: 'PARTIALLY_REFUNDED',
+  PENDING_REFUND: 'PENDING_REFUND'
 };
 
 exports.PaymentMethod = exports.$Enums.PaymentMethod = {
@@ -1119,6 +1134,7 @@ exports.Prisma.ModelName = {
   WaitlistEntry: 'WaitlistEntry',
   TicketTransfer: 'TicketTransfer',
   ApiKey: 'ApiKey',
+  OrgInvitation: 'OrgInvitation',
   FiscalProfile: 'FiscalProfile',
   CfdiInvoice: 'CfdiInvoice',
   SeasonPass: 'SeasonPass',

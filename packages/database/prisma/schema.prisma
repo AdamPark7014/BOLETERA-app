@@ -72,6 +72,7 @@ model Organization {
   fiscalProfile    FiscalProfile?
   cfdiInvoices     CfdiInvoice[]
   seasonPasses     SeasonPass[]
+  invitations      OrgInvitation[]
   
   // Audit
   createdAt        DateTime  @default(now())
@@ -232,6 +233,11 @@ model SeatHold {
   @@index([seatId])
   @@index([expiresAt])
   @@index([status])
+  /// Barrido de holds vencidos (incluidos los GA, que no tienen seatId).
+  @@index([status, expiresAt])
+  /// Respalda el índice único parcial de holds ACTIVE por asiento
+  /// (definido en SQL crudo: Prisma no expresa índices únicos parciales).
+  @@index([eventId, seatId, status])
 }
 
 model TenantTheme {
@@ -494,6 +500,10 @@ model Ticket {
   @@index([status])
   @@index([code])
   @@index([seatId])
+  /// Soporta el stream de disponibilidad por deltas (solo lo que cambió desde T).
+  @@index([eventId, updatedAt])
+  /// Reserva por lotes con FOR UPDATE SKIP LOCKED sobre inventario GA.
+  @@index([eventId, offerId, status])
 }
 
 model Order {
@@ -544,6 +554,11 @@ model Order {
   expiresAt        DateTime
   completedAt      DateTime?
   refundedAt       DateTime?
+
+  /// SHA-256 del token de acceso de invitado enviado por correo. Permite ver la
+  /// orden sin cuenta sin que el publicId sea, por sí solo, la credencial.
+  accessTokenHash  String?
+  accessTokenAt    DateTime?
   
   // Relations
   items            OrderItem[]
@@ -1083,6 +1098,25 @@ model ApiKey {
   @@index([active])
 }
 
+/// Invitación explícita a un rol con privilegios dentro de una organización.
+/// El SSO autentica; la elevación de rol SOLO ocurre contra una invitación viva.
+model OrgInvitation {
+  id               String       @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email            String
+  role             UserRole
+  invitedById      String?
+  expiresAt        DateTime
+  acceptedAt       DateTime?
+  acceptedByUserId String?
+  createdAt        DateTime     @default(now())
+
+  @@unique([organizationId, email])
+  @@index([email, acceptedAt])
+  @@index([expiresAt])
+}
+
 // ============================================================================
 // FISCAL / CFDI 4.0 (Mexico)
 // ============================================================================
@@ -1199,6 +1233,9 @@ enum OrderStatus {
   REFUNDED
   CANCELLED
   PARTIALLY_REFUNDED
+  /// Pago recibido fuera de la ventana de reserva o con importe discrepante:
+  /// el dinero entró pero NO se puede emitir. Requiere reembolso, no emisión.
+  PENDING_REFUND
 }
 
 enum PaymentGateway {

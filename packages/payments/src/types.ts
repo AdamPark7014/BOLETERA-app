@@ -45,10 +45,34 @@ export interface RefundResult {
   error?: string;
 }
 
+/**
+ * Estado de una transacción según el proveedor.
+ *
+ * Incluye el importe liquidado porque sin él la conciliación es imposible:
+ * el sistema solo conocía el importe *esperado* (Order.totalAmount) y nunca
+ * el realmente cobrado, de modo que un cobro parcial o en otra moneda emitía
+ * boletos igual (F1-05).
+ */
+export interface PaymentStatusResult {
+  status: 'completed' | 'failed' | 'pending';
+  /** Importe liquidado por el banco, cuando la respuesta lo declara. */
+  amount?: number;
+  /** ISO-4217 alfabético (MXN/USD) ya normalizado desde el numérico 484/840. */
+  currency?: string;
+  /** Código crudo del proveedor: se audita para poder ampliar los catálogos. */
+  rawCode?: string;
+}
+
 export interface WebhookResult {
   orderId?: string;
   intentId?: string;
   status: 'completed' | 'failed' | 'pending';
+  /** Importe liquidado declarado en el IPN (IMPORTE / amount / monto). */
+  amount?: number;
+  /** ISO-4217 alfabético normalizado desde MONEDA (484 → MXN, 840 → USD). */
+  currency?: string;
+  /** Código o estatus crudo recibido, para auditoría. */
+  rawCode?: string;
 }
 
 export interface PaymentProvider {
