@@ -5,6 +5,14 @@ import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
+import { InvitationsService } from './invitations.service';
+
+/**
+ * Alias multi-tenant de Azure AD: aceptan CUALQUIER tenant del mundo (o
+ * cuentas personales). Con ellos, "iniciar sesión con Microsoft" deja de
+ * identificar a la empresa del promotor. Se rechazan explícitamente.
+ */
+const MICROSOFT_MULTI_TENANT_ALIASES = ['common', 'organizations', 'consumers'];
 
 @Injectable()
 export class AuthService {
@@ -12,6 +20,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private notifications: NotificationService,
+    private invitations: InvitationsService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -24,6 +33,14 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.validateUser(email, password);
+    // El sello de lastLogin se escribe ANTES de firmar: cualquier escritura
+    // sobre User refresca `updatedAt`, y JwtStrategy invalida los tokens
+    // emitidos antes de la última modificación (F2-07). Firmar primero haría
+    // que el token naciera ya obsoleto.
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() },
+    });
     const payload = {
       sub: user.id,
       email: user.email,
@@ -31,10 +48,6 @@ export class AuthService {
       organizationId: user.organizationId,
     };
     const accessToken = this.jwt.sign(payload);
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date() },
-    });
     return {
       accessToken,
       user: {
@@ -102,7 +115,7 @@ export class AuthService {
 
     const clientId = process.env.MICROSOFT_CLIENT_ID;
     if (!clientId) throw new UnauthorizedException('MICROSOFT_CLIENT_ID not configured');
-    const tenant = process.env.MICROSOFT_TENANT_ID || 'common';
+    const tenant = this.requireMicrosoftTenant();
     const u = new URL(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`);
     u.searchParams.set('client_id', clientId);
     u.searchParams.set('redirect_uri', redirectUri);
@@ -112,6 +125,33 @@ export class AuthService {
     return u.toString();
   }
 
+  /**
+   * F2-02 — `MICROSOFT_TENANT_ID` es obligatorio y debe apuntar a un tenant
+   * concreto. Antes caía por defecto en 'common', lo que dejaba entrar a
+   * cualquier cuenta de Azure del planeta.
+   */
+  private requireMicrosoftTenant(): string {
+    const tenant = process.env.MICROSOFT_TENANT_ID?.trim();
+    if (!tenant) {
+      throw new UnauthorizedException('MICROSOFT_TENANT_ID not configured');
+    }
+    if (MICROSOFT_MULTI_TENANT_ALIASES.includes(tenant.toLowerCase())) {
+      throw new UnauthorizedException(
+        'MICROSOFT_TENANT_ID must be a specific tenant id, not a multi-tenant alias',
+      );
+    }
+    return tenant;
+  }
+
+  /**
+   * El SSO AUTENTICA, NO AUTORIZA.
+   *
+   * F2-02: antes, cualquier cuenta de Google nueva nacía PROMOTER y cualquier
+   * CUSTOMER existente era promovido a PROMOTER al entrar por SSO — registro
+   * abierto a un rol con acceso a reembolsos, eventos, campañas y reportes.
+   * Ahora toda cuenta nueva nace CUSTOMER sin organización, y la única vía de
+   * elevación es una `OrgInvitation` viva para ese correo.
+   */
   async loginWithOauth(
     provider: 'google' | 'microsoft',
     code: string,
@@ -129,7 +169,9 @@ export class AuthService {
           email: profile.email,
           firstName: profile.firstName,
           lastName: profile.lastName,
-          role: UserRole.PROMOTER,
+          // Sin privilegios y sin tenant: el panel de administración tiene puerta.
+          role: UserRole.CUSTOMER,
+          organizationId: null,
           provider,
           providerId: profile.sub,
           emailVerified: true,
@@ -138,26 +180,23 @@ export class AuthService {
         },
       });
     } else {
-      await this.prisma.user.update({
+      // Una cuenta dada de baja no vuelve por la puerta del SSO.
+      if (!user.active) throw new UnauthorizedException('Account is no longer active');
+      user = await this.prisma.user.update({
         where: { id: user.id },
         data: {
           provider,
           providerId: profile.sub,
           emailVerified: true,
+          emailVerifiedAt: user.emailVerifiedAt ?? new Date(),
           lastLogin: new Date(),
         },
       });
     }
 
-    if (!['PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER', 'TAQUILLA'].includes(user.role)) {
-      // Elevate customer → promoter on first SSO into admin panel
-      if (user.role === UserRole.CUSTOMER) {
-        user = await this.prisma.user.update({
-          where: { id: user.id },
-          data: { role: UserRole.PROMOTER },
-        });
-      }
-    }
+    // Única elevación de rol admitida. Sin invitación viva, el usuario se queda
+    // exactamente con el rol que ya tuviera en la base.
+    user = await this.invitations.applyPendingInvitation(user);
 
     const payload = {
       sub: user.id,
@@ -215,7 +254,9 @@ export class AuthService {
   private async exchangeMicrosoft(code: string, redirectUri: string) {
     const clientId = process.env.MICROSOFT_CLIENT_ID!;
     const clientSecret = process.env.MICROSOFT_CLIENT_SECRET!;
-    const tenant = process.env.MICROSOFT_TENANT_ID || 'common';
+    // También aquí: el intercambio de código no puede caer en 'common' aunque
+    // alguien llame al callback sin haber pasado por getOauthStartUrl().
+    const tenant = this.requireMicrosoftTenant();
     const tokenRes = await fetch(
       `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
       {

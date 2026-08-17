@@ -1,14 +1,39 @@
-import { Body, Controller, Get, Post, Query, Res, UseGuards, Request } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import type { UserRole } from '@prisma/client';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
+import { InvitationsService } from './invitations.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { OrgAccessGuard } from './org-access.guard';
+import { Roles } from './roles.decorator';
+import { RolesGuard } from './roles.guard';
+
+/** Petición autenticada con el tenant ya resuelto por OrgAccessGuard. */
+type ScopedRequest = {
+  user: { sub: string; email: string; role: string; organizationId?: string | null };
+  scopedOrganizationId?: string | null;
+};
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private auth: AuthService) {}
+  constructor(
+    private auth: AuthService,
+    private invitations: InvitationsService,
+  ) {}
 
   @Post('login')
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
@@ -76,5 +101,59 @@ export class AuthController {
       process.env.OAUTH_ADMIN_REDIRECT_URI ||
       'http://localhost:3001/login/oauth/callback';
     return this.auth.loginWithOauth('microsoft', body.code, uri);
+  }
+
+  // ==================== INVITACIONES DE ORGANIZACIÓN (F2-02) ====================
+  // Única puerta de elevación de rol. `OrgAccessGuard` valida el
+  // `organizationId` del cuerpo/query contra el token y publica el tenant en
+  // `req.scopedOrganizationId`, que es el que usamos como autoridad.
+
+  @Post('invitations')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Invite an email to a privileged role in an organization' })
+  createInvitation(
+    @Request() req: ScopedRequest,
+    @Body()
+    body: {
+      organizationId?: string;
+      email: string;
+      role: UserRole;
+      expiresInDays?: number;
+    },
+  ) {
+    return this.invitations.createInvitation({
+      organizationId: req.scopedOrganizationId ?? body.organizationId ?? '',
+      email: body.email,
+      role: body.role,
+      inviterRole: req.user.role,
+      inviterId: req.user.sub,
+      inviterOrganizationId: req.user.organizationId ?? null,
+      expiresInDays: body.expiresInDays,
+    });
+  }
+
+  @Get('invitations')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List invitations for an organization' })
+  listInvitations(
+    @Request() req: ScopedRequest,
+    @Query('organizationId') organizationId?: string,
+  ) {
+    return this.invitations.listByOrganization(req.scopedOrganizationId ?? organizationId);
+  }
+
+  @Delete('invitations/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Revoke a pending invitation' })
+  revokeInvitation(@Request() req: ScopedRequest, @Param('id') id: string) {
+    // SUPER_ADMIN sin organización en el token revoca en cualquier tenant.
+    const scoped = req.user.role === 'SUPER_ADMIN' ? null : req.scopedOrganizationId;
+    return this.invitations.revokeInvitation(id, scoped);
   }
 }

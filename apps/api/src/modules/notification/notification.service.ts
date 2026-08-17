@@ -2,15 +2,44 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import type { Queue, Job } from 'bull';
+import type { Queue, JobOptions } from 'bull';
 
 export const NOTIFICATION_QUEUE = 'notifications';
 
+/**
+ * Trabajos de la cola de notificaciones.
+ *
+ * `accessToken` viaja en el job (no en la base) porque de la orden solo se
+ * guarda su SHA-256: el texto plano existe únicamente en el instante de crearla
+ * y en el correo que lo entrega. Es la credencial que permite al comprador
+ * invitado —el que compró sin cuenta— abrir sus boletos; sin ella, el correo de
+ * confirmación es un callejón sin salida.
+ */
 export type NotificationJob =
-  | { type: 'order.confirmation'; orderId: string; email: string; buyerName: string }
-  | { type: 'ticket.pdf'; orderId: string; email: string }
+  | {
+      type: 'order.confirmation';
+      orderId: string;
+      email: string;
+      buyerName: string;
+      /** Credencial de acceso del comprador invitado. Opcional: ver arriba. */
+      accessToken?: string;
+    }
+  | { type: 'ticket.pdf'; orderId: string; email: string; accessToken?: string }
+  | { type: 'payment.pending'; orderId: string; email?: string; accessToken?: string }
+  | { type: 'payment.received'; orderId: string; email?: string; accessToken?: string }
   | { type: 'fraud.alert'; orderId: string; score: number; severity: string }
-  | { type: 'refund.notification'; orderId: string; email: string; amount: number }
+  | {
+      type: 'refund.notification';
+      orderId: string;
+      email: string;
+      amount: number;
+      reason?: string;
+      partial?: boolean;
+    }
+  /** Difusión: abre un job por cada orden afectada del evento. */
+  | { type: 'event.cancelled'; eventId: string; reason?: string }
+  /** Aviso de cancelación para una orden concreta (lo genera el anterior). */
+  | { type: 'order.event_cancelled'; orderId: string; reason?: string }
   | { type: 'resale.alert'; listingId: string; buyerEmail: string; eventTitle: string }
   | { type: 'payout.ready'; organizationId: string; amount: number; email: string }
   | { type: 'event.reminder'; eventId: string; userId: string; email: string; eventTitle: string }
@@ -21,6 +50,29 @@ export type NotificationJob =
       template: string;
       data: Record<string, unknown>;
     };
+
+/**
+ * Opciones por defecto de todos los avisos.
+ *
+ * - `attempts` + retroceso exponencial: un SMTP que rechaza por límite de tasa
+ *   o un DNS que tarda se recuperan solos (15 s, 30 s, 1 min, 2 min, 4 min).
+ * - `removeOnFail: false` es deliberado: un correo que no salió tiene que
+ *   quedar en la cola de fallidos, donde `getQueueStats()` lo cuenta y
+ *   `retryFailedJobs()` lo puede reintentar. Borrarlo es perder el aviso en
+ *   silencio, que es exactamente lo que no queremos.
+ * - `removeOnComplete: 200` conserva los últimos envíos para poder auditar
+ *   "¿se mandó o no?" sin dejar que la cola crezca sin límite.
+ */
+const DEFAULT_JOB_OPTIONS: JobOptions = {
+  attempts: 5,
+  backoff: { type: 'exponential', delay: 15_000 },
+  removeOnComplete: 200,
+  removeOnFail: false,
+};
+
+function jobOptions(overrides: JobOptions = {}): JobOptions {
+  return { ...DEFAULT_JOB_OPTIONS, ...overrides };
+}
 
 @Injectable()
 export class NotificationService {
@@ -34,22 +86,79 @@ export class NotificationService {
 
   // ==================== ORDER NOTIFICATIONS ====================
 
-  async enqueueOrderConfirmation(orderId: string, email: string, buyerName: string) {
+  /**
+   * Confirmación de compra.
+   *
+   * El cuarto parámetro es aditivo a propósito: `admin.service` sigue llamando
+   * con tres argumentos. Cuando llega `accessToken`, el correo enlaza a
+   * `{WEB_URL}/orders/{publicId}?t=…` y el comprador sin cuenta puede abrir sus
+   * boletos; cuando no llega, el procesador emite una credencial nueva (ver
+   * `notification.processor.ts`).
+   */
+  async enqueueOrderConfirmation(
+    orderId: string,
+    email: string,
+    buyerName: string,
+    options?: { accessToken?: string },
+  ) {
     await this.queue.add(
       'dispatch',
-      { type: 'order.confirmation', orderId, email, buyerName } as NotificationJob,
-      { attempts: 3, backoff: { type: 'exponential', delay: 2000 }, removeOnComplete: true },
+      {
+        type: 'order.confirmation',
+        orderId,
+        email,
+        buyerName,
+        accessToken: options?.accessToken,
+      } satisfies NotificationJob,
+      jobOptions(),
     );
-    this.logger.log(`Queued order confirmation for ${orderId}`);
+    this.logger.log(
+      `Queued order confirmation for ${orderId}${options?.accessToken ? ' (con credencial de acceso)' : ''}`,
+    );
   }
 
-  async enqueueTicketPDF(orderId: string, email: string) {
+  async enqueueTicketPDF(orderId: string, email: string, options?: { accessToken?: string }) {
     await this.queue.add(
       'dispatch',
-      { type: 'ticket.pdf', orderId, email } as NotificationJob,
-      { attempts: 3, delay: 5000, removeOnComplete: true },
+      { type: 'ticket.pdf', orderId, email, accessToken: options?.accessToken } satisfies NotificationJob,
+      jobOptions({ delay: 5000 }),
     );
     this.logger.log(`Queued ticket PDF generation for ${orderId}`);
+  }
+
+  /**
+   * Aviso de pago pendiente (OXXO/SPEI): referencia y fecha límite real.
+   *
+   * El procesador lee la referencia y el vencimiento del `PaymentIntent`, así
+   * que quien dispara esto solo necesita el id de la orden. Falta el disparador
+   * en el flujo de creación de órdenes diferidas (ver entrega).
+   */
+  async enqueuePaymentPending(
+    orderId: string,
+    email?: string,
+    options?: { accessToken?: string },
+  ) {
+    await this.queue.add(
+      'dispatch',
+      {
+        type: 'payment.pending',
+        orderId,
+        email,
+        accessToken: options?.accessToken,
+      } satisfies NotificationJob,
+      jobOptions(),
+    );
+    this.logger.log(`Queued pending-payment notice for ${orderId}`);
+  }
+
+  /** Acuse de pago recibido. */
+  async enqueuePaymentReceived(orderId: string, email?: string, options?: { accessToken?: string }) {
+    await this.queue.add(
+      'dispatch',
+      { type: 'payment.received', orderId, email, accessToken: options?.accessToken } satisfies NotificationJob,
+      jobOptions(),
+    );
+    this.logger.log(`Queued payment-received notice for ${orderId}`);
   }
 
   // ==================== FRAUD NOTIFICATIONS ====================
@@ -57,21 +166,51 @@ export class NotificationService {
   async enqueueFraudAlert(orderId: string, score: number, severity: string) {
     await this.queue.add(
       'dispatch',
-      { type: 'fraud.alert', orderId, score, severity } as NotificationJob,
-      { priority: 1, attempts: 5, removeOnComplete: true },
+      { type: 'fraud.alert', orderId, score, severity } satisfies NotificationJob,
+      jobOptions({ priority: 1 }),
     );
     this.logger.warn(`Queued fraud alert for ${orderId} (score: ${score}, severity: ${severity})`);
   }
 
   // ==================== REFUND NOTIFICATIONS ====================
 
-  async enqueueRefundNotification(orderId: string, email: string, amount: number) {
+  async enqueueRefundNotification(
+    orderId: string,
+    email: string,
+    amount: number,
+    options?: { reason?: string; partial?: boolean },
+  ) {
     await this.queue.add(
       'dispatch',
-      { type: 'refund.notification', orderId, email, amount } as NotificationJob,
-      { attempts: 3, removeOnComplete: true },
+      {
+        type: 'refund.notification',
+        orderId,
+        email,
+        amount,
+        reason: options?.reason,
+        partial: options?.partial,
+      } satisfies NotificationJob,
+      jobOptions(),
     );
     this.logger.log(`Queued refund notification for ${orderId}`);
+  }
+
+  // ==================== EVENT CANCELLATION ====================
+
+  /**
+   * Cancelación de evento: un solo job de difusión que abre uno por orden.
+   *
+   * Se hace en dos etapas para que el reintento de un correo no reenvíe el
+   * aviso a todo el aforo. Falta el disparador en el módulo de eventos (ver
+   * entrega).
+   */
+  async enqueueEventCancelled(eventId: string, reason?: string) {
+    await this.queue.add(
+      'dispatch',
+      { type: 'event.cancelled', eventId, reason } satisfies NotificationJob,
+      jobOptions({ attempts: 3 }),
+    );
+    this.logger.warn(`Queued cancellation broadcast for event ${eventId}`);
   }
 
   // ==================== RESALE NOTIFICATIONS ====================
@@ -79,8 +218,8 @@ export class NotificationService {
   async enqueueResaleAlert(listingId: string, buyerEmail: string, eventTitle: string) {
     await this.queue.add(
       'dispatch',
-      { type: 'resale.alert', listingId, buyerEmail, eventTitle } as NotificationJob,
-      { attempts: 3, removeOnComplete: true },
+      { type: 'resale.alert', listingId, buyerEmail, eventTitle } satisfies NotificationJob,
+      jobOptions(),
     );
     this.logger.log(`Queued resale alert for ${listingId}`);
   }
@@ -90,8 +229,8 @@ export class NotificationService {
   async enqueuePayoutReady(organizationId: string, amount: number, email: string) {
     await this.queue.add(
       'dispatch',
-      { type: 'payout.ready', organizationId, amount, email } as NotificationJob,
-      { attempts: 3, removeOnComplete: true },
+      { type: 'payout.ready', organizationId, amount, email } satisfies NotificationJob,
+      jobOptions(),
     );
     this.logger.log(`Queued payout notification for org ${organizationId}`);
   }
@@ -101,8 +240,8 @@ export class NotificationService {
   async enqueueEventReminder(eventId: string, userId: string, email: string, eventTitle: string) {
     await this.queue.add(
       'dispatch',
-      { type: 'event.reminder', eventId, userId, email, eventTitle } as NotificationJob,
-      { delay: 24 * 60 * 60 * 1000, attempts: 2, removeOnComplete: true }, // 24h before
+      { type: 'event.reminder', eventId, userId, email, eventTitle } satisfies NotificationJob,
+      jobOptions({ delay: 24 * 60 * 60 * 1000, attempts: 3 }), // 24 h antes
     );
     this.logger.log(`Queued event reminder for ${eventId}`);
   }
@@ -121,8 +260,8 @@ export class NotificationService {
         subject: payload.subject,
         template: payload.template,
         data: payload.data,
-      } as NotificationJob,
-      { attempts: 3, removeOnComplete: true },
+      } satisfies NotificationJob,
+      jobOptions(),
     );
     this.logger.log(`Queued generic email to ${payload.to} (${payload.template})`);
   }
@@ -141,14 +280,23 @@ export class NotificationService {
     return { waiting, active, completed, failed, delayed };
   }
 
+  /**
+   * Reintenta los avisos fallidos. Es una acción manual de operación, así que
+   * se reintentan todos: antes se filtraba por `attemptsMade < 3` y, como los
+   * jobs agotan 5 intentos antes de fallar, el filtro no reintentaba nunca nada.
+   */
   async retryFailedJobs() {
     const failed = await this.queue.getFailed(0, -1);
     let retried = 0;
 
     for (const job of failed) {
-      if (job.attemptsMade < 3) {
+      try {
         await job.retry();
         retried++;
+      } catch (error) {
+        this.logger.warn(
+          `No se pudo reintentar el job ${job.id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 
@@ -160,47 +308,4 @@ export class NotificationService {
     await this.queue.empty();
     this.logger.log('Queue cleared');
   }
-
-  // ==================== NOTIFICATION TEMPLATES ====================
-
-  getOrderConfirmationTemplate(buyerName: string, eventTitle: string, totalAmount: number) {
-    return {
-      subject: `¡Tu entrada a ${eventTitle} está confirmada!`,
-      html: `
-        <h1>Confirmación de Orden</h1>
-        <p>Hola ${buyerName},</p>
-        <p>Tu orden para <strong>${eventTitle}</strong> ha sido confirmada.</p>
-        <p>Total: <strong>$${totalAmount}</strong></p>
-        <p>Revisa tu correo para los detalles de tus entradas.</p>
-      `,
-    };
-  }
-
-  getFraudAlertTemplate(orderId: string, score: number, severity: string) {
-    return {
-      subject: `[ALERTA FRAUDE] Orden ${orderId}`,
-      html: `
-        <h1>Alerta de Fraude Detectada</h1>
-        <p>Se ha detectado actividad sospechosa.</p>
-        <p>Orden ID: ${orderId}</p>
-        <p>Puntuación: ${score}/100</p>
-        <p>Severidad: ${severity}</p>
-        <p>Por favor, revisa esta orden en tu dashboard de administración.</p>
-      `,
-    };
-  }
-
-  getRefundTemplate(amount: number, reason: string) {
-    return {
-      subject: 'Tu reembolso ha sido procesado',
-      html: `
-        <h1>Reembolso Confirmado</h1>
-        <p>Tu reembolso de $${amount} ha sido procesado exitosamente.</p>
-        <p>Razón: ${reason}</p>
-        <p>El dinero aparecerá en tu cuenta en 3-5 días hábiles.</p>
-      `,
-    };
-  }
 }
-
-

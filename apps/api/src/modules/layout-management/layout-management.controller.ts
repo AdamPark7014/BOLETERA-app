@@ -19,22 +19,46 @@ export type CreateLayoutDto = {
   }>;
 };
 
+/** Categorías de motivo para bloqueos/liberaciones administrativas. */
+export type HoldReasonCategory =
+  | 'CORTESIA'
+  | 'PRODUCCION'
+  | 'INCIDENCIA'
+  | 'FRAUDE'
+  | 'TECNICO'
+  | 'OTRO';
+
 export type HoldSeatsDto = {
   eventId: string;
   seatIds: string[];
+  /** Motivo obligatorio (mín. 8 caracteres). Queda en la bitácora. */
+  reason: string;
+  category?: HoldReasonCategory;
   durationMinutes?: number;
   sessionId?: string;
 };
 
+export type ReleaseSeatsDto = {
+  seatIds: string[];
+  /** Motivo obligatorio (mín. 8 caracteres). Queda en la bitácora. */
+  reason: string;
+  category?: HoldReasonCategory;
+};
+
+/** Roles que pueden operar inventario administrativamente. */
+const INVENTORY_STAFF_ROLES = ['ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER', 'PROMOTER'] as const;
+
 @ApiTags('Layout Management')
 @Controller('layouts')
+// Todas las rutas exigen sesión: antes `sightlines`, `seats/hold` y `seats/release`
+// eran anónimas y escribían en base de datos e inventario.
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
 export class LayoutManagementController {
   constructor(private layoutService: LayoutManagementService) {}
 
   @Post('venue/:venueId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER', 'PROMOTER')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create venue layout with sections' })
   async createLayout(
     @Param('venueId') venueId: string,
@@ -45,27 +69,50 @@ export class LayoutManagementController {
   }
 
   @Post(':layoutId/sightlines')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
   @ApiOperation({ summary: 'Calculate sightline scores' })
-  async calculateSightlines(@Param('layoutId') layoutId: string) {
-    return await this.layoutService.calculateSightlineScores(layoutId);
+  async calculateSightlines(
+    @Param('layoutId') layoutId: string,
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+  ) {
+    return await this.layoutService.calculateSightlineScores(layoutId, {
+      userId: user.sub,
+      organizationId: user.organizationId,
+      role: user.role,
+    });
   }
 
   @Post(':layoutId/seats/hold')
-  @ApiOperation({ summary: 'Hold seats' })
-  async holdSeats(@Param('layoutId') layoutId: string, @Body() data: HoldSeatsDto) {
+  @Roles(...INVENTORY_STAFF_ROLES)
+  @ApiOperation({ summary: 'Bloqueo administrativo de butacas (motivo obligatorio)' })
+  async holdSeats(
+    @Param('layoutId') layoutId: string,
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+    @Body() data: HoldSeatsDto,
+  ) {
     return await this.layoutService.holdSeats(
       layoutId,
       data.eventId,
       data.seatIds,
-      data.durationMinutes,
+      { userId: user.sub, organizationId: user.organizationId, role: user.role },
+      { reason: data.reason, category: data.category },
       data.sessionId,
     );
   }
 
   @Post(':layoutId/seats/release')
-  @ApiOperation({ summary: 'Release seats' })
-  async releaseSeats(@Param('layoutId') _layoutId: string, @Body() data: { seatIds: string[] }) {
-    return await this.layoutService.releaseSeats(data.seatIds);
+  @Roles(...INVENTORY_STAFF_ROLES)
+  @ApiOperation({ summary: 'Liberación administrativa de holds (motivo obligatorio)' })
+  async releaseSeats(
+    @Param('layoutId') _layoutId: string,
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+    @Body() data: ReleaseSeatsDto,
+  ) {
+    return await this.layoutService.releaseSeats(
+      data.seatIds,
+      { userId: user.sub, organizationId: user.organizationId, role: user.role },
+      { reason: data.reason, category: data.category },
+    );
   }
 }
 

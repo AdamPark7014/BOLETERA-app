@@ -1,7 +1,35 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { SalesChannel } from '@prisma/client';
 import { Observable, from, map, mergeMap, timer } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
+
+/** Caracteres con los que Excel y Sheets interpretan la celda como fórmula. */
+const FORMULA_PREFIXES = ['=', '+', '-', '@', '\t', '\r'];
+
+/**
+ * Convierte un valor en una celda CSV segura.
+ *
+ * Dos problemas distintos, ambos reales en un export que abre un operador:
+ *
+ * 1. **Escape de CSV**: comas, comillas y saltos de línea dentro de un título de
+ *    evento o un nombre parten la fila y descuadran todas las columnas
+ *    siguientes.
+ * 2. **Inyección de fórmulas**: un nombre de comprador que empiece por `=` o `@`
+ *    lo ejecuta la hoja de cálculo al abrirla. Como el nombre lo escribe el
+ *    propio comprador en el checkout, es entrada no confiable. Se antepone un
+ *    apóstrofo para que la hoja lo trate como texto.
+ */
+function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  let text = String(value);
+  if (FORMULA_PREFIXES.some((prefix) => text.startsWith(prefix))) {
+    text = `'${text}`;
+  }
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
 
 @Injectable()
 export class ReportingService {
@@ -15,13 +43,21 @@ export class ReportingService {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Fetch event data
+    // F2-10: `?eventId=` es libre y el guard sólo valida `:organizationId`.
+    // Los agregados de pedidos ya filtraban por organización, pero el título del
+    // evento y los conteos de boletos (`totalTickets`/`soldTickets`) van sólo
+    // por `eventId`: sin este filtro, apuntar al evento de otro promotor
+    // devolvía su nombre y su ocupación real.
     const event = eventId
-      ? await this.prisma.event.findUnique({
-          where: { id: eventId },
+      ? await this.prisma.event.findFirst({
+          where: { id: eventId, organizationId },
           include: { venue: true, organization: true }
         })
       : null;
+
+    if (eventId && !event) {
+      throw new ForbiddenException('Organization access denied');
+    }
 
     // Today's sales
     const todaySales = await this.prisma.order.findMany({
@@ -382,10 +418,13 @@ export class ReportingService {
   // ==================== REVENUE FORECAST ====================
 
   async generateRevenueForecast(organizationId: string, days: number = 30) {
+    // `:days` viene de la URL sin validar y el bucle lanza una consulta por día:
+    // `/forecast/:org/100000` eran 100 000 consultas secuenciales por petición.
+    const horizon = Math.min(Math.max(Number.isFinite(days) ? Math.trunc(days) : 30, 1), 365);
     const forecast = [];
     const now = new Date();
 
-    for (let i = 0; i < days; i++) {
+    for (let i = 0; i < horizon; i++) {
       const date = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
       date.setHours(0, 0, 0, 0);
 
@@ -414,7 +453,7 @@ export class ReportingService {
 
     return {
       organizationId,
-      forecastDays: days,
+      forecastDays: horizon,
       forecast,
       generatedAt: now
     };
@@ -451,7 +490,15 @@ export class ReportingService {
     const header = 'publicId,event,channel,total,currency,createdAt,buyerEmail';
     const rows = orders.map(
       (o) =>
-        `${o.publicId},"${o.event.title.replace(/"/g, '""')}",${o.channel},${o.totalAmount},${o.currency},${o.createdAt.toISOString()},${o.buyerEmail}`,
+        [
+          csvCell(o.publicId),
+          csvCell(o.event.title),
+          csvCell(o.channel),
+          csvCell(o.totalAmount),
+          csvCell(o.currency),
+          csvCell(o.createdAt.toISOString()),
+          csvCell(o.buyerEmail),
+        ].join(','),
     );
     return { filename: `ventas-${organizationId}-${Date.now()}.csv`, csv: [header, ...rows].join('\n') };
   }

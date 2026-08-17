@@ -1,6 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { FraudSeverity, FraudStatus, FraudType, OrderStatus } from '@prisma/client';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { FraudSeverity, FraudStatus, FraudType, OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+
+/**
+ * F2-11 — Aislamiento multi-inquilino de las señales de fraude.
+ *
+ * `FraudFlag` NO tiene columna `organizationId` (esquema congelado), así que el
+ * tenant se deduce por relación: el evento o el pedido señalado pertenecen a una
+ * organización. Un flag sin `eventId` ni `orderId` (p. ej. sólo `userId` o una
+ * IP) no es atribuible a ningún promotor: queda reservado a SUPER_ADMIN en
+ * lugar de mostrarse a todos, que era el comportamiento anterior.
+ */
+function organizationScopeFilter(
+  organizationId: string | null | undefined,
+): Prisma.FraudFlagWhereInput {
+  if (!organizationId) return {};
+  return {
+    OR: [{ event: { organizationId } }, { order: { organizationId } }],
+  };
+}
 
 interface FraudCheckContext {
   orderId?: string;
@@ -193,7 +211,21 @@ export class FraudService {
     ipAddress?: string;
     deviceFingerprint?: string;
     metadata?: Record<string, any>;
-  }) {
+  },
+  /**
+   * Tenant del solicitante cuando el flag llega por HTTP. El motor de checkout
+   * (orders.service) llama sin este argumento: ya opera sobre un pedido cuyo
+   * tenant validó antes, y no hay usuario al que acotar.
+   */
+  scopedOrganizationId?: string | null,
+  ) {
+    if (scopedOrganizationId) {
+      await this.assertSubjectBelongsToOrg(scopedOrganizationId, {
+        eventId: data.eventId,
+        orderId: data.orderId,
+      });
+    }
+
     const flag = await this.prisma.fraudFlag.create({
       data: {
         type: data.type,
@@ -278,15 +310,23 @@ export class FraudService {
     status?: FraudStatus;
     limit?: number;
     offset?: number;
+    /** Tenant resuelto por el guard. `null` (sólo SUPER_ADMIN) = sin acotar. */
+    organizationId?: string | null;
   }) {
+    // El límite lo fija el servidor: `?limit=999999` permitía volcar la tabla
+    // entera de señales (con email del comprador) en una sola petición.
+    const take = Math.min(Math.max(Number(params.limit) || 50, 1), 200);
+    const skip = Math.max(Number(params.offset) || 0, 0);
+
     return await this.prisma.fraudFlag.findMany({
       where: {
+        ...organizationScopeFilter(params.organizationId),
         ...(params.severity ? { severity: params.severity } : {}),
         ...(params.status ? { status: params.status } : {}),
       },
       orderBy: { createdAt: 'desc' },
-      take: params.limit ?? 50,
-      skip: params.offset ?? 0,
+      take,
+      skip,
       include: {
         order: { select: { publicId: true } },
         user: { select: { email: true } },
@@ -296,19 +336,75 @@ export class FraudService {
 
   // ==================== RESOLVE FLAG ====================
 
-  async resolveFlag(flagId: string, resolution: string, resolvedBy: string) {
+  /**
+   * `resolvedBy` es la identidad del JWT, nunca un valor del cuerpo: la
+   * atribución de quién cerró una señal es prueba en una disputa con el
+   * adquirente y no puede ser autodeclarada por el cliente.
+   */
+  async resolveFlag(
+    flagId: string,
+    resolution: string,
+    resolvedBy: string,
+    scopedOrganizationId?: string | null,
+  ) {
+    // Comprobación de pertenencia ANTES del update: `update({where:{id}})` sin
+    // filtro de tenant deja que el ADMIN de un promotor cierre (y firme) las
+    // señales de otro con sólo adivinar el cuid.
+    const existing = await this.prisma.fraudFlag.findFirst({
+      where: { id: flagId, ...organizationScopeFilter(scopedOrganizationId) },
+      select: { id: true },
+    });
+    if (!existing) throw new NotFoundException('Fraud flag not found');
+
     const flag = await this.prisma.fraudFlag.update({
       where: { id: flagId },
       data: {
         status: FraudStatus.RESOLVED,
+        resolved: true,
         resolution,
         resolvedBy,
         resolvedAt: new Date(),
       },
     });
 
-    this.logger.log(`Fraud flag resolved: ${flagId}`);
+    this.logger.log(`Fraud flag resolved: ${flagId} by ${resolvedBy}`);
     return flag;
+  }
+
+  // ==================== TENANT GUARDS (relaciones) ====================
+
+  /**
+   * Verifica que el sujeto señalado (evento y/o pedido) sea del inquilino que
+   * escribe. Sin esto un ADMIN podía plantar señales CRITICAL sobre los pedidos
+   * de un competidor.
+   */
+  private async assertSubjectBelongsToOrg(
+    organizationId: string,
+    subject: { eventId?: string; orderId?: string },
+  ) {
+    if (subject.eventId) {
+      const event = await this.prisma.event.findUnique({
+        where: { id: subject.eventId },
+        select: { organizationId: true },
+      });
+      if (!event || event.organizationId !== organizationId) {
+        throw new ForbiddenException('Organization access denied');
+      }
+    }
+    if (subject.orderId) {
+      const order = await this.prisma.order.findUnique({
+        where: { id: subject.orderId },
+        select: { organizationId: true },
+      });
+      if (!order || order.organizationId !== organizationId) {
+        throw new ForbiddenException('Organization access denied');
+      }
+    }
+    if (!subject.eventId && !subject.orderId) {
+      // Un flag sin sujeto no sería visible ni para quien lo crea (ver
+      // organizationScopeFilter): lo rechazamos en vez de dejar huérfanos.
+      throw new ForbiddenException('Fraud flag requires an eventId or an orderId');
+    }
   }
 
   // ==================== ALERT SYSTEM ====================
@@ -329,15 +425,37 @@ export class FraudService {
 
   // ==================== KYC/AML CHECKS ====================
 
-  async performKYCCheck(userId: string, data: {
-    fullName: string;
-    dateOfBirth: string;
-    address: string;
-    city: string;
-    country: string;
-    documentNumber: string;
-    documentType: string;
-  }) {
+  async performKYCCheck(
+    userId: string,
+    data: {
+      fullName: string;
+      dateOfBirth: string;
+      address: string;
+      city: string;
+      country: string;
+      documentNumber: string;
+      documentType: string;
+    },
+    scopedOrganizationId?: string | null,
+  ) {
+    // Un comprador no pertenece a ninguna organización (`user.organizationId`
+    // es nulo para CUSTOMER): la relación con el promotor es haberle comprado.
+    // Sin esta comprobación, cualquier ADMIN podía lanzar KYC —y adjuntar datos
+    // de identidad— sobre cualquier usuario de la plataforma con sólo su id.
+    if (scopedOrganizationId) {
+      const belongs = await this.prisma.user.findFirst({
+        where: {
+          id: userId,
+          OR: [
+            { organizationId: scopedOrganizationId },
+            { orders: { some: { organizationId: scopedOrganizationId } } },
+          ],
+        },
+        select: { id: true },
+      });
+      if (!belongs) throw new NotFoundException('User not found');
+    }
+
     this.logger.log(`Performing KYC check for user: ${userId}`);
 
     // In production, integrate with KYC providers:
@@ -345,13 +463,11 @@ export class FraudService {
     // - IDology
     // - Trulioo
     // - Onfido
-
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        // Store KYC data (encrypted in production)
-      },
-    });
+    //
+    // Los datos de `data` (documento, domicilio, fecha de nacimiento) NO se
+    // persisten hoy: el `user.update({data:{}})` anterior era una escritura
+    // vacía que sólo servía para enumerar ids. Cuando se integre el proveedor,
+    // estos campos deben ir cifrados y nunca al log.
 
     return { status: 'verified', userId };
   }

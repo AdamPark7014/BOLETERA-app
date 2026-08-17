@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, SalesChannel } from '@prisma/client';
 import type { SeatMapData } from '@boletera/shared';
 import {
@@ -9,6 +15,24 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { VenueLayoutService } from '../venue-layout/venue-layout.service';
 import { InventoryService } from '../inventory/inventory.service';
+import { AuditService } from '../../common/audit.service';
+
+/** Contexto del operador que ejecuta una acción administrativa sobre inventario. */
+export type OperatorContext = {
+  userId: string;
+  organizationId: string | null;
+  role: string;
+};
+
+/** Motivo obligatorio en bloqueos/liberaciones administrativas. */
+export type ReasonedAction = {
+  /** Texto libre obligatorio: queda en la bitácora de auditoría. */
+  reason: string;
+  /** Categoría opcional para poder agrupar en reportes. */
+  category?: 'CORTESIA' | 'PRODUCCION' | 'INCIDENCIA' | 'FRAUDE' | 'TECNICO' | 'OTRO';
+};
+
+const MIN_REASON_LENGTH = 8;
 
 @Injectable()
 export class LayoutManagementService {
@@ -18,7 +42,53 @@ export class LayoutManagementService {
     private prisma: PrismaService,
     private venueLayout: VenueLayoutService,
     private inventory: InventoryService,
+    private audit: AuditService,
   ) {}
+
+  /**
+   * Valida el motivo obligatorio. Sin motivo no hay bloqueo ni liberación:
+   * una butaca que desaparece del inventario sin rastro es un agujero de auditoría.
+   */
+  private assertReason(action: ReasonedAction | undefined): ReasonedAction {
+    const reason = action?.reason?.trim();
+    if (!reason || reason.length < MIN_REASON_LENGTH) {
+      throw new BadRequestException(
+        `El motivo es obligatorio y debe tener al menos ${MIN_REASON_LENGTH} caracteres.`,
+      );
+    }
+    return { reason, category: action?.category ?? 'OTRO' };
+  }
+
+  /**
+   * Comprueba que el layout pertenece a un venue de la organización del operador.
+   * SUPER_ADMIN puede cruzar tenants; el resto no.
+   */
+  private async assertLayoutInOrg(layoutId: string, operator: OperatorContext) {
+    const layout = await this.prisma.venueLayout.findUnique({
+      where: { id: layoutId },
+      select: { id: true, venue: { select: { id: true, organizationId: true } } },
+    });
+    if (!layout) throw new NotFoundException('Layout not found');
+    if (operator.role === 'SUPER_ADMIN') return layout;
+    if (!operator.organizationId || layout.venue?.organizationId !== operator.organizationId) {
+      throw new ForbiddenException('Organization access denied');
+    }
+    return layout;
+  }
+
+  /** Comprueba que el evento pertenece a la organización del operador. */
+  private async assertEventInOrg(eventId: string, operator: OperatorContext) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, title: true, organizationId: true },
+    });
+    if (!event) throw new NotFoundException('Event not found');
+    if (operator.role === 'SUPER_ADMIN') return event;
+    if (!operator.organizationId || event.organizationId !== operator.organizationId) {
+      throw new ForbiddenException('Organization access denied');
+    }
+    return event;
+  }
 
   async createVenueLayout(
     venueId: string,
@@ -70,7 +140,10 @@ export class LayoutManagementService {
     return this.venueLayout.saveMap(venueId, organizationId, mapData);
   }
 
-  async calculateSightlineScores(layoutId: string) {
+  async calculateSightlineScores(layoutId: string, operator: OperatorContext) {
+    // El cálculo reescribe Seat.viewQuality y VenueLayout.mapData: exige tenant válido.
+    await this.assertLayoutInOrg(layoutId, operator);
+
     const layout = await this.prisma.venueLayout.findUnique({
       where: { id: layoutId },
       include: { sections: { include: { seats: true } } },
@@ -144,30 +217,131 @@ export class LayoutManagementService {
     };
   }
 
+  /**
+   * Bloqueo administrativo de butacas (cortesías, producción, incidencias).
+   *
+   * Antes esta ruta era anónima y creaba holds de canal WEB para cualquier evento.
+   * Ahora exige operador autenticado de la organización dueña del evento, motivo
+   * obligatorio y deja rastro en la bitácora.
+   */
   async holdSeats(
     _layoutId: string,
     eventId: string,
     seatIds: string[],
-    _durationMinutes = 15,
+    operator: OperatorContext,
+    action: ReasonedAction,
     sessionId?: string,
   ) {
-    return this.inventory.createHold({
+    const reasoned = this.assertReason(action);
+    const event = await this.assertEventInOrg(eventId, operator);
+
+    if (!Array.isArray(seatIds) || seatIds.length === 0) {
+      throw new BadRequestException('seatIds es obligatorio');
+    }
+
+    const hold = await this.inventory.createHold({
       eventId,
       seatIds,
-      sessionId: sessionId ?? `layout-${Date.now()}`,
-      channel: SalesChannel.WEB,
+      sessionId: sessionId ?? `admin-${operator.userId}`,
+      channel: SalesChannel.TAQUILLA,
+      cashierId: operator.userId,
+      skipSessionLimit: true,
     });
+
+    await this.audit.log({
+      action: 'INVENTORY_ADMIN_HOLD',
+      entityType: 'Event',
+      entityId: eventId,
+      organizationId: event.organizationId ?? operator.organizationId ?? undefined,
+      userId: operator.userId,
+      metadata: {
+        seatIds,
+        seatCount: seatIds.length,
+        reason: reasoned.reason,
+        category: reasoned.category,
+        eventTitle: event.title,
+      },
+    });
+
+    this.logger.log(
+      `Admin hold: ${seatIds.length} butacas en ${eventId} por ${operator.userId} — ${reasoned.category}`,
+    );
+    return { ...hold, reason: reasoned.reason, category: reasoned.category };
   }
 
-  async releaseSeats(seatIds: string[]) {
-    for (const seatId of seatIds) {
-      const hold = await this.prisma.seatHold.findFirst({
-        where: { seatId, status: 'ACTIVE' },
-        orderBy: { createdAt: 'desc' },
-      });
-      if (hold) await this.inventory.releaseHold(hold.id);
+  /**
+   * Liberación administrativa (kill) de holds activos.
+   *
+   * Ruta antes anónima: cualquiera podía liberar los holds de otros compradores
+   * durante un onsale. Ahora exige operador de la organización dueña del evento
+   * de cada butaca, motivo obligatorio y registro de auditoría por lote.
+   */
+  async releaseSeats(seatIds: string[], operator: OperatorContext, action: ReasonedAction) {
+    const reasoned = this.assertReason(action);
+
+    if (!Array.isArray(seatIds) || seatIds.length === 0) {
+      throw new BadRequestException('seatIds es obligatorio');
     }
-    return { seatsReleased: seatIds.length };
+
+    const holds = await this.prisma.seatHold.findMany({
+      where: { seatId: { in: seatIds }, status: 'ACTIVE' },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, seatId: true, eventId: true },
+    });
+
+    // Un solo lote puede tocar varios eventos: se valida el tenant de todos antes
+    // de liberar nada, para que la operación sea todo-o-nada respecto a permisos.
+    const eventIds = [...new Set(holds.map((h) => h.eventId).filter(Boolean))] as string[];
+    for (const eventId of eventIds) {
+      await this.assertEventInOrg(eventId, operator);
+    }
+
+    // Solo el hold más reciente por butaca (findMany devuelve todos los activos).
+    const seen = new Set<string>();
+    const targets = holds.filter((h) => {
+      if (!h.seatId || seen.has(h.seatId)) return false;
+      seen.add(h.seatId);
+      return true;
+    });
+
+    let released = 0;
+    const failed: string[] = [];
+    for (const hold of targets) {
+      const result = await this.inventory.releaseHold(hold.id, { staff: true });
+      if (result?.released) released += 1;
+      else failed.push(hold.seatId as string);
+    }
+
+    await this.audit.log({
+      action: 'INVENTORY_ADMIN_RELEASE',
+      entityType: 'SeatHold',
+      organizationId: operator.organizationId ?? undefined,
+      userId: operator.userId,
+      metadata: {
+        requestedSeatIds: seatIds,
+        requested: seatIds.length,
+        released,
+        notActive: seatIds.length - targets.length,
+        failed,
+        eventIds,
+        reason: reasoned.reason,
+        category: reasoned.category,
+      },
+    });
+
+    this.logger.log(
+      `Admin release: ${released}/${seatIds.length} butacas por ${operator.userId} — ${reasoned.category}`,
+    );
+
+    return {
+      requested: seatIds.length,
+      released,
+      /** Butacas pedidas que no tenían hold activo (no es un error). */
+      notActive: seatIds.length - targets.length,
+      failed,
+      reason: reasoned.reason,
+      category: reasoned.category,
+    };
   }
 }
 

@@ -17,6 +17,12 @@ export class RolesGuard implements CanActivate {
     // @Roles() decorator across the API to remember to list it too is how
     // this org's own platform admin ends up locked out of endpoints (e.g.
     // the event hub) whenever a new route is added without it.
+    //
+    // F2-07: `user.role` ya NO sale del token. JwtStrategy lo relee de la base
+    // en cada petición (con caché de TTL corto), así que este bypass ya no es
+    // falsificable con un token viejo emitido cuando el usuario tenía otro rol:
+    // degradar a alguien surte efecto en cuanto expira el TTL de caché, sin
+    // esperar a que caduque su JWT.
     if (user?.role === 'SUPER_ADMIN') return true;
     return roles.includes(user?.role);
   }
