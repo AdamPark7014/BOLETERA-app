@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { TenantContextInterceptor } from '../../common/tenant-context.interceptor';
+import { TenantContextService } from '../../common/tenant-context.service';
 import { JwtModule, type JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -36,6 +39,12 @@ import { requireJwtSecret } from './jwt-secret';
   ],
   controllers: [AuthController, StreamTicketController],
   providers: [
+    // El inquilino se fija en el contexto asíncrono para TODA la petición.
+    // Es defensa que no depende de recordar un guard al añadir una ruta: los
+    // servicios pueden exigir `requireOrganization()` estén donde estén.
+    TenantContextService,
+    TenantContextInterceptor,
+    { provide: APP_INTERCEPTOR, useExisting: TenantContextInterceptor },
     AuthService,
     InvitationsService,
     JwtStrategy,
@@ -48,6 +57,7 @@ import { requireJwtSecret } from './jwt-secret';
     StreamAuthGuard,
   ],
   exports: [
+    TenantContextService,
     AuthService,
     InvitationsService,
     JwtModule,
