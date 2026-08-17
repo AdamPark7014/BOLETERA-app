@@ -23,6 +23,7 @@ import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { InventoryService } from './inventory.service';
+import { WaitingRoomService } from './waiting-room.service';
 
 /** Roles con derecho a operar sobre la asignación de taquilla. */
 const STAFF_ROLES = ['TAQUILLA', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER'];
@@ -37,7 +38,28 @@ type PublicUser = { sub?: string; email?: string; role?: string } | undefined;
 @ApiTags('Inventory')
 @Controller('inventory')
 export class InventoryController {
-  constructor(private inventory: InventoryService) {}
+  constructor(
+    private inventory: InventoryService,
+    private waitingRoom: WaitingRoomService,
+  ) {}
+
+  /**
+   * Exige el pase de la sala de espera cuando el evento la tiene activa.
+   *
+   * Sin esto la fila sería decorativa: cualquiera que conociera el endpoint
+   * apartaría butacas saltándose a las 30.000 personas que sí están esperando,
+   * que es justo la injusticia que la sala existe para evitar. Los eventos sin
+   * sala configurada no pagan ningún costo: `isGated` sale en falso y no se
+   * consulta nada más.
+   */
+  private async assertQueuePass(eventId: string, pass?: string) {
+    if (!(await this.waitingRoom.isGated(eventId))) return;
+    if (!this.waitingRoom.verifyPass(pass, eventId)) {
+      throw new ForbiddenException(
+        'Este evento tiene sala de espera: entra a la fila y espera tu turno para apartar lugares.',
+      );
+    }
+  }
 
   @Get(':eventId/map')
   getMap(@Param('eventId') eventId: string) {
@@ -89,7 +111,7 @@ export class InventoryController {
   @Post('holds/best-available')
   @UseGuards(OptionalJwtAuthGuard)
   @Throttle(HOLD_THROTTLE)
-  createBestAvailable(
+  async createBestAvailable(
     @Body()
     body: {
       eventId: string;
@@ -97,6 +119,8 @@ export class InventoryController {
       quantity: number;
       sessionId?: string;
       contiguous?: boolean;
+      /** Pase emitido por la sala de espera, si el evento la tiene activa. */
+      queuePass?: string;
     },
     @CurrentUser() user: PublicUser,
     @Headers('x-channel') channelHeader?: string,
@@ -104,6 +128,7 @@ export class InventoryController {
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
+    await this.assertQueuePass(body.eventId, body.queuePass);
     return this.inventory.createBestAvailableHold({
       eventId: body.eventId,
       offerId: body.offerId,
@@ -118,7 +143,7 @@ export class InventoryController {
   @Post('holds')
   @UseGuards(OptionalJwtAuthGuard)
   @Throttle(HOLD_THROTTLE)
-  createHold(
+  async createHold(
     @Body()
     body: {
       eventId: string;
@@ -126,6 +151,8 @@ export class InventoryController {
       offerId?: string;
       quantity?: number;
       sessionId?: string;
+      /** Pase emitido por la sala de espera, si el evento la tiene activa. */
+      queuePass?: string;
     },
     @CurrentUser() user: PublicUser,
     @Headers('x-channel') channelHeader?: string,
@@ -134,6 +161,7 @@ export class InventoryController {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
     // Nada de `...body`: `channel`, `cashierId` y `userId` los pone el servidor.
+    await this.assertQueuePass(body.eventId, body.queuePass);
     return this.inventory.createHold({
       eventId: body.eventId,
       seatIds: body.seatIds,

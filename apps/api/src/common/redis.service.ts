@@ -175,6 +175,37 @@ export class RedisService implements OnModuleDestroy {
    * @deprecated Usa `acquireLock`, que distingue "ocupado" de "Redis caído".
    * Se mantiene para no romper llamadores fuera de este módulo.
    */
+  /**
+   * Conjuntos ordenados — sala de espera.
+   *
+   * La posición en la fila es el rango dentro del conjunto: `ZRANK` la resuelve
+   * en O(log n) sin leer la base y sin recorrer nada, que es lo que permite
+   * sostener el sondeo de decenas de miles de personas a la vez.
+   */
+  async zAdd(key: string, score: number, member: string, ttlSeconds: number): Promise<boolean> {
+    if (!this.client.isReady) return false;
+    // NX: llegar dos veces no te reordena ni te manda al final de la fila.
+    await this.client.zAdd(key, [{ score, value: member }], { NX: true });
+    await this.client.expire(key, ttlSeconds);
+    return true;
+  }
+
+  /** Posición 0-indexada, o `null` si no está en la fila. */
+  async zRank(key: string, member: string): Promise<number | null> {
+    if (!this.client.isReady) return null;
+    const rank = await this.client.zRank(key, member);
+    return rank === null || rank === undefined ? null : Number(rank);
+  }
+
+  async zCard(key: string): Promise<number> {
+    if (!this.client.isReady) return 0;
+    return Number(await this.client.zCard(key));
+  }
+
+  async zRem(key: string, member: string): Promise<void> {
+    if (this.client.isReady) await this.client.zRem(key, member);
+  }
+
   async setHold(key: string, value: string, ttlSeconds: number): Promise<boolean> {
     return (await this.acquireLock(key, value, ttlSeconds)) === 'ACQUIRED';
   }
