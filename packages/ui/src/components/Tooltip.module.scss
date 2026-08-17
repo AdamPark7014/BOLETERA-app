@@ -1,0 +1,34 @@
+@use '../styles/tokens' as *;
+
+.tooltip {
+  position: fixed;
+  z-index: $z-tooltip;
+  max-width: 18rem;
+  padding: $space-1-5 $space-2-5;
+  border-radius: $radius-sm;
+  background: $c-text-primary;
+  color: $c-text-inverse;
+  font-family: $font-sans;
+  @include type('xs', $weight-medium);
+  box-shadow: $shadow-lg;
+  pointer-events: none;
+
+  // Hasta medir la capa no sabemos donde va: se mantiene invisible para evitar
+  // el salto desde la esquina superior izquierda.
+  opacity: 0;
+}
+
+.placed {
+  opacity: 1;
+
+  @include motion-safe {
+    animation: appear $duration-fast $ease-standard;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}

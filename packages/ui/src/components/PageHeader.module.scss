@@ -1,0 +1,102 @@
+@use '../styles/tokens' as *;
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  padding-bottom: $space-5;
+  font-family: $font-sans;
+}
+
+.bordered {
+  border-bottom: 1px solid $c-border;
+}
+
+.breadcrumbs {
+  min-width: 0;
+}
+
+.crumbList {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-1-5;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  @include type('xs');
+  color: $c-text-tertiary;
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+}
+
+.crumbLink {
+  color: inherit;
+  text-decoration: none;
+  border-radius: $radius-xs;
+
+  &:hover {
+    color: $c-text-primary;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  @include focus-ring(2px);
+}
+
+.separator {
+  color: $c-text-disabled;
+}
+
+.main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-5;
+  flex-wrap: wrap;
+}
+
+.text {
+  min-width: 0;
+  flex: 1 1 24rem;
+}
+
+.eyebrow {
+  margin: 0 0 $space-1;
+  @include type('xs', $weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $c-accent-text;
+}
+
+.title {
+  margin: 0;
+  @include type('3xl', $weight-semibold);
+  color: $c-text-primary;
+  text-wrap: balance;
+}
+
+.description {
+  margin: $space-2 0 0;
+  max-width: 60ch;
+  @include type('md');
+  color: $c-text-secondary;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex: none;
+  padding-top: $space-1;
+}
+
+.extra {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}

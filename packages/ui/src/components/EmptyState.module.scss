@@ -1,22 +1,160 @@
 @use '../styles/tokens' as *;
 
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 3rem 1.5rem;
-  color: $ink-500;
+  min-width: 0;
+  font-family: $font-sans;
+}
 
-  :global(h3) {
-    font-size: 1rem;
-    font-weight: 600;
-    color: $ink-700;
-    margin-bottom: 0.5rem;
+.visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $space-5;
+}
+
+.art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fillSoft {
+  fill: var(--empty-soft);
+  stroke: none;
+}
+
+.fillAccent {
+  fill: var(--empty-accent);
+  stroke: none;
+}
+
+.strokeSoft {
+  fill: none;
+  stroke: var(--empty-line);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.strokeAccent {
+  fill: none;
+  stroke: var(--empty-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.title {
+  margin: 0;
+  @include type('lg', $weight-semibold);
+  color: $c-text-primary;
+  text-wrap: balance;
+}
+
+.description {
+  margin: $space-2 0 0;
+  max-width: 46ch;
+  @include type('sm');
+  color: $c-text-tertiary;
+  text-wrap: pretty;
+}
+
+.hints {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  margin: $space-4 0 0;
+  padding: 0;
+  list-style: none;
+  @include type('sm');
+  color: $c-text-tertiary;
+
+  li {
+    position: relative;
+    padding-left: $space-4;
+    text-align: left;
   }
 
-  :global(p) {
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
+  li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    width: 4px;
+    height: 4px;
+    border-radius: $radius-full;
+    background: var(--empty-accent);
   }
 }
-.action {
-  margin-top: 1rem;
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  flex-wrap: wrap;
+  margin-top: $space-5;
+}
+
+// ---------------------------------------------------------------- densidades
+
+.sm {
+  padding: $space-6 $space-4;
+
+  .art {
+    max-width: 96px;
+  }
+  .visual {
+    margin-bottom: $space-4;
+  }
+  .title {
+    @include type('md', $weight-semibold);
+  }
+}
+
+.md {
+  padding: $space-10 $space-6;
+
+  .art {
+    max-width: 140px;
+  }
+}
+
+.lg {
+  padding: $space-16 $space-6;
+
+  .art {
+    max-width: 190px;
+  }
+}
+
+// --------------------------------------------------------------------- tonos
+
+.accent {
+  --empty-soft: #{$c-accent-subtle};
+  --empty-accent: #{$c-accent};
+  --empty-line: #{$c-border-strong};
+}
+
+.neutral {
+  --empty-soft: #{$c-surface-sunken};
+  --empty-accent: #{$c-text-tertiary};
+  --empty-line: #{$c-border-strong};
+}
+
+.danger {
+  --empty-soft: #{$c-danger-subtle};
+  --empty-accent: #{$c-danger};
+  --empty-line: #{$c-border-strong};
+}
+
+.success {
+  --empty-soft: #{$c-success-subtle};
+  --empty-accent: #{$c-success};
+  --empty-line: #{$c-border-strong};
 }

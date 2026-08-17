@@ -1,0 +1,122 @@
+@use '../styles/tokens' as *;
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  width: min(92vw, 24rem);
+  padding: $space-3 $space-3 $space-3 $space-4;
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-left: 3px solid var(--toast-color);
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  font-family: $font-sans;
+  pointer-events: auto;
+
+  @include motion-safe {
+    animation: enter $duration-slow $ease-spring;
+  }
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 1px;
+  fill: none;
+  stroke: var(--toast-color);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  @include type('md', $weight-semibold);
+  color: $c-text-primary;
+}
+
+.description {
+  margin: $space-1 0 0;
+  @include type('sm');
+  color: $c-text-secondary;
+}
+
+.action {
+  flex: none;
+  align-self: center;
+  height: 26px;
+  padding-inline: $space-2-5;
+  border: 1px solid $c-border;
+  border-radius: $radius-sm;
+  background: $c-surface-sunken;
+  color: $c-text-primary;
+  @include type('sm', $weight-medium);
+  cursor: pointer;
+
+  &:hover {
+    background: $c-surface-active;
+  }
+
+  @include focus-ring(1px);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $c-text-tertiary;
+  cursor: pointer;
+
+  svg {
+    width: 11px;
+    height: 11px;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: $c-surface-hover;
+    color: $c-text-primary;
+  }
+
+  @include focus-ring(1px);
+}
+
+.neutral {
+  --toast-color: #{$c-text-tertiary};
+}
+.success {
+  --toast-color: #{$c-success};
+}
+.warning {
+  --toast-color: #{$c-warning};
+}
+.danger {
+  --toast-color: #{$c-danger};
+}
+.info {
+  --toast-color: #{$c-info};
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}

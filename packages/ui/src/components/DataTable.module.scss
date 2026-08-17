@@ -1,30 +1,295 @@
 @use '../styles/tokens' as *;
 
 .wrap {
-  overflow-x: auto;
-  border: 1px solid $ink-300;
-  border-radius: $radius-md;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  font-family: $font-sans;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
+.scroller {
+  overflow: auto;
+  min-width: 0;
+  @include thin-scrollbar;
+}
 
-  :global(th),
-  :global(td) {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid $ink-200;
+.grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  align-items: center;
+  min-width: 0;
+}
+
+.headerRow {
+  height: 36px;
+  background: $c-surface-sunken;
+  border-bottom: 1px solid $c-border;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: $z-sticky;
+}
+
+.bodyRow {
+  border-bottom: 1px solid $c-border-subtle;
+  transition: background-color $duration-fast $ease-standard;
+
+  &:hover {
+    background: $c-surface-hover;
+  }
+}
+
+.clickable {
+  cursor: pointer;
+
+  @include focus-ring(-2px);
+}
+
+.selected {
+  background: $c-accent-subtle;
+
+  &:hover {
+    background: $c-accent-subtle;
+  }
+}
+
+.rowGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  min-width: 0;
+  height: 100%;
+  padding-inline: $space-3;
+  @include type('md');
+  color: $c-text-secondary;
+}
+
+.cellContent {
+  min-width: 0;
+  @include truncate;
+}
+
+.left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.center {
+  justify-content: center;
+  text-align: center;
+}
+
+.right {
+  justify-content: flex-end;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.headerCell {
+  position: relative;
+  @include type('xs', $weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $c-text-tertiary;
+}
+
+.headerText {
+  min-width: 0;
+  @include truncate;
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  border-radius: $radius-xs;
+
+  &:hover {
+    color: $c-text-primary;
   }
 
-  :global(th) {
-    background: $paper-50;
-    font-weight: 600;
-    color: $ink-700;
+  @include focus-ring(2px);
+}
+
+.sortIcon {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity $duration-fast $ease-standard;
+}
+
+.sortButton:hover .sortIcon {
+  opacity: 0.5;
+}
+
+.sortActive {
+  color: $c-text-primary;
+
+  .sortIcon {
+    opacity: 1;
+  }
+}
+
+.resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 7px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: $z-raised;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 3px;
+    width: 1px;
+    background: $c-border;
+    transition: background-color $duration-fast $ease-standard;
   }
 
-  :global(tr:last-child td) {
-    border-bottom: none;
+  &:hover::after,
+  &:focus-visible::after {
+    background: $c-accent;
+    top: 0;
+    bottom: 0;
+    width: 2px;
   }
+
+  @include focus-ring(-2px);
+}
+
+.checkboxCell,
+.expandCell {
+  padding-inline: 0;
+  justify-content: center;
+
+  input[type='checkbox'] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: $c-accent;
+    cursor: pointer;
+  }
+}
+
+.expandButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: $radius-xs;
+  background: transparent;
+  color: $c-text-tertiary;
+  cursor: pointer;
+
+  svg {
+    width: 10px;
+    height: 10px;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform $duration-fast $ease-standard;
+  }
+
+  &:hover {
+    background: $c-surface-active;
+    color: $c-text-primary;
+  }
+
+  @include focus-ring(1px);
+}
+
+.expandOpen svg {
+  transform: rotate(90deg);
+}
+
+.expandedPanel {
+  display: block;
+  border-bottom: 1px solid $c-border-subtle;
+  background: $c-surface-sunken;
+}
+
+.expandedCell {
+  padding: $space-4 $space-5;
+  @include type('sm');
+  color: $c-text-secondary;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+}
+
+.state {
+  padding-block: $space-8;
+}
+
+.selectionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-2 $space-3;
+  border-top: 1px solid $c-border;
+  background: $c-accent-subtle;
+  @include type('sm', $weight-medium);
+  color: $c-accent-text;
+}
+
+.compact {
+  .cell {
+    @include type('sm');
+    padding-inline: $space-2-5;
+  }
+  .headerRow {
+    height: 30px;
+  }
+}
+
+.default {
+  // Densidad base: sin ajustes sobre `.cell`.
+  min-width: 0;
+}
+
+.srOnly {
+  @include visually-hidden;
 }

@@ -1,0 +1,92 @@
+@use '../styles/tokens' as *;
+
+.donut {
+  min-width: 0;
+}
+
+.layout {
+  display: flex;
+  align-items: center;
+  gap: $space-5;
+  min-width: 0;
+  height: 100%;
+}
+
+.slice {
+  cursor: pointer;
+  transition: opacity $duration-fast $ease-standard;
+  stroke: $c-elevated;
+  stroke-width: 1;
+}
+
+.dimmed {
+  opacity: 0.34;
+}
+
+.placeholder {
+  fill: none;
+  stroke: $c-surface-sunken;
+}
+
+.centerValue {
+  fill: $c-text-primary;
+  font-family: $font-sans;
+  font-size: 20px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.centerLabel {
+  fill: $c-text-tertiary;
+  font-family: $font-sans;
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1-5;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  max-height: 100%;
+  @include thin-scrollbar;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  min-width: 0;
+  @include type('sm');
+  color: $c-text-secondary;
+  transition: opacity $duration-fast $ease-standard;
+  cursor: default;
+}
+
+.swatch {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 2px;
+}
+
+.legendLabel {
+  flex: 1;
+  min-width: 0;
+  @include truncate;
+}
+
+.legendValue {
+  flex: none;
+  font-weight: $weight-semibold;
+  color: $c-text-primary;
+  font-variant-numeric: tabular-nums;
+}

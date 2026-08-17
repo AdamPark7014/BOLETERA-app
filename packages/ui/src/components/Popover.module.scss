@@ -1,0 +1,45 @@
+@use '../styles/tokens' as *;
+
+.root {
+  position: relative;
+  display: inline-flex;
+}
+
+.anchor {
+  display: inline-flex;
+}
+
+.panel {
+  position: fixed;
+  z-index: $z-popover;
+  min-width: 12rem;
+  max-width: min(92vw, 28rem);
+  max-height: min(70vh, 32rem);
+  overflow-y: auto;
+  padding: $space-2;
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  font-family: $font-sans;
+  font-size: $text-md;
+  color: $c-text-primary;
+  opacity: 0;
+
+  @include thin-scrollbar;
+}
+
+.placed {
+  opacity: 1;
+
+  @include motion-safe {
+    animation: appear $duration-normal $ease-standard;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}

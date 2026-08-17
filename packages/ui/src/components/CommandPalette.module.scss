@@ -1,0 +1,236 @@
+@use '../styles/tokens' as *;
+
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: $z-command;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(#{$space-6}, 12vh, 160px) $space-4 $space-6;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: $c-overlay;
+  backdrop-filter: blur(3px);
+
+  @include motion-safe {
+    animation: fade $duration-normal $ease-standard;
+  }
+}
+
+.palette {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 40rem);
+  max-height: min(70vh, 34rem);
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-xl;
+  overflow: hidden;
+  font-family: $font-sans;
+
+  @include motion-safe {
+    animation: rise $duration-slow $ease-spring;
+  }
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  flex: none;
+  padding: $space-3 $space-4;
+  border-bottom: 1px solid $c-border-subtle;
+}
+
+.searchIcon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: $c-text-tertiary;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: $c-text-primary;
+  @include type('lg');
+
+  &::placeholder {
+    color: $c-text-tertiary;
+  }
+}
+
+.escHint {
+  flex: none;
+  padding: 1px $space-1-5;
+  border: 1px solid $c-border;
+  border-radius: $radius-xs;
+  background: $c-surface-sunken;
+  color: $c-text-tertiary;
+  @include type('2xs');
+  line-height: 16px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: $space-2;
+  @include thin-scrollbar;
+}
+
+.group {
+  & + & {
+    margin-top: $space-2;
+  }
+}
+
+.groupLabel {
+  margin: $space-1 $space-2 $space-1;
+  @include type('2xs', $weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $c-text-tertiary;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-2 $space-2-5;
+  border-radius: $radius-md;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.optionActive {
+  background: $c-accent-subtle;
+
+  .optionLabel {
+    color: $c-accent-text;
+  }
+}
+
+.optionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: $radius-sm;
+  background: $c-surface-sunken;
+  color: $c-text-secondary;
+
+  svg {
+    display: block;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.optionLabel {
+  @include type('md', $weight-medium);
+  color: $c-text-primary;
+  @include truncate;
+}
+
+.mark {
+  background: transparent;
+  color: $c-accent-text;
+  font-weight: $weight-semibold;
+}
+
+.optionDescription {
+  @include type('xs');
+  color: $c-text-tertiary;
+  @include truncate;
+}
+
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  flex: none;
+
+  kbd {
+    min-width: 18px;
+    padding: 1px $space-1;
+    border: 1px solid $c-border;
+    border-radius: $radius-xs;
+    background: $c-surface-sunken;
+    color: $c-text-tertiary;
+    font-family: $font-sans;
+    @include type('2xs', $weight-medium);
+    line-height: 16px;
+    text-align: center;
+  }
+}
+
+.empty {
+  margin: 0;
+  padding: $space-8 $space-4;
+  text-align: center;
+  @include type('sm');
+  color: $c-text-tertiary;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  flex: none;
+  padding: $space-2 $space-4;
+  border-top: 1px solid $c-border-subtle;
+  background: $c-surface-sunken;
+  @include type('2xs');
+  color: $c-text-tertiary;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+  }
+
+  kbd {
+    padding: 0 $space-1;
+    border: 1px solid $c-border;
+    border-radius: $radius-xs;
+    background: $c-elevated;
+    font-family: $font-sans;
+    line-height: 15px;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+}

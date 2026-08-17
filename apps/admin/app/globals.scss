@@ -1,14 +1,27 @@
-@use '../styles/tokens';
+:root {
+  --sidebar: #18181b;
+  --bg: var(--bl-surface, #f4f4f5);
+  --surface: var(--bl-elevated, #ffffff);
+  --border: var(--bl-border, #e4e4e7);
+  --text: var(--bl-text-primary, #18181b);
+  --muted: var(--bl-text-secondary, #71717a);
+  --accent: var(--bl-accent, #18181b);
+  --ink-900: var(--bl-text-primary, #18181b);
+}
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  color-scheme: light dark;
+}
+
 body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: var(--font-body), var(--bl-font-sans, 'Space Grotesk'), system-ui, sans-serif;
   background: var(--bg);
-  color: var(--color-text);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -20,44 +33,13 @@ button {
   font-family: inherit;
 }
 
-/**
- * Foco visible por defecto (WCAG 2.2 AA, 2.4.11). Varias pantallas hacían
- * `outline: none` al enfocar inputs y solo dejaban un cambio de color de borde,
- * que no basta. Esto pone un suelo para todo el admin.
- */
-:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-
-/** Enlace de salto: invisible hasta que recibe foco con el tabulador. */
-.skipLink {
-  position: absolute;
-  left: var(--space-2);
-  top: var(--space-2);
-  z-index: 1100;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  font-size: var(--text-md);
-  font-weight: var(--weight-semibold);
-  text-decoration: none;
-  transform: translateY(-200%);
-  transition: transform var(--transition-fast);
-
-  &:focus-visible {
-    transform: translateY(0);
-  }
+:focus-visible {
+  outline: 2px solid var(--bl-focus-ring, #3b82f6);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  html:focus-within {
+    scroll-behavior: auto;
   }
 }

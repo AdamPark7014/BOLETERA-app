@@ -1,0 +1,81 @@
+@use '../styles/tokens' as *;
+
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-family: $font-sans;
+  font-size: $text-sm;
+  color: $c-text-secondary;
+  vertical-align: middle;
+}
+
+.dot {
+  position: relative;
+  flex: none;
+  border-radius: $radius-full;
+  background: var(--status-color);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    opacity: 0;
+  }
+}
+
+.label {
+  @include truncate;
+}
+
+.sm {
+  width: 6px;
+  height: 6px;
+}
+.md {
+  width: 8px;
+  height: 8px;
+}
+.lg {
+  width: 10px;
+  height: 10px;
+}
+
+.neutral {
+  --status-color: #{$c-text-tertiary};
+}
+.accent {
+  --status-color: #{$c-accent};
+}
+.success {
+  --status-color: #{$c-success};
+}
+.warning {
+  --status-color: #{$c-warning};
+}
+.danger {
+  --status-color: #{$c-danger};
+}
+.info {
+  --status-color: #{$c-info};
+}
+
+@include motion-safe {
+  .pulse::after {
+    animation: halo 1800ms $ease-decelerate infinite;
+  }
+}
+
+@keyframes halo {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}

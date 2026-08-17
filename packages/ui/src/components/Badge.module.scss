@@ -1,20 +1,105 @@
 @use '../styles/tokens' as *;
 
 .badge {
-  display: inline-block;
-  padding: 0.125rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border-radius: $radius-sm;
-  background: $paper-50;
-  color: $ink-700;
-  border: 1px solid $ink-300;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+  flex: none;
+  font-family: $font-sans;
+  font-weight: $weight-medium;
+  border: 1px solid transparent;
+  border-radius: $radius-full;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.sm {
+  height: 20px;
+  padding-inline: $space-2;
+  font-size: $text-xs;
+}
+
+.md {
+  height: 24px;
+  padding-inline: $space-2-5;
+  font-size: $text-sm;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: $radius-full;
+  background: currentcolor;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+
+  svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+  }
+}
+
+// Cada tono declara el trio (superficie tenue, borde, texto) y su color solido.
+.neutral {
+  --badge-subtle: #{$c-surface-sunken};
+  --badge-border: #{$c-border};
+  --badge-text: #{$c-text-secondary};
+  --badge-solid: #{$c-text-secondary};
+  --badge-on-solid: #{$c-text-inverse};
+}
+.accent {
+  --badge-subtle: #{$c-accent-subtle};
+  --badge-border: #{$c-accent-border};
+  --badge-text: #{$c-accent-text};
+  --badge-solid: #{$c-accent};
+  --badge-on-solid: #{$c-on-accent};
 }
 .success {
-  background: $paper-50;
-  color: $ink-900;
+  --badge-subtle: #{$c-success-subtle};
+  --badge-border: #{$c-success-border};
+  --badge-text: #{$c-success-text};
+  --badge-solid: #{$c-success};
+  --badge-on-solid: #ffffff;
 }
 .warning {
-  background: $ink-200;
-  color: $ink-900;
+  --badge-subtle: #{$c-warning-subtle};
+  --badge-border: #{$c-warning-border};
+  --badge-text: #{$c-warning-text};
+  --badge-solid: #{$c-warning};
+  --badge-on-solid: #{$gray-950};
+}
+.danger {
+  --badge-subtle: #{$c-danger-subtle};
+  --badge-border: #{$c-danger-border};
+  --badge-text: #{$c-danger-text};
+  --badge-solid: #{$c-danger};
+  --badge-on-solid: #ffffff;
+}
+.info {
+  --badge-subtle: #{$c-info-subtle};
+  --badge-border: #{$c-info-border};
+  --badge-text: #{$c-info-text};
+  --badge-solid: #{$c-info};
+  --badge-on-solid: #ffffff;
+}
+
+.soft {
+  background: var(--badge-subtle);
+  color: var(--badge-text);
+}
+
+.outline {
+  background: transparent;
+  border-color: var(--badge-border);
+  color: var(--badge-text);
+}
+
+.solid {
+  background: var(--badge-solid);
+  color: var(--badge-on-solid);
 }

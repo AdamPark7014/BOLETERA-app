@@ -1,0 +1,145 @@
+@use '../styles/tokens' as *;
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  min-width: 0;
+  padding: $space-4;
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  font-family: $font-sans;
+  text-decoration: none;
+  overflow: hidden;
+  transition:
+    border-color $duration-fast $ease-standard,
+    box-shadow $duration-fast $ease-standard,
+    transform $duration-fast $ease-standard;
+
+  // Filo superior del color del tono: identidad sin ruido visual.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: var(--kpi-color);
+    opacity: 0.9;
+  }
+}
+
+.linked {
+  cursor: pointer;
+
+  &:hover {
+    border-color: $c-border-strong;
+    box-shadow: $shadow-md;
+  }
+
+  @include motion-safe {
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  @include focus-ring;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  min-height: 18px;
+}
+
+.label {
+  @include type('xs', $weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $c-text-tertiary;
+  @include truncate;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: $radius-sm;
+  background: var(--kpi-soft);
+  color: var(--kpi-color);
+
+  svg {
+    display: block;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.valueRow {
+  display: flex;
+  align-items: baseline;
+  gap: $space-1-5;
+  min-width: 0;
+}
+
+.value {
+  @include type('3xl', $weight-semibold);
+  color: $c-text-primary;
+  font-variant-numeric: tabular-nums;
+  @include truncate;
+}
+
+.unit {
+  flex: none;
+  @include type('xs', $weight-medium);
+  color: $c-text-tertiary;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  min-height: 26px;
+}
+
+.spark {
+  flex: none;
+}
+
+.hint {
+  @include type('xs');
+  color: $c-text-tertiary;
+  @include truncate;
+}
+
+.neutral {
+  --kpi-color: #{$c-text-tertiary};
+  --kpi-soft: #{$c-surface-sunken};
+}
+.accent {
+  --kpi-color: #{$c-accent};
+  --kpi-soft: #{$c-accent-subtle};
+}
+.success {
+  --kpi-color: #{$c-success};
+  --kpi-soft: #{$c-success-subtle};
+}
+.warning {
+  --kpi-color: #{$c-warning};
+  --kpi-soft: #{$c-warning-subtle};
+}
+.danger {
+  --kpi-color: #{$c-danger};
+  --kpi-soft: #{$c-danger-subtle};
+}
+.info {
+  --kpi-color: #{$c-info};
+  --kpi-soft: #{$c-info-subtle};
+}

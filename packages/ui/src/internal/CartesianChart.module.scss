@@ -1,0 +1,53 @@
+@use '../styles/tokens' as *;
+
+.grid {
+  stroke: $c-grid-line;
+  stroke-width: 1;
+  shape-rendering: crispedges;
+}
+
+.axisLabel {
+  fill: $c-text-tertiary;
+  font-family: $font-sans;
+  font-size: 11px;
+  dominant-baseline: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.area {
+  stroke: none;
+  fill-opacity: 0.16;
+}
+
+.areaStacked {
+  stroke: none;
+  fill-opacity: 0.85;
+}
+
+.dot {
+  stroke: $c-elevated;
+  stroke-width: 1.5;
+}
+
+.hoverDot {
+  stroke: $c-elevated;
+  stroke-width: 2;
+}
+
+.crosshair {
+  stroke: $c-border-strong;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.overlay {
+  fill: transparent;
+  cursor: crosshair;
+}

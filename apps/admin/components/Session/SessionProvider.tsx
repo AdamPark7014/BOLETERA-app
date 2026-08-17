@@ -77,10 +77,37 @@ export type SessionState = {
 
 const SessionContext = createContext<SessionState | null>(null);
 
+/**
+ * Sesión vacía para el prerenderizado.
+ *
+ * En el servidor no hay proveedor montado ni token que leer, así que lanzar
+ * rompía el build de cualquier página estática que usara el hook — y ese es un
+ * fallo de infraestructura, no del código que lo llama. En el navegador se
+ * mantiene el error: ahí sí significa que alguien olvidó el proveedor.
+ *
+ * Todo sale apagado (sin permisos, `loading: true`) para que la primera pintura
+ * del servidor no muestre acciones que el usuario quizá no tenga; al hidratar,
+ * el proveedor real las resuelve.
+ */
+const SERVER_SESSION: SessionState = {
+  token: null,
+  email: null,
+  role: null,
+  organizationId: null,
+  loading: true,
+  can: () => false,
+  capabilities: [],
+  secondsLeft: null,
+  expiringSoon: false,
+  requireReauth: async () => null,
+  logout: () => undefined,
+};
+
 export function useSession(): SessionState {
   const ctx = useContext(SessionContext);
-  if (!ctx) throw new Error('useSession debe usarse dentro de <SessionProvider>');
-  return ctx;
+  if (ctx) return ctx;
+  if (typeof window === 'undefined') return SERVER_SESSION;
+  throw new Error('useSession debe usarse dentro de <SessionProvider>');
 }
 
 /** Atajo para gatear un fragmento de interfaz por capacidad. */

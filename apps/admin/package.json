@@ -13,6 +13,7 @@
     "@boletera/ui": "workspace:*",
     "@boletera/venue-3d": "workspace:*",
     "@boletera/venue-engine": "workspace:*",
+    "@tanstack/react-query": "^5.101.4",
     "next": "^16.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -25,4 +26,3 @@
     "typescript": "^5.9.2"
   }
 }
-

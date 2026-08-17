@@ -1,0 +1,453 @@
+// =============================================================================
+// @boletera/ui — Design tokens (capa SCSS)
+//
+// Este archivo NO emite CSS: solo declara variables y mapas, por lo que puede
+// ser consumido con `@use` desde cualquier CSS Module sin duplicar reglas.
+// Las custom properties globales viven en `theme.scss` (se importa una sola vez
+// en el layout raiz de cada app).
+// =============================================================================
+
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:math';
+@use 'sass:string';
+
+// -----------------------------------------------------------------------------
+// Paleta primitiva — valores crudos. Usalos solo para construir semantica.
+// -----------------------------------------------------------------------------
+
+// Neutros frios (base de la interfaz)
+$gray-0: #ffffff;
+$gray-25: #fcfcfd;
+$gray-50: #f8f9fb;
+$gray-100: #f1f2f6;
+$gray-150: #e9ebf1;
+$gray-200: #e0e3ea;
+$gray-300: #cbd0db;
+$gray-400: #9ba3b4;
+$gray-500: #6f7887;
+$gray-600: #545c6b;
+$gray-700: #3d4451;
+$gray-800: #272c36;
+$gray-850: #1b1f27;
+$gray-900: #14171d;
+$gray-950: #0b0d11;
+
+// Acento de marca — "boleto MX" (rose)
+$accent-50: #fff1f3;
+$accent-100: #ffe0e6;
+$accent-200: #ffc6d2;
+$accent-300: #ff9db1;
+$accent-400: #fb6486;
+$accent-500: #f03562;
+$accent-600: #e11d48;
+$accent-700: #be123c;
+$accent-800: #9f1239;
+$accent-900: #881337;
+
+// Exito (emerald)
+$success-50: #ecfdf5;
+$success-100: #d1fae5;
+$success-300: #6ee7b7;
+$success-500: #10b981;
+$success-600: #059669;
+$success-700: #047857;
+$success-900: #064e3b;
+
+// Advertencia (amber)
+$warning-50: #fffbeb;
+$warning-100: #fef3c7;
+$warning-300: #fcd34d;
+$warning-500: #f59e0b;
+$warning-600: #d97706;
+$warning-700: #b45309;
+$warning-900: #78350f;
+
+// Peligro (red)
+$danger-50: #fef2f2;
+$danger-100: #fee2e2;
+$danger-300: #fca5a5;
+$danger-500: #ef4444;
+$danger-600: #dc2626;
+$danger-700: #b91c1c;
+$danger-900: #7f1d1d;
+
+// Informacion (blue)
+$info-50: #eff6ff;
+$info-100: #dbeafe;
+$info-300: #93c5fd;
+$info-500: #3b82f6;
+$info-600: #2563eb;
+$info-700: #1d4ed8;
+$info-900: #1e3a8a;
+
+// Serie categorica para visualizacion de datos (8 tonos discriminables)
+$viz-1: #6366f1;
+$viz-2: #14b8a6;
+$viz-3: #f59e0b;
+$viz-4: #ec4899;
+$viz-5: #22c55e;
+$viz-6: #8b5cf6;
+$viz-7: #06b6d4;
+$viz-8: #f43f5e;
+$viz-series: ($viz-1, $viz-2, $viz-3, $viz-4, $viz-5, $viz-6, $viz-7, $viz-8);
+
+// -----------------------------------------------------------------------------
+// Colores semanticos — apuntan a custom properties, por lo que responden a
+// `data-theme` automaticamente. Son los que deben usar los componentes.
+//
+// Cada uno lleva el valor del tema claro como fallback de `var()`: asi los
+// componentes se ven correctos aunque la app todavia no importe `theme.scss`.
+// El tema oscuro si requiere esa importacion, porque necesita redefinir las
+// custom properties en `[data-theme='dark']`.
+// -----------------------------------------------------------------------------
+
+$c-surface: var(--bl-surface, #{$gray-50});
+$c-surface-sunken: var(--bl-surface-sunken, #{$gray-100});
+$c-surface-hover: var(--bl-surface-hover, #{$gray-100});
+$c-surface-active: var(--bl-surface-active, #{$gray-150});
+$c-elevated: var(--bl-elevated, #{$gray-0});
+$c-elevated-hover: var(--bl-elevated-hover, #{$gray-25});
+
+$c-border: var(--bl-border, #{$gray-200});
+$c-border-subtle: var(--bl-border-subtle, #{$gray-150});
+$c-border-strong: var(--bl-border-strong, #{$gray-300});
+
+$c-text-primary: var(--bl-text-primary, #{$gray-900});
+$c-text-secondary: var(--bl-text-secondary, #{$gray-600});
+$c-text-tertiary: var(--bl-text-tertiary, #{$gray-500});
+$c-text-disabled: var(--bl-text-disabled, #{$gray-400});
+$c-text-inverse: var(--bl-text-inverse, #{$gray-0});
+
+$c-accent: var(--bl-accent, #{$accent-600});
+$c-accent-hover: var(--bl-accent-hover, #{$accent-700});
+$c-accent-active: var(--bl-accent-active, #{$accent-800});
+$c-accent-subtle: var(--bl-accent-subtle, #{$accent-50});
+$c-accent-border: var(--bl-accent-border, #{$accent-200});
+$c-accent-text: var(--bl-accent-text, #{$accent-700});
+$c-on-accent: var(--bl-on-accent, #{$gray-0});
+
+$c-success: var(--bl-success, #{$success-600});
+$c-success-subtle: var(--bl-success-subtle, #{$success-50});
+$c-success-border: var(--bl-success-border, #{$success-300});
+$c-success-text: var(--bl-success-text, #{$success-700});
+
+$c-warning: var(--bl-warning, #{$warning-500});
+$c-warning-subtle: var(--bl-warning-subtle, #{$warning-50});
+$c-warning-border: var(--bl-warning-border, #{$warning-300});
+$c-warning-text: var(--bl-warning-text, #{$warning-700});
+
+$c-danger: var(--bl-danger, #{$danger-600});
+$c-danger-hover: var(--bl-danger-hover, #{$danger-700});
+$c-danger-subtle: var(--bl-danger-subtle, #{$danger-50});
+$c-danger-border: var(--bl-danger-border, #{$danger-300});
+$c-danger-text: var(--bl-danger-text, #{$danger-700});
+
+$c-info: var(--bl-info, #{$info-600});
+$c-info-subtle: var(--bl-info-subtle, #{$info-50});
+$c-info-border: var(--bl-info-border, #{$info-300});
+$c-info-text: var(--bl-info-text, #{$info-700});
+
+$c-focus-ring: var(--bl-focus-ring, #{$info-500});
+$c-overlay: var(--bl-overlay, rgba(11, 13, 17, 0.45));
+$c-skeleton: var(--bl-skeleton, #{$gray-150});
+$c-skeleton-shine: var(--bl-skeleton-shine, rgba(255, 255, 255, 0.72));
+$c-grid-line: var(--bl-grid-line, #{$gray-150});
+
+// -----------------------------------------------------------------------------
+// Tipografia
+// -----------------------------------------------------------------------------
+
+// Stacks crudos. Se declaran como cadena unica y se desentrecomillan: asi la
+// interpolacion `#{}` conserva las comillas internas de los nombres compuestos.
+$font-stack-sans: string.unquote(
+  "'Inter var', 'Inter', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif"
+);
+$font-stack-display: string.unquote(
+  "'Bebas Neue', 'Inter var', 'Inter', Impact, sans-serif"
+);
+$font-stack-mono: string.unquote(
+  "'JetBrains Mono', 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace"
+);
+
+$font-sans: var(--bl-font-sans, #{$font-stack-sans});
+$font-display: var(--bl-font-display, #{$font-stack-display});
+$font-mono: var(--bl-font-mono, #{$font-stack-mono});
+
+// Tamanos sueltos, para cuando no se quiere el interlineado del mixin `type()`.
+$text-2xs: var(--bl-text-2xs, 11px);
+$text-xs: var(--bl-text-xs, 12px);
+$text-sm: var(--bl-text-sm, 13px);
+$text-md: var(--bl-text-md, 14px);
+$text-lg: var(--bl-text-lg, 16px);
+$text-xl: var(--bl-text-xl, 18px);
+
+// Escala tipografica: (font-size, line-height, letter-spacing)
+$type-scale: (
+  '2xs': (11px, 16px, 0.01em),
+  'xs': (12px, 16px, 0.005em),
+  'sm': (13px, 20px, 0),
+  'md': (14px, 20px, -0.005em),
+  'lg': (16px, 24px, -0.01em),
+  'xl': (18px, 26px, -0.014em),
+  '2xl': (21px, 28px, -0.018em),
+  '3xl': (26px, 32px, -0.022em),
+  '4xl': (32px, 38px, -0.026em),
+  '5xl': (40px, 46px, -0.03em),
+  '6xl': (52px, 56px, -0.034em),
+);
+
+$weight-regular: 400;
+$weight-medium: 500;
+$weight-semibold: 600;
+$weight-bold: 700;
+
+// -----------------------------------------------------------------------------
+// Espaciado — base 4px
+// -----------------------------------------------------------------------------
+
+$space-unit: 4px;
+
+/// Devuelve un multiplo de la unidad base de 4px.
+/// @example space(3) => 12px
+@function space($steps) {
+  @return $space-unit * $steps;
+}
+
+$space-0: 0;
+$space-px: 1px;
+$space-0-5: 2px;
+$space-1: 4px;
+$space-1-5: 6px;
+$space-2: 8px;
+$space-2-5: 10px;
+$space-3: 12px;
+$space-4: 16px;
+$space-5: 20px;
+$space-6: 24px;
+$space-7: 28px;
+$space-8: 32px;
+$space-10: 40px;
+$space-12: 48px;
+$space-16: 64px;
+$space-20: 80px;
+$space-24: 96px;
+
+// -----------------------------------------------------------------------------
+// Radios
+// -----------------------------------------------------------------------------
+
+$radius-none: 0;
+$radius-xs: 4px;
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-2xl: 20px;
+$radius-full: 9999px;
+
+// -----------------------------------------------------------------------------
+// Elevaciones y sombras — apiladas y de bajo contraste, estilo Linear.
+// -----------------------------------------------------------------------------
+
+$shadow-xs: var(--bl-shadow-xs, 0 1px 1px rgba(11, 13, 17, 0.04));
+$shadow-sm: var(--bl-shadow-sm, 0 1px 2px rgba(11, 13, 17, 0.05), 0 1px 3px rgba(11, 13, 17, 0.04));
+$shadow-md: var(
+  --bl-shadow-md,
+  0 2px 4px -1px rgba(11, 13, 17, 0.06),
+  0 6px 12px -3px rgba(11, 13, 17, 0.07)
+);
+$shadow-lg: var(
+  --bl-shadow-lg,
+  0 4px 8px -2px rgba(11, 13, 17, 0.06),
+  0 14px 28px -6px rgba(11, 13, 17, 0.1)
+);
+$shadow-xl: var(
+  --bl-shadow-xl,
+  0 8px 16px -4px rgba(11, 13, 17, 0.08),
+  0 28px 56px -12px rgba(11, 13, 17, 0.16)
+);
+$shadow-inner: var(--bl-shadow-inner, inset 0 1px 2px rgba(11, 13, 17, 0.06));
+
+// -----------------------------------------------------------------------------
+// Capas (z-index)
+// -----------------------------------------------------------------------------
+
+$z-base: 0;
+$z-raised: 10;
+$z-sticky: 100;
+$z-header: 200;
+$z-dropdown: 1000;
+$z-popover: 1100;
+$z-overlay: 1200;
+$z-drawer: 1250;
+$z-modal: 1300;
+$z-command: 1400;
+$z-toast: 1500;
+$z-tooltip: 1600;
+
+// -----------------------------------------------------------------------------
+// Breakpoints
+// -----------------------------------------------------------------------------
+
+$breakpoints: (
+  'xs': 480px,
+  'sm': 640px,
+  'md': 768px,
+  'lg': 1024px,
+  'xl': 1280px,
+  '2xl': 1536px,
+);
+
+// -----------------------------------------------------------------------------
+// Movimiento
+// -----------------------------------------------------------------------------
+
+$duration-instant: 0ms;
+$duration-fast: 120ms;
+$duration-normal: 180ms;
+$duration-slow: 260ms;
+$duration-slower: 400ms;
+
+$ease-standard: cubic-bezier(0.2, 0, 0, 1);
+$ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+$ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+$ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+$ease-linear: linear;
+
+// -----------------------------------------------------------------------------
+// Alias heredados — mantienen compatibilidad con hojas de estilo previas que
+// hacen `@use 'tokens' as *` (apps/web resuelve via sassOptions.includePaths).
+// -----------------------------------------------------------------------------
+
+$ink-950: $gray-950;
+$ink-900: $gray-900;
+$ink-700: $gray-700;
+$ink-500: $gray-500;
+$ink-300: $gray-300;
+$ink-200: $gray-200;
+$paper-0: $gray-0;
+$paper-50: $gray-50;
+$paper-100: $gray-100;
+$accent: $accent-600;
+$accent-muted: $accent-700;
+$accent-soft: $accent-300;
+$success: $success-600;
+$danger: $danger-700;
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+/// Media query ascendente a partir de un breakpoint nombrado.
+@mixin above($name) {
+  $bp: map.get($breakpoints, $name);
+  @if $bp == null {
+    @error 'Breakpoint desconocido: #{$name}';
+  }
+  @media (min-width: $bp) {
+    @content;
+  }
+}
+
+/// Media query descendente a partir de un breakpoint nombrado.
+@mixin below($name) {
+  $bp: map.get($breakpoints, $name);
+  @if $bp == null {
+    @error 'Breakpoint desconocido: #{$name}';
+  }
+  @media (max-width: $bp - 0.02px) {
+    @content;
+  }
+}
+
+/// Aplica una entrada de la escala tipografica.
+@mixin type($name, $weight: null) {
+  $entry: map.get($type-scale, $name);
+  @if $entry == null {
+    @error 'Escalon tipografico desconocido: #{$name}';
+  }
+  font-size: list.nth($entry, 1);
+  line-height: math.div(list.nth($entry, 2), list.nth($entry, 1));
+  letter-spacing: list.nth($entry, 3);
+  @if $weight != null {
+    font-weight: $weight;
+  }
+}
+
+/// Anillo de foco unificado; solo visible con navegacion por teclado.
+@mixin focus-ring($offset: 2px, $color: null) {
+  &:focus-visible {
+    @if $color == null {
+      outline: 2px solid $c-focus-ring;
+    } @else {
+      outline: 2px solid $color;
+    }
+    outline-offset: $offset;
+  }
+}
+
+/// Oculta visualmente el contenido dejandolo disponible para lectores de pantalla.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/// Trunca a una linea con elipsis.
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Trunca a N lineas.
+@mixin clamp-lines($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/// Contenido que solo aplica cuando el usuario no pidio reducir movimiento.
+@mixin motion-safe {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}
+
+/// Contenido que solo aplica cuando el usuario pidio reducir movimiento.
+@mixin motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+/// Barra de scroll discreta y consistente entre plataformas.
+@mixin thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: $c-border-strong transparent;
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-clip: padding-box;
+    background-color: $c-border-strong;
+    border: 3px solid transparent;
+    border-radius: $radius-full;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: $c-text-tertiary;
+  }
+}

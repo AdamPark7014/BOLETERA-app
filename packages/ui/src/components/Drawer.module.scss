@@ -1,0 +1,196 @@
+@use '../styles/tokens' as *;
+
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: $z-drawer;
+  display: flex;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: $c-overlay;
+
+  @include motion-safe {
+    animation: fade $duration-normal $ease-standard;
+  }
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: $c-elevated;
+  box-shadow: $shadow-xl;
+  outline: none;
+}
+
+.right {
+  justify-content: flex-end;
+
+  .panel {
+    height: 100%;
+    border-left: 1px solid $c-border;
+
+    @include motion-safe {
+      animation: slide-from-right $duration-slow $ease-standard;
+    }
+  }
+}
+
+.left {
+  justify-content: flex-start;
+
+  .panel {
+    height: 100%;
+    border-right: 1px solid $c-border;
+
+    @include motion-safe {
+      animation: slide-from-left $duration-slow $ease-standard;
+    }
+  }
+}
+
+.bottom {
+  align-items: flex-end;
+
+  .panel {
+    width: 100%;
+    border-top: 1px solid $c-border;
+    border-radius: $radius-xl $radius-xl 0 0;
+
+    @include motion-safe {
+      animation: slide-from-bottom $duration-slow $ease-standard;
+    }
+  }
+}
+
+.right .panel,
+.left .panel {
+  &.size-sm {
+    width: min(100vw, 22rem);
+  }
+  &.size-md {
+    width: min(100vw, 32rem);
+  }
+  &.size-lg {
+    width: min(100vw, 46rem);
+  }
+}
+
+.bottom .panel {
+  &.size-sm {
+    height: min(100vh, 18rem);
+  }
+  &.size-md {
+    height: min(100vh, 28rem);
+  }
+  &.size-lg {
+    height: min(100vh, 42rem);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  flex: none;
+  padding: $space-5;
+  border-bottom: 1px solid $c-border-subtle;
+}
+
+.headerText {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: $font-sans;
+  @include type('lg', $weight-semibold);
+  color: $c-text-primary;
+}
+
+.description {
+  margin: $space-1 0 0;
+  @include type('sm');
+  color: $c-text-tertiary;
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $c-text-tertiary;
+  cursor: pointer;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: $c-surface-hover;
+    color: $c-text-primary;
+  }
+
+  @include focus-ring;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: $space-5;
+  font-family: $font-sans;
+  font-size: $text-md;
+  color: $c-text-secondary;
+  @include thin-scrollbar;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $space-2;
+  flex: none;
+  padding: $space-4 $space-5;
+  border-top: 1px solid $c-border-subtle;
+  background: $c-surface-sunken;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-from-bottom {
+  from {
+    transform: translateY(100%);
+  }
+}

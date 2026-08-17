@@ -1,0 +1,84 @@
+@use '../styles/tokens' as *;
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  padding: 2px;
+  background: $c-surface-sunken;
+  border: 1px solid $c-border-subtle;
+  border-radius: $radius-md;
+  font-family: $font-sans;
+}
+
+.fullWidth {
+  display: flex;
+  width: 100%;
+
+  .segment {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-1-5;
+  flex: none;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $c-text-tertiary;
+  font: inherit;
+  font-weight: $weight-medium;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color $duration-fast $ease-standard,
+    color $duration-fast $ease-standard,
+    box-shadow $duration-fast $ease-standard;
+
+  &:hover:not(:disabled):not(.checked) {
+    color: $c-text-primary;
+    background: $c-surface-hover;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  @include focus-ring(1px);
+}
+
+.checked {
+  background: $c-elevated;
+  color: $c-text-primary;
+  box-shadow: $shadow-xs;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+
+  svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+  }
+}
+
+.sm .segment {
+  height: 24px;
+  padding-inline: $space-2;
+  font-size: $text-xs;
+}
+
+.md .segment {
+  height: 28px;
+  padding-inline: $space-3;
+  font-size: $text-sm;
+}

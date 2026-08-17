@@ -1,0 +1,98 @@
+@use '../styles/tokens' as *;
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin: 0;
+  min-width: 0;
+  font-family: $font-sans;
+}
+
+.canvas {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+
+  svg {
+    display: block;
+    overflow: visible;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  z-index: $z-raised;
+  transform: translate(-50%, calc(-100% - 10px));
+  min-width: 8rem;
+  max-width: 16rem;
+  padding: $space-2 $space-2-5;
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tooltipTitle {
+  margin: 0 0 $space-1;
+  @include type('xs', $weight-semibold);
+  color: $c-text-primary;
+}
+
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin: 0;
+  @include type('xs');
+  color: $c-text-secondary;
+}
+
+.tooltipLabel {
+  flex: 1;
+  min-width: 0;
+  @include truncate;
+}
+
+.tooltipValue {
+  flex: none;
+  font-weight: $weight-semibold;
+  color: $c-text-primary;
+  font-variant-numeric: tabular-nums;
+}
+
+.swatch {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 2px;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+  @include type('xs');
+  color: $c-text-secondary;
+}
+
+.caption {
+  @include type('xs');
+  color: $c-text-tertiary;
+}
+
+.srOnly {
+  @include visually-hidden;
+}

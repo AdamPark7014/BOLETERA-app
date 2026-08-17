@@ -1,0 +1,63 @@
+@use '../styles/tokens' as *;
+
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  font-family: $font-sans;
+  font-weight: $weight-semibold;
+  line-height: 1;
+  color: #ffffff;
+  background: var(--avatar-color, #{$c-text-tertiary});
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  user-select: none;
+  vertical-align: middle;
+}
+
+.circle {
+  border-radius: $radius-full;
+}
+
+.square {
+  border-radius: $radius-md;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.initials {
+  letter-spacing: 0.01em;
+}
+
+.xs {
+  width: 20px;
+  height: 20px;
+  font-size: 9px;
+}
+.sm {
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+}
+.md {
+  width: 32px;
+  height: 32px;
+  font-size: $text-xs;
+}
+.lg {
+  width: 40px;
+  height: 40px;
+  font-size: $text-md;
+}
+.xl {
+  width: 56px;
+  height: 56px;
+  font-size: $text-xl;
+}

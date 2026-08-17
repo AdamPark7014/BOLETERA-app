@@ -1,0 +1,77 @@
+@use '../styles/tokens' as *;
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  min-width: 0;
+  font-family: $font-sans;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $space-4;
+  flex-wrap: wrap;
+}
+
+.text {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  @include type('lg', $weight-semibold);
+  color: $c-text-primary;
+}
+
+.description {
+  margin: $space-1 0 0;
+  max-width: 68ch;
+  @include type('sm');
+  color: $c-text-tertiary;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.grid {
+  display: grid;
+  align-items: stretch;
+}
+
+.gap-sm {
+  gap: $space-2;
+}
+.gap-md {
+  gap: $space-4;
+}
+.gap-lg {
+  gap: $space-6;
+}
+
+// Rejillas fluidas: colapsan por ancho disponible, no por breakpoint global,
+// para que funcionen igual con la barra lateral abierta o cerrada.
+.cols-1 {
+  grid-template-columns: 1fr;
+}
+.cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+.cols-3 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+.cols-4 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}

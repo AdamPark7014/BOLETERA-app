@@ -1,13 +1,10 @@
 export * from './types';
 export * from './migrate';
-export * from './numbering';
 export * from './generators';
-export * from './accessibility';
 export * from './resolve';
 export * from './project';
 export * from './validate';
 export * from './sightlines';
-export * from './cad-diagnostics';
 export * from './svg-import';
 export * from './dxf-import';
 export * from './dxf-export';
@@ -21,3 +18,9 @@ export * from './cad-import-apply';
 export * from './cad-level-tags';
 export * from './venue-levels';
 export * from './egress-overlay';
+// Convenciones de numeración de filas y asientos (salta I y O).
+export * from './numbering';
+// Plazas accesibles y sus acompañantes.
+export * from './accessibility';
+// Diagnóstico accionable de importación DXF/SVG.
+export * from './cad-diagnostics';

@@ -1,27 +1,146 @@
 @use '../styles/tokens' as *;
 
-.overlay {
+.layer {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 10, 0.5);
+  z-index: $z-modal;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  padding: $space-6;
+  overflow-y: auto;
 }
 
-.modal {
-  background: $paper-0;
-  border-radius: $radius-lg;
-  padding: 1.5rem;
-  max-width: 32rem;
-  width: 90%;
-  box-shadow: $shadow-md;
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: $c-overlay;
+  backdrop-filter: blur(2px);
+
+  @include motion-safe {
+    animation: fade $duration-normal $ease-standard;
+  }
+}
+
+.dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100vh - #{$space-12});
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-xl;
+  outline: none;
+
+  @include motion-safe {
+    animation: rise $duration-slow $ease-spring;
+  }
+}
+
+.sm {
+  max-width: 26rem;
+}
+.md {
+  max-width: 34rem;
+}
+.lg {
+  max-width: 48rem;
+}
+.xl {
+  max-width: 64rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-5 $space-5 $space-4;
+  flex: none;
+}
+
+.headerText {
+  min-width: 0;
 }
 
 .title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: $ink-950;
+  margin: 0;
+  font-family: $font-sans;
+  @include type('xl', $weight-semibold);
+  color: $c-text-primary;
+}
+
+.description {
+  margin: $space-1 0 0;
+  @include type('sm');
+  color: $c-text-tertiary;
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: -2px -2px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $c-text-tertiary;
+  cursor: pointer;
+  transition: background-color $duration-fast $ease-standard, color $duration-fast $ease-standard;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: $c-surface-hover;
+    color: $c-text-primary;
+  }
+
+  @include focus-ring;
+}
+
+.body {
+  padding: 0 $space-5 $space-5;
+  overflow-y: auto;
+  color: $c-text-secondary;
+  font-family: $font-sans;
+  font-size: $text-md;
+  @include thin-scrollbar;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $space-2;
+  flex: none;
+  padding: $space-4 $space-5;
+  border-top: 1px solid $c-border-subtle;
+  background: $c-surface-sunken;
+  border-radius: 0 0 $radius-xl $radius-xl;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
 }

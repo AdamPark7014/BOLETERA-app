@@ -1,0 +1,44 @@
+@use '../styles/tokens' as *;
+
+.axisLabel {
+  fill: $c-text-tertiary;
+  font-family: $font-sans;
+  font-size: 11px;
+  dominant-baseline: middle;
+}
+
+.rowLabel {
+  fill: $c-text-secondary;
+  font-family: $font-sans;
+  font-size: 11px;
+  font-weight: 500;
+  dominant-baseline: middle;
+}
+
+.cell {
+  stroke: transparent;
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: stroke $duration-fast $ease-standard;
+}
+
+.hoveredCell {
+  stroke: $c-text-primary;
+}
+
+.scale {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  @include type('2xs');
+  color: $c-text-tertiary;
+  font-variant-numeric: tabular-nums;
+}
+
+.gradient {
+  flex: 1;
+  max-width: 10rem;
+  height: 6px;
+  border-radius: $radius-full;
+  border: 1px solid $c-border-subtle;
+}

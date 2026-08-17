@@ -1,0 +1,30 @@
+@use '../styles/tokens' as *;
+
+.grid {
+  stroke: $c-grid-line;
+  stroke-width: 1;
+  shape-rendering: crispedges;
+}
+
+.axis {
+  stroke: $c-border-strong;
+  stroke-width: 1;
+  shape-rendering: crispedges;
+}
+
+.axisLabel {
+  fill: $c-text-tertiary;
+  font-family: $font-sans;
+  font-size: 11px;
+  dominant-baseline: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  transition: opacity $duration-fast $ease-standard;
+}
+
+.overlay {
+  fill: transparent;
+  cursor: crosshair;
+}

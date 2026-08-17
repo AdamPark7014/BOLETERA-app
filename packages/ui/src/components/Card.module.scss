@@ -1,9 +1,95 @@
 @use '../styles/tokens' as *;
 
 .card {
-  background: $paper-0;
-  border: 1px solid $ink-300;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   border-radius: $radius-lg;
-  padding: 1.25rem;
+  transition:
+    border-color $duration-fast $ease-standard,
+    box-shadow $duration-fast $ease-standard,
+    background-color $duration-fast $ease-standard;
+}
+
+.elevated {
+  background: $c-elevated;
+  border: 1px solid $c-border;
   box-shadow: $shadow-sm;
+}
+
+.outline {
+  background: transparent;
+  border: 1px solid $c-border;
+}
+
+.ghost {
+  background: $c-surface-sunken;
+  border: 1px solid transparent;
+}
+
+.interactive {
+  cursor: pointer;
+
+  &:hover {
+    border-color: $c-border-strong;
+    box-shadow: $shadow-md;
+  }
+
+  @include focus-ring;
+}
+
+.padding-none {
+  padding: 0;
+}
+.padding-sm {
+  padding: $space-3;
+}
+.padding-md {
+  padding: $space-5;
+}
+.padding-lg {
+  padding: $space-6;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-4;
+}
+
+.headerText {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: $font-sans;
+  @include type('lg', $weight-semibold);
+  color: $c-text-primary;
+}
+
+.description {
+  margin: $space-1 0 0;
+  @include type('sm');
+  color: $c-text-tertiary;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex: none;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  margin-top: $space-4;
+  padding-top: $space-4;
+  border-top: 1px solid $c-border-subtle;
 }

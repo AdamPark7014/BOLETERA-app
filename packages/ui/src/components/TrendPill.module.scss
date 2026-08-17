@@ -1,0 +1,57 @@
+@use '../styles/tokens' as *;
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  flex: none;
+  font-family: $font-sans;
+  font-weight: $weight-medium;
+  font-variant-numeric: tabular-nums;
+  border-radius: $radius-full;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.sm {
+  height: 20px;
+  padding-inline: $space-2;
+  font-size: $text-xs;
+}
+
+.md {
+  height: 24px;
+  padding-inline: $space-2-5;
+  font-size: $text-sm;
+}
+
+.arrow {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.comparison {
+  color: $c-text-tertiary;
+  font-weight: $weight-regular;
+}
+
+.positive {
+  background: $c-success-subtle;
+  color: $c-success-text;
+}
+
+.negative {
+  background: $c-danger-subtle;
+  color: $c-danger-text;
+}
+
+.flat {
+  background: $c-surface-sunken;
+  color: $c-text-tertiary;
+}

@@ -10,12 +10,19 @@
       "import": "./src/index.ts",
       "require": "./dist/index.js",
       "default": "./src/index.ts"
+    },
+    "./render": {
+      "types": "./src/render/index.ts",
+      "import": "./src/render/index.ts",
+      "require": "./dist/render/index.js",
+      "default": "./src/render/index.ts"
     }
   },
   "scripts": {
     "build": "tsc",
     "check-types": "tsc --noEmit",
-    "smoke": "node scripts/run-smokes.cjs"
+    "smoke": "node scripts/run-smokes.cjs",
+    "bench:render": "pnpm build && node scripts/bench-render.cjs"
   },
   "dependencies": { "@boletera/shared": "workspace:*" },
   "devDependencies": { "typescript": "^5.9.2" }

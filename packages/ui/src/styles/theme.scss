@@ -1,0 +1,283 @@
+// =============================================================================
+// @boletera/ui — Custom properties globales
+//
+// Importar UNA sola vez por app, en el layout raiz:
+//   import '@boletera/ui/src/styles/theme.scss';
+//
+// El tema se controla con el atributo `data-theme` en <html>:
+//   <html data-theme="light">  |  <html data-theme="dark">
+// Sin atributo se respeta la preferencia del sistema.
+// =============================================================================
+
+@use './variables' as *;
+
+// -----------------------------------------------------------------------------
+// Tokens independientes del tema
+// -----------------------------------------------------------------------------
+
+:root {
+  // Tipografia
+  --bl-font-sans: #{$font-stack-sans};
+  --bl-font-display: #{$font-stack-display};
+  --bl-font-mono: #{$font-stack-mono};
+
+  --bl-text-2xs: 11px;
+  --bl-text-xs: 12px;
+  --bl-text-sm: 13px;
+  --bl-text-md: 14px;
+  --bl-text-lg: 16px;
+  --bl-text-xl: 18px;
+  --bl-text-2xl: 21px;
+  --bl-text-3xl: 26px;
+  --bl-text-4xl: 32px;
+  --bl-text-5xl: 40px;
+  --bl-text-6xl: 52px;
+
+  // Espaciado (base 4px)
+  --bl-space-0: 0px;
+  --bl-space-px: 1px;
+  --bl-space-0-5: 2px;
+  --bl-space-1: 4px;
+  --bl-space-1-5: 6px;
+  --bl-space-2: 8px;
+  --bl-space-2-5: 10px;
+  --bl-space-3: 12px;
+  --bl-space-4: 16px;
+  --bl-space-5: 20px;
+  --bl-space-6: 24px;
+  --bl-space-7: 28px;
+  --bl-space-8: 32px;
+  --bl-space-10: 40px;
+  --bl-space-12: 48px;
+  --bl-space-16: 64px;
+  --bl-space-20: 80px;
+  --bl-space-24: 96px;
+
+  // Radios
+  --bl-radius-none: 0px;
+  --bl-radius-xs: 4px;
+  --bl-radius-sm: 6px;
+  --bl-radius-md: 8px;
+  --bl-radius-lg: 12px;
+  --bl-radius-xl: 16px;
+  --bl-radius-2xl: 20px;
+  --bl-radius-full: 9999px;
+
+  // Capas
+  --bl-z-base: 0;
+  --bl-z-raised: 10;
+  --bl-z-sticky: 100;
+  --bl-z-header: 200;
+  --bl-z-dropdown: 1000;
+  --bl-z-popover: 1100;
+  --bl-z-overlay: 1200;
+  --bl-z-drawer: 1250;
+  --bl-z-modal: 1300;
+  --bl-z-command: 1400;
+  --bl-z-toast: 1500;
+  --bl-z-tooltip: 1600;
+
+  // Movimiento
+  --bl-duration-instant: 0ms;
+  --bl-duration-fast: 120ms;
+  --bl-duration-normal: 180ms;
+  --bl-duration-slow: 260ms;
+  --bl-duration-slower: 400ms;
+  --bl-ease-standard: #{$ease-standard};
+  --bl-ease-accelerate: #{$ease-accelerate};
+  --bl-ease-decelerate: #{$ease-decelerate};
+  --bl-ease-spring: #{$ease-spring};
+
+  // Serie categorica de visualizacion (estable entre temas para no romper leyendas)
+  --bl-viz-1: #{$viz-1};
+  --bl-viz-2: #{$viz-2};
+  --bl-viz-3: #{$viz-3};
+  --bl-viz-4: #{$viz-4};
+  --bl-viz-5: #{$viz-5};
+  --bl-viz-6: #{$viz-6};
+  --bl-viz-7: #{$viz-7};
+  --bl-viz-8: #{$viz-8};
+}
+
+// -----------------------------------------------------------------------------
+// Tema claro
+// -----------------------------------------------------------------------------
+
+@mixin light-palette {
+  color-scheme: light;
+
+  --bl-surface: #{$gray-50};
+  --bl-surface-sunken: #{$gray-100};
+  --bl-surface-hover: #{$gray-100};
+  --bl-surface-active: #{$gray-150};
+  --bl-elevated: #{$gray-0};
+  --bl-elevated-hover: #{$gray-25};
+
+  --bl-border: #{$gray-200};
+  --bl-border-subtle: #{$gray-150};
+  --bl-border-strong: #{$gray-300};
+
+  --bl-text-primary: #{$gray-900};
+  --bl-text-secondary: #{$gray-600};
+  --bl-text-tertiary: #{$gray-500};
+  --bl-text-disabled: #{$gray-400};
+  --bl-text-inverse: #{$gray-0};
+
+  --bl-accent: #{$accent-600};
+  --bl-accent-hover: #{$accent-700};
+  --bl-accent-active: #{$accent-800};
+  --bl-accent-subtle: #{$accent-50};
+  --bl-accent-border: #{$accent-200};
+  --bl-accent-text: #{$accent-700};
+  --bl-on-accent: #{$gray-0};
+
+  --bl-success: #{$success-600};
+  --bl-success-subtle: #{$success-50};
+  --bl-success-border: #{$success-300};
+  --bl-success-text: #{$success-700};
+
+  --bl-warning: #{$warning-500};
+  --bl-warning-subtle: #{$warning-50};
+  --bl-warning-border: #{$warning-300};
+  --bl-warning-text: #{$warning-700};
+
+  --bl-danger: #{$danger-600};
+  --bl-danger-hover: #{$danger-700};
+  --bl-danger-subtle: #{$danger-50};
+  --bl-danger-border: #{$danger-300};
+  --bl-danger-text: #{$danger-700};
+
+  --bl-info: #{$info-600};
+  --bl-info-subtle: #{$info-50};
+  --bl-info-border: #{$info-300};
+  --bl-info-text: #{$info-700};
+
+  --bl-focus-ring: #{$info-500};
+  --bl-overlay: rgba(11, 13, 17, 0.45);
+  --bl-skeleton: #{$gray-150};
+  --bl-skeleton-shine: rgba(255, 255, 255, 0.72);
+  --bl-grid-line: #{$gray-150};
+
+  --bl-shadow-xs: 0 1px 1px rgba(11, 13, 17, 0.04);
+  --bl-shadow-sm: 0 1px 2px rgba(11, 13, 17, 0.05), 0 1px 3px rgba(11, 13, 17, 0.04);
+  --bl-shadow-md: 0 2px 4px -1px rgba(11, 13, 17, 0.06), 0 6px 12px -3px rgba(11, 13, 17, 0.07);
+  --bl-shadow-lg: 0 4px 8px -2px rgba(11, 13, 17, 0.06), 0 14px 28px -6px rgba(11, 13, 17, 0.1);
+  --bl-shadow-xl: 0 8px 16px -4px rgba(11, 13, 17, 0.08), 0 28px 56px -12px rgba(11, 13, 17, 0.16);
+  --bl-shadow-inner: inset 0 1px 2px rgba(11, 13, 17, 0.06);
+}
+
+// -----------------------------------------------------------------------------
+// Tema oscuro
+// -----------------------------------------------------------------------------
+
+@mixin dark-palette {
+  color-scheme: dark;
+
+  --bl-surface: #{$gray-950};
+  --bl-surface-sunken: #000000;
+  --bl-surface-hover: rgba(255, 255, 255, 0.04);
+  --bl-surface-active: rgba(255, 255, 255, 0.08);
+  --bl-elevated: #{$gray-900};
+  --bl-elevated-hover: #{$gray-850};
+
+  --bl-border: rgba(255, 255, 255, 0.09);
+  --bl-border-subtle: rgba(255, 255, 255, 0.055);
+  --bl-border-strong: rgba(255, 255, 255, 0.16);
+
+  --bl-text-primary: #f4f5f7;
+  --bl-text-secondary: #a3aab8;
+  --bl-text-tertiary: #757d8c;
+  --bl-text-disabled: #4d545f;
+  --bl-text-inverse: #{$gray-950};
+
+  --bl-accent: #{$accent-500};
+  --bl-accent-hover: #{$accent-400};
+  --bl-accent-active: #{$accent-300};
+  --bl-accent-subtle: rgba(240, 53, 98, 0.14);
+  --bl-accent-border: rgba(240, 53, 98, 0.34);
+  --bl-accent-text: #{$accent-300};
+  --bl-on-accent: #ffffff;
+
+  --bl-success: #{$success-500};
+  --bl-success-subtle: rgba(16, 185, 129, 0.14);
+  --bl-success-border: rgba(16, 185, 129, 0.34);
+  --bl-success-text: #{$success-300};
+
+  --bl-warning: #{$warning-500};
+  --bl-warning-subtle: rgba(245, 158, 11, 0.14);
+  --bl-warning-border: rgba(245, 158, 11, 0.34);
+  --bl-warning-text: #{$warning-300};
+
+  --bl-danger: #{$danger-500};
+  --bl-danger-hover: #{$danger-300};
+  --bl-danger-subtle: rgba(239, 68, 68, 0.14);
+  --bl-danger-border: rgba(239, 68, 68, 0.34);
+  --bl-danger-text: #{$danger-300};
+
+  --bl-info: #{$info-500};
+  --bl-info-subtle: rgba(59, 130, 246, 0.14);
+  --bl-info-border: rgba(59, 130, 246, 0.34);
+  --bl-info-text: #{$info-300};
+
+  --bl-focus-ring: #{$info-300};
+  --bl-overlay: rgba(0, 0, 0, 0.66);
+  --bl-skeleton: rgba(255, 255, 255, 0.06);
+  --bl-skeleton-shine: rgba(255, 255, 255, 0.11);
+  --bl-grid-line: rgba(255, 255, 255, 0.07);
+
+  --bl-shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.4);
+  --bl-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.36);
+  --bl-shadow-md: 0 2px 4px -1px rgba(0, 0, 0, 0.5), 0 6px 12px -3px rgba(0, 0, 0, 0.45);
+  --bl-shadow-lg: 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 14px 28px -6px rgba(0, 0, 0, 0.55);
+  --bl-shadow-xl: 0 8px 16px -4px rgba(0, 0, 0, 0.55), 0 28px 56px -12px rgba(0, 0, 0, 0.65);
+  --bl-shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+:root,
+[data-theme='light'] {
+  @include light-palette;
+}
+
+[data-theme='dark'] {
+  @include dark-palette;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include dark-palette;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Base minima. No es un reset completo: solo alinea lo que el design system
+// asume (box-sizing, tipografia base y comportamiento de movimiento).
+// -----------------------------------------------------------------------------
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: $c-surface;
+  color: $c-text-primary;
+  font-family: $font-sans;
+  font-size: var(--bl-text-md);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-numeric: tabular-nums;
+}
+
+@include motion-reduce {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

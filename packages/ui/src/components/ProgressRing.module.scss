@@ -1,0 +1,56 @@
+@use '../styles/tokens' as *;
+
+.ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+
+  svg {
+    display: block;
+  }
+}
+
+.track {
+  fill: none;
+  stroke: $c-surface-sunken;
+}
+
+.value {
+  fill: none;
+  stroke: var(--ring-color);
+  stroke-linecap: round;
+  transition: stroke-dashoffset $duration-slow $ease-standard;
+}
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-sans;
+  font-size: $text-sm;
+  font-weight: $weight-semibold;
+  font-variant-numeric: tabular-nums;
+  color: $c-text-primary;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.accent {
+  --ring-color: #{$c-accent};
+}
+.success {
+  --ring-color: #{$c-success};
+}
+.warning {
+  --ring-color: #{$c-warning};
+}
+.danger {
+  --ring-color: #{$c-danger};
+}
+.info {
+  --ring-color: #{$c-info};
+}

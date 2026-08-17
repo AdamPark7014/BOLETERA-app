@@ -1,0 +1,44 @@
+@use '../styles/tokens' as *;
+
+.stage {
+  cursor: pointer;
+  transition: opacity $duration-fast $ease-standard;
+}
+
+.dimmed {
+  opacity: 0.4;
+}
+
+.segment {
+  stroke: $c-elevated;
+  stroke-width: 1;
+}
+
+.stageLabel {
+  fill: $c-text-secondary;
+  font-family: $font-sans;
+  font-size: 12px;
+  font-weight: 500;
+  dominant-baseline: middle;
+}
+
+.stageValue {
+  fill: #ffffff;
+  font-family: $font-sans;
+  font-size: 12px;
+  font-weight: 600;
+  dominant-baseline: middle;
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.25);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.conversion {
+  fill: $c-text-tertiary;
+  font-family: $font-sans;
+  font-size: 11px;
+  dominant-baseline: middle;
+  font-variant-numeric: tabular-nums;
+}

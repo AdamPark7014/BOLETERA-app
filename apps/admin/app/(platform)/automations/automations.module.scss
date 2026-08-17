@@ -1,0 +1,207 @@
+.page {
+  display: grid;
+  gap: 1.25rem;
+  color: var(--color-fg, #18181b);
+  padding-bottom: 2rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 14rem;
+}
+
+.field label {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--color-fg-muted, #52525b);
+}
+
+.field input,
+.field select {
+  height: 2.25rem;
+  border: 1px solid var(--color-border, #d4d4d8);
+  border-radius: 0.6rem;
+  padding: 0 0.75rem;
+  background: var(--color-surface, #fff);
+  color: inherit;
+  font: inherit;
+}
+
+.field input:focus-visible,
+.field select:focus-visible {
+  outline: 3px solid #a5b4fc;
+  outline-offset: 2px;
+}
+
+.banner {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+}
+
+.banner strong {
+  font-size: 0.88rem;
+}
+
+.banner p {
+  margin: 0;
+  color: var(--color-fg-muted, #52525b);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-fg-muted, #71717a);
+  font-size: 0.8rem;
+}
+
+.warn {
+  margin: 0;
+  color: #92400e;
+  font-size: 0.82rem;
+}
+
+.stack,
+.stackTight {
+  display: grid;
+  gap: 1rem;
+}
+
+.stackTight {
+  gap: 0.75rem;
+}
+
+.ruleList,
+.triggerList,
+.historyList,
+.opportunityList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.opportunityCard {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border, #e4e4e7);
+  border-radius: 0.75rem;
+  background: var(--color-surface, #fff);
+}
+
+.opportunityHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.opportunityBody {
+  margin: 0;
+  color: var(--color-fg-muted, #52525b);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.ruleCard,
+.triggerCard,
+.historyCard {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border, #e4e4e7);
+  border-radius: 0.75rem;
+  background: var(--color-surface, #fff);
+}
+
+.ruleHead,
+.triggerHead,
+.historyHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem 0.75rem;
+}
+
+.ruleTitle,
+.triggerTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.ruleBody,
+.triggerBody,
+.historyBody {
+  margin: 0;
+  color: var(--color-fg-muted, #52525b);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.ruleActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirmBody {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.confirmTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.endpointList {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-fg-muted, #52525b);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (max-width: 1100px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+}

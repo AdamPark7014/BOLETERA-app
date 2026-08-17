@@ -795,3 +795,29 @@ export function stampCfdi(
     { method: 'POST', body: JSON.stringify(body) },
   );
 }
+
+/** Alta de recinto desde el constructor de mapas (viene de enterprise-upgrade). */
+export function createVenue(
+  token: string,
+  data: {
+    name: string;
+    city?: string;
+    state?: string;
+    address?: string;
+    totalCapacity?: number;
+    template?: 'arena' | 'theater' | 'stadium' | 'festival' | 'blank';
+  },
+) {
+  return adminApi<{
+    id: string;
+    name: string;
+    slug: string;
+    city: string;
+    totalCapacity: number;
+    layoutId: string | null;
+    template: string;
+  }>('/admin/venues', token, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}

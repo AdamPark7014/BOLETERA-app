@@ -1,0 +1,281 @@
+$ink: #18181b;
+$ink-soft: #3f3f46;
+$muted: #71717a;
+$border: #e4e4e7;
+$surface: #ffffff;
+$surface-soft: #fafafa;
+$danger: #b91c1c;
+$warning: #a16207;
+$success: #16a34a;
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modes {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.modeOn,
+.modeOff {
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid $border;
+}
+
+.modeOn {
+  background: $ink;
+  border-color: $ink;
+  color: #fff;
+}
+
+.modeOff {
+  background: $surface;
+  color: $muted;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: $ink-soft;
+  }
+
+  input,
+  select {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid $border;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: $ink;
+    background: $surface;
+
+    &:focus {
+      outline: none;
+      border-color: $ink;
+      box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.06);
+    }
+  }
+
+  small {
+    color: $muted;
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+}
+
+.fullField {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  small {
+    color: $muted;
+    font-size: 0.75rem;
+  }
+}
+
+.fieldLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: $ink-soft;
+}
+
+.weekdays {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.dayOn,
+.dayOff {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid $border;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dayOn {
+  background: $ink;
+  border-color: $ink;
+  color: #fff;
+}
+
+.dayOff {
+  background: $surface;
+  color: $muted;
+}
+
+.summary {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  background: $surface-soft;
+  border: 1px solid $border;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: $ink-soft;
+}
+
+.error {
+  margin: 0;
+  color: $danger;
+  font-size: 0.8125rem;
+}
+
+.previewHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: $ink;
+}
+
+.badgeBlocking,
+.badgeWarn {
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badgeBlocking {
+  background: #fef2f2;
+  color: $danger;
+}
+
+.badgeWarn {
+  background: #fffbeb;
+  color: $warning;
+}
+
+.occurrences {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-height: 22rem;
+  overflow-y: auto;
+
+  li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    align-items: start;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid $border;
+    border-left-width: 3px;
+    border-radius: 8px;
+    background: $surface;
+    font-size: 0.8125rem;
+  }
+}
+
+.occOk {
+  border-left-color: $success;
+}
+
+.occWarn {
+  border-left-color: $warning;
+  background: #fffdf5;
+}
+
+.occBlocking {
+  border-left-color: $danger;
+  background: #fffafa;
+}
+
+.occMain {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: capitalize;
+
+  span {
+    color: $muted;
+    text-transform: none;
+  }
+}
+
+.tag {
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: #f4f4f5;
+  color: $muted;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.conflictList {
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: $ink-soft;
+}
+
+.conflictKind {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  background: #f4f4f5;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+}
+
+.skipBtn {
+  align-self: center;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid $border;
+  border-radius: 6px;
+  background: $surface;
+  color: $muted;
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:hover {
+    color: $ink;
+    border-color: #a1a1aa;
+  }
+}
+
+.exceptions {
+  margin: 0;
+  font-size: 0.75rem;
+  color: $muted;
+
+  button {
+    border: none;
+    background: none;
+    color: $ink;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
+}

@@ -1,12 +1,15 @@
 {
-  "extends": "../../tsconfig.packages.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowJs": false,
     "noEmit": true,
-    "jsx": "react-jsx",
-    "skipLibCheck": true
+    "declaration": false,
+    "declarationMap": false,
+    "skipLibCheck": true,
+    "types": []
   },
-  "include": ["src/**/*"],
-  // El `exclude` heredado descarta `**/*.d.ts`, lo que dejaría fuera la
-  // declaración de los módulos SCSS y rompería el chequeo de tipos.
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }

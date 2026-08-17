@@ -1,0 +1,41 @@
+@use '../styles/tokens' as *;
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  flex-wrap: wrap;
+  min-width: 0;
+  font-family: $font-sans;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.surface {
+  padding: $space-2-5 $space-3;
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xs;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: $z-sticky;
+  background: $c-surface;
+}
+
+.separator {
+  width: 1px;
+  height: 18px;
+  flex: none;
+  background: $c-border;
+}

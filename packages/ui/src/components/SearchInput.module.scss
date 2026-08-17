@@ -1,0 +1,124 @@
+@use '../styles/tokens' as *;
+
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-width: 0;
+  font-family: $font-sans;
+  background: $c-elevated;
+  border: 1px solid $c-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-xs;
+  transition:
+    border-color $duration-fast $ease-standard,
+    box-shadow $duration-fast $ease-standard;
+
+  &:hover {
+    border-color: $c-border-strong;
+  }
+
+  &:focus-within {
+    border-color: $c-accent;
+    box-shadow: 0 0 0 3px $c-accent-subtle;
+  }
+}
+
+.fullWidth {
+  display: flex;
+  width: 100%;
+}
+
+.icon {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  fill: none;
+  stroke: $c-text-tertiary;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: $c-text-primary;
+  font: inherit;
+
+  &::placeholder {
+    color: $c-text-tertiary;
+  }
+
+  // Oculta la X nativa de WebKit: tenemos un boton propio y accesible.
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+  }
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: $radius-full;
+  background: $c-surface-sunken;
+  color: $c-text-tertiary;
+  cursor: pointer;
+  transition: color $duration-fast $ease-standard, background-color $duration-fast $ease-standard;
+
+  svg {
+    width: 10px;
+    height: 10px;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: $c-surface-active;
+    color: $c-text-primary;
+  }
+
+  @include focus-ring(1px);
+}
+
+.shortcut {
+  flex: none;
+  padding: 1px $space-1-5;
+  border: 1px solid $c-border;
+  border-radius: $radius-xs;
+  background: $c-surface-sunken;
+  color: $c-text-tertiary;
+  font-family: $font-sans;
+  font-size: $text-2xs;
+  line-height: 16px;
+}
+
+.sm {
+  height: 28px;
+  padding-inline: $space-2-5;
+  font-size: $text-sm;
+  border-radius: $radius-sm;
+}
+
+.md {
+  height: 34px;
+  padding-inline: $space-3;
+  font-size: $text-md;
+}
+
+.lg {
+  height: 42px;
+  padding-inline: $space-4;
+  font-size: $text-lg;
+  border-radius: $radius-lg;
+}

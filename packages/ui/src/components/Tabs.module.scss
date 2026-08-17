@@ -1,0 +1,142 @@
+@use '../styles/tokens' as *;
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  font-family: $font-sans;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.fullWidth .tab,
+.fullWidth.list .tab {
+  flex: 1;
+  justify-content: center;
+}
+
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  flex: none;
+  height: 34px;
+  padding-inline: $space-3;
+  border: none;
+  background: transparent;
+  color: $c-text-tertiary;
+  @include type('md', $weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color $duration-fast $ease-standard, background-color $duration-fast $ease-standard;
+
+  &:hover:not(:disabled) {
+    color: $c-text-primary;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  @include focus-ring(-2px);
+}
+
+.selected {
+  color: $c-text-primary;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+
+  svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+  }
+}
+
+.label {
+  @include truncate;
+}
+
+.badge {
+  min-width: 18px;
+  padding-inline: $space-1-5;
+  border-radius: $radius-full;
+  background: $c-surface-sunken;
+  color: $c-text-tertiary;
+  @include type('2xs', $weight-semibold);
+  line-height: 18px;
+  text-align: center;
+}
+
+.selected .badge {
+  background: $c-accent-subtle;
+  color: $c-accent-text;
+}
+
+// ---------------------------------------------------------------- underline
+
+.underline {
+  gap: 0;
+  border-bottom: 1px solid $c-border;
+
+  .tab::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: $c-accent;
+    opacity: 0;
+    transition: opacity $duration-fast $ease-standard;
+  }
+
+  .selected::after {
+    opacity: 1;
+  }
+}
+
+// --------------------------------------------------------------------- pill
+
+.pill {
+  padding: $space-1;
+  background: $c-surface-sunken;
+  border-radius: $radius-lg;
+
+  .tab {
+    height: 28px;
+    border-radius: $radius-md;
+    font-size: $text-sm;
+  }
+
+  .tab:hover:not(:disabled):not(.selected) {
+    background: $c-surface-hover;
+  }
+
+  .selected {
+    background: $c-elevated;
+    box-shadow: $shadow-xs;
+  }
+}
+
+.panel {
+  padding-top: $space-5;
+  outline: none;
+
+  @include focus-ring(2px);
+}

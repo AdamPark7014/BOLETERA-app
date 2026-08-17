@@ -1,0 +1,75 @@
+@use '../styles/tokens' as *;
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.item {
+  box-shadow: 0 0 0 2px $c-elevated;
+  transition: transform $duration-fast $ease-standard;
+
+  &:not(:first-child) {
+    margin-left: var(--avatar-overlap);
+  }
+
+  &:hover {
+    z-index: $z-raised;
+    transform: translateY(-1px);
+  }
+}
+
+.overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: $radius-full;
+  background: $c-surface-sunken;
+  color: $c-text-secondary;
+  font-family: $font-sans;
+  font-weight: $weight-semibold;
+  line-height: 1;
+}
+
+.xs {
+  --avatar-overlap: -6px;
+  .overflow {
+    width: 20px;
+    height: 20px;
+    font-size: 9px;
+  }
+}
+.sm {
+  --avatar-overlap: -7px;
+  .overflow {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+}
+.md {
+  --avatar-overlap: -9px;
+  .overflow {
+    width: 32px;
+    height: 32px;
+    font-size: $text-xs;
+  }
+}
+.lg {
+  --avatar-overlap: -11px;
+  .overflow {
+    width: 40px;
+    height: 40px;
+    font-size: $text-sm;
+  }
+}
+.xl {
+  --avatar-overlap: -15px;
+  .overflow {
+    width: 56px;
+    height: 56px;
+    font-size: $text-lg;
+  }
+}

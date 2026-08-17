@@ -177,6 +177,11 @@ export type ProjectedScene3D = {
   }>;
 };
 
+/**
+ * Códigos de incidencia. Los de integridad de inventario y accesibilidad
+ * vienen de la auditoría: sin ellos un mapa con ids duplicados o sin plazas
+ * accesibles se publica sin que nadie lo note.
+ */
 export type GeometryIssueCode =
   | 'overlap'
   | 'outside_shape'
@@ -212,21 +217,18 @@ export type GeometryIssueCode =
 export type GeometryIssue = {
   code: GeometryIssueCode;
   severity: 'warning' | 'error';
+  /** Cuántas entidades agrupa esta incidencia. */
+  count?: number;
+  /** Qué hacer para resolverla, en lenguaje de operación. */
+  hint?: string;
   seatIds: string[];
   sectionIds?: string[];
   message: string;
-  /**
-   * Qué hacer para resolverlo. La validación existía pero solo describía el
-   * síntoma; sin esto el operador ve "hay 340 avisos" y no sabe por dónde empezar.
-   */
-  hint?: string;
-  /** Cuántos elementos afecta cuando el aviso se agrupa. */
-  count?: number;
 };
 
 export type GeometryValidation = {
   ok: boolean;
   issues: GeometryIssue[];
-  /** Resumen por código, para poder priorizar sin recorrer la lista. */
+  /** Conteo por código: permite al editor priorizar sin recorrer la lista. */
   summary?: { code: GeometryIssueCode; severity: 'warning' | 'error'; count: number }[];
 };

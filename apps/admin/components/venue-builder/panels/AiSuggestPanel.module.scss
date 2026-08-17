@@ -1,0 +1,221 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.card {
+  width: min(56rem, 100%);
+  max-height: min(88dvh, 44rem);
+  overflow: auto;
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 1.1rem 1.15rem;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.promptEcho {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: #9ca3af;
+  line-height: 1.35;
+}
+
+.sideBySide {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  min-height: 12rem;
+}
+
+.previewPane {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.previewCaption {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.previewHost {
+  position: relative;
+  height: 11rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #070a0f;
+  overflow: hidden;
+}
+
+.previewCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.previewEmpty {
+  margin: 0;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.diffSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.diffTitle {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.diffBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.diffStats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  color: #d1d5db;
+
+  strong {
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
+.diffList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 9rem;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: #0b0f14;
+}
+
+.diffList li {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.diffKind {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.diffName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diffSeats {
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+}
+
+.diff_added .diffKind {
+  color: #4ade80;
+}
+
+.diff_removed .diffKind {
+  color: #fca5a5;
+}
+
+.diff_changed .diffKind {
+  color: #fbbf24;
+}
+
+.diff_unchanged .diffKind {
+  color: #9ca3af;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.loadingHint {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: #38bdf8;
+}
+
+@media (max-width: 640px) {
+  .sideBySide {
+    grid-template-columns: 1fr;
+  }
+
+  .previewHost {
+    height: 9rem;
+  }
+
+  .diffList li {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+
+  .diffSeats {
+    grid-column: 2;
+  }
+}

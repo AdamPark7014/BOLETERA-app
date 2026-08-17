@@ -1,0 +1,203 @@
+@use '../styles/tokens' as *;
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2-5;
+  min-width: 0;
+  font-family: $font-sans;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.search {
+  width: min(100%, 18rem);
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+  height: 28px;
+  padding-inline: $space-2-5;
+  border: 1px dashed $c-border-strong;
+  border-radius: $radius-full;
+  background: transparent;
+  color: $c-text-secondary;
+  @include type('sm', $weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color $duration-fast $ease-standard,
+    background-color $duration-fast $ease-standard,
+    color $duration-fast $ease-standard;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    color: $c-text-primary;
+    background: $c-surface-hover;
+  }
+
+  @include focus-ring;
+}
+
+.triggerActive {
+  border-style: solid;
+  border-color: $c-accent-border;
+  background: $c-accent-subtle;
+  color: $c-accent-text;
+}
+
+.triggerOpen {
+  border-style: solid;
+  border-color: $c-border-strong;
+}
+
+.triggerCount {
+  min-width: 16px;
+  padding-inline: $space-1;
+  border-radius: $radius-full;
+  background: $c-accent;
+  color: $c-on-accent;
+  @include type('2xs', $weight-semibold);
+  line-height: 16px;
+  text-align: center;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: $space-2-5;
+  padding: $space-1-5 $space-2;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  @include type('md');
+  color: $c-text-primary;
+
+  &:hover {
+    background: $c-surface-hover;
+  }
+
+  &:focus-within {
+    background: $c-surface-hover;
+    outline: 2px solid $c-focus-ring;
+    outline-offset: -2px;
+  }
+
+  input {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: $c-accent;
+    cursor: pointer;
+  }
+}
+
+.optionLabel {
+  flex: 1;
+  min-width: 0;
+  @include truncate;
+}
+
+.optionCount {
+  flex: none;
+  @include type('xs');
+  color: $c-text-tertiary;
+  font-variant-numeric: tabular-nums;
+}
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: $space-1-5;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  height: 22px;
+  padding-inline: $space-2 $space-1;
+  border-radius: $radius-full;
+  background: $c-surface-sunken;
+  color: $c-text-secondary;
+  @include type('xs', $weight-medium);
+}
+
+.chipLabel {
+  max-width: 18rem;
+  @include truncate;
+}
+
+.chipRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  border-radius: $radius-full;
+  background: transparent;
+  color: $c-text-tertiary;
+  cursor: pointer;
+
+  svg {
+    width: 9px;
+    height: 9px;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: $c-surface-active;
+    color: $c-text-primary;
+  }
+
+  @include focus-ring(1px);
+}
+
+.clear {
+  border: none;
+  background: transparent;
+  padding: 0 $space-1;
+  color: $c-accent-text;
+  @include type('xs', $weight-medium);
+  cursor: pointer;
+  border-radius: $radius-xs;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  @include focus-ring;
+}

@@ -1,0 +1,120 @@
+@use '../styles/tokens' as *;
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  min-width: 0;
+  font-family: $font-sans;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  min-width: 0;
+}
+
+.dayLabel {
+  position: sticky;
+  top: 0;
+  z-index: $z-raised;
+  margin: 0 0 $space-1;
+  padding: $space-1 0;
+  background: $c-elevated;
+  @include type('xs', $weight-semibold);
+  text-transform: capitalize;
+  color: $c-text-tertiary;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  padding: $space-2 $space-2 $space-2 0;
+  border-radius: $radius-md;
+  min-width: 0;
+
+  &:hover {
+    background: $c-surface-hover;
+  }
+}
+
+.systemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: $radius-full;
+  background: $c-surface-sunken;
+  color: $c-text-tertiary;
+
+  svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sentence {
+  margin: 0;
+  @include type('sm');
+  color: $c-text-secondary;
+  text-wrap: pretty;
+}
+
+.actor {
+  font-weight: $weight-semibold;
+  color: $c-text-primary;
+}
+
+.action {
+  color: $c-text-secondary;
+}
+
+.target {
+  font-weight: $weight-medium;
+  color: $c-text-primary;
+}
+
+.detail {
+  margin-top: $space-1-5;
+  padding: $space-2 $space-2-5;
+  border-left: 2px solid $c-border;
+  background: $c-surface-sunken;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  @include type('xs');
+  color: $c-text-tertiary;
+}
+
+.time {
+  flex: none;
+  padding-top: 2px;
+  @include type('xs');
+  color: $c-text-tertiary;
+  font-variant-numeric: tabular-nums;
+}
+
+.skeletonBody {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  flex: 1;
+  min-width: 0;
+  padding-top: $space-1;
+}
