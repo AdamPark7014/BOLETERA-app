@@ -9,6 +9,8 @@ import {
 } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { SaleWindowService } from './sale-window.service';
+import { SalePhaseQuotaService, type PhaseQuotaUsage } from './sale-phase-quota.service';
+import { resolvePhaseStatus, withResolvedStatus } from './sale-phase-status';
 
 type EventMetadata = Record<string, unknown>;
 
@@ -37,6 +39,7 @@ export class EventManagementService {
   constructor(
     private prisma: PrismaService,
     private saleWindow: SaleWindowService,
+    private phaseQuota: SalePhaseQuotaService,
   ) {}
 
   private slugify(text: string) {
@@ -464,7 +467,14 @@ export class EventManagementService {
   private async assertEventInOrg(eventId: string, orgId: string) {
     const event = await this.prisma.event.findFirst({
       where: { id: eventId, organizationId: orgId },
-      select: { id: true, title: true, startsAt: true, organizationId: true },
+      select: {
+        id: true,
+        title: true,
+        startsAt: true,
+        // Denominador del cupo por fase: `allocationPercent` es un % del aforo.
+        totalCapacity: true,
+        organizationId: true,
+      },
     });
     if (!event) throw new NotFoundException('Event not found');
     return event;
@@ -549,15 +559,52 @@ export class EventManagementService {
   }
 
   async listSalePhases(eventId: string, orgId: string) {
-    await this.assertEventInOrg(eventId, orgId);
-    const phases = await this.prisma.salePhase.findMany({
+    const event = await this.assertEventInOrg(eventId, orgId);
+    const at = new Date();
+    const rows = await this.prisma.salePhase.findMany({
       where: { eventId },
       orderBy: [{ startsAt: 'asc' }, { priority: 'asc' }],
     });
+
+    // Se persiste aquí de forma síncrona —es una pantalla de backoffice, no el
+    // camino caliente— pero lo que se devuelve se deriva igualmente del reloj:
+    // si la escritura fallara, el operador seguiría viendo el estado correcto.
+    await this.saleWindow.syncPhaseStatuses(eventId, rows, at).catch((error: Error) => {
+      this.logger.warn(`No se pudo persistir el estado de las fases de ${eventId}: ${error.message}`);
+    });
+
+    const phases = await Promise.all(
+      rows.map(async (phase) => ({
+        ...withResolvedStatus(phase, at),
+        // Cuánto lleva consumido el cupo: sin esto `allocationPercent` es una
+        // promesa que el operador no puede vigilar hasta que ya se agotó.
+        quota: await this.phaseQuotaUsage(eventId, phase, event.totalCapacity),
+      })),
+    );
+
     // La decisión vigente viaja con la lista: es lo que el panel necesita para
     // pintar "vendiendo ahora" sin recalcular la regla por su cuenta.
     const window = await this.saleWindow.checkSaleWindow(eventId);
     return { eventId, phases, window };
+  }
+
+  private async phaseQuotaUsage(
+    eventId: string,
+    phase: { id: string; name: string; startsAt: Date; endsAt: Date; allocationPercent: number | null },
+    capacity: number,
+  ): Promise<PhaseQuotaUsage | null> {
+    if (phase.allocationPercent == null) return null;
+    return this.phaseQuota.getUsage(
+      {
+        id: phase.id,
+        eventId,
+        name: phase.name,
+        startsAt: phase.startsAt,
+        endsAt: phase.endsAt,
+        allocationPercent: phase.allocationPercent,
+      },
+      capacity,
+    );
   }
 
   async createSalePhase(eventId: string, orgId: string, input: SalePhaseInput) {
@@ -578,7 +625,11 @@ export class EventManagementService {
           code: code ?? null,
           startsAt,
           endsAt,
-          status: input.status ?? SalePhaseStatus.SCHEDULED,
+          // Una fase creada con sus fechas ya en curso nace ACTIVE, no
+          // SCHEDULED: nacer mintiendo es el mismo defecto que no avanzar.
+          status:
+            input.status ??
+            resolvePhaseStatus({ status: SalePhaseStatus.SCHEDULED, startsAt, endsAt }),
           channels: input.channels ?? [],
           allocationPercent: input.allocationPercent ?? null,
           maxPerOrder: input.maxPerOrder ?? null,
@@ -618,6 +669,18 @@ export class EventManagementService {
       await this.assertAllocationFits(eventId, patch.allocationPercent, phaseId);
     }
 
+    // Mover las fechas de una fase ya terminada tiene que revivirla. `ENDED` es
+    // pegajoso (cerrar antes de hora es una decisión del promotor) y además
+    // `checkSaleWindow` excluye esas fases por ESTADO, no por reloj: sin este
+    // recálculo, alargar una fase la dejaría cerrada para siempre.
+    const datesMoved =
+      startsAt.getTime() !== current.startsAt.getTime() ||
+      endsAt.getTime() !== current.endsAt.getTime();
+    const rebornStatus =
+      patch.status == null && datesMoved && current.status !== SalePhaseStatus.CANCELLED
+        ? resolvePhaseStatus({ status: SalePhaseStatus.SCHEDULED, startsAt, endsAt })
+        : null;
+
     return this.prisma.salePhase.update({
       where: { id: phaseId },
       data: {
@@ -627,6 +690,7 @@ export class EventManagementService {
         endsAt,
         ...(code !== undefined ? { code } : {}),
         ...(patch.status != null ? { status: patch.status } : {}),
+        ...(rebornStatus ? { status: rebornStatus } : {}),
         ...(patch.channels != null ? { channels: patch.channels } : {}),
         ...(patch.allocationPercent !== undefined
           ? { allocationPercent: patch.allocationPercent }
@@ -690,10 +754,16 @@ export class EventManagementService {
       _count: true,
     });
 
+    // `checkSaleWindow` ya dispara la persistencia del estado; aquí basta con
+    // derivarlo para que el hub no pinte una fase «programada» que ya vende.
     const saleWindow = await this.saleWindow.checkSaleWindow(eventId);
+    const at = new Date();
 
     return {
-      event,
+      event: {
+        ...event,
+        salePhases: event.salePhases.map((phase) => withResolvedStatus(phase, at)),
+      },
       inventory: {
         total: event.totalCapacity,
         sold,

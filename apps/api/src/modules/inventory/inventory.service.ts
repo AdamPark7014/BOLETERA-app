@@ -416,9 +416,22 @@ export class InventoryService {
     // La ventana de venta se comprueba ANTES de tocar inventario: apartar fuera
     // de horario y descubrirlo al cobrar deja butacas retenidas por una compra
     // que nunca podrá completarse.
-    await this.saleWindow.assertSaleWindowOpen(dto.eventId, { channel });
+    // Además de la ventana, se aparta cupo de la fase activa: sin esto,
+    // `allocationPercent` era una promesa que el producto hacía y no cumplía —
+    // se podía vender el 100% en preventa y dejar la venta general sin nada.
+    // El apartado es atómico en Redis, así que dos compras simultáneas obtienen
+    // valores distintos y solo una puede cruzar el límite.
+    const window = await this.saleWindow.assertSaleWindowOpenAndReserve(dto.eventId, {
+      channel,
+      quantity,
+    });
 
-    await this.assertSessionBudget(dto, channel, quantity);
+    try {
+      await this.assertSessionBudget(dto, channel, quantity);
+    } catch (error) {
+      await this.saleWindow.releasePhaseQuota(window.quota);
+      throw error;
+    }
 
     const ttl = this.holdTtl(channel);
     const expiresAt = new Date(Date.now() + ttl * 1000);
@@ -430,6 +443,9 @@ export class InventoryService {
       }
       return await this.createGeneralAdmissionHold(dto, dto.offerId, quantity, channel, ttl, expiresAt);
     } catch (error) {
+      // Cupo apartado que nunca llegó a ser hold: la reconciliación no lo vería
+      // en la base, así que aquí sí hay que compensar a mano.
+      await this.saleWindow.releasePhaseQuota(window.quota);
       await this.refundSessionBudget(dto, channel, quantity);
       throw error;
     }

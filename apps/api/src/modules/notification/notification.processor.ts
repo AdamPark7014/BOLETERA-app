@@ -27,6 +27,7 @@ import {
 import { NOTIFICATION_QUEUE, NotificationJob } from './notification.service';
 import {
   COMPENSATION_LEGAL_NOTE,
+  COMPENSATION_NOTE_PREFIX,
   formatPolicyDate,
   refundDeadlines,
   refundMethodLabel,
@@ -36,15 +37,10 @@ import {
 } from './refund-policy';
 import { TicketPdfService } from './ticket-pdf.service';
 
-/**
- * Marca de la bonificación del art. 92 Bis dentro de `Refund.notes`.
- *
- * `EventCancellationService` asienta la bonificación como un `Refund` aparte
- * —no es devolución del cobro, es indemnización— y la única señal que deja en
- * el registro es este prefijo en la nota. Si allá cambia el texto, aquí la
- * bonificación se contaría como dinero devuelto y el correo diría de más.
- */
-const COMPENSATION_NOTE_PREFIX = 'BONIFICACIÓN';
+// `COMPENSATION_NOTE_PREFIX` se importa de `./refund-policy`: el correo y la
+// lectura del comprador tienen que reconocer la bonificación por la MISMA
+// marca. Cuando cada uno guardaba su copia, bastaba con retocar una para que
+// una superficie contara la indemnización como dinero devuelto y la otra no.
 
 /**
  * Ventana de la marca de "ya enviado".

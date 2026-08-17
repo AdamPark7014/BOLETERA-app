@@ -8,10 +8,15 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { authHeaders, clearSession, getStoredUser, getToken } from '@/lib/auth';
 import { formatMoney } from '@/lib/pricing';
 import {
+  type OrderRefund,
   formatPolicyDate,
+  formatShortDate,
   orderHasRefund,
   refundDeadlines,
+  refundFallbackCopy,
   refundMethodLabel,
+  refundStatusCopy,
+  summarizeRefunds,
 } from '@/lib/refund-policy';
 import styles from './cuenta.module.scss';
 
@@ -38,6 +43,9 @@ type OrderRow = {
     slug: string;
     startsAt: string;
     venue?: { name: string; city: string } | null;
+    /** Un evento caído no puede seguir anunciándose como «próximo». */
+    status?: string | null;
+    cancelledAt?: string | null;
   };
   organizationId?: string;
   items?: { tickets?: TicketRow[]; quantity?: number }[];
@@ -45,6 +53,12 @@ type OrderRow = {
   paymentMethod?: string | null;
   /** Momento en que se asentó la devolución: de ahí sale el plazo prometido. */
   refundedAt?: string | null;
+  /**
+   * Filas de `Refund` de la orden. Con ellas se dice el importe devuelto de
+   * verdad —y se separa la bonificación—; sin ellas solo se puede hablar del
+   * estado, nunca inventar una cifra.
+   */
+  refunds?: OrderRefund[] | null;
 };
 
 type TransferRow = {
@@ -187,25 +201,76 @@ export default function CuentaPage() {
    * Reembolsos en curso, arriba y sin abrir orden por orden.
    *
    * Es la pregunta que el comprador viene a hacerse ("¿y mi dinero?") y hasta
-   * ahora obligaba a entrar en cada orden a leer un estado en inglés. La fecha
-   * prometida se calcula desde `refundedAt` —no desde hoy—, así que no se corre
-   * cada vez que se recarga la página.
+   * ahora obligaba a entrar en cada orden a leer un estado en inglés.
+   *
+   * Manda el estado de la DEVOLUCIÓN, no el de la orden. Son cosas distintas y
+   * confundirlas se notaba: una orden `REFUNDED` cuyo envío al banco falló
+   * salía aquí como «Reembolso aprobado», que es exactamente lo contrario de
+   * lo que había pasado. Y el importe sale de las filas de `Refund`, no del
+   * total de la orden, que en una devolución parcial es sencillamente otra
+   * cifra.
    */
   const refunds = useMemo(
     () =>
       orders
-        .filter((o) => orderHasRefund(o.status))
+        .filter((o) => orderHasRefund(o.status) || (o.refunds?.length ?? 0) > 0)
         .map((o) => {
-          const anchor = o.refundedAt ? new Date(o.refundedAt) : new Date(o.createdAt);
-          const valid = !Number.isNaN(anchor.getTime());
-          const settled = o.status === 'REFUNDED' || o.status === 'PARTIALLY_REFUNDED';
+          const currency = o.currency ?? 'MXN';
+          const methodLabel = refundMethodLabel(o.paymentMethod);
+          const summary = summarizeRefunds(o.refunds);
+
+          // Sin filas de `Refund` no hay importe ni fecha que afirmar: se dice
+          // lo que se sabe y se remite al detalle, en vez de fabricar una
+          // promesa. (Con el API al día esto es ya el caso raro.)
+          if (!summary) {
+            const fallback = refundFallbackCopy(o.status);
+            return {
+              order: o,
+              headline: fallback?.headline ?? 'Devolución en proceso',
+              tone: fallback?.tone ?? ('progress' as const),
+              // En una devolución PARCIAL el total de la orden no es lo que se
+              // devuelve: enseñarlo sería afirmar una cifra que nadie calculó.
+              amount:
+                o.status === 'PARTIALLY_REFUNDED'
+                  ? null
+                  : formatMoney(o.totalAmount, currency),
+              compensation: null,
+              when:
+                `Vuelve por ${methodLabel}. Te avisamos por correo en cuanto quede ` +
+                'autorizado, con el importe y la fecha.',
+            };
+          }
+
+          // El plazo cuenta desde que se asentó la devolución, no desde hoy:
+          // si contara desde el render, la fecha se correría en cada recarga.
+          const anchor = summary.requestedAt ?? (o.refundedAt ? new Date(o.refundedAt) : null);
+          const deadlines = anchor ? refundDeadlines(anchor) : null;
+          const copy = refundStatusCopy(summary.status, {
+            methodLabel,
+            sentBy: deadlines ? formatPolicyDate(deadlines.sentBy) : '—',
+            visibleBy: deadlines ? formatPolicyDate(deadlines.visibleBy) : '—',
+          });
+
           return {
             order: o,
-            settled,
-            // `PENDING_REFUND` es dinero cobrado que aún no tiene devolución
-            // asentada: no hay fecha que prometer todavía, y decir una sería
-            // inventarla.
-            visibleBy: settled && valid ? formatPolicyDate(refundDeadlines(anchor).visibleBy) : null,
+            headline: copy.headline,
+            tone: copy.tone,
+            amount: formatMoney(summary.refundedTotal, currency),
+            // La bonificación del art. 92 Bis se cuenta aparte: sumarla al
+            // reembolso borraría la distinción que la ley establece —una repara
+            // el cobro, la otra indemniza— y abultaría la devolución.
+            compensation:
+              summary.compensationTotal > 0
+                ? formatMoney(summary.compensationTotal, currency)
+                : null,
+            when:
+              // Con el envío fallado o en aclaración no hay fecha que prometer.
+              copy.tone === 'alert'
+                ? `Vuelve por ${methodLabel}. Te escribimos en cuanto haya novedad.`
+                : deadlines
+                  ? `Lo verás abonado a más tardar el ${formatPolicyDate(deadlines.visibleBy)}, ` +
+                    `por ${methodLabel}.`
+                  : `Vuelve por ${methodLabel}.`,
           };
         }),
     [orders],
@@ -361,23 +426,32 @@ export default function CuentaPage() {
                   {refunds.length === 1 ? ' orden' : ' órdenes'})
                 </h2>
                 <ul className={styles.refundList}>
-                  {refunds.map(({ order, settled, visibleBy }) => (
+                  {refunds.map(({ order, headline, tone, amount, compensation, when }) => (
                     <li key={order.publicId}>
                       <div className={styles.refundMain}>
                         <p className={styles.refundEvent}>{order.event.title}</p>
-                        <p className={styles.refundState}>
-                          {settled
-                            ? 'Reembolso aprobado'
-                            : 'Devolución en proceso: te cobramos y no pudimos emitir tus boletos'}
+                        {/*
+                          El estado va en palabras, no solo en color: el tono es
+                          apoyo visual y nunca el único portador del significado
+                          (WCAG 1.4.1).
+                        */}
+                        <p
+                          className={
+                            tone === 'alert'
+                              ? `${styles.refundState} ${styles.refundStateAlert}`
+                              : styles.refundState
+                          }
+                        >
+                          {headline}
                         </p>
-                        <p className={styles.refundWhen}>
-                          {visibleBy
-                            ? `Lo verás abonado a más tardar el ${visibleBy}, por ${refundMethodLabel(order.paymentMethod)}.`
-                            : `Vuelve por ${refundMethodLabel(order.paymentMethod)}. Te avisamos por correo en cuanto quede autorizado, con el importe y la fecha.`}
-                        </p>
+                        <p className={styles.refundWhen}>{when}</p>
                       </div>
                       <div className={styles.refundSide}>
-                        <strong>{formatMoney(order.totalAmount, order.currency ?? 'MXN')}</strong>
+                        {/* Sin importe conocido no se escribe una cifra falsa. */}
+                        {amount ? <strong>{amount}</strong> : <strong aria-hidden="true">—</strong>}
+                        {compensation && (
+                          <span className={styles.refundBonus}>+ {compensation} de bonificación</span>
+                        )}
                         <Link href={`/orders/${order.publicId}`} className={styles.refundLink}>
                           Ver detalle
                           <span className={styles.srOnly}> del reembolso de {order.event.title}</span>
@@ -423,6 +497,7 @@ export default function CuentaPage() {
                     tickets.length ||
                     o.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ||
                     0;
+                  const cancelled = o.event.status === 'CANCELLED';
                   return (
                     <li key={o.publicId} className={styles.walletCard}>
                       <div className={styles.walletDateBlock} aria-hidden="true">
@@ -445,18 +520,49 @@ export default function CuentaPage() {
                           {o.event.venue?.city ? ` · ${o.event.venue.city}` : ''}
                           {count ? ` · ${count} boleto${count === 1 ? '' : 's'}` : ''}
                         </p>
-                        {tickets.slice(0, 2).map((t) => (
-                          <p key={t.id} className={styles.walletSeat}>
-                            {seatLabel(t) || t.code}
+                        {/*
+                          Si el evento se cayó, esa es la noticia. Sin este
+                          aviso la tarjeta seguía anunciándolo como próximo y el
+                          comprador solo se enteraba entrando orden por orden
+                          —o el día del evento, en la puerta.
+                        */}
+                        {cancelled && (
+                          <p className={styles.walletCancelled}>
+                            Evento cancelado
+                            {o.event.cancelledAt
+                              ? ` el ${formatShortDate(o.event.cancelledAt)}`
+                              : ''}
+                            . Tus boletos ya no sirven para entrar y la devolución la iniciamos
+                            nosotros: no tienes que hacer ningún trámite.
                           </p>
-                        ))}
+                        )}
+                        {!cancelled &&
+                          tickets.slice(0, 2).map((t) => (
+                            <p key={t.id} className={styles.walletSeat}>
+                              {seatLabel(t) || t.code}
+                            </p>
+                          ))}
                       </div>
+                      {/*
+                        De un evento cancelado no se ofrece «Ver QR» ni el PDF:
+                        invitar a preparar la entrada de algo que no se va a
+                        celebrar contradice el aviso de arriba y manda al
+                        comprador a la puerta con un código muerto.
+                      */}
                       <div className={styles.walletActions}>
-                        <Link href={`/orders/${o.publicId}`} className={styles.qrCta}>
-                          Ver QR
-                        </Link>
-                        <a href={`${API}/orders/${o.publicId}/tickets.pdf`}>Descargar PDF</a>
-                        <Link href={`/events/${o.event.slug}`}>Ver evento</Link>
+                        {cancelled ? (
+                          <Link href={`/orders/${o.publicId}`} className={styles.qrCta}>
+                            Ver reembolso
+                          </Link>
+                        ) : (
+                          <>
+                            <Link href={`/orders/${o.publicId}`} className={styles.qrCta}>
+                              Ver QR
+                            </Link>
+                            <a href={`${API}/orders/${o.publicId}/tickets.pdf`}>Descargar PDF</a>
+                            <Link href={`/events/${o.event.slug}`}>Ver evento</Link>
+                          </>
+                        )}
                       </div>
                     </li>
                   );

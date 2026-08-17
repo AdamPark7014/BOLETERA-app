@@ -33,6 +33,7 @@ import { requireTicketQrSecret } from '../auth/jwt-secret';
 import { PricingService } from '../pricing/pricing.service';
 import { FraudService } from '../fraud/fraud.service';
 import { NotificationService } from '../notification/notification.service';
+import { buyerVisibleRefundNote } from '../notification/refund-policy';
 import { CampaignExecutionService } from '../campaign-execution/campaign-execution.service';
 import { ChannelQuotaService } from '../channel-management/channel-quota.service';
 import { TicketPdfService } from '../notification/ticket-pdf.service';
@@ -63,6 +64,22 @@ const DB_TX_TIMEOUT_MS = 10_000;
 
 /** Reintentos al reclamar un boleto GA que otra venta pudo llevarse. */
 const GA_CLAIM_ATTEMPTS = 5;
+
+/**
+ * Deja una fila de `Refund` en lo que el comprador puede ver.
+ *
+ * `notes` es lo único que hay que tocar: llega mezclado —referencias del
+ * gateway, jerga de operación, texto libre de administración— y sale reducido
+ * a lo que se escribió para él. Se aplica en las DOS lecturas del comprador,
+ * porque una sola descuidada publica el campo entero igual que si no hubiera
+ * ninguna.
+ *
+ * `requestedBy` y `processedBy` no aparecen aquí y tampoco en el `select`: son
+ * correos de personal interno y no tienen por qué llegar hasta este punto.
+ */
+function toBuyerRefund<T extends { notes: string | null }>(refund: T): T {
+  return { ...refund, notes: buyerVisibleRefundNote(refund.notes) };
+}
 
 @Injectable()
 export class OrdersService {
@@ -868,18 +885,24 @@ export class OrdersService {
         // mensaje genérico derivado del estado de la orden.
         //
         // Se seleccionan campos, NO el modelo entero: `requestedBy` y
-        // `processedBy` identifican a personal interno, y `notes` puede llevar
-        // anotaciones de operación. Nada de eso es del comprador.
+        // `processedBy` identifican a personal interno y no salen nunca de
+        // aquí. `notes` sí se lee, pero no se publica en crudo: pasa por
+        // `buyerVisibleRefundNote` más abajo.
+        //
+        // Ascendente a propósito: quien consume esto toma la ÚLTIMA fila como
+        // la que manda. En descendente esa posición la ocupa la más antigua y
+        // el plazo se calcularía desde la fecha equivocada.
         refunds: {
           select: {
             id: true,
             amount: true,
             reason: true,
             status: true,
+            notes: true,
             requestedAt: true,
             processedAt: true,
           },
-          orderBy: { requestedAt: 'desc' },
+          orderBy: { requestedAt: 'asc' },
         },
       },
     });
@@ -890,6 +913,7 @@ export class OrdersService {
     });
     return {
       ...order,
+      refunds: order.refunds.map(toBuyerRefund),
       pendingPayment: pendingIntent
         ? {
             reference: pendingIntent.externalId,
@@ -970,7 +994,7 @@ export class OrdersService {
 
   async listForUser(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       where: user
         ? { OR: [{ userId }, { buyerEmail: user.email }] }
         : { userId },
@@ -991,16 +1015,24 @@ export class OrdersService {
             venue: { select: { name: true, city: true } },
           },
         },
-        // Mismo criterio que el detalle: solo lo que es del comprador.
+        // Mismo criterio y mismo orden que el detalle: solo lo que es del
+        // comprador, con la nota recortada, y ascendente para que la última
+        // fila sea de verdad la más reciente.
+        //
+        // Con esto «Mis boletos» puede decir el importe devuelto —y separar la
+        // bonificación— en vez de enseñar el total de la orden, que en una
+        // devolución parcial es sencillamente otra cifra.
         refunds: {
           select: {
             id: true,
             amount: true,
+            reason: true,
             status: true,
+            notes: true,
             requestedAt: true,
             processedAt: true,
           },
-          orderBy: { requestedAt: 'desc' },
+          orderBy: { requestedAt: 'asc' },
         },
         items: {
           select: {
@@ -1019,6 +1051,7 @@ export class OrdersService {
         },
       },
     });
+    return orders.map((order) => ({ ...order, refunds: order.refunds.map(toBuyerRefund) }));
   }
 
   async getQrCodesForOrder(publicId: string, requester: OrderRequester) {

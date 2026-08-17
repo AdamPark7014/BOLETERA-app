@@ -230,6 +230,22 @@
   color: var(--text-muted);
 }
 
+/*
+ * Evento cancelado dentro de la tarjeta de «Próximos». Ocupa el sitio de los
+ * asientos porque el asiento ya no significa nada, y se lee antes que las
+ * acciones: es la razón por la que esta tarjeta dejó de ser una entrada.
+ */
+.walletCancelled {
+  margin: 0.4rem 0 0;
+  padding: 0.45rem 0.6rem;
+  border-left: 3px solid #b42318;
+  background: #fef3f2;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  font-weight: 600;
+  color: #912018;
+}
+
 .walletActions {
   display: flex;
   flex-direction: column;
@@ -499,6 +515,14 @@
   color: #1e40af;
 }
 
+/*
+ * Envío fallado o aclaración abierta. El color solo acompaña: el titular ya lo
+ * dice con palabras, que es lo que exige WCAG 1.4.1.
+ */
+.refundStateAlert {
+  color: #b42318;
+}
+
 .refundWhen {
   margin: 0.2rem 0 0;
   font-size: 0.83rem;
@@ -518,6 +542,18 @@
     color: #171717;
     font-variant-numeric: tabular-nums;
   }
+}
+
+/*
+ * Bonificación del art. 92 Bis. Va debajo del importe y con un «+» delante
+ * porque NO es parte de la devolución: se suma a ella.
+ */
+.refundBonus {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e40af;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .refundLink {

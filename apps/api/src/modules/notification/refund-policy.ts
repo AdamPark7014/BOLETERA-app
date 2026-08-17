@@ -196,3 +196,63 @@ export const COMPENSATION_LEGAL_NOTE =
   'completo —cargo por servicio incluido— y, cuando la cancelación es imputable al ' +
   'organizador, a pagar además una bonificación mínima del 20 %. Esa bonificación no es ' +
   'parte de tu devolución: es una indemnización que se suma.';
+
+/**
+ * Marca con la que `EventCancellationService` asienta la bonificación del
+ * art. 92 Bis dentro de `Refund.notes`.
+ *
+ * Es la ÚNICA señal en el registro de que esa fila indemniza en vez de
+ * devolver. Si el texto cambia allá y no aquí, la bonificación se cuenta como
+ * dinero devuelto y tanto el correo como la pantalla dicen de más.
+ */
+export const COMPENSATION_NOTE_PREFIX = 'BONIFICACIÓN';
+
+/** Prefijo de la nota que deja una cancelación de evento. */
+const CANCELLATION_NOTE_PREFIX = 'Cancelación de "';
+
+/**
+ * Separador con el que `completeRefund` encadena anotaciones sobre la nota ya
+ * existente (`notes | Banorte ref: …`).
+ */
+const NOTE_SEGMENT_SEPARATOR = ' | ';
+
+/**
+ * Recorta `Refund.notes` a lo que el comprador puede leer.
+ *
+ * `notes` es un campo mixto y NO es publicable en crudo. Según quién asiente la
+ * devolución acaba conteniendo, entre otras cosas:
+ *
+ *   - el error que devolvió el gateway (`payment.service`),
+ *   - la instrucción interna «call POST /payments/refunds/:id/complete when
+ *     done», que describe nuestra API a quien no debería conocerla,
+ *   - la referencia de Banorte que `completeRefund` anexa al liquidar,
+ *   - «Void desde taquilla», «asentado por staff» y demás jerga de operación,
+ *   - texto libre que un administrador escribe desde el panel, sin más
+ *     restricción que su criterio.
+ *
+ * Solo dos cosas de ese campo son del comprador, y ambas se escribieron para
+ * que las lea: la bonificación del art. 92 Bis —cuya explicación legal vive en
+ * la propia nota— y el motivo de cancelación, que además ya le llega por
+ * `Event.cancellationReason`, así que dejarlo pasar no descubre nada nuevo.
+ *
+ * La lista es de admisión, no de exclusión: se trocea por el separador y se
+ * conserva únicamente lo reconocido. Un `notes` con forma nueva —o un origen
+ * que todavía no existe— se cae solo, que es la única manera de que esto no se
+ * convierta en una fuga la próxima vez que alguien añada un escritor.
+ *
+ * Efecto colateral asumido: un título de evento o un motivo que contengan
+ * « | » pierden la cola del texto. Se prefiere una frase recortada a una nota
+ * interna publicada.
+ */
+export function buyerVisibleRefundNote(notes: string | null | undefined): string | null {
+  if (!notes) return null;
+  const visible = notes
+    .split(NOTE_SEGMENT_SEPARATOR)
+    .map((segment) => segment.trim())
+    .filter(
+      (segment) =>
+        segment.startsWith(COMPENSATION_NOTE_PREFIX) ||
+        segment.startsWith(CANCELLATION_NOTE_PREFIX),
+    );
+  return visible.length > 0 ? visible.join(' ') : null;
+}

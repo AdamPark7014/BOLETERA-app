@@ -1,6 +1,14 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { EventStatus, SalePhaseStatus, SalesChannel } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import { RedisService } from '../../common/redis.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { resolvePhaseStatus } from './sale-phase-status';
+import {
+  SalePhaseQuotaService,
+  type PhaseQuotaHandle,
+  type PhaseQuotaTarget,
+} from './sale-phase-quota.service';
 
 /**
  * Motivo de la decisión. El código es estable y pensado para que quien lo
@@ -22,6 +30,8 @@ export type SaleWindowPhaseView = {
   kind: string;
   startsAt: Date;
   endsAt: Date;
+  /** Estado derivado del reloj, no el guardado: nunca va con retraso. */
+  status: SalePhaseStatus;
   channels: SalesChannel[];
   maxPerOrder: number | null;
   discountPercent: number | null;
@@ -56,6 +66,46 @@ export type SaleWindowQuery = {
   code?: string;
 };
 
+/**
+ * Decisión + cupo apartado. `quota` viaja para poder DEVOLVERLO: quien reserva
+ * y luego falla (asiento ya tomado, tope de sesión, transacción revertida) tiene
+ * que llamar a `releasePhaseQuota` o estará quitándole butacas a la fase por una
+ * compra que nunca existió.
+ */
+export type SaleWindowReservation = SaleWindowDecision & {
+  quota: PhaseQuotaHandle | null;
+};
+
+/** Cada cuánto se persiste el estado de las fases desde el camino de venta. */
+const STATUS_SYNC_INTERVAL_SECONDS = Number(process.env.SALE_PHASE_STATUS_SYNC_SECONDS ?? 30);
+
+const statusSyncKey = (eventId: string) => `salephase:status:${eventId}`;
+
+/** Fila de `SalePhase` tal y como la lee este servicio. */
+type SalePhaseRow = {
+  id: string;
+  name: string;
+  kind: string;
+  startsAt: Date;
+  endsAt: Date;
+  status: SalePhaseStatus;
+  channels: SalesChannel[];
+  maxPerOrder: number | null;
+  discountPercent: number | null;
+  allocationPercent: number | null;
+  code: string | null;
+  priority: number;
+};
+
+type EventWindowRow = {
+  status: EventStatus;
+  startsAt: Date;
+  totalCapacity: number;
+  salesStartAt: Date | null;
+  salesEndAt: Date | null;
+  salePhases: SalePhaseRow[];
+};
+
 /** Estados en los que un evento no admite venta, pase lo que pase con las fases. */
 const NON_SELLABLE_EVENT_STATUS: EventStatus[] = [
   EventStatus.DRAFT,
@@ -75,13 +125,29 @@ const NON_SELLABLE_EVENT_STATUS: EventStatus[] = [
 export class SaleWindowService {
   private logger = new Logger(SaleWindowService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private quota: SalePhaseQuotaService,
+    private redis: RedisService,
+  ) {}
 
   /**
    * Resuelve la ventana de venta sin lanzar. Devuelve siempre una decisión
    * explicada: quien la consulta decide si corta o solo informa.
    */
   async checkSaleWindow(eventId: string, query: SaleWindowQuery = {}): Promise<SaleWindowDecision> {
+    return (await this.resolve(eventId, query)).decision;
+  }
+
+  /**
+   * El aforo sale de aquí y no de una consulta aparte porque el cupo de fase se
+   * comprueba en el camino caliente del onsale: leerlo dos veces por intento de
+   * reserva es una consulta de más por cada compra.
+   */
+  private async resolve(
+    eventId: string,
+    query: SaleWindowQuery = {},
+  ): Promise<{ decision: SaleWindowDecision; capacity: number }> {
     const at = query.at ?? new Date();
 
     const event = await this.prisma.event.findUnique({
@@ -90,6 +156,7 @@ export class SaleWindowService {
         id: true,
         status: true,
         startsAt: true,
+        totalCapacity: true,
         salesStartAt: true,
         salesEndAt: true,
         salePhases: {
@@ -105,9 +172,31 @@ export class SaleWindowService {
     });
 
     if (!event) {
-      return this.deny('EVENT_NOT_FOUND', 'El evento no existe.', { nextOpensAt: null });
+      return {
+        decision: this.deny('EVENT_NOT_FOUND', 'El evento no existe.', { nextOpensAt: null }),
+        capacity: 0,
+      };
     }
 
+    // Sin await y limitado por candado: el estado guardado converge con el
+    // tráfico que ya existe, sin cron y sin alargar la compra. Lo que se
+    // DEVUELVE se deriva del reloj, así que la respuesta nunca depende de que
+    // esta escritura llegue a ocurrir.
+    //
+    // Sólo cuando se evalúa AHORA: `query.at` sirve para simular la ventana en
+    // el alta, y persistir el resultado de una simulación dejaría las fases con
+    // el estado de un futuro que todavía no ha pasado.
+    if (!query.at) {
+      void this.syncPhaseStatuses(eventId, event.salePhases, at).catch(() => undefined);
+    }
+
+    return {
+      decision: this.decide(event, query, at),
+      capacity: event.totalCapacity ?? 0,
+    };
+  }
+
+  private decide(event: EventWindowRow, query: SaleWindowQuery, at: Date): SaleWindowDecision {
     if (NON_SELLABLE_EVENT_STATUS.includes(event.status)) {
       return this.deny('EVENT_NOT_ON_SALE', 'El evento no está a la venta.', { nextOpensAt: null });
     }
@@ -152,7 +241,7 @@ export class SaleWindowService {
         allowed: true,
         reason: 'OPEN',
         message: `Venta abierta: ${phase.name}.`,
-        phase: this.toPhaseView(phase),
+        phase: this.toPhaseView(phase, at),
         nextOpensAt,
         closesAt: phase.endsAt,
         maxPerOrder: phase.maxPerOrder,
@@ -182,16 +271,120 @@ export class SaleWindowService {
     eventId: string,
     query: SaleWindowQuery = {},
   ): Promise<SaleWindowDecision> {
-    const decision = await this.checkSaleWindow(eventId, query);
-    if (!decision.allowed) {
-      this.logger.warn(`Venta rechazada para ${eventId}: ${decision.reason}`);
-      throw new ForbiddenException({
-        message: decision.message,
-        reason: decision.reason,
-        nextOpensAt: decision.nextOpensAt,
-      });
-    }
+    const { decision } = await this.resolve(eventId, query);
+    this.assertAllowed(eventId, decision);
     return decision;
+  }
+
+  /**
+   * `assertSaleWindowOpen` + reserva del cupo de la fase (`allocationPercent`).
+   *
+   * ESTE MÉTODO TIENE EFECTO. Se llama en lugar de `assertSaleWindowOpen` justo
+   * antes de tocar inventario (`InventoryService.createHold`), porque el cupo
+   * tiene que apartarse ANTES de que las butacas queden retenidas: comprobarlo
+   * al cobrar llega tarde, la preventa ya se llevó el aforo.
+   *
+   * Si después de esto la reserva no cuaja —asiento tomado por otro, tope de
+   * sesión, transacción revertida— hay que devolver el cupo con
+   * `releasePhaseQuota(decision.quota)`. Lo que NO hace falta compensar es el
+   * caso normal: un hold que expira o una orden que se cancela devuelven el cupo
+   * solos, porque el contador se reconcilia contra la base (ver
+   * `SalePhaseQuotaService`).
+   *
+   * @param query.quantity boletos que se pretenden apartar.
+   */
+  async assertSaleWindowOpenAndReserve(
+    eventId: string,
+    query: SaleWindowQuery & { quantity: number },
+  ): Promise<SaleWindowReservation> {
+    const { decision, capacity } = await this.resolve(eventId, query);
+    this.assertAllowed(eventId, decision);
+
+    const phase = decision.phase;
+    if (!phase || phase.allocationPercent == null || query.quantity <= 0) {
+      return { ...decision, quota: null };
+    }
+
+    const target: PhaseQuotaTarget = {
+      id: phase.id,
+      eventId,
+      name: phase.name,
+      startsAt: phase.startsAt,
+      endsAt: phase.endsAt,
+      allocationPercent: phase.allocationPercent,
+    };
+    const quota = await this.quota.reserve(target, capacity, query.quantity);
+    return { ...decision, quota };
+  }
+
+  /** Devuelve un cupo apartado que no llegó a convertirse en reserva. */
+  async releasePhaseQuota(quota: PhaseQuotaHandle | null): Promise<void> {
+    await this.quota.release(quota);
+  }
+
+  private assertAllowed(eventId: string, decision: SaleWindowDecision): void {
+    if (decision.allowed) return;
+    this.logger.warn(`Venta rechazada para ${eventId}: ${decision.reason}`);
+    throw new ForbiddenException({
+      message: decision.message,
+      reason: decision.reason,
+      nextOpensAt: decision.nextOpensAt,
+    });
+  }
+
+  /**
+   * Persiste el estado derivado de las fases (`SCHEDULED → ACTIVE → ENDED`).
+   *
+   * NO es de lo que depende la verdad: todas las lecturas derivan el estado del
+   * reloj (`resolvePhaseStatus`), así que el backoffice no puede ver «programada»
+   * una fase que lleva dos horas vendiendo aunque esto no corra nunca. Esto sólo
+   * hace que la columna guardada cuadre, para los informes y para las consultas
+   * que filtran por estado.
+   *
+   * Por eso no hay cron: la escritura viaja de gorra en el tráfico que ya pasa
+   * por aquí —cada intento de reserva del onsale— y un candado con TTL hace de
+   * limitador para que sea un solo nodo cada `STATUS_SYNC_INTERVAL_SECONDS`. Un
+   * cron caído dejaría el sistema mintiendo; esto no puede, porque no es la
+   * fuente de lo que se muestra.
+   *
+   * Son `updateMany` con guarda por estado y por fecha: idempotentes y sin
+   * leer-modificar-escribir, así que dos nodos a la vez no se pisan.
+   */
+  async syncPhaseStatuses(
+    eventId: string,
+    phases: Array<{ status: SalePhaseStatus; startsAt: Date; endsAt: Date }>,
+    at: Date = new Date(),
+  ): Promise<void> {
+    const needsWork = phases.some((phase) => resolvePhaseStatus(phase, at) !== phase.status);
+    if (!needsWork) return;
+
+    // El candado no se libera: su TTL ES el intervalo entre pasadas.
+    const acquired = await this.redis.acquireLock(
+      statusSyncKey(eventId),
+      randomUUID(),
+      STATUS_SYNC_INTERVAL_SECONDS,
+    );
+    // `UNAVAILABLE` (Redis caído) deja pasar: sin limitador es una escritura de
+    // más, no una incorrecta. `TAKEN` significa que otro nodo ya la hizo.
+    if (acquired === 'TAKEN') return;
+
+    await this.prisma.salePhase.updateMany({
+      where: {
+        eventId,
+        status: SalePhaseStatus.SCHEDULED,
+        startsAt: { lte: at },
+        endsAt: { gt: at },
+      },
+      data: { status: SalePhaseStatus.ACTIVE },
+    });
+    await this.prisma.salePhase.updateMany({
+      where: {
+        eventId,
+        status: { in: [SalePhaseStatus.SCHEDULED, SalePhaseStatus.ACTIVE] },
+        endsAt: { lte: at },
+      },
+      data: { status: SalePhaseStatus.ENDED },
+    });
   }
 
   /**
@@ -257,25 +450,14 @@ export class SaleWindowService {
     };
   }
 
-  private toPhaseView(phase: {
-    id: string;
-    name: string;
-    kind: string;
-    startsAt: Date;
-    endsAt: Date;
-    channels: SalesChannel[];
-    maxPerOrder: number | null;
-    discountPercent: number | null;
-    allocationPercent: number | null;
-    code: string | null;
-    priority: number;
-  }): SaleWindowPhaseView {
+  private toPhaseView(phase: SalePhaseRow, at: Date): SaleWindowPhaseView {
     return {
       id: phase.id,
       name: phase.name,
       kind: phase.kind,
       startsAt: phase.startsAt,
       endsAt: phase.endsAt,
+      status: resolvePhaseStatus(phase, at),
       channels: phase.channels,
       maxPerOrder: phase.maxPerOrder,
       discountPercent: phase.discountPercent,
