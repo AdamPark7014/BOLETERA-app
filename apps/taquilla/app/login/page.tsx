@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch, saveTaquillaSession, type TaquillaUser } from '@/lib/auth';
+import { loginRequest, saveTaquillaSession } from '@/lib/auth';
 import { openShift } from '@/lib/pos';
 import styles from './login.module.scss';
 
@@ -73,19 +73,14 @@ export default function TaquillaLoginPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await apiFetch('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? 'Credenciales inválidas');
-
-      const user = data.user as TaquillaUser;
+      // `loginRequest` no pasa por el interceptor de 401: aquí un 401 significa
+      // credenciales incorrectas, no sesión caducada.
+      const { accessToken, user } = await loginRequest(email, password);
       if (!user?.organizationId) {
         throw new Error('Usuario sin organización asignada');
       }
 
-      saveTaquillaSession(data.accessToken, {
+      saveTaquillaSession(accessToken, {
         terminalLabel: terminalId,
         user,
         cashierId: user.id,

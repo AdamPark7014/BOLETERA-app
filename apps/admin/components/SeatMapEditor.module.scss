@@ -296,6 +296,128 @@
   }
 }
 
+/* Atajo de teclado impreso dentro del botón. */
+.kbd {
+  display: inline-block;
+  margin-left: 0.3rem;
+  padding: 0.05rem 0.28rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  border-radius: 3px;
+  background: rgba(15, 23, 42, 0.6);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.62rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.historyHint {
+  align-self: center;
+  max-width: 16rem;
+  overflow: hidden;
+  font-size: 0.65rem;
+  color: #94a3b8;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Lista accionable de avisos: cada uno lleva a su zona o butaca. */
+.issueList {
+  padding-left: 0 !important;
+  list-style: none;
+  gap: 0.45rem !important;
+
+  li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.35rem;
+    align-items: start;
+  }
+}
+
+.issueTag {
+  grid-column: 1;
+  align-self: start;
+  min-width: 3.1rem;
+  padding: 0.08rem 0.3rem;
+  border-radius: 3px;
+  background: #b45309;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+
+  li[data-severity='error'] & {
+    background: #dc2626;
+  }
+
+  &[data-ok] {
+    background: #15803d;
+  }
+}
+
+.issueLink,
+.issueText {
+  grid-column: 2;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  text-align: left;
+  color: #fed7aa;
+}
+
+.issueLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover {
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #93c5fd;
+    outline-offset: 2px;
+  }
+}
+
+.issueHint {
+  grid-column: 2;
+  margin: 0.1rem 0 0;
+  font-size: 0.65rem;
+  line-height: 1.4;
+  color: rgba(254, 215, 170, 0.8);
+}
+
+/* Resumen de accesibilidad con acciones para crear o localizar plazas. */
+.accessBox {
+  margin-top: 0.35rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(30, 41, 59, 0.6);
+  font-size: 0.7rem;
+  color: #e2e8f0;
+
+  h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #cbd5e1;
+  }
+
+  p {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 0 0.45rem;
+    line-height: 1.4;
+  }
+}
+
 .main {
   display: flex;
   flex-direction: column;

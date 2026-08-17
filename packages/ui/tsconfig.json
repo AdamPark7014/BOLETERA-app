@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.packages.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  // El `exclude` heredado descarta `**/*.d.ts`, lo que dejaría fuera la
+  // declaración de los módulos SCSS y rompería el chequeo de tipos.
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,149 @@
+/**
+ * Tokens del backoffice.
+ *
+ * No es una identidad nueva: es el inventario de lo que ya se repetía a mano en
+ * `shell.module.scss`, `_styles/platform.module.scss`, `dashboard.module.scss`,
+ * `payments.module.scss` y `Session.module.scss`. Cada valor de aquí sale de al
+ * menos dos archivos distintos; se les da nombre para poder cambiarlos en un
+ * sitio y para que las pantallas nuevas no inventen un gris más.
+ *
+ * Se declaran como custom properties (no como variables de Sass) porque los
+ * módulos CSS se compilan por separado: `var()` cruza esa frontera, `$var` no.
+ */
+
+:root {
+  /* ---- Escala neutra (zinc) — la que ya usaba todo el admin ---------- */
+  --c-ink-950: #0a0a0a; /* texto máximo contraste, logo */
+  --c-ink-900: #18181b; /* texto principal, sidebar, botón primario */
+  --c-ink-800: #262626; /* hover del botón primario */
+  --c-ink-700: #3f3f46; /* texto secundario fuerte */
+  --c-ink-600: #52525b;
+  --c-ink-500: #71717a; /* texto atenuado (muted) */
+  --c-ink-400: #a1a1aa;
+  --c-ink-300: #d4d4d8; /* borde marcado */
+  --c-ink-200: #e4e4e7; /* borde estándar */
+  --c-ink-150: #f0f0f2; /* separador de filas de tabla */
+  --c-ink-100: #f4f4f5; /* fondo de página */
+  --c-ink-75: #f7f7f8; /* fondo del shell */
+  --c-ink-50: #fafafa; /* superficie suave / texto sobre oscuro */
+  --c-white: #ffffff;
+
+  /* ---- Roles semánticos --------------------------------------------- */
+  --color-bg: var(--c-ink-75);
+  --color-surface: var(--c-white);
+  --color-surface-soft: var(--c-ink-50);
+  --color-border: var(--c-ink-200);
+  --color-border-strong: var(--c-ink-300);
+  --color-border-subtle: var(--c-ink-150);
+  --color-text: var(--c-ink-900);
+  --color-text-soft: var(--c-ink-700);
+  --color-text-muted: var(--c-ink-500);
+  --color-text-invert: var(--c-ink-50);
+
+  /* Acento de marca: el rosa que ya marcaba el enlace activo del menú. */
+  --color-accent: #e11d48;
+  --color-accent-soft: #fb7185;
+  --color-accent-wash: rgba(225, 29, 72, 0.12);
+
+  /* Estados. Los tonos de texto son los que ya cumplían 4.5:1 sobre su wash. */
+  --color-success: #16a34a;
+  --color-success-text: #166534;
+  --color-success-wash: #f0fdf4;
+  --color-success-border: #bbf7d0;
+
+  --color-warning: #a16207;
+  --color-warning-text: #854d0e;
+  --color-warning-wash: #fefce8;
+  --color-warning-border: #fde68a;
+
+  --color-danger: #b91c1c;
+  --color-danger-text: #991b1b;
+  --color-danger-wash: #fef2f2;
+  --color-danger-border: #fecaca;
+
+  --color-info: #4338ca;
+  --color-info-wash: #eef2ff;
+  --color-info-border: #c7d2fe;
+
+  /* Superficie oscura del sidebar y sus transparencias. */
+  --color-sidebar: #18181b;
+  --color-sidebar-border: #27272a;
+  --on-dark-1: rgba(250, 250, 250, 0.92); /* texto principal sobre oscuro */
+  --on-dark-2: rgba(250, 250, 250, 0.72); /* enlace en reposo */
+  --on-dark-3: rgba(250, 250, 250, 0.55); /* iconos, metadatos */
+  --on-dark-4: rgba(250, 250, 250, 0.4); /* rótulos de grupo */
+  --on-dark-line: rgba(255, 255, 255, 0.08);
+  --on-dark-fill: rgba(255, 255, 255, 0.05);
+
+  /* ---- Tipografía ---------------------------------------------------- */
+  --font-sans: var(--font-body), 'Space Grotesk', system-ui, sans-serif;
+  --text-2xs: 0.625rem; /* rótulos de grupo del menú */
+  --text-xs: 0.6875rem; /* etiquetas en versalitas */
+  --text-sm: 0.75rem;
+  --text-md: 0.8125rem; /* base de la interfaz densa */
+  --text-base: 0.875rem; /* base de lectura */
+  --text-lg: 1rem; /* h2 de panel */
+  --text-xl: 1.25rem;
+  --text-2xl: 1.625rem; /* h1 de página */
+  --text-3xl: 1.75rem; /* cifra de KPI */
+
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  --tracking-tight: -0.025em; /* titulares */
+  --tracking-wide: 0.06em;
+  --tracking-caps: 0.08em; /* versalitas */
+  --tracking-label: 0.12em; /* rótulos del menú */
+
+  --leading-tight: 1.15;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+
+  /* ---- Espaciado (base 4px, la retícula que ya seguían los paddings) -- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* ---- Radios -------------------------------------------------------- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-pill: 999px;
+
+  /* ---- Sombras ------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.28);
+
+  /* ---- Movimiento y foco --------------------------------------------- */
+  --transition-fast: 0.15s ease;
+  /* WCAG 2.2 (2.4.11/2.4.13): anillo visible y separado del control. */
+  --focus-ring: 2px solid var(--c-ink-900);
+  --focus-ring-invert: 2px solid #fafafa;
+  --focus-offset: 2px;
+  /* WCAG 2.2 (2.5.8): objetivo mínimo. */
+  --tap-min: 24px;
+
+  /* Compatibilidad con los alias antiguos que aún leen otras pantallas. */
+  --sidebar: var(--color-sidebar);
+  --bg: var(--c-ink-100);
+  --surface: var(--color-surface);
+  --border: var(--color-border);
+  --text: var(--color-text);
+  --muted: var(--color-text-muted);
+  --accent: var(--c-ink-900);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0s;
+  }
+}

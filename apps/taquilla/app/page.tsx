@@ -1,20 +1,25 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  apiJson,
   clearTaquillaSession,
   getTerminalLabel,
   getTaquillaToken,
   getTaquillaUser,
-  apiFetch,
 } from '@/lib/auth';
-import { flushQueue, getQueueSize } from '@/lib/offline-queue';
+import { HotkeyBar } from '@/components/HotkeyBar';
+import { NetStatus, useOpsStatus } from '@/components/NetStatus';
+import { digitPressed, type Hotkey, useHotkeys } from '@/lib/hotkeys';
+import { money } from '@/lib/cash';
+import { flushQueue } from '@/lib/offline-queue';
+import { clearConflicts, listConflicts, syncScans, type ScanConflict } from '@/lib/scan-queue';
 import {
+  clearFailedSync,
   fetchSessionSummary,
   getFailedSync,
-  clearFailedSync,
   getLastReceipt,
   getSessionId,
   printReceipt,
@@ -29,19 +34,14 @@ type EventRow = {
   id: string;
   title: string;
   startsAt: string;
-  venue: { name: string };
-  offers?: { id: string; name?: string; zone?: string; basePrice: string | number; remainingQuantity?: number }[];
+  venue?: { name: string };
+  offers?: { id: string; name?: string; zone?: string; basePrice: string | number }[];
 };
-
-function money(n: number) {
-  return `$${n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 export default function TaquillaHome() {
   const router = useRouter();
+  const status = useOpsStatus();
   const [synced, setSynced] = useState(0);
-  const [pending, setPending] = useState(0);
-  const [online, setOnline] = useState(true);
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
   const [terminalLabel, setTerminalLabel] = useState('TAQ-01');
@@ -49,16 +49,15 @@ export default function TaquillaHome() {
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [lastReceipt, setLastReceipt] = useState<PosReceipt | null>(null);
+  const [conflicts, setConflicts] = useState<ScanConflict[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const [failedSync, setFailedSync] = useState<Array<{ clientSaleId: string; error: string; at: string }>>([]);
+  const [failedSync, setFailedSync] = useState<Array<{ clientSaleId: string; error: string; at: string }>>(
+    [],
+  );
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(null), 3500);
-  }, []);
-
-  const refreshFailed = useCallback(() => {
-    setFailedSync(getFailedSync());
+    setTimeout(() => setToast((t) => (t === msg ? null : t)), 3500);
   }, []);
 
   const refreshSummary = useCallback(() => {
@@ -80,15 +79,23 @@ export default function TaquillaHome() {
       user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email : 'Cajero',
     );
     setLastReceipt(getLastReceipt());
-    refreshFailed();
-  }, [router, refreshFailed]);
+    setFailedSync(getFailedSync());
+    void listConflicts().then(setConflicts);
+  }, [router]);
 
   useEffect(() => {
     const tick = () => {
       const d = new Date();
-      setTime(d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setTime(
+        d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      );
       setDate(
-        d.toLocaleDateString('es-MX', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }),
+        d.toLocaleDateString('es-MX', {
+          weekday: 'long',
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        }),
       );
     };
     tick();
@@ -103,9 +110,8 @@ export default function TaquillaHome() {
   }, [refreshSummary]);
 
   useEffect(() => {
-    apiFetch('/discovery/events')
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: EventRow[]) => {
+    apiJson<EventRow[]>('/discovery/events')
+      .then((data) => {
         const now = Date.now();
         const week = now + 7 * 24 * 60 * 60 * 1000;
         const upcoming = data
@@ -114,73 +120,46 @@ export default function TaquillaHome() {
             return t >= now - 12 * 60 * 60 * 1000 && t <= week;
           })
           .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt))
-          .slice(0, 8);
-        setEvents(upcoming.length ? upcoming : data.slice(0, 8));
+          .slice(0, 9);
+        setEvents(upcoming.length ? upcoming : data.slice(0, 9));
       })
       .catch(() => setEvents([]));
   }, []);
 
-  useEffect(() => {
-    setOnline(navigator.onLine);
-    const refresh = () => {
-      setOnline(navigator.onLine);
-      getQueueSize().then(setPending);
-    };
-    window.addEventListener('online', refresh);
-    window.addEventListener('offline', refresh);
-    refresh();
-
-    const syncOnOnline = () => {
-      if (!navigator.onLine) return;
-      void flushQueue(async (payload) => {
-        if ((payload as OfflinePosPayload).type === 'pos') {
-          await syncOfflineSales([payload as OfflinePosPayload]);
-        }
-      }).then((n) => {
-        if (n > 0) {
-          setSynced((s) => s + n);
-          clearFailedSync();
-        }
-        getQueueSize().then(setPending);
-        setFailedSync(getFailedSync());
-      });
-    };
-    window.addEventListener('online', syncOnOnline);
-    syncOnOnline();
-
-    return () => {
-      window.removeEventListener('online', refresh);
-      window.removeEventListener('online', syncOnOnline);
-      window.removeEventListener('offline', refresh);
-    };
-  }, []);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === 'F1') {
-        e.preventDefault();
-        router.push('/eventos');
-      } else if (e.key === 'F2') {
-        e.preventDefault();
-        router.push('/eventos');
-      } else if (e.key === 'F3') {
-        e.preventDefault();
-        router.push('/buscar');
-      } else if (e.key === 'F4') {
-        e.preventDefault();
-        router.push('/willcall');
-      } else if (e.key === 'F5') {
-        e.preventDefault();
-        router.push('/eventos?comp=1');
-      } else if (e.key === 'F12') {
-        e.preventDefault();
-        router.push('/corte');
+  const syncAll = useCallback(() => {
+    if (!navigator.onLine) return;
+    void flushQueue(async (payload) => {
+      if ((payload as OfflinePosPayload).type === 'pos') {
+        await syncOfflineSales([payload as OfflinePosPayload]);
       }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [router]);
+    }).then((n) => {
+      if (n > 0) {
+        setSynced((s) => s + n);
+        clearFailedSync();
+      }
+      setFailedSync(getFailedSync());
+      status.refresh();
+      refreshSummary();
+    });
+    void syncScans()
+      .then((result) => {
+        if (result.sent > 0) {
+          showToast(
+            `${result.applied} escaneos aplicados · ${result.conflicts} conflictos · ${result.rejected} rechazados`,
+          );
+        }
+        void listConflicts().then(setConflicts);
+        status.refresh();
+      })
+      .catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshSummary, showToast]);
+
+  useEffect(() => {
+    syncAll();
+    window.addEventListener('online', syncAll);
+    return () => window.removeEventListener('online', syncAll);
+  }, [syncAll]);
 
   function logout() {
     clearTaquillaSession();
@@ -197,31 +176,38 @@ export default function TaquillaHome() {
     showToast('Reimprimiendo última venta');
   }
 
-  function retryOffline() {
-    void flushQueue(async (payload) => {
-      if ((payload as OfflinePosPayload).type === 'pos') {
-        await syncOfflineSales([payload as OfflinePosPayload]);
-      }
-    }).then((n) => {
-      if (n > 0) {
-        setSynced((s) => s + n);
-        clearFailedSync();
-        showToast(`${n} ventas sincronizadas`);
-      }
-      getQueueSize().then(setPending);
-      refreshFailed();
-    });
-  }
-
   function sellHref(e: EventRow) {
-    const offer = e.offers?.[0];
-    const q = new URLSearchParams({
-      eventId: e.id,
-      ...(offer?.id ? { offerId: offer.id } : {}),
-      ...(offer?.basePrice != null ? { unitPrice: String(offer.basePrice) } : {}),
-    });
+    const offerId = e.offers?.[0]?.id;
+    const q = new URLSearchParams({ eventId: e.id, ...(offerId ? { offerId } : {}) });
     return `/venta?${q.toString()}`;
   }
+
+  const hotkeys = useMemo<Hotkey[]>(
+    () => [
+      { keys: 'F1', label: 'Nueva venta', whileTyping: true, run: () => router.push('/venta') },
+      {
+        keys: '1-9',
+        label: 'Vender evento',
+        match: (e) => digitPressed(e) != null,
+        run: (e) => {
+          const n = digitPressed(e);
+          const row = n ? events[n - 1] : undefined;
+          if (row) router.push(sellHref(row));
+        },
+      },
+      { keys: 'F3', label: 'Buscar', whileTyping: true, run: () => router.push('/buscar') },
+      { keys: 'F4', label: 'Will-call', whileTyping: true, run: () => router.push('/willcall') },
+      { keys: 'F6', label: 'Acceso', whileTyping: true, run: () => router.push('/acceso') },
+      { keys: 'F7', label: 'Reimprimir', whileTyping: true, run: reprint },
+      { keys: 'F12', label: 'Corte', whileTyping: true, run: () => router.push('/corte') },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [router, events],
+  );
+
+  useHotkeys(hotkeys);
+
+  const pending = status.pendingSales + status.pendingScans;
 
   return (
     <main className={styles.home}>
@@ -259,10 +245,7 @@ export default function TaquillaHome() {
             <small>Cajero</small>
             <strong>{cashierName}</strong>
           </span>
-          <span className={online ? styles.statusOn : styles.statusOff}>
-            <span className={styles.dot} />
-            {online ? 'En línea' : 'Offline'}
-          </span>
+          <NetStatus status={status} />
           <button type="button" className={styles.logoutBtn} onClick={logout} aria-label="Cerrar sesión">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
@@ -277,11 +260,11 @@ export default function TaquillaHome() {
         </div>
       </header>
 
-      {(pending > 0 || synced > 0 || !online || failedSync.length > 0) && (
+      {(pending > 0 || synced > 0 || !status.online || failedSync.length > 0 || conflicts.length > 0) && (
         <div className={styles.banner}>
-          {!online && (
+          {!status.online && (
             <span className={styles.bannerWarn}>
-              <strong>Sin conexión</strong> · ventas en cola local.
+              <strong>Sin conexión</strong> · las ventas y los escaneos quedan en cola local.
             </span>
           )}
           {synced > 0 && (
@@ -291,14 +274,26 @@ export default function TaquillaHome() {
           )}
           {pending > 0 && (
             <span className={styles.bannerInfo}>
-              <strong>{pending}</strong> pendientes de sync.
+              <strong>{pending}</strong> operaciones pendientes de sincronizar.
+              <button type="button" onClick={syncAll}>
+                Sincronizar ahora
+              </button>
             </span>
           )}
           {failedSync.length > 0 && (
             <span className={styles.bannerWarn}>
-              <strong>{failedSync.length}</strong> sync fallidas.{' '}
-              <button type="button" onClick={retryOffline} style={{ marginLeft: 8, cursor: 'pointer' }}>
+              <strong>{failedSync.length}</strong> ventas rechazadas al sincronizar.
+              <button type="button" onClick={syncAll}>
                 Reintentar
+              </button>
+            </span>
+          )}
+          {conflicts.length > 0 && (
+            <span className={styles.bannerDanger}>
+              <strong>{conflicts.length}</strong> conflictos de escaneo por revisar.
+              <Link href="/acceso">Ver</Link>
+              <button type="button" onClick={() => void clearConflicts().then(() => setConflicts([]))}>
+                Marcar revisados
               </button>
             </span>
           )}
@@ -308,7 +303,7 @@ export default function TaquillaHome() {
       <div className={styles.workspace}>
         <section className={styles.kpiRow} aria-label="Resumen del turno">
           <div className={styles.kpi}>
-            <span>Ventas turno</span>
+            <span>Ventas del turno</span>
             <strong>{money(summary?.totalRevenue ?? 0)}</strong>
           </div>
           <div className={styles.kpi}>
@@ -316,8 +311,8 @@ export default function TaquillaHome() {
             <strong>{summary?.totalTransactions ?? 0}</strong>
           </div>
           <div className={styles.kpi}>
-            <span>Efectivo</span>
-            <strong>{money(summary?.cashSales ?? 0)}</strong>
+            <span>Efectivo esperado</span>
+            <strong>{money(summary?.expectedCash ?? 0)}</strong>
           </div>
           <div className={styles.kpi}>
             <span>Tarjeta</span>
@@ -326,53 +321,59 @@ export default function TaquillaHome() {
         </section>
 
         <section className={styles.quickActions}>
-          <Link href="/eventos" className={`${styles.actionCard} ${styles.primary}`}>
+          <Link href="/venta" className={`${styles.actionCard} ${styles.primary}`}>
             <strong>Nueva venta</strong>
-            <span>Seleccionar evento</span>
-          </Link>
-          <Link href="/eventos" className={styles.actionCard}>
-            <strong>Eventos</strong>
-            <span>Catálogo del día</span>
+            <span>Cobrar en mostrador</span>
+            <kbd>F1</kbd>
           </Link>
           <Link href="/buscar" className={styles.actionCard}>
             <strong>Buscar</strong>
-            <span>Código u orden</span>
+            <span>Boleto u orden</span>
+            <kbd>F3</kbd>
           </Link>
           <Link href="/willcall" className={styles.actionCard}>
             <strong>Will-call</strong>
             <span>Entrega en taquilla</span>
+            <kbd>F4</kbd>
+          </Link>
+          <Link href="/acceso" className={styles.actionCard}>
+            <strong>Acceso</strong>
+            <span>Puerta y manifiesto</span>
+            <kbd>F6</kbd>
           </Link>
           <button type="button" className={styles.actionCard} onClick={reprint}>
             <strong>Reimprimir</strong>
             <span>{lastReceipt ? lastReceipt.receiptNumber : 'Sin venta reciente'}</span>
+            <kbd>F7</kbd>
           </button>
           <Link href="/corte" className={styles.actionCard}>
-            <strong>Corte de caja</strong>
-            <span>Cerrar turno</span>
+            <strong>Turno y caja</strong>
+            <span>Arqueo, retiro, corte</span>
+            <kbd>F12</kbd>
           </Link>
           <Link href="/ajustes" className={styles.actionCard}>
             <strong>Ajustes</strong>
-            <span>Impresora y PIN</span>
+            <span>Impresora y terminal</span>
           </Link>
         </section>
 
         <div className={styles.columns}>
           <section className={styles.panel}>
             <header className={styles.panelHead}>
-              <h2>Eventos</h2>
+              <h2>Vender ahora · pulsa el número</h2>
               <Link href="/eventos">Ver todos</Link>
             </header>
             {events.length === 0 ? (
               <p className={styles.empty}>No hay eventos en ventana de venta.</p>
             ) : (
               <ul className={styles.eventList}>
-                {events.map((e) => {
-                  const offer = e.offers?.[0];
-                  const price = offer ? Number(offer.basePrice) : 0;
+                {events.map((e, i) => {
+                  const price = Number(e.offers?.[0]?.basePrice ?? 0);
                   const when = new Date(e.startsAt);
                   return (
                     <li key={e.id}>
                       <Link href={sellHref(e)} className={styles.eventRow}>
+                        <kbd className={styles.eventKey}>{i + 1}</kbd>
                         <div>
                           <strong>{e.title}</strong>
                           <span>
@@ -425,20 +426,7 @@ export default function TaquillaHome() {
         </div>
       </div>
 
-      <footer className={styles.footer}>
-        <span className={styles.hotkeysTitle}>Atajos</span>
-        <ul className={styles.hotkeys}>
-          <li>
-            <kbd>F1</kbd> Venta
-          </li>
-          <li>
-            <kbd>F3</kbd> Buscar
-          </li>
-          <li>
-            <kbd>F12</kbd> Corte
-          </li>
-        </ul>
-      </footer>
+      <HotkeyBar hotkeys={hotkeys} />
     </main>
   );
 }

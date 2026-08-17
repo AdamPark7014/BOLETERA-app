@@ -79,6 +79,6 @@ export const useCartStore = create<CartState>()(
   ),
 );
 
-export function secondsUntil(iso: string) {
-  return Math.max(0, Math.floor((new Date(iso).getTime() - Date.now()) / 1000));
-}
+// Una sola implementación del reloj: `lib/payment-window` la comparte con el
+// contador de la reserva y con la ventana de pago diferido (OXXO/SPEI).
+export { secondsUntil } from './payment-window';

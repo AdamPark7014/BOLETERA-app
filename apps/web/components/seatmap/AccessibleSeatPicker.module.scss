@@ -1,0 +1,194 @@
+// Ruta accesible: contraste ≥4.5:1 sobre el fondo #0e0e10 y objetivos de
+// ≥44 px de alto (WCAG 2.2 §2.5.8 pide 24; aquí sobra a propósito, porque este
+// es el control equivalente para las butacas que en el mapa quedan pequeñas).
+
+.picker {
+  border: 1px solid #1c1c1f;
+  background: #0e0e10;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.sub {
+  margin: 0;
+  font-size: 0.72rem;
+  // rgba(250,250,250,0.72) sobre #0e0e10 ≈ 10:1
+  color: rgba(250, 250, 250, 0.72);
+}
+
+.accessibleToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: #121214;
+  border: 1px solid #2a2a2e;
+  cursor: pointer;
+  align-self: flex-start;
+
+  input {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: #22c55e;
+    cursor: pointer;
+  }
+
+  &:hover {
+    border-color: #52525b;
+  }
+
+  &:focus-within {
+    outline: 2px solid #fafafa;
+    outline-offset: 2px;
+  }
+}
+
+.loadingNote {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fcd34d;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+
+  @media (max-width: 40rem) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.columnLabel {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(250, 250, 250, 0.62);
+}
+
+.emptyColumn {
+  margin: 0;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.74rem;
+  color: rgba(250, 250, 250, 0.6);
+  background: #09090b;
+  border: 1px solid #1a1a1d;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 13rem;
+  overflow-y: auto;
+  border: 1px solid #1a1a1d;
+  background: #09090b;
+  scrollbar-width: thin;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  // 44 px: objetivo táctil holgado, no el mínimo de 24.
+  min-height: 2.75rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fafafa;
+  cursor: pointer;
+  border-bottom: 1px solid #141417;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: rgba(250, 250, 250, 0.06);
+  }
+
+  // Foco visible en TODO control (WCAG 2.4.11): anillo claro + separación.
+  &:focus-visible {
+    outline: 2px solid #fafafa;
+    outline-offset: -3px;
+    background: rgba(250, 250, 250, 0.1);
+  }
+
+  &[aria-selected='true'] {
+    background: rgba(225, 29, 72, 0.2);
+    box-shadow: inset 3px 0 0 #e11d48;
+  }
+}
+
+.optionSelected {
+  color: #fff;
+}
+
+.optionDisabled {
+  color: rgba(250, 250, 250, 0.45);
+  cursor: not-allowed;
+  text-decoration: line-through;
+  text-decoration-color: rgba(250, 250, 250, 0.35);
+}
+
+.optionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  font-size: 0.85rem;
+  line-height: 1;
+  color: #7dd3fc;
+}
+
+.optionMeta {
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(250, 250, 250, 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
+.liveRegion {
+  margin: 0;
+  min-height: 1.1rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #a5f3fc;
+}

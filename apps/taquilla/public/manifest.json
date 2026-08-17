@@ -2,7 +2,10 @@
   "name": "Boletera Taquilla",
   "short_name": "Taquilla",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#171717"
+  "orientation": "landscape",
+  "background_color": "#0c0c0e",
+  "theme_color": "#111113",
+  "description": "Punto de venta y control de acceso de taquilla, operable sin red."
 }

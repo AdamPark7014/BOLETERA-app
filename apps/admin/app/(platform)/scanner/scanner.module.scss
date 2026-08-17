@@ -1,40 +1,125 @@
-.page {
-  max-width: 480px;
+// Pantalla de puerta: se lee de reojo, con fila delante y a veces con guantes.
+// De ahí los objetivos grandes, el contraste alto y que cada veredicto tenga
+// forma e icono además de color (un operador daltónico no puede distinguir
+// «permitido» de «rechazado» sólo por verde y rojo).
 
-  :global(textarea) {
-    width: 100%;
-    margin: 1rem 0;
-    padding: 0.75rem;
-    border: 1px solid #d4d4d4;
-    border-radius: 8px;
-    font-family: ui-monospace, monospace;
-    font-size: 0.8125rem;
-  }
+$ink: #171717;
+$muted: #595959; // 7.0:1 sobre blanco — el #737373 anterior no llegaba a 4.5:1
+$border: #d4d4d4;
+
+.page {
+  max-width: 520px;
 
   :global(button) {
-    padding: 0.625rem 1.25rem;
-    background: #171717;
+    min-height: 48px; // puerta: objetivo grande, no los 24px del mínimo WCAG
+    padding: 0.75rem 1.5rem;
+    background: $ink;
     color: #fff;
     border: none;
     border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
+
     &:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
     }
   }
 }
+
+.field {
+  margin: 1rem 0;
+
+  label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: $ink;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid $border;
+    border-radius: 8px;
+    font-family: ui-monospace, monospace;
+    font-size: 1rem; // 16px: evita el zoom automático de iOS al enfocar
+
+    &:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 1px;
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.secondary {
+  background: #fff !important;
+  color: $ink !important;
+  border: 1px solid $border !important;
+}
+
 .hint {
-  color: #737373;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  color: $muted;
   font-size: 0.875rem;
 }
-.error {
-  margin-top: 1rem;
-  color: #b91c1c;
+
+.pillOnline,
+.pillOffline,
+.pillQueued {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.pillOnline {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.pillOffline {
+  color: #7c2d12;
+  background: #ffedd5;
+}
+
+.pillQueued {
+  color: #1e3a8a;
+  background: #dbeafe;
+}
+
+.warnBanner {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.9rem;
+  color: #7c2d12;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #c2410c;
+  border-radius: 8px;
   font-size: 0.875rem;
 }
+
 .camera {
   margin: 1rem 0;
 }
+
 .video {
   width: 100%;
   max-height: 240px;
@@ -42,16 +127,82 @@
   border-radius: 8px;
   background: #000;
 }
-.ok {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+
+// --- Veredictos -------------------------------------------------------------
+// Cada uno con su banda lateral: la forma distingue aunque el color no llegue.
+
+%verdict {
+  margin-top: 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid;
+  border-left-width: 6px;
   border-radius: 8px;
+
+  strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 1.125rem;
+  }
+
+  p {
+    margin: 0.25rem 0;
+    font-size: 0.9375rem;
+  }
+
+  ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.875rem;
+  }
 
   :global(code) {
     display: block;
     margin-top: 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
   }
+}
+
+.ok {
+  @extend %verdict;
+  color: #14532d;
+  background: #f0fdf4;
+  border-color: #16a34a;
+}
+
+.seat {
+  font-weight: 700;
+  font-size: 1.0625rem !important;
+}
+
+.duplicate {
+  @extend %verdict;
+  color: #7c2d12;
+  background: #fffbeb;
+  border-color: #d97706;
+}
+
+.queued {
+  @extend %verdict;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.error {
+  @extend %verdict;
+  color: #7f1d1d;
+  background: #fef2f2;
+  border-color: #b91c1c;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

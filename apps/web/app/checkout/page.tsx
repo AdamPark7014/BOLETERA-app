@@ -2,24 +2,26 @@
 
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
-import { Button, Input } from '@boletera/ui';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { HoldCountdown } from '@/components/HoldCountdown';
+import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import { authHeaders, getStoredUser } from '@/lib/auth';
+import { checkoutFingerprint, clearCheckoutAttempt, getCheckoutIdempotencyKey } from '@/lib/checkout-attempt';
 import { useCartStore } from '@/lib/cart-store';
+import { orderPath, saveOrderAccessToken } from '@/lib/order-access';
+import { isDeferredMethod, paymentWindowNotice, type PaymentMethodId } from '@/lib/payment-window';
+import {
+  fetchCartPricing,
+  formatMoney,
+  pricingTotal,
+  sameTotal,
+  type CartPricing,
+} from '@/lib/pricing';
 import styles from './checkout.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-
-type Pricing = {
-  subtotal: string;
-  fees: string;
-  taxes: string;
-  total: string;
-  discount: string;
-};
 
 type PaymentAction = {
   gateway: string;
@@ -35,6 +37,16 @@ type PaymentAction = {
   status: string;
 };
 
+type CreatedOrder = {
+  publicId: string;
+  /** Se entrega UNA sola vez, aquí. Es la credencial del comprador invitado. */
+  accessToken?: string;
+  totalAmount?: string;
+  currency?: string;
+  expiresAt?: string;
+  paymentAction?: PaymentAction;
+};
+
 type GatewayInfo = {
   settlement: string;
   demo: boolean;
@@ -44,7 +56,7 @@ type GatewayInfo = {
   accountClabeMasked?: string | null;
 };
 
-const METHODS = [
+const METHODS: { id: PaymentMethodId; label: string; detail: string }[] = [
   {
     id: 'CARD',
     label: 'Tarjeta',
@@ -60,16 +72,43 @@ const METHODS = [
     label: 'OXXO',
     detail: 'Paga en tienda con referencia',
   },
-] as const;
+];
+
+/** Aviso de expiración con dos minutos de margen; suficiente para reaccionar. */
+const HOLD_WARN_SECONDS = 120;
+
+type FieldErrors = { name?: string; email?: string; phone?: string };
+
+function validate(name: string, email: string, phone: string): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!name.trim()) errors.name = 'Escribe el nombre de quien recibe los boletos.';
+  else if (name.trim().length > 120) errors.name = 'El nombre no puede pasar de 120 caracteres.';
+
+  const cleanEmail = email.trim();
+  if (!cleanEmail) errors.email = 'Necesitamos tu correo para enviarte los boletos y el acceso a la orden.';
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail))
+    errors.email = 'Ese correo no parece válido. Revisa que tenga el formato nombre@dominio.com.';
+
+  const cleanPhone = phone.replace(/[\s()-]/g, '');
+  if (cleanPhone && !/^\+?\d{10,15}$/.test(cleanPhone))
+    errors.phone = 'Escribe 10 dígitos (o el número con lada internacional).';
+
+  return errors;
+}
 
 function CheckoutForm() {
   const params = useSearchParams();
   const router = useRouter();
   const eventId = params.get('eventId') ?? '';
   const offerId = params.get('offerId') ?? '';
-  const storedUser = getStoredUser();
-  const urlHoldIds = (params.get('holdIds') ?? '').split(',').filter(Boolean);
+  const urlHoldIds = useMemo(
+    () => (params.get('holdIds') ?? '').split(',').filter(Boolean),
+    [params],
+  );
   const rawCart = useCartStore((s) => s.items.find((i) => i.eventId === eventId));
+  const removeFromCart = useCartStore((s) => s.removeAt);
+  const cartIndex = useCartStore((s) => s.items.findIndex((i) => i.eventId === eventId));
+
   const cartItem = rawCart
     ? {
         ...rawCart,
@@ -93,124 +132,255 @@ function CheckoutForm() {
     cartItem?.lines?.length
       ? cartItem.lines
       : offerId && urlHoldIds.length
-        ? [{ offerId, holdIds: urlHoldIds, quantity: urlHoldIds.length }]
+        ? [{ offerId, holdIds: urlHoldIds, quantity: urlHoldIds.length, offerName: undefined, seatLabels: undefined }]
         : [];
   const holdIds = orderLines.flatMap((l) => l.holdIds);
   const cartExpires = cartItem?.expiresAt;
   const expiresAt = params.get('expiresAt') || cartExpires || null;
+  const currency = cartItem?.currency || 'MXN';
+
   const [holdExpired, setHoldExpired] = useState(false);
+  const [holdWarning, setHoldWarning] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [showErrors, setShowErrors] = useState(false);
   const [promo, setPromo] = useState('');
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
   const [promoValid, setPromoValid] = useState(false);
-  const [method, setMethod] = useState('CARD');
+  const [promoChecking, setPromoChecking] = useState(false);
+  const [method, setMethod] = useState<PaymentMethodId>('CARD');
   const [loading, setLoading] = useState(false);
-  const [pricing, setPricing] = useState<Pricing | null>(null);
-  const [error, setError] = useState('');
+  const [pricing, setPricing] = useState<CartPricing | null>(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
+  /** Total que el comprador tiene delante; nunca se cobra otro sin confirmar. */
+  const [quotedTotal, setQuotedTotal] = useState<number | null>(null);
+  const [priceChange, setPriceChange] = useState<{ from: number; to: number } | null>(null);
+  const [failure, setFailure] = useState<ApiErrorInfo | null>(null);
   const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
 
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const methodRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Prellenado desde la sesión: una sola vez al montar. Leerlo en cada render
+  // (como antes) reescribía el campo en cada pulsación y el usuario no podía
+  // corregir el nombre heredado de su cuenta.
   useEffect(() => {
-    if (storedUser) {
-      setName(`${storedUser.firstName} ${storedUser.lastName}`.trim());
-      setEmail(storedUser.email);
-    }
-  }, [storedUser]);
+    const storedUser = getStoredUser();
+    if (!storedUser) return;
+    setName((current) => current || `${storedUser.firstName} ${storedUser.lastName}`.trim());
+    setEmail((current) => current || storedUser.email);
+  }, []);
 
   useEffect(() => {
-    fetch(`${API}/payments/config`)
+    const controller = new AbortController();
+    fetch(`${API}/payments/config`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : null))
       .then((data: GatewayInfo | null) => setGatewayInfo(data))
       .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   const linesKey = orderLines.map((l) => `${l.offerId}:${l.holdIds.length}`).join('|');
+  const pricingItems = useMemo(
+    () =>
+      orderLines.map((l) => ({
+        offerId: l.offerId,
+        quantity: l.holdIds.length || l.quantity || 1,
+      })),
+    // `linesKey` resume la forma del pedido; recalcular por identidad de array
+    // dispararía una petición de precio en cada render.
+    [linesKey], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
+  // Precio completo desde el primer render de esta pantalla: sin él, el
+  // comprador solo vería el subtotal hasta después de teclear sus datos.
   useEffect(() => {
-    if (!eventId || !orderLines.length) return;
-    const items = orderLines.map((l) => ({
-      offerId: l.offerId,
-      quantity: l.holdIds.length || l.quantity || 1,
-    }));
-    fetch(`${API}/pricing/calculate-cart`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        eventId,
-        items,
-        promotionCode: promoValid ? promo : undefined,
-      }),
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setPricing)
-      .catch(() => {});
-  }, [eventId, linesKey, promo, promoValid]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!eventId || !pricingItems.length) return;
+    const controller = new AbortController();
+    setPricingLoading(true);
+    fetchCartPricing(
+      API,
+      { eventId, items: pricingItems, promotionCode: promoValid ? promo : undefined },
+      controller.signal,
+    )
+      .then((data) => {
+        if (controller.signal.aborted || !data) return;
+        setPricing(data);
+        setQuotedTotal(pricingTotal(data));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setPricingLoading(false);
+      });
+    return () => controller.abort();
+  }, [eventId, pricingItems, promo, promoValid]);
 
   async function validatePromo() {
     if (!promo.trim() || !eventId) return;
     setPromoMsg(null);
-    const res = await fetch(`${API}/campaigns/validate-code`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: promo, eventId, userId: email || 'guest' }),
-    });
-    if (res.ok) {
-      setPromoValid(true);
-      setPromoMsg('Código aplicado');
-    } else {
+    setPromoChecking(true);
+    try {
+      const res = await fetch(`${API}/campaigns/validate-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promo.trim(), eventId, userId: email.trim() || 'guest' }),
+      });
+      if (res.ok) {
+        setPromoValid(true);
+        setPromoMsg('Código aplicado. El total de abajo ya lo incluye.');
+      } else {
+        setPromoValid(false);
+        setPromoMsg('Código inválido o expirado.');
+      }
+    } catch {
       setPromoValid(false);
-      setPromoMsg('Código inválido o expirado');
+      setPromoMsg('No pudimos validar el código. Revisa tu conexión.');
+    } finally {
+      setPromoChecking(false);
     }
   }
 
-  function paymentMethodForApi() {
-    if (method === 'OXXO' || method === 'SPEI') return method;
-    return 'CARD';
+  /** Lleva el foco al primer campo con error (WCAG 2.2: 3.3.1 / 3.3.3). */
+  const focusFirstError = useCallback((errors: FieldErrors) => {
+    if (errors.name) nameRef.current?.focus();
+    else if (errors.email) emailRef.current?.focus();
+    else if (errors.phone) phoneRef.current?.focus();
+  }, []);
+
+  /** Flechas dentro del radiogroup, como pide el patrón ARIA de radios. */
+  function onMethodKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
+    const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'];
+    if (!keys.includes(event.key)) return;
+    event.preventDefault();
+    const forward = event.key === 'ArrowRight' || event.key === 'ArrowDown';
+    const next = (index + (forward ? 1 : -1) + METHODS.length) % METHODS.length;
+    setMethod(METHODS[next].id);
+    methodRefs.current[next]?.focus();
+  }
+
+  function handleHoldExpired() {
+    setHoldExpired(true);
+    setHoldWarning(false);
+    // El hold ya no vale en el servidor: dejar la entrada en el carrito solo
+    // sirve para que el comprador vuelva a chocar contra el mismo 400.
+    if (cartIndex >= 0) removeFromCart(cartIndex);
   }
 
   async function pay() {
+    const errors = validate(name, email, phone);
+    setFieldErrors(errors);
+    setShowErrors(true);
+    if (Object.keys(errors).length) {
+      focusFirstError(errors);
+      return;
+    }
+
     setLoading(true);
-    setError('');
+    setFailure(null);
     try {
+      // Reconsulta del precio pegada al cobro: entre que se pintó el resumen y
+      // este clic pudo cambiar el precio dinámico o caducar la promoción.
+      // Cobrar un importe distinto del mostrado sin decirlo es lo que no se
+      // puede hacer, así que se muestra el cambio y se exige un segundo clic.
+      const fresh = await fetchCartPricing(API, {
+        eventId,
+        items: pricingItems,
+        promotionCode: promoValid ? promo : undefined,
+      });
+      if (fresh) {
+        const freshTotal = pricingTotal(fresh);
+        // Con una confirmación pendiente, el importe aprobado es el de la
+        // confirmación: si volvió a moverse entre los dos clics hay que
+        // preguntar otra vez, no cobrar el tercero en silencio.
+        const approved = priceChange ? priceChange.to : (quotedTotal ?? freshTotal);
+        setPricing(fresh);
+        setQuotedTotal(freshTotal);
+        if (!sameTotal(approved, freshTotal)) {
+          setPriceChange({ from: approved, to: freshTotal });
+          setLoading(false);
+          return;
+        }
+      }
+      setPriceChange(null);
+
+      const fingerprint = checkoutFingerprint({
+        eventId,
+        holdIds,
+        paymentMethod: method,
+        promotionCode: promoValid ? promo : undefined,
+      });
+
+      // Cuerpo estricto: el ValidationPipe rechaza con 400 cualquier campo no
+      // declarado. `userId` sale del JWT, nunca de aquí. `items` gana sobre
+      // `holdIds`/`offerId` en el servidor, así que se manda uno u otro.
+      const multiLine = orderLines.length > 1;
+      const body: Record<string, unknown> = {
+        eventId,
+        buyerName: name.trim(),
+        buyerEmail: email.trim(),
+        paymentMethod: method,
+      };
+      if (multiLine) {
+        body.items = orderLines.map((l) => ({ offerId: l.offerId, holdIds: l.holdIds }));
+      } else {
+        body.holdIds = holdIds;
+        const singleOffer = orderLines[0]?.offerId || offerId;
+        if (singleOffer) body.offerId = singleOffer;
+      }
+      const cleanPhone = phone.replace(/[\s()-]/g, '');
+      if (cleanPhone) body.buyerPhone = cleanPhone;
+      if (promoValid && promo.trim()) body.promotionCode = promo.trim();
+
       const res = await fetch(`${API}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Idempotency-Key': crypto.randomUUID(),
+          // Estable por intento: un reintento tras un timeout devuelve la orden
+          // ya creada en vez de cobrar dos veces.
+          'Idempotency-Key': getCheckoutIdempotencyKey(fingerprint),
           ...authHeaders(),
         },
-        body: JSON.stringify({
-          eventId,
-          items: orderLines.map((l) => ({ offerId: l.offerId, holdIds: l.holdIds })),
-          holdIds,
-          offerId: orderLines.length === 1 ? orderLines[0].offerId : offerId || undefined,
-          buyerName: name || `${storedUser?.firstName ?? ''} ${storedUser?.lastName ?? ''}`.trim(),
-          buyerEmail: email || storedUser?.email,
-          paymentMethod: paymentMethodForApi(),
-          promotionCode: promoValid ? promo : undefined,
-        }),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || 'No se pudo crear la orden');
-      }
-      const order = await res.json();
 
-      if (order.paymentAction) {
-        const action = order.paymentAction as PaymentAction;
-        if (action.redirectUrl) {
-          window.location.href = action.redirectUrl;
-          return;
-        }
+      if (!res.ok) {
+        const info = await readApiError(res, 'No se pudo crear la orden');
+        setFailure(info);
+        if (info.needsNewHold) handleHoldExpired();
+        return;
+      }
+
+      const order = (await res.json()) as CreatedOrder;
+      // El token vuelve una sola vez. Se archiva ANTES de navegar (o de saltar
+      // a la pasarela, que vuelve por una URL que el banco compone y en la que
+      // no cabe el token).
+      saveOrderAccessToken(order.publicId, order.accessToken);
+      clearCheckoutAttempt();
+
+      const action = order.paymentAction;
+      if (action?.redirectUrl) {
+        window.location.href = action.redirectUrl;
+        return;
+      }
+
+      if (action) {
         router.push(
-          `/orders/${order.publicId}/pago?method=${method}&ref=${encodeURIComponent(action.reference ?? '')}&clabe=${encodeURIComponent(String(action.metadata?.clabe ?? ''))}&concept=${encodeURIComponent(String(action.metadata?.concept ?? ''))}`,
+          orderPath(order.publicId, order.accessToken, '/pago', {
+            method,
+            ref: action.reference ?? '',
+            clabe: action.metadata?.clabe ?? '',
+            concept: action.metadata?.concept ?? '',
+          }),
         );
         return;
       }
 
-      router.push(`/orders/${order.publicId}`);
+      router.push(orderPath(order.publicId, order.accessToken));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error de pago');
+      setFailure(networkError(e));
     } finally {
       setLoading(false);
     }
@@ -218,6 +388,17 @@ function CheckoutForm() {
 
   const seatLabels =
     cartItem?.lines?.flatMap((l) => l.seatLabels ?? []) ?? cartItem?.seatLabels ?? [];
+  const total = quotedTotal ?? pricingTotal(pricing);
+  const totalLabel = pricing ? formatMoney(total, currency) : null;
+  const canPay = !loading && !holdExpired && holdIds.length > 0;
+  const deferred = isDeferredMethod(method);
+  const payLabel = priceChange
+    ? `Confirmar y pagar ${formatMoney(priceChange.to, currency)}`
+    : gatewayInfo?.demo
+      ? `Simular pago${totalLabel ? ` ${totalLabel}` : ''}`
+      : deferred
+        ? `Generar referencia${totalLabel ? ` ${totalLabel}` : ''}`
+        : `Pagar${totalLabel ? ` ${totalLabel}` : ''} con Banorte`;
 
   return (
     <div className={styles.shell}>
@@ -227,7 +408,9 @@ function CheckoutForm() {
           <Link href="/cart" className={styles.stepDone}>
             1 Carrito
           </Link>
-          <span className={styles.stepActive}>2 Pago</span>
+          <span className={styles.stepActive} aria-current="step">
+            2 Pago
+          </span>
           <span className={styles.stepTodo}>3 Boletos</span>
         </div>
 
@@ -240,10 +423,28 @@ function CheckoutForm() {
           </p>
         </header>
 
-        <HoldCountdown expiresAt={expiresAt} onExpire={() => setHoldExpired(true)} />
+        <HoldCountdown
+          expiresAt={expiresAt}
+          variant="hold"
+          warnSeconds={HOLD_WARN_SECONDS}
+          onWarn={() => setHoldWarning(true)}
+          onExpire={handleHoldExpired}
+          hint={
+            deferred
+              ? 'Tiempo para confirmar. Al generar la referencia ampliamos el apartado.'
+              : 'Completa el pago antes de que expire'
+          }
+        />
+
+        {holdWarning && !holdExpired && (
+          <p className={styles.warn} role="status">
+            Tu reserva está por expirar. Termina el pago o tendrás que elegir asientos otra vez.
+          </p>
+        )}
+
         {holdExpired && (
           <p className={styles.error} role="alert">
-            Tu reserva expiró.{' '}
+            Tu reserva expiró y los lugares volvieron a la venta. No se realizó ningún cargo.{' '}
             <Link href={cartItem?.slug ? `/events/${cartItem.slug}` : '/events'}>
               Volver a elegir asientos
             </Link>
@@ -271,27 +472,108 @@ function CheckoutForm() {
             )}
 
             <div className={styles.fieldGrid}>
-              <Input
-                label="Nombre completo"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-                required
-              />
-              <Input
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
-              />
+              <div className={styles.field}>
+                <label htmlFor="buyer-name">Nombre completo</label>
+                <input
+                  id="buyer-name"
+                  ref={nameRef}
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (showErrors) setFieldErrors(validate(e.target.value, email, phone));
+                  }}
+                  autoComplete="name"
+                  inputMode="text"
+                  enterKeyHint="next"
+                  required
+                  aria-required="true"
+                  aria-invalid={showErrors && Boolean(fieldErrors.name)}
+                  aria-describedby={
+                    showErrors && fieldErrors.name ? 'buyer-name-error' : 'buyer-name-hint'
+                  }
+                />
+                {showErrors && fieldErrors.name ? (
+                  <span id="buyer-name-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.name}
+                  </span>
+                ) : (
+                  <span id="buyer-name-hint" className={styles.fieldHint}>
+                    Como aparece en tu identificación, por si la piden en el acceso.
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="buyer-email">Correo electrónico</label>
+                <input
+                  id="buyer-email"
+                  ref={emailRef}
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (showErrors) setFieldErrors(validate(name, e.target.value, phone));
+                  }}
+                  autoComplete="email"
+                  inputMode="email"
+                  enterKeyHint="next"
+                  required
+                  aria-required="true"
+                  aria-invalid={showErrors && Boolean(fieldErrors.email)}
+                  aria-describedby={
+                    showErrors && fieldErrors.email ? 'buyer-email-error' : 'buyer-email-hint'
+                  }
+                />
+                {showErrors && fieldErrors.email ? (
+                  <span id="buyer-email-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.email}
+                  </span>
+                ) : (
+                  <span id="buyer-email-hint" className={styles.fieldHint}>
+                    Ahí enviamos tus boletos y el enlace para consultarlos desde cualquier
+                    dispositivo.
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="buyer-phone">
+                  Teléfono <span className={styles.optional}>(opcional)</span>
+                </label>
+                <input
+                  id="buyer-phone"
+                  ref={phoneRef}
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    if (showErrors) setFieldErrors(validate(name, email, e.target.value));
+                  }}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  enterKeyHint="done"
+                  aria-invalid={showErrors && Boolean(fieldErrors.phone)}
+                  aria-describedby={
+                    showErrors && fieldErrors.phone ? 'buyer-phone-error' : 'buyer-phone-hint'
+                  }
+                />
+                {showErrors && fieldErrors.phone ? (
+                  <span id="buyer-phone-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.phone}
+                  </span>
+                ) : (
+                  <span id="buyer-phone-hint" className={styles.fieldHint}>
+                    Solo para avisarte si hay un cambio en el evento.
+                  </span>
+                )}
+              </div>
             </div>
 
-            <label className={styles.promoLabel}>
-              Código promocional
+            <div className={styles.field}>
+              <label htmlFor="promo-code">Código promocional</label>
               <div className={styles.promoRow}>
                 <input
+                  id="promo-code"
                   value={promo}
                   onChange={(e) => {
                     setPromo(e.target.value);
@@ -299,31 +581,44 @@ function CheckoutForm() {
                     setPromoMsg(null);
                   }}
                   placeholder="Opcional"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  aria-describedby="promo-code-status"
                 />
-                <Button
+                <button
                   type="button"
-                  variant="secondary"
-                  size="md"
-                  onClick={validatePromo}
-                  disabled={!promo.trim()}
+                  className={styles.promoBtn}
+                  onClick={() => void validatePromo()}
+                  disabled={!promo.trim() || promoChecking}
                 >
-                  Validar
-                </Button>
+                  {promoChecking ? 'Validando…' : 'Validar'}
+                </button>
               </div>
-              {promoMsg && (
-                <span className={promoValid ? styles.promoOk : styles.promoErr}>{promoMsg}</span>
-              )}
-            </label>
+              <span
+                id="promo-code-status"
+                className={promoValid ? styles.promoOk : promoMsg ? styles.promoErr : styles.fieldHint}
+                role="status"
+              >
+                {promoMsg ?? 'Si tienes un código, aplícalo antes de pagar.'}
+              </span>
+            </div>
 
             <fieldset className={styles.methods}>
               <legend>Método de pago</legend>
               <div className={styles.methodGrid} role="radiogroup" aria-label="Método de pago">
-                {METHODS.map((m) => (
+                {METHODS.map((m, index) => (
                   <button
                     key={m.id}
                     type="button"
                     role="radio"
                     aria-checked={method === m.id}
+                    // Roving tabindex: el grupo entero es una sola parada de
+                    // tabulación y las flechas mueven la selección.
+                    tabIndex={method === m.id ? 0 : -1}
+                    ref={(el) => {
+                      methodRefs.current[index] = el;
+                    }}
+                    onKeyDown={(e) => onMethodKeyDown(e, index)}
                     className={`${styles.methodCard} ${method === m.id ? styles.methodOn : ''}`}
                     onClick={() => setMethod(m.id)}
                   >
@@ -336,31 +631,48 @@ function CheckoutForm() {
                   </button>
                 ))}
               </div>
+              <p className={styles.methodNote} role="status">
+                {paymentWindowNotice(method)}
+              </p>
             </fieldset>
 
-            {error && (
-              <p className={styles.error} role="alert">
-                {error}
-              </p>
+            {priceChange && (
+              <div className={styles.priceChange} role="alert">
+                <strong>El total cambió antes de cobrar</strong>
+                <p>
+                  Pasó de {formatMoney(priceChange.from, currency)} a{' '}
+                  {formatMoney(priceChange.to, currency)}. Revísalo y confirma si quieres continuar:
+                  no cobramos nada hasta que lo apruebes.
+                </p>
+              </div>
             )}
 
-            <Button
+            {failure && (
+              <div className={styles.error} role="alert">
+                <p>{failure.message}</p>
+                {failure.needsNewHold && (
+                  <Link href={cartItem?.slug ? `/events/${cartItem.slug}` : '/events'}>
+                    Volver a elegir asientos
+                  </Link>
+                )}
+                {failure.kind === 'credential' && !failure.needsNewHold && (
+                  <Link href="/login">Iniciar sesión</Link>
+                )}
+              </div>
+            )}
+
+            <button
               type="button"
-              size="lg"
               className={styles.pay}
-              disabled={loading || !name || !email || !holdIds.length || holdExpired}
-              onClick={pay}
+              disabled={!canPay}
+              aria-busy={loading}
+              onClick={() => void pay()}
             >
-              {loading
-                ? 'Procesando…'
-                : gatewayInfo?.demo
-                  ? `Simular pago${pricing ? ` $${pricing.total}` : ''}`
-                  : `Pagar${pricing ? ` $${pricing.total}` : ''} con Banorte`}
-            </Button>
+              {loading ? 'Procesando…' : payLabel}
+            </button>
 
             <p className={styles.fine}>
-              Al continuar aceptas los{' '}
-              <Link href="/terminos">términos</Link> y el{' '}
+              Al continuar aceptas los <Link href="/terminos">términos</Link> y el{' '}
               <Link href="/privacidad">aviso de privacidad</Link>.
             </p>
           </section>
@@ -412,32 +724,41 @@ function CheckoutForm() {
               </div>
             )}
 
-            {pricing && (
-              <div className={styles.summary}>
-                <div>
-                  <span>Subtotal</span>
-                  <strong>${pricing.subtotal}</strong>
-                </div>
-                <div>
-                  <span>Cargos de servicio</span>
-                  <strong>${pricing.fees}</strong>
-                </div>
-                <div>
-                  <span>Impuestos</span>
-                  <strong>${pricing.taxes}</strong>
-                </div>
-                {Number(pricing.discount) > 0 && (
+            <div className={styles.summary} aria-busy={pricingLoading}>
+              {pricing ? (
+                <>
                   <div>
-                    <span>Descuento</span>
-                    <strong>−${pricing.discount}</strong>
+                    <span>Precio de los boletos</span>
+                    <strong>{formatMoney(pricing.subtotal, currency)}</strong>
                   </div>
-                )}
-                <div className={styles.total}>
-                  <span>Total</span>
-                  <strong>${pricing.total}</strong>
-                </div>
-              </div>
-            )}
+                  <div>
+                    <span>Cargo por servicio</span>
+                    <strong>{formatMoney(pricing.fees, currency)}</strong>
+                  </div>
+                  <div>
+                    <span>IVA</span>
+                    <strong>{formatMoney(pricing.taxes, currency)}</strong>
+                  </div>
+                  {Number(pricing.discount) > 0 && (
+                    <div>
+                      <span>Descuento</span>
+                      <strong>−{formatMoney(pricing.discount, currency)}</strong>
+                    </div>
+                  )}
+                  <div className={styles.total}>
+                    <span>Total a pagar</span>
+                    <strong>{formatMoney(total, currency)}</strong>
+                  </div>
+                  <p className={styles.totalNote}>
+                    Precio final: incluye cargo por servicio e IVA. Es el importe que se cobra.
+                  </p>
+                </>
+              ) : (
+                <p className={styles.totalNote}>
+                  {pricingLoading ? 'Calculando el total con cargos e IVA…' : 'Total no disponible.'}
+                </p>
+              )}
+            </div>
 
             <Link href="/cart" className={styles.backCart}>
               ← Volver al carrito

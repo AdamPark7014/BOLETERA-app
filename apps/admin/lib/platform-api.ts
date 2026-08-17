@@ -586,17 +586,68 @@ export function inviteTeamMember(
   });
 }
 
+/* ── Invitaciones de equipo ─────────────────────────────────────────────────
+ * El SSO ya no otorga rol automáticamente: un usuario nuevo entra como CUSTOMER
+ * y solo se eleva si existe una invitación viva. Sin esta interfaz no hay forma
+ * de dar de alta a un promotor desde el producto.
+ * Contrato: apps/api/src/modules/auth/invitations.service.ts
+ */
+
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED';
+
+export type Invitation = {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: string;
+  invitedById: string | null;
+  expiresAt: string;
+  acceptedAt: string | null;
+  acceptedByUserId: string | null;
+  createdAt: string;
+  status: InvitationStatus;
+};
+
+export function listInvitations(token: string, organizationId: string) {
+  return adminApi<Invitation[]>(
+    `/auth/invitations?organizationId=${encodeURIComponent(organizationId)}`,
+    token,
+  );
+}
+
+export function createInvitation(
+  token: string,
+  body: { organizationId: string; email: string; role: string; expiresInDays?: number },
+) {
+  return adminApi<Invitation>('/auth/invitations', token, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export function revokeInvitation(token: string, id: string) {
+  return adminApi<{ ok: true; id: string }>(`/auth/invitations/${id}`, token, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * `AuditEvent` tal y como lo devuelve el API (un `findMany` sin `select`, así
+ * que llegan también `userId` e `ipAddress`, que el tipo anterior escondía).
+ */
+export type AuditRow = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  createdAt: string;
+  userId?: string | null;
+  ipAddress?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
 export function getAuditLog(token: string, orgId: string, limit = 80) {
-  return adminApi<
-    {
-      id: string;
-      action: string;
-      entityType: string;
-      entityId: string;
-      createdAt: string;
-      metadata?: Record<string, unknown>;
-    }[]
-  >(`/organization/${orgId}/audit?limit=${limit}`, token);
+  return adminApi<AuditRow[]>(`/organization/${orgId}/audit?limit=${limit}`, token);
 }
 
 export type WaitlistRow = {
@@ -655,16 +706,23 @@ export function revokeApiKey(token: string, orgId: string, keyId: string) {
   return adminApi(`/partners/${orgId}/keys/${keyId}/revoke`, token, { method: 'PATCH' });
 }
 
+export type FiscalProfile = {
+  id: string;
+  rfc: string;
+  legalName: string;
+  regimenFiscal: string;
+  codigoPostal: string;
+  serie: string;
+  /** Siguiente folio que consumirá el timbrado. Lo lleva el API, no la UI. */
+  nextFolio: number;
+  /** `sandbox` | `production` — determina si el UUID es real ante el SAT. */
+  pacMode: string;
+  pacProvider: string | null;
+  active: boolean;
+};
+
 export function getFiscalProfile(token: string, orgId: string) {
-  return adminApi<{
-    id: string;
-    rfc: string;
-    legalName: string;
-    regimenFiscal: string;
-    codigoPostal: string;
-    serie: string;
-    pacMode: string;
-  } | null>(`/billing/${orgId}/fiscal-profile`, token);
+  return adminApi<FiscalProfile | null>(`/billing/${orgId}/fiscal-profile`, token);
 }
 
 export function upsertFiscalProfile(
@@ -685,20 +743,40 @@ export function upsertFiscalProfile(
   });
 }
 
+/** `CfdiStatus` de Prisma. `PENDING` no existe en el enum: un CFDI sin timbrar es `DRAFT`. */
+export type CfdiStatus = 'DRAFT' | 'STAMPED' | 'CANCELLED' | 'ERROR';
+
+/**
+ * `listInvoices` hace un `findMany` sin `select`, así que llegan todas las
+ * columnas del modelo. El tipo anterior solo declaraba seis y por eso la
+ * pantalla no podía mostrar ni el uso de CFDI ni el motivo del error.
+ */
+export type CfdiInvoice = {
+  id: string;
+  uuid: string | null;
+  serie: string;
+  folio: number;
+  /** `I` ingreso, `E` egreso (nota de crédito). */
+  tipo: string;
+  status: CfdiStatus;
+  receptorRfc: string;
+  receptorNombre: string;
+  receptorUsoCfdi: string;
+  subtotal: string | number;
+  iva: string | number;
+  total: string | number;
+  currency: string;
+  xmlUrl: string | null;
+  pdfUrl: string | null;
+  /** Texto crudo del PAC cuando `status === 'ERROR'`. */
+  errorMessage: string | null;
+  stampedAt: string | null;
+  createdAt: string;
+  orderId: string | null;
+};
+
 export function listCfdiInvoices(token: string, orgId: string) {
-  return adminApi<
-    {
-      id: string;
-      uuid: string | null;
-      serie: string;
-      folio: number;
-      status: string;
-      receptorRfc: string;
-      total: string | number;
-      stampedAt: string | null;
-      orderId: string | null;
-    }[]
-  >(`/billing/${orgId}/cfdi`, token);
+  return adminApi<CfdiInvoice[]>(`/billing/${orgId}/cfdi`, token);
 }
 
 export function stampCfdi(
@@ -711,8 +789,9 @@ export function stampCfdi(
     receptorUsoCfdi?: string;
   },
 ) {
-  return adminApi(`/billing/${orgId}/cfdi/stamp`, token, {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+  return adminApi<CfdiInvoice & { sandbox: boolean; xml: string }>(
+    `/billing/${orgId}/cfdi/stamp`,
+    token,
+    { method: 'POST', body: JSON.stringify(body) },
+  );
 }

@@ -4,11 +4,11 @@ import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
-import { authHeaders, getToken } from '@/lib/auth';
+import { authHeaders, clearSession, getToken } from '@/lib/auth';
 import styles from './vender.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+const LOGIN_BACK = '/login?next=%2Fresale%2Fvender';
 
 export default function ResaleSellPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function ResaleSellPage() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!getToken()) {
-      router.push('/login?next=/resale/vender');
+      router.push(LOGIN_BACK);
       return;
     }
     setLoading(true);
@@ -34,11 +34,25 @@ export default function ResaleSellPage() {
           askingPrice: Number(askingPrice),
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? 'No se pudo publicar');
+      // Con la sesión de 2 h, caducar a mitad del formulario es normal.
+      if (res.status === 401 || res.status === 403) {
+        clearSession();
+        setError('Tu sesión caducó. Vuelve a entrar y podrás publicar el boleto.');
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          data.message ?? 'No pudimos publicar el boleto. Revisa el código y el precio.',
+        );
+      }
       router.push('/resale');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'No pudimos conectarnos. Revisa tu conexión e inténtalo otra vez.',
+      );
     } finally {
       setLoading(false);
     }
@@ -47,49 +61,61 @@ export default function ResaleSellPage() {
   return (
     <div className={styles.shell}>
       <SiteHeader />
-      <main className={styles.page}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
         <p className={styles.eyebrow}>Reventa oficial</p>
         <h1>Vender boleto</h1>
         <p className={styles.lead}>
-          Publica un boleto de tu cuenta. El precio debe respetar el tope anti-scalping del evento.
+          Publica un boleto de tu cuenta. El precio debe respetar el tope máximo que fija
+          el evento.
         </p>
 
         <form onSubmit={submit} className={styles.form}>
-          <label>
-            Código del boleto
+          <div className={styles.field}>
+            <label htmlFor="ticket-code">Código del boleto</label>
             <input
+              id="ticket-code"
+              name="ticketCode"
               value={ticketCode}
               onChange={(e) => setTicketCode(e.target.value)}
-              placeholder="Ej. BL-XXXX"
+              placeholder="BL-XXXX"
+              aria-describedby="ticket-code-hint"
               required
             />
-          </label>
-          <label>
-            Precio de reventa (MXN)
+            <p id="ticket-code-hint" className={styles.hint}>
+              Lo encuentras en el detalle de la orden, junto al QR.
+            </p>
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="asking-price">Precio de reventa (MXN)</label>
             <input
+              id="asking-price"
+              name="askingPrice"
               type="number"
+              inputMode="numeric"
               min={1}
               value={askingPrice}
               onChange={(e) => setAskingPrice(e.target.value)}
-              placeholder="0"
               required
             />
-          </label>
+          </div>
+
           {error && (
             <p className={styles.error} role="alert">
-              {error}
+              {error}{' '}
+              {error.startsWith('Tu sesión') && <Link href={LOGIN_BACK}>Volver a entrar</Link>}
             </p>
           )}
+
           <button type="submit" disabled={loading}>
             {loading ? 'Publicando…' : 'Publicar listado'}
           </button>
         </form>
 
         <Link href="/resale" className={styles.back}>
-          ← Volver a reventa
+          Volver a reventa
         </Link>
       </main>
-      <SiteFooter />
     </div>
   );
 }

@@ -10,13 +10,18 @@ import {
   priceHeatColor,
   buildEgressPathOverlays,
 } from '@boletera/venue-engine';
+import { loadSeatStatuses, subscribeInventory } from '@/lib/inventory';
 import styles from './PosSeatMap.module.scss';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 type HeatMode = 'off' | 'price' | 'view';
 
-type MapData = {
+/** Sólo AVAILABLE se puede vender. Todo lo demás (SOLD, USED, TRANSFERRED,
+ *  RESOLD, REFUNDED, EXPIRED) es lugar ocupado desde la ventanilla. */
+function isSellable(status: string | undefined): boolean {
+  return !status || status === 'available';
+}
+
+export type PosMapData = {
   version?: number;
   sections?: {
     id?: string;
@@ -37,7 +42,7 @@ export function PosSeatMap({
   offers = [],
 }: {
   eventId: string;
-  mapData: MapData | null;
+  mapData: PosMapData | null;
   selected: string[];
   onToggle: (seatId: string) => void;
   offers?: { id: string; zone: string; name?: string; basePrice: string | number }[];
@@ -134,8 +139,8 @@ export function PosSeatMap({
     let sold = 0;
     for (const s of visibleSeats) {
       const st = statusBySeat[s.id];
-      if (st === 'sold') sold += 1;
-      else if (st === 'held') held += 1;
+      if (st === 'held') held += 1;
+      else if (!isSellable(st)) sold += 1;
       else available += 1;
     }
     return { available, held, sold, total: visibleSeats.length };
@@ -154,43 +159,56 @@ export function PosSeatMap({
     setTy(el.clientHeight / 2 - (bounds.minY + bounds.height / 2) * next);
   }, [bounds, seats.length]);
 
+  /**
+   * Estado por butaca contra el contrato nuevo.
+   *
+   * `availability` ya NO trae `tickets[]` — leerlo dejaba `statusBySeat` vacío y
+   * el mapa pintaba TODO como libre, así que la ventanilla ofrecía asientos ya
+   * vendidos. Ahora: barrido inicial paginado por `/seats` y, a partir de ahí,
+   * DELTAS por SSE. Sólo se rebarre si el productor avisa de `truncated`.
+   */
   useEffect(() => {
-    let cancelled = false;
+    if (!eventId) return undefined;
+    const signal = { cancelled: false };
 
-    async function loadAvailability() {
-      try {
-        const res = await fetch(`${API}/inventory/${eventId}/availability`);
-        if (cancelled) return;
-        if (!res.ok) {
-          setConnError(`Disponibilidad HTTP ${res.status}`);
-          return;
-        }
-        const data = await res.json();
-        const next: Record<string, string> = {};
-        for (const t of data.tickets ?? []) {
-          if (t.seatId) next[t.seatId] = String(t.status).toLowerCase();
-        }
-        setStatusBySeat(next);
-        setConnError(null);
-      } catch {
-        if (!cancelled) setConnError(`Sin API (${API})`);
-      }
-    }
+    const sweep = () => {
+      loadSeatStatuses(eventId, signal)
+        .then((statuses) => {
+          if (signal.cancelled) return;
+          setStatusBySeat(statuses);
+          setConnError(null);
+        })
+        .catch((err: unknown) => {
+          if (!signal.cancelled) {
+            setConnError(err instanceof Error ? err.message : 'Sin disponibilidad');
+          }
+        });
+    };
 
-    void loadAvailability();
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource(`${API}/inventory/${eventId}/stream`);
-      es.onopen = () => setLive(true);
-      es.onerror = () => setLive(false);
-      es.onmessage = () => void loadAvailability();
-    } catch {
-      setLive(false);
-    }
-    const poll = setInterval(() => void loadAvailability(), 5000);
+    sweep();
+
+    const unsubscribe = subscribeInventory(eventId, {
+      onLive: setLive,
+      onTruncated: sweep,
+      onDelta: (delta) => {
+        if (signal.cancelled) return;
+        setStatusBySeat((prev) => {
+          const next = { ...prev };
+          for (const change of delta.changes) {
+            if (change.seatId) next[change.seatId] = change.status.toLowerCase();
+          }
+          return next;
+        });
+      },
+    });
+
+    // Red de seguridad si el SSE no llega a establecerse (proxy, CORS, PWA):
+    // un barrido cada 30 s cuesta bastante menos que vender un lugar ocupado.
+    const poll = setInterval(sweep, 30000);
+
     return () => {
-      cancelled = true;
-      es?.close();
+      signal.cancelled = true;
+      unsubscribe();
       clearInterval(poll);
     };
   }, [eventId]);
@@ -198,8 +216,8 @@ export function PosSeatMap({
   function seatFill(seatId: string, sectionColor: string) {
     const st = statusBySeat[seatId];
     if (selected.includes(seatId)) return '#e11d48';
-    if (st === 'sold') return '#3f3f46';
     if (st === 'held') return '#d4a017';
+    if (!isSellable(st)) return '#3f3f46';
     return sectionColor;
   }
 
@@ -592,16 +610,16 @@ export function PosSeatMap({
               const restricted = Boolean(s.visibility?.restrictedView);
               const price = typeof s.price === 'number' ? s.price : 0;
               const overBudget = priceCap != null && price > priceCap;
-              const disabled = st === 'sold' || st === 'held' || blocked || overBudget;
+              const disabled = !isSellable(st) || st === 'held' || blocked || overBudget;
               const viewScore = sightlineBySeat?.get(s.id);
               const fill = selected.includes(s.id)
                 ? '#e11d48'
                 : blocked
                   ? '#3f3f46'
-                  : st === 'sold'
-                    ? '#3f3f46'
-                    : st === 'held'
-                      ? '#d4a017'
+                  : st === 'held'
+                    ? '#d4a017'
+                    : !isSellable(st)
+                      ? '#3f3f46'
                       : overBudget
                         ? '#2a2a2e'
                         : heatMode === 'price' && price > 0 && priceRange.max > 0

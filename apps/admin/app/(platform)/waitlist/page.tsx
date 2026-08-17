@@ -6,23 +6,50 @@ import {
   notifyWaitlistBatch,
   type WaitlistRow,
 } from '@/lib/platform-api';
-import { useOrgId } from '@/lib/use-org';
+import {
+  AnonymousView,
+  ApiErrorView,
+  LoadingView,
+  NoOrgView,
+  useSession,
+} from '../events/_shared/api-state';
 import platform from '../_styles/platform.module.scss';
 
 export default function WaitlistPage() {
-  const orgId = useOrgId();
+  const session = useSession();
   const [rows, setRows] = useState<WaitlistRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [loading, setLoading] = useState(true);
+  const { token, orgId } = session;
 
   function reload() {
-    const token = localStorage.getItem('boletera_token');
     if (!token || !orgId) return;
-    listWaitlistByOrg(token, orgId).then(setRows).catch(() => setRows([]));
+    setLoading(true);
+    setError(null);
+    // `catch(() => setRows([]))` convertía un 403 en «sin registros»: la pantalla
+    // mentía diciendo que no había nadie en cola.
+    listWaitlistByOrg(token, orgId)
+      .then((data) => {
+        setRows(data);
+        setError(null);
+      })
+      .catch(setError)
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
-    reload();
-  }, [orgId]);
+    if (session.status === 'ready') reload();
+    else if (session.status !== 'loading') setLoading(false);
+  }, [orgId, token, session.status]);
+
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (error) {
+    return (
+      <ApiErrorView error={error} context="leer la lista de espera" onRetry={reload} />
+    );
+  }
 
   const byEvent = rows.reduce<Record<string, WaitlistRow[]>>((acc, r) => {
     const id = r.event.id;
@@ -49,11 +76,13 @@ export default function WaitlistPage() {
               className={platform.primaryBtn}
               disabled={busy === eventId}
               onClick={async () => {
-                const token = localStorage.getItem('boletera_token')!;
+                if (!token) return;
                 setBusy(eventId);
                 try {
                   await notifyWaitlistBatch(token, eventId);
                   reload();
+                } catch (err) {
+                  setError(err);
                 } finally {
                   setBusy(null);
                 }
@@ -85,8 +114,9 @@ export default function WaitlistPage() {
         </section>
       ))}
 
-      {!rows.length && (
-        <p style={{ color: '#737373' }}>Sin registros en lista de espera para tu organización.</p>
+      {loading && <LoadingView label="Cargando lista de espera…" />}
+      {!loading && !rows.length && (
+        <p style={{ color: '#525252' }}>Sin registros en lista de espera para tu organización.</p>
       )}
     </div>
   );

@@ -1,4 +1,9 @@
 import type { SeatMapBlock, SeatMapSeat } from '@boletera/shared';
+import {
+  numberRow,
+  rowLabelAt,
+  type NumberingConvention,
+} from './numbering';
 
 export type StraightRowOptions = {
   origin: { x: number; y: number };
@@ -13,6 +18,8 @@ export type StraightRowOptions = {
   idPrefix?: string;
   startNumber?: number;
   tier?: string;
+  /** Convención de numeración del recinto (pares/impares, letras sin I ni O, …) */
+  numbering?: NumberingConvention;
 };
 
 export type CurvedRowOptions = {
@@ -33,6 +40,8 @@ export type CurvedRowOptions = {
   yScale?: number;
   /** Extra facing offset in degrees */
   facingOffset?: number;
+  /** Convención de numeración del recinto */
+  numbering?: NumberingConvention;
 };
 
 export type BlockOptions = SeatMapBlock & {
@@ -40,17 +49,28 @@ export type BlockOptions = SeatMapBlock & {
   skipColumns?: number[];
   /** Visual facing degrees; defaults to `yaw` (layout orientation) */
   facing?: number;
+  /** Convención de numeración del recinto */
+  numbering?: NumberingConvention;
 };
 
 function degToRad(d: number) {
   return (d * Math.PI) / 180;
 }
 
-function rowLabelFromIndex(start: string | undefined, index: number): string {
-  if (!start) return String.fromCharCode(65 + (index % 26));
-  const code = start.charCodeAt(0);
-  if (code >= 65 && code <= 90) return String.fromCharCode(code + index);
-  return `${start}${index + 1}`;
+/**
+ * Etiqueta de fila.
+ *
+ * Antes esto era `String.fromCharCode(65 + index)`, que a partir de la fila 26
+ * emite `[`, `\`, `]`… y nunca saltaba la I ni la O. Ahora delega en la
+ * convención del recinto, cuyo valor por defecto omite las letras ambiguas.
+ */
+function rowLabelFromIndex(
+  start: string | undefined,
+  index: number,
+  numbering?: NumberingConvention,
+  totalRows?: number,
+): string {
+  return rowLabelAt(index, { ...numbering, startRowLabel: start ?? numbering?.startRowLabel }, totalRows);
 }
 
 /** Generate a straight row of seats with consistent spacing (no overlaps). */
@@ -66,6 +86,7 @@ export function generateStraightRow(opts: StraightRowOptions): SeatMapSeat[] {
     idPrefix = 'row',
     startNumber = 1,
     tier,
+    numbering,
   } = opts;
   const rad = degToRad(yaw);
   // Along-row axis for yaw=0 is +X (stage at low Y / north)
@@ -74,14 +95,18 @@ export function generateStraightRow(opts: StraightRowOptions): SeatMapSeat[] {
   const seats: SeatMapSeat[] = [];
   const half = ((count - 1) * seatPitch) / 2;
 
+  // La numeración de toda la fila se resuelve de una vez: las convenciones
+  // desde el centro necesitan conocer el total de butacas.
+  const numbers = numberRow(count, rowLabel, { startSeatNumber: startNumber, ...numbering });
+
   for (let i = 0; i < count; i++) {
     const offset = -half + i * seatPitch;
     const x = origin.x + alongX * offset;
     const y = origin.y + alongY * offset;
-    const n = startNumber + i;
+    const n = numbers[i].number;
     seats.push({
       id: `${idPrefix}-${rowLabel}-${n}`,
-      label: `${rowLabel}-${n}`,
+      label: numbers[i].label,
       row: rowLabel,
       x: Math.round(x * 100) / 100,
       y: Math.round(y * 100) / 100,
@@ -111,12 +136,15 @@ export function generateCurvedRow(opts: CurvedRowOptions): SeatMapSeat[] {
     tier,
     yScale = 1,
     facingOffset = 0,
+    numbering,
   } = opts;
 
   const arcLen = Math.max(0.01, count > 1 ? (count - 1) * seatPitch : seatPitch);
   const span = opts.span ?? arcLen / Math.max(radius, 1);
   const startAngle = opts.startAngle ?? -span / 2 - Math.PI / 2;
   const seats: SeatMapSeat[] = [];
+
+  const numbers = numberRow(count, rowLabel, { startSeatNumber: startNumber, ...numbering });
 
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? 0.5 : i / (count - 1);
@@ -125,10 +153,10 @@ export function generateCurvedRow(opts: CurvedRowOptions): SeatMapSeat[] {
     const y = center.y + Math.sin(angle) * radius * yScale;
     const yaw = ((angle + Math.PI / 2) * 180) / Math.PI + facingOffset;
     const elev = elevation + rake;
-    const n = startNumber + i;
+    const n = numbers[i].number;
     seats.push({
       id: `${idPrefix}-${rowLabel}-${n}`,
-      label: `${rowLabel}-${n}`,
+      label: numbers[i].label,
       row: rowLabel,
       x: Math.round(x * 100) / 100,
       y: Math.round(y * 100) / 100,
@@ -164,6 +192,7 @@ export function generateBlock(opts: BlockOptions): SeatMapSeat[] {
     idPrefix,
     skipColumns = [],
     facing,
+    numbering,
   } = opts;
 
   const prefix = idPrefix ?? id;
@@ -176,23 +205,32 @@ export function generateBlock(opts: BlockOptions): SeatMapSeat[] {
   const seats: SeatMapSeat[] = [];
   const skip = new Set(skipColumns);
 
+  // Las columnas saltadas son pasillos: no consumen número de butaca. Se numera
+  // sobre las butacas realmente ocupadas, que es lo que ve el acomodador.
+  const occupiedColumns: number[] = [];
+  for (let c = 0; c < seatsPerRow; c++) if (!skip.has(c)) occupiedColumns.push(c);
+  const seatsInRow = occupiedColumns.length;
+
+  let seatsBefore = 0;
   for (let r = 0; r < rows; r++) {
-    const rowLabel = rowLabelFromIndex(startRowLabel, r);
+    const rowLabel = rowLabelFromIndex(startRowLabel, r, numbering, rows);
     const elev = elevation + r * rake;
     const pitch = rake > 0 ? Math.min(18, rake * 2.2) : 0;
     const half = ((seatsPerRow - 1) * seatPitch) / 2;
 
-    for (let c = 0; c < seatsPerRow; c++) {
-      if (skip.has(c)) continue;
+    const numbers = numberRow(seatsInRow, rowLabel, numbering, r, seatsBefore);
+
+    for (let k = 0; k < seatsInRow; k++) {
+      const c = occupiedColumns[k];
       const lateral = -half + c * seatPitch;
       const midT = seatsPerRow === 1 ? 0 : (c / (seatsPerRow - 1) - 0.5) * 2;
       const curveBias = curvature > 0 ? midT * midT * curvature * (r + 1) * 0.35 : 0;
       const x = origin.x + alongX * lateral + depthX * (r * rowPitch + curveBias);
       const y = origin.y + alongY * lateral + depthY * (r * rowPitch + curveBias);
-      const n = c + 1;
+      const n = numbers[k].number;
       seats.push({
         id: `${prefix}-${rowLabel}-${n}`,
-        label: `${rowLabel}-${n}`,
+        label: numbers[k].label,
         row: rowLabel,
         x: Math.round(x * 100) / 100,
         y: Math.round(y * 100) / 100,
@@ -204,6 +242,7 @@ export function generateBlock(opts: BlockOptions): SeatMapSeat[] {
         coord3d: { x, y: elev, z: y, pitch, roll: 0 },
       });
     }
+    seatsBefore += seatsInRow;
   }
   return seats;
 }

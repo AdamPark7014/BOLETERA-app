@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { listEvents, type EventRow } from '@/lib/platform-api';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from './_shared/api-state';
 import platform from '../_styles/platform.module.scss';
 import styles from './events.module.scss';
 
@@ -22,18 +23,33 @@ const FILTERS = [
 ];
 
 export default function EventsPage() {
+  const session = useSession();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
   const [filter, setFilter] = useState<string>('ALL');
   const [q, setQ] = useState('');
+  const [nonce, setNonce] = useState(0);
+  const token = session.token;
 
   useEffect(() => {
-    const token = localStorage.getItem('boletera_token');
-    if (!token) return;
+    // Sin token todavía no hay nada que pedir; el estado de sesión decide qué
+    // pintar. Antes se hacía `if (!token) return` y `loading` se quedaba en true
+    // para siempre, dejando el esqueleto de carga como pantalla final.
+    if (!token) {
+      if (session.status !== 'loading') setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
     listEvents(token)
-      .then(setEvents)
+      .then((rows) => {
+        setEvents(rows);
+        setError(null);
+      })
+      .catch(setError)
       .finally(() => setLoading(false));
-  }, []);
+  }, [token, session.status, nonce]);
 
   const filtered = useMemo(() => {
     return events.filter((e) => {
@@ -53,6 +69,18 @@ export default function EventsPage() {
     }),
     [events],
   );
+
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (error) {
+    return (
+      <ApiErrorView
+        error={error}
+        context="listar los eventos de tu organización"
+        onRetry={() => setNonce((n) => n + 1)}
+      />
+    );
+  }
 
   return (
     <div>

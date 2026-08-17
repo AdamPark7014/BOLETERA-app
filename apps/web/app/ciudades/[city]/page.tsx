@@ -23,35 +23,49 @@ export default async function CiudadPage({
   const { city: raw } = await params;
   const city = decodeURIComponent(raw);
   let events: EventHit[] = [];
+  let failed = false;
   try {
     events = await api<EventHit[]>(
       `/discovery/events?city=${encodeURIComponent(city)}&limit=60`,
     );
   } catch {
-    events = [];
+    failed = true;
   }
 
   return (
     <>
       <SiteHeader />
-      <main className={styles.page}>
-        <div className={styles.crumb}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
+        <nav className={styles.crumb} aria-label="Ruta de navegación">
           <Link href="/">Cartelera</Link>
-          <span>/</span>
+          <span aria-hidden="true">/</span>
           <Link href="/ciudades">Ciudades</Link>
-          <span>/</span>
-          <span>{city}</span>
-        </div>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{city}</span>
+        </nav>
         <header className={styles.hero}>
           <h1>{city}</h1>
           <p>
-            {events.length} evento{events.length === 1 ? '' : 's'} disponibles
+            {failed
+              ? 'No pudimos consultar la cartelera de esta ciudad.'
+              : `${events.length} evento${events.length === 1 ? '' : 's'} disponible${
+                  events.length === 1 ? '' : 's'
+                }`}
           </p>
         </header>
-        {events.length === 0 ? (
-          <p className={styles.empty}>
-            Sin eventos en esta ciudad. <Link href="/ciudades">Ver otras</Link>
-          </p>
+
+        {failed ? (
+          <div className={styles.error} role="alert">
+            <strong>No pudimos cargar los eventos de {city}</strong>
+            <p>Es un problema temporal. Vuelve a intentarlo en unos minutos.</p>
+            <Link href="/ciudades">Ver otras ciudades</Link>
+          </div>
+        ) : events.length === 0 ? (
+          <div className={styles.empty}>
+            <strong>Sin eventos en {city} por ahora</strong>
+            <p>Todavía no hay funciones anunciadas en esta ciudad.</p>
+            <Link href="/ciudades">Ver otras ciudades</Link>
+          </div>
         ) : (
           <ul className={styles.grid}>
             {events.map((e) => (
@@ -70,7 +84,7 @@ export default async function CiudadPage({
                       ? `$${Number(e.minPrice).toLocaleString('es-MX', {
                           maximumFractionDigits: 0,
                         })}`
-                      : '—'}
+                      : 'Consultar'}
                   </em>
                 </Link>
               </li>

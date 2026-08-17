@@ -9,7 +9,7 @@ export type PosterEvent = {
   image?: string | null;
   bannerImage?: string | null;
   startsAt?: string;
-  /** CSS aspect-ratio from DB metadata, e.g. "3/4", "16/9", "1/1" */
+  /** aspect-ratio CSS que viene de la metadata en BD, p. ej. "3/4", "16/9", "1/1" */
   posterAspect?: string | null;
 };
 
@@ -26,6 +26,16 @@ function defaultAspect(category: string | null | undefined): string {
     default:
       return '3/4';
   }
+}
+
+/** Ancho/alto intrínsecos para que el navegador reserve el hueco antes del CSS. */
+function intrinsicSize(aspect: string) {
+  const [w, h] = aspect.split('/').map((n) => Number(n.trim()));
+  if (!Number.isFinite(w) || !Number.isFinite(h) || !w || !h) {
+    return { width: 600, height: 800 };
+  }
+  const base = 600;
+  return { width: base, height: Math.round((base * h) / w) };
 }
 
 function hash(input: string) {
@@ -68,15 +78,22 @@ export function EventPosterArt({
   event,
   size = 'md',
   showDate,
+  priority,
 }: {
   event: PosterEvent;
   size?: 'sm' | 'md' | 'lg' | 'hero';
   showDate?: boolean;
+  /** Solo para el póster principal del hero: evita el lazy-load del LCP. */
+  priority?: boolean;
 }) {
   const colors = palette(event.category, event.slug || event.id);
   const src = event.bannerImage || event.image;
   const d = event.startsAt ? new Date(event.startsAt) : null;
   const aspect = event.posterAspect || defaultAspect(event.category);
+  const { width, height } = intrinsicSize(aspect);
+  // El mismo evento puede pintarse dos veces en una página (hero + riel): el
+  // tamaño desambigua el id del degradado para no duplicarlo en el DOM.
+  const gradientId = `poster-${event.id}-${size}`;
   const style = {
     ['--pa']: colors.a,
     ['--pb']: colors.b,
@@ -86,29 +103,77 @@ export function EventPosterArt({
   } as CSSProperties;
 
   return (
+    /*
+     * El póster es decorativo: el título, la fecha y el recinto siempre están
+     * en texto junto a él, así que anunciarlo duplicaría la información.
+     */
     <div
       className={`${styles.poster} ${styles[size]}`}
       style={style}
       data-aspect={aspect}
-      aria-hidden
+      aria-hidden="true"
     >
       {src ? (
+        /*
+         * Se mantiene <img> a propósito: los pósters son SVG servidos desde el
+         * propio dominio (next/image no optimiza SVG y exigiría activar
+         * dangerouslyAllowSVG) y en producción la URL puede venir de cualquier
+         * host de la BD, que sin remotePatterns rompería la página entera.
+         * El hueco ya lo reserva el aspect-ratio del contenedor, así que no hay
+         * CLS; lo que faltaba eran las pistas de carga.
+         */
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className={styles.photo} />
+        <img
+          src={src}
+          alt=""
+          className={styles.photo}
+          width={width}
+          height={height}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
+          decoding="async"
+        />
       ) : (
         <div className={styles.art}>
-          <svg className={styles.rings} viewBox="0 0 200 260" preserveAspectRatio="xMidYMid slice">
+          <svg
+            className={styles.rings}
+            viewBox="0 0 200 260"
+            preserveAspectRatio="xMidYMid slice"
+            focusable="false"
+          >
             <defs>
-              <radialGradient id={`g-${event.id}`} cx="35%" cy="30%" r="70%">
+              <radialGradient id={gradientId} cx="35%" cy="30%" r="70%">
                 <stop offset="0%" stopColor={colors.c} stopOpacity="0.55" />
                 <stop offset="55%" stopColor={colors.b} stopOpacity="0.35" />
                 <stop offset="100%" stopColor={colors.a} stopOpacity="1" />
               </radialGradient>
             </defs>
-            <rect width="200" height="260" fill={`url(#g-${event.id})`} />
-            <circle cx="100" cy="118" r="78" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.2" />
-            <circle cx="100" cy="118" r="54" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
-            <circle cx="100" cy="118" r="28" fill="none" stroke={colors.c} strokeWidth="2" opacity="0.85" />
+            <rect width="200" height="260" fill={`url(#${gradientId})`} />
+            <circle
+              cx="100"
+              cy="118"
+              r="78"
+              fill="none"
+              stroke="rgba(255,255,255,0.12)"
+              strokeWidth="1.2"
+            />
+            <circle
+              cx="100"
+              cy="118"
+              r="54"
+              fill="none"
+              stroke="rgba(255,255,255,0.18)"
+              strokeWidth="1.2"
+            />
+            <circle
+              cx="100"
+              cy="118"
+              r="28"
+              fill="none"
+              stroke={colors.c}
+              strokeWidth="2"
+              opacity="0.85"
+            />
             <path
               d="M20 220 Q100 180 180 220"
               fill="none"

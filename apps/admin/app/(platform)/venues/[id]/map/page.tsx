@@ -13,31 +13,57 @@ import {
   publishEvent,
   saveVenueLayout,
 } from '@/lib/platform-api';
+import { ApiStateBoundary, useSession } from '../../../events/_shared/api-state';
 import platform from '../../../_styles/platform.module.scss';
 
 export default function VenueMapEditorPage() {
   const { id: venueId } = useParams<{ id: string }>();
+  const session = useSession();
   const [map, setMap] = useState<SeatMapData | null>(null);
   const [venueName, setVenueName] = useState('');
   const [events, setEvents] = useState<{ id: string; title: string; venueId?: string }[]>([]);
   const [publishEventId, setPublishEventId] = useState('');
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [nonce, setNonce] = useState(0);
+  const token = session.token;
 
   useEffect(() => {
-    const token = localStorage.getItem('boletera_token');
     if (!token || !venueId) return;
-    getVenueLayout(token, venueId).then((data) => {
-      setMap(data.layout.mapData);
-      setVenueName(data.venue?.name ?? 'Venue');
-    });
-    listEvents(token).then((list) => {
-      const filtered = list.filter((e) => (e as { venueId?: string }).venueId === venueId);
-      setEvents(filtered);
-      if (filtered[0]) setPublishEventId(filtered[0].id);
-    });
-  }, [venueId]);
+    setError(null);
+    getVenueLayout(token, venueId)
+      .then((data) => {
+        setMap(data.layout.mapData);
+        setVenueName(data.venue?.name ?? 'Venue');
+      })
+      // Un 403 dejaba «Cargando editor de mapa…» en pantalla indefinidamente.
+      .catch(setError);
+    listEvents(token)
+      .then((list) => {
+        const filtered = list.filter((e) => (e as { venueId?: string }).venueId === venueId);
+        setEvents(filtered);
+        if (filtered[0]) setPublishEventId(filtered[0].id);
+      })
+      .catch(() => setEvents([]));
+  }, [venueId, token, nonce]);
 
-  if (!map) return <p>Cargando editor de mapa…</p>;
+  if (session.status !== 'ready' || error || !map || !token) {
+    return (
+      <ApiStateBoundary
+        session={session}
+        error={error}
+        loading={!map}
+        context="abrir el mapa del recinto"
+        onRetry={() => setNonce((n) => n + 1)}
+        loadingLabel="Cargando editor de mapa…"
+      >
+        <span />
+      </ApiStateBoundary>
+    );
+  }
+
+  // Tras la guarda el token existe: el editor lo recibe ya resuelto.
+  const authToken: string = token;
 
   return (
     <div>
@@ -64,7 +90,6 @@ export default function VenueMapEditorPage() {
                 type="button"
                 className={platform.primaryBtn}
                 onClick={async () => {
-                  const token = localStorage.getItem('boletera_token');
                   if (!token || !publishEventId) return;
                   setPublishMsg(null);
                   try {
@@ -89,22 +114,21 @@ export default function VenueMapEditorPage() {
       <SeatMapEditor
         initial={map}
         venueId={venueId}
-        getAuthToken={() => localStorage.getItem('boletera_token')}
+        // El token sale de la sesión ya resuelta; el `!` sobre `localStorage`
+        // reventaba con «cannot read property of null» al vencer el JWT.
+        getAuthToken={() => authToken}
         onSave={async (mapData) => {
-          const token = localStorage.getItem('boletera_token')!;
-          await saveVenueLayout(token, venueId, mapData);
-          const refreshed = await getVenueLayout(token, venueId);
+          await saveVenueLayout(authToken, venueId, mapData);
+          const refreshed = await getVenueLayout(authToken, venueId);
           setMap(refreshed.layout.mapData);
         }}
         onApplyTemplate={async (template) => {
-          const token = localStorage.getItem('boletera_token')!;
-          const result = await applyLayoutTemplate(token, venueId, template);
+          const result = await applyLayoutTemplate(authToken, venueId, template);
           setMap(result.layout.mapData);
           return result.layout.mapData;
         }}
         onAiSuggest={async (description) => {
-          const token = localStorage.getItem('boletera_token')!;
-          const result = await suggestLayout(token, venueId, description);
+          const result = await suggestLayout(authToken, venueId, description);
           setMap(result.layout.mapData);
           return result.layout.mapData;
         }}

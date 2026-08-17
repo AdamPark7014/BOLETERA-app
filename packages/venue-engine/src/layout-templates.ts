@@ -1,5 +1,6 @@
 import type { SeatMapBlock, SeatMapData, SeatMapSeat, SeatMapSection } from '@boletera/shared';
 import { generateBlock, generateCurvedRow, generateStraightRow } from './geometry/generators';
+import { rowLabelAt, type NumberingConvention } from './geometry/numbering';
 
 export type LayoutTemplateId = 'arena' | 'theater' | 'stadium' | 'festival';
 
@@ -8,7 +9,40 @@ export type TemplateOptions = {
   sectionCount?: number;
   /** Stable id prefix so reseed can be deterministic */
   idPrefix?: string;
+  /** Convención de numeración del recinto (pares/impares, letras sin I ni O, …) */
+  numbering?: NumberingConvention;
 };
+
+/**
+ * Reparte un aforo objetivo en una parrilla de filas × butacas.
+ *
+ * Las plantillas tenían filas y columnas fijas (el estadio, 5×20 y 10×6), así
+ * que pedir 45.000 butacas devolvía 300: `capacity` solo recortaba, nunca
+ * expandía. Aquí se deriva la parrilla del aforo, manteniendo una proporción
+ * de gradería creíble (más ancha que profunda).
+ */
+export function gridForCapacity(
+  capacity: number,
+  opts: { aspect?: number; maxRows?: number; minCols?: number } = {},
+): { rows: number; cols: number } {
+  const aspect = opts.aspect ?? 3.2; // butacas por fila ÷ filas
+  const maxRows = opts.maxRows ?? 60;
+  const minCols = opts.minCols ?? 4;
+  const target = Math.max(1, Math.floor(capacity));
+
+  let rows = Math.max(1, Math.round(Math.sqrt(target / aspect)));
+  rows = Math.min(rows, maxRows);
+  let cols = Math.max(minCols, Math.ceil(target / rows));
+
+  // Con aforos muy grandes se prefiere crecer en filas antes que hacer
+  // graderías de 400 butacas de ancho, que no existen.
+  const MAX_COLS = 80;
+  if (cols > MAX_COLS) {
+    cols = MAX_COLS;
+    rows = Math.min(maxRows * 4, Math.ceil(target / cols));
+  }
+  return { rows, cols };
+}
 
 function seatId(prefix: string, sec: string, row: string, n: number) {
   return `${prefix}-${sec}-${row}-${n}`;
@@ -75,7 +109,11 @@ function withIds(
 export function generateArenaTemplate(opts: TemplateOptions = {}): SeatMapData {
   const prefix = opts.idPrefix ?? 'arena';
   const capacity = opts.capacity ?? 240;
-  const sectionCount = Math.min(6, Math.max(2, opts.sectionCount ?? 4));
+  const numbering = opts.numbering;
+  // Con aforos grandes se abren más cuñas en vez de estirar las existentes:
+  // un anillo de 6 secciones no sostiene 45.000 butacas de forma creíble.
+  const autoSections = Math.max(4, Math.min(24, Math.round(capacity / 2000)));
+  const sectionCount = Math.max(2, opts.sectionCount ?? (capacity > 2000 ? autoSections : 4));
   const perSection = Math.floor(capacity / sectionCount);
   const palette = [
     { name: 'Lateral Izq', slug: 'lateral-izq', color: '#5b9fd4' },
@@ -96,19 +134,37 @@ export function generateArenaTemplate(opts: TemplateOptions = {}): SeatMapData {
 
   const sections: SeatMapSection[] = [];
   for (let s = 0; s < sectionCount; s++) {
-    const meta = palette[s % palette.length];
+    const base = palette[s % palette.length];
+    // Con más cuñas que colores en la paleta, el slug se numera: si no, dos
+    // secciones comparten id y el guardado del API borra una de las dos.
+    const meta =
+      sectionCount > palette.length
+        ? {
+            name: `${base.name} ${Math.floor(s / palette.length) + 1}`,
+            slug: `${base.slug}-${s + 1}`,
+            color: base.color,
+          }
+        : base;
+
     const seats: SeatMapSeat[] = [];
-    const rows = Math.max(4, Math.min(8, Math.ceil(Math.sqrt(perSection / 2))));
     const secSpan = span / sectionCount;
     const a0 = start + s * secSpan + aisleGap;
     const a1 = start + (s + 1) * secSpan - aisleGap;
 
+    // Las filas se derivan del aforo de la cuña y del arco disponible, en vez
+    // de estar topadas a 8: con 8 filas un anillo nunca pasa de unos cientos.
+    const arcAtMid = Math.max(0.01, (a1 - a0) * (155 + 8 * rowPitch));
+    const colsAtMid = Math.max(3, Math.floor(arcAtMid / seatPitch));
+    const rows = Math.max(4, Math.ceil(perSection / colsAtMid));
+
     let n = 0;
     for (let r = 0; r < rows && n < perSection; r++) {
-      const rowLabel = String.fromCharCode(65 + r);
       const radius = 155 + r * rowPitch;
       const arcLen = Math.max(0.01, (a1 - a0) * radius);
       const cols = Math.max(3, Math.min(Math.floor(arcLen / seatPitch), perSection - n));
+      // El generador ya aplica la convención (letras sin I/O, pares e impares):
+      // renumerar aquí con un contador global rompía la etiqueta de fila.
+      const rowLabel = rowLabelAt(r, numbering, rows);
       const rowSeats = generateCurvedRow({
         center: { x: cx, y: cy },
         radius,
@@ -122,14 +178,11 @@ export function generateArenaTemplate(opts: TemplateOptions = {}): SeatMapData {
         idPrefix: `${prefix}-${meta.slug}`,
         tier: r < 2 ? 'premium' : r >= rows - 2 ? 'economy' : 'standard',
         yScale: 0.78,
+        numbering,
       });
       for (const seat of rowSeats) {
         if (n >= perSection) break;
-        seats.push({
-          ...seat,
-          id: seatId(prefix, meta.slug, rowLabel, n + 1),
-          label: `${rowLabel}-${n + 1}`,
-        });
+        seats.push(seat);
         n += 1;
       }
     }
@@ -267,19 +320,43 @@ export function generateTheaterTemplate(opts: TemplateOptions = {}): SeatMapData
 export function generateStadiumTemplate(opts: TemplateOptions = {}): SeatMapData {
   const prefix = opts.idPrefix ?? 'stadium';
   const capacity = opts.capacity ?? 320;
-  const per = Math.floor(capacity / 4);
+  const numbering = opts.numbering;
   const rake = 18;
   const seatPitch = 26;
   const rowPitch = 24;
+
+  // El aforo se reparte 30/30/20/20 entre las cuatro tribunas y cada una deriva
+  // su parrilla del aforo que le toca, en lugar de tener filas fijas.
+  const shares = [0.3, 0.3, 0.2, 0.2] as const;
+  const grids = shares.map((share, i) =>
+    gridForCapacity(Math.round(capacity * share), {
+      // Norte/Sur son anchas y poco profundas; Este/Oeste al revés.
+      aspect: i < 2 ? 4.5 : 1.4,
+    }),
+  );
+
+  const northWidth = grids[0].cols * seatPitch;
+  const northDepth = grids[0].rows * rowPitch;
+  const sideDepth = grids[2].rows * rowPitch;
+  const sideWidth = grids[2].cols * seatPitch;
+
+  // El campo se dimensiona a partir de la tribuna más ancha para que las
+  // laterales no se solapen con las de fondo.
+  const fieldWidth = Math.max(northWidth, 600);
+  const fieldHeight = Math.max(sideDepth, 400);
+  const cx = 200 + fieldWidth / 2;
+  const northY = 120;
+  const fieldTop = northY + northDepth + 60;
+  const fieldBottom = fieldTop + fieldHeight;
 
   const defs = [
     {
       slug: 'norte',
       name: 'Tribuna Norte',
       color: '#22c55e',
-      origin: { x: 160 + 9.5 * seatPitch, y: 60 },
-      rows: 5,
-      cols: 20,
+      origin: { x: cx, y: northY },
+      rows: grids[0].rows,
+      cols: grids[0].cols,
       facing: 0,
       elev: 0,
     },
@@ -287,9 +364,9 @@ export function generateStadiumTemplate(opts: TemplateOptions = {}): SeatMapData
       slug: 'sur',
       name: 'Tribuna Sur',
       color: '#e11d48',
-      origin: { x: 160 + 9.5 * seatPitch, y: 420 },
-      rows: 5,
-      cols: 20,
+      origin: { x: cx, y: fieldBottom + 60 },
+      rows: grids[1].rows,
+      cols: grids[1].cols,
       facing: 180,
       elev: 0,
     },
@@ -297,9 +374,9 @@ export function generateStadiumTemplate(opts: TemplateOptions = {}): SeatMapData
       slug: 'este',
       name: 'Preferente Este',
       color: '#38bdf8',
-      origin: { x: 720 + 2.5 * seatPitch, y: 120 },
-      rows: 10,
-      cols: 6,
+      origin: { x: cx + fieldWidth / 2 + 80 + sideWidth / 2, y: fieldTop },
+      rows: grids[2].rows,
+      cols: grids[2].cols,
       facing: -90,
       elev: 40,
     },
@@ -307,16 +384,19 @@ export function generateStadiumTemplate(opts: TemplateOptions = {}): SeatMapData
       slug: 'oeste',
       name: 'Preferente Oeste',
       color: '#f59e0b',
-      origin: { x: 40 + 2.5 * seatPitch, y: 120 },
-      rows: 10,
-      cols: 6,
+      origin: { x: cx - fieldWidth / 2 - 80 - sideWidth / 2, y: fieldTop },
+      rows: grids[3].rows,
+      cols: grids[3].cols,
       facing: 90,
       elev: 40,
     },
   ] as const;
 
   const sections: SeatMapSection[] = defs.map((d, di) => {
-    const skip = Array.from({ length: d.cols }, (_, c) => c).filter((c) => c > 0 && c % 7 === 0);
+    // Pasillo cada 14 butacas: recorrido máximo razonable hasta salir de la fila.
+    const skip = Array.from({ length: d.cols }, (_, c) => c).filter(
+      (c) => c > 0 && c % 15 === 0,
+    );
     const block: SeatMapBlock = {
       id: `${prefix}-${d.slug}`,
       label: d.name,
@@ -331,13 +411,13 @@ export function generateStadiumTemplate(opts: TemplateOptions = {}): SeatMapData
       tier: di < 2 ? 'standard' : 'premium',
       skipColumns: skip,
     };
-    const generated = generateBlock({
+    const seats = generateBlock({
       ...block,
       facing: d.facing,
-    });
-    const seats = withIds(generated.slice(0, per), prefix, d.slug).map((s, i) => ({
+      idPrefix: `${prefix}-${d.slug}`,
+      numbering,
+    }).map((s) => ({
       ...s,
-      id: seatId(prefix, d.slug, s.row ?? 'A', i + 1),
       tier: di < 2 ? ((s.row?.charCodeAt(0) ?? 65) < 67 ? 'premium' : 'standard') : 'premium',
     }));
     return {

@@ -17,6 +17,16 @@ import {
 import { flatSeats, normalizeSeatMap, resolveOfferForSection } from '@boletera/venue-engine';
 import type { SeatMapData } from '@boletera/shared';
 import { useToast } from '@/components/Toast/ToastProvider';
+import { ApiStateBoundary, useSession } from '../_shared/api-state';
+import { LiveInventoryPanel } from '../_shared/LiveInventoryPanel';
+import { InventoryBlocksPanel } from '../_shared/InventoryBlocksPanel';
+import {
+  countOf,
+  getAvailability,
+  occupancyPercent,
+  soldCount,
+  type AvailabilitySnapshot,
+} from '../_shared/inventory-api';
 import platform from '../../_styles/platform.module.scss';
 
 const Venue3DViewer = dynamic(
@@ -26,7 +36,16 @@ const Venue3DViewer = dynamic(
 
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
 
-type Tab = 'overview' | 'channels' | 'map3d' | 'pricing';
+type Tab = 'overview' | 'live' | 'blocks' | 'channels' | 'map3d' | 'pricing';
+
+const TAB_LABEL: Record<Tab, string> = {
+  overview: 'Resumen',
+  live: 'En vivo',
+  blocks: 'Bloqueos',
+  channels: 'Canales',
+  map3d: 'Mapa 3D',
+  pricing: 'Precios',
+};
 type ChannelPct = { web: number; taquilla: number; api: number };
 
 function parseChannelAllocation(metadata: Record<string, unknown>): ChannelPct {
@@ -54,26 +73,39 @@ export default function EventHubPage() {
   const [offerEdits, setOfferEdits] = useState<Record<string, string>>({});
   const [pricingSaving, setPricingSaving] = useState<string | null>(null);
   const [dynamicPricing, setDynamicPricing] = useState(false);
+  const [hubError, setHubError] = useState<unknown>(null);
+  const [availability, setAvailability] = useState<AvailabilitySnapshot | null>(null);
+  const [layoutId, setLayoutId] = useState<string | null>(null);
   const toast = useToast();
+  const session = useSession();
+  const token = session.token;
 
   function reload() {
-    const token = localStorage.getItem('boletera_token');
     if (!token || !id) return;
-    getEventHub(token, id).then((data) => {
-      setHub(data);
-      setChannels(parseChannelAllocation(data.metadata ?? {}));
-      const edits: Record<string, string> = {};
-      data.event.offers?.forEach((o) => {
-        edits[o.id] = String(o.basePrice);
-      });
-      setOfferEdits(edits);
-      setDynamicPricing(Boolean((data.event as { enableDynamic?: boolean }).enableDynamic));
-    });
+    setHubError(null);
+    getEventHub(token, id)
+      .then((data) => {
+        setHub(data);
+        setChannels(parseChannelAllocation(data.metadata ?? {}));
+        const edits: Record<string, string> = {};
+        data.event.offers?.forEach((o) => {
+          edits[o.id] = String(o.basePrice);
+        });
+        setOfferEdits(edits);
+        setDynamicPricing(Boolean((data.event as { enableDynamic?: boolean }).enableDynamic));
+      })
+      .catch(setHubError);
+
+    // El contrato nuevo agrega: `availability` ya no trae `tickets[]`, así que la
+    // cabecera se pinta con `totals` y el detalle vive en la pestaña «En vivo».
+    getAvailability(token, id, { silent: true })
+      .then(setAvailability)
+      .catch(() => setAvailability(null));
+
     getChannelHealth(token, id).then(setHealth).catch(() => {});
   }
 
   async function saveDynamicPricing() {
-    const token = localStorage.getItem('boletera_token');
     if (!token || !id || !hub) return;
     const base = Number(hub.event.offers?.[0]?.basePrice ?? 100);
     try {
@@ -89,7 +121,9 @@ export default function EventHubPage() {
 
   useEffect(() => {
     reload();
-  }, [id]);
+    // La sesión se resuelve de forma asíncrona: sin `token` en las dependencias
+    // la primera carga salía siempre vacía y la pantalla se quedaba en «Cargando».
+  }, [id, token]);
 
   async function saveChannels() {
     const total = channels.web + channels.taquilla + channels.api;
@@ -97,7 +131,6 @@ export default function EventHubPage() {
       toast.error(`La suma debe ser 100% (actual: ${total}%)`);
       return;
     }
-    const token = localStorage.getItem('boletera_token');
     if (!token || !id) return;
     setSaving(true);
     try {
@@ -116,7 +149,6 @@ export default function EventHubPage() {
   }
 
   async function saveOfferPrice(offerId: string) {
-    const token = localStorage.getItem('boletera_token');
     if (!token || !id) return;
     const price = Number(offerEdits[offerId]);
     if (!Number.isFinite(price) || price <= 0) return;
@@ -146,11 +178,17 @@ export default function EventHubPage() {
   }, [tab, id]);
 
   useEffect(() => {
-    const token = localStorage.getItem('boletera_token');
     const vId = (hub?.event as { venue?: { id?: string } } | undefined)?.venue?.id;
-    if (tab !== 'map3d' || !token || !vId) return;
-    getVenueLayout(token, vId).then((data) => setVenueMapData(data.layout.mapData));
-  }, [tab, hub]);
+    // El layout hace falta para el 3D y también para los bloqueos, que se piden
+    // contra `/layouts/:layoutId/seats/hold`, no contra el evento.
+    if (!token || !vId || (tab !== 'map3d' && tab !== 'blocks')) return;
+    getVenueLayout(token, vId)
+      .then((data) => {
+        setVenueMapData(data.layout.mapData);
+        setLayoutId(data.layout.id ?? null);
+      })
+      .catch(() => setLayoutId(null));
+  }, [tab, hub, token]);
 
   const normalizedVenueMap = useMemo(
     () => (venueMapData ? normalizeSeatMap(venueMapData) : null),
@@ -189,13 +227,34 @@ export default function EventHubPage() {
     });
   }, [normalizedVenueMap, hub, seats3dStatus]);
 
-  if (!hub) {
-    return <p>Cargando evento…</p>;
+  // Sesión ausente, sin organización o 401/403: pantalla explicativa en vez de
+  // un «Cargando evento…» eterno o el texto crudo del error de Nest.
+  if (session.status !== 'ready' || hubError || !hub) {
+    return (
+      <ApiStateBoundary
+        session={session}
+        error={hubError}
+        loading={!hub}
+        context="abrir el evento"
+        onRetry={reload}
+        loadingLabel="Cargando evento…"
+      >
+        <span />
+      </ApiStateBoundary>
+    );
   }
 
   const { event, inventory } = hub;
   const venueId = (event as { venue?: { id?: string } }).venue?.id ?? '';
   const channelTotal = channels.web + channels.taquilla + channels.api;
+
+  // `availability` es la fuente autoritativa; `hub.inventory` queda de respaldo
+  // para eventos cuyo inventario aún no se publicó.
+  const totalTickets = availability?.totalTickets ?? inventory.total;
+  const sold = availability ? soldCount(availability) : inventory.sold;
+  const held = availability ? countOf(availability, 'HELD') : inventory.held;
+  const availableSeats = availability ? countOf(availability, 'AVAILABLE') : inventory.available;
+  const occupancy = availability ? occupancyPercent(availability) : inventory.occupancyPercent;
 
   return (
     <div>
@@ -204,7 +263,7 @@ export default function EventHubPage() {
           <h1>{event.title}</h1>
           <p>
             {event.venue?.name} · {new Date(event.startsAt).toLocaleString('es-MX')} ·{' '}
-            {inventory.occupancyPercent}% ocupación · {event.status}
+            {occupancy}% ocupación · {event.status}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -214,7 +273,6 @@ export default function EventHubPage() {
             disabled={publishing}
             onClick={async () => {
               if (!confirm('¿Publicar el inventario de este evento? Esto genera los boletos vendibles a partir del mapa guardado.')) return;
-              const token = localStorage.getItem('boletera_token');
               if (!token || !id) return;
               setPublishing(true);
               try {
@@ -244,16 +302,17 @@ export default function EventHubPage() {
       <div className={platform.cardGrid}>
         <article className={platform.statCard}>
           <span>Vendidos</span>
-          <strong>{inventory.sold}</strong>
-          <small>de {inventory.total}</small>
+          <strong>{sold.toLocaleString('es-MX')}</strong>
+          <small>de {totalTickets.toLocaleString('es-MX')}</small>
         </article>
         <article className={platform.statCard}>
           <span>Disponibles</span>
-          <strong>{inventory.available}</strong>
+          <strong>{availableSeats.toLocaleString('es-MX')}</strong>
         </article>
         <article className={platform.statCard}>
           <span>En hold</span>
-          <strong>{inventory.held}</strong>
+          <strong>{held.toLocaleString('es-MX')}</strong>
+          {availability && <small>{availability.activeHolds} holds activos</small>}
         </article>
         <article className={platform.statCard}>
           <span>Órdenes</span>
@@ -261,13 +320,16 @@ export default function EventHubPage() {
         </article>
       </div>
 
-      <nav className={platform.tabs}>
-        {(['overview', 'channels', 'map3d', 'pricing'] as Tab[]).map((t) => (
-          <button key={t} type="button" className={tab === t ? platform.active : ''} onClick={() => setTab(t)}>
-            {t === 'overview' && 'Resumen'}
-            {t === 'channels' && 'Canales'}
-            {t === 'map3d' && 'Mapa 3D'}
-            {t === 'pricing' && 'Precios'}
+      <nav className={platform.tabs} aria-label="Secciones del evento">
+        {(['overview', 'live', 'blocks', 'channels', 'map3d', 'pricing'] as Tab[]).map((t) => (
+          <button
+            key={t}
+            type="button"
+            aria-current={tab === t ? 'page' : undefined}
+            className={tab === t ? platform.active : ''}
+            onClick={() => setTab(t)}
+          >
+            {TAB_LABEL[t]}
           </button>
         ))}
       </nav>
@@ -296,6 +358,20 @@ export default function EventHubPage() {
           <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#737373' }}>
             Asignación: Web {channels.web}% · Taquilla {channels.taquilla}% · API {channels.api}%
           </p>
+        </section>
+      )}
+
+      {tab === 'live' && (
+        <section className={platform.panel}>
+          <h2>Onsale en vivo</h2>
+          <LiveInventoryPanel token={token!} eventId={id} eventTitle={event.title} />
+        </section>
+      )}
+
+      {tab === 'blocks' && (
+        <section className={platform.panel}>
+          <h2>Bloqueos administrativos</h2>
+          <InventoryBlocksPanel token={token!} eventId={id} layoutId={layoutId} />
         </section>
       )}
 

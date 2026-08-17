@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Suspense, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { getStoredUser, getToken } from '@/lib/auth';
+import { clearSession, getStoredUser, getToken } from '@/lib/auth';
 import styles from './SiteHeader.module.scss';
 
 type SiteHeaderProps = {
@@ -30,6 +30,27 @@ type SuggestHit = {
   startsAt: string;
   subtitle?: string;
 };
+
+/**
+ * El JWT ahora vive 2 h y se revoca al cambiar el usuario, así que la sesión
+ * caducada dejó de ser un caso raro. Leemos el `exp` del propio token en vez de
+ * pedir permiso al servidor: es gratis, funciona sin red y evita que la barra
+ * anuncie "Mi cuenta" cuando el token ya no sirve para nada.
+ */
+function isTokenUsable(token: string | null): boolean {
+  if (!token) return false;
+  const payload = token.split('.')[1];
+  if (!payload) return false;
+  try {
+    const json = JSON.parse(
+      atob(payload.replace(/-/g, '+').replace(/_/g, '/')),
+    ) as { exp?: number };
+    if (typeof json.exp !== 'number') return true; // sin caducidad declarada
+    return json.exp * 1000 > Date.now();
+  } catch {
+    return false; // token ilegible = sesión inservible
+  }
+}
 
 export function SiteHeader(props: SiteHeaderProps) {
   return (
@@ -61,6 +82,7 @@ function SiteHeaderBar({
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
   const [name, setName] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [query, setQuery] = useState('');
@@ -70,10 +92,33 @@ function SiteHeaderBar({
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const token = getToken();
+    if (token && !isTokenUsable(token)) {
+      // Limpiamos el token muerto para que ninguna página lo mande al API.
+      clearSession();
+      setLoggedIn(false);
+      setName('');
+      setSessionExpired(true);
+      return;
+    }
     const user = getStoredUser();
-    setLoggedIn(!!getToken());
+    setLoggedIn(!!token);
     setName(user ? `${user.firstName}` : '');
-  }, []);
+    setSessionExpired(false);
+  }, [pathname]);
+
+  /*
+   * El enlace "saltar al contenido" apunta a #contenido. Las páginas propias ya
+   * traen el id, pero el resto del sitio (checkout, carrito, órdenes) también
+   * monta esta barra: le ponemos el ancla a su <main> al hidratar para que el
+   * salto nunca quede muerto.
+   */
+  useEffect(() => {
+    const main = document.querySelector('main');
+    if (!main) return;
+    if (!main.id) main.id = 'contenido';
+    if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -112,7 +157,7 @@ function SiteHeaderBar({
         setSuggestOpen(data.length > 0);
         setActiveSuggest(-1);
       } catch {
-        /* ignore */
+        /* la búsqueda es auxiliar: si falla, el formulario sigue enviando */
       }
     }, 200);
     return () => clearTimeout(t);
@@ -156,6 +201,11 @@ function SiteHeaderBar({
   }
 
   const effectiveTheme = theme === 'dark' && !scrolled ? 'dark' : 'light';
+  // Volver a entrar sin perder el contexto: el login regresa a donde estabas.
+  const loginHref =
+    pathname && pathname !== '/' && pathname !== '/login'
+      ? `/login?next=${encodeURIComponent(pathname)}`
+      : '/login';
 
   return (
     <header
@@ -163,10 +213,21 @@ function SiteHeaderBar({
         scrolled ? styles.scrolled : ''
       } ${theme === 'dark' && !scrolled ? styles.overHero : ''}`}
     >
+      <a href="#contenido" className={styles.skipLink}>
+        Saltar al contenido
+      </a>
+
+      {sessionExpired && (
+        <p className={styles.sessionNotice} role="status">
+          Tu sesión caducó por seguridad.{' '}
+          <Link href={loginHref}>Vuelve a entrar</Link> para seguir donde ibas.
+        </p>
+      )}
+
       <div className={styles.inner}>
-        <Link href="/" className={styles.brand} aria-label="Boletera inicio">
+        <Link href="/" className={styles.brand}>
           <span className={styles.logo}>
-            <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
               <rect width="32" height="32" rx="9" fill="currentColor" />
               <path
                 d="M9 11h14M9 16h14M9 21h9"
@@ -183,33 +244,59 @@ function SiteHeaderBar({
             </svg>
           </span>
           <span className={styles.brandText}>BOLETERA</span>
+          <span className="sr-only">— ir al inicio</span>
         </Link>
 
         <div className={styles.search} ref={searchRef}>
-          <form onSubmit={onSubmit}>
-            <label className={styles.searchLabel}>
-              <span className={styles.srOnly}>Buscar eventos</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <form onSubmit={onSubmit} role="search">
+            <div className={styles.searchLabel}>
+              <label htmlFor="header-search" className="sr-only">
+                Buscar eventos
+              </label>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                focusable="false"
+              >
                 <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
-                <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                <path
+                  d="m20 20-3.5-3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
               </svg>
               <input
+                id="header-search"
                 type="search"
                 placeholder="Buscar eventos"
                 value={query}
                 autoComplete="off"
+                role="combobox"
                 aria-autocomplete="list"
                 aria-expanded={suggestOpen}
+                aria-controls="header-suggest"
+                aria-activedescendant={
+                  activeSuggest >= 0 ? `header-suggest-${activeSuggest}` : undefined
+                }
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => suggestions.length > 0 && setSuggestOpen(true)}
                 onKeyDown={onSearchKeyDown}
               />
-            </label>
+            </div>
           </form>
           {suggestOpen && suggestions.length > 0 && (
-            <ul className={styles.suggest} role="listbox">
+            <ul id="header-suggest" className={styles.suggest} role="listbox" aria-label="Sugerencias">
               {suggestions.map((s, i) => (
-                <li key={s.id} role="option" aria-selected={i === activeSuggest}>
+                <li
+                  key={s.id}
+                  id={`header-suggest-${i}`}
+                  role="option"
+                  aria-selected={i === activeSuggest}
+                >
                   <button
                     type="button"
                     className={i === activeSuggest ? styles.suggestActive : styles.suggestItem}
@@ -225,7 +312,11 @@ function SiteHeaderBar({
           )}
         </div>
 
-        <nav className={`${styles.nav} ${open ? styles.navOpen : ''}`}>
+        <nav
+          id="site-nav"
+          className={`${styles.nav} ${open ? styles.navOpen : ''}`}
+          aria-label="Categorías y secciones"
+        >
           {navItems.map((item) => {
             const active = item.category
               ? activeCategory === item.category || pathname === item.href
@@ -235,6 +326,7 @@ function SiteHeaderBar({
                 key={item.href}
                 href={item.href}
                 className={active ? styles.navActive : styles.navLink}
+                aria-current={active ? 'page' : undefined}
                 onClick={() => setOpen(false)}
               >
                 {item.label}
@@ -244,8 +336,15 @@ function SiteHeaderBar({
         </nav>
 
         <div className={styles.actions}>
-          <Link href="/cart" className={styles.iconLink} aria-label="Carrito">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <Link href="/cart" className={styles.iconLink}>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              focusable="false"
+            >
               <path
                 d="M6 4h12l2 6-7 10-7-10z M3 10h18"
                 stroke="currentColor"
@@ -254,14 +353,18 @@ function SiteHeaderBar({
                 strokeLinejoin="round"
               />
             </svg>
+            <span className="sr-only">Carrito</span>
           </Link>
           {loggedIn ? (
             <Link href="/cuenta" className={styles.userLink}>
-              <span className={styles.avatar}>{(name || 'M').charAt(0).toUpperCase()}</span>
+              <span className={styles.avatar} aria-hidden="true">
+                {(name || 'M').charAt(0).toUpperCase()}
+              </span>
               <span className={styles.userText}>{name || 'Cuenta'}</span>
+              <span className="sr-only">Mi cuenta</span>
             </Link>
           ) : (
-            <Link href="/login" className={styles.cta}>
+            <Link href={loginHref} className={styles.cta}>
               Entrar
             </Link>
           )}
@@ -269,9 +372,18 @@ function SiteHeaderBar({
             type="button"
             className={styles.menuBtn}
             onClick={() => setOpen((v) => !v)}
-            aria-label="Abrir menú"
+            aria-expanded={open}
+            aria-controls="site-nav"
+            aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              focusable="false"
+            >
               <path
                 d={open ? 'M6 6l12 12M6 18L18 6' : 'M4 6h16M4 12h16M4 18h16'}
                 stroke="currentColor"

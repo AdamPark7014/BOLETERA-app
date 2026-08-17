@@ -1,0 +1,197 @@
+/* Estados compartidos por las pantallas de dinero: vacío ≠ falló ≠ sin permiso. */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 2.5rem 1.25rem;
+  text-align: center;
+  color: #3f3f46;
+
+  p {
+    margin: 0;
+    max-width: 46ch;
+    line-height: 1.5;
+  }
+}
+
+.title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #18181b;
+  margin: 0;
+}
+
+.hint {
+  font-size: 0.8125rem;
+  /* #52525b sobre blanco = 7.4:1 */
+  color: #52525b;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f4f4f5;
+  color: #3f3f46;
+}
+
+.iconWarn {
+  background: #fef3c7;
+  color: #854d0e;
+}
+
+.iconError {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+/* Objetivo táctil mínimo 24×24 y foco visible en todos los controles del kit. */
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 36px;
+  min-width: 44px;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid #18181b;
+  border-radius: 8px;
+  background: #18181b;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+
+  &:hover {
+    background: #27272a;
+  }
+}
+
+.actionGhost {
+  composes: action;
+  background: #fff;
+  color: #18181b;
+  border-color: #d4d4d8;
+
+  &:hover {
+    background: #fafafa;
+  }
+}
+
+.action:focus-visible,
+.actionGhost:focus-visible {
+  outline: 2px solid #18181b;
+  outline-offset: 2px;
+}
+
+/* Esqueleto de carga: ocupa el sitio de la tabla para que no salte el layout. */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.skelRow {
+  height: 38px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f4f4f5 25%, #ececee 37%, #f4f4f5 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skelRow {
+    animation: none;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Banda de aviso reutilizable (descuadres, reembolsos pendientes, degradaciones). */
+.notice {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e4e4e7;
+  background: #fafafa;
+  color: #27272a;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+
+  p {
+    margin: 0;
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 0.125rem;
+  }
+}
+
+.noticeWarn {
+  composes: notice;
+  border-color: #fcd34d;
+  background: #fffbeb;
+  color: #713f12;
+}
+
+.noticeDanger {
+  composes: notice;
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.noticeInfo {
+  composes: notice;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.noticeBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.noticeActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}

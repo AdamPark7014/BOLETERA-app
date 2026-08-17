@@ -3,6 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { getEventCalendar } from '@/lib/platform-api';
+import {
+  AnonymousView,
+  ApiErrorView,
+  NoOrgView,
+  useSession,
+} from '../events/_shared/api-state';
 import platform from '../_styles/platform.module.scss';
 import styles from './calendar.module.scss';
 
@@ -33,16 +39,22 @@ export default function CalendarPage() {
   const [calendar, setCalendar] = useState<Record<string, DayEvent[]>>({});
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [nonce, setNonce] = useState(0);
+  const session = useSession();
+  const token = session.token;
 
   useEffect(() => {
-    const token = localStorage.getItem('boletera_token');
     if (!token) return;
-    getEventCalendar(token, month, year).then((data) => {
-      setCalendar(data.calendar as typeof calendar);
-      setTotal(data.totalEvents);
-      setSelected(null);
-    });
-  }, [month, year]);
+    setError(null);
+    getEventCalendar(token, month, year)
+      .then((data) => {
+        setCalendar(data.calendar as typeof calendar);
+        setTotal(data.totalEvents);
+        setSelected(null);
+      })
+      .catch(setError);
+  }, [month, year, token, nonce]);
 
   const cells = useMemo(() => {
     const totalDays = daysInMonth(year, month);
@@ -71,6 +83,18 @@ export default function CalendarPage() {
     const d = new Date(year, month - 1 + delta, 1);
     setMonth(d.getMonth() + 1);
     setYear(d.getFullYear());
+  }
+
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (error) {
+    return (
+      <ApiErrorView
+        error={error}
+        context="cargar el calendario de eventos"
+        onRetry={() => setNonce((n) => n + 1)}
+      />
+    );
   }
 
   return (

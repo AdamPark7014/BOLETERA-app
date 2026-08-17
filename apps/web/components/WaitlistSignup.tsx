@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useId, useState } from 'react';
+import styles from './WaitlistSignup.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -13,6 +14,7 @@ export function WaitlistSignup({
   eventTitle: string;
   offerId?: string;
 }) {
+  const emailId = useId();
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
@@ -31,7 +33,7 @@ export function WaitlistSignup({
       if (!res.ok) throw new Error(await res.text());
       setDone(true);
     } catch {
-      setError('No pudimos registrarte. ¿Ya estás en la lista?');
+      setError('No pudimos registrarte. Puede que ya estés en la lista con ese correo.');
     } finally {
       setLoading(false);
     }
@@ -39,46 +41,45 @@ export function WaitlistSignup({
 
   if (done) {
     return (
-      <div style={{ padding: '1.25rem', borderRadius: 12, background: '#ecfdf5', marginTop: '1rem' }}>
-        <strong>¡Listo!</strong>
-        <p style={{ margin: '0.5rem 0 0' }}>
-          Te avisaremos por correo cuando haya boletos para {eventTitle}.
-        </p>
+      <div className={styles.done} role="status">
+        <strong>Listo, ya estás en la lista</strong>
+        <p>Te avisaremos por correo cuando haya boletos para {eventTitle}.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '1.25rem', borderRadius: 12, border: '1px solid #e7e7ea', marginTop: '1rem' }}>
-      <h3 style={{ margin: '0 0 0.5rem' }}>Agotado — lista de espera</h3>
-      <p style={{ margin: '0 0 1rem', color: '#737373', fontSize: '0.9rem' }}>
-        Déjanos tu email y serás de los primeros en enterarte cuando liberemos cupo.
+    <div className={styles.card}>
+      <h3>Agotado — lista de espera</h3>
+      <p className={styles.lead}>
+        Déjanos tu correo y serás de los primeros en enterarte cuando liberemos cupo.
       </p>
-      <form onSubmit={onSubmit} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <input
-          type="email"
-          required
-          placeholder="tu@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ flex: 1, minWidth: 200, padding: '0.625rem 0.875rem', borderRadius: 8, border: '1px solid #ddd' }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: '0.625rem 1rem',
-            background: '#0a0a0a',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
-          }}
-        >
-          {loading ? 'Enviando…' : 'Unirme'}
+      <form onSubmit={onSubmit} className={styles.form}>
+        <div className={styles.field}>
+          {/* Etiqueta real: el placeholder desaparece al escribir. */}
+          <label htmlFor={emailId}>Tu correo electrónico</label>
+          <input
+            id={emailId}
+            type="email"
+            name="email"
+            autoComplete="email"
+            required
+            placeholder="nombre@correo.com"
+            value={email}
+            aria-describedby={error ? `${emailId}-error` : undefined}
+            aria-invalid={error ? true : undefined}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Enviando…' : 'Avísenme'}
         </button>
       </form>
-      {error && <p style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '0.85rem' }}>{error}</p>}
+      {error && (
+        <p id={`${emailId}-error`} className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,0 +1,261 @@
+/* Asistente de alta de evento: pasos, borrador y resumen de validación. */
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.stepChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 999px;
+  background: #f4f4f5;
+  color: #52525b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &[data-state='current'] {
+    background: #18181b;
+    border-color: #18181b;
+    color: #fff;
+  }
+
+  &[data-state='done'] {
+    background: #e4e4e7;
+    color: #27272a;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+}
+
+.stepBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.draftBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #bfdbfe;
+  border-left: 5px solid #1d4ed8;
+  border-radius: 10px;
+  background: #eff6ff;
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #1e3a8a;
+  }
+}
+
+.draftActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.draftStamp {
+  font-size: 0.8125rem;
+  color: #52525b;
+}
+
+.primaryBtn,
+.ghostBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+}
+
+.primaryBtn {
+  border: 1px solid #18181b;
+  background: #18181b;
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: #3f3f46;
+  }
+
+  &:disabled {
+    background: #a1a1aa;
+    border-color: #a1a1aa;
+    cursor: not-allowed;
+  }
+}
+
+.ghostBtn {
+  border: 1px solid #d4d4d4;
+  background: #fff;
+  color: #18181b;
+
+  &:hover {
+    background: #f4f4f5;
+  }
+}
+
+.navRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.blockedNote {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.submitError {
+  margin-bottom: 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #fca5a5;
+  border-left: 5px solid #b91c1c;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #7f1d1d;
+  font-size: 0.875rem;
+}
+
+.hint {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #52525b;
+}
+
+.mapStatus {
+  font-size: 0.875rem;
+  color: #3f3f46;
+
+  a {
+    color: #1d4ed8;
+
+    &:focus-visible {
+      outline: 3px solid #1d4ed8;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.summary {
+  line-height: 1.75;
+  font-size: 0.9375rem;
+  color: #27272a;
+}
+
+.issues {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  background: #fafafa;
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 0.9375rem;
+    color: #18181b;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  /* La severidad se distingue por la etiqueta de texto, no solo por el color. */
+  li[data-severity='error'] .issueTag {
+    background: #b91c1c;
+  }
+  li[data-severity='warning'] .issueTag {
+    background: #a16207;
+  }
+}
+
+.issueTag {
+  flex: none;
+  min-width: 3.6rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.issueLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #18181b;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:hover {
+    color: #1d4ed8;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+}
+
+.issueHint {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #52525b;
+}

@@ -1,0 +1,236 @@
+/*
+ * Tokens de diseño de BOLETERA.
+ *
+ * La paleta NO es nueva: sale de inventariar los valores que ya estaban
+ * repetidos a mano por todo el árbol (#e11d48 x60, #fafafa x59, #737373 x55,
+ * #0a0a0a x50, #e5e5e5 x39, #171717 x24…). Aquí se les da un nombre semántico
+ * para que el cambio sea invisible en pantalla y el sistema quede unificado.
+ *
+ * Las dos únicas desviaciones respecto del inventario son de accesibilidad y
+ * están marcadas con "AA:" en el comentario correspondiente.
+ */
+
+:root {
+  /* ---------------------------------------------------------------
+   * Escalas crudas (la realidad del repo, sin semántica)
+   * --------------------------------------------------------------- */
+
+  /* Tinta */
+  --ink-950: #0a0a0a;
+  --ink-900: #171717;
+  --ink-800: #262626;
+  --ink-700: #404040;
+  --ink-600: #525252;
+  --ink-500: #737373;
+  --ink-400: #a3a3a3;
+  --ink-300: #d4d4d4;
+  --ink-200: #e5e5e5;
+  --ink-100: #f4f4f5;
+  --ink-50: #fafafa;
+
+  /* Papel */
+  --paper-0: #ffffff;
+
+  /* Marca */
+  --accent-700: #9f1239;
+  --accent-600: #be123c;
+  --accent-500: #e11d48;
+  --accent-300: #fb7185;
+  --accent-50: #fff1f2;
+
+  /* Estado */
+  --success-700: #065f46;
+  --success-600: #15803d;
+  --success-500: #16a34a;
+  --success-100: #a7f3d0;
+  --success-50: #ecfdf5;
+  --danger-700: #991b1b;
+  --danger-600: #b91c1c;
+  --danger-100: #fecaca;
+  --danger-50: #fef2f2;
+  --warning-600: #d97706;
+  --warning-50: #fffbeb;
+
+  /* ---------------------------------------------------------------
+   * Color semántico
+   * --------------------------------------------------------------- */
+
+  /* Superficies */
+  --color-bg: var(--ink-50);
+  --color-surface: var(--paper-0);
+  --color-surface-muted: var(--ink-50);
+  --color-surface-sunken: var(--ink-100);
+  --color-surface-inverse: var(--ink-950);
+  --color-surface-inverse-hover: var(--ink-900);
+
+  /* Bordes */
+  --color-border: var(--ink-200);
+  /* Borde apenas más frío que --color-border; venía de las tarjetas de login. */
+  --color-border-soft: #e7e7ea;
+  --color-border-strong: var(--ink-300);
+  --color-border-inverse: rgba(255, 255, 255, 0.14);
+
+  /* Brillo de los esqueletos de carga */
+  --color-skeleton-highlight: #ececef;
+
+  /* Texto */
+  --text-primary: var(--ink-950);
+  --text-heading: var(--ink-900);
+  --text-secondary: var(--ink-700);
+  /*
+   * AA: el gris de apoyo era #737373. Sobre blanco da 4.74:1 (pasa por poco),
+   * pero casi todas las superficies del sitio son #fafafa o #f4f4f5, donde cae
+   * a 4.54:1 y 4.31:1 → reprueba. #6b6b6b es 4 puntos más oscuro (diferencia
+   * imperceptible) y da 4.85:1 sobre la superficie más clara que usamos.
+   */
+  --text-muted: #6b6b6b;
+  --text-placeholder: var(--text-muted);
+  --text-inverse: var(--ink-50);
+  --text-inverse-muted: rgba(250, 250, 250, 0.82);
+  --text-on-accent: var(--paper-0);
+
+  /* Acento */
+  --color-accent: var(--accent-500);
+  --color-accent-hover: var(--accent-600);
+  /*
+   * AA: #e11d48 como TEXTO sobre superficies claras da 4.27:1 sobre #f4f4f5.
+   * Para texto y enlaces usamos el tono que ya existía en el repo (#be123c,
+   * 17 apariciones), que da 5.7:1. #e11d48 se reserva para rellenos, donde el
+   * texto blanco encima sí cumple (4.70:1).
+   */
+  --color-accent-text: var(--accent-600);
+  --color-accent-text-hover: var(--accent-700);
+  --color-accent-tint: var(--accent-50);
+
+  /* Estado semántico */
+  --color-success: var(--success-500);
+  --color-success-text: var(--success-600);
+  --color-success-bg: var(--success-50);
+  --color-success-border: var(--success-100);
+  --color-danger: var(--danger-600);
+  --color-danger-text: var(--danger-600);
+  --color-danger-strong: var(--danger-700);
+  --color-danger-bg: var(--danger-50);
+  --color-danger-border: var(--danger-100);
+  --color-warning: var(--warning-600);
+  --color-warning-bg: var(--warning-50);
+
+  /* Foco */
+  --color-focus: var(--accent-500);
+  --color-focus-halo: var(--paper-0);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 1px;
+
+  /* ---------------------------------------------------------------
+   * Tipografía
+   * --------------------------------------------------------------- */
+  --font-family-heading: var(--font-heading), 'Bebas Neue', sans-serif;
+  --font-family-body: var(--font-body), 'Space Grotesk', system-ui, sans-serif;
+
+  /*
+   * El repo tenía 25+ tamaños distintos entre 0.62rem y 1.75rem. Se colapsan a
+   * una escala de 7 pasos. El mínimo sube a 0.75rem (12px): los rótulos de
+   * 0.62rem eran ilegibles en gama media.
+   */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.625rem;
+
+  /* Display (Bebas Neue, fluido) */
+  --display-sm: clamp(1.5rem, 3vw, 1.75rem);
+  --display-md: clamp(1.85rem, 3.5vw, 2.35rem);
+  --display-lg: clamp(2.25rem, 5vw, 3.2rem);
+  --display-xl: clamp(3.2rem, 9vw, 5.75rem);
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.08em;
+  --tracking-widest: 0.14em;
+  --tracking-brand: 0.18em;
+
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---------------------------------------------------------------
+   * Espaciado (escala de 4px, derivada de los valores más repetidos)
+   * --------------------------------------------------------------- */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.375rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* ---------------------------------------------------------------
+   * Layout
+   * --------------------------------------------------------------- */
+  --layout-max: 72rem;
+  --layout-gutter: clamp(1rem, 3vw, 2rem);
+  --layout-gutter-wide: clamp(1.25rem, 4vw, 2.5rem);
+  /* Alto de la barra sticky: estaba escrito a mano como 64px en 6 archivos. */
+  --header-height: 64px;
+
+  /* ---------------------------------------------------------------
+   * Radios (el sistema es mayormente recto; solo login usa esquinas)
+   * --------------------------------------------------------------- */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* ---------------------------------------------------------------
+   * Sombras
+   * --------------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px rgba(10, 10, 10, 0.06);
+  --shadow-sm: 0 4px 12px rgba(10, 10, 10, 0.08);
+  --shadow-md: 0 12px 40px rgba(10, 10, 10, 0.04);
+  --shadow-lg: 0 16px 40px rgba(10, 10, 10, 0.08);
+  --shadow-poster: 0 18px 40px rgba(10, 10, 10, 0.12);
+  --shadow-accent: 0 4px 14px rgba(225, 29, 72, 0.28);
+
+  /* ---------------------------------------------------------------
+   * Movimiento
+   * --------------------------------------------------------------- */
+  --duration-fast: 0.15s;
+  --duration-base: 0.25s;
+  --duration-slow: 0.45s;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ---------------------------------------------------------------
+   * Controles / objetivos táctiles
+   * WCAG 2.2 AA (2.5.8) pide 24x24 CSS px como mínimo.
+   * --------------------------------------------------------------- */
+  --target-min: 1.5rem;
+  --control-height-sm: 2.25rem;
+  --control-height-md: 2.75rem;
+
+  /* Capas */
+  --z-header: 50;
+  --z-sticky: 30;
+  --z-popover: 60;
+
+  /*
+   * Esquema fijo en claro. El sistema visual es "papel claro + héroes oscuros"
+   * y no existe una paleta oscura equivalente para las 15 superficies del
+   * sitio; declararlo evita que el navegador pinte selects, inputs y
+   * scrollbars en oscuro sobre tarjetas blancas, que es como se rompía antes
+   * en dispositivos con modo oscuro del sistema.
+   */
+  color-scheme: light;
+}

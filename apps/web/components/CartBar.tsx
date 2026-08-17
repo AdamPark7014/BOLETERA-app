@@ -3,11 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { secondsUntil, useCartStore } from '@/lib/cart-store';
+import { formatCountdown } from '@/lib/payment-window';
 import styles from './CartBar.module.scss';
-
-function fmtTimer(sec: number) {
-  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
-}
 
 export function CartBar() {
   const items = useCartStore((s) => s.items);
@@ -39,7 +36,7 @@ export function CartBar() {
           Carrito · {seats} asiento{seats === 1 ? '' : 's'}
         </span>
         <span className={`${styles.clock} ${soonest < 120 ? styles.urgent : ''}`}>
-          {soonest > 0 ? fmtTimer(soonest) : 'Exp.'}
+          {soonest > 0 ? formatCountdown(soonest) : 'Exp.'}
         </span>
       </button>
 
@@ -53,7 +50,7 @@ export function CartBar() {
                   <div>
                     <strong>{item.eventTitle}</strong>
                     <span className={sec < 120 ? styles.urgent : undefined}>
-                      {sec > 0 ? fmtTimer(sec) : 'Expirado'}
+                      {sec > 0 ? formatCountdown(sec) : 'Expirado'}
                     </span>
                   </div>
                   <button type="button" onClick={() => removeAt(i)} aria-label="Quitar del carrito">

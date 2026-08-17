@@ -1,0 +1,34 @@
+// Breakpoints del sistema.
+//
+// Van en SCSS y no en custom properties porque las media queries no pueden
+// leer variables CSS. Los valores salen de los que ya estaban repetidos en los
+// módulos (480 / 520 / 560 / 620 / 640 / 720 / 760 / 768 / 800 / 900 / 980 /
+// 1100), colapsados a seis escalones.
+
+$bp-xs: 480px;
+$bp-sm: 640px;
+$bp-md: 720px;
+$bp-lg: 900px;
+$bp-xl: 980px;
+$bp-2xl: 1100px;
+
+/// Aplica estilos por debajo de un breakpoint (mobile-last, como el repo).
+@mixin below($bp) {
+  @media (max-width: $bp) {
+    @content;
+  }
+}
+
+/// Aplica estilos a partir de un breakpoint.
+@mixin from($bp) {
+  @media (min-width: $bp) {
+    @content;
+  }
+}
+
+/// Respeta la preferencia de movimiento reducido.
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}

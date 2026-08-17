@@ -3,6 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { listEvents, getChannelHealth, configureChannels, type EventRow } from '@/lib/platform-api';
+import { ApiError } from '@/lib/api';
+import {
+  AnonymousView,
+  ApiErrorView,
+  NoOrgView,
+  useSession,
+} from '../events/_shared/api-state';
 import platform from '../_styles/platform.module.scss';
 
 type ChannelPct = { web: number; taquilla: number; api: number };
@@ -26,24 +33,32 @@ export default function ChannelsPage() {
   const [channels, setChannels] = useState<ChannelPct>({ web: 50, taquilla: 35, api: 15 });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [nonce, setNonce] = useState(0);
+  const session = useSession();
+  const token = session.token;
 
   useEffect(() => {
-    const token = localStorage.getItem('boletera_token');
     if (!token) return;
-    listEvents(token).then((list) => {
-      setEvents(list);
-      if (list[0]) setSelected(list[0].id);
-    });
-  }, []);
+    setError(null);
+    listEvents(token)
+      .then((list) => {
+        setEvents(list);
+        if (list[0]) setSelected(list[0].id);
+      })
+      .catch(setError);
+  }, [token, nonce]);
 
   useEffect(() => {
-    if (!selected) return;
-    const token = localStorage.getItem('boletera_token');
-    if (!token) return;
-    getChannelHealth(token, selected).then(setHealth);
+    if (!selected || !token) return;
+    // La salud de canales es accesoria: si falla no debe tumbar la pantalla,
+    // pero tampoco puede quedar como un rechazo sin capturar.
+    getChannelHealth(token, selected)
+      .then(setHealth)
+      .catch(() => setHealth(null));
     const ev = events.find((e) => e.id === selected);
     if (ev?.metadata) setChannels(parseChannels(ev.metadata));
-  }, [selected, events]);
+  }, [selected, events, token]);
 
   const total = channels.web + channels.taquilla + channels.api;
 
@@ -52,7 +67,6 @@ export default function ChannelsPage() {
       setMsg('La suma debe ser 100%');
       return;
     }
-    const token = localStorage.getItem('boletera_token');
     if (!token || !selected) return;
     setSaving(true);
     setMsg(null);
@@ -66,10 +80,28 @@ export default function ChannelsPage() {
       const list = await listEvents(token);
       setEvents(list);
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Error');
+      setMsg(
+        e instanceof ApiError
+          ? `${e.userMessage} (${e.status})`
+          : e instanceof Error
+            ? e.message
+            : 'Error',
+      );
     } finally {
       setSaving(false);
     }
+  }
+
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (error) {
+    return (
+      <ApiErrorView
+        error={error}
+        context="cargar los eventos de tu organización"
+        onRetry={() => setNonce((n) => n + 1)}
+      />
+    );
   }
 
   return (

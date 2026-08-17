@@ -1,53 +1,61 @@
-$ink: #0a0a0a;
-$mute: #737373;
-$line: #e5e5e5;
-$paper: #fafafa;
-$accent: #e11d48;
+@use '../styles/breakpoints' as bp;
 
 .page {
-  max-width: 72rem;
+  max-width: var(--layout-max);
   margin: 0 auto;
-  padding: 1.5rem clamp(1rem, 3vw, 2rem) 3rem;
-  background: $paper;
-  min-height: calc(100vh - 64px);
+  padding: var(--space-lg) var(--layout-gutter) var(--space-2xl);
+  background: var(--color-surface-muted);
+  min-height: calc(100vh - var(--header-height));
 }
 
 .hero {
-  margin-bottom: 1.5rem;
-  padding: 1.5rem 0 1.25rem;
-  border-bottom: 1px solid $line;
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg) 0 1.25rem;
+  border-bottom: 1px solid var(--color-border);
 
   h1 {
     margin: 0 0 0.35rem;
-    font-family: var(--font-heading), 'Bebas Neue', sans-serif;
-    font-size: clamp(2rem, 5vw, 3rem);
-    letter-spacing: 0.04em;
+    font-family: var(--font-family-heading);
+    font-size: var(--display-lg);
+    letter-spacing: var(--tracking-wide);
     line-height: 0.95;
   }
 
   p {
     margin: 0;
-    color: $mute;
-    font-size: 0.95rem;
+    color: var(--text-muted);
+    font-size: var(--text-md);
   }
 }
 
 .crumb {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.8125rem;
-  color: $mute;
+  align-items: center;
+  gap: var(--space-3xs) 0.4rem;
+  margin-bottom: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 
   a {
-    color: $mute;
-    text-decoration: none;
+    /* 24px de objetivo táctil también en las migas. */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    color: var(--text-muted);
+    text-decoration: underline;
 
     &:hover {
-      color: $accent;
+      color: var(--color-accent-text);
     }
   }
+}
+
+.sectionTitle {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-family-heading);
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-wide);
 }
 
 .grid {
@@ -56,9 +64,9 @@ $accent: #e11d48;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--space-sm);
 
-  @media (max-width: 640px) {
+  @include bp.below(bp.$bp-sm) {
     grid-template-columns: 1fr;
   }
 }
@@ -68,33 +76,37 @@ $accent: #e11d48;
   grid-template-columns: 5.5rem 1fr auto;
   gap: 0.85rem;
   align-items: center;
-  padding: 0.75rem;
-  background: #fff;
-  border: 1px solid $line;
+  padding: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   text-decoration: none;
   color: inherit;
 
   strong {
     display: block;
-    font-size: 0.95rem;
+    font-size: var(--text-md);
   }
 
   span {
     display: block;
     margin-top: 0.2rem;
-    font-size: 0.8rem;
-    color: $mute;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
   }
 
   em {
     font-style: normal;
-    font-weight: 700;
-    font-size: 0.875rem;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-base);
     white-space: nowrap;
   }
 
   &:hover {
-    border-color: #d4d4d4;
+    border-color: var(--color-border-strong);
+
+    strong {
+      color: var(--color-accent-text);
+    }
   }
 }
 
@@ -107,11 +119,11 @@ $accent: #e11d48;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
 
-  @media (max-width: 800px) {
+  @include bp.below(bp.$bp-md) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  @media (max-width: 520px) {
+  @include bp.below(bp.$bp-xs) {
     grid-template-columns: 1fr;
   }
 }
@@ -119,10 +131,10 @@ $accent: #e11d48;
 .cityTile {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-3xs);
   padding: 1.25rem 1.1rem;
-  background: #0a0a0a;
-  color: #fafafa;
+  background: var(--color-surface-inverse);
+  color: var(--text-inverse);
   text-decoration: none;
 
   strong {
@@ -130,72 +142,121 @@ $accent: #e11d48;
   }
 
   span {
-    font-size: 0.8rem;
-    color: rgba(250, 250, 250, 0.65);
+    font-size: var(--text-xs);
+    color: var(--text-inverse-muted);
   }
 
   &:hover {
-    background: #171717;
+    background: var(--color-surface-inverse-hover);
   }
 }
 
 .venueTile {
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border: 1px solid $line;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   text-decoration: none;
   color: inherit;
   overflow: hidden;
 
   .art {
+    /* Alto fijo: el hueco existe aunque la foto tarde o no exista. */
     height: 8rem;
-    background: linear-gradient(135deg, #171717, #525252);
-    background-size: cover;
-    background-position: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--ink-900), var(--ink-600));
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
   }
 
   .body {
-    padding: 0.9rem 1rem 1.1rem;
+    padding: 0.9rem var(--space-md) 1.1rem;
   }
 
   strong {
     display: block;
-    font-size: 0.95rem;
+    font-size: var(--text-md);
   }
 
   span {
     display: block;
-    margin-top: 0.25rem;
-    font-size: 0.8rem;
-    color: $mute;
+    margin-top: var(--space-3xs);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
   }
 
   &:hover {
-    border-color: #d4d4d4;
+    border-color: var(--color-border-strong);
+
+    strong {
+      color: var(--color-accent-text);
+    }
   }
 }
 
-.empty {
-  padding: 2rem 0;
-  color: $mute;
+@mixin state-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-lg) 1.25rem;
+  color: var(--text-muted);
+  font-size: var(--text-base);
+
+  strong {
+    font-size: var(--text-lg);
+    color: var(--text-primary);
+  }
 
   a {
-    color: $accent;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-height-sm);
+    color: var(--color-accent-text);
+    font-weight: var(--weight-bold);
+    text-decoration: underline;
+  }
+}
+
+/* Estado vacío: la lista está bien, simplemente no hay nada que mostrar. */
+.empty {
+  @include state-block;
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-surface);
+}
+
+/* Estado de error: algo falló y hay que decirlo con otras palabras. */
+.error {
+  @include state-block;
+  border: 1px solid var(--color-danger-border);
+  background: var(--color-danger-bg);
+
+  strong {
+    color: var(--color-danger-strong);
   }
 }
 
 .metaBlock {
-  margin: 0 0 1.5rem;
-  padding: 1rem 1.1rem;
-  background: #fff;
-  border: 1px solid $line;
-  font-size: 0.9rem;
-  color: #404040;
-  line-height: 1.5;
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-md) 1.1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
 
   a {
-    color: $accent;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    color: var(--color-accent-text);
+    text-decoration: underline;
   }
 
   p {

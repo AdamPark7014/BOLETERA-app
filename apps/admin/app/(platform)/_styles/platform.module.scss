@@ -1,120 +1,143 @@
 @use './platform.scss';
+@use '../../../styles/mixins' as m;
 
-$page-bg: #f4f4f5;
-$ink: #18181b;
-$ink-soft: #3f3f46;
-$muted: #71717a;
-$border: #e4e4e7;
-$border-strong: #d4d4d8;
-$surface: #ffffff;
-$surface-soft: #fafafa;
-$accent: #18181b;
-$success: #16a34a;
-$warning: #a16207;
-$danger: #b91c1c;
+/**
+ * Estilos compartidos por casi todo el backoffice.
+ *
+ * Migrado a los tokens de `styles/_tokens.scss`: antes declaraba su propia
+ * paleta en variables Sass (`$ink`, `$muted`, …) con los mismos hex que el resto
+ * del admin, así que un cambio de gris había que hacerlo en cinco archivos. Los
+ * valores son los mismos; ahora tienen nombre.
+ *
+ * Se corrigieron además tres contrastes que no llegaban a 4.5:1 (ver comentarios
+ * `contraste:` en cada sitio) y el `outline: none` de los inputs, que dejaba el
+ * foco de teclado sin anillo (WCAG 2.2 AA, 2.4.11).
+ */
 
 .pageHeader {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 
   :global(h1) {
-    font-size: 1.625rem;
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    color: $ink;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text);
     margin: 0 0 0.375rem;
   }
 
+  /**
+   * contraste: la bajada del encabezado vive sobre el fondo de página (#f4f4f5),
+   * no sobre una tarjeta blanca. Con `--color-text-muted` daba 4.40:1; con
+   * `--c-ink-600` da 7.03:1.
+   */
   :global(p) {
     margin: 0;
-    color: $muted;
-    font-size: 0.875rem;
+    color: var(--c-ink-600);
+    font-size: var(--text-base);
   }
 }
 
 .primaryBtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
-  padding: 0.625rem 1rem;
-  background: $ink;
-  color: #fff;
-  border: 1px solid $ink;
-  border-radius: 9px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 0.625rem var(--space-4);
+  background: var(--color-text);
+  color: var(--color-text-invert);
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s, transform 0.1s;
+  transition: background var(--transition-fast), transform 0.1s;
+  @include m.tap-target;
+  @include m.focus-ring;
 
   &:hover {
-    background: #262626;
+    background: var(--c-ink-800);
   }
 
   &:active {
     transform: scale(0.99);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
   }
 }
 
 .ghostBtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
-  padding: 0.5rem 0.875rem;
-  border: 1px solid $border;
-  background: $surface;
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  color: $ink;
+  padding: var(--space-2) 0.875rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
+  color: var(--color-text);
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  @include m.tap-target;
+  @include m.focus-ring;
 
   &:hover {
-    background: $surface-soft;
-    border-color: $border-strong;
+    background: var(--color-surface-soft);
+    border-color: var(--color-border-strong);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 }
 
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .statCard {
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: 12px;
-  padding: 1.125rem 1.25rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 1.125rem var(--space-5);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 
   &:hover {
-    border-color: $border-strong;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-sm);
   }
 
   :global(span) {
     display: block;
-    font-size: 0.6875rem;
+    font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 600;
-    color: $muted;
+    letter-spacing: var(--tracking-caps);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-muted);
     margin-bottom: 0.625rem;
   }
 
   :global(strong) {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: $ink;
-    letter-spacing: -0.025em;
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    letter-spacing: var(--tracking-tight);
     font-feature-settings: 'tnum';
     line-height: 1.1;
     display: block;
@@ -123,66 +146,66 @@ $danger: #b91c1c;
   :global(small) {
     display: block;
     margin-top: 0.375rem;
-    font-size: 0.75rem;
-    color: $muted;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
   }
 }
 
 .panel {
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: 14px;
-  padding: 1.25rem 1.375rem 1.375rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-5) 1.375rem 1.375rem;
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow-xs);
 
   :global(h2) {
-    font-size: 1rem;
-    font-weight: 600;
-    color: $ink;
-    margin: 0 0 1rem;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    margin: 0 0 var(--space-4);
   }
 }
 
 .panelTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  color: $ink;
-  margin-bottom: 1rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
 }
 
 .withBorder {
-  border-top: 1px solid $border;
-  padding-top: 1rem;
-  margin-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+  margin-top: var(--space-4);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--text-base);
 
   :global(th) {
     text-align: left;
-    padding: 0.75rem 0.875rem;
-    border-bottom: 1px solid $border;
-    color: $muted;
-    font-weight: 600;
-    font-size: 0.6875rem;
+    padding: var(--space-3) 0.875rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    background: $surface-soft;
+    letter-spacing: var(--tracking-caps);
+    background: var(--color-surface-soft);
   }
 
   :global(td) {
     padding: 0.875rem;
-    border-bottom: 1px solid #f0f0f2;
-    color: $ink;
+    border-bottom: 1px solid var(--color-border-subtle);
+    color: var(--color-text);
     vertical-align: top;
   }
 
   :global(tr:hover td) {
-    background: $surface-soft;
+    background: var(--color-surface-soft);
   }
 
   :global(tr:last-child td) {
@@ -194,13 +217,14 @@ $danger: #b91c1c;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 5px;
-  font-size: 0.6875rem;
-  font-weight: 600;
+  padding: 0.2rem var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wide);
 
+  /* El punto es decorativo: el estado siempre lo dice el texto de la etiqueta. */
   &::before {
     content: '';
     width: 6px;
@@ -210,33 +234,45 @@ $danger: #b91c1c;
   }
 }
 
+/**
+ * contraste: `draft` (#525252 sobre #f5f5f5) ya cumplía, pero `completed`
+ * (#737373 sobre #f5f5f5) daba 4.35:1. La diferencia de gris entre ambos no
+ * significaba nada — quien lee el badge lee "Borrador" o "Finalizado" — así que
+ * los dos comparten ahora el neutro que sí cumple (7.03:1) y se distinguen por
+ * el texto, no por el tono.
+ */
 .draft {
-  background: #f5f5f5;
-  color: #525252;
+  background: var(--c-ink-100);
+  color: var(--c-ink-600);
 }
 
 .scheduled {
-  background: #eef2ff;
-  color: #4338ca;
+  background: var(--color-info-wash);
+  color: var(--color-info);
 }
 
 .live {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--color-success-wash);
+  color: var(--color-success-text);
 }
 
 .completed {
-  background: #f5f5f5;
-  color: #737373;
+  background: var(--c-ink-100);
+  color: var(--c-ink-600);
 }
 
+/**
+ * Barra de reparto por canal. Los segmentos son decorativos: la pantalla que la
+ * use tiene que rotular cada canal en texto, porque el color por sí solo no
+ * identifica el canal (WCAG 1.4.1).
+ */
 .channelBar {
   display: flex;
   height: 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  background: #f0f0f0;
-  margin-top: 0.5rem;
+  background: var(--color-border-subtle);
+  margin-top: var(--space-2);
 
   :global(span) {
     display: block;
@@ -245,19 +281,19 @@ $danger: #b91c1c;
 }
 
 .web {
-  background: $accent;
+  background: var(--color-text);
 }
 
 .taquilla {
-  background: $success;
+  background: var(--color-success);
 }
 
 .api {
-  background: $warning;
+  background: var(--color-warning);
 }
 
 .admin {
-  background: $muted;
+  background: var(--color-text-muted);
 }
 
 .full {
@@ -267,32 +303,44 @@ $danger: #b91c1c;
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--space-4);
 
   :global(label) {
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
-    font-size: 0.8125rem;
-    color: $ink-soft;
-    font-weight: 500;
+    font-size: var(--text-md);
+    color: var(--color-text-soft);
+    font-weight: var(--weight-medium);
     grid-column: span 1;
 
     :global(input),
     :global(select),
     :global(textarea) {
-      padding: 0.625rem 0.75rem;
-      border: 1px solid $border;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      color: $ink;
-      background: $surface;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      padding: 0.625rem var(--space-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+      color: var(--color-text);
+      background: var(--color-surface);
+      min-height: var(--tap-min);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+      /**
+       * Antes: `outline: none` + borde oscuro. El borde solo no es un indicador
+       * de foco suficiente y el `outline:none` del módulo ganaba al suelo
+       * `:where()` de `globals.scss`. Ahora el anillo se mantiene y el borde
+       * queda como refuerzo (WCAG 2.2 AA, 2.4.11).
+       */
+      &:focus-visible {
+        outline: var(--focus-ring);
+        outline-offset: var(--focus-offset);
+        border-color: var(--color-text);
+      }
 
       &:focus {
-        outline: none;
-        border-color: $ink;
-        box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.06);
+        border-color: var(--color-text);
+        box-shadow: 0 0 0 3px var(--c-ink-150);
       }
     }
   }
@@ -300,82 +348,92 @@ $danger: #b91c1c;
 
 .tabs {
   display: flex;
-  gap: 0.25rem;
-  border-bottom: 1px solid $border;
-  margin-bottom: 1.25rem;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-5);
 
   :global(button) {
-    padding: 0.625rem 1rem;
+    padding: 0.625rem var(--space-4);
     border: none;
     background: none;
-    font-size: 0.875rem;
-    color: $muted;
+    font-size: var(--text-base);
+    /* contraste: las pestañas van sobre el fondo de página; con muted eran 4.40:1. */
+    color: var(--c-ink-600);
     cursor: pointer;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
-    font-weight: 500;
-    transition: color 0.15s;
+    font-weight: var(--weight-medium);
+    transition: color var(--transition-fast);
+    min-height: var(--tap-min);
+    min-width: var(--tap-min);
+
+    &:focus-visible {
+      outline: var(--focus-ring);
+      outline-offset: var(--focus-offset);
+    }
   }
 
   :global(button:hover) {
-    color: $ink-soft;
+    color: var(--color-text-soft);
   }
 }
 
+/* La pestaña activa se marca con color **y** con el subrayado + peso (no solo color). */
 .active {
-  color: $ink !important;
-  border-bottom-color: $ink !important;
-  font-weight: 600;
+  color: var(--color-text) !important;
+  border-bottom-color: var(--color-text) !important;
+  font-weight: var(--weight-semibold);
 }
 
 .kpiRow {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
 .kpi {
-  background: $surface;
-  border: 1px solid $border;
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
   min-width: 120px;
 
   :global(span) {
     display: block;
-    font-size: 0.6875rem;
+    font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $muted;
-    margin-bottom: 0.25rem;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-1);
   }
 
   :global(strong) {
-    font-size: 1.25rem;
-    color: $ink;
+    font-size: var(--text-xl);
+    color: var(--color-text);
+    font-feature-settings: 'tnum';
   }
 }
 
 .chipGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .chipOn {
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  padding: 0.35rem var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  background: var(--color-success-wash);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
 }
 
 .chipOff {
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  background: $surface-soft;
-  color: $muted;
-  border: 1px solid $border;
+  padding: 0.35rem var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  background: var(--color-surface-soft);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
 }

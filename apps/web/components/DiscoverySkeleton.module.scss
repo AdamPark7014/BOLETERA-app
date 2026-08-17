@@ -1,6 +1,4 @@
-$line: #e5e5e5;
-$paper: #f4f4f5;
-$white: #fff;
+@use '../styles/breakpoints' as bp;
 
 @keyframes shimmer {
   0% {
@@ -11,10 +9,25 @@ $white: #fff;
   }
 }
 
-@mixin bone {
-  background: linear-gradient(90deg, $paper 25%, #ececef 40%, $paper 55%);
+@mixin bone($on-dark: false) {
+  @if $on-dark {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 25%,
+      rgba(255, 255, 255, 0.16) 40%,
+      rgba(255, 255, 255, 0.08) 55%
+    );
+  } @else {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-sunken) 25%,
+      var(--color-skeleton-highlight) 40%,
+      var(--color-surface-sunken) 55%
+    );
+  }
   background-size: 200% 100%;
   animation: shimmer 1.2s ease-in-out infinite;
+  display: block;
 }
 
 .wrap {
@@ -22,30 +35,69 @@ $white: #fff;
   flex-direction: column;
 }
 
+/* Misma geometría que .hero del panel real. */
 .hero {
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  min-height: min(72vh, 620px);
-  background: #171717;
+  margin-top: calc(var(--header-height) * -1);
+  min-height: min(78vh, 680px);
+  background: var(--ink-900);
   display: flex;
   align-items: flex-end;
+
+  @include bp.below(bp.$bp-md) {
+    min-height: min(70vh, 560px);
+  }
 }
 
 .heroCopy {
   width: 100%;
-  max-width: 72rem;
+  max-width: var(--layout-max);
   margin: 0 auto;
-  padding: 3rem clamp(1.25rem, 4vw, 2.5rem);
+  padding: clamp(6.5rem, 14vh, 8rem) var(--layout-gutter-wide) clamp(2rem, 5vh, 3.25rem);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.65rem;
+}
+
+.brandMark {
+  @include bone(true);
+  width: 8rem;
+  height: 1.5rem;
+}
+
+.heroTitle,
+.heroTitleShort {
+  @include bone(true);
+  height: clamp(3rem, 8vw, 5rem);
+}
+
+.heroTitle {
+  width: min(100%, 28rem);
+}
+
+.heroTitleShort {
+  width: min(70%, 18rem);
+}
+
+.heroSupport {
+  @include bone(true);
+  width: min(90%, 24rem);
+  height: 1rem;
+}
+
+.cta {
+  @include bone(true);
+  width: 11rem;
+  height: var(--control-height-md);
+  margin-top: var(--space-xs);
 }
 
 .shell {
-  max-width: 72rem;
+  max-width: var(--layout-max);
   width: 100%;
   margin: 0 auto;
-  padding: 1.25rem clamp(1rem, 3vw, 2rem) 2rem;
+  padding: 1.25rem var(--layout-gutter) var(--space-xl);
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
@@ -53,54 +105,54 @@ $white: #fff;
 
 .search {
   @include bone;
-  height: 3.25rem;
-  border: 1px solid $line;
+  height: 3.85rem;
+  border: 1px solid var(--color-border);
 }
 
 .hubs {
   display: flex;
-  gap: 0.45rem;
+  gap: var(--space-xs);
+  overflow: hidden;
 }
 
 .hub {
   @include bone;
-  height: 2.4rem;
-  width: 6.5rem;
+  height: var(--control-height-md);
+  width: 8rem;
+  flex: 0 0 auto;
+}
+
+.cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3xs);
+}
+
+.cat {
+  @include bone;
+  height: var(--control-height-sm);
+  width: 6rem;
 }
 
 .listHead {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid $line;
+  gap: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.lineSm,
-.lineMd,
-.lineLg {
+.listTitle {
   @include bone;
-  display: block;
-  height: 0.75rem;
+  width: 14rem;
+  height: 2.35rem;
 }
 
-.lineSm {
-  width: 30%;
-}
-
-.lineMd {
-  width: 55%;
-}
-
-.lineLg {
-  width: 70%;
-  height: 2.5rem;
-}
-
-.cta {
+.listTools {
   @include bone;
-  width: 9rem;
-  height: 2.5rem;
-  margin-top: 0.35rem;
+  width: 8rem;
+  height: var(--control-height-sm);
 }
 
 .grid {
@@ -109,21 +161,54 @@ $white: #fff;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.15rem var(--space-md);
 
-  @media (max-width: 720px) {
+  @include bp.below(bp.$bp-xl) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include bp.below(bp.$bp-md) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md) var(--space-sm);
   }
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.2rem;
 }
 
 .poster {
   @include bone;
   aspect-ratio: 3 / 4;
   width: 100%;
+  margin-bottom: var(--space-sm);
+}
+
+.cardCat {
+  @include bone;
+  width: 40%;
+  height: 0.7rem;
+  margin-bottom: 0.15rem;
+}
+
+.cardTitle {
+  @include bone;
+  width: 85%;
+  height: 1.3rem;
+}
+
+.cardMeta {
+  @include bone;
+  width: 70%;
+  height: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.cardPrice {
+  @include bone;
+  width: 45%;
+  height: 0.9rem;
+  margin-top: var(--space-3xs);
 }

@@ -3,18 +3,51 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { listVenues } from '@/lib/platform-api';
+import {
+  AnonymousView,
+  ApiErrorView,
+  LoadingView,
+  NoOrgView,
+  useSession,
+} from '../events/_shared/api-state';
 import platform from '../_styles/platform.module.scss';
 
 export default function VenuesPage() {
+  const session = useSession();
   const [venues, setVenues] = useState<
     { id: string; name: string; slug: string; city?: string; totalCapacity?: number }[]
   >([]);
+  const [error, setError] = useState<unknown>(null);
+  const [loading, setLoading] = useState(true);
+  const [nonce, setNonce] = useState(0);
+  const token = session.token;
 
   useEffect(() => {
-    const token = localStorage.getItem('boletera_token');
-    if (!token) return;
-    listVenues(token).then(setVenues);
-  }, []);
+    if (!token) {
+      if (session.status !== 'loading') setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    // `listVenues(token).then(setVenues)` sin `catch`: cualquier 401/403 acababa
+    // en un rechazo no capturado y una tabla vacía sin explicación.
+    listVenues(token)
+      .then(setVenues)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [token, session.status, nonce]);
+
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (error) {
+    return (
+      <ApiErrorView
+        error={error}
+        context="listar los recintos"
+        onRetry={() => setNonce((n) => n + 1)}
+      />
+    );
+  }
 
   return (
     <div>
@@ -53,8 +86,16 @@ export default function VenuesPage() {
                 </td>
               </tr>
             ))}
+            {!loading && venues.length === 0 && (
+              <tr>
+                <td colSpan={3} style={{ color: '#525252' }}>
+                  Tu organización todavía no tiene recintos registrados.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
+        {loading && <LoadingView label="Cargando recintos…" />}
       </section>
     </div>
   );

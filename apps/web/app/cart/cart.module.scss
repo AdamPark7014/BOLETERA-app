@@ -1,7 +1,8 @@
 $ink: #0a0a0a;
-$mute: #737373;
+// #737373 se quedaba en 4.4:1 sobre el fondo claro; WCAG 2.2 AA pide 4.5:1
+$mute: #595959;
 $line: #e5e5e5;
-$accent: #e11d48;
+$accent: #be123c;
 $paper: #fafafa;
 
 .shell {
@@ -154,6 +155,26 @@ $paper: #fafafa;
     font-size: 0.9rem;
     font-weight: 600;
   }
+}
+
+/* Total ya con cargos e IVA: es el número que se cobra, y se destaca. */
+.factTotal {
+  dt {
+    color: $ink;
+  }
+
+  dd {
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.factNote {
+  display: inline;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #595959;
 }
 
 .actions {

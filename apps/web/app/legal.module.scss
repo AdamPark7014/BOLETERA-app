@@ -1,29 +1,144 @@
 .page {
-  max-width: 40rem;
+  max-width: 44rem;
   margin: 0 auto;
-  padding: 3rem 1.5rem 4rem;
-  color: #171717;
-  line-height: 1.6;
+  padding: var(--space-2xl) var(--space-lg) var(--space-3xl);
+  color: var(--text-heading);
+  line-height: var(--leading-relaxed);
 }
 
 .updated {
-  color: #737373;
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-lg);
 }
 
 .page h1 {
-  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+  font-family: var(--font-family-heading);
   font-size: clamp(2rem, 5vw, 2.75rem);
   letter-spacing: 0.02em;
-  margin: 0 0 0.25rem;
+  margin: 0 0 var(--space-3xs);
 }
 
 .page h2 {
-  font-size: 1.125rem;
-  margin: 2rem 0 0.5rem;
+  font-size: var(--text-xl);
+  margin: var(--space-xl) 0 var(--space-xs);
+  /* scroll-margin: los enlaces #reembolsos / #arco no quedan bajo la barra. */
+  scroll-margin-top: calc(var(--header-height) + var(--space-md));
+}
+
+.page h3 {
+  font-size: var(--text-lg);
+  margin: var(--space-lg) 0 var(--space-3xs);
+}
+
+.page p,
+.page li {
+  font-size: var(--text-md);
+}
+
+.page ul,
+.page ol {
+  margin: var(--space-xs) 0 var(--space-md) 1.25rem;
+}
+
+.page li {
+  margin-bottom: var(--space-3xs);
 }
 
 .page a {
-  color: #e11d48;
+  color: var(--color-accent-text);
+  text-decoration: underline;
+
+  &:hover {
+    color: var(--color-accent-text-hover);
+  }
+}
+
+/*
+ * Aviso de borrador. Es deliberadamente visible: este texto NO está revisado
+ * por un abogado y no debe publicarse como definitivo.
+ */
+.draftNotice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-md) 1.1rem;
+  border: 2px solid var(--color-warning);
+  background: var(--color-warning-bg);
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+
+  strong {
+    color: var(--text-primary);
+    font-size: var(--text-md);
+  }
+}
+
+/* Índice de la página legal. */
+.toc {
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-md) 1.1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+
+  h2 {
+    margin: 0 0 var(--space-xs);
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--text-muted);
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3xs) var(--space-md);
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    font-size: var(--text-base);
+  }
+}
+
+/* Bloque de datos del responsable / contacto. */
+.dataBlock {
+  margin: var(--space-xs) 0 var(--space-md);
+  padding: var(--space-md) 1.1rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-surface-muted);
+  font-size: var(--text-base);
+
+  p {
+    margin: 0 0 var(--space-3xs);
+    font-size: var(--text-base);
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-height-sm);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+  }
 }

@@ -1,8 +1,14 @@
-const DB_NAME = 'boletera-taquilla';
-const STORE = 'sales';
-
 import type { OfflinePosPayload } from './pos';
 import { pushFailedSync } from './pos';
+import { STORE_SALES, idbAvailable, idbCount, idbDelete, idbGetAll, idbPut } from './idb';
+
+/**
+ * Cola de ventas hechas sin red.
+ *
+ * Ahora usa el helper compartido de IndexedDB: antes abría la base con su
+ * propia versión y cualquier almacén nuevo (manifiestos, escaneos) la habría
+ * dejado inservible con un VersionError.
+ */
 
 export interface QueuedSale {
   id: string;
@@ -10,70 +16,45 @@ export interface QueuedSale {
   createdAt: string;
 }
 
-export async function enqueueSale(payload: OfflinePosPayload | Record<string, unknown>): Promise<void> {
-  if (typeof indexedDB === 'undefined') return;
+export async function enqueueSale(
+  payload: OfflinePosPayload | Record<string, unknown>,
+): Promise<void> {
+  if (!idbAvailable()) return;
   const id =
     (payload as OfflinePosPayload).clientSaleId ||
     (typeof crypto !== 'undefined' ? crypto.randomUUID() : String(Date.now()));
-  const sale: QueuedSale = { id, payload, createdAt: new Date().toISOString() };
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: 'id' });
-    req.onsuccess = () => {
-      const tx = req.result.transaction(STORE, 'readwrite');
-      tx.objectStore(STORE).put(sale);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    };
-    req.onerror = () => reject(req.error);
-  });
+  await idbPut<QueuedSale>(STORE_SALES, { id, payload, createdAt: new Date().toISOString() });
 }
 
 export async function getQueueSize(): Promise<number> {
-  if (typeof indexedDB === 'undefined') return 0;
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onsuccess = () => {
-      const tx = req.result.transaction(STORE, 'readonly');
-      const g = tx.objectStore(STORE).count();
-      g.onsuccess = () => resolve(g.result);
-      g.onerror = () => reject(g.error);
-    };
-    req.onerror = () => reject(req.error);
-  });
+  if (!idbAvailable()) return 0;
+  return idbCount(STORE_SALES).catch(() => 0);
 }
 
+/**
+ * Envía la cola una a una. Un fallo NO detiene el resto: antes bastaba una
+ * venta rechazada por el API para dejar bloqueadas todas las demás del turno.
+ * Lo que falla se apunta en `failedSync` y se reintenta en la siguiente vuelta.
+ */
 export async function flushQueue(
   send: (payload: QueuedSale['payload']) => Promise<void>,
 ): Promise<number> {
-  if (typeof indexedDB === 'undefined') return 0;
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onsuccess = async () => {
-      const db = req.result;
-      const tx = db.transaction(STORE, 'readwrite');
-      const store = tx.objectStore(STORE);
-      const all = await new Promise<QueuedSale[]>((res, rej) => {
-        const g = store.getAll();
-        g.onsuccess = () => res(g.result as QueuedSale[]);
-        g.onerror = () => rej(g.error);
+  if (!idbAvailable()) return 0;
+  const all = await idbGetAll<QueuedSale>(STORE_SALES).catch(() => [] as QueuedSale[]);
+  let count = 0;
+  for (const sale of all) {
+    try {
+      await send(sale.payload);
+      await idbDelete(STORE_SALES, sale.id);
+      count += 1;
+    } catch (e) {
+      pushFailedSync({
+        clientSaleId: sale.id,
+        error: e instanceof Error ? e.message : 'sync failed',
       });
-      let count = 0;
-      for (const sale of all) {
-        try {
-          await send(sale.payload);
-          store.delete(sale.id);
-          count++;
-        } catch (e) {
-          pushFailedSync({
-            clientSaleId: sale.id,
-            error: e instanceof Error ? e.message : 'sync failed',
-          });
-          break;
-        }
-      }
-      resolve(count);
-    };
-    req.onerror = () => reject(req.error);
-  });
+      // Sin red no tiene sentido seguir intentando el resto del lote.
+      if (typeof navigator !== 'undefined' && !navigator.onLine) break;
+    }
+  }
+  return count;
 }

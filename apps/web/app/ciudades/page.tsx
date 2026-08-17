@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
 import { api } from '@/lib/api';
@@ -5,32 +6,47 @@ import styles from '../hub.module.scss';
 
 type CityFacet = { name: string; count: number };
 
+export const metadata: Metadata = {
+  title: 'Ciudades | Boletera',
+  description: 'Explora la cartelera de eventos por ciudad en México.',
+};
+
 export default async function CiudadesPage() {
   let cities: CityFacet[] = [];
+  let failed = false;
   try {
     const facets = await api<{ cities: CityFacet[] }>('/discovery/facets');
     cities = facets.cities ?? [];
   } catch {
-    cities = [];
+    failed = true;
   }
 
   return (
     <>
       <SiteHeader />
-      <main className={styles.page}>
-        <div className={styles.crumb}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
+        <nav className={styles.crumb} aria-label="Ruta de navegación">
           <Link href="/">Cartelera</Link>
-          <span>/</span>
-          <span>Ciudades</span>
-        </div>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">Ciudades</span>
+        </nav>
         <header className={styles.hero}>
           <h1>Ciudades</h1>
           <p>Explora eventos por ciudad en México.</p>
         </header>
-        {cities.length === 0 ? (
-          <p className={styles.empty}>
-            Aún no hay ciudades con cartelera. <Link href="/">Volver</Link>
-          </p>
+
+        {failed ? (
+          <div className={styles.error} role="alert">
+            <strong>No pudimos cargar las ciudades</strong>
+            <p>Vuelve a intentarlo en unos minutos.</p>
+            <Link href="/">Ver la cartelera</Link>
+          </div>
+        ) : cities.length === 0 ? (
+          <div className={styles.empty}>
+            <strong>Aún no hay ciudades con cartelera</strong>
+            <p>En cuanto se publiquen eventos verás aquí sus ciudades.</p>
+            <Link href="/">Ver la cartelera</Link>
+          </div>
         ) : (
           <ul className={styles.cityGrid}>
             {cities.map((c) => (

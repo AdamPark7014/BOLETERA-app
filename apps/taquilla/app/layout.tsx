@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk } from 'next/font/google';
+import { ReauthDialog } from '@/components/ReauthDialog';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import './globals.scss';
 
@@ -11,11 +12,22 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
 };
 
+/** Pantalla completa en tablet y sin zoom accidental al teclear importes. */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#111113',
+};
+
 export default function TaquillaLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
       <body className={body.variable}>
         <ServiceWorkerRegister />
+        {/* El diálogo de reautenticación vive en el layout: un 401 puede llegar
+            desde cualquier pantalla y no debe tumbar la venta en curso. */}
+        <ReauthDialog />
         {children}
       </body>
     </html>

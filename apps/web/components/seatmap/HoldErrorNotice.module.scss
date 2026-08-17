@@ -1,0 +1,55 @@
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  background: rgba(159, 18, 57, 0.28);
+  border: 1px solid rgba(251, 113, 133, 0.4);
+}
+
+.text {
+  margin: 0;
+  flex: 1 1 16rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+  // #fecdd3 sobre el fondo compuesto ≈ 9:1
+  color: #fecdd3;
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.retry,
+.dismiss {
+  // 40 px de alto: muy por encima del mínimo de 24×24 (WCAG 2.2 §2.5.8), que
+  // es lo mínimo exigible en un control que aparece durante un error de pago.
+  min-height: 2.5rem;
+  padding: 0 0.85rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(251, 113, 133, 0.5);
+  background: transparent;
+  color: #fff;
+
+  &:hover {
+    background: rgba(251, 113, 133, 0.18);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fafafa;
+    outline-offset: 2px;
+  }
+}
+
+.retry {
+  background: #e11d48;
+  border-color: #e11d48;
+}

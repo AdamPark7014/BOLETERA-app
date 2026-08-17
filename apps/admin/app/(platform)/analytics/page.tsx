@@ -1,62 +1,68 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+/**
+ * Analítica del promotor.
+ *
+ * `/analytics/promoters/:organizationId/dashboard` dejó de ser público: exige
+ * JWT, rol y pertenencia a la organización, y el `OrgAccessGuard` ya no exime a
+ * ADMIN ni acepta peticiones sin `organizationId`. Antes esta pantalla resolvía
+ * la organización a mano y cualquier fallo terminaba en un "No se pudieron
+ * cargar las métricas" que no distinguía sesión vencida de falta de permiso.
+ *
+ * También se corrige el periodo: el API acepta `DAY | WEEK | MONTH`; la pantalla
+ * mandaba `YEAR`, que no existe.
+ */
+
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { adminApi, fetchMe, getStoredToken } from '@/lib/api';
+import { adminApi } from '@/lib/api';
 import platform from '../_styles/platform.module.scss';
 import styles from './analytics.module.scss';
+import { EmptyBlock, ResourceView } from '../orders/_ui/States';
+import { useResource } from '../orders/_ui/useResource';
+import { formatDate, formatMoney, formatNumber } from '../orders/_ui/format';
+
+type Period = 'DAY' | 'WEEK' | 'MONTH';
+
+const PERIODS: [Period, string, string][] = [
+  ['DAY', 'Día', 'hoy'],
+  ['WEEK', 'Semana', 'esta semana'],
+  ['MONTH', 'Mes', 'este mes'],
+];
 
 type PromoterDashboard = {
+  organizationId: string;
+  name?: string;
+  period?: string;
+  dateRange?: { startDate: string; endDate: string };
   metrics?: {
-    totalRevenue?: number;
     totalOrders?: number;
     totalTicketsSold?: number;
+    totalRevenue?: number;
+    commission?: number;
     netRevenue?: number;
     currency?: string;
   };
   topEvents?: { eventId: string; eventTitle: string; revenue: number; orders: number }[];
 };
 
-function fmtMoney(n?: number) {
-  if (typeof n !== 'number') return '—';
-  return `$${n.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`;
-}
-
 export default function AnalyticsPage() {
-  const [data, setData] = useState<PromoterDashboard | null>(null);
-  const [error, setError] = useState('');
-  const [period, setPeriod] = useState<'WEEK' | 'MONTH' | 'YEAR'>('MONTH');
+  const [period, setPeriod] = useState<Period>('MONTH');
 
-  useEffect(() => {
-    const token = getStoredToken();
-    if (!token) return;
-    (async () => {
-      try {
-        setError('');
-        const orgId =
-          localStorage.getItem('boletera_org') ?? (await fetchMe(token)).organizationId;
-        if (!orgId) {
-          setError('Usuario sin organización asignada');
-          return;
-        }
-        const dash = await adminApi<PromoterDashboard>(
+  const resource = useResource<PromoterDashboard>(
+    useCallback(
+      ({ token, orgId, signal }) =>
+        adminApi<PromoterDashboard>(
           `/analytics/promoters/${orgId}/dashboard?period=${period}`,
           token,
-        );
-        setData(dash);
-      } catch {
-        setError('No se pudieron cargar las métricas');
-      }
-    })();
-  }, [period]);
+          { signal },
+        ),
+      [period],
+    ),
+    { deps: [period] },
+  );
 
-  const maxRevenue = useMemo(() => {
-    const list = data?.topEvents ?? [];
-    return Math.max(1, ...list.map((e) => e.revenue));
-  }, [data]);
-
-  const periodLabel =
-    period === 'WEEK' ? 'esta semana' : period === 'YEAR' ? 'este año' : 'este mes';
+  const periodLabel = PERIODS.find(([p]) => p === period)?.[2] ?? '';
 
   return (
     <div className={styles.wrap}>
@@ -65,19 +71,12 @@ export default function AnalyticsPage() {
           <h1>Analítica</h1>
           <p>Rendimiento de ventas {periodLabel}</p>
         </div>
-        <div className={styles.periodTabs} role="tablist" aria-label="Periodo">
-          {(
-            [
-              ['WEEK', 'Semana'],
-              ['MONTH', 'Mes'],
-              ['YEAR', 'Año'],
-            ] as const
-          ).map(([id, label]) => (
+        <div className={styles.periodTabs} role="group" aria-label="Periodo">
+          {PERIODS.map(([id, label]) => (
             <button
               key={id}
               type="button"
-              role="tab"
-              aria-selected={period === id}
+              aria-pressed={period === id}
               className={period === id ? styles.tabOn : styles.tab}
               onClick={() => setPeriod(id)}
             >
@@ -87,64 +86,105 @@ export default function AnalyticsPage() {
         </div>
       </header>
 
-      {error && <p className={styles.error}>{error}</p>}
-
-      <section className={styles.kpis}>
-        <article className={styles.kpiHero}>
-          <span>Ingresos</span>
-          <strong>
-            {fmtMoney(data?.metrics?.totalRevenue)}{' '}
-            <em>{data?.metrics?.currency || 'MXN'}</em>
-          </strong>
-        </article>
-        <article>
-          <span>Órdenes</span>
-          <strong>{data?.metrics?.totalOrders ?? '—'}</strong>
-        </article>
-        <article>
-          <span>Boletos</span>
-          <strong>{data?.metrics?.totalTicketsSold ?? '—'}</strong>
-        </article>
-        <article>
-          <span>Neto promotor</span>
-          <strong>{fmtMoney(data?.metrics?.netRevenue)}</strong>
-        </article>
-      </section>
-
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
-          <h2>Top eventos</h2>
-          <Link href="/events" className={platform.ghostBtn}>
-            Ver eventos
-          </Link>
-        </div>
-
-        {!data?.topEvents?.length ? (
-          <p className={styles.muted}>Aún no hay datos de eventos en este periodo.</p>
-        ) : (
-          <ul className={styles.bars}>
-            {data.topEvents.map((e, i) => {
-              const pct = Math.round((e.revenue / maxRevenue) * 100);
-              return (
-                <li key={e.eventId}>
-                  <div className={styles.barMeta}>
-                    <strong>
-                      <span className={styles.rank}>{i + 1}</span>
-                      {e.eventTitle}
-                    </strong>
-                    <span>
-                      {e.orders} órdenes · {fmtMoney(e.revenue)}
-                    </span>
-                  </div>
-                  <div className={styles.barTrack} aria-hidden>
-                    <div className={styles.barFill} style={{ width: `${pct}%` }} />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      <ResourceView resource={resource} context="las métricas" loadingRows={4}>
+        {(data) => <Dashboard data={data} />}
+      </ResourceView>
     </div>
+  );
+}
+
+function Dashboard({ data }: { data: PromoterDashboard }) {
+  const metrics = data.metrics ?? {};
+  const currency = (metrics.currency || 'MXN').toUpperCase();
+  const topEvents = data.topEvents ?? [];
+
+  const maxRevenue = useMemo(
+    () => Math.max(1, ...topEvents.map((e) => e.revenue || 0)),
+    [topEvents],
+  );
+
+  const empty = !metrics.totalOrders && !metrics.totalRevenue && topEvents.length === 0;
+
+  return (
+    <>
+      {data.dateRange && (
+        <p className={styles.muted}>
+          Periodo {formatDate(data.dateRange.startDate)} – {formatDate(data.dateRange.endDate)}
+          {data.name && <> · {data.name}</>}
+        </p>
+      )}
+
+      {empty ? (
+        <EmptyBlock
+          title="Sin ventas en el periodo seleccionado"
+          hint="Prueba con un periodo más amplio o revisa que el evento ya esté en venta."
+        />
+      ) : (
+        <>
+          <section className={styles.kpis}>
+            <article className={styles.kpiHero}>
+              <span>Ingresos brutos</span>
+              <strong>{formatMoney(metrics.totalRevenue, currency)}</strong>
+            </article>
+            <article>
+              <span>Órdenes</span>
+              <strong>{formatNumber(metrics.totalOrders)}</strong>
+            </article>
+            <article>
+              <span>Boletos vendidos</span>
+              <strong>{formatNumber(metrics.totalTicketsSold)}</strong>
+            </article>
+            <article>
+              <span>Comisión</span>
+              <strong>{formatMoney(metrics.commission, currency)}</strong>
+            </article>
+            <article>
+              <span>Neto al promotor</span>
+              <strong>{formatMoney(metrics.netRevenue, currency)}</strong>
+            </article>
+          </section>
+
+          <section className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2>Eventos con más ingresos</h2>
+              <Link href="/events" className={platform.ghostBtn}>
+                Ver eventos
+              </Link>
+            </div>
+
+            {topEvents.length === 0 ? (
+              <EmptyBlock
+                title="Sin eventos con ventas en este periodo"
+                hint="Los eventos aparecen aquí en cuanto registran su primera orden."
+              />
+            ) : (
+              <ul className={styles.bars}>
+                {topEvents.map((e, i) => {
+                  const pct = Math.round(((e.revenue || 0) / maxRevenue) * 100);
+                  return (
+                    <li key={e.eventId}>
+                      <div className={styles.barMeta}>
+                        <strong>
+                          <span className={styles.rank}>{i + 1}</span>
+                          {e.eventTitle}
+                        </strong>
+                        {/* Las cifras van en texto; la barra es solo apoyo visual. */}
+                        <span>
+                          {formatNumber(e.orders)} órdenes ·{' '}
+                          {formatMoney(e.revenue, currency)}
+                        </span>
+                      </div>
+                      <div className={styles.barTrack} aria-hidden="true">
+                        <div className={styles.barFill} style={{ width: `${pct}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+    </>
   );
 }

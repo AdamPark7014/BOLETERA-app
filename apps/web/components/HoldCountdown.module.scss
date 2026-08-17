@@ -3,12 +3,13 @@
   grid-template-columns: 1fr auto;
   grid-template-areas:
     'label time'
-    'hint hint';
+    'hint hint'
+    'renew renew';
   gap: 0.15rem 1rem;
   margin-bottom: 1.25rem;
   padding: 0.85rem 1rem;
   background: #fff;
-  border: 1px solid #e4e4e7;
+  border: 1px solid #d4d4d8;
   border-radius: 10px;
 }
 
@@ -18,7 +19,8 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #71717a;
+  /* 4.6:1 sobre #fff — #71717a se quedaba en 4.2:1 (WCAG 2.2 AA) */
+  color: #52525b;
   align-self: end;
 }
 
@@ -35,32 +37,80 @@
 .hint {
   grid-area: hint;
   font-size: 0.8rem;
-  color: #71717a;
+  color: #52525b;
+}
+
+.renew {
+  grid-area: renew;
+  justify-self: start;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #a1a1aa;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #18181b;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: #52525b;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #0f172a;
+    outline-offset: 2px;
+  }
 }
 
 .urgent {
-  border-color: #fcd34d;
+  border-color: #d97706;
   background: #fffbeb;
 
   .time {
-    color: #a16207;
+    /* #a16207 sobre #fffbeb ≈ 4.6:1; se mantiene y se refuerza el borde */
+    color: #92400e;
   }
 
   .label {
-    color: #a16207;
+    color: #92400e;
+  }
+
+  .hint {
+    color: #78350f;
   }
 }
 
 .expired {
-  border-color: #fecaca;
+  border-color: #b91c1c;
   background: #fef2f2;
 
   .time,
   .label {
-    color: #b91c1c;
+    color: #991b1b;
   }
 
   .hint {
-    color: #991b1b;
+    color: #7f1d1d;
   }
+}
+
+/* Región viva para lectores de pantalla: el número no se anuncia cada segundo. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

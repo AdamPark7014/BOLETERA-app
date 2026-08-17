@@ -1,15 +1,15 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, EmptyState, Input } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
 import { authHeaders, clearSession, getStoredUser, getToken } from '@/lib/auth';
 import styles from './cuenta.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+const LOGIN_BACK = '/login?next=%2Fcuenta';
 
 type TicketRow = {
   id: string;
@@ -44,6 +44,19 @@ type TransferRow = {
   ticket: { code: string; event: { title: string } };
 };
 
+/** Etiquetas de estado en español: la API devuelve constantes en inglés. */
+const ORDER_STATUS_LABEL: Record<string, string> = {
+  COMPLETED: 'Pagada',
+  PENDING: 'Pendiente de pago',
+  PROCESSING: 'Procesando',
+  CANCELLED: 'Cancelada',
+  REFUNDED: 'Reembolsada',
+  EXPIRED: 'Expirada',
+  FAILED: 'Pago rechazado',
+};
+
+type LoadState = 'loading' | 'ready' | 'expired' | 'error';
+
 function seatLabel(t: TicketRow) {
   const parts = [
     t.section,
@@ -55,10 +68,10 @@ function seatLabel(t: TicketRow) {
 
 export default function CuentaPage() {
   const router = useRouter();
-  const user = getStoredUser();
+  const [user, setUser] = useState<ReturnType<typeof getStoredUser>>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [transfers, setTransfers] = useState<TransferRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<LoadState>('loading');
   const [transferCode, setTransferCode] = useState('');
   const [transferForm, setTransferForm] = useState({ ticketId: '', toEmail: '', message: '' });
   const [toast, setToast] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -69,38 +82,64 @@ export default function CuentaPage() {
 
   function showToast(type: 'ok' | 'err', text: string) {
     setToast({ type, text });
-    setTimeout(() => setToast(null), 4000);
+    setTimeout(() => setToast(null), 6000);
   }
 
-  function reload() {
+  /*
+   * El JWT dura 2 h y se revoca al cambiar el usuario, así que un 401 aquí es
+   * rutina. Antes se tragaba el error y la lista quedaba vacía: parecía que no
+   * habías comprado nada. Ahora se distingue sesión caducada de fallo de red y
+   * cada caso dice qué hacer.
+   */
+  const reload = useCallback(async () => {
     const headers = authHeaders();
-    Promise.all([
-      fetch(`${API}/orders/mine`, { headers }).then((r) => (r.ok ? r.json() : [])),
-      fetch(`${API}/tickets/transfer/mine`, { headers }).then((r) =>
-        r.ok ? r.json() : { sent: [], received: [] },
-      ),
-    ])
-      .then(([o, t]) => {
-        setOrders(o);
-        const merged = [...(t.sent ?? []), ...(t.received ?? [])] as TransferRow[];
-        setTransfers(merged);
-      })
-      .finally(() => setLoading(false));
-  }
+    try {
+      const [ordersRes, transfersRes] = await Promise.all([
+        fetch(`${API}/orders/mine`, { headers, cache: 'no-store' }),
+        fetch(`${API}/tickets/transfer/mine`, { headers, cache: 'no-store' }),
+      ]);
+
+      if (ordersRes.status === 401 || ordersRes.status === 403) {
+        clearSession();
+        setState('expired');
+        return;
+      }
+      if (!ordersRes.ok) {
+        setState('error');
+        return;
+      }
+
+      setOrders((await ordersRes.json()) as OrderRow[]);
+
+      if (transfersRes.ok) {
+        const t = (await transfersRes.json()) as {
+          sent?: TransferRow[];
+          received?: TransferRow[];
+        };
+        setTransfers([...(t.sent ?? []), ...(t.received ?? [])]);
+      } else {
+        setTransfers([]);
+      }
+      setState('ready');
+    } catch {
+      setState('error');
+    }
+  }, []);
 
   useEffect(() => {
     if (!getToken()) {
-      router.replace('/login');
+      router.replace(LOGIN_BACK);
       return;
     }
+    setUser(getStoredUser());
     const p = new URLSearchParams(window.location.search);
     const code = p.get('transfer');
     if (code) {
       setTransferCode(code);
       setShowTools(true);
     }
-    reload();
-  }, [router]);
+    void reload();
+  }, [router, reload]);
 
   const myTickets = orders.flatMap(
     (o) =>
@@ -129,36 +168,48 @@ export default function CuentaPage() {
     return orders.filter((o) => !upcomingIds.has(o.publicId));
   }, [orders, upcoming]);
 
+  /** Cualquier mutación puede toparse con la sesión caducada a mitad de camino. */
+  function handleAuthFailure(res: Response) {
+    if (res.status === 401 || res.status === 403) {
+      clearSession();
+      setState('expired');
+      return true;
+    }
+    return false;
+  }
+
   async function acceptTransfer(e: FormEvent) {
     e.preventDefault();
     const res = await fetch(`${API}/tickets/transfer/accept`, {
       method: 'POST',
-      headers: authHeaders(),
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ transferCode }),
     });
+    if (handleAuthFailure(res)) return;
     if (!res.ok) {
-      showToast('err', 'No se pudo aceptar la transferencia');
+      showToast('err', 'No se pudo aceptar la transferencia. Revisa que el código sea correcto.');
       return;
     }
     setTransferCode('');
-    showToast('ok', 'Transferencia aceptada');
-    reload();
+    showToast('ok', 'Transferencia aceptada. El boleto ya está en tu cuenta.');
+    void reload();
   }
 
   async function sendTransfer(e: FormEvent) {
     e.preventDefault();
     const res = await fetch(`${API}/tickets/transfer`, {
       method: 'POST',
-      headers: authHeaders(),
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(transferForm),
     });
+    if (handleAuthFailure(res)) return;
     if (!res.ok) {
-      showToast('err', 'No se pudo iniciar la transferencia');
+      showToast('err', 'No se pudo iniciar la transferencia. Inténtalo de nuevo.');
       return;
     }
     setTransferForm({ ticketId: '', toEmail: '', message: '' });
-    showToast('ok', 'Transferencia enviada — el destinatario recibirá un código');
-    reload();
+    showToast('ok', 'Transferencia enviada: el destinatario recibirá un código por correo.');
+    void reload();
   }
 
   async function requestCfdi(e: FormEvent) {
@@ -169,19 +220,20 @@ export default function CuentaPage() {
       const order = orders.find((o) => o.publicId === cfdiOrderId);
       const res = await fetch(`${API}/orders/${cfdiOrderId}/cfdi`, {
         method: 'POST',
-        headers: authHeaders(),
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           receptorRfc: cfdiForm.rfc,
           receptorNombre: cfdiForm.nombre,
           orderId: order?.id,
         }),
       });
+      if (handleAuthFailure(res)) return;
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        showToast('err', data.message || 'No se pudo solicitar CFDI (sandbox)');
+        showToast('err', data.message || 'No se pudo solicitar la factura. Inténtalo más tarde.');
         return;
       }
-      showToast('ok', data.sandbox ? `CFDI sandbox: ${data.uuid}` : `CFDI: ${data.uuid}`);
+      showToast('ok', data.sandbox ? `CFDI de prueba: ${data.uuid}` : `CFDI: ${data.uuid}`);
       setCfdiForm({ rfc: '', nombre: '' });
     } finally {
       setCfdiBusy(false);
@@ -196,239 +248,316 @@ export default function CuentaPage() {
   return (
     <div className={styles.shell}>
       <SiteHeader />
-      <main className={styles.page}>
-      {toast && (
-        <div className={toast.type === 'ok' ? styles.toastOk : styles.toastErr} role="status">
-          {toast.text}
-        </div>
-      )}
-      <header className={styles.hero}>
-        <p className={styles.eyebrow}>Cuenta BOLETERA</p>
-        <h1>Mis boletos</h1>
-        {user && (
-          <p className={styles.user}>
-            {user.firstName} {user.lastName} · {user.email}
+      <main id="contenido" tabIndex={-1} className={styles.page}>
+        {toast && (
+          <p className={toast.type === 'ok' ? styles.toastOk : styles.toastErr} role="status">
+            {toast.text}
           </p>
         )}
-        <div className={styles.heroActions}>
-          <Link href="/events" className={styles.browse}>
-            Explorar eventos
-          </Link>
-          <Button type="button" variant="ghost" size="md" onClick={logout} className={styles.logout}>
-            Cerrar sesión
-          </Button>
-        </div>
-      </header>
 
-      <section className={styles.wallet} aria-label="Próximos eventos">
-        <div className={styles.walletHead}>
-          <h2>Próximos</h2>
-          <p className={styles.hint}>Abre el detalle para ver QR, PDF y opciones de transferencia.</p>
-        </div>
-        {loading && <p className={styles.loading}>Cargando tu wallet…</p>}
-        {!loading && upcoming.length === 0 && (
-          <EmptyState
-            title="Sin boletos próximos"
-            description="Cuando compres, tus entradas aparecerán aquí listas para el evento."
-            action={
-              <Link href="/" className={styles.browse}>
-                Ver cartelera
-              </Link>
-            }
-          />
-        )}
-        <ul className={styles.walletList}>
-          {upcoming.map((o) => {
-            const when = new Date(o.event.startsAt);
-            const tickets =
-              o.items?.flatMap((i) => i.tickets ?? []) ?? [];
-            const count = tickets.length || o.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) || 0;
-            return (
-              <li key={o.publicId} className={styles.walletCard}>
-                <div className={styles.walletDateBlock} aria-hidden>
-                  <strong>
-                    {when.toLocaleDateString('es-MX', { day: '2-digit' })}
-                  </strong>
-                  <span>
-                    {when.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '')}
-                  </span>
-                </div>
-                <div className={styles.walletBody}>
-                  <p className={styles.walletDate}>
-                    {when.toLocaleDateString('es-MX', {
-                      weekday: 'short',
-                    })}{' '}
-                    ·{' '}
-                    {when.toLocaleTimeString('es-MX', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                  <strong className={styles.walletTitle}>{o.event.title}</strong>
-                  <p className={styles.walletMeta}>
-                    {o.event.venue?.name}
-                    {o.event.venue?.city ? ` · ${o.event.venue.city}` : ''}
-                    {count ? ` · ${count} boleto${count === 1 ? '' : 's'}` : ''}
-                  </p>
-                  {tickets.slice(0, 2).map((t) => (
-                    <p key={t.id} className={styles.walletSeat}>
-                      {seatLabel(t) || t.code}
-                    </p>
-                  ))}
-                </div>
-                <div className={styles.walletActions}>
-                  <Link href={`/orders/${o.publicId}`} className={styles.qrCta}>
-                    Ver QR
-                  </Link>
-                  <a href={`${API}/orders/${o.publicId}/tickets.pdf`}>Descargar PDF</a>
-                  <Link href={`/events/${o.event.slug}`}>Ver evento</Link>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <button
-        type="button"
-        className={styles.toolsToggle}
-        onClick={() => setShowTools((v) => !v)}
-        aria-expanded={showTools}
-      >
-        {showTools ? 'Ocultar herramientas' : 'Transferencias y factura'}
-      </button>
-
-      {showTools && (
-        <>
-          {transferCode && (
-            <section className={styles.section}>
-              <h2>Aceptar boleto</h2>
-              <form onSubmit={acceptTransfer} className={styles.formRow}>
-                <Input
-                  label="Código de transferencia"
-                  value={transferCode}
-                  onChange={(e) => setTransferCode(e.target.value)}
-                  required
-                />
-                <Button type="submit" size="md">
-                  Aceptar transferencia
-                </Button>
-              </form>
-            </section>
+        <header className={styles.hero}>
+          <p className={styles.eyebrow}>Cuenta BOLETERA</p>
+          <h1>Mis boletos</h1>
+          {user && (
+            <p className={styles.user}>
+              {user.firstName} {user.lastName} · {user.email}
+            </p>
           )}
+          <div className={styles.heroActions}>
+            <Link href="/" className={styles.browse}>
+              Explorar eventos
+            </Link>
+            <Button
+              type="button"
+              variant="ghost"
+              size="md"
+              onClick={logout}
+              className={styles.logout}
+            >
+              Cerrar sesión
+            </Button>
+          </div>
+        </header>
 
-          <section className={styles.section}>
-            <h2>Transferir boleto</h2>
-            <form onSubmit={sendTransfer} className={styles.formStack}>
-              <select
-                value={transferForm.ticketId}
-                onChange={(e) => setTransferForm({ ...transferForm, ticketId: e.target.value })}
-                required
-              >
-                <option value="">Selecciona boleto</option>
-                {myTickets.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.code} — {t.eventTitle}
-                  </option>
-                ))}
-              </select>
-              <Input
-                label="Email del destinatario"
-                type="email"
-                value={transferForm.toEmail}
-                onChange={(e) => setTransferForm({ ...transferForm, toEmail: e.target.value })}
-                required
-              />
-              <Input
-                label="Mensaje (opcional)"
-                value={transferForm.message}
-                onChange={(e) => setTransferForm({ ...transferForm, message: e.target.value })}
-              />
-              <Button type="submit" size="md">
-                Enviar transferencia
-              </Button>
-            </form>
+        {state === 'expired' ? (
+          <section className={styles.sessionExpired} role="alert" aria-labelledby="expired-title">
+            <h2 id="expired-title">Tu sesión caducó</h2>
+            <p>
+              Por seguridad, cerramos la sesión después de un rato o cuando cambian los
+              datos de tu cuenta. Tus boletos siguen guardados: vuelve a entrar y
+              regresarás a esta misma página.
+            </p>
+            <Link href={LOGIN_BACK} className={styles.browse}>
+              Volver a entrar
+            </Link>
           </section>
-
-          <section className={styles.section}>
-            <h2>Factura CFDI (sandbox)</h2>
-            <p className={styles.hint}>Solicita timbrado de prueba para una orden completada.</p>
-            <form onSubmit={requestCfdi} className={styles.formStack}>
-              <select
-                value={cfdiOrderId}
-                onChange={(e) => setCfdiOrderId(e.target.value)}
-                required
-              >
-                <option value="">Orden completada</option>
-                {completedOrders.map((o) => (
-                  <option key={o.publicId} value={o.publicId}>
-                    {o.event.title} · {o.publicId}
-                  </option>
-                ))}
-              </select>
-              <Input
-                label="RFC receptor"
-                value={cfdiForm.rfc}
-                onChange={(e) => setCfdiForm({ ...cfdiForm, rfc: e.target.value })}
-                required
-                minLength={12}
-                maxLength={13}
-              />
-              <Input
-                label="Razón social / nombre"
-                value={cfdiForm.nombre}
-                onChange={(e) => setCfdiForm({ ...cfdiForm, nombre: e.target.value })}
-                required
-              />
-              <Button type="submit" size="md" disabled={cfdiBusy}>
-                {cfdiBusy ? 'Timbrando…' : 'Solicitar CFDI'}
-              </Button>
-            </form>
+        ) : state === 'error' ? (
+          <section className={styles.loadError} role="alert" aria-labelledby="error-title">
+            <h2 id="error-title">No pudimos cargar tus boletos</h2>
+            <p>
+              Puede ser tu conexión o algo temporal de nuestro lado. Tus compras no se
+              pierden: vuelve a intentarlo.
+            </p>
+            <button
+              type="button"
+              className={styles.retry}
+              onClick={() => {
+                setState('loading');
+                void reload();
+              }}
+            >
+              Reintentar
+            </button>
           </section>
+        ) : (
+          <>
+            <section className={styles.wallet} aria-labelledby="wallet-title">
+              <div className={styles.walletHead}>
+                <h2 id="wallet-title">Próximos</h2>
+                <p className={styles.hint}>
+                  Abre el detalle para ver el QR, descargar el PDF y transferir boletos.
+                </p>
+              </div>
 
-          {transfers.length > 0 && (
-            <section className={styles.section}>
-              <h2>Mis transferencias</h2>
-              <ul className={styles.list}>
-                {transfers.map((t) => (
-                  <li key={t.id}>
-                    <strong>{t.ticket.event.title}</strong> → {t.toEmail}
-                    <br />
-                    <small>
-                      {t.transferCode} · {t.status}
-                    </small>
-                  </li>
-                ))}
+              {state === 'loading' && (
+                <p className={styles.loading} role="status">
+                  Cargando tus boletos…
+                </p>
+              )}
+
+              {state === 'ready' && upcoming.length === 0 && (
+                <EmptyState
+                  title="Sin boletos próximos"
+                  description="Cuando compres, tus entradas aparecerán aquí listas para el evento."
+                  action={
+                    <Link href="/" className={styles.browse}>
+                      Ver cartelera
+                    </Link>
+                  }
+                />
+              )}
+
+              <ul className={styles.walletList}>
+                {upcoming.map((o) => {
+                  const when = new Date(o.event.startsAt);
+                  const tickets = o.items?.flatMap((i) => i.tickets ?? []) ?? [];
+                  const count =
+                    tickets.length ||
+                    o.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ||
+                    0;
+                  return (
+                    <li key={o.publicId} className={styles.walletCard}>
+                      <div className={styles.walletDateBlock} aria-hidden="true">
+                        <strong>{when.toLocaleDateString('es-MX', { day: '2-digit' })}</strong>
+                        <span>
+                          {when.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '')}
+                        </span>
+                      </div>
+                      <div className={styles.walletBody}>
+                        <p className={styles.walletDate}>
+                          {when.toLocaleDateString('es-MX', { weekday: 'short' })} ·{' '}
+                          {when.toLocaleTimeString('es-MX', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                        <strong className={styles.walletTitle}>{o.event.title}</strong>
+                        <p className={styles.walletMeta}>
+                          {o.event.venue?.name}
+                          {o.event.venue?.city ? ` · ${o.event.venue.city}` : ''}
+                          {count ? ` · ${count} boleto${count === 1 ? '' : 's'}` : ''}
+                        </p>
+                        {tickets.slice(0, 2).map((t) => (
+                          <p key={t.id} className={styles.walletSeat}>
+                            {seatLabel(t) || t.code}
+                          </p>
+                        ))}
+                      </div>
+                      <div className={styles.walletActions}>
+                        <Link href={`/orders/${o.publicId}`} className={styles.qrCta}>
+                          Ver QR
+                        </Link>
+                        <a href={`${API}/orders/${o.publicId}/tickets.pdf`}>Descargar PDF</a>
+                        <Link href={`/events/${o.event.slug}`}>Ver evento</Link>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
-          )}
-        </>
-      )}
 
-      {past.length > 0 && (
-        <section className={styles.section}>
-          <h2>Historial</h2>
-          <ul className={styles.list}>
-            {past.map((o) => (
-              <li key={o.publicId}>
-                <div>
-                  <strong>{o.event.title}</strong>
-                  <span className={styles.status}>{o.status}</span>
-                </div>
-                <p>${o.totalAmount}</p>
-                <div className={styles.orderLinks}>
-                  <Link href={`/orders/${o.publicId}`}>Ver detalle</Link>
-                  {o.status === 'COMPLETED' && (
-                    <a href={`${API}/orders/${o.publicId}/tickets.pdf`}>PDF boletos</a>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+            <button
+              type="button"
+              className={styles.toolsToggle}
+              onClick={() => setShowTools((v) => !v)}
+              aria-expanded={showTools}
+              aria-controls="cuenta-tools"
+            >
+              {showTools ? 'Ocultar herramientas' : 'Transferencias y factura'}
+            </button>
+
+            <div id="cuenta-tools" hidden={!showTools}>
+              {transferCode && (
+                <section className={styles.section}>
+                  <h2>Aceptar boleto</h2>
+                  <form onSubmit={acceptTransfer} className={styles.formRow}>
+                    <Input
+                      label="Código de transferencia"
+                      value={transferCode}
+                      onChange={(e) => setTransferCode(e.target.value)}
+                      required
+                    />
+                    <Button type="submit" size="md">
+                      Aceptar transferencia
+                    </Button>
+                  </form>
+                </section>
+              )}
+
+              <section className={styles.section}>
+                <h2>Transferir boleto</h2>
+                {myTickets.length === 0 ? (
+                  <p className={styles.hint}>
+                    Todavía no tienes boletos que puedas transferir.
+                  </p>
+                ) : (
+                  <form onSubmit={sendTransfer} className={styles.formStack}>
+                    <label htmlFor="transfer-ticket" className={styles.fieldLabel}>
+                      Boleto que quieres ceder
+                    </label>
+                    <select
+                      id="transfer-ticket"
+                      value={transferForm.ticketId}
+                      onChange={(e) =>
+                        setTransferForm({ ...transferForm, ticketId: e.target.value })
+                      }
+                      required
+                    >
+                      <option value="">Selecciona un boleto</option>
+                      {myTickets.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.code} — {t.eventTitle}
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      label="Correo del destinatario"
+                      type="email"
+                      value={transferForm.toEmail}
+                      onChange={(e) =>
+                        setTransferForm({ ...transferForm, toEmail: e.target.value })
+                      }
+                      required
+                    />
+                    <Input
+                      label="Mensaje (opcional)"
+                      value={transferForm.message}
+                      onChange={(e) =>
+                        setTransferForm({ ...transferForm, message: e.target.value })
+                      }
+                    />
+                    <Button type="submit" size="md">
+                      Enviar transferencia
+                    </Button>
+                  </form>
+                )}
+              </section>
+
+              <section className={styles.section}>
+                <h2>Factura CFDI (entorno de pruebas)</h2>
+                {completedOrders.length === 0 ? (
+                  <p className={styles.hint}>
+                    Cuando tengas una orden pagada podrás pedir su factura desde aquí.
+                  </p>
+                ) : (
+                  <>
+                    <p className={styles.hint}>
+                      Solicita el timbrado de prueba para una orden ya pagada.
+                    </p>
+                    <form onSubmit={requestCfdi} className={styles.formStack}>
+                      <label htmlFor="cfdi-order" className={styles.fieldLabel}>
+                        Orden a facturar
+                      </label>
+                      <select
+                        id="cfdi-order"
+                        value={cfdiOrderId}
+                        onChange={(e) => setCfdiOrderId(e.target.value)}
+                        required
+                      >
+                        <option value="">Selecciona una orden pagada</option>
+                        {completedOrders.map((o) => (
+                          <option key={o.publicId} value={o.publicId}>
+                            {o.event.title} · {o.publicId}
+                          </option>
+                        ))}
+                      </select>
+                      <Input
+                        label="RFC del receptor"
+                        value={cfdiForm.rfc}
+                        onChange={(e) => setCfdiForm({ ...cfdiForm, rfc: e.target.value })}
+                        required
+                        minLength={12}
+                        maxLength={13}
+                      />
+                      <Input
+                        label="Razón social o nombre"
+                        value={cfdiForm.nombre}
+                        onChange={(e) => setCfdiForm({ ...cfdiForm, nombre: e.target.value })}
+                        required
+                      />
+                      <Button type="submit" size="md" disabled={cfdiBusy}>
+                        {cfdiBusy ? 'Timbrando…' : 'Solicitar CFDI'}
+                      </Button>
+                    </form>
+                  </>
+                )}
+              </section>
+
+              {transfers.length > 0 && (
+                <section className={styles.section}>
+                  <h2>Mis transferencias</h2>
+                  <ul className={styles.list}>
+                    {transfers.map((t) => (
+                      <li key={t.id}>
+                        <strong>{t.ticket.event.title}</strong> → {t.toEmail}
+                        <br />
+                        <small>
+                          Código {t.transferCode} · {t.status}
+                        </small>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+
+            {state === 'ready' && past.length > 0 && (
+              <section className={styles.section}>
+                <h2>Historial</h2>
+                <ul className={styles.list}>
+                  {past.map((o) => (
+                    <li key={o.publicId}>
+                      <div>
+                        <strong>{o.event.title}</strong>
+                        <span className={styles.status}>
+                          {ORDER_STATUS_LABEL[o.status] ?? o.status}
+                        </span>
+                      </div>
+                      <p>${o.totalAmount}</p>
+                      <div className={styles.orderLinks}>
+                        <Link href={`/orders/${o.publicId}`}>Ver detalle</Link>
+                        {o.status === 'COMPLETED' && (
+                          <a href={`${API}/orders/${o.publicId}/tickets.pdf`}>PDF de boletos</a>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
+        )}
       </main>
-      <SiteFooter />
     </div>
   );
 }

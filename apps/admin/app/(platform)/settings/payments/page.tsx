@@ -111,6 +111,17 @@ export default function PaymentsSettingsPage() {
   const checklist = validation ?? cfg?.validation;
   const ipn = validation?.ipn ?? cfg?.ipn;
 
+  /**
+   * Modo demo fuera de local es un incidente, no un ajuste pendiente: el
+   * checkout acepta pagos que nunca llegan a Banorte. Se detecta por el host
+   * porque el admin no conoce el `NODE_ENV` del API; con eso basta para que
+   * nadie descubra el problema por el estado de cuenta.
+   */
+  const runningOffLocalhost =
+    typeof window !== 'undefined' &&
+    !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
+  const demoInProduction = Boolean(cfg?.demo) && runningOffLocalhost;
+
   return (
     <div className={styles.wrap}>
       <header className={platform.pageHeader}>
@@ -127,6 +138,29 @@ export default function PaymentsSettingsPage() {
           {busy ? 'Validando…' : 'Validar setup'}
         </button>
       </header>
+
+      {demoInProduction && (
+        <section className={styles.incident} role="alert" aria-labelledby="demo-incident">
+          <span className={styles.incidentTag}>Incidente</span>
+          <h2 id="demo-incident">La pasarela está en modo demo fuera de local</h2>
+          <p>
+            Este admin no corre en <code>localhost</code>, pero el API responde que Banorte opera en
+            demo. Ninguna orden pagada aquí llega a Banorte: los cobros son simulados y no habrá
+            liquidación.
+          </p>
+          <ul>
+            <li>
+              Define <code>BANORTE_MERCHANT_ID</code> y el resto de credenciales live en el servidor
+              del API.
+            </li>
+            <li>
+              Define <code>BANORTE_WEBHOOK_SECRET</code>: sin él el IPN se rechaza y las órdenes
+              quedan pendientes.
+            </li>
+            <li>Vuelve a validar el setup y confirma que el modo pasa a live antes de vender.</li>
+          </ul>
+        </section>
+      )}
 
       {error && <p className={styles.error}>{error}</p>}
 

@@ -33,17 +33,48 @@ export function HomeModules({
   trending,
   cities,
   venues,
+  failed,
 }: {
   trending: EventHit[];
   cities: CityFacet[];
   venues: VenueHit[];
+  /** Ninguna de las tres consultas de descubrimiento respondió. */
+  failed?: boolean;
 }) {
+  const hasAnything = trending.length > 0 || cities.length > 0 || venues.length > 0;
+
+  /*
+   * Antes, si el API no respondía, media home quedaba en blanco sin explicar
+   * nada. Ahora el bloque dice qué pasó y ofrece una salida.
+   */
+  if (!hasAnything) {
+    return (
+      <div className={styles.wrap}>
+        <div className={styles.fallback} role={failed ? 'alert' : undefined}>
+          <p className={styles.fallbackTitle}>
+            {failed
+              ? 'No pudimos cargar las secciones de la home'
+              : 'Todavía estamos armando la cartelera'}
+          </p>
+          <p>
+            {failed
+              ? 'Es un problema temporal de nuestro lado. Recarga la página en un momento.'
+              : 'En cuanto haya eventos publicados verás aquí lo más buscado, las ciudades y los recintos.'}
+          </p>
+          <Link href="/ayuda" className={styles.fallbackLink}>
+            Ir a Ayuda
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.wrap}>
       {trending.length > 0 && (
-        <section className={styles.section} aria-label="Lo más buscado">
+        <section className={styles.section} aria-labelledby="home-trending">
           <div className={styles.head}>
-            <h2>Lo más buscado</h2>
+            <h2 id="home-trending">Lo más buscado</h2>
             <Link href="/">Ver cartelera</Link>
           </div>
           <ul className={styles.trending}>
@@ -69,9 +100,9 @@ export function HomeModules({
       )}
 
       {cities.length > 0 && (
-        <section className={styles.section} aria-label="Ciudades">
+        <section className={styles.section} aria-labelledby="home-cities">
           <div className={styles.head}>
-            <h2>Ciudades más buscadas</h2>
+            <h2 id="home-cities">Ciudades más buscadas</h2>
             <Link href="/ciudades">Ver todas</Link>
           </div>
           <div className={styles.cities}>
@@ -92,23 +123,22 @@ export function HomeModules({
       )}
 
       {venues.length > 0 && (
-        <section className={styles.section} aria-label="Recintos">
+        <section className={styles.section} aria-labelledby="home-venues">
           <div className={styles.head}>
-            <h2>Inmuebles</h2>
+            <h2 id="home-venues">Inmuebles</h2>
             <Link href="/venues">Ver recintos</Link>
           </div>
           <ul className={styles.venues}>
             {venues.map((v) => (
               <li key={v.id}>
                 <Link href={`/venues/${v.slug}`} className={styles.venueCard}>
-                  <div
-                    className={styles.venueArt}
-                    style={
-                      v.image
-                        ? { backgroundImage: `url(${v.image})` }
-                        : undefined
-                    }
-                  />
+                  <div className={styles.venueArt}>
+                    {v.image ? (
+                      /* Decorativa: el nombre del recinto va como texto debajo. */
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={v.image} alt="" loading="lazy" decoding="async" />
+                    ) : null}
+                  </div>
                   <div>
                     <strong>{v.name}</strong>
                     <span>

@@ -44,6 +44,38 @@
   border: 1px solid #1c1c1f;
 }
 
+// Progreso de la carga paginada de /seats: el mapa es usable desde la primera
+// página, así que esto informa, no bloquea.
+.loadBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem 0.7rem;
+  background: #0e0e10;
+  border: 1px solid #1c1c1f;
+
+  p {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    // Contraste ≥7:1 sobre #0e0e10.
+    color: rgba(250, 250, 250, 0.78);
+  }
+}
+
+.loadTrack {
+  height: 0.25rem;
+  background: #1c1c1f;
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    background: #e11d48;
+    transition: width 0.25s ease;
+  }
+}
+
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -53,7 +85,7 @@
   padding: 0;
   font-size: 0.7rem;
   font-weight: 600;
-  color: rgba(250, 250, 250, 0.72);
+  color: rgba(250, 250, 250, 0.78);
 
   li {
     display: inline-flex;
@@ -64,16 +96,16 @@
   em {
     font-style: normal;
     font-size: 0.62rem;
-    color: rgba(250, 250, 250, 0.4);
+    color: rgba(250, 250, 250, 0.55);
     font-variant-numeric: tabular-nums;
   }
 }
 
-.dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 1px;
-  display: inline-block;
+// Silueta idéntica a la que pinta el canvas: la leyenda enseña la FORMA, no
+// sólo el color (WCAG 1.4.1, daltonismo).
+.legendMark {
+  flex: 0 0 auto;
+  display: block;
 }
 
 .zoomBtns {
@@ -82,21 +114,32 @@
   align-items: center;
 
   button {
-    min-width: 1.85rem;
-    height: 1.85rem;
+    // 2.25rem = 36 px: por encima del mínimo de 24×24 de WCAG 2.2 (2.5.8).
+    min-width: 2.25rem;
+    min-height: 2.25rem;
     border: 1px solid #2a2a2e;
     background: #141416;
-    color: rgba(250, 250, 250, 0.88);
+    color: rgba(250, 250, 250, 0.9);
     font: inherit;
     font-weight: 600;
     font-size: 0.78rem;
     cursor: pointer;
-    padding: 0 0.5rem;
+    padding: 0 0.55rem;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
 
     &:hover {
       border-color: #52525b;
       color: #fff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fafafa;
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
   }
 }
@@ -226,14 +269,17 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  // Objetivo táctil ≥24 px con holgura: estos son los atajos de navegación
+  // por zona cuando el zoom aún no permite tocar butacas.
+  min-height: 2.5rem;
   border: 1px solid #2a2a2e;
   background: #121214;
   font: inherit;
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.4rem 0.65rem;
+  padding: 0.4rem 0.7rem;
   cursor: pointer;
-  color: rgba(250, 250, 250, 0.82);
+  color: rgba(250, 250, 250, 0.85);
   transition: border-color 0.15s, background 0.15s;
 
   i {
@@ -246,9 +292,14 @@
   em {
     font-style: normal;
     font-size: 0.64rem;
-    color: rgba(250, 250, 250, 0.42);
+    color: rgba(250, 250, 250, 0.58);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fafafa;
+    outline-offset: 2px;
   }
 }
 
@@ -271,13 +322,35 @@
   height: min(58vh, 480px);
   min-height: 320px;
   overflow: hidden;
+  // Superficie de manipulación directa: el navegador no puede quedarse el
+  // gesto (ni el doble toque, que aquí significa «acercar»). La caja mide
+  // ≤58vh a propósito para que siempre quede página por la que hacer scroll.
   touch-action: none;
+  overscroll-behavior: contain;
   cursor: grab;
   background:
     radial-gradient(ellipse 70% 40% at 50% 0%, rgba(225, 29, 72, 0.08), transparent 60%),
     #09090b;
   border: 1px solid #1c1c1f;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus-visible {
+    outline: 2px solid #fafafa;
+    outline-offset: -2px;
+  }
+}
+
+// Las dos capas de canvas y las dos de SVG se apilan en el mismo hueco. Todos
+// los eventos los recoge el viewport: así el hit-testing es uno solo (rejilla
+// espacial) y no depende de qué capa quede encima.
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: block;
 }
 
 .dragging {
@@ -306,66 +379,29 @@
   }
 }
 
-.sectionLabel {
-  font-size: 7.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  pointer-events: none;
-}
-
 .svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   overflow: visible;
-  transition: opacity 0.2s ease;
-}
-
-.seat {
-  cursor: pointer;
-
-  &:hover {
-    filter: brightness(1.12);
-  }
-
-  &:focus-visible {
-    outline: 2px solid #fafafa;
-    outline-offset: 2px;
-  }
-}
-
-.seatFlash {
-  animation: seatPulse 0.65s ease;
-}
-
-@keyframes seatPulse {
-  0% {
-    opacity: 0.45;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-.seatDisabled {
-  cursor: not-allowed;
-}
-
-.label {
-  fill: rgba(250, 250, 250, 0.35);
-  font-size: 6px;
+  // Estructura, no interacción: el viewport recoge todos los punteros.
   pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
 .hint {
   position: absolute;
   left: 0.7rem;
+  right: 0.7rem;
   bottom: 0.55rem;
   margin: 0;
-  font-size: 0.6rem;
-  letter-spacing: 0.03em;
-  color: rgba(250, 250, 250, 0.28);
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  // 0.55 sobre #09090b ≈ 5.2:1 — el texto de ayuda también cuenta para 1.4.3.
+  color: rgba(250, 250, 250, 0.55);
   pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 .tray {
@@ -462,7 +498,18 @@
   margin: 0;
   min-height: 1.15rem;
   font-size: 0.75rem;
-  color: rgba(250, 250, 250, 0.48);
+  font-weight: 600;
+  // 0.7 sobre el fondo #09090b ≈ 8:1 (antes 0.48 ≈ 4.0:1, por debajo de AA).
+  color: rgba(250, 250, 250, 0.7);
+  padding: 0 0.1rem;
+}
+
+.actionMessage {
+  margin: 0;
+  min-height: 1.1rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #a5f3fc;
   padding: 0 0.1rem;
 }
 

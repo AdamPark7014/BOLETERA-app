@@ -1,7 +1,5 @@
-'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import styles from './SiteFooter.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -15,20 +13,46 @@ const CATEGORIES = [
   { key: 'FAMILY', label: 'Familiares' },
 ];
 
+type CityFacet = { name: string; count: number };
+
+/*
+ * El pie salía como componente de cliente solo para pedir las ciudades al
+ * montar: eso arrastraba JavaScript y una petición extra en CADA página del
+ * sitio, y provocaba un salto de layout cuando la lista llegaba. Ahora se
+ * resuelve en el servidor, con caché de 10 minutos (las ciudades con cartelera
+ * cambian por día, no por segundo) y dentro de <Suspense> para que el pie se
+ * pinte de inmediato aunque el API tarde.
+ */
+async function FooterCities() {
+  let cities: CityFacet[] = [];
+  try {
+    const res = await fetch(`${API}/discovery/facets`, {
+      next: { revalidate: 600 },
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { cities?: CityFacet[] };
+      cities = data.cities?.slice(0, 8) ?? [];
+    }
+  } catch {
+    cities = [];
+  }
+
+  // Si el API no responde, el enlace "Todas las ciudades" del fallback basta.
+  return (
+    <>
+      {cities.map((c) => (
+        <li key={c.name}>
+          <Link href={`/ciudades/${encodeURIComponent(c.name)}`}>{c.name}</Link>
+        </li>
+      ))}
+    </>
+  );
+}
+
 export function SiteFooter() {
-  const [cities, setCities] = useState<{ name: string; count: number }[]>([]);
-
-  useEffect(() => {
-    fetch(`${API}/discovery/facets`, { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.cities?.length) setCities(data.cities.slice(0, 8));
-      })
-      .catch(() => {});
-  }, []);
-
   return (
     <footer className={styles.footer}>
+      <h2 className="sr-only">Pie de página</h2>
       <div className={styles.inner}>
         <div className={styles.brandCol}>
           <p className={styles.brand}>BOLETERA</p>
@@ -48,15 +72,14 @@ export function SiteFooter() {
 
         <div className={styles.col}>
           <h3>Ciudades</h3>
-          <ul>
+          {/* min-height reserva el alto de la lista para no provocar CLS. */}
+          <ul className={styles.cityList}>
             <li>
               <Link href="/ciudades">Todas las ciudades</Link>
             </li>
-            {cities.map((c) => (
-              <li key={c.name}>
-                <Link href={`/ciudades/${encodeURIComponent(c.name)}`}>{c.name}</Link>
-              </li>
-            ))}
+            <Suspense fallback={null}>
+              <FooterCities />
+            </Suspense>
           </ul>
         </div>
 
@@ -82,10 +105,16 @@ export function SiteFooter() {
           <h3>Legal</h3>
           <ul>
             <li>
-              <Link href="/terminos">Términos</Link>
+              <Link href="/terminos">Términos y condiciones</Link>
             </li>
             <li>
-              <Link href="/privacidad">Privacidad</Link>
+              <Link href="/terminos#reembolsos">Reembolsos y cambios</Link>
+            </li>
+            <li>
+              <Link href="/privacidad">Aviso de privacidad</Link>
+            </li>
+            <li>
+              <Link href="/privacidad#arco">Derechos ARCO</Link>
             </li>
           </ul>
         </div>

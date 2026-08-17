@@ -6,6 +6,7 @@ import {
   type CadReviewPrimitive,
 } from './cad-import-apply';
 import { decodeDxfLayer, resolveLevelToken } from './cad-level-tags';
+import { CadDiagnostics, CadImportError, buildCadImportReport, type CadImportReport } from './cad-diagnostics';
 
 export type DxfImportRole =
   | 'section'
@@ -188,11 +189,13 @@ function readEntityBlock(pairs: DxfPair[], start: number): { entity: RawEntity; 
  * Extract geometry entities from the ENTITIES section of an ASCII DXF.
  * Supports LINE, LWPOLYLINE, POLYLINE+VERTEX, CIRCLE, ARC.
  */
-export function parseDxfEntities(text: string): RawEntity[] {
+export function parseDxfEntities(text: string, diag?: CadDiagnostics): RawEntity[] {
   const pairs = tokenizeDxf(text);
   const out: RawEntity[] = [];
   let i = 0;
   let inEntities = false;
+  /** Contador de entidades vistas, para poder señalar cuál falló. */
+  let seen = 0;
 
   while (i < pairs.length) {
     const p = pairs[i];
@@ -213,6 +216,9 @@ export function parseDxfEntities(text: string): RawEntity[] {
     }
 
     const type = p.value.toUpperCase();
+    seen += 1;
+    diag?.note(type);
+
     if (type === 'TEXT' || type === 'MTEXT') {
       const { entity, next } = readEntityBlock(pairs, i);
       out.push(entity);
@@ -221,6 +227,8 @@ export function parseDxfEntities(text: string): RawEntity[] {
     }
     if (type === 'LINE' || type === 'LWPOLYLINE' || type === 'CIRCLE' || type === 'ARC') {
       const { entity, next } = readEntityBlock(pairs, i);
+      const isCurve = type === 'CIRCLE' || type === 'ARC';
+
       if (type === 'CIRCLE' && entity.cx != null && entity.cy != null && entity.r != null) {
         entity.points = sampleCircle(entity.cx, entity.cy, entity.r);
         entity.closed = true;
@@ -240,7 +248,37 @@ export function parseDxfEntities(text: string): RawEntity[] {
           entity.endAngle,
         );
       }
-      if (entity.points.length >= 2) out.push(entity);
+
+      if (entity.points.length >= 2) {
+        // Coordenadas no finitas producirían NaN aguas abajo sin avisar.
+        if (entity.points.some(([x, y]) => !Number.isFinite(x) || !Number.isFinite(y))) {
+          diag?.skip({
+            reason: 'invalid-coordinates',
+            entityType: type,
+            layer: entity.layer,
+            index: seen - 1,
+            at: entity.points[0],
+          });
+        } else {
+          diag?.accept();
+          out.push(entity);
+        }
+      } else {
+        diag?.skip({
+          reason: isCurve
+            ? 'invalid-arc'
+            : entity.points.length === 0
+              ? 'no-points'
+              : 'too-few-points',
+          entityType: type,
+          layer: entity.layer,
+          index: seen - 1,
+          at: entity.points[0],
+          detail: isCurve
+            ? `radio=${entity.r ?? 'ausente'} centro=(${entity.cx ?? '?'}, ${entity.cy ?? '?'})`
+            : `${entity.points.length} vértice(s)`,
+        });
+      }
       i = next;
       continue;
     }
@@ -268,10 +306,35 @@ export function parseDxfEntities(text: string): RawEntity[] {
         const [lx, ly] = verts[verts.length - 1];
         if (fx !== lx || fy !== ly) entity.points = [...verts, [fx, fy]];
       }
-      if (entity.points.length >= 2) out.push(entity);
+      if (entity.points.length >= 2) {
+        diag?.accept();
+        out.push(entity);
+      } else {
+        diag?.skip({
+          reason: entity.points.length === 0 ? 'no-points' : 'too-few-points',
+          entityType: 'POLYLINE',
+          layer: entity.layer,
+          index: seen - 1,
+          at: entity.points[0],
+          detail: `${entity.points.length} vértice(s) tras leer VERTEX/SEQEND`,
+        });
+      }
       continue;
     }
 
+    // Tipos que el motor no interpreta (BLOCK, INSERT, SPLINE, HATCH, …).
+    // Se lee la capa de todos modos: saber en qué capa estaba la entidad
+    // descartada es justo lo que permite localizarla en el CAD.
+    if (diag) {
+      let layer: string | undefined;
+      for (let k = i + 1; k < pairs.length && pairs[k].code !== 0; k++) {
+        if (pairs[k].code === 8) {
+          layer = pairs[k].value || undefined;
+          break;
+        }
+      }
+      diag.skip({ reason: 'unsupported-type', entityType: type, layer, index: seen - 1 });
+    }
     i += 1;
   }
 
@@ -311,8 +374,11 @@ function fitPrimitives(
  * Level tags: AISLE__L_*, EXIT__L_*, STAIRS__F_*__T_* (see cad-level-tags).
  * CAD Y-up is flipped to map Y-down (SVG-like).
  */
-export function parseDxfPrimitives(dxfText: string): DxfImportedPrimitive[] {
-  const entities = parseDxfEntities(dxfText);
+export function parseDxfPrimitives(
+  dxfText: string,
+  diag?: CadDiagnostics,
+): DxfImportedPrimitive[] {
+  const entities = parseDxfEntities(dxfText, diag);
   const levels = parseDxfLevelsFromEntities(entities);
   const primitives: DxfImportedPrimitive[] = [];
 
@@ -418,6 +484,14 @@ export function parseDxfLevels(dxfText: string): SeatMapLevel[] | undefined {
   return parseDxfLevelsFromEntities(parseDxfEntities(dxfText));
 }
 
+/** Informe del último preview: entidades aceptadas y descartadas con su motivo. */
+let lastDxfImportReport: CadImportReport | null = null;
+
+/** Devuelve el informe del último `previewDxfCadImport` (avisos parciales). */
+export function getLastDxfImportReport(): CadImportReport | null {
+  return lastDxfImportReport;
+}
+
 export type DxfToMapOptions = {
   mode?: 'merge' | 'replace-meta';
 };
@@ -427,10 +501,12 @@ export function importDxfToSeatMap(
   base?: SeatMapData | null,
   opts?: DxfToMapOptions,
 ): DxfImportResult {
-  const primitives = parseDxfPrimitives(dxfText);
+  const diag = new CadDiagnostics();
+  const primitives = parseDxfPrimitives(dxfText, diag);
   if (!primitives.length) {
-    throw new Error('DXF sin geometría usable (LINE / LWPOLYLINE / POLYLINE / CIRCLE / ARC).');
+    throw new CadImportError('dxf', diag, 'El DXF no tiene geometría que el motor pueda usar.');
   }
+  lastDxfImportReport = buildCadImportReport(diag);
   const levels = parseDxfLevels(dxfText);
   const { map, stats } = applyCadPrimitivesToSeatMap(primitives, base, {
     mode: opts?.mode ?? 'merge',
@@ -442,10 +518,12 @@ export function importDxfToSeatMap(
 
 /** Parse DXF into editable review rows (do not merge yet). */
 export function previewDxfCadImport(dxfText: string): CadReviewPrimitive[] {
-  const primitives = parseDxfPrimitives(dxfText);
+  const diag = new CadDiagnostics();
+  const primitives = parseDxfPrimitives(dxfText, diag);
   if (!primitives.length) {
-    throw new Error('DXF sin geometría usable (LINE / LWPOLYLINE / POLYLINE / CIRCLE / ARC).');
+    throw new CadImportError('dxf', diag, 'El DXF no tiene geometría que el motor pueda usar.');
   }
+  lastDxfImportReport = buildCadImportReport(diag);
   return primitives.map((p) =>
     toCadReviewPrimitive({
       id: p.id,

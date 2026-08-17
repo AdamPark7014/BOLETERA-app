@@ -1,9 +1,10 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
+import type { Hotkey } from '@/lib/hotkeys';
 import {
   fetchReceipt,
   getTerminalId,
@@ -37,16 +38,25 @@ export default function WillcallPage() {
     if (!getTaquillaToken()) router.replace('/login');
   }, [router]);
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'F4') {
-        e.preventDefault();
-        document.getElementById('willcall-q')?.focus();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  const hotkeys = useMemo<Hotkey[]>(
+    () => [
+      {
+        keys: 'F4',
+        label: 'Enfocar búsqueda',
+        whileTyping: true,
+        run: () => document.getElementById('willcall-q')?.focus(),
+      },
+      { keys: 'Enter', label: 'Buscar', displayOnly: true },
+      {
+        keys: 'Esc',
+        label: 'Inicio',
+        whileTyping: true,
+        match: (e) => e.key === 'Escape',
+        run: () => router.push('/'),
+      },
+    ],
+    [router],
+  );
 
   async function search(e?: FormEvent) {
     e?.preventDefault();
@@ -85,7 +95,14 @@ export default function WillcallPage() {
   }
 
   return (
-    <PosShell title="Entregar boletos" eyebrow="Will-call · F4 buscar" backHref="/">
+    <PosShell
+      title="Entregar boletos"
+      eyebrow="Will-call"
+      backHref="/"
+      size="md"
+      hotkeys={hotkeys}
+      escapeGoesBack={false}
+    >
       {toast && (
         <p className={styles.toast} role="status">
           {toast}

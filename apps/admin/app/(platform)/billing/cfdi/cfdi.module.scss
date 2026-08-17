@@ -1,0 +1,178 @@
+@use '../../../../styles/mixins' as m;
+
+/**
+ * Estilos propios de CFDI. Solo lo que no cubre `_styles/platform.module.scss`:
+ * los cuatro estados del timbre (que necesitan un tono de peligro que el módulo
+ * compartido no tiene) y el detalle del error del PAC.
+ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: var(--text-md);
+  color: var(--color-text-soft);
+  font-weight: var(--weight-medium);
+
+  :global(input),
+  :global(select) {
+    padding: 0.625rem var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    color: var(--color-text);
+    background: var(--color-surface);
+    min-height: var(--tap-min);
+    font-family: inherit;
+
+    &:focus-visible {
+      outline: var(--focus-ring);
+      outline-offset: var(--focus-offset);
+    }
+  }
+
+  :global(input[aria-invalid='true']) {
+    border-color: var(--color-danger);
+  }
+}
+
+/** Pista bajo el campo; es la que explica el formato esperado del RFC. */
+.hint {
+  font-weight: 400;
+  font-size: var(--text-sm);
+  color: var(--c-ink-600);
+}
+
+.fieldError {
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  color: var(--color-danger-text);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+}
+
+/* ── Estados del timbre ──────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  border: 1px solid transparent;
+  white-space: nowrap;
+
+  /* Punto decorativo: el estado lo dice siempre el texto, no el color. */
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+  }
+}
+
+/* Timbrada — 6.81:1 sobre su wash. */
+.stamped {
+  background: var(--color-success-wash);
+  color: var(--color-success-text);
+  border-color: var(--color-success-border);
+}
+
+/* Pendiente (DRAFT en el modelo) — 6.62:1. */
+.draft {
+  background: var(--color-warning-wash);
+  color: var(--color-warning-text);
+  border-color: var(--color-warning-border);
+}
+
+/* Cancelada — neutro; 7.03:1 sobre el gris de página. */
+.cancelled {
+  background: var(--c-ink-100);
+  color: var(--c-ink-600);
+  border-color: var(--color-border);
+}
+
+/* Con error — 7.60:1. */
+.errored {
+  background: var(--color-danger-wash);
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-border);
+}
+
+.uuid {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: var(--text-sm);
+  color: var(--color-text-soft);
+  word-break: break-all;
+}
+
+.rfc {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: var(--text-md);
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.secondary {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--c-ink-600);
+  margin-top: 0.15rem;
+}
+
+.money {
+  font-feature-settings: 'tnum';
+  white-space: nowrap;
+}
+
+/** Bloque de "qué hacer" bajo una factura con error. */
+.errorDetail {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-danger);
+  background: var(--color-danger-wash);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-sm);
+  color: var(--color-danger-text);
+
+  :global(code) {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    word-break: break-word;
+  }
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.totalsRow {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.sandboxNote {
+  font-size: var(--text-sm);
+  color: var(--c-ink-600);
+  margin: var(--space-2) 0 0;
+}

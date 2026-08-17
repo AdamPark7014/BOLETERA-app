@@ -10,7 +10,6 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "test": "jest",
     "test:watch": "jest --watch"
   },
   "dependencies": {

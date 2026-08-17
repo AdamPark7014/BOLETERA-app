@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/api';
+import { ApiError, login, storeSession } from '@/lib/api';
 import styles from './login.module.scss';
 
 function IconMail() {
@@ -109,13 +109,18 @@ export default function LoginPage() {
     setError('');
     try {
       const { accessToken, user } = await login(email, password);
-      localStorage.setItem('boletera_token', accessToken);
-      if (user.organizationId) {
-        localStorage.setItem('boletera_org', user.organizationId);
-      }
+      storeSession(accessToken, user);
       router.push('/dashboard');
-    } catch {
-      setError('Credenciales inválidas. Verifica tu email y contraseña.');
+    } catch (err) {
+      // Un 500 o una caída de red no son "credenciales inválidas": decirlo así
+      // manda al operador a revisar su contraseña cuando el problema es el servidor.
+      setError(
+        err instanceof ApiError && err.status === 401
+          ? 'Credenciales inválidas. Verifica tu email y contraseña.'
+          : err instanceof ApiError
+            ? err.userMessage
+            : 'No se pudo conectar con el servidor. Revisa tu conexión.',
+      );
     } finally {
       setLoading(false);
     }

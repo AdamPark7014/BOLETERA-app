@@ -29,8 +29,8 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${headingFont.variable} ${bodyFont.variable}`}>
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-          <div style={{ flex: 1 }}>{children}</div>
+        <div className="app-shell">
+          <div className="app-shell__content">{children}</div>
           <SiteFooter />
         </div>
         <CartBar />

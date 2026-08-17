@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ElementType,
+  type KeyboardEvent,
+} from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { EventPosterArt } from './EventPosterArt';
@@ -71,9 +78,12 @@ function fmtPrice(n: number | string) {
 export function EventDiscoveryPanel({
   initial,
   compact,
+  initialFailed,
 }: {
   initial: EventHit[];
   compact?: boolean;
+  /** El servidor no pudo traer la cartelera: "vacío" y "falló" no son lo mismo. */
+  initialFailed?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -85,6 +95,8 @@ export function EventDiscoveryPanel({
   const [sort, setSort] = useState<SortKey>('date');
   const [events, setEvents] = useState<EventHit[]>(initial);
   const [loading, setLoading] = useState(false);
+  const [fetchFailed, setFetchFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [suggestions, setSuggestions] = useState<SuggestHit[]>([]);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [activeSuggest, setActiveSuggest] = useState(-1);
@@ -129,7 +141,7 @@ export function EventDiscoveryPanel({
         setSuggestOpen(data.length > 0);
         setActiveSuggest(-1);
       } catch {
-        /* ignore */
+        /* las sugerencias son auxiliares: el formulario sigue funcionando */
       }
     }, 220);
     return () => clearTimeout(t);
@@ -145,8 +157,9 @@ export function EventDiscoveryPanel({
 
     const isDefault =
       !query.trim() && city === 'ALL' && category === 'ALL' && when === 'ALL';
-    if (isDefault) {
+    if (isDefault && !reloadKey) {
       setEvents(initial);
+      setFetchFailed(Boolean(initialFailed));
       return;
     }
 
@@ -154,15 +167,18 @@ export function EventDiscoveryPanel({
       setLoading(true);
       try {
         const res = await fetch(`${API}/discovery/events?${params}`, { cache: 'no-store' });
-        if (res.ok) setEvents(await res.json());
+        if (!res.ok) throw new Error('discovery');
+        setEvents(await res.json());
+        setFetchFailed(false);
       } catch {
-        /* keep previous */
+        // Nos quedamos con lo anterior en pantalla y avisamos qué pasó.
+        setFetchFailed(true);
       } finally {
         setLoading(false);
       }
     }, 280);
     return () => clearTimeout(t);
-  }, [query, city, category, when, initial]);
+  }, [query, city, category, when, initial, initialFailed, reloadKey]);
 
   const cityStats = useMemo(() => {
     const map = new Map<string, number>();
@@ -187,6 +203,13 @@ export function EventDiscoveryPanel({
   const featured = !compact && !isFiltering ? filtered[0] : null;
   const list = featured ? filtered.slice(1) : filtered;
 
+  /*
+   * Un único h1 por página. Cuando hay evento destacado, él es el título de la
+   * página; si se está filtrando (o el panel va incrustado), el h1 pasa al
+   * encabezado de la lista para no dejar la página sin nivel 1.
+   */
+  const ListHeading: ElementType = compact || featured ? 'h2' : 'h1';
+
   function pushParams(next: { q?: string; city?: string; category?: string; when?: string }) {
     const params = new URLSearchParams(searchParams.toString());
     const apply = (key: string, value: string | undefined, empty = 'ALL') => {
@@ -208,6 +231,7 @@ export function EventDiscoveryPanel({
     setCategory('ALL');
     setWhen('ALL');
     setEvents(initial);
+    setFetchFailed(Boolean(initialFailed));
     setSuggestions([]);
     setSuggestOpen(false);
     router.replace(pathname, { scroll: false });
@@ -236,17 +260,23 @@ export function EventDiscoveryPanel({
     }
   }
 
+  const countLabel = loading
+    ? 'Buscando…'
+    : `${filtered.length} evento${filtered.length === 1 ? '' : 's'}${
+        city !== 'ALL' ? ` en ${city}` : ''
+      }${category !== 'ALL' ? ` · ${CATEGORY_LABEL[category] ?? category}` : ''}`;
+
   return (
     <div className={compact ? styles.compact : styles.wrap}>
       {featured && (
         <Link href={`/events/${featured.slug}`} className={styles.hero}>
           <div className={styles.heroMedia}>
-            <EventPosterArt event={featured} size="hero" />
+            <EventPosterArt event={featured} size="hero" priority />
           </div>
-          <div className={styles.heroShade} aria-hidden />
+          <div className={styles.heroShade} aria-hidden="true" />
           <div className={styles.heroCopy}>
             <p className={styles.brandMark}>BOLETERA</p>
-            <h2>{featured.title}</h2>
+            <h1>{featured.title}</h1>
             <p className={styles.heroSupport}>
               {fmtDate(featured.startsAt).full} · {fmtDate(featured.startsAt).time}
               {featured.venue?.name ? ` · ${featured.venue.name}` : ''}
@@ -262,17 +292,18 @@ export function EventDiscoveryPanel({
 
       <div className={styles.shell}>
         {!featured && (
-          <div className={styles.trust}>
+          <p className={styles.trust}>
             <span>Boletos oficiales</span>
-            <span aria-hidden>·</span>
+            <span aria-hidden="true">·</span>
             <span>Inventario en tiempo real</span>
-            <span aria-hidden>·</span>
+            <span aria-hidden="true">·</span>
             <span>Pagos Banorte</span>
-          </div>
+          </p>
         )}
 
         <form
           className={styles.searchBar}
+          role="search"
           onSubmit={(e) => {
             e.preventDefault();
             setSuggestOpen(false);
@@ -280,9 +311,18 @@ export function EventDiscoveryPanel({
           }}
         >
           <div className={styles.searchField} ref={searchWrapRef}>
-            <label className={styles.fieldGrow}>
-              <span className={styles.srOnly}>Buscar eventos</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <div className={styles.fieldGrow}>
+              <label htmlFor="discovery-search" className="sr-only">
+                Buscar eventos, recintos o ciudades
+              </label>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                focusable="false"
+              >
                 <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
                 <path
                   d="m20 20-3.5-3.5"
@@ -292,24 +332,39 @@ export function EventDiscoveryPanel({
                 />
               </svg>
               <input
+                id="discovery-search"
                 type="search"
-                placeholder="Buscar eventos, venues o ciudades"
+                placeholder="Ej. Rock, Monterrey, Auditorio Nacional"
                 value={query}
                 autoComplete="off"
+                role="combobox"
                 aria-autocomplete="list"
                 aria-expanded={suggestOpen}
                 aria-controls="discovery-suggest"
+                aria-activedescendant={
+                  activeSuggest >= 0 ? `discovery-suggest-${activeSuggest}` : undefined
+                }
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => suggestions.length > 0 && setSuggestOpen(true)}
                 onKeyDown={onSearchKeyDown}
               />
-            </label>
+            </div>
             {suggestOpen && suggestions.length > 0 && (
-              <ul id="discovery-suggest" className={styles.suggest} role="listbox">
+              <ul
+                id="discovery-suggest"
+                className={styles.suggest}
+                role="listbox"
+                aria-label="Sugerencias de búsqueda"
+              >
                 {suggestions.map((s, i) => {
                   const d = fmtDate(s.startsAt);
                   return (
-                    <li key={s.id} role="option" aria-selected={i === activeSuggest}>
+                    <li
+                      key={s.id}
+                      id={`discovery-suggest-${i}`}
+                      role="option"
+                      aria-selected={i === activeSuggest}
+                    >
                       <button
                         type="button"
                         className={
@@ -331,10 +386,13 @@ export function EventDiscoveryPanel({
             )}
           </div>
 
+          <label htmlFor="discovery-when" className="sr-only">
+            Filtrar por fecha
+          </label>
           <select
+            id="discovery-when"
             className={styles.select}
             value={when}
-            aria-label="Fecha"
             onChange={(e) => {
               const v = e.target.value as WhenKey;
               setWhen(v);
@@ -349,10 +407,11 @@ export function EventDiscoveryPanel({
         </form>
 
         {cityStats.length > 0 && (
-          <div className={styles.cityHubs} role="toolbar" aria-label="Ciudades">
+          <div className={styles.cityHubs} role="group" aria-label="Filtrar por ciudad">
             <button
               type="button"
               className={city === 'ALL' ? styles.hubActive : styles.hub}
+              aria-pressed={city === 'ALL'}
               onClick={() => {
                 setCity('ALL');
                 pushParams({ q: query, city: 'ALL', category, when });
@@ -366,6 +425,7 @@ export function EventDiscoveryPanel({
                 key={c.name}
                 type="button"
                 className={city === c.name ? styles.hubActive : styles.hub}
+                aria-pressed={city === c.name}
                 onClick={() => {
                   setCity(c.name);
                   pushParams({ q: query, city: c.name, category, when });
@@ -378,7 +438,7 @@ export function EventDiscoveryPanel({
           </div>
         )}
 
-        <div className={styles.catHubs} role="toolbar" aria-label="Categorías">
+        <div className={styles.catHubs} role="group" aria-label="Filtrar por categoría">
           {[
             { key: 'ALL', label: 'Todos' },
             { key: 'MUSIC', label: 'Conciertos' },
@@ -386,56 +446,73 @@ export function EventDiscoveryPanel({
             { key: 'THEATER', label: 'Artes' },
             { key: 'COMEDY', label: 'Comedia' },
             { key: 'FESTIVAL', label: 'Festivales' },
-          ].map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              className={
-                (c.key === 'ALL' ? category === 'ALL' : category === c.key)
-                  ? styles.catActive
-                  : styles.cat
-              }
-              onClick={() => {
-                setCategory(c.key);
-                pushParams({ q: query, city, category: c.key, when });
-              }}
-            >
-              {c.label}
-            </button>
-          ))}
+          ].map((c) => {
+            const active = c.key === 'ALL' ? category === 'ALL' : category === c.key;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                className={active ? styles.catActive : styles.cat}
+                aria-pressed={active}
+                onClick={() => {
+                  setCategory(c.key);
+                  pushParams({ q: query, city, category: c.key, when });
+                }}
+              >
+                {c.label}
+              </button>
+            );
+          })}
         </div>
 
         <section className={styles.listSection} aria-label="Eventos">
           <div className={styles.listHead}>
             <div>
-              <h2 className={styles.listTitle}>
+              <ListHeading className={styles.listTitle}>
                 {isFiltering ? 'Resultados' : 'Próximos eventos'}
-              </h2>
-              <p className={styles.listCount}>
-                {loading
-                  ? 'Buscando…'
-                  : `${filtered.length} evento${filtered.length === 1 ? '' : 's'}`}
-                {!loading && city !== 'ALL' ? ` en ${city}` : ''}
-                {!loading && category !== 'ALL'
-                  ? ` · ${CATEGORY_LABEL[category] ?? category}`
-                  : ''}
+              </ListHeading>
+              {/* aria-live: al cambiar filtros el lector anuncia cuántos quedan. */}
+              <p className={styles.listCount} role="status" aria-live="polite">
+                {countLabel}
               </p>
             </div>
             <div className={styles.listTools}>
               {isFiltering && (
                 <button type="button" className={styles.clear} onClick={clearFilters}>
-                  Limpiar
+                  Limpiar filtros
                 </button>
               )}
-              <label className={styles.sort}>
-                <span className={styles.srOnly}>Ordenar</span>
-                <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-                  <option value="date">Por fecha</option>
-                  <option value="price">Por precio</option>
-                </select>
+              <label htmlFor="discovery-sort" className="sr-only">
+                Ordenar resultados
               </label>
+              <select
+                id="discovery-sort"
+                className={styles.sort}
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+              >
+                <option value="date">Por fecha</option>
+                <option value="price">Por precio</option>
+              </select>
             </div>
           </div>
+
+          {fetchFailed && (
+            <div className={styles.notice} role="alert">
+              <p className={styles.noticeTitle}>No pudimos cargar la cartelera</p>
+              <p>
+                Revisa tu conexión e inténtalo otra vez. Si el problema sigue, vuelve en
+                unos minutos.
+              </p>
+              <button
+                type="button"
+                className={styles.clear}
+                onClick={() => setReloadKey((k) => k + 1)}
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
 
           {!isFiltering && !compact ? (
             <ul className={styles.posterGrid} aria-busy={loading}>
@@ -503,13 +580,28 @@ export function EventDiscoveryPanel({
             </ul>
           )}
 
-          {filtered.length === 0 && !loading && (
+          {filtered.length === 0 && !loading && !fetchFailed && (
             <div className={styles.empty}>
-              <p className={styles.emptyTitle}>Sin resultados</p>
-              <p>Prueba otra ciudad o limpia los filtros para ver toda la cartelera.</p>
-              <button type="button" className={styles.clear} onClick={clearFilters}>
-                Ver toda la cartelera
-              </button>
+              {isFiltering ? (
+                <>
+                  <p className={styles.emptyTitle}>Ningún evento coincide</p>
+                  <p>
+                    Prueba con otra ciudad, otra fecha o quita algún filtro para ver toda
+                    la cartelera.
+                  </p>
+                  <button type="button" className={styles.clear} onClick={clearFilters}>
+                    Ver toda la cartelera
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className={styles.emptyTitle}>Todavía no hay eventos publicados</p>
+                  <p>
+                    En cuanto los promotores publiquen su cartelera la verás aquí. Vuelve
+                    pronto.
+                  </p>
+                </>
+              )}
             </div>
           )}
         </section>

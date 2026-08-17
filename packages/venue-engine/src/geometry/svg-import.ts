@@ -5,6 +5,12 @@ import {
   type CadImportStats,
   type CadReviewPrimitive,
 } from './cad-import-apply';
+import {
+  CadDiagnostics,
+  CadImportError,
+  buildCadImportReport,
+  type CadImportReport,
+} from './cad-diagnostics';
 
 export type SvgImportRole =
   | 'section'
@@ -294,24 +300,79 @@ function fitPrimitives(
  * Heuristics: id/class/data-role containing aisle|obstacle|stage; otherwise section shapes (GA).
  * Level tags: data-level-id / data-from-level-id / data-to-level-id (+ data-levels JSON).
  */
-export function parseSvgPrimitives(svgText: string): SvgImportedPrimitive[] {
+export function parseSvgPrimitives(
+  svgText: string,
+  diag?: CadDiagnostics,
+): SvgImportedPrimitive[] {
   const svg = svgText.replace(/\n+/g, ' ');
   const primitives: SvgImportedPrimitive[] = [];
   let idx = 0;
 
   for (const tag of ['polygon', 'polyline', 'rect', 'path', 'circle'] as const) {
+    /*
+     * El recorrido va por tipo de etiqueta, no en orden de documento, así que
+     * el índice se lleva por etiqueta: "path #2" significa "el segundo <path>
+     * del archivo", que es lo que el operador puede buscar en su editor.
+     */
+    let seen = 0;
     for (const el of extractElements(svg, tag)) {
       const dataRole = attr(el, 'data-role') || attr(el, 'data-boletera');
       if (dataRole === 'levels') continue;
+      seen += 1;
+      diag?.note(tag);
+
+      const elementId = attr(el, 'id') || undefined;
       const points = pointsFromElement(tag, el);
-      if (!points.length) continue;
-      const id = attr(el, 'id') || `svg-${tag}-${idx}`;
+      if (!points.length) {
+        // Antes esto era un `continue` mudo: el elemento desaparecía sin rastro.
+        diag?.skip({
+          reason: tag === 'path' || tag === 'polygon' || tag === 'polyline'
+            ? 'unparsable-attribute'
+            : 'degenerate',
+          entityType: tag,
+          layer: attr(el, 'class') || undefined,
+          ref: elementId,
+          index: seen - 1,
+          detail:
+            tag === 'path'
+              ? `atributo d="${attr(el, 'd').slice(0, 40)}…" sin puntos interpretables`
+              : tag === 'rect'
+                ? `width=${attr(el, 'width') || '0'} height=${attr(el, 'height') || '0'}`
+                : undefined,
+        });
+        continue;
+      }
+      const id = elementId || `svg-${tag}-${idx}`;
       const className = attr(el, 'class');
       const fill = attr(el, 'fill');
       const role = classifyRole(id, className, dataRole);
       // Circles: exits, furniture, or focus markers; skip seat noise
-      if (tag === 'circle' && role !== 'exit' && role !== 'furniture' && role !== 'focus') continue;
-      if (points.length < 2 && role !== 'exit' && role !== 'furniture' && role !== 'focus') continue;
+      if (tag === 'circle' && role !== 'exit' && role !== 'furniture' && role !== 'focus') {
+        diag?.skip({
+          reason: 'unsupported-type',
+          entityType: 'circle',
+          layer: className || undefined,
+          ref: elementId,
+          index: seen - 1,
+          at: points[0],
+          detail:
+            'los círculos solo se importan como salida, mobiliario o foco; marca su rol con data-role',
+        });
+        continue;
+      }
+      if (points.length < 2 && role !== 'exit' && role !== 'furniture' && role !== 'focus') {
+        diag?.skip({
+          reason: 'too-few-points',
+          entityType: tag,
+          layer: className || undefined,
+          ref: elementId,
+          index: seen - 1,
+          at: points[0],
+          detail: `${points.length} punto(s) para el rol "${role}"`,
+        });
+        continue;
+      }
+      diag?.accept();
       const name =
         attr(el, 'data-name') ||
         attr(el, 'data-type') ||
@@ -358,7 +419,12 @@ export function importSvgToSeatMap(
   base?: SeatMapData | null,
   opts?: SvgToMapOptions,
 ): SvgImportResult {
-  const primitives = parseSvgPrimitives(svgText);
+  const diag = new CadDiagnostics();
+  const primitives = parseSvgPrimitives(svgText, diag);
+  if (!primitives.length) {
+    throw new CadImportError('svg', diag, 'El SVG no tiene geometría que el motor pueda usar.');
+  }
+  lastSvgImportReport = buildCadImportReport(diag);
   const levels = parseSvgLevels(svgText);
   const { map, stats } = applyCadPrimitivesToSeatMap(primitives, base, {
     mode: opts?.mode ?? 'merge',
@@ -368,9 +434,22 @@ export function importSvgToSeatMap(
   return { primitives, map, stats, levels };
 }
 
+/** Informe del último preview SVG: aceptadas, descartadas y por qué. */
+let lastSvgImportReport: CadImportReport | null = null;
+
+export function getLastSvgImportReport(): CadImportReport | null {
+  return lastSvgImportReport;
+}
+
 /** Parse SVG into editable review rows (do not merge yet). */
 export function previewSvgCadImport(svgText: string): CadReviewPrimitive[] {
-  return parseSvgPrimitives(svgText).map((p) =>
+  const diag = new CadDiagnostics();
+  const primitives = parseSvgPrimitives(svgText, diag);
+  if (!primitives.length) {
+    throw new CadImportError('svg', diag, 'El SVG no tiene geometría que el motor pueda usar.');
+  }
+  lastSvgImportReport = buildCadImportReport(diag);
+  return primitives.map((p) =>
     toCadReviewPrimitive({
       id: p.id,
       role: p.role,

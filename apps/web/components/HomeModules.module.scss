@@ -1,12 +1,9 @@
-$ink: #0a0a0a;
-$mute: #737373;
-$line: #e5e5e5;
-$accent: #e11d48;
+@use '../styles/breakpoints' as bp;
 
 .wrap {
-  max-width: 72rem;
+  max-width: var(--layout-max);
   margin: 0 auto;
-  padding: 0.5rem clamp(1rem, 3vw, 2rem) 4rem;
+  padding: var(--space-xs) var(--layout-gutter) var(--space-3xl);
   display: flex;
   flex-direction: column;
   gap: 3.25rem;
@@ -22,22 +19,60 @@ $accent: #e11d48;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-md);
 
   h2 {
     margin: 0;
-    font-family: var(--font-heading), 'Bebas Neue', sans-serif;
-    font-size: clamp(1.75rem, 3.2vw, 2.25rem);
-    letter-spacing: 0.04em;
+    font-family: var(--font-family-heading);
+    font-size: var(--display-md);
+    letter-spacing: var(--tracking-wide);
     line-height: 1;
   }
 
   a {
-    font-size: 0.8125rem;
-    color: $accent;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    padding: var(--space-3xs) 0;
+    font-size: var(--text-sm);
+    color: var(--color-accent-text);
     text-decoration: none;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
+}
+
+/* Bloque de vacío/error cuando no llegó ninguna sección. */
+.fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-lg) 1.25rem;
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--text-muted);
+  font-size: var(--text-base);
+}
+
+.fallbackTitle {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+}
+
+.fallbackLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height-sm);
+  padding: var(--space-3xs) 0;
+  color: var(--color-accent-text);
+  font-weight: var(--weight-bold);
+  text-decoration: underline;
 }
 
 .trending {
@@ -46,9 +81,9 @@ $accent: #e11d48;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-md);
 
-  @media (max-width: 900px) {
+  @include bp.below(bp.$bp-lg) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -56,32 +91,32 @@ $accent: #e11d48;
 .trendCard {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-sm);
   text-decoration: none;
   color: inherit;
 
   strong {
     display: block;
-    font-size: 0.95rem;
-    line-height: 1.25;
+    font-size: var(--text-md);
+    line-height: var(--leading-snug);
   }
 
   span,
   em {
     display: block;
     margin-top: 0.2rem;
-    font-size: 0.75rem;
-    color: $mute;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
     font-style: normal;
   }
 
   em {
-    color: $ink;
-    font-weight: 700;
+    color: var(--text-primary);
+    font-weight: var(--weight-bold);
   }
 
   &:hover strong {
-    color: $accent;
+    color: var(--color-accent-text);
   }
 
   &:hover .trendArt {
@@ -91,16 +126,16 @@ $accent: #e11d48;
 
 .trendArt {
   overflow: hidden;
-  transition: transform 0.3s ease;
+  transition: transform var(--duration-base) ease;
   box-shadow: 0 14px 32px rgba(10, 10, 10, 0.1);
 }
 
 .cities {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--space-sm);
 
-  @media (max-width: 760px) {
+  @include bp.below(bp.$bp-md) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -114,11 +149,11 @@ $accent: #e11d48;
   min-height: 8.5rem;
   padding: 1.15rem 1.05rem;
   overflow: hidden;
-  color: #fafafa;
+  color: var(--text-inverse);
   text-decoration: none;
   background:
     linear-gradient(160deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.85)),
-    linear-gradient(135deg, #1c1917, #404040 55%, #e11d48);
+    linear-gradient(135deg, #1c1917, var(--ink-700) 55%, var(--accent-500));
 
   &::before {
     content: '';
@@ -137,15 +172,15 @@ $accent: #e11d48;
   }
 
   strong {
-    font-family: var(--font-heading), 'Bebas Neue', sans-serif;
+    font-family: var(--font-family-heading);
     font-size: 1.65rem;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--tracking-wide);
     line-height: 1;
   }
 
   span {
-    font-size: 0.75rem;
-    color: rgba(250, 250, 250, 0.7);
+    font-size: var(--text-xs);
+    color: var(--text-inverse-muted);
   }
 
   &:hover {
@@ -155,19 +190,19 @@ $accent: #e11d48;
   &:nth-child(2) {
     background:
       linear-gradient(160deg, rgba(10, 10, 10, 0.25), rgba(10, 10, 10, 0.88)),
-      linear-gradient(135deg, #0c4a6e, #0284c7 60%, #0a0a0a);
+      linear-gradient(135deg, #0c4a6e, #0284c7 60%, var(--ink-950));
   }
 
   &:nth-child(3) {
     background:
       linear-gradient(160deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.88)),
-      linear-gradient(135deg, #431407, #c2410c 55%, #0a0a0a);
+      linear-gradient(135deg, #431407, #c2410c 55%, var(--ink-950));
   }
 
   &:nth-child(4) {
     background:
       linear-gradient(160deg, rgba(10, 10, 10, 0.25), rgba(10, 10, 10, 0.9)),
-      linear-gradient(135deg, #14532d, #166534 50%, #0a0a0a);
+      linear-gradient(135deg, #14532d, #166534 50%, var(--ink-950));
   }
 }
 
@@ -179,7 +214,7 @@ $accent: #e11d48;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.85rem;
 
-  @media (max-width: 900px) {
+  @include bp.below(bp.$bp-lg) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -193,35 +228,42 @@ $accent: #e11d48;
 
   strong {
     display: block;
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
   }
 
   span {
     display: block;
-    margin-top: 0.25rem;
-    font-size: 0.75rem;
-    color: $mute;
+    margin-top: var(--space-3xs);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
   }
 
   > div:last-child {
     padding: 0.85rem 0.1rem 0.2rem;
   }
 
-  &:hover .venueArt {
+  &:hover .venueArt img {
     transform: scale(1.04);
   }
 
   &:hover strong {
-    color: $accent;
+    color: var(--color-accent-text);
   }
 }
 
+/* Alto fijo: el hueco existe aunque la foto del recinto tarde o falle. */
 .venueArt {
   height: 9rem;
-  background: linear-gradient(135deg, #171717, #525252);
-  background-size: cover;
-  background-position: center;
-  transition: transform 0.45s ease;
-  transform-origin: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--ink-900), var(--ink-600));
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: transform var(--duration-slow) ease;
+  }
 }

@@ -35,7 +35,6 @@ import {
   svgFilename,
   regenerateSeatsFromBlocks,
   resolveGeometry,
-  sightlineHeatColor,
   snapPoint,
   validateGeometry,
   buildEgressReport,
@@ -47,10 +46,37 @@ import {
   filterCirculationGraph,
   removeVenueLevel,
   patchVenueLevel,
+  buildSeatIndex,
+  SEAT_FLAG,
+  lodModeFor,
+  querySeatsInRect,
+  hitTestSeat,
+  seatsOfSection,
+  applySeatProps,
+  applySeatSection,
+  pushCommand,
+  undo as undoCommand,
+  redo as redoCommand,
+  canUndo,
+  canRedo,
+  undoLabel,
+  redoLabel,
+  EMPTY_HISTORY,
+  estimateMapBytes,
+  formatBytes,
+  auditAccessibility,
+  generateAccessibleSpaces,
+  requiredWheelchairSpaces,
+  type HistoryState,
+  type EditCommand,
   type CadReviewPrimitive,
   type CadEntityRole,
 } from '@boletera/venue-engine';
+import { SeatCanvasLayer } from './SeatMap/SeatCanvasLayer';
 import styles from './SeatMapEditor.module.scss';
+
+/** Selección vacía compartida: evita crear un Set nuevo en cada limpieza. */
+const EMPTY_SELECTION: ReadonlySet<string> = new Set<string>();
 
 type CadReviewState = {
   source: 'svg' | 'dxf';
@@ -262,7 +288,7 @@ export function SeatMapEditor({
   getAuthToken,
 }: Props) {
   const [map, setMap] = useState<SeatMapData>(() => cloneMap(initial));
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<ReadonlySet<string>>(EMPTY_SELECTION);
   const [selectedFurnitureId, setSelectedFurnitureId] = useState<string | null>(null);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(
     initial.sections[0]?.id ?? null,
@@ -292,9 +318,23 @@ export function SeatMapEditor({
   const [viewHeat, setViewHeat] = useState(false);
   const [showCirculation, setShowCirculation] = useState(false);
   const [cadReview, setCadReview] = useState<CadReviewState | null>(null);
-  const [history, setHistory] = useState<SeatMapData[]>([cloneMap(initial)]);
-  const [histIdx, setHistIdx] = useState(0);
+  /**
+   * Historial por comandos. Antes eran 40 clones profundos del documento; a
+   * 45.000 butacas eso son cientos de megabytes y un bloqueo por acción. Ahora
+   * cada comando guarda solo lo que cambia, y las instantáneas completas (que
+   * siguen haciendo falta para plantillas o importaciones) están topadas aparte.
+   */
+  const [history, setHistory] = useState<HistoryState>(EMPTY_HISTORY);
+  const [marquee, setMarquee] = useState<{
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  } | null>(null);
+  const [viewportSize, setViewportSize] = useState({ width: 800, height: 600 });
   const dragRef = useRef<DragState | null>(null);
+  /** Origen del rectángulo de selección en curso. */
+  const marqueeRef = useRef<{ x0: number; y0: number; additive: boolean } | null>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef(map);
   mapRef.current = map;
@@ -302,32 +342,56 @@ export function SeatMapEditor({
   useEffect(() => {
     setMap(cloneMap(initial));
     setActiveSectionId(initial.sections[0]?.id ?? null);
-    setHistory([cloneMap(initial)]);
-    setHistIdx(0);
+    setHistory(EMPTY_HISTORY);
   }, [initial]);
 
-  const pushHistory = useCallback((next: SeatMapData) => {
-    setHistory((h) => {
-      const trimmed = h.slice(0, histIdx + 1);
-      const stack = [...trimmed, cloneMap(next)].slice(-40);
-      setHistIdx(stack.length - 1);
-      return stack;
-    });
+  /** Mide el viewport para que el canvas recorte con el tamaño real. */
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      setViewportSize({ width: Math.round(r.width), height: Math.round(r.height) });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /** Registra un comando compacto y aplica el mapa resultante. */
+  const commit = useCallback((next: SeatMapData, command: EditCommand) => {
+    setHistory((h) => pushCommand(h, command));
     setMap(next);
-  }, [histIdx]);
+  }, []);
+
+  /**
+   * Cambio estructural: se guarda instantánea completa porque no hay inverso
+   * compacto (plantillas, importación CAD, regeneración de bloques).
+   */
+  const pushHistory = useCallback(
+    (next: SeatMapData, label = 'Cambio de estructura') => {
+      const before = mapRef.current;
+      setHistory((h) => pushCommand(h, { kind: 'snapshot', label, before, after: next }));
+      setMap(next);
+    },
+    [],
+  );
 
   function undo() {
-    if (histIdx <= 0) return;
-    const i = histIdx - 1;
-    setHistIdx(i);
-    setMap(cloneMap(history[i]));
+    const result = undoCommand(mapRef.current, history);
+    if (result.history === history) return;
+    setMap(result.map);
+    setHistory(result.history);
+    setSelected(EMPTY_SELECTION);
   }
 
   function redo() {
-    if (histIdx >= history.length - 1) return;
-    const i = histIdx + 1;
-    setHistIdx(i);
-    setMap(cloneMap(history[i]));
+    const result = redoCommand(mapRef.current, history);
+    if (result.history === history) return;
+    setMap(result.map);
+    setHistory(result.history);
+    setSelected(EMPTY_SELECTION);
   }
 
   const activeSection = map.sections.find((s) => s.id === activeSectionId) ?? map.sections[0];
@@ -362,31 +426,93 @@ export function SeatMapEditor({
       .filter((n) => Number.isFinite(n) && n >= 0 && n < cols);
   }
 
+  /**
+   * Índice espacial columnar: arrays tipados + rejilla. Se reconstruye solo
+   * cuando cambia la geometría, no al seleccionar ni al hacer zoom.
+   */
+  const seatIndex = useMemo(() => buildSeatIndex(map), [map]);
+  const seatCount = seatIndex.count;
+
+  /** A partir de este tamaño se apagan los análisis caros en cada tecla. */
+  const isLargeVenue = seatCount > 5000;
+
+  /**
+   * `allSeats` se conserva para las herramientas CAD que aún lo usan, pero solo
+   * se materializa en recintos pequeños: a 45.000 butacas crear ese array en
+   * cada render es justo lo que había que quitar.
+   */
   const allSeats = useMemo(
     () =>
-      map.sections.flatMap((sec) =>
-        sec.seats.map((s) => ({ ...s, sectionId: sec.id, sectionColor: sec.color })),
-      ),
-    [map.sections],
+      isLargeVenue
+        ? []
+        : map.sections.flatMap((sec) =>
+            sec.seats.map((s) => ({ ...s, sectionId: sec.id, sectionColor: sec.color })),
+          ),
+    [map.sections, isLargeVenue],
   );
 
+  /** Selección traducida a índices internos: comparación O(1) en el canvas. */
+  const selectedIdx = useMemo(() => {
+    const set = new Set<number>();
+    for (const id of selected) {
+      const i = seatIndex.idToIdx.get(id);
+      if (i !== undefined) set.add(i);
+    }
+    return set;
+  }, [selected, seatIndex]);
+
+  /** Nivel de detalle actual, para explicarlo en la barra de estado. */
+  const lodLabel = useMemo(() => {
+    const mode = lodModeFor(scale);
+    if (mode === 'seats') return 'butacas';
+    if (mode === 'clusters') return 'densidad (acércate para ver butacas)';
+    return 'zonas (acércate para ver butacas)';
+  }, [scale]);
+
+  const firstSelectedSeat = useMemo(() => {
+    for (const id of selected) {
+      const i = seatIndex.idToIdx.get(id);
+      if (i === undefined) continue;
+      const sec = map.sections[seatIndex.sectionIdx[i]];
+      return sec?.seats.find((s) => s.id === id);
+    }
+    return undefined;
+  }, [selected, seatIndex, map.sections]);
+
+  /**
+   * Los límites salen del índice (ya recorrió las butacas una vez) más la
+   * geometría autorada. `Math.min(...array)` sobre 45.000 elementos además
+   * desborda la pila de argumentos, así que se acumula en un bucle.
+   */
   const bounds = useMemo(() => {
-    const pts: Point[] = allSeats.map((s) => ({ x: s.x, y: s.y }));
+    let minX = seatIndex.count ? seatIndex.bounds.minX : Infinity;
+    let minY = seatIndex.count ? seatIndex.bounds.minY : Infinity;
+    let maxX = seatIndex.count ? seatIndex.bounds.maxX : -Infinity;
+    let maxY = seatIndex.count ? seatIndex.bounds.maxY : -Infinity;
+
+    const extend = (px: number, py: number) => {
+      if (px < minX) minX = px;
+      if (py < minY) minY = py;
+      if (px > maxX) maxX = px;
+      if (py > maxY) maxY = py;
+    };
+
     for (const sec of map.sections) {
-      if (sec.shape?.points) for (const [x, y] of sec.shape.points) pts.push({ x, y });
+      if (sec.shape?.points) for (const [px, py] of sec.shape.points) extend(px, py);
     }
     if (map.venue?.stage) {
-      pts.push({ x: map.venue.stage.x, y: map.venue.stage.y });
-      pts.push({ x: map.venue.stage.x + map.venue.stage.width, y: map.venue.stage.y });
+      extend(map.venue.stage.x, map.venue.stage.y);
+      extend(map.venue.stage.x + map.venue.stage.width, map.venue.stage.y);
     }
-    if (!pts.length) return { minX: 0, minY: 0, width: 900, height: 600 };
+    if (!Number.isFinite(minX)) return { minX: 0, minY: 0, width: 900, height: 600 };
     const pad = 80;
-    const minX = Math.min(...pts.map((p) => p.x)) - pad;
-    const minY = Math.min(...pts.map((p) => p.y)) - pad;
-    const maxX = Math.max(...pts.map((p) => p.x)) + pad;
-    const maxY = Math.max(...pts.map((p) => p.y)) + pad;
-    return { minX, minY, width: maxX - minX, height: maxY - minY };
-  }, [allSeats, map.sections, map.venue]);
+    return {
+      minX: minX - pad,
+      minY: minY - pad,
+      width: maxX - minX + pad * 2,
+      height: maxY - minY + pad * 2,
+    };
+  }, [seatIndex, map.sections, map.venue]);
 
   const stage = useMemo(
     () =>
@@ -405,9 +531,33 @@ export function SeatMapEditor({
   const snapPitch = map.venue?.snapPitch ?? defaultSeatPitchMap(map.venue?.scale ?? 40);
   const mapScale = map.venue?.scale ?? 40;
 
-  const resolvedScene = useMemo(() => resolveGeometry(map), [map]);
-  /** Full-venue validation for save (still skips cross-level overlaps). */
-  const validationFull = useMemo(() => validateGeometry(resolvedScene), [resolvedScene]);
+  /**
+   * `resolveGeometry` + `validateGeometry` + `analyzeCirculation` recorren todo
+   * el recinto. Ejecutarlos de forma síncrona en cada cambio del mapa —que es lo
+   * que hacía el editor— convierte cada tecla en medio segundo de bloqueo a
+   * 45.000 butacas. Se difieren: el mapa se dibuja ya y el análisis alcanza
+   * después. El guardado fuerza un pase completo antes de enviar.
+   */
+  const [deferredMap, setDeferredMap] = useState(map);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  useEffect(() => {
+    if (!isLargeVenue) {
+      setDeferredMap(map);
+      return;
+    }
+    setAnalyzing(true);
+    const id = window.setTimeout(() => {
+      setDeferredMap(map);
+      setAnalyzing(false);
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [map, isLargeVenue]);
+
+  /** Auditoría de accesibilidad — se recalcula con el mapa diferido, no en caliente. */
+  const accessibility = useMemo(() => auditAccessibility(deferredMap), [deferredMap]);
+
+  const resolvedScene = useMemo(() => resolveGeometry(deferredMap), [deferredMap]);
   /** Level-scoped issues for banner / canvas highlights. */
   const validation = useMemo(
     () =>
@@ -424,13 +574,33 @@ export function SeatMapEditor({
     return ids;
   }, [validation.issues]);
 
+  /** Solapamientos como índices internos, para que el canvas no busque por id. */
+  const overlapSeatIdx = useMemo(() => {
+    const set = new Set<number>();
+    for (const id of overlapSeatIds) {
+      const i = seatIndex.idToIdx.get(id);
+      if (i !== undefined) set.add(i);
+    }
+    return set;
+  }, [overlapSeatIds, seatIndex]);
+
   const sightlineBySeat = useMemo(() => {
-    if (!viewHeat || !allSeats.length) return null;
-    const result = calculateSightlines(resolveGeometry(map), {
+    if (!viewHeat || !seatCount) return null;
+    const result = calculateSightlines(resolveGeometry(deferredMap), {
       levelId: levelFilter === 'ALL' ? undefined : levelFilter,
     });
     return new Map(result.scores.map((s) => [s.seatId, s]));
-  }, [viewHeat, map, allSeats.length, levelFilter]);
+  }, [viewHeat, deferredMap, seatCount, levelFilter]);
+
+  /** Puntuaciones de visibilidad en array paralelo al índice (sin Map en el bucle). */
+  const sightlineScores = useMemo(() => {
+    if (!sightlineBySeat) return null;
+    const arr = new Float32Array(seatIndex.count);
+    for (let i = 0; i < seatIndex.count; i++) {
+      arr[i] = sightlineBySeat.get(seatIndex.ids[i])?.score ?? 0;
+    }
+    return arr;
+  }, [sightlineBySeat, seatIndex]);
 
   const circulationScene = useMemo(() => {
     if (!showCirculation) return null;
@@ -489,6 +659,125 @@ export function SeatMapEditor({
     return new Set(bottlenecksView.slice(0, 3).map((b) => b.edgeId));
   }, [bottlenecksView]);
 
+  /**
+   * Lleva la vista a las butacas o la zona de un aviso y las deja seleccionadas.
+   *
+   * Sin esto, un mensaje como «las butacas A-12 y A-13 se pisan» obligaba a
+   * buscarlas a mano en un recinto de 45.000 plazas: el aviso era informativo,
+   * no accionable.
+   */
+  const focusOnEntities = useCallback(
+    (seatIds: string[] | undefined, sectionIds: string[] | undefined) => {
+      const idx = seatIndex;
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      const targetSeats = (seatIds ?? []).filter((id) => idx.idToIdx.has(id));
+      if (targetSeats.length) {
+        for (const id of targetSeats) {
+          const i = idx.idToIdx.get(id)!;
+          minX = Math.min(minX, idx.x[i]);
+          minY = Math.min(minY, idx.y[i]);
+          maxX = Math.max(maxX, idx.x[i]);
+          maxY = Math.max(maxY, idx.y[i]);
+        }
+        setSelected(new Set(targetSeats));
+      } else if (sectionIds?.length) {
+        for (const secId of sectionIds) {
+          const sec = map.sections.find((s) => s.id === secId);
+          if (!sec) continue;
+          for (const seat of sec.seats) {
+            minX = Math.min(minX, seat.x);
+            minY = Math.min(minY, seat.y);
+            maxX = Math.max(maxX, seat.x);
+            maxY = Math.max(maxY, seat.y);
+          }
+        }
+        setSelected(EMPTY_SELECTION);
+      }
+
+      const firstSection = sectionIds?.[0] ?? (targetSeats.length
+        ? idx.sections[idx.sectionIdx[idx.idToIdx.get(targetSeats[0])!]]?.id
+        : undefined);
+      if (firstSection) setActiveSectionId(firstSection);
+
+      if (!Number.isFinite(minX)) return;
+
+      // Margen suficiente para ver el contexto de la butaca, no solo el punto.
+      const pad = Math.max(idx.pitch * 6, 60);
+      const w = maxX - minX + pad * 2;
+      const h = maxY - minY + pad * 2;
+      const next = Math.max(0.15, Math.min(6, Math.min(viewportSize.width / w, viewportSize.height / h)));
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      setScale(next);
+      setTx(viewportSize.width / 2 - cx * next);
+      setTy(viewportSize.height / 2 - cy * next);
+    },
+    [seatIndex, map.sections, viewportSize],
+  );
+
+  /**
+   * Avisos accionables: geometría + accesibilidad en una sola lista, con los
+   * errores primero. La accesibilidad no salía en el panel de validación, así que
+   * un mapa sin plazas de silla de ruedas se publicaba sin que nadie lo viera.
+   */
+  const actionableIssues = useMemo(() => {
+    type Row = {
+      severity: 'error' | 'warning';
+      message: string;
+      hint?: string;
+      seatIds?: string[];
+      sectionIds?: string[];
+    };
+    const rows: Row[] = validation.issues.map((i) => ({
+      severity: i.severity === 'error' ? 'error' : 'warning',
+      message: i.message,
+      hint: i.hint,
+      seatIds: i.seatIds,
+      sectionIds: i.sectionIds,
+    }));
+
+    if (accessibility.capacity > 0) {
+      if (accessibility.wheelchairSpaces < accessibility.requiredWheelchairSpaces) {
+        rows.push({
+          severity: 'error',
+          message: `Faltan ${accessibility.requiredWheelchairSpaces - accessibility.wheelchairSpaces} plazas de silla de ruedas (hay ${accessibility.wheelchairSpaces} de ${accessibility.requiredWheelchairSpaces} exigidas para ${accessibility.capacity.toLocaleString('es-MX')} butacas).`,
+          hint: 'Usa «Generar plazas accesibles» en la zona activa, o marca butacas existentes con ♿ Silla.',
+        });
+      }
+      for (const seatId of accessibility.wheelchairWithoutCompanion.slice(0, 10)) {
+        rows.push({
+          severity: 'warning',
+          message: `La plaza accesible ${seatId} no tiene acompañante ligado.`,
+          hint: 'Marca la butaca contigua como acompañante para que se vendan juntas.',
+          seatIds: [seatId],
+        });
+      }
+      for (const seatId of accessibility.orphanCompanions.slice(0, 10)) {
+        rows.push({
+          severity: 'error',
+          message: `El acompañante ${seatId} apunta a una plaza que ya no existe.`,
+          hint: 'Vuelve a ligarlo a una plaza de silla de ruedas o quítale la marca.',
+          seatIds: [seatId],
+        });
+      }
+      for (const sec of accessibility.sectionsWithoutAccessible.slice(0, 6)) {
+        rows.push({
+          severity: 'warning',
+          message: `La zona ${sec.name} (${sec.seats.toLocaleString('es-MX')} butacas) no tiene ninguna plaza accesible.`,
+          sectionIds: [sec.id],
+        });
+      }
+    }
+
+    return rows.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'error' ? -1 : 1));
+  }, [validation.issues, accessibility]);
+
+  const errorCount = actionableIssues.filter((i) => i.severity === 'error').length;
+
   const unreachableSectionIds = useMemo(() => {
     const ids = new Set<string>();
     for (const issue of validation.issues) {
@@ -504,12 +793,11 @@ export function SeatMapEditor({
     return map.sections.filter((s) => (s.levelId ?? '') === levelFilter);
   }, [map.sections, levelFilter]);
 
-  const visibleSeatIds = useMemo(() => {
-    if (levelFilter === 'ALL') return null;
-    const ids = new Set<string>();
-    for (const sec of visibleSections) for (const s of sec.seats) ids.add(s.id);
-    return ids;
-  }, [levelFilter, visibleSections]);
+  /*
+   * `visibleSeatIds` desapareció: lo consumía el bucle SVG de butacas para
+   * filtrar por nivel, y construía un Set con las 45.000 ids en cada render.
+   * El canvas filtra ahora con el índice de nivel del propio índice espacial.
+   */
 
   const egressSectionsView = useMemo(() => {
     if (!circulation?.egress?.sections) return [];
@@ -662,7 +950,7 @@ export function SeatMapEditor({
     }
     const next = regenerateSeatsFromBlocks(map, { sectionId: activeSection.id });
     pushHistory(next);
-    setSelected([]);
+    setSelected(EMPTY_SELECTION);
   }
 
   function regenerateAllFromBlocks() {
@@ -678,7 +966,7 @@ export function SeatMapEditor({
       next = regenerateSeatsFromBlocks(next, { sectionId: sec.id });
     }
     pushHistory(next);
-    setSelected([]);
+    setSelected(EMPTY_SELECTION);
   }
 
   function seedStageFocuses() {
@@ -866,7 +1154,7 @@ export function SeatMapEditor({
     const next = map.sections.filter((s) => s.id !== id);
     updateSections(next);
     setActiveSectionId(next[0]?.id ?? null);
-    setSelected([]);
+    setSelected(EMPTY_SELECTION);
   }
 
   function addRow(cols = blockParams.cols) {
@@ -1000,7 +1288,7 @@ export function SeatMapEditor({
     };
     const next = regenerateSeatsFromBlocks(patched, { sectionId: activeSection.id });
     pushHistory(next);
-    setSelected([]);
+    setSelected(EMPTY_SELECTION);
   }
 
   function rotateActiveBlocks(deltaDeg: number) {
@@ -1024,7 +1312,7 @@ export function SeatMapEditor({
     };
     const next = regenerateSeatsFromBlocks(patched, { sectionId: activeSection.id });
     pushHistory(next);
-    setSelected([]);
+    setSelected(EMPTY_SELECTION);
   }
 
   function handleBlockPointerDown(
@@ -1122,12 +1410,12 @@ export function SeatMapEditor({
   }
 
   function applyElevationToSelected(elevation: number) {
-    if (!selected.length) return;
+    if (!selected.size) return;
     updateSections(
       map.sections.map((sec) => ({
         ...sec,
         seats: sec.seats.map((seat) => {
-          if (!selected.includes(seat.id)) return seat;
+          if (!selected.has(seat.id)) return seat;
           return {
             ...seat,
             elevation,
@@ -1150,12 +1438,12 @@ export function SeatMapEditor({
     restrictedView?: boolean;
     premiumView?: boolean;
   }) {
-    if (!selected.length) return;
+    if (!selected.size) return;
     updateSections(
       map.sections.map((sec) => ({
         ...sec,
         seats: sec.seats.map((seat) => {
-          if (!selected.includes(seat.id)) return seat;
+          if (!selected.has(seat.id)) return seat;
           return {
             ...seat,
             visibility: { ...seat.visibility, ...patch },
@@ -1534,43 +1822,117 @@ export function SeatMapEditor({
   }
 
   function deleteSelected() {
-    if (!selected.length) return;
+    if (!selected.size) return;
     updateSections(
       map.sections.map((s) => {
         if (s.locked) return s;
         return {
           ...s,
-          seats: s.seats.filter((seat) => !selected.includes(seat.id)),
+          seats: s.seats.filter((seat) => !selected.has(seat.id)),
         };
       }),
     );
-    setSelected([]);
+    setSelected(EMPTY_SELECTION);
   }
 
+  /**
+   * Edición masiva de tarifa.
+   *
+   * Un solo recorrido sobre las secciones afectadas y un comando que guarda
+   * únicamente la tarifa anterior de cada butaca: cambiar 45.000 butacas cuesta
+   * unos milisegundos y ocupa una fracción de lo que ocupaba un clon completo.
+   */
   function applyTier(tier: (typeof TIERS)[number]) {
-    if (!selected.length) return;
-    updateSections(
-      map.sections.map((s) => {
-        if (s.locked) return s;
-        return {
-          ...s,
-          seats: s.seats.map((seat) =>
-            selected.includes(seat.id) ? { ...seat, tier } : seat,
-          ),
-        };
-      }),
+    if (!selected.size) return;
+    const { map: next, before } = applySeatProps(map, selected, { tier });
+    if (!before.length) return;
+    commit(next, {
+      kind: 'seat-props',
+      label: `Tarifa ${tier} en ${before.length} butaca(s)`,
+      before,
+      after: { tier },
+    });
+  }
+
+  /** Selecciona de golpe todas las butacas de la zona activa. */
+  function selectActiveSectionSeats() {
+    if (!activeSection) return;
+    const si = seatIndex.sections.findIndex((s) => s.id === activeSection.id);
+    if (si < 0) return;
+    const hits = seatsOfSection(seatIndex, si, []);
+    setSelected(new Set(hits.map((i) => seatIndex.ids[i])));
+  }
+
+  /** Mueve la selección completa a otra zona (cambio masivo de precio/aforo). */
+  function moveSelectionToSection(toSectionId: string) {
+    if (!selected.size) return;
+    const target = map.sections.find((s) => s.id === toSectionId);
+    if (!target) return;
+    const { map: next, before } = applySeatSection(map, selected, toSectionId);
+    if (!before.length) return;
+    commit(next, {
+      kind: 'seat-section',
+      label: `Mover ${before.length} butaca(s) a ${target.name}`,
+      before,
+      toSectionId,
+    });
+    setActiveSectionId(toSectionId);
+  }
+
+  /** Marca la selección como plaza accesible o acompañante. */
+  function applyAccessibility(kind: 'wheelchair' | 'companion' | null) {
+    if (!selected.size) return;
+    const patch = kind
+      ? { metadata: { accessible: true, accessibleKind: kind } }
+      : { metadata: undefined };
+    const { map: next, before } = applySeatProps(map, selected, patch as Partial<SeatMapSeat>);
+    if (!before.length) return;
+    commit(next, {
+      kind: 'seat-props',
+      label: kind
+        ? `Marcar ${before.length} plaza(s) accesible(s)`
+        : `Quitar accesibilidad de ${before.length} butaca(s)`,
+      before,
+      after: patch as Partial<SeatMapSeat>,
+    });
+  }
+
+  /**
+   * Crea las plazas de silla de ruedas que exige el aforo en la zona activa.
+   *
+   * Reutiliza butacas ya generadas en vez de inventar geometría: así el aforo
+   * declarado no se mueve y no aparecen solapamientos nuevos.
+   */
+  function generateAccessibleForActiveSection() {
+    if (!activeSection) return;
+    const missing = Math.max(
+      0,
+      accessibility.requiredWheelchairSpaces - accessibility.wheelchairSpaces,
     );
+    const count = missing || requiredWheelchairSpaces(activeSection.seats.length);
+    if (!count) return;
+    const { section: nextSection, created } = generateAccessibleSpaces(activeSection, { count });
+    if (!created.wheelchair.length) return;
+    const next: SeatMapData = {
+      ...map,
+      sections: map.sections.map((s) => (s.id === activeSection.id ? nextSection : s)),
+    };
+    pushHistory(
+      next,
+      `Generar ${created.wheelchair.length} plaza(s) accesible(s) en ${activeSection.name}`,
+    );
+    setSelected(new Set([...created.wheelchair, ...created.companions]));
   }
 
   function rotateSelected(delta = 15) {
-    if (!selected.length) return;
+    if (!selected.size) return;
     updateSections(
       map.sections.map((s) => {
         if (s.locked) return s;
         return {
           ...s,
           seats: s.seats.map((seat) =>
-            selected.includes(seat.id)
+            selected.has(seat.id)
               ? { ...seat, rotation: ((seat.rotation ?? 0) + delta) % 360 }
               : seat,
           ),
@@ -1587,8 +1949,11 @@ export function SeatMapEditor({
   }
 
   async function handleSave() {
-    if (!validationFull.ok) {
-      const errs = validationFull.issues.filter((i) => i.severity === 'error');
+    // El análisis diferido puede ir por detrás del mapa: antes de guardar se
+    // fuerza un pase completo sobre el estado actual, no sobre el diferido.
+    const freshValidation = validateGeometry(resolveGeometry(map));
+    if (!freshValidation.ok) {
+      const errs = freshValidation.issues.filter((i) => i.severity === 'error');
       // eslint-disable-next-line no-alert
       window.alert(
         `No se puede guardar:\n${errs
@@ -1598,6 +1963,25 @@ export function SeatMapEditor({
       );
       return;
     }
+
+    /*
+     * El API no admite parcheo parcial: `PUT /venues/:id/layout` reemplaza el
+     * documento entero y borra por omisión lo que no venga. Con 45.000 butacas
+     * eso son ~10 MB por guardado, así que se confirma explícitamente y se avisa
+     * del tamaño en lugar de mandarlo sin más.
+     */
+    const bytes = estimateMapBytes(map);
+    const HEAVY_SAVE_BYTES = 2 * 1024 * 1024;
+    if (bytes > HEAVY_SAVE_BYTES) {
+      const ok = window.confirm(
+        `Vas a guardar el mapa completo: ${seatCount.toLocaleString('es-MX')} butacas, ` +
+          `~${formatBytes(bytes)}.\n\n` +
+          'El API reemplaza el documento entero (no hay guardado parcial), así que ' +
+          'cualquier zona que falte se borra.\n\n¿Continuar?',
+      );
+      if (!ok) return;
+    }
+
     setSaving(true);
     try {
       const scene = resolveGeometry(map);
@@ -1618,12 +2002,22 @@ export function SeatMapEditor({
           snapPitch: scene.map.venue?.snapPitch,
           focusPoints: scene.map.venue?.focusPoints,
         },
-        sections: scene.map.sections.map((sec) => ({
-          ...sec,
-          seats: scene.seats
-            .filter((s) => s.sectionId === sec.id)
-            .map(({ sectionId: _a, sectionName: _b, sectionColor: _c, rowIndex: _d, ...seat }) => seat),
-        })),
+        // Agrupar una vez en lugar de filtrar por sección: el `filter` dentro
+        // del `map` era O(secciones × butacas) — 1,3 millones de comparaciones
+        // en un recinto de 45.000 butacas y 30 zonas.
+        sections: (() => {
+          const bySection = new Map<string, SeatMapSeat[]>();
+          for (const s of scene.seats) {
+            const { sectionId, sectionName: _b, sectionColor: _c, rowIndex: _d, ...seat } = s;
+            const arr = bySection.get(sectionId);
+            if (arr) arr.push(seat);
+            else bySection.set(sectionId, [seat]);
+          }
+          return scene.map.sections.map((sec) => ({
+            ...sec,
+            seats: bySection.get(sec.id) ?? [],
+          }));
+        })(),
       };
       await onSave(payload);
     } finally {
@@ -1636,7 +2030,7 @@ export function SeatMapEditor({
     const next = await onApplyTemplate(id);
     pushHistory(cloneMap(next));
     setActiveSectionId(next.sections[0]?.id ?? null);
-    setSelected([]);
+    setSelected(EMPTY_SELECTION);
   }
 
   async function handleAi() {
@@ -1652,14 +2046,26 @@ export function SeatMapEditor({
   }
 
   function clientToWorld(clientX: number, clientY: number): Point {
+    const raw = clientToWorldRaw(clientX, clientY);
+    return snapEnabled ? snapPoint(raw, snapPitch) : raw;
+  }
+
+  /**
+   * Posición sin ajustar a la rejilla.
+   *
+   * Para dibujar y colocar sí interesa el ajuste, pero para señalar una butaca
+   * o arrastrar un rectángulo de selección no: cuantizar el puntero al paso de
+   * rejilla desplaza el impacto y hace que la selección por área no coincida
+   * con lo que el operador ve.
+   */
+  function clientToWorldRaw(clientX: number, clientY: number): Point {
     const el = viewportRef.current;
     if (!el) return { x: 0, y: 0 };
     const rect = el.getBoundingClientRect();
-    const raw = {
+    return {
       x: (clientX - rect.left - tx) / scale,
       y: (clientY - rect.top - ty) / scale,
     };
-    return snapEnabled ? snapPoint(raw, snapPitch) : raw;
   }
 
   function handleSectionBackdropPointerDown(e: React.PointerEvent, sectionId: string) {
@@ -1732,7 +2138,7 @@ export function SeatMapEditor({
     }
     e.stopPropagation();
     setSelectedFurnitureId(item.id);
-    setSelected([]);
+    setSelected(EMPTY_SELECTION);
     const world = clientToWorld(e.clientX, e.clientY);
     dragRef.current = {
       mode: 'furniture',
@@ -1746,7 +2152,13 @@ export function SeatMapEditor({
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      // Antes solo se excluía INPUT: un Ctrl+Z dentro del textarea del asistente
+      // de IA deshacía el mapa en vez del texto que se estaba escribiendo.
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) {
+        return;
+      }
       if (e.key === 'Escape') {
         if (tool === 'ga') cancelGaZone();
         if (tool === 'aisle' || tool === 'obstacle' || tool === 'stairs') cancelPolyTool();
@@ -1770,9 +2182,14 @@ export function SeatMapEditor({
         if (e.shiftKey) redo();
         else undo();
       }
+      // Ctrl+Y es el rehacer que espera quien viene de AutoCAD o de Windows.
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
         e.preventDefault();
-        setSelected(allSeats.map((s) => s.id));
+        setSelected(new Set(seatIndex.ids));
       }
     }
     window.addEventListener('keydown', onKey);
@@ -1791,7 +2208,7 @@ export function SeatMapEditor({
                 className={s.id === activeSection?.id ? styles.secActive : styles.secItem}
                 onClick={() => {
                   setActiveSectionId(s.id);
-                  setSelected([]);
+                  setSelected(EMPTY_SELECTION);
                 }}
               >
                 <i style={{ background: s.color }} />
@@ -2768,16 +3185,38 @@ export function SeatMapEditor({
           </p>
         )}
 
-        {selected.length > 0 && (
+        {selected.size > 0 && (
           <>
-            <h3>Selección ({selected.length})</h3>
+            <h3>Selección ({selected.size.toLocaleString('es-MX')})</h3>
+            {/*
+              Accesibilidad: `Seat.accessible` existe en base de datos pero el
+              documento de mapa no tiene campo propio, así que la marca viaja en
+              `metadata` con las claves que lee el motor.
+            */}
+            <div className={styles.stageTools}>
+              <button
+                type="button"
+                onClick={() => applyAccessibility('wheelchair')}
+                title="Marcar como espacio para silla de ruedas"
+              >
+                ♿ Silla
+              </button>
+              <button
+                type="button"
+                onClick={() => applyAccessibility('companion')}
+                title="Marcar como butaca de acompañante"
+              >
+                Acompañante
+              </button>
+              <button type="button" onClick={() => applyAccessibility(null)} title="Quitar marca">
+                Quitar acc.
+              </button>
+            </div>
             <label className={styles.paramField}>
               Elevación Z
               <input
                 type="number"
-                defaultValue={
-                  allSeats.find((s) => s.id === selected[0])?.elevation ?? 0
-                }
+                defaultValue={firstSelectedSeat?.elevation ?? 0}
                 onBlur={(e) => applyElevationToSelected(Number(e.target.value) || 0)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -2818,19 +3257,88 @@ export function SeatMapEditor({
           </>
         )}
 
-        {validation.issues.length > 0 && (
-          <div className={styles.validationBanner} role="status">
+        {accessibility.capacity > 0 && (
+          <div className={styles.accessBox}>
+            <h3>Accesibilidad</h3>
+            <p>
+              <span className={styles.issueTag} data-ok={accessibility.compliant || undefined}>
+                {accessibility.compliant ? 'OK' : 'FALTA'}
+              </span>
+              {accessibility.wheelchairSpaces} de {accessibility.requiredWheelchairSpaces} plazas de
+              silla de ruedas · {accessibility.companionSeats} acompañantes
+            </p>
+            <div className={styles.stageTools}>
+              <button
+                type="button"
+                onClick={generateAccessibleForActiveSection}
+                disabled={!activeSection?.seats.length}
+                title={
+                  activeSection
+                    ? `Convertir butacas del final de fila de ${activeSection.name} en plazas accesibles`
+                    : 'Selecciona una zona primero'
+                }
+              >
+                Generar plazas accesibles
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const ids: string[] = [];
+                  for (let i = 0; i < seatIndex.count; i++) {
+                    if (seatIndex.flags[i] & SEAT_FLAG.ACCESSIBLE) ids.push(seatIndex.ids[i]);
+                  }
+                  if (ids.length) focusOnEntities(ids, undefined);
+                }}
+                disabled={accessibility.wheelchairSpaces + accessibility.companionSeats === 0}
+                title="Selecciona y encuadra todas las plazas accesibles del mapa"
+              >
+                Ver las existentes
+              </button>
+            </div>
+          </div>
+        )}
+
+        {actionableIssues.length > 0 && (
+          <div className={styles.validationBanner} role="status" aria-live="polite">
             <strong>
-              {validation.issues.filter((i) => i.code === 'overlap').length} solapes ·{' '}
-              {validation.issues.filter((i) => i.code === 'unreachable_section').length} sin acceso ·{' '}
-              {validation.issues.length} avisos
+              {errorCount > 0
+                ? `${errorCount} ${errorCount === 1 ? 'error impide' : 'errores impiden'} publicar`
+                : `${actionableIssues.length} avisos`}
+              {' · '}
+              {actionableIssues.length} en total
               {levelFilter !== 'ALL' ? ' (nivel actual)' : ''}
             </strong>
-            <ul>
-              {validation.issues.slice(0, 4).map((issue, i) => (
-                <li key={`${issue.code}-${i}`}>{issue.message}</li>
-              ))}
+            <ul className={styles.issueList}>
+              {actionableIssues.slice(0, 12).map((issue, i) => {
+                const targetable = Boolean(issue.seatIds?.length || issue.sectionIds?.length);
+                return (
+                  <li key={`${issue.message}-${i}`} data-severity={issue.severity}>
+                    {/* La severidad se lee, no se adivina por el color del borde. */}
+                    <span className={styles.issueTag}>
+                      {issue.severity === 'error' ? 'ERROR' : 'AVISO'}
+                    </span>
+                    {targetable ? (
+                      <button
+                        type="button"
+                        className={styles.issueLink}
+                        onClick={() => focusOnEntities(issue.seatIds, issue.sectionIds)}
+                        title="Llevar la vista a la zona o butaca del problema"
+                      >
+                        {issue.message}
+                      </button>
+                    ) : (
+                      <span className={styles.issueText}>{issue.message}</span>
+                    )}
+                    {issue.hint && <p className={styles.issueHint}>{issue.hint}</p>}
+                  </li>
+                );
+              })}
             </ul>
+            {actionableIssues.length > 12 && (
+              <p className={styles.issueHint}>
+                …y {actionableIssues.length - 12} más. Resuelve los de arriba y la lista se recalcula.
+              </p>
+            )}
           </div>
         )}
       </aside>
@@ -2954,23 +3462,99 @@ export function SeatMapEditor({
           </div>
 
           <div className={styles.toolGroup}>
-            <button type="button" onClick={deleteSelected} disabled={!selected.length}>
-              Eliminar ({selected.length})
+            <button type="button" onClick={deleteSelected} disabled={!selected.size}>
+              Eliminar ({selected.size})
             </button>
             {TIERS.map((t) => (
-              <button key={t} type="button" onClick={() => applyTier(t)} disabled={!selected.length}>
+              <button key={t} type="button" onClick={() => applyTier(t)} disabled={!selected.size}>
                 {t}
               </button>
             ))}
-            <button type="button" onClick={() => rotateSelected(15)} disabled={!selected.length}>
+            {/*
+              La selección por zona existía en el código pero no tenía botón:
+              seleccionar 1.500 butacas a rectángulo es inviable, y el atajo por
+              zona resuelve en 0,06 ms lo que el arrastre hace en varios pasos.
+            */}
+            <button
+              type="button"
+              onClick={selectActiveSectionSeats}
+              disabled={!activeSection?.seats.length}
+              title={
+                activeSection
+                  ? `Seleccionar las ${activeSection.seats.length.toLocaleString('es-MX')} butacas de ${activeSection.name}`
+                  : 'No hay zona activa'
+              }
+            >
+              Seleccionar zona
+            </button>
+            <button type="button" onClick={() => rotateSelected(15)} disabled={!selected.size}>
               Rotar +15°
             </button>
-            <button type="button" onClick={undo} disabled={histIdx <= 0}>
-              Undo
+            {/*
+              El atajo va en el propio botón, no solo en `title`: un tooltip no
+              se ve con teclado ni con lector de pantalla, y deshacer es la
+              función que más se busca cuando una edición masiva sale mal.
+            */}
+            <button
+              type="button"
+              onClick={undo}
+              disabled={!canUndo(history)}
+              aria-keyshortcuts="Control+Z"
+              title={undoLabel(history) ? `Deshacer: ${undoLabel(history)}` : 'Nada que deshacer'}
+            >
+              ↶ Deshacer <kbd className={styles.kbd}>Ctrl+Z</kbd>
             </button>
-            <button type="button" onClick={redo} disabled={histIdx >= history.length - 1}>
-              Redo
+            <button
+              type="button"
+              onClick={redo}
+              disabled={!canRedo(history)}
+              aria-keyshortcuts="Control+Shift+Z Control+Y"
+              title={redoLabel(history) ? `Rehacer: ${redoLabel(history)}` : 'Nada que rehacer'}
+            >
+              ↷ Rehacer <kbd className={styles.kbd}>Ctrl+Shift+Z</kbd>
             </button>
+            {/* Qué se deshará exactamente, sin tener que pasar el ratón. */}
+            {(undoLabel(history) || redoLabel(history)) && (
+              <span className={styles.historyHint} aria-live="polite">
+                {undoLabel(history) ? `Deshace: ${undoLabel(history)}` : 'Nada que deshacer'}
+              </span>
+            )}
+          </div>
+
+          <div className={styles.toolGroup}>
+            <button
+              type="button"
+              onClick={selectActiveSectionSeats}
+              disabled={!activeSection}
+              title="Seleccionar todas las butacas de la zona activa"
+            >
+              Sel. zona
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelected(EMPTY_SELECTION)}
+              disabled={!selected.size}
+            >
+              Limpiar sel.
+            </button>
+            {map.sections.length > 1 && (
+              <select
+                value=""
+                disabled={!selected.size}
+                onChange={(e) => {
+                  if (e.target.value) moveSelectionToSection(e.target.value);
+                  e.currentTarget.value = '';
+                }}
+                title="Mover la selección a otra zona"
+              >
+                <option value="">Mover a zona…</option>
+                {map.sections.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className={styles.toolGroup}>
@@ -3054,9 +3638,54 @@ export function SeatMapEditor({
               (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
               return;
             }
-            if (tool === 'select') {
-              setSelected([]);
+            if (tool === 'select' && e.button === 0) {
+              const world = clientToWorldRaw(e.clientX, e.clientY);
+
+              // Impacto directo sobre una butaca: la rejilla resuelve en microsegundos.
+              const hit = hitTestSeat(seatIndex, world.x, world.y, seatIndex.pitch * 0.6);
+              if (hit >= 0) {
+                const seatId = seatIndex.ids[hit];
+                const sectionId = seatIndex.sections[seatIndex.sectionIdx[hit]]?.id;
+                const next = e.shiftKey
+                  ? new Set(selected).add(seatId)
+                  : selected.has(seatId) && selected.size > 1
+                    ? selected
+                    : new Set([seatId]);
+                setSelected(next);
+                setSelectedFurnitureId(null);
+                if (sectionId) setActiveSectionId(sectionId);
+
+                if (sectionId && !sectionLocked(sectionId)) {
+                  const orig: Record<string, Point> = {};
+                  const movable: string[] = [];
+                  for (const id of next) {
+                    const i = seatIndex.idToIdx.get(id);
+                    if (i === undefined) continue;
+                    const secId = seatIndex.sections[seatIndex.sectionIdx[i]]?.id;
+                    if (secId && sectionLocked(secId)) continue;
+                    movable.push(id);
+                    orig[id] = { x: seatIndex.x[i], y: seatIndex.y[i] };
+                  }
+                  if (movable.length) {
+                    dragRef.current = {
+                      mode: 'seat',
+                      seatIds: movable,
+                      startX: world.x,
+                      startY: world.y,
+                      orig,
+                    };
+                    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+                  }
+                }
+                return;
+              }
+
+              // Clic en vacío: empieza selección por rectángulo.
+              if (!e.shiftKey) setSelected(EMPTY_SELECTION);
               setSelectedFurnitureId(null);
+              marqueeRef.current = { x0: world.x, y0: world.y, additive: e.shiftKey };
+              setMarquee({ x0: world.x, y0: world.y, x1: world.x, y1: world.y });
+              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
             }
           }}
           onDoubleClick={() => {
@@ -3065,6 +3694,13 @@ export function SeatMapEditor({
               finishPolyTool();
           }}
           onPointerMove={(e) => {
+            // Selección por rectángulo en curso.
+            const mq = marqueeRef.current;
+            if (mq) {
+              const world = clientToWorldRaw(e.clientX, e.clientY);
+              setMarquee({ x0: mq.x0, y0: mq.y0, x1: world.x, y1: world.y });
+              return;
+            }
             const d = dragRef.current;
             if (!d) return;
             if (d.mode === 'pan') {
@@ -3220,22 +3856,84 @@ export function SeatMapEditor({
             }
           }}
           onPointerUp={() => {
+            // Cierre de la selección por rectángulo.
+            const mq = marqueeRef.current;
+            if (mq) {
+              const box = marquee;
+              marqueeRef.current = null;
+              setMarquee(null);
+              if (box) {
+                const minX = Math.min(box.x0, box.x1);
+                const minY = Math.min(box.y0, box.y1);
+                const maxX = Math.max(box.x0, box.x1);
+                const maxY = Math.max(box.y0, box.y1);
+                // Un rectángulo diminuto es un clic en vacío, no una selección.
+                if (maxX - minX > 2 || maxY - minY > 2) {
+                  const hits = querySeatsInRect(seatIndex, minX, minY, maxX, maxY, []);
+                  const next = mq.additive ? new Set(selected) : new Set<string>();
+                  const activeLevel = levelFilter === 'ALL' ? null : levelFilter;
+                  const levelIdx = activeLevel ? seatIndex.levels.indexOf(activeLevel) : -1;
+                  for (const i of hits) {
+                    // Respeta el filtro de nivel: no se selecciona lo que no se ve.
+                    if (levelIdx >= 0) {
+                      const li = seatIndex.levelIdx[i];
+                      if (li !== 0xffff && li !== levelIdx) continue;
+                    }
+                    next.add(seatIndex.ids[i]);
+                  }
+                  setSelected(next);
+                }
+              }
+              return;
+            }
+
             const d = dragRef.current;
             if (d && d.mode === 'block') {
               const next = regenerateSeatsFromBlocks(mapRef.current, { sectionId: d.sectionId });
-              pushHistory(next);
-              setSelected([]);
+              pushHistory(next, 'Regenerar bloque');
+              setSelected(EMPTY_SELECTION);
+            } else if (d && d.mode === 'seat') {
+              // Movimiento de butacas: comando compacto (posiciones previas), no clon.
+              commit(mapRef.current, {
+                kind: 'seat-move',
+                label: `Mover ${d.seatIds.length} butaca(s)`,
+                before: d.seatIds.map((id) => ({
+                  id,
+                  x: d.orig[id]?.x ?? 0,
+                  y: d.orig[id]?.y ?? 0,
+                })),
+                dx: 0,
+                dy: 0,
+              });
             } else if (d && d.mode !== 'pan') {
-              pushHistory(cloneMap(mapRef.current));
+              pushHistory(cloneMap(mapRef.current), 'Mover elemento');
             }
             dragRef.current = null;
           }}
         >
+          {/*
+            Capa de butacas sobre canvas. Va debajo del SVG estructural para que
+            secciones, escenario, pasillos y salidas sigan siendo nodos del DOM
+            (son pocos y necesitan interacción propia).
+          */}
+          <SeatCanvasLayer
+            index={seatIndex}
+            selected={selectedIdx}
+            overlaps={overlapSeatIdx}
+            sightlines={sightlineScores}
+            levelFilter={levelFilter === 'ALL' ? null : levelFilter}
+            scale={scale}
+            tx={tx}
+            ty={ty}
+            width={viewportSize.width}
+            height={viewportSize.height}
+            marquee={marquee}
+          />
           <svg
             className={styles.canvas}
             width="100%"
             height="100%"
-            style={{ background: '#0a0a0a' }}
+            style={{ background: 'transparent', position: 'relative' }}
           >
             <g transform={`translate(${tx} ${ty}) scale(${scale})`}>
               {/* Snap grid */}
@@ -3706,118 +4404,32 @@ export function SeatMapEditor({
                 </>
               )}
 
-              {/* Seats — two-part chair glyph (backrest + cushion) */}
-              {allSeats.map((seat) => {
-                if (visibleSeatIds && !visibleSeatIds.has(seat.id)) return null;
-                const isSel = selected.includes(seat.id);
-                const overlap = overlapSeatIds.has(seat.id);
-                const unreachable = unreachableSectionIds.has(seat.sectionId);
-                const viewScore = sightlineBySeat?.get(seat.id)?.score;
-                const fill = viewHeat && viewScore != null
-                  ? sightlineHeatColor(viewScore)
-                  : seat.visibility?.blocked
-                  ? '#3f3f46'
-                  : seat.visibility?.premiumView
-                    ? '#d4a017'
-                    : seat.tier === 'premium'
-                      ? '#f59e0b'
-                      : seat.tier === 'economy'
-                        ? '#64748b'
-                        : seat.sectionColor || '#38bdf8';
-                const showLabel = scale >= 1.4;
-                return (
-                  <g
-                    key={seat.id}
-                    opacity={seat.visibility?.blocked ? 0.45 : unreachable ? 0.35 : 1}
-                    transform={`translate(${seat.x} ${seat.y}) rotate(${seat.rotation ?? 0})`}
-                    onPointerDown={(e) => {
-                      if (tool !== 'select' || e.button !== 0) return;
-                      e.stopPropagation();
-                      const ids = e.shiftKey
-                        ? Array.from(new Set([...selected, seat.id]))
-                        : selected.includes(seat.id) && selected.length > 1
-                          ? selected
-                          : [seat.id];
-                      setSelected(ids);
-                      setSelectedFurnitureId(null);
-                      setActiveSectionId(seat.sectionId);
-                      if (sectionLocked(seat.sectionId)) return;
-                      const movable = ids.filter((id) => {
-                        const s = allSeats.find((x) => x.id === id);
-                        return s && !sectionLocked(s.sectionId);
-                      });
-                      if (!movable.length) return;
-                      const world = clientToWorld(e.clientX, e.clientY);
-                      const orig: Record<string, Point> = {};
-                      for (const id of movable) {
-                        const s = allSeats.find((x) => x.id === id);
-                        if (s) orig[id] = { x: s.x, y: s.y };
-                      }
-                      dragRef.current = {
-                        mode: 'seat',
-                        seatIds: movable,
-                        startX: world.x,
-                        startY: world.y,
-                        orig,
-                      };
-                      (viewportRef.current as HTMLElement | null)?.setPointerCapture(e.pointerId);
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (e.shiftKey) {
-                        setSelected((prev) =>
-                          prev.includes(seat.id)
-                            ? prev.filter((id) => id !== seat.id)
-                            : [...prev, seat.id],
-                        );
-                      }
-                    }}
-                    style={{ cursor: tool === 'select' ? 'pointer' : 'default' }}
-                  >
-                    {(isSel || overlap) && (
-                      <rect
-                        x={-9}
-                        y={-10}
-                        width={18}
-                        height={17}
-                        rx={2.5}
-                        fill="none"
-                        stroke={overlap && !isSel ? '#f97316' : '#fff'}
-                        strokeWidth={1.4}
-                      />
-                    )}
-                    <rect x={-6} y={-9} width={12} height={5} rx={1.4} fill={isSel ? '#fff' : fill} opacity={0.92} />
-                    <rect
-                      x={-7}
-                      y={-4.5}
-                      width={14}
-                      height={9}
-                      rx={1.8}
-                      fill={isSel ? '#fff' : fill}
-                      stroke={
-                        seat.visibility?.restrictedView
-                          ? 'rgba(148,163,184,0.95)'
-                          : isSel
-                            ? '#e11d48'
-                            : 'rgba(0,0,0,0.35)'
-                      }
-                      strokeWidth={isSel || seat.visibility?.restrictedView ? 1.6 : 0.6}
-                      strokeDasharray={seat.visibility?.restrictedView ? '2 1.5' : undefined}
-                    />
-                    {showLabel && (
-                      <text y={12} textAnchor="middle" fontSize={5.5} fill="rgba(250,250,250,0.75)" style={{ pointerEvents: 'none' }}>
-                        {seat.label}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
+              {/*
+                Las butacas ya no se dibujan en SVG: a 45.000 asientos eran
+                ~180.000 nodos del DOM. Ahora viven en <SeatCanvasLayer>, que se
+                monta fuera del <svg> y se pinta debajo de lo estructural.
+              */}
             </g>
           </svg>
           <p className={styles.hint}>
-            {allSeats.length} asientos · {map.sections.length} zonas · zoom rueda · pan herramienta ·
+            {seatCount.toLocaleString('es-MX')} asientos · {map.sections.length} zonas ·{' '}
+            {lodLabel} · zoom rueda · arrastra en vacío para seleccionar por área ·
             Delete · Ctrl+Z · Shift multi
-            {selected.length ? ` · ${selected.length} sel.` : ''}
+            {selected.size ? ` · ${selected.size.toLocaleString('es-MX')} sel.` : ''}
+            {analyzing ? ' · analizando…' : ''}
+            {accessibility.capacity > 0 && (
+              <span
+                title={
+                  accessibility.compliant
+                    ? 'Cumple el cupo de plazas accesibles'
+                    : `Faltan plazas accesibles o acompañantes (${accessibility.wheelchairSpaces}/${accessibility.requiredWheelchairSpaces})`
+                }
+                style={{ color: accessibility.compliant ? '#22c55e' : '#f59e0b' }}
+              >
+                {' '}
+                · ♿ {accessibility.wheelchairSpaces}/{accessibility.requiredWheelchairSpaces}
+              </span>
+            )}
             {tool === 'ga' ? ' · click para agregar vértices, doble-click o Enter para cerrar' : ''}
             {tool === 'focus' ? ' · click para colocar foco · click en un foco para borrarlo' : ''}
             {tool === 'exit' ? ' · click para colocar salida · click en una salida para borrarla' : ''}

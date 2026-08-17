@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { ApiError, adminApi, getStoredToken } from '@/lib/api';
 import { getPlatformOverview, type PlatformOverview } from '@/lib/platform-api';
+import { useSession } from '@/components/Session/SessionProvider';
 import { RealtimeDashboardPanel } from '@/components/RealtimeDashboardPanel';
+import type { Capability } from '@/lib/permissions';
 import styles from './dashboard.module.scss';
 
 const channelMeta: Record<string, { color: string; label: string }> = {
@@ -37,13 +40,22 @@ function StatIcon({ kind }: { kind: 'pulse' | 'cart' | 'cash' | 'terminal' }) {
   );
 }
 
-const quickActions = [
+/** Atajos con su capacidad: ofrecer un enlace que dará 403 no es un atajo. */
+const quickActions: {
+  href: string;
+  title: string;
+  desc: string;
+  icon: string;
+  accent: string;
+  cap: Capability;
+}[] = [
   {
     href: '/events/new',
     title: 'Crear evento',
     desc: 'Nuevo show, mapa y ofertas',
     icon: 'M12 5v14M5 12h14',
     accent: 'ink',
+    cap: 'events.manage',
   },
   {
     href: '/channels',
@@ -51,6 +63,7 @@ const quickActions = [
     desc: 'Web, POS, API y reventa',
     icon: 'M4 12h4l3-7 4 14 3-7h2',
     accent: 'ink',
+    cap: 'marketing.manage',
   },
   {
     href: '/scanner',
@@ -58,6 +71,7 @@ const quickActions = [
     desc: 'Validación de acceso',
     icon: 'M3 7V5a2 2 0 0 1 2-2h2 M17 3h2a2 2 0 0 1 2 2v2 M21 17v2a2 2 0 0 1-2 2h-2 M7 21H5a2 2 0 0 1-2-2v-2 M3 12h18',
     accent: 'ink',
+    cap: 'access.scan',
   },
   {
     href: '/payouts',
@@ -65,20 +79,115 @@ const quickActions = [
     desc: 'Pagos a organizadores',
     icon: 'M3 7h18v10H3z M7 12h2 M15 12h2',
     accent: 'ink',
+    cap: 'finance.view',
   },
 ];
 
+/** Un aviso accionable de la primera pantalla. */
+type Attention = {
+  id: string;
+  level: 'critical' | 'warn';
+  title: string;
+  detail: string;
+  href?: string;
+  cta?: string;
+};
+
 export default function DashboardPage() {
+  const { can, organizationId, loading: sessionLoading } = useSession();
   const [data, setData] = useState<PlatformOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [paymentsDemo, setPaymentsDemo] = useState<boolean | null>(null);
+
+  const load = useCallback(async () => {
+    const token = getStoredToken();
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    try {
+      setData(await getPlatformOverview(token));
+    } catch (err) {
+      // Antes esto era `.catch(() => {})`: el dashboard se quedaba en guiones y
+      // parecía "no hay ventas hoy" cuando en realidad la petición había fallado.
+      setError(err instanceof ApiError ? err.userMessage : 'No se pudo cargar el resumen.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('boletera_token');
-    if (!token) return;
-    getPlatformOverview(token).then(setData).catch(() => {});
-  }, []);
+    void load();
+  }, [load]);
+
+  /** Estado de la pasarela: en demo no se está cobrando nada de verdad. */
+  useEffect(() => {
+    const token = getStoredToken();
+    if (!token || !can('settings.payments')) return;
+    adminApi<{ demo: boolean }>('/payments/config', token, { silent: true, noRetry: true })
+      .then((c) => setPaymentsDemo(c.demo))
+      .catch(() => setPaymentsDemo(null));
+  }, [can]);
 
   const totalChannelRevenue =
     data?.channelBreakdown?.reduce((s, c) => s + c.revenue, 0) ?? 0;
+
+  const visibleActions = useMemo(() => quickActions.filter((q) => can(q.cap)), [can]);
+
+  /**
+   * Lo que de verdad importa hoy. Solo entra aquí lo que tiene una acción
+   * detrás; una cifra que nadie puede mover es adorno, no información.
+   */
+  const attention = useMemo<Attention[]>(() => {
+    const items: Attention[] = [];
+
+    if (!sessionLoading && !organizationId) {
+      items.push({
+        id: 'no-org',
+        level: 'critical',
+        title: 'Tu cuenta no tiene organización activa',
+        detail:
+          'El API rechaza todas las rutas de organización mientras siga así, incluso con rol de administrador. Pide que te asignen una.',
+      });
+    }
+
+    if (paymentsDemo) {
+      items.push({
+        id: 'demo',
+        level: 'critical',
+        title: 'Banorte está en modo demo',
+        detail: 'Los cobros son simulados: ninguna venta llega al banco ni se liquidará.',
+        href: '/settings/payments',
+        cta: 'Revisar pagos',
+      });
+    }
+
+    const pending = data?.recentOrders?.filter((o) => o.status === 'PENDING').length ?? 0;
+    if (pending > 0 && can('orders.view')) {
+      items.push({
+        id: 'pending',
+        level: 'warn',
+        title: `${pending} ${pending === 1 ? 'orden reciente pendiente' : 'órdenes recientes pendientes'}`,
+        detail:
+          'Siguen sin confirmarse. Si se acumulan, suele ser el IPN de Banorte sin llegar al API.',
+        href: '/orders',
+        cta: 'Ver órdenes',
+      });
+    }
+
+    if (!loading && !error && data && data.activeEvents === 0 && can('events.view')) {
+      items.push({
+        id: 'no-events',
+        level: 'warn',
+        title: 'No hay eventos activos',
+        detail: 'Sin eventos publicados no hay nada a la venta hoy.',
+        href: '/events',
+        cta: 'Ver eventos',
+      });
+    }
+
+    return items;
+  }, [sessionLoading, organizationId, paymentsDemo, data, can, loading, error]);
 
   return (
     <div className={styles.wrap}>
@@ -91,16 +200,60 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className={styles.headerActions}>
-          <Link href="/events/new" className={styles.primaryBtn}>
-            + Crear evento
-          </Link>
-          <Link href="/reports" className={styles.ghostBtn}>
-            Exportar reportes
-          </Link>
+          {can('events.manage') && (
+            <Link href="/events/new" className={styles.primaryBtn}>
+              + Crear evento
+            </Link>
+          )}
+          {can('reports.view') && (
+            <Link href="/reports" className={styles.ghostBtn}>
+              Exportar reportes
+            </Link>
+          )}
         </div>
       </header>
 
-      <section className={styles.kpis}>
+      {/* Lo primero de la primera pantalla: lo que hay que atender hoy. */}
+      {attention.length > 0 && (
+        <section className={styles.attention} aria-labelledby="attention-title">
+          <h2 id="attention-title" className={styles.attentionTitle}>
+            Requiere atención
+          </h2>
+          <ul className={styles.attentionList}>
+            {attention.map((a) => (
+              <li
+                key={a.id}
+                className={a.level === 'critical' ? styles.attCritical : styles.attWarn}
+              >
+                <div>
+                  {/* La severidad va en texto, no solo en el color del borde. */}
+                  <span className={styles.attLevel}>
+                    {a.level === 'critical' ? 'Crítico' : 'Revisar'}
+                  </span>
+                  <strong className={styles.attHeading}>{a.title}</strong>
+                  <p className={styles.attDetail}>{a.detail}</p>
+                </div>
+                {a.href && a.cta && (
+                  <Link href={a.href} className={styles.ghostBtn}>
+                    {a.cta}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {error && (
+        <div className={styles.loadError} role="alert">
+          <p>{error}</p>
+          <button type="button" className={styles.ghostBtn} onClick={() => void load()}>
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      <section className={styles.kpis} aria-busy={loading}>
         <article className={`${styles.kpi} ${styles.kpiHero}`}>
           <div className={styles.kpiTop}>
             <span className={styles.kpiIcon} style={{ background: '#f4f4f5', color: '#18181b' }}>
@@ -235,7 +388,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className={styles.actionsGrid}>
-            {quickActions.map((q) => (
+            {visibleActions.map((q) => (
               <Link key={q.href} href={q.href} className={`${styles.actionCard} ${styles[q.accent]}`}>
                 <div className={styles.actionIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -260,9 +413,11 @@ export default function DashboardPage() {
             <h2>Actividad reciente</h2>
             <p>Últimos eventos del sistema</p>
           </div>
-          <Link href="/orders" className={styles.linkAll}>
-            Ver órdenes →
-          </Link>
+          {can('orders.view') && (
+            <Link href="/orders" className={styles.linkAll}>
+              Ver órdenes →
+            </Link>
+          )}
         </div>
         <div className={styles.activity}>
           {data?.recentOrders?.length ? (

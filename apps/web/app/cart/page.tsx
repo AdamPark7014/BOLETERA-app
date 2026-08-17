@@ -12,11 +12,40 @@ import {
   useCartStore,
   type CartItem,
 } from '@/lib/cart-store';
+import { authHeaders } from '@/lib/auth';
+import { getGuestSessionId } from '@/lib/guest-session';
+import { formatCountdown } from '@/lib/payment-window';
+import { fetchCartPricing, formatMoney, type CartPricing } from '@/lib/pricing';
 import styles from './cart.module.scss';
 
-function fmtMoney(n: number, currency = 'MXN') {
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return `$${n.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`;
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
+/**
+ * Quitar del carrito tiene que devolver la butaca a la venta.
+ *
+ * Antes solo se borraba la entrada local y el hold seguía vivo en el servidor
+ * hasta expirar: inventario congelado durante quince minutos por cada
+ * arrepentimiento, justo en el momento de un onsale en el que más falta hace.
+ * El API exige propiedad para liberar, y la propiedad se acredita con el
+ * `sessionId` estable del navegador (o con el JWT si hay sesión).
+ *
+ * Es best-effort a propósito: si la liberación falla, el hold caduca solo y el
+ * comprador no se queda con el carrito bloqueado por un error de red.
+ */
+function releaseHolds(item: CartItem) {
+  const holdIds = item.lines?.flatMap((l) => l.holdIds) ?? item.holdIds ?? [];
+  if (!holdIds.length) return;
+  const sessionId = getGuestSessionId();
+  for (const id of holdIds) {
+    void fetch(`${API}/inventory/holds/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      // El `sessionId` va en el cuerpo, no en la URL: es un identificador de
+      // sesión y no debe acabar en los registros de acceso del servidor.
+      body: JSON.stringify({ sessionId }),
+      keepalive: true,
+    }).catch(() => {});
+  }
 }
 
 function fmtDate(iso?: string) {
@@ -28,12 +57,6 @@ function fmtDate(iso?: string) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function fmtTimer(sec: number) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 function seatSummary(item: CartItem) {
@@ -52,10 +75,17 @@ function lineBreakdown(item: CartItem) {
     .join(' · ');
 }
 
-function itemTotal(item: CartItem) {
+/** Solo el precio de lista que trae el carrito: aún sin cargos ni IVA. */
+function itemSubtotal(item: CartItem) {
   const fromLines = item.lines?.reduce((s, l) => s + (l.lineTotal ?? 0), 0) ?? 0;
   if (fromLines > 0) return fromLines;
   return item.lineTotal ?? 0;
+}
+
+function pricingItemsFor(item: CartItem) {
+  return (item.lines ?? [])
+    .map((l) => ({ offerId: l.offerId, quantity: l.quantity || l.holdIds.length }))
+    .filter((l) => l.offerId && l.quantity > 0);
 }
 
 function goCheckout(router: ReturnType<typeof useRouter>, item: CartItem) {
@@ -90,12 +120,67 @@ export default function CartPage() {
 
   const active = items.filter((i) => secondsUntil(i.expiresAt) > 0);
   const expired = items.filter((i) => secondsUntil(i.expiresAt) <= 0);
-  const estimated = active.reduce((s, i) => s + itemTotal(i), 0);
+  const listSubtotal = active.reduce((s, i) => s + itemSubtotal(i), 0);
   const seatCount = active.reduce((s, i) => s + i.seatCount, 0);
   const currency = active[0]?.currency || 'MXN';
   const soonest = active.reduce(
     (min, i) => Math.min(min, secondsUntil(i.expiresAt)),
     Number.POSITIVE_INFINITY,
+  );
+
+  // Precio final con cargos e IVA, ya en el carrito.
+  //
+  // Enseñar aquí un «estimado» de $800 y cobrar $1,044 al final es exactamente
+  // lo que la ley mexicana no permite: el precio anunciado tiene que ser el que
+  // se paga. `pricing/calculate-cart` es público y devuelve el desglose, así que
+  // se pide por evento (el endpoint es de un solo evento) y se suma.
+  const pricingKey = active
+    .map((i) => `${i.eventId}:${pricingItemsFor(i).map((l) => `${l.offerId}x${l.quantity}`).join(',')}`)
+    .join('|');
+  const [pricingByEvent, setPricingByEvent] = useState<Record<string, CartPricing>>({});
+  const [pricingLoading, setPricingLoading] = useState(false);
+
+  useEffect(() => {
+    const targets = active
+      .map((item) => ({ eventId: item.eventId, items: pricingItemsFor(item) }))
+      .filter((t) => t.items.length);
+    if (!targets.length) {
+      setPricingByEvent({});
+      return;
+    }
+    const controller = new AbortController();
+    setPricingLoading(true);
+    void Promise.all(
+      targets.map((t) =>
+        fetchCartPricing(API, { eventId: t.eventId, items: t.items }, controller.signal).then(
+          (data) => [t.eventId, data] as const,
+        ),
+      ),
+    )
+      .then((entries) => {
+        if (controller.signal.aborted) return;
+        const next: Record<string, CartPricing> = {};
+        for (const [eventId, data] of entries) if (data) next[eventId] = data;
+        setPricingByEvent(next);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setPricingLoading(false);
+      });
+    return () => controller.abort();
+    // `pricingKey` resume qué se está cotizando; `active` cambia de identidad
+    // cada segundo por el tick del temporizador y dispararía una petición por
+    // segundo.
+  }, [pricingKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const priced = active.filter((i) => pricingByEvent[i.eventId]);
+  const allPriced = priced.length === active.length && active.length > 0;
+  const grandTotal = priced.reduce((s, i) => s + Number(pricingByEvent[i.eventId].total || 0), 0);
+  const grandExtras = priced.reduce(
+    (s, i) =>
+      s +
+      Number(pricingByEvent[i.eventId].fees || 0) +
+      Number(pricingByEvent[i.eventId].taxes || 0),
+    0,
   );
 
   return (
@@ -141,7 +226,9 @@ export default function CartPage() {
                 const idx = rawItems.findIndex((r) => r.eventId === item.eventId);
                 const sec = secondsUntil(item.expiresAt);
                 const urgent = sec > 0 && sec < 120;
-                const total = itemTotal(item);
+                const listPrice = itemSubtotal(item);
+                const pricing = pricingByEvent[item.eventId];
+                const itemCurrency = item.currency || currency;
                 const seats = seatSummary(item);
                 const zones = lineBreakdown(item);
                 const when = fmtDate(item.startsAt);
@@ -162,12 +249,15 @@ export default function CartPage() {
                           {[item.venueName, item.venueCity, when].filter(Boolean).join(' · ')}
                         </p>
                       </div>
+                      {/* `aria-live` en un número que cambia cada segundo satura
+                          al lector de pantalla; el hito lo anuncia el checkout. */}
                       <div
                         className={`${styles.timer} ${urgent ? styles.timerUrgent : ''}`}
-                        aria-live="polite"
+                        role="timer"
+                        aria-label={`Tiempo restante de la reserva para ${item.eventTitle}`}
                       >
                         <span>Tiempo</span>
-                        <strong>{fmtTimer(sec)}</strong>
+                        <strong>{formatCountdown(sec)}</strong>
                       </div>
                     </div>
 
@@ -190,12 +280,45 @@ export default function CartPage() {
                           <dd>{seats}</dd>
                         </div>
                       )}
-                      {total > 0 && (
+                      {pricing ? (
+                        <>
+                          <div>
+                            <dt>Precio de los boletos</dt>
+                            <dd>{formatMoney(pricing.subtotal, itemCurrency)}</dd>
+                          </div>
+                          <div>
+                            <dt>Cargo por servicio + IVA</dt>
+                            <dd>
+                              {formatMoney(
+                                Number(pricing.fees || 0) + Number(pricing.taxes || 0),
+                                itemCurrency,
+                              )}
+                            </dd>
+                          </div>
+                          {Number(pricing.discount) > 0 && (
+                            <div>
+                              <dt>Descuento</dt>
+                              <dd>−{formatMoney(pricing.discount, itemCurrency)}</dd>
+                            </div>
+                          )}
+                          <div className={styles.factTotal}>
+                            <dt>Total a pagar</dt>
+                            <dd>{formatMoney(pricing.total, itemCurrency)}</dd>
+                          </div>
+                        </>
+                      ) : listPrice > 0 ? (
                         <div>
-                          <dt>Subtotal</dt>
-                          <dd>{fmtMoney(total, item.currency || currency)}</dd>
+                          <dt>Precio de los boletos</dt>
+                          <dd>
+                            {formatMoney(listPrice, itemCurrency)}
+                            <span className={styles.factNote}>
+                              {pricingLoading
+                                ? ' · calculando cargos e IVA…'
+                                : ' · falta sumar cargos e IVA'}
+                            </span>
+                          </dd>
                         </div>
-                      )}
+                      ) : null}
                     </dl>
 
                     <div className={styles.actions}>
@@ -214,7 +337,11 @@ export default function CartPage() {
                       <button
                         type="button"
                         className={styles.danger}
-                        onClick={() => idx >= 0 && removeAt(idx)}
+                        onClick={() => {
+                          if (idx < 0) return;
+                          releaseHolds(item);
+                          removeAt(idx);
+                        }}
                       >
                         Quitar
                       </button>
@@ -264,20 +391,35 @@ export default function CartPage() {
                   <li>
                     <span>Expira en</span>
                     <strong className={soonest < 120 ? styles.warn : undefined}>
-                      {fmtTimer(soonest)}
+                      {formatCountdown(soonest)}
                     </strong>
                   </li>
                 )}
-                {estimated > 0 && (
-                  <li className={styles.totalRow}>
-                    <span>Estimado</span>
-                    <strong>{fmtMoney(estimated, currency)}</strong>
+                {allPriced && grandExtras > 0 && (
+                  <li>
+                    <span>Cargo por servicio + IVA</span>
+                    <strong>{formatMoney(grandExtras, currency)}</strong>
                   </li>
                 )}
+                {allPriced ? (
+                  <li className={styles.totalRow}>
+                    <span>Total a pagar</span>
+                    <strong>{formatMoney(grandTotal, currency)}</strong>
+                  </li>
+                ) : listSubtotal > 0 ? (
+                  <li className={styles.totalRow}>
+                    <span>Precio de los boletos</span>
+                    <strong>{formatMoney(listSubtotal, currency)}</strong>
+                  </li>
+                ) : null}
               </ul>
 
               <p className={styles.hint}>
-                El total final (cargos e impuestos) se confirma en el checkout.
+                {allPriced
+                  ? 'Precio final: ya incluye cargo por servicio e IVA. Es el mismo importe que verás al pagar.'
+                  : pricingLoading
+                    ? 'Calculando el total con cargo por servicio e IVA…'
+                    : 'El total con cargo por servicio e IVA se muestra en el checkout, antes de cualquier cobro.'}
               </p>
 
               {active.length === 1 ? (
@@ -305,7 +447,14 @@ export default function CartPage() {
 
               <div className={styles.summaryFooter}>
                 <Link href="/events">Seguir explorando</Link>
-                <button type="button" onClick={() => clear()}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Solo los activos: los expirados ya los soltó el worker.
+                    active.forEach(releaseHolds);
+                    clear();
+                  }}
+                >
                   Vaciar carrito
                 </button>
               </div>

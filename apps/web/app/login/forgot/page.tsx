@@ -24,11 +24,14 @@ export default function ForgotPasswordPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
-      setMsg(data.message || 'Revisa tu correo');
+      const data = await res.json().catch(() => ({}));
+      setMsg(
+        data.message ||
+          'Si ese correo está registrado, te enviamos un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.',
+      );
       if (data.devResetUrl) setDevUrl(data.devResetUrl);
     } catch {
-      setMsg('No se pudo enviar la solicitud');
+      setMsg('No pudimos enviar la solicitud. Revisa tu conexión e inténtalo otra vez.');
     } finally {
       setLoading(false);
     }
@@ -37,25 +40,42 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <SiteHeader />
-      <main className={styles.page}>
-        <form className={styles.card} onSubmit={onSubmit}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
+        <form className={styles.simpleCard} onSubmit={onSubmit}>
           <h1>Recuperar contraseña</h1>
-          <p className={styles.sub}>Te enviaremos un enlace si el correo está registrado.</p>
-          <label>
-            Email
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <p className={styles.sub}>
+            Escribe el correo de tu cuenta y te mandamos un enlace para crear una
+            contraseña nueva.
+          </p>
+          <label htmlFor="forgot-email">
+            Correo electrónico
+            <input
+              id="forgot-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </label>
           <button type="submit" disabled={loading}>
             {loading ? 'Enviando…' : 'Enviar enlace'}
           </button>
-          {msg && <p className={styles.hint}>{msg}</p>}
+          {msg && (
+            <p className={styles.feedback} role="status">
+              {msg}
+            </p>
+          )}
           {devUrl && (
-            <p className={styles.hint}>
-              Dev:{' '}
+            <p className={styles.feedback}>
+              Enlace de desarrollo:{' '}
               <Link href={devUrl.replace(/^https?:\/\/[^/]+/, '')}>{devUrl}</Link>
             </p>
           )}
-          <Link href="/login">Volver al login</Link>
+          <Link href="/login" className={styles.backLink}>
+            Volver a iniciar sesión
+          </Link>
         </form>
       </main>
     </>

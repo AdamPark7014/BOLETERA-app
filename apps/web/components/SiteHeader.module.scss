@@ -1,18 +1,66 @@
+@use '../styles/breakpoints' as bp;
+
 .header {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: var(--z-header);
   width: 100%;
   background: rgba(255, 255, 255, 0.7);
   border-bottom: 1px solid transparent;
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
-  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+  transition:
+    background var(--duration-base),
+    border-color var(--duration-base),
+    box-shadow var(--duration-base);
+}
+
+/*
+ * Saltar al contenido (WCAG 2.4.1). Se mantiene en el flujo pero fuera de
+ * pantalla; al recibir foco baja sobre la barra. No usamos display:none porque
+ * eso lo sacaría del orden de tabulación.
+ */
+.skipLink {
+  position: absolute;
+  top: var(--space-xs);
+  left: var(--space-xs);
+  z-index: calc(var(--z-header) + 1);
+  padding: var(--space-xs) var(--space-md);
+  min-height: var(--control-height-sm);
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-surface-inverse);
+  color: var(--text-inverse);
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  transform: translateY(-200%);
+  transition: transform var(--duration-fast) var(--ease-out);
+
+  &:focus-visible {
+    transform: translateY(0);
+  }
+}
+
+/* Aviso de sesión caducada: ocupa el ancho completo encima de la barra. */
+.sessionNotice {
+  margin: 0;
+  padding: var(--space-xs) var(--layout-gutter);
+  background: var(--color-danger-bg);
+  border-bottom: 1px solid var(--color-danger-border);
+  color: var(--color-danger-strong);
+  font-size: var(--text-base);
+  text-align: center;
+
+  a {
+    color: var(--color-danger-strong);
+    font-weight: var(--weight-bold);
+    text-decoration: underline;
+  }
 }
 
 .overHero {
-  /* compound with .dark — transparent chrome over home hero */
-  z-index: 50;
+  /* compound con .dark — barra transparente sobre el hero del home */
+  z-index: var(--z-header);
 }
 
 .scrolled {
@@ -24,7 +72,7 @@
 .dark {
   background: rgba(10, 10, 10, 0.5);
   border-bottom-color: rgba(255, 255, 255, 0.06);
-  color: #fafafa;
+  color: var(--text-inverse);
 
   &.scrolled {
     background: rgba(10, 10, 10, 0.85);
@@ -36,60 +84,63 @@
     border-bottom-color: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+
+    /*
+     * Sin fondo propio, el texto cae sobre la foto del hero. La sombra asegura
+     * legibilidad aunque el póster tenga zonas claras justo ahí.
+     */
+    .brand,
+    .navLink,
+    .navActive,
+    .iconLink,
+    .userLink,
+    .menuBtn {
+      text-shadow: 0 1px 3px rgba(10, 10, 10, 0.55);
+    }
   }
 
   .navLink,
   .iconLink,
   .userLink,
   .menuBtn {
-    color: rgba(250, 250, 250, 0.7);
+    /* 0.7 de opacidad daba ~4.3:1 sobre la barra oscura; 0.82 da 6.6:1. */
+    color: var(--text-inverse-muted);
   }
 
   .navLink:hover,
   .iconLink:hover,
   .userLink:hover {
-    color: #fafafa;
+    color: var(--text-inverse);
     background: rgba(255, 255, 255, 0.06);
   }
 
   .navActive {
-    color: #fafafa;
+    color: var(--text-inverse);
     background: rgba(255, 255, 255, 0.08);
   }
 
   .cta {
-    color: #0a0a0a;
-    background: #fafafa;
+    color: var(--ink-950);
+    background: var(--ink-50);
 
     &:hover {
-      background: #fff;
+      background: var(--paper-0);
     }
   }
 
   .brand {
-    color: #fafafa;
+    color: var(--text-inverse);
   }
 }
 
 .inner {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  height: 64px;
+  gap: var(--space-md);
+  min-height: var(--header-height);
   padding: 0 clamp(1rem, 4vw, 2rem);
-  max-width: 72rem;
+  max-width: var(--layout-max);
   margin: 0 auto;
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
 }
 
 .search {
@@ -98,11 +149,11 @@
   max-width: 16rem;
   min-width: 0;
 
-  @media (max-width: 900px) {
+  @include bp.below(bp.$bp-lg) {
     max-width: 11rem;
   }
 
-  @media (max-width: 640px) {
+  @include bp.below(bp.$bp-sm) {
     display: none;
   }
 }
@@ -111,15 +162,16 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.45rem 0.7rem;
+  padding: var(--space-2xs) 0.7rem;
+  min-height: var(--control-height-sm);
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid transparent;
-  color: #737373;
+  color: var(--text-muted);
 
   &:focus-within {
-    background: #fff;
-    border-color: #e5e5e5;
-    color: #171717;
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--text-heading);
   }
 
   input {
@@ -129,8 +181,12 @@
     outline: none;
     background: transparent;
     font: inherit;
-    font-size: 0.8125rem;
-    color: #171717;
+    font-size: var(--text-sm);
+    color: var(--text-heading);
+
+    &::placeholder {
+      color: var(--text-placeholder);
+    }
   }
 }
 
@@ -140,11 +196,12 @@
   right: 0;
   top: calc(100% + 0.35rem);
   margin: 0;
-  padding: 0.3rem 0;
+  padding: var(--space-3xs) 0;
   list-style: none;
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  z-index: 60;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-popover);
   max-height: 16rem;
   overflow: auto;
 }
@@ -156,7 +213,8 @@
   align-items: flex-start;
   gap: 0.1rem;
   width: 100%;
-  padding: 0.55rem 0.75rem;
+  min-height: var(--control-height-sm);
+  padding: var(--space-xs) var(--space-sm);
   border: none;
   background: transparent;
   text-align: left;
@@ -164,41 +222,46 @@
   font: inherit;
 
   strong {
-    font-size: 0.8125rem;
-    color: #0a0a0a;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
   }
 
   span {
-    font-size: 0.7rem;
-    color: #737373;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
   }
 }
 
 .suggestActive {
-  background: #fafafa;
+  background: var(--color-surface-muted);
 }
 
 .dark .searchLabel {
   background: rgba(255, 255, 255, 0.08);
-  color: rgba(250, 250, 250, 0.65);
+  color: var(--text-inverse-muted);
 
   &:focus-within {
     background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.14);
-    color: #fafafa;
+    border-color: var(--color-border-inverse);
+    color: var(--text-inverse);
   }
 
   input {
-    color: #fafafa;
+    color: var(--text-inverse);
+
+    &::placeholder {
+      color: rgba(250, 250, 250, 0.72);
+    }
   }
 }
 
-/* Brand */
+/* Marca */
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 0.625rem;
-  color: #0a0a0a;
+  min-height: var(--control-height-sm);
+  color: var(--text-primary);
   text-decoration: none;
 }
 
@@ -216,13 +279,13 @@
 }
 
 .brandText {
-  font-family: var(--font-heading), 'Bebas Neue', sans-serif;
+  font-family: var(--font-family-heading);
   font-weight: 400;
-  font-size: 1.25rem;
-  letter-spacing: 0.18em;
+  font-size: var(--text-xl);
+  letter-spacing: var(--tracking-brand);
 }
 
-/* Nav */
+/* Navegación */
 .nav {
   display: flex;
   align-items: center;
@@ -230,65 +293,80 @@
   flex-wrap: nowrap;
   overflow-x: auto;
 
-  @media (max-width: 1100px) {
-    display: none;
-  }
-
-  @media (max-width: 768px) {
-    display: flex;
+  /*
+   * Antes la nav se ocultaba a partir de 1100px pero el cajón desplegable solo
+   * existía por debajo de 768px: entre 769 y 1100 el botón de menú no abría
+   * nada. Ahora el punto de corte del cajón es el mismo que el del botón.
+   */
+  @include bp.below(bp.$bp-2xl) {
     position: absolute;
-    top: 64px;
+    top: var(--header-height);
     left: 0;
     right: 0;
     flex-direction: column;
     align-items: stretch;
     overflow: visible;
-    padding: 0.5rem 1rem 1rem;
+    padding: var(--space-xs) var(--space-md) var(--space-md);
     background: inherit;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     transform: translateY(-10px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s, transform 0.2s;
+    visibility: hidden;
+    transition:
+      opacity var(--duration-base),
+      transform var(--duration-base),
+      visibility var(--duration-base);
   }
 }
 
 .navOpen {
-  @media (max-width: 768px) {
+  @include bp.below(bp.$bp-2xl) {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
   }
 }
 
 .navLink,
 .navActive {
-  padding: 0.4rem 0.55rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #525252;
+  display: inline-flex;
+  align-items: center;
+  /* 24x24 CSS px mínimo (WCAG 2.2 AA 2.5.8). */
+  min-height: var(--control-height-sm);
+  padding: var(--space-3xs) var(--space-xs);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-600);
   text-decoration: none;
-  border-radius: 0;
+  border-radius: var(--radius-none);
   border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color var(--duration-fast),
+    border-color var(--duration-fast);
 }
 
 .navLink:hover {
-  color: #0a0a0a;
+  color: var(--text-primary);
   background: transparent;
 }
 
+/*
+ * El estado activo no se distingue solo por color: además del acento lleva un
+ * subrayado de 2px y aria-current="page" en el marcado.
+ */
 .navActive {
-  color: #0a0a0a;
+  color: var(--text-primary);
   background: transparent;
-  border-bottom-color: #e11d48;
+  border-bottom-color: var(--color-accent);
 }
 
-/* Actions */
+/* Acciones */
 .actions {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: var(--space-2xs);
   margin-left: auto;
 }
 
@@ -296,15 +374,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: #525252;
-  border-radius: 8px;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  color: var(--ink-600);
+  border-radius: var(--radius-md);
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast);
 
   &:hover {
-    color: #0a0a0a;
+    color: var(--text-primary);
     background: rgba(0, 0, 0, 0.04);
   }
 }
@@ -312,15 +392,16 @@
 .userLink {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3125rem 0.75rem 0.3125rem 0.3125rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #404040;
+  gap: var(--space-xs);
+  min-height: var(--control-height-sm);
+  padding: 0.3125rem var(--space-sm) 0.3125rem 0.3125rem;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
   background: rgba(0, 0, 0, 0.04);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   text-decoration: none;
-  transition: background 0.15s;
+  transition: background var(--duration-fast);
 
   &:hover {
     background: rgba(0, 0, 0, 0.08);
@@ -333,15 +414,15 @@
   justify-content: center;
   width: 1.625rem;
   height: 1.625rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #fafafa;
-  background: linear-gradient(135deg, #e11d48, #fb7185);
-  border-radius: 50%;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-accent);
+  background: linear-gradient(135deg, var(--accent-500), var(--accent-300));
+  border-radius: var(--radius-circle);
 }
 
 .userText {
-  @media (max-width: 480px) {
+  @include bp.below(bp.$bp-xs) {
     display: none;
   }
 }
@@ -349,39 +430,41 @@
 .cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.4375rem 0.875rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #fff;
-  background: #0a0a0a;
-  border-radius: 8px;
+  justify-content: center;
+  gap: var(--space-2xs);
+  min-height: var(--control-height-sm);
+  padding: var(--space-2xs) 0.875rem;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-accent);
+  background: var(--color-surface-inverse);
+  border-radius: var(--radius-md);
   text-decoration: none;
-  transition: background 0.15s;
+  transition: background var(--duration-fast);
 
   &:hover {
-    background: #262626;
+    background: var(--ink-800);
   }
 }
 
 .menuBtn {
   display: none;
-  width: 36px;
-  height: 36px;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
   align-items: center;
   justify-content: center;
-  color: #525252;
+  color: var(--ink-600);
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
 
   &:hover {
-    color: #0a0a0a;
+    color: var(--text-primary);
     background: rgba(0, 0, 0, 0.04);
   }
 
-  @media (max-width: 1100px) {
+  @include bp.below(bp.$bp-2xl) {
     display: inline-flex;
   }
 }

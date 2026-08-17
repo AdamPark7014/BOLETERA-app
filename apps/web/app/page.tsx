@@ -21,26 +21,31 @@ type VenueHit = {
   eventCount: number;
 };
 
-export default async function Home() {
-  let events: EventHit[] = [];
-  let facets: Facets = { cities: [], categories: [] };
-  let venues: VenueHit[] = [];
+/*
+ * Las tres consultas de descubrimiento eran tres `await` en fila: en 4G eso son
+ * tres viajes encadenados antes de pintar nada. Ahora salen a la vez y el
+ * bloque entero vive dentro de <Suspense>, así la cabecera se envía de
+ * inmediato y el esqueleto ocupa el hueco mientras llegan los datos.
+ */
+async function DiscoveryBoard() {
+  const [eventsResult, facetsResult, venuesResult] = await Promise.allSettled([
+    api<EventHit[]>("/discovery/events?limit=40"),
+    api<Facets>("/discovery/facets"),
+    api<VenueHit[]>("/discovery/venues?limit=8"),
+  ]);
 
-  try {
-    events = await api<EventHit[]>("/discovery/events?limit=40");
-  } catch {
-    events = [];
-  }
-  try {
-    facets = await api<Facets>("/discovery/facets");
-  } catch {
-    facets = { cities: [], categories: [] };
-  }
-  try {
-    venues = await api<VenueHit[]>("/discovery/venues?limit=8");
-  } catch {
-    venues = [];
-  }
+  const events = eventsResult.status === "fulfilled" ? eventsResult.value : [];
+  const facets =
+    facetsResult.status === "fulfilled"
+      ? facetsResult.value
+      : { cities: [], categories: [] };
+  const venues = venuesResult.status === "fulfilled" ? venuesResult.value : [];
+
+  const eventsFailed = eventsResult.status === "rejected";
+  const allFailed =
+    eventsFailed &&
+    facetsResult.status === "rejected" &&
+    venuesResult.status === "rejected";
 
   const trending = [...events]
     .sort((a, b) => Number(b.offerCount ?? 0) - Number(a.offerCount ?? 0))
@@ -48,19 +53,28 @@ export default async function Home() {
 
   return (
     <>
-      <SiteHeader theme="dark" />
-      <main className={styles.page}>
-        <section className={styles.board} aria-label="Cartelera">
-          <Suspense fallback={<DiscoverySkeleton />}>
-            <EventDiscoveryPanel initial={events} />
-          </Suspense>
-        </section>
+      <section className={styles.board} aria-label="Cartelera">
+        <EventDiscoveryPanel initial={events} initialFailed={eventsFailed} />
+      </section>
 
-        <HomeModules
-          trending={trending.slice(0, 4)}
-          cities={facets.cities.slice(0, 8)}
-          venues={venues.slice(0, 4)}
-        />
+      <HomeModules
+        trending={trending.slice(0, 4)}
+        cities={facets.cities.slice(0, 8)}
+        venues={venues.slice(0, 4)}
+        failed={allFailed}
+      />
+    </>
+  );
+}
+
+export default function Home() {
+  return (
+    <>
+      <SiteHeader theme="dark" />
+      <main id="contenido" tabIndex={-1} className={styles.page}>
+        <Suspense fallback={<DiscoverySkeleton />}>
+          <DiscoveryBoard />
+        </Suspense>
       </main>
     </>
   );

@@ -2,8 +2,9 @@
   position: relative;
   overflow: hidden;
   background: linear-gradient(155deg, var(--pa), var(--pb));
-  color: #fff;
+  color: var(--paper-0);
   isolation: isolate;
+  /* Reserva el hueco antes de que baje la imagen: sin esto habría CLS en 4G. */
   aspect-ratio: var(--poster-aspect, 3 / 4);
 }
 
@@ -43,7 +44,7 @@
   display: block;
 }
 
-/* Landscape posters: avoid cropping title bands */
+/* Pósters apaisados: evita recortar las bandas de título */
 .poster[data-aspect='16/9'] .photo,
 .poster[data-aspect='21/9'] .photo {
   object-fit: cover;
@@ -66,7 +67,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  font-family: var(--font-heading), 'Bebas Neue', sans-serif;
+  font-family: var(--font-family-heading);
   font-size: clamp(1.4rem, 40%, 4.5rem);
   letter-spacing: 0.06em;
   text-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
@@ -83,10 +84,10 @@
   position: absolute;
   left: 0.55rem;
   bottom: 0.45rem;
-  font-family: var(--font-heading), 'Bebas Neue', sans-serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  opacity: 0.55;
+  font-family: var(--font-family-heading);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-brand);
+  opacity: 0.65;
 }
 
 .sm .brand,
@@ -96,15 +97,15 @@
 
 .date {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
+  top: var(--space-xs);
+  left: var(--space-xs);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 2.5rem;
   padding: 0.3rem 0.35rem;
   background: rgba(250, 250, 250, 0.95);
-  color: #0a0a0a;
+  color: var(--text-primary);
   line-height: 1.05;
   z-index: 2;
 
@@ -113,11 +114,12 @@
   }
 
   span {
-    font-size: 0.62rem;
+    /* Era 0.62rem en #e11d48 (4.3:1 sobre la pastilla clara). */
+    font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #e11d48;
-    font-weight: 700;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-accent-text);
+    font-weight: var(--weight-bold);
   }
 }
 
@@ -127,10 +129,10 @@
 }
 
 .hero .date {
-  top: 1rem;
-  left: 1rem;
+  top: var(--space-md);
+  left: var(--space-md);
   min-width: 3rem;
-  padding: 0.45rem 0.5rem;
+  padding: 0.45rem var(--space-xs);
 
   strong {
     font-size: 1.35rem;

@@ -8,9 +8,20 @@
 }
 
 .event {
-  color: #737373;
+  /* #737373 no llegaba a 4.5:1 sobre el fondo claro de la página */
+  color: #595959;
   font-size: 0.875rem;
   margin-top: 0.25rem;
+}
+
+.notice {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #d97706;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 .grid {

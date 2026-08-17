@@ -1,11 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   SeatMapViewer,
   type SelectedSeatInfo,
 } from '@/components/SeatMapViewer';
+import {
+  describeInventoryError,
+  describeNetworkError,
+  type InventoryError,
+} from '@/components/seatmap/errors';
+import { getGuestSessionId, resetGuestSessionId } from '@/components/seatmap/session';
+import { HoldErrorNotice } from '@/components/seatmap/HoldErrorNotice';
 import {
   flatSeats,
   normalizeSeatMap,
@@ -32,6 +39,21 @@ type Offer = {
   basePrice: string;
   remainingQuantity?: number;
 };
+
+type HoldResponse = {
+  holds?: { id: string; seatId?: string | null }[];
+  expiresAt?: string;
+  seats?: { label?: string; section?: string; row?: string; seatNumber?: string }[];
+};
+
+function isInventoryError(value: unknown): value is InventoryError {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'kind' in value &&
+    typeof (value as InventoryError).message === 'string'
+  );
+}
 
 export function EventPurchaseClient({
   eventId,
@@ -74,6 +96,12 @@ export function EventPurchaseClient({
   const [loading, setLoading] = useState(false);
   const [buyMode, setBuyMode] = useState<'map' | 'best' | 'ga'>(hasSeatMap ? 'map' : 'ga');
   const [qty, setQty] = useState(2);
+  /** Último error de reserva ya traducido a algo accionable. */
+  const [holdError, setHoldError] = useState<InventoryError | null>(null);
+  /** Butacas que perdimos en un 409: el mapa las señala. */
+  const [conflictSeatIds, setConflictSeatIds] = useState<string[]>([]);
+  /** Cambiarlo obliga al visor a resincronizar el inventario. */
+  const [resyncToken, setResyncToken] = useState(0);
 
   const focusedOffer = useMemo(() => {
     if (focusZone) {
@@ -253,6 +281,58 @@ export function EventPurchaseClient({
     return Array.from(byOffer.values());
   }
 
+  /**
+   * Reserva con identidad de invitado estable.
+   *
+   * Tres reglas del contrato nuevo que aquí se respetan explícitamente:
+   *  · `sessionId` SIEMPRE (400 si falta y no hay JWT). Antes se generaba un
+   *    UUID nuevo por petición, lo que rompía el tope de 10 boletos y hacía
+   *    imposible liberar el propio hold (DELETE → 403).
+   *  · NUNCA `x-channel` ni `x-cashier-id` en rutas públicas → 403.
+   *  · Un 400 por `sessionId` es un bug del cliente: se regenera la sesión y se
+   *    reintenta una vez, sin enseñar nada al comprador.
+   */
+  const postHold = useCallback(
+    async (endpoint: string, body: Record<string, unknown>): Promise<HoldResponse> => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const sessionId = attempt === 0 ? getGuestSessionId() : resetGuestSessionId();
+        let res: Response;
+        try {
+          res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...body, sessionId }),
+          });
+        } catch {
+          throw describeNetworkError();
+        }
+        let payload: unknown = null;
+        try {
+          payload = await res.json();
+        } catch {
+          // Algunas respuestas de error llegan sin cuerpo; el status basta.
+        }
+        if (res.ok) return (payload ?? {}) as HoldResponse;
+        const error = describeInventoryError(res.status, payload);
+        if (error.selfHealing && attempt === 0) continue;
+        throw error;
+      }
+      throw describeInventoryError(500);
+    },
+    [],
+  );
+
+  /** Un 409 no puede dejar al comprador mirando un spinner: se marca y se sigue. */
+  function handleHoldFailure(raw: unknown) {
+    const error = isInventoryError(raw) ? raw : describeNetworkError();
+    setHoldError(error);
+    if (error.seatId) {
+      setConflictSeatIds([error.seatId]);
+      setSelected((prev) => prev.filter((id) => id !== error.seatId));
+    }
+    if (error.staleMap) setResyncToken((t) => t + 1);
+  }
+
   function goCheckout(lines: CartOfferLine[], expiresAt: string) {
     const seatCount = lines.reduce((s, l) => s + l.quantity, 0);
     addToCart({
@@ -279,16 +359,13 @@ export function EventPurchaseClient({
   async function checkoutMap() {
     if (!selected.length) return;
     setLoading(true);
+    setHoldError(null);
+    setConflictSeatIds([]);
     try {
-      const holdRes = await fetch(`${API}/inventory/holds`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, seatIds: selected, sessionId: crypto.randomUUID() }),
+      const holdData = await postHold(`${API}/inventory/holds`, {
+        eventId,
+        seatIds: selected,
       });
-      const holdData = await holdRes.json();
-      if (!holdRes.ok) {
-        throw new Error(holdData.message || 'No se pudieron reservar los asientos');
-      }
       const holds: { id: string; seatId?: string | null }[] = holdData.holds ?? [];
       const holdBySeat = new Map<string, string>();
       for (const h of holds) {
@@ -299,12 +376,20 @@ export function EventPurchaseClient({
         selected.forEach((seatId, i) => holdBySeat.set(seatId, holds[i].id));
       }
       const lines = groupLines(selectedInfo, holdBySeat);
-      if (!lines.length) throw new Error('No se pudo asociar ofertas a los asientos');
+      if (!lines.length) {
+        throw {
+          kind: 'unknown' as const,
+          message:
+            'No pudimos asociar tus butacas con una zona de venta. Recarga la página y vuelve a elegir.',
+          selfHealing: false,
+          staleMap: true,
+        };
+      }
       const expiresAt =
         holdData.expiresAt ?? new Date(Date.now() + 900_000).toISOString();
       goCheckout(lines, expiresAt);
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Error al reservar');
+      handleHoldFailure(e);
     } finally {
       setLoading(false);
     }
@@ -313,6 +398,7 @@ export function EventPurchaseClient({
   async function checkoutBestOrGa() {
     if (!focusedOffer) return;
     setLoading(true);
+    setHoldError(null);
     try {
       const endpoint =
         buyMode === 'ga'
@@ -320,28 +406,9 @@ export function EventPurchaseClient({
           : `${API}/inventory/holds/best-available`;
       const body =
         buyMode === 'ga'
-          ? {
-              eventId,
-              offerId: focusedOffer.id,
-              quantity: qty,
-              sessionId: crypto.randomUUID(),
-            }
-          : {
-              eventId,
-              offerId: focusedOffer.id,
-              quantity: qty,
-              contiguous: true,
-              sessionId: crypto.randomUUID(),
-            };
-      const holdRes = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const holdData = await holdRes.json();
-      if (!holdRes.ok) {
-        throw new Error(holdData.message || 'No se pudieron reservar boletos');
-      }
+          ? { eventId, offerId: focusedOffer.id, quantity: qty }
+          : { eventId, offerId: focusedOffer.id, quantity: qty, contiguous: true };
+      const holdData = await postHold(endpoint, body);
       const holds: { id: string }[] = holdData.holds ?? [];
       const seatLabels: string[] =
         holdData.seats?.map(
@@ -363,7 +430,7 @@ export function EventPurchaseClient({
         holdData.expiresAt ?? new Date(Date.now() + 900_000).toISOString();
       goCheckout(lines, expiresAt);
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Error al reservar');
+      handleHoldFailure(e);
     } finally {
       setLoading(false);
     }
@@ -490,8 +557,25 @@ export function EventPurchaseClient({
             focusZone={focusZone}
             onToggle={toggleSeat}
             onClear={() => setSelected([])}
+            conflictSeatIds={conflictSeatIds}
+            resyncToken={resyncToken}
           />
         )
+      )}
+
+      {holdError && (
+        <HoldErrorNotice
+          error={holdError}
+          onRetry={
+            holdError.kind === 'hold-limit'
+              ? undefined
+              : () => (buyMode === 'map' ? void checkoutMap() : void checkoutBestOrGa())
+          }
+          onDismiss={() => {
+            setHoldError(null);
+            setConflictSeatIds([]);
+          }}
+        />
       )}
 
       <div className={styles.stickyBuy}>

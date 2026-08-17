@@ -1,5 +1,7 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventPosterArt } from '@/components/EventPosterArt';
 import { WaitlistSignup } from '@/components/WaitlistSignup';
@@ -71,9 +73,18 @@ function absUrl(path?: string | null) {
   return `${SITE}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
-async function loadEvent(slug: string) {
-  return api<EventDetail>(`/discovery/events/${slug}`);
-}
+/*
+ * `generateMetadata` y el propio componente piden el mismo evento. Como
+ * `api()` va con cache: 'no-store', Next no puede deduplicar por sí solo y
+ * salían dos viajes al API por visita. `cache()` los colapsa en uno dentro de
+ * la misma petición.
+ */
+const loadEvent = cache(async (slug: string) =>
+  api<EventDetail>(`/discovery/events/${slug}`),
+);
+
+/** Cartelera completa, reutilizada para calcular los eventos relacionados. */
+const loadCatalog = cache(async () => api<EventHit[]>('/discovery/events?limit=40'));
 
 export async function generateMetadata({
   params,
@@ -129,11 +140,24 @@ export default async function EventPage({
 }) {
   const { slug } = await params;
   const { zone } = await searchParams;
-  const event = await loadEvent(slug);
+
+  /*
+   * El detalle y la cartelera para "también te puede interesar" no dependen uno
+   * del otro: iban en serie y ahora salen a la vez. En 4G esto quita un viaje
+   * completo del camino crítico.
+   */
+  const [eventResult, catalogResult] = await Promise.allSettled([
+    loadEvent(slug),
+    loadCatalog(),
+  ]);
+
+  // Un evento inexistente es un 404, no una pantalla de error genérica.
+  if (eventResult.status === 'rejected') notFound();
+  const event = eventResult.value;
 
   let related: EventHit[] = [];
-  try {
-    const all = await api<EventHit[]>('/discovery/events?limit=40');
+  if (catalogResult.status === 'fulfilled') {
+    const all = catalogResult.value;
     related = all
       .filter((e) => e.slug !== slug)
       .filter(
@@ -144,8 +168,6 @@ export default async function EventPage({
     if (related.length < 3) {
       related = all.filter((e) => e.slug !== slug).slice(0, 4);
     }
-  } catch {
-    related = [];
   }
 
   const prices = event.offers.map((o) => Number(o.basePrice)).filter((n) => !Number.isNaN(n));
@@ -213,25 +235,26 @@ export default async function EventPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <SiteHeader theme="dark" />
-      <main className={styles.page}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
         <section className={styles.hero}>
           <div className={styles.heroMedia}>
-            <EventPosterArt event={poster} size="hero" />
+            {/* Único `priority` de la página: es el elemento LCP. */}
+            <EventPosterArt event={poster} size="hero" priority />
           </div>
-          <div className={styles.heroShade} aria-hidden />
+          <div className={styles.heroShade} aria-hidden="true" />
           <div className={styles.heroCopy}>
-            <nav className={styles.crumb} aria-label="Breadcrumb">
+            <nav className={styles.crumb} aria-label="Ruta de navegación">
               <Link href="/">Cartelera</Link>
-              <span aria-hidden>/</span>
+              <span aria-hidden="true">/</span>
               {event.category && (
                 <>
                   <Link href={`/categoria/${event.category}`}>
                     {CATEGORY_LABEL[event.category] ?? event.category}
                   </Link>
-                  <span aria-hidden>/</span>
+                  <span aria-hidden="true">/</span>
                 </>
               )}
-              <span>{event.title}</span>
+              <span aria-current="page">{event.title}</span>
             </nav>
             <p className={styles.brandMark}>BOLETERA</p>
             <p className={styles.eyebrow}>
@@ -363,8 +386,11 @@ export default async function EventPage({
                     <strong>Reembolso</strong>
                     <span>
                       {event.refundable === false
-                        ? 'No reembolsable'
-                        : 'Sujeto a política del promotor'}
+                        ? 'No reembolsable. '
+                        : 'Sujeto a la política del promotor. '}
+                      <Link href="/terminos#reembolsos">
+                        Ver política de reembolsos y cambios
+                      </Link>
                     </span>
                   </li>
                   <li>
@@ -396,6 +422,7 @@ export default async function EventPage({
                       <span>
                         <a href={event.venue.website} target="_blank" rel="noreferrer">
                           {event.venue.website.replace(/^https?:\/\//, '')}
+                          <span className="sr-only"> (se abre en una pestaña nueva)</span>
                         </a>
                       </span>
                     </li>

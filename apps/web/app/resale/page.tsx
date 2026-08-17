@@ -1,9 +1,15 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
 import styles from './resale.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
+export const metadata: Metadata = {
+  title: 'Reventa oficial | Boletera',
+  description:
+    'Boletos de reventa verificados, con tope de precio y código QR nuevo para el comprador.',
+};
 
 type Listing = {
   id: string;
@@ -28,27 +34,36 @@ type Listing = {
   };
 };
 
+/** La API devuelve constantes en inglés; en pantalla van en español. */
+const LISTING_STATUS_LABEL: Record<string, string> = {
+  ACTIVE: 'Disponible',
+  PENDING: 'En revisión',
+  SOLD: 'Vendido',
+  CANCELLED: 'Retirado',
+  EXPIRED: 'Vencido',
+};
+
 export default async function ResalePage() {
   let listings: Listing[] = [];
+  let failed = false;
   try {
     const res = await fetch(`${API}/resale/listings?limit=40`, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      listings = Array.isArray(data) ? data : (data.listings ?? []);
-    }
+    if (!res.ok) throw new Error('resale');
+    const data = await res.json();
+    listings = Array.isArray(data) ? data : (data.listings ?? []);
   } catch {
-    listings = [];
+    failed = true;
   }
 
   return (
     <div className={styles.shell}>
       <SiteHeader />
-      <main className={styles.page}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Mercado secundario</p>
           <h1>Reventa oficial</h1>
           <p className={styles.lead}>
-            Boletos verificados con tope anti-scalping. El comprador recibe QR nuevo y el
+            Boletos verificados con tope de precio. El comprador recibe un QR nuevo y el
             original se invalida.
           </p>
           <div className={styles.heroActions}>
@@ -68,7 +83,7 @@ export default async function ResalePage() {
           </li>
           <li>
             <strong>Precio controlado</strong>
-            <span>Tope vs face value del evento</span>
+            <span>Tope respecto al precio original del evento</span>
           </li>
           <li>
             <strong>QR seguro</strong>
@@ -76,17 +91,33 @@ export default async function ResalePage() {
           </li>
         </ul>
 
-        <section aria-label="Listados activos">
+        <section aria-labelledby="resale-list-title">
           <div className={styles.sectionHead}>
-            <h2>Disponibles ahora</h2>
-            <span>{listings.length} listado{listings.length === 1 ? '' : 's'}</span>
+            <h2 id="resale-list-title">Disponibles ahora</h2>
+            {!failed && (
+              <span>
+                {listings.length} listado{listings.length === 1 ? '' : 's'}
+              </span>
+            )}
           </div>
 
-          {!listings.length ? (
+          {failed ? (
+            <div className={styles.error} role="alert">
+              <strong>No pudimos cargar los listados</strong>
+              <p>
+                Es un problema temporal. Vuelve a intentarlo en unos minutos; si querías
+                publicar un boleto, puedes hacerlo de todos modos.
+              </p>
+              <Link href="/resale/vender">Vender mi boleto</Link>
+            </div>
+          ) : !listings.length ? (
             <div className={styles.empty}>
               <strong>Sin listados activos</strong>
-              <p>Cuando haya boletos en reventa, aparecerán aquí con precio y asiento.</p>
-              <Link href="/events">Explorar cartelera</Link>
+              <p>
+                Cuando alguien ponga un boleto en reventa aparecerá aquí con su precio y
+                asiento.
+              </p>
+              <Link href="/">Explorar la cartelera</Link>
             </div>
           ) : (
             <ul className={styles.list}>
@@ -103,7 +134,9 @@ export default async function ResalePage() {
                 return (
                   <li key={l.id} className={styles.card}>
                     <div>
-                      <p className={styles.status}>{l.status}</p>
+                      <p className={styles.status}>
+                        {LISTING_STATUS_LABEL[l.status] ?? l.status}
+                      </p>
                       <h3>{event?.title || 'Evento'}</h3>
                       <p className={styles.meta}>
                         {when
@@ -119,11 +152,13 @@ export default async function ResalePage() {
                       </p>
                       {typeof original === 'number' && original > 0 && (
                         <p className={styles.compare}>
-                          Face ${original.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                          Precio original $
+                          {original.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                           {Number.isFinite(markup) && (
                             <>
                               {' '}
-                              · {markup > 0 ? `+${markup}%` : `${markup}%`} vs original
+                              · {markup > 0 ? `+${markup}%` : `${markup}%`} respecto al
+                              original
                             </>
                           )}
                         </p>
@@ -137,7 +172,7 @@ export default async function ResalePage() {
                       {event?.slug ? (
                         <Link href={`/events/${event.slug}`}>Ver evento</Link>
                       ) : (
-                        <span className={styles.id}>#{l.id.slice(0, 8)}</span>
+                        <span className={styles.id}>Listado #{l.id.slice(0, 8)}</span>
                       )}
                     </div>
                   </li>
@@ -147,7 +182,6 @@ export default async function ResalePage() {
           )}
         </section>
       </main>
-      <SiteFooter />
     </div>
   );
 }

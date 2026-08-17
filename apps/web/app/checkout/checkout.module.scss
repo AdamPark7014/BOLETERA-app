@@ -113,69 +113,81 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 1rem;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
+}
 
-  /* Adapt @boletera/ui Input to checkout density */
-  :global(label),
+.field {
+  display: block;
+  margin-bottom: 1rem;
+
   label {
+    display: block;
+    margin-bottom: 0.4rem;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #737373;
+    /* #737373 daba 4.4:1 sobre blanco; #595959 pasa el 4.5:1 de WCAG AA */
+    color: #595959;
   }
-
-  input {
-    width: 100%;
-    padding: 0.75rem 0.85rem;
-    border: 1px solid #e5e5e5;
-    background: #fff;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #171717;
-
-    &:focus {
-      outline: 2px solid rgba(225, 29, 72, 0.35);
-      outline-offset: -1px;
-      border-color: #e11d48;
-    }
-  }
-}
-
-.formCol label,
-.promoLabel {
-  display: block;
-  margin-bottom: 1rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #737373;
 
   input {
     display: block;
     width: 100%;
-    margin-top: 0.4rem;
     padding: 0.75rem 0.85rem;
-    border: 1px solid #e5e5e5;
+    /* Borde con contraste 3:1 contra el fondo (WCAG 2.2 · 1.4.11) */
+    border: 1px solid #8f8f8f;
     background: #fff;
     font: inherit;
-    font-size: 0.95rem;
+    font-size: 1rem; /* 16px evita el zoom automático de iOS al enfocar */
     font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
     color: #171717;
 
-    &:focus {
-      outline: 2px solid rgba(225, 29, 72, 0.35);
-      outline-offset: -1px;
-      border-color: #e11d48;
+    &:focus-visible {
+      outline: 2px solid #9f1239;
+      outline-offset: 1px;
+      border-color: #9f1239;
+    }
+
+    &[aria-invalid='true'] {
+      border-color: #b91c1c;
+      background: #fff5f5;
     }
   }
+}
+
+.fieldGrid .field {
+  margin-bottom: 0;
+}
+
+.optional {
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #6b6b6b;
+}
+
+.fieldHint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #595959;
+}
+
+.fieldError {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #b91c1c;
 }
 
 .methods {
@@ -188,7 +200,7 @@
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #737373;
+    color: #595959;
     margin-bottom: 0.55rem;
   }
 }
@@ -205,7 +217,7 @@
   gap: 0.15rem;
   width: 100%;
   padding: 0.8rem 0.9rem;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #8f8f8f;
   background: #fff;
   text-align: left;
   cursor: pointer;
@@ -218,43 +230,66 @@
 
   span {
     font-size: 0.8rem;
-    color: #737373;
+    color: #595959;
   }
 
   &:hover {
-    border-color: #a3a3a3;
+    border-color: #525252;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #9f1239;
+    outline-offset: 2px;
   }
 }
 
 .methodOn {
-  border-color: #e11d48;
-  box-shadow: inset 3px 0 0 #e11d48;
+  border-color: #9f1239;
+  box-shadow: inset 3px 0 0 #9f1239;
   background: #fff1f2;
+}
+
+.methodNote {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #4b4b4b;
 }
 
 .promoRow {
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.4rem;
 
   input {
     flex: 1;
   }
+}
 
-  button {
-    padding: 0.65rem 0.9rem;
-    border: 1px solid #e5e5e5;
-    background: #fff;
-    cursor: pointer;
-    font-size: 0.8125rem;
-    font-weight: 700;
+.promoBtn {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #8f8f8f;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #171717;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #9f1239;
+    outline-offset: 2px;
   }
 }
 
 .promoOk {
   display: block;
   margin-top: 0.35rem;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: #15803d;
   font-weight: 600;
   text-transform: none;
@@ -264,20 +299,62 @@
 .promoErr {
   display: block;
   margin-top: 0.35rem;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: #b91c1c;
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0;
 }
 
-.error {
-  color: #b91c1c;
-  font-size: 0.875rem;
+.warn {
   margin: 0 0 1rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #d97706;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.priceChange {
+  margin: 0 0 1rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #d97706;
+  background: #fffbeb;
+  color: #78350f;
+
+  strong {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: #7c2d12;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+}
+
+.error {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #b91c1c;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.875rem;
+  line-height: 1.5;
+
+  p {
+    margin: 0;
+  }
 
   a {
-    color: inherit;
+    display: inline-block;
+    margin-top: 0.5rem;
+    margin-right: 0.9rem;
+    color: #991b1b;
     font-weight: 700;
   }
 }
@@ -285,20 +362,28 @@
 .pay {
   width: 100%;
   padding: 0.95rem 1.25rem;
-  background: #e11d48;
+  /* #e11d48 sobre blanco daba 3.9:1 en texto blanco; #be123c llega a 5.9:1 */
+  background: #be123c;
   color: #fff;
   border: none;
+  font: inherit;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
 
   &:disabled {
-    opacity: 0.5;
+    /* Opacidad baja rompía el contraste del texto; se oscurece el fondo */
+    background: #7c7c7c;
     cursor: not-allowed;
   }
 
   &:not(:disabled):hover {
-    background: #be123c;
+    background: #9f1239;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #0a0a0a;
+    outline-offset: 2px;
   }
 }
 
@@ -417,6 +502,14 @@
   font-weight: 700;
   color: #fff !important;
   font-size: 1rem !important;
+}
+
+/* Transparencia PROFECO: el total ya lleva cargos e IVA, y se dice. */
+.totalNote {
+  margin: 0.6rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: rgba(250, 250, 250, 0.82);
 }
 
 .backCart {

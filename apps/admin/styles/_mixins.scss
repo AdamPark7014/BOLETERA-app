@@ -1,0 +1,43 @@
+/**
+ * Utilidades compartidas por los módulos del backoffice.
+ * Solo patrones que ya se repetían copiados a mano; nada decorativo.
+ */
+
+/** Anillo de foco visible sobre superficie clara (WCAG 2.2 AA, 2.4.11). */
+@mixin focus-ring {
+  &:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+}
+
+/** Igual, pero sobre el sidebar oscuro: el anillo oscuro ahí no se ve. */
+@mixin focus-ring-invert {
+  &:focus-visible {
+    outline: var(--focus-ring-invert);
+    outline-offset: var(--focus-offset);
+  }
+}
+
+/**
+ * Objetivo táctil mínimo (WCAG 2.2 AA, 2.5.8). Se aplica con `min-*` para no
+ * romper la densidad visual: el botón sigue viéndose de 28-30px si así se
+ * dibujó, pero nunca queda por debajo del mínimo pulsable.
+ */
+@mixin tap-target($size: var(--tap-min)) {
+  min-width: $size;
+  min-height: $size;
+}
+
+/** Texto solo para lectores de pantalla. */
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

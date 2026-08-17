@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { apiFetch, getTaquillaToken } from '@/lib/auth';
+import { apiJson, getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
+import { digitPressed, type Hotkey } from '@/lib/hotkeys';
 import styles from './eventos.module.scss';
 
 type Offer = {
@@ -41,22 +42,10 @@ export default function EventosTaquillaPage() {
   }, [router]);
 
   useEffect(() => {
-    apiFetch('/discovery/events')
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setEvents(data))
+    apiJson<EventRow[]>('/discovery/events')
+      .then(setEvents)
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'F2' || (e.key === '/' && !(e.target instanceof HTMLInputElement))) {
-        e.preventDefault();
-        document.getElementById('event-search')?.focus();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const filtered = useMemo(() => {
@@ -67,17 +56,47 @@ export default function EventosTaquillaPage() {
     );
   }, [events, q]);
 
+  /** El precio ya NO viaja por la URL: lo fija el catálogo en la pantalla de venta. */
   function ventaUrl(eventId: string, offer: Offer) {
-    const params = new URLSearchParams({
-      eventId,
-      offerId: offer.id,
-      unitPrice: String(offer.basePrice),
-    });
-    return `/venta?${params.toString()}`;
+    return `/venta?${new URLSearchParams({ eventId, offerId: offer.id }).toString()}`;
   }
 
+  const hotkeys: Hotkey[] = [
+    {
+      keys: '1-9',
+      label: 'Vender evento',
+      whileTyping: true,
+      match: (e) => digitPressed(e) != null,
+      run: (e) => {
+        const n = digitPressed(e);
+        const row = n ? filtered[n - 1] : undefined;
+        if (!row) return;
+        const offer = (row.offers ?? []).filter((o) => o.isAvailable !== false)[0];
+        router.push(
+          offer
+            ? ventaUrl(row.id, offer)
+            : `/venta?${new URLSearchParams({ eventId: row.id }).toString()}`,
+        );
+      },
+    },
+    {
+      keys: 'F2',
+      label: 'Buscar',
+      whileTyping: true,
+      run: () => document.getElementById('event-search')?.focus(),
+    },
+    { keys: 'Esc', label: 'Volver', whileTyping: true, match: (e) => e.key === 'Escape', run: () => router.push('/') },
+  ];
+
   return (
-    <PosShell title="Selecciona evento y zona" eyebrow="Catálogo de turno" backHref="/" size="md">
+    <PosShell
+      title="Selecciona evento y zona"
+      eyebrow="Catálogo de turno"
+      backHref="/"
+      size="md"
+      hotkeys={hotkeys}
+      escapeGoesBack={false}
+    >
       <div className={styles.search}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />

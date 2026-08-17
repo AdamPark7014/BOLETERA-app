@@ -40,12 +40,13 @@ export default async function CategoriaPage({
   if (!ALLOWED.has(key)) notFound();
 
   let events: EventHit[] = [];
+  let failed = false;
   try {
     events = await api<EventHit[]>(
       `/discovery/events?category=${encodeURIComponent(key)}&limit=60`,
     );
   } catch {
-    events = [];
+    failed = true;
   }
 
   const label = CATEGORY_LABEL[key] ?? key;
@@ -53,22 +54,33 @@ export default async function CategoriaPage({
   return (
     <>
       <SiteHeader />
-      <main className={styles.page}>
-        <div className={styles.crumb}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
+        <nav className={styles.crumb} aria-label="Ruta de navegación">
           <Link href="/">Cartelera</Link>
-          <span>/</span>
-          <span>{label}</span>
-        </div>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{label}</span>
+        </nav>
         <header className={styles.hero}>
           <h1>{label}</h1>
           <p>
-            {events.length} evento{events.length === 1 ? '' : 's'} en cartelera
+            {failed
+              ? 'No pudimos consultar esta categoría.'
+              : `${events.length} evento${events.length === 1 ? '' : 's'} en cartelera`}
           </p>
         </header>
-        {events.length === 0 ? (
-          <p className={styles.empty}>
-            No hay eventos en esta categoría. <Link href="/">Ver cartelera</Link>
-          </p>
+
+        {failed ? (
+          <div className={styles.error} role="alert">
+            <strong>No pudimos cargar los eventos de {label}</strong>
+            <p>Es un problema temporal. Vuelve a intentarlo en unos minutos.</p>
+            <Link href="/">Ver toda la cartelera</Link>
+          </div>
+        ) : events.length === 0 ? (
+          <div className={styles.empty}>
+            <strong>Sin eventos en {label} por ahora</strong>
+            <p>Prueba con otra categoría o revisa la cartelera completa.</p>
+            <Link href="/">Ver toda la cartelera</Link>
+          </div>
         ) : (
           <ul className={styles.grid}>
             {events.map((e) => (
@@ -87,7 +99,7 @@ export default async function CategoriaPage({
                       ? `$${Number(e.minPrice).toLocaleString('es-MX', {
                           maximumFractionDigits: 0,
                         })}`
-                      : '—'}
+                      : 'Consultar'}
                   </em>
                 </Link>
               </li>

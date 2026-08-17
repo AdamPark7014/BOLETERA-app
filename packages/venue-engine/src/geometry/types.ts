@@ -177,23 +177,56 @@ export type ProjectedScene3D = {
   }>;
 };
 
+export type GeometryIssueCode =
+  | 'overlap'
+  | 'outside_shape'
+  | 'missing_position'
+  | 'unreachable_section'
+  | 'long_egress'
+  | 'egress_bottleneck'
+  | 'slow_clearance'
+  | 'no_exits'
+  /* ── Integridad del inventario ── */
+  /** Dos butacas comparten id: el guardado del API pisaría una con la otra. */
+  | 'duplicate_seat_id'
+  /** Dos butacas de la misma sección comparten etiqueta visible. */
+  | 'duplicate_seat_label'
+  /** Butacas sin etiqueta de fila: el acomodador no puede ubicarlas. */
+  | 'missing_row_label'
+  /** Sección declarada sin ninguna butaca. */
+  | 'empty_section'
+  /** Secciones que comparten id o slug. */
+  | 'duplicate_section'
+  /** El aforo declarado no coincide con las butacas generadas. */
+  | 'capacity_mismatch'
+  /** Salto en la numeración de una fila (butaca faltante en medio). */
+  | 'row_numbering_gap'
+  /* ── Accesibilidad ── */
+  /** Menos plazas de silla de ruedas que las exigidas por aforo. */
+  | 'accessible_shortfall'
+  /** Plaza de silla de ruedas sin butaca de acompañante ligada. */
+  | 'accessible_no_companion'
+  /** Acompañante que apunta a una plaza inexistente. */
+  | 'accessible_orphan_companion';
+
 export type GeometryIssue = {
-  code:
-    | 'overlap'
-    | 'outside_shape'
-    | 'missing_position'
-    | 'unreachable_section'
-    | 'long_egress'
-    | 'egress_bottleneck'
-    | 'slow_clearance'
-    | 'no_exits';
+  code: GeometryIssueCode;
   severity: 'warning' | 'error';
   seatIds: string[];
   sectionIds?: string[];
   message: string;
+  /**
+   * Qué hacer para resolverlo. La validación existía pero solo describía el
+   * síntoma; sin esto el operador ve "hay 340 avisos" y no sabe por dónde empezar.
+   */
+  hint?: string;
+  /** Cuántos elementos afecta cuando el aviso se agrupa. */
+  count?: number;
 };
 
 export type GeometryValidation = {
   ok: boolean;
   issues: GeometryIssue[];
+  /** Resumen por código, para poder priorizar sin recorrer la lista. */
+  summary?: { code: GeometryIssueCode; severity: 'warning' | 'error'; count: number }[];
 };
