@@ -11,6 +11,18 @@ CREATE TYPE "EventCategory" AS ENUM ('MUSIC', 'SPORTS', 'THEATER', 'COMEDY', 'CO
 CREATE TYPE "EventStatus" AS ENUM ('DRAFT', 'SCHEDULED', 'LIVE', 'COMPLETED', 'CANCELLED', 'RESCHEDULED');
 
 -- CreateEnum
+CREATE TYPE "EventSeriesKind" AS ENUM ('SERIES', 'RESIDENCY', 'TOUR', 'SEASON', 'FESTIVAL');
+
+-- CreateEnum
+CREATE TYPE "EventSeriesStatus" AS ENUM ('DRAFT', 'ACTIVE', 'COMPLETED', 'ARCHIVED');
+
+-- CreateEnum
+CREATE TYPE "SalePhaseKind" AS ENUM ('PRESALE', 'MEMBERS', 'PUBLIC', 'LAST_MINUTE', 'DOOR');
+
+-- CreateEnum
+CREATE TYPE "SalePhaseStatus" AS ENUM ('SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED');
+
+-- CreateEnum
 CREATE TYPE "TicketStatus" AS ENUM ('AVAILABLE', 'HELD', 'SOLD', 'USED', 'REFUNDED', 'TRANSFERRED', 'RESOLD', 'EXPIRED');
 
 -- CreateEnum
@@ -79,6 +91,15 @@ CREATE TYPE "TransferStatus" AS ENUM ('PENDING', 'ACCEPTED', 'CANCELLED', 'EXPIR
 -- CreateEnum
 CREATE TYPE "CfdiStatus" AS ENUM ('DRAFT', 'STAMPED', 'CANCELLED', 'ERROR');
 
+-- CreateEnum
+CREATE TYPE "PosTerminalStatus" AS ENUM ('READY', 'OFFLINE', 'DISABLED', 'MAINTENANCE');
+
+-- CreateEnum
+CREATE TYPE "PosSessionStatus" AS ENUM ('ACTIVE', 'CLOSED');
+
+-- CreateEnum
+CREATE TYPE "SeasonPassPurchaseStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED', 'REFUNDED');
+
 -- CreateTable
 CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
@@ -92,8 +113,8 @@ CREATE TABLE "Organization" (
     "email" TEXT NOT NULL,
     "phone" TEXT,
     "country" TEXT NOT NULL,
-    "timezone" TEXT NOT NULL DEFAULT 'UTC',
-    "currency" "Currency" NOT NULL DEFAULT 'USD',
+    "timezone" TEXT NOT NULL DEFAULT 'America/Mexico_City',
+    "currency" "Currency" NOT NULL DEFAULT 'MXN',
     "address" TEXT,
     "city" TEXT,
     "state" TEXT,
@@ -349,12 +370,22 @@ CREATE TABLE "Event" (
     "startsAt" TIMESTAMP(3) NOT NULL,
     "endsAt" TIMESTAMP(3),
     "timezone" TEXT NOT NULL,
+    "doorsAt" TIMESTAMP(3),
+    "durationMinutes" INTEGER,
     "status" "EventStatus" NOT NULL DEFAULT 'DRAFT',
     "publishedAt" TIMESTAMP(3),
     "cancelledAt" TIMESTAMP(3),
-    "minPrice" DECIMAL(10,2) NOT NULL DEFAULT 0,
-    "maxPrice" DECIMAL(10,2) NOT NULL DEFAULT 1000,
-    "currency" "Currency" NOT NULL DEFAULT 'USD',
+    "announceAt" TIMESTAMP(3),
+    "publishAt" TIMESTAMP(3),
+    "salesStartAt" TIMESTAMP(3),
+    "salesEndAt" TIMESTAMP(3),
+    "rescheduledFrom" TIMESTAMP(3),
+    "scheduleNote" TEXT,
+    "seriesId" TEXT,
+    "seriesOrder" INTEGER,
+    "minPrice" DECIMAL(12,2) NOT NULL DEFAULT 0,
+    "maxPrice" DECIMAL(12,2) NOT NULL DEFAULT 1000,
+    "currency" "Currency" NOT NULL DEFAULT 'MXN',
     "totalCapacity" INTEGER NOT NULL,
     "holdableCapacity" INTEGER,
     "allowResale" BOOLEAN NOT NULL DEFAULT true,
@@ -373,15 +404,72 @@ CREATE TABLE "Event" (
 );
 
 -- CreateTable
+CREATE TABLE "EventSeries" (
+    "id" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
+    "venueId" TEXT,
+    "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "description" TEXT,
+    "kind" "EventSeriesKind" NOT NULL DEFAULT 'SERIES',
+    "status" "EventSeriesStatus" NOT NULL DEFAULT 'DRAFT',
+    "category" "EventCategory" NOT NULL DEFAULT 'MUSIC',
+    "timezone" TEXT NOT NULL DEFAULT 'America/Mexico_City',
+    "recurrence" JSONB,
+    "template" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "EventSeries_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SalePhase" (
+    "id" TEXT NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "kind" "SalePhaseKind" NOT NULL DEFAULT 'PUBLIC',
+    "code" TEXT,
+    "startsAt" TIMESTAMP(3) NOT NULL,
+    "endsAt" TIMESTAMP(3) NOT NULL,
+    "status" "SalePhaseStatus" NOT NULL DEFAULT 'SCHEDULED',
+    "channels" "SalesChannel"[],
+    "allocationPercent" INTEGER,
+    "maxPerOrder" INTEGER,
+    "discountPercent" DOUBLE PRECISION,
+    "priority" INTEGER NOT NULL DEFAULT 100,
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SalePhase_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VenueBlackout" (
+    "id" TEXT NOT NULL,
+    "venueId" TEXT NOT NULL,
+    "reason" TEXT NOT NULL,
+    "startsAt" TIMESTAMP(3) NOT NULL,
+    "endsAt" TIMESTAMP(3) NOT NULL,
+    "blocking" BOOLEAN NOT NULL DEFAULT true,
+    "createdBy" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "VenueBlackout_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Offer" (
     "id" TEXT NOT NULL,
     "eventId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "zone" TEXT NOT NULL,
     "description" TEXT,
-    "basePrice" DECIMAL(10,2) NOT NULL,
-    "fees" DECIMAL(10,2) NOT NULL DEFAULT 0,
-    "currency" "Currency" NOT NULL DEFAULT 'USD',
+    "basePrice" DECIMAL(12,2) NOT NULL,
+    "fees" DECIMAL(12,2) NOT NULL DEFAULT 0,
+    "currency" "Currency" NOT NULL DEFAULT 'MXN',
     "totalQuantity" INTEGER NOT NULL,
     "remainingQuantity" INTEGER NOT NULL,
     "soldQuantity" INTEGER NOT NULL DEFAULT 0,
@@ -414,8 +502,8 @@ CREATE TABLE "Ticket" (
     "row" TEXT,
     "section" TEXT,
     "isResale" BOOLEAN NOT NULL DEFAULT false,
-    "originalPrice" DECIMAL(10,2),
-    "resalePrice" DECIMAL(10,2),
+    "originalPrice" DECIMAL(12,2),
+    "resalePrice" DECIMAL(12,2),
     "checkedInAt" TIMESTAMP(3),
     "usedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -441,7 +529,7 @@ CREATE TABLE "Order" (
     "discountAmount" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "taxAmount" DECIMAL(10,2) NOT NULL,
     "totalAmount" DECIMAL(12,2) NOT NULL,
-    "currency" "Currency" NOT NULL DEFAULT 'USD',
+    "currency" "Currency" NOT NULL DEFAULT 'MXN',
     "promotionId" TEXT,
     "commissionAmount" DECIMAL(10,2) NOT NULL,
     "paymentId" TEXT,
@@ -556,7 +644,7 @@ CREATE TABLE "PosTerminal" (
     "organizationId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "locationName" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'READY',
+    "status" "PosTerminalStatus" NOT NULL DEFAULT 'READY',
     "hardwareConfig" JSONB,
     "offlineMode" BOOLEAN NOT NULL DEFAULT false,
     "lastSyncAt" TIMESTAMP(3),
@@ -572,7 +660,7 @@ CREATE TABLE "PosCashierSession" (
     "id" TEXT NOT NULL,
     "terminalId" TEXT NOT NULL,
     "cashierId" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "status" "PosSessionStatus" NOT NULL DEFAULT 'ACTIVE',
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "endedAt" TIMESTAMP(3),
     "metadata" JSONB,
@@ -587,7 +675,7 @@ CREATE TABLE "ResaleListing" (
     "sellerId" TEXT NOT NULL,
     "sellerName" TEXT NOT NULL,
     "askingPrice" DECIMAL(10,2) NOT NULL,
-    "currency" "Currency" NOT NULL DEFAULT 'USD',
+    "currency" "Currency" NOT NULL DEFAULT 'MXN',
     "fee" DECIMAL(10,2) NOT NULL,
     "status" "ResaleStatus" NOT NULL DEFAULT 'ACTIVE',
     "delisted" BOOLEAN NOT NULL DEFAULT false,
@@ -889,7 +977,7 @@ CREATE TABLE "SeasonPassPurchase" (
     "buyerName" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
     "totalAmount" DECIMAL(12,2) NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "status" "SeasonPassPurchaseStatus" NOT NULL DEFAULT 'PENDING',
     "seatSection" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -922,6 +1010,9 @@ CREATE INDEX "Venue_slug_idx" ON "Venue"("slug");
 
 -- CreateIndex
 CREATE INDEX "Venue_city_idx" ON "Venue"("city");
+
+-- CreateIndex
+CREATE INDEX "Venue_organizationId_city_idx" ON "Venue"("organizationId", "city");
 
 -- CreateIndex
 CREATE INDEX "VenueLayout_venueId_idx" ON "VenueLayout"("venueId");
@@ -966,6 +1057,12 @@ CREATE INDEX "SeatHold_expiresAt_idx" ON "SeatHold"("expiresAt");
 CREATE INDEX "SeatHold_status_idx" ON "SeatHold"("status");
 
 -- CreateIndex
+CREATE INDEX "SeatHold_eventId_status_expiresAt_idx" ON "SeatHold"("eventId", "status", "expiresAt");
+
+-- CreateIndex
+CREATE INDEX "SeatHold_sessionId_status_idx" ON "SeatHold"("sessionId", "status");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TenantTheme_organizationId_key" ON "TenantTheme"("organizationId");
 
 -- CreateIndex
@@ -973,6 +1070,9 @@ CREATE UNIQUE INDEX "TenantTheme_customDomain_key" ON "TenantTheme"("customDomai
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TenantTheme_subdomain_key" ON "TenantTheme"("subdomain");
+
+-- CreateIndex
+CREATE INDEX "AccessZone_venueId_idx" ON "AccessZone"("venueId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "AccessZone_venueId_slug_key" ON "AccessZone"("venueId", "slug");
@@ -984,6 +1084,12 @@ CREATE INDEX "TicketScan_ticketId_idx" ON "TicketScan"("ticketId");
 CREATE INDEX "TicketScan_scannedAt_idx" ON "TicketScan"("scannedAt");
 
 -- CreateIndex
+CREATE INDEX "TicketScan_zoneId_scannedAt_idx" ON "TicketScan"("zoneId", "scannedAt");
+
+-- CreateIndex
+CREATE INDEX "TicketScan_ticketId_success_scannedAt_idx" ON "TicketScan"("ticketId", "success", "scannedAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "PaymentIntent_idempotencyKey_key" ON "PaymentIntent"("idempotencyKey");
 
 -- CreateIndex
@@ -991,6 +1097,12 @@ CREATE INDEX "PaymentIntent_orderId_idx" ON "PaymentIntent"("orderId");
 
 -- CreateIndex
 CREATE INDEX "PaymentIntent_externalId_idx" ON "PaymentIntent"("externalId");
+
+-- CreateIndex
+CREATE INDEX "PaymentIntent_provider_status_createdAt_idx" ON "PaymentIntent"("provider", "status", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "PaymentIntent_status_expiresAt_idx" ON "PaymentIntent"("status", "expiresAt");
 
 -- CreateIndex
 CREATE INDEX "AuditEvent_organizationId_idx" ON "AuditEvent"("organizationId");
@@ -1002,10 +1114,22 @@ CREATE INDEX "AuditEvent_entityType_entityId_idx" ON "AuditEvent"("entityType", 
 CREATE INDEX "AuditEvent_createdAt_idx" ON "AuditEvent"("createdAt");
 
 -- CreateIndex
+CREATE INDEX "AuditEvent_organizationId_createdAt_idx" ON "AuditEvent"("organizationId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "AuditEvent_userId_createdAt_idx" ON "AuditEvent"("userId", "createdAt");
+
+-- CreateIndex
 CREATE INDEX "CashierShift_userId_idx" ON "CashierShift"("userId");
 
 -- CreateIndex
 CREATE INDEX "CashierShift_organizationId_idx" ON "CashierShift"("organizationId");
+
+-- CreateIndex
+CREATE INDEX "CashierShift_userId_closedAt_idx" ON "CashierShift"("userId", "closedAt");
+
+-- CreateIndex
+CREATE INDEX "CashierShift_organizationId_openedAt_idx" ON "CashierShift"("organizationId", "openedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Event_externalId_key" ON "Event"("externalId");
@@ -1032,10 +1156,58 @@ CREATE INDEX "Event_status_idx" ON "Event"("status");
 CREATE INDEX "Event_category_idx" ON "Event"("category");
 
 -- CreateIndex
+CREATE INDEX "Event_seriesId_idx" ON "Event"("seriesId");
+
+-- CreateIndex
+CREATE INDEX "Event_venueId_startsAt_idx" ON "Event"("venueId", "startsAt");
+
+-- CreateIndex
+CREATE INDEX "Event_publishAt_idx" ON "Event"("publishAt");
+
+-- CreateIndex
+CREATE INDEX "Event_salesStartAt_idx" ON "Event"("salesStartAt");
+
+-- CreateIndex
+CREATE INDEX "Event_organizationId_status_startsAt_idx" ON "Event"("organizationId", "status", "startsAt");
+
+-- CreateIndex
+CREATE INDEX "Event_organizationId_status_publishAt_idx" ON "Event"("organizationId", "status", "publishAt");
+
+-- CreateIndex
+CREATE INDEX "Event_status_category_startsAt_idx" ON "Event"("status", "category", "startsAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "EventSeries_slug_key" ON "EventSeries"("slug");
+
+-- CreateIndex
+CREATE INDEX "EventSeries_organizationId_idx" ON "EventSeries"("organizationId");
+
+-- CreateIndex
+CREATE INDEX "EventSeries_venueId_idx" ON "EventSeries"("venueId");
+
+-- CreateIndex
+CREATE INDEX "EventSeries_status_idx" ON "EventSeries"("status");
+
+-- CreateIndex
+CREATE INDEX "SalePhase_eventId_startsAt_idx" ON "SalePhase"("eventId", "startsAt");
+
+-- CreateIndex
+CREATE INDEX "SalePhase_status_idx" ON "SalePhase"("status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SalePhase_eventId_name_key" ON "SalePhase"("eventId", "name");
+
+-- CreateIndex
+CREATE INDEX "VenueBlackout_venueId_startsAt_idx" ON "VenueBlackout"("venueId", "startsAt");
+
+-- CreateIndex
 CREATE INDEX "Offer_eventId_idx" ON "Offer"("eventId");
 
 -- CreateIndex
 CREATE INDEX "Offer_isAvailable_idx" ON "Offer"("isAvailable");
+
+-- CreateIndex
+CREATE INDEX "Offer_eventId_isAvailable_idx" ON "Offer"("eventId", "isAvailable");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Offer_eventId_zone_key" ON "Offer"("eventId", "zone");
@@ -1057,6 +1229,24 @@ CREATE INDEX "Ticket_code_idx" ON "Ticket"("code");
 
 -- CreateIndex
 CREATE INDEX "Ticket_seatId_idx" ON "Ticket"("seatId");
+
+-- CreateIndex
+CREATE INDEX "Ticket_eventId_status_idx" ON "Ticket"("eventId", "status");
+
+-- CreateIndex
+CREATE INDEX "Ticket_eventId_offerId_status_idx" ON "Ticket"("eventId", "offerId", "status");
+
+-- CreateIndex
+CREATE INDEX "Ticket_eventId_seatId_status_idx" ON "Ticket"("eventId", "seatId", "status");
+
+-- CreateIndex
+CREATE INDEX "Ticket_eventId_checkedInAt_idx" ON "Ticket"("eventId", "checkedInAt");
+
+-- CreateIndex
+CREATE INDEX "Ticket_orderItemId_idx" ON "Ticket"("orderItemId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Ticket_eventId_seatId_key" ON "Ticket"("eventId", "seatId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Order_publicId_key" ON "Order"("publicId");
@@ -1083,6 +1273,27 @@ CREATE INDEX "Order_buyerEmail_idx" ON "Order"("buyerEmail");
 CREATE INDEX "Order_createdAt_idx" ON "Order"("createdAt");
 
 -- CreateIndex
+CREATE INDEX "Order_organizationId_status_createdAt_idx" ON "Order"("organizationId", "status", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "Order_organizationId_status_completedAt_idx" ON "Order"("organizationId", "status", "completedAt");
+
+-- CreateIndex
+CREATE INDEX "Order_eventId_status_idx" ON "Order"("eventId", "status");
+
+-- CreateIndex
+CREATE INDEX "Order_organizationId_channel_status_createdAt_idx" ON "Order"("organizationId", "channel", "status", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "Order_cashierId_channel_createdAt_idx" ON "Order"("cashierId", "channel", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "Order_paymentId_idx" ON "Order"("paymentId");
+
+-- CreateIndex
+CREATE INDEX "Order_promotionId_idx" ON "Order"("promotionId");
+
+-- CreateIndex
 CREATE INDEX "OrderItem_orderId_idx" ON "OrderItem"("orderId");
 
 -- CreateIndex
@@ -1101,10 +1312,19 @@ CREATE INDEX "Payment_status_idx" ON "Payment"("status");
 CREATE INDEX "Payment_externalId_idx" ON "Payment"("externalId");
 
 -- CreateIndex
+CREATE INDEX "Payment_gateway_status_createdAt_idx" ON "Payment"("gateway", "status", "createdAt");
+
+-- CreateIndex
 CREATE INDEX "Refund_orderId_idx" ON "Refund"("orderId");
 
 -- CreateIndex
 CREATE INDEX "Refund_status_idx" ON "Refund"("status");
+
+-- CreateIndex
+CREATE INDEX "Refund_status_processedAt_idx" ON "Refund"("status", "processedAt");
+
+-- CreateIndex
+CREATE INDEX "Refund_status_requestedAt_idx" ON "Refund"("status", "requestedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
@@ -1131,10 +1351,19 @@ CREATE INDEX "Session_token_idx" ON "Session"("token");
 CREATE INDEX "PosTerminal_organizationId_idx" ON "PosTerminal"("organizationId");
 
 -- CreateIndex
+CREATE INDEX "PosTerminal_organizationId_status_idx" ON "PosTerminal"("organizationId", "status");
+
+-- CreateIndex
 CREATE INDEX "PosCashierSession_terminalId_idx" ON "PosCashierSession"("terminalId");
 
 -- CreateIndex
 CREATE INDEX "PosCashierSession_cashierId_idx" ON "PosCashierSession"("cashierId");
+
+-- CreateIndex
+CREATE INDEX "PosCashierSession_terminalId_cashierId_status_idx" ON "PosCashierSession"("terminalId", "cashierId", "status");
+
+-- CreateIndex
+CREATE INDEX "PosCashierSession_terminalId_status_startedAt_idx" ON "PosCashierSession"("terminalId", "status", "startedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ResaleListing_ticketId_key" ON "ResaleListing"("ticketId");
@@ -1144,6 +1373,9 @@ CREATE INDEX "ResaleListing_sellerId_idx" ON "ResaleListing"("sellerId");
 
 -- CreateIndex
 CREATE INDEX "ResaleListing_status_idx" ON "ResaleListing"("status");
+
+-- CreateIndex
+CREATE INDEX "ResaleListing_status_listedAt_idx" ON "ResaleListing"("status", "listedAt");
 
 -- CreateIndex
 CREATE INDEX "ResaleOffer_listingId_idx" ON "ResaleOffer"("listingId");
@@ -1191,6 +1423,15 @@ CREATE INDEX "FraudFlag_severity_idx" ON "FraudFlag"("severity");
 CREATE INDEX "FraudFlag_status_idx" ON "FraudFlag"("status");
 
 -- CreateIndex
+CREATE INDEX "FraudFlag_eventId_status_idx" ON "FraudFlag"("eventId", "status");
+
+-- CreateIndex
+CREATE INDEX "FraudFlag_eventId_severity_idx" ON "FraudFlag"("eventId", "severity");
+
+-- CreateIndex
+CREATE INDEX "FraudFlag_ticketId_idx" ON "FraudFlag"("ticketId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "EventAnalytics_eventId_key" ON "EventAnalytics"("eventId");
 
 -- CreateIndex
@@ -1204,6 +1445,9 @@ CREATE INDEX "PromoterPayout_organizationId_idx" ON "PromoterPayout"("organizati
 
 -- CreateIndex
 CREATE INDEX "PromoterPayout_status_idx" ON "PromoterPayout"("status");
+
+-- CreateIndex
+CREATE INDEX "PromoterPayout_organizationId_status_periodEnd_idx" ON "PromoterPayout"("organizationId", "status", "periodEnd");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Cart_userId_key" ON "Cart"("userId");
@@ -1236,6 +1480,9 @@ CREATE INDEX "WaitlistEntry_status_idx" ON "WaitlistEntry"("status");
 CREATE INDEX "WaitlistEntry_createdAt_idx" ON "WaitlistEntry"("createdAt");
 
 -- CreateIndex
+CREATE INDEX "WaitlistEntry_eventId_status_priority_createdAt_idx" ON "WaitlistEntry"("eventId", "status", "priority", "createdAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "WaitlistEntry_eventId_email_key" ON "WaitlistEntry"("eventId", "email");
 
 -- CreateIndex
@@ -1252,6 +1499,9 @@ CREATE INDEX "TicketTransfer_transferCode_idx" ON "TicketTransfer"("transferCode
 
 -- CreateIndex
 CREATE INDEX "TicketTransfer_status_idx" ON "TicketTransfer"("status");
+
+-- CreateIndex
+CREATE INDEX "TicketTransfer_status_expiresAt_idx" ON "TicketTransfer"("status", "expiresAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ApiKey_keyHash_key" ON "ApiKey"("keyHash");
@@ -1284,6 +1534,9 @@ CREATE INDEX "CfdiInvoice_status_idx" ON "CfdiInvoice"("status");
 CREATE INDEX "CfdiInvoice_receptorRfc_idx" ON "CfdiInvoice"("receptorRfc");
 
 -- CreateIndex
+CREATE INDEX "CfdiInvoice_organizationId_status_createdAt_idx" ON "CfdiInvoice"("organizationId", "status", "createdAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "CfdiInvoice_organizationId_serie_folio_key" ON "CfdiInvoice"("organizationId", "serie", "folio");
 
 -- CreateIndex
@@ -1306,6 +1559,9 @@ CREATE INDEX "SeasonPassPurchase_seasonPassId_idx" ON "SeasonPassPurchase"("seas
 
 -- CreateIndex
 CREATE INDEX "SeasonPassPurchase_buyerEmail_idx" ON "SeasonPassPurchase"("buyerEmail");
+
+-- CreateIndex
+CREATE INDEX "SeasonPassPurchase_seasonPassId_status_idx" ON "SeasonPassPurchase"("seasonPassId", "status");
 
 -- AddForeignKey
 ALTER TABLE "Venue" ADD CONSTRAINT "Venue_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1341,6 +1597,12 @@ ALTER TABLE "SeatHold" ADD CONSTRAINT "SeatHold_seatId_fkey" FOREIGN KEY ("seatI
 ALTER TABLE "TenantTheme" ADD CONSTRAINT "TenantTheme_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "AccessZone" ADD CONSTRAINT "AccessZone_venueId_fkey" FOREIGN KEY ("venueId") REFERENCES "Venue"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TicketScan" ADD CONSTRAINT "TicketScan_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "Ticket"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "TicketScan" ADD CONSTRAINT "TicketScan_zoneId_fkey" FOREIGN KEY ("zoneId") REFERENCES "AccessZone"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1348,6 +1610,21 @@ ALTER TABLE "Event" ADD CONSTRAINT "Event_organizationId_fkey" FOREIGN KEY ("org
 
 -- AddForeignKey
 ALTER TABLE "Event" ADD CONSTRAINT "Event_venueId_fkey" FOREIGN KEY ("venueId") REFERENCES "Venue"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_seriesId_fkey" FOREIGN KEY ("seriesId") REFERENCES "EventSeries"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventSeries" ADD CONSTRAINT "EventSeries_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventSeries" ADD CONSTRAINT "EventSeries_venueId_fkey" FOREIGN KEY ("venueId") REFERENCES "Venue"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SalePhase" ADD CONSTRAINT "SalePhase_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VenueBlackout" ADD CONSTRAINT "VenueBlackout_venueId_fkey" FOREIGN KEY ("venueId") REFERENCES "Venue"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Offer" ADD CONSTRAINT "Offer_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;

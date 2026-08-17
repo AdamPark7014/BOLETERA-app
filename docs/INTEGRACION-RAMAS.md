@@ -88,7 +88,41 @@ Las dos capas son consistentes por construcción: derivan del mismo
 Es además el único lado con **prueba de concurrencia** que demuestra ausencia de
 sobreventa, validada por contra-prueba.
 
-### 4. Interfaz — PENDIENTE (~689 archivos)
+### 4. Interfaz — INTEGRADO (`e29f7ff`)
+
+Medir cambió la estrategia: de 502 archivos que divergían en `apps/admin`, **425
+eran adiciones puras** de `enterprise-upgrade`, 19 aportaciones propias y solo
+**43 un conflicto real**. No era una reescritura rival.
+
+Adoptado: `packages/ui` completo (86 componentes), el shell del backoffice
+(topbar, paleta de comandos, migas, prefetch, tema claro/oscuro con script
+anti-parpadeo), react-query, y el subsistema de renderizado de `venue-engine`.
+
+Conservado: índice espacial, edición masiva, deshacer/rehacer, numeración de
+filas, validación de inventario, tokens, estados de pantalla y guardia de
+permisos.
+
+**Trampa encontrada:** su `index.ts` dejó de reexportar mis módulos y los smoke
+tests pasaron de 30/30 a 27/30 **sin que el build se enterara**. Ejecutar las
+pruebas tras cada adopción no es opcional.
+
+### 5. Migraciones — RECONCILIADO
+
+Se adopta el `20260730220000_init` de `enterprise-upgrade` (que es el que está
+aplicado en la base) y encima van dos deltas: el valor de enum `PENDING_REFUND`
+en su propia migración —en PostgreSQL un valor recién creado no se puede usar en
+la misma transacción— y el endurecimiento de la auditoría con los invariantes
+que Prisma no expresa (índice único parcial de hold activo y los CHECK de
+inventario, en `NOT VALID` para no fallar por datos históricos).
+
+Los esquemas habían convergido: 43 modelos comunes, `OrgInvitation` solo mío,
+`EventSeries`/`SalePhase`/`VenueBlackout` solo suyos. El delta final son 35
+líneas.
+
+**Desbloqueado con esto:** `SalePhase` (la ventana de venta que el asistente de
+alta validaba sin poder persistir) ya existe en el esquema fusionado.
+
+### (histórico) Interfaz — antes pendiente (~689 archivos)
 
 `apps/admin` 502 · `apps/web` 118 · `apps/taquilla` 69.
 
@@ -121,9 +155,9 @@ pnpm run check-types && pnpm run build && pnpm run test
 inexistente, **o si ninguna venta prospera** — cero sobreventa con cero compras
 es lo que devuelve un API caído, y no demuestra nada.
 
-## Pendiente de decisión
+## Pendiente
 
-**Las migraciones siguen congeladas.** La base de desarrollo está migrada con el
+**Las migraciones YA NO están congeladas** (ver dominio 5). Queda por conectar: La base de desarrollo está migrada con el
 `_init` de `enterprise-upgrade`; esta rama tiene su propia baseline, que lo
 duplica. Mientras no se resuelva, no se pueden añadir al esquema:
 
