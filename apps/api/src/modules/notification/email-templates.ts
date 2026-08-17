@@ -259,6 +259,26 @@ export function paymentReceivedEmail(ctx: OrderEmailContext): EmailDocument {
   };
 }
 
+/** Desglose de lo devuelto. Solo se pasa cuando se devolvió la orden completa. */
+export type RefundBreakdown = {
+  tickets: unknown;
+  fees: unknown;
+  tax: unknown;
+  discount?: unknown;
+};
+
+/**
+ * Correo de reembolso.
+ *
+ * Responde, en este orden, a las cuatro preguntas que el comprador hace por
+ * teléfono cuando el correo no las contesta: cuánto, por qué medio, para
+ * cuándo y por qué. El plazo NO se escribe aquí: llega ya resuelto desde
+ * `refund-policy.ts`, que es el único sitio donde se define.
+ *
+ * La bonificación del art. 92 Bis se presenta aparte y con ese nombre. Sumarla
+ * al importe devuelto sería mentir dos veces: el comprador creería que le
+ * devolvimos de más, y perdería de vista que la ley le da una indemnización.
+ */
 export function refundEmail(ctx: {
   publicId: string;
   buyerName?: string | null;
@@ -267,39 +287,129 @@ export function refundEmail(ctx: {
   eventTitle: string;
   reason?: string | null;
   partial?: boolean;
+  /** Desglose boleto + cargos; ausente en reembolsos parciales. */
+  breakdown?: RefundBreakdown | null;
+  /** Bonificación art. 92 Bis, si la cancelación fue imputable al organizador. */
+  compensation?: unknown | null;
+  /** Estado real del `Refund`: decide el titular y el «qué sigue». */
+  statusHeadline: string;
+  statusDetail: string;
+  /** Medio por el que vuelve el dinero, en palabras del comprador. */
+  methodLabel: string;
+  /** Fecha tope comprometida para que salga hacia el banco. */
+  sentBy: string;
+  /** Fecha tope para que el abono sea visible. */
+  visibleBy: string;
+  /** El evento se canceló: cambia el motivo y activa la nota legal. */
+  eventCancelled?: boolean;
+  /** Nota legal del art. 92 Bis; solo cuando hay bonificación. */
+  compensationNote?: string | null;
+  /** Hace falta una CLABE porque el pago fue en efectivo. */
+  needsBankAccount?: boolean;
+  accessUrl?: string | null;
 }): EmailDocument {
+  const total = formatMoney(ctx.amount, ctx.currency);
+  const hasCompensation = ctx.compensation != null && Number(ctx.compensation) > 0;
+
+  const breakdownRows: EmailDetailRow[] = ctx.breakdown
+    ? [
+        { label: 'Precio de los boletos', value: formatMoney(ctx.breakdown.tickets, ctx.currency) },
+        { label: 'Cargo por servicio', value: formatMoney(ctx.breakdown.fees, ctx.currency) },
+        { label: 'IVA', value: formatMoney(ctx.breakdown.tax, ctx.currency) },
+        ...(Number(ctx.breakdown.discount ?? 0) > 0
+          ? [
+              {
+                label: 'Descuento aplicado en la compra',
+                value: `−${formatMoney(ctx.breakdown.discount, ctx.currency)}`,
+              },
+            ]
+          : []),
+      ]
+    : [];
+
   return {
-    subject: `Reembolso ${ctx.partial ? 'parcial ' : ''}procesado · Orden ${ctx.publicId}`,
-    preheader: `Reembolso de ${formatMoney(ctx.amount, ctx.currency)} de tu orden ${ctx.publicId}.`,
-    heading: 'Tu reembolso está en camino',
+    subject: hasCompensation
+      ? `Reembolso + bonificación · Orden ${ctx.publicId}`
+      : `Reembolso ${ctx.partial ? 'parcial ' : ''}aprobado · Orden ${ctx.publicId}`,
+    preheader: `${total} de vuelta por ${ctx.methodLabel}. A más tardar el ${ctx.visibleBy}.`,
+    heading: ctx.statusHeadline,
     blocks: [
       {
         kind: 'paragraph',
-        text: `${ctx.buyerName ? `Hola ${ctx.buyerName}. ` : ''}Procesamos un reembolso ${ctx.partial ? 'parcial ' : ''}de tu orden ${ctx.publicId} para ${ctx.eventTitle}.`,
+        text:
+          `${ctx.buyerName ? `Hola ${ctx.buyerName}. ` : ''}` +
+          (ctx.eventCancelled
+            ? `${ctx.eventTitle} fue cancelado, así que te devolvemos ${ctx.partial ? 'parte de ' : ''}lo que pagaste por la orden ${ctx.publicId}.`
+            : `Aprobamos el reembolso ${ctx.partial ? 'parcial ' : ''}de tu orden ${ctx.publicId} para ${ctx.eventTitle}.`),
       },
       {
         kind: 'details',
-        title: 'Detalle del reembolso',
+        title: ctx.partial ? 'Qué te devolvemos' : 'Qué te devolvemos (importe completo)',
         rows: [
-          { label: 'Evento', value: ctx.eventTitle },
-          { label: 'Orden', value: ctx.publicId },
-          { label: 'Importe reembolsado', value: formatMoney(ctx.amount, ctx.currency) },
+          ...breakdownRows,
+          { label: 'Total que te devolvemos', value: total },
+          { label: 'Medio', value: ctx.methodLabel },
+          { label: 'Sale hacia tu banco', value: `a más tardar el ${ctx.sentBy}` },
+          { label: 'Lo verás abonado', value: `a más tardar el ${ctx.visibleBy}` },
           ...(ctx.reason ? [{ label: 'Motivo', value: ctx.reason }] : []),
+          { label: 'Orden', value: ctx.publicId },
         ],
       },
       {
         kind: 'callout',
         tone: 'info',
-        title: 'Cuándo verás el dinero',
-        text: 'El banco emisor aplica el abono en 3 a 10 días hábiles según el método de pago. Si pagaste con tarjeta aparecerá en el mismo plástico; si pagaste en OXXO o por SPEI, en la cuenta que nos indicaste.',
+        title: ctx.statusHeadline,
+        text: ctx.statusDetail,
       },
+      ...(ctx.breakdown
+        ? ([
+            {
+              kind: 'paragraph' as const,
+              text: 'Te devolvemos el importe completo: el precio del boleto y también el cargo por servicio y el IVA. No descontamos nada por gestión.',
+            },
+          ] as const)
+        : []),
+      ...(hasCompensation
+        ? ([
+            { kind: 'divider' as const },
+            {
+              kind: 'callout' as const,
+              tone: 'success' as const,
+              title: `Además: bonificación de ${formatMoney(ctx.compensation, ctx.currency)}`,
+              text: 'Es una indemnización adicional por la cancelación, no parte de tu devolución. Se paga aparte y por el mismo medio, con el mismo plazo.',
+            },
+            ...(ctx.compensationNote
+              ? [{ kind: 'paragraph' as const, muted: true, text: ctx.compensationNote }]
+              : []),
+          ] as const)
+        : []),
+      ...(ctx.needsBankAccount
+        ? ([
+            {
+              kind: 'callout' as const,
+              tone: 'warning' as const,
+              title: 'Necesitamos tu CLABE',
+              text: 'Pagaste en efectivo, así que no hay tarjeta a la que devolver. Respóndenos a este correo con tu CLABE interbancaria (18 dígitos) y el nombre del titular; el plazo empieza a contar desde que la recibimos.',
+            },
+          ] as const)
+        : []),
+      ...(ctx.accessUrl
+        ? ([
+            {
+              kind: 'cta' as const,
+              url: ctx.accessUrl,
+              label: 'Ver el estado de mi reembolso',
+              helper: 'La misma información, siempre actualizada, sin tener que llamar.',
+            },
+          ] as const)
+        : []),
       {
         kind: 'paragraph',
         muted: true,
         text: 'Los boletos reembolsados quedan cancelados: ya no permiten el acceso al evento.',
       },
     ],
-    footerNote: `Orden ${ctx.publicId}.`,
+    footerNote: `Orden ${ctx.publicId}. Guarda este correo: es el comprobante de tu reembolso.`,
   };
 }
 

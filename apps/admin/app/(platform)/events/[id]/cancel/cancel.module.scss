@@ -1,0 +1,157 @@
+// Pantalla de decisión irreversible: el peso visual va donde está el riesgo.
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 46rem;
+
+  > span {
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: 600;
+    color: var(--color-text, inherit);
+  }
+
+  textarea,
+  input {
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    font: inherit;
+    color: inherit;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #d4d4d8);
+    border-radius: var(--radius-md, 8px);
+    resize: vertical;
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent, #2563eb);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.hint {
+  color: var(--color-text-muted, #52525b);
+  font-size: var(--text-xs, 0.8125rem);
+}
+
+.hintWarn {
+  color: var(--color-warning-text, #a16207);
+  font-size: var(--text-xs, 0.8125rem);
+  font-weight: 600;
+}
+
+.error {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  color: var(--color-danger-text, #b91c1c);
+  background: var(--color-danger-wash, #fef2f2);
+  border: 1px solid var(--color-danger-border, #fecaca);
+  border-left-width: 4px;
+  border-radius: var(--radius-md, 8px);
+}
+
+// --- Imputabilidad -----------------------------------------------------------
+// Dos opciones grandes y explícitas en vez de una casilla: la respuesta decide
+// si se paga una bonificación legal, así que no puede parecer un ajuste menor.
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.75rem;
+  max-width: 46rem;
+}
+
+.choice,
+.choiceOn {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+  padding: 1rem;
+  text-align: left;
+  cursor: pointer;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #d4d4d8);
+  border-radius: var(--radius-lg, 12px);
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+
+  strong {
+    font-size: var(--text-md, 1rem);
+  }
+
+  span {
+    color: var(--color-text-muted, #52525b);
+    font-size: var(--text-sm, 0.875rem);
+  }
+
+  &:hover {
+    border-color: var(--color-border-strong, #a1a1aa);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent, #2563eb);
+    outline-offset: 2px;
+  }
+}
+
+.choiceOn {
+  border-color: var(--color-accent, #2563eb);
+  // Además del color: el borde grueso distingue la selección sin depender de
+  // percibir el matiz.
+  box-shadow: inset 0 0 0 1px var(--color-accent, #2563eb);
+  background: var(--color-accent-wash, #eff6ff);
+}
+
+// --- Impacto -----------------------------------------------------------------
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+}
+
+.execute {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.placeholder {
+  margin: 0;
+  color: var(--color-text-muted, #52525b);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.failedList {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+    padding: 0.6rem 0.75rem;
+    background: var(--color-danger-wash, #fef2f2);
+    border-radius: var(--radius-md, 8px);
+
+    a {
+      font-weight: 600;
+      font-family: ui-monospace, monospace;
+    }
+
+    span {
+      color: var(--color-danger-text, #b91c1c);
+      font-size: var(--text-sm, 0.875rem);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice,
+  .choiceOn {
+    transition: none;
+  }
+}

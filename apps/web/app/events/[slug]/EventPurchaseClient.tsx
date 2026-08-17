@@ -20,6 +20,9 @@ import {
 } from '@boletera/venue-engine';
 import type { Venue3DViewerProps } from '@boletera/venue-3d';
 import { useCartStore, type CartOfferLine } from '@/lib/cart-store';
+import { useWaitingRoom } from '@/components/waiting-room/useWaitingRoom';
+import { WaitingRoomGate } from '@/components/waiting-room/WaitingRoomGate';
+import { isQueueRejection } from '@/components/waiting-room/queue-client';
 import styles from './event.module.scss';
 
 const SECTION_PALETTE = ['#5b9fd4', '#c45c6a', '#c4a35a', '#5a9e78', '#7a8fd4', '#b87a9a'];
@@ -85,6 +88,13 @@ export function EventPurchaseClient({
 }) {
   const router = useRouter();
   const addToCart = useCartStore((s) => s.addItem);
+  /**
+   * Sala de espera. Va por delante de todo lo demás: si el evento la tiene
+   * activa, el API responde 403 a cualquier hold sin pase, así que dejar elegir
+   * butacas antes de tener turno sería enseñar una compra que no existe.
+   */
+  const room = useWaitingRoom(eventId);
+  const { getPass: getQueuePass, onQueueRejected, releaseSpot } = room;
   const normalized = useMemo(() => normalizeSeatMap(mapData), [mapData]);
   const seats2d = useMemo(() => flatSeats(normalized), [normalized]);
   const hasSeatMap = seats2d.length > 0;
@@ -294,6 +304,8 @@ export function EventPurchaseClient({
    *  · NUNCA `x-channel` ni `x-cashier-id` en rutas públicas → 403.
    *  · Un 400 por `sessionId` es un bug del cliente: se regenera la sesión y se
    *    reintenta una vez, sin enseñar nada al comprador.
+   *  · `queuePass` en todo hold cuando la sala nos admitió. En eventos sin sala
+   *    el API lo ignora; en eventos con sala, su ausencia es un 403.
    */
   const postHold = useCallback(
     async (endpoint: string, body: Record<string, unknown>): Promise<HoldResponse> => {
@@ -304,7 +316,8 @@ export function EventPurchaseClient({
           res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...body, sessionId }),
+            // `JSON.stringify` descarta `undefined`: sin pase no se manda el campo.
+            body: JSON.stringify({ ...body, sessionId, queuePass: getQueuePass() }),
           });
         } catch {
           throw describeNetworkError();
@@ -316,13 +329,28 @@ export function EventPurchaseClient({
           // Algunas respuestas de error llegan sin cuerpo; el status basta.
         }
         if (res.ok) return (payload ?? {}) as HoldResponse;
+        // Un 403 de la fila no es un error de inventario: el pase caducó, se
+        // perdió o la sala se activó mientras el comprador miraba el mapa.
+        // Se le devuelve a la sala explicando qué pasó, en vez de enseñarle
+        // «esa reserva pertenece a otra sesión», que no dice nada y asusta.
+        if (isQueueRejection(res.status, payload)) {
+          onQueueRejected();
+          const queueError: InventoryError = {
+            kind: 'forbidden',
+            message:
+              'Este evento tiene sala de espera y tu pase ya no era válido. Te devolvimos a la fila.',
+            selfHealing: false,
+            staleMap: false,
+          };
+          throw queueError;
+        }
         const error = describeInventoryError(res.status, payload);
         if (error.selfHealing && attempt === 0) continue;
         throw error;
       }
       throw describeInventoryError(500);
     },
-    [],
+    [getQueuePass, onQueueRejected],
   );
 
   /** Un 409 no puede dejar al comprador mirando un spinner: se marca y se sigue. */
@@ -350,6 +378,9 @@ export function EventPurchaseClient({
       currency,
       lines,
     });
+    // Los lugares ya están apartados y el pase queda guardado: mantener el
+    // sitio en la fila sólo alargaría la espera de los que vienen detrás.
+    releaseSpot();
     const params = new URLSearchParams({
       eventId,
       holdIds: lines.flatMap((l) => l.holdIds).join(','),
@@ -442,8 +473,33 @@ export function EventPurchaseClient({
   const canPayMap = selected.length > 0 && buyMode === 'map';
   const canPayQty = (buyMode === 'best' || buyMode === 'ga') && qty > 0 && Boolean(focusedOffer);
 
+  // --- puerta de la sala de espera -------------------------------------------
+  // Todo lo de arriba son hooks y se ejecuta siempre; sólo el render se corta.
+  if (room.phase === 'checking') {
+    return (
+      <div className={styles.buyBox} id="compra">
+        <p className={styles.qtyMeta} role="status">
+          Comprobando la disponibilidad de este evento…
+        </p>
+      </div>
+    );
+  }
+
+  if (room.phase === 'queued' || room.phase === 'left') {
+    return (
+      <div className={styles.buyBox} id="compra">
+        <WaitingRoomGate room={room} eventTitle={eventTitle} />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.buyBox} id="compra">
+      {room.phase === 'admitted' && (
+        <p className={styles.qtyMeta} role="status">
+          Pasaste la sala de espera: es tu turno para elegir y apartar lugares.
+        </p>
+      )}
       <div className={styles.toggle}>
         {!isGaOffer && (
           <>

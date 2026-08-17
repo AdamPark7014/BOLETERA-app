@@ -9,8 +9,10 @@ import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButto
 import { fetchOrderResource, orderPath, resolveOrderAccessToken } from '@/lib/order-access';
 import { isDeferredMethod } from '@/lib/payment-window';
 import { formatMoney } from '@/lib/pricing';
+import { orderHasRefund, type OrderRefund } from '@/lib/refund-policy';
 import { DeferredPaymentPanel } from './DeferredPaymentPanel';
 import { OrderAccessGate } from './OrderAccessGate';
+import { EventCancelledBanner, OrderTimeline, RefundStatusPanel } from './RefundStatusPanel';
 import { TicketsPdfLink } from './TicketsPdfLink';
 import styles from './order.module.scss';
 
@@ -38,11 +40,22 @@ type OrderDetail = {
   paymentMethod?: string | null;
   /** Fecha límite real de pago; para OXXO/SPEI son horas, no minutos. */
   expiresAt?: string | null;
+  createdAt?: string | null;
+  completedAt?: string | null;
+  refundedAt?: string | null;
+  /**
+   * Devoluciones asentadas. Opcional porque `GET /orders/:publicId` todavía no
+   * las incluye (el `include` vive en el módulo `orders`); la vista degrada sin
+   * ellas y se enciende sola en cuanto lleguen.
+   */
+  refunds?: OrderRefund[] | null;
   event?: {
     title: string;
     slug: string;
     startsAt: string;
     endsAt?: string | null;
+    status?: string | null;
+    cancelledAt?: string | null;
     venue?: { name: string; city: string; address?: string | null } | null;
   } | null;
   items: {
@@ -209,6 +222,8 @@ export function OrderDetailClient({
   const isDemoFlow = gatewayDemo || pendingMeta?.demo === true;
   const method = (order.paymentMethod ?? '').toUpperCase();
   const showDeferred = order.status === 'PENDING' && (method === 'SPEI' || method === 'OXXO');
+  const refunded = orderHasRefund(order.status);
+  const eventCancelled = order.event?.status === 'CANCELLED';
   const hasBreakdown = order.subtotal != null && order.fees != null && order.taxAmount != null;
 
   return (
@@ -224,14 +239,26 @@ export function OrderDetailClient({
         </div>
 
         <header className={styles.hero}>
-          {completed ? (
+          {/* Una orden reembolsada no está «en proceso de pago»: decirlo así
+              fue durante mucho tiempo la parte que el comprador no entendía. */}
+          {refunded ? (
+            <p className={styles.refundedTag}>
+              {order.status === 'PENDING_REFUND' ? 'Devolución en proceso' : 'Orden reembolsada'}
+            </p>
+          ) : completed ? (
             <p className={styles.ok}>Compra confirmada</p>
           ) : (
             <p className={styles.pending}>
               {showDeferred ? 'Pendiente de pago' : 'Pago en proceso — Banorte'}
             </p>
           )}
-          <h1>{completed ? 'Tus boletos están listos' : 'Completa tu pago'}</h1>
+          <h1>
+            {refunded
+              ? 'Te estamos devolviendo tu dinero'
+              : completed
+                ? 'Tus boletos están listos'
+                : 'Completa tu pago'}
+          </h1>
           <p className={styles.sub}>
             Orden <code>{order.publicId}</code>
             {order.buyerEmail ? ` · ${order.buyerEmail}` : ''}
@@ -243,6 +270,10 @@ export function OrderDetailClient({
             </p>
           )}
         </header>
+
+        {/* Lo excepcional va arriba: la cancelación y el dinero de vuelta. */}
+        <EventCancelledBanner order={order} />
+        <RefundStatusPanel order={order} />
 
         {order.event && (
           <section className={styles.eventCard} aria-label="Evento">
@@ -348,6 +379,12 @@ export function OrderDetailClient({
               <TicketsPdfLink apiBase={API} publicId={order.publicId} accessToken={token} />
             )}
           </div>
+          {(refunded || eventCancelled) && (
+            <p className={styles.ticketsVoidNote}>
+              Estos boletos están cancelados: ya no permiten la entrada. Los dejamos a la vista
+              porque son el comprobante de qué se te devolvió.
+            </p>
+          )}
           <ul className={styles.ticketList}>
             {tickets.map((t) => (
               <li key={t.code}>
@@ -360,6 +397,8 @@ export function OrderDetailClient({
             )}
           </ul>
         </section>
+
+        <OrderTimeline order={order} hasTickets={tickets.length > 0} />
 
         {completed && <OrderQrCards publicId={order.publicId} accessToken={token} />}
 

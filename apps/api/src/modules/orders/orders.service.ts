@@ -863,6 +863,24 @@ export class OrdersService {
           },
         },
         payment: true,
+        // El comprador necesita ver su reembolso: importe, estado y desde
+        // cuándo corre el plazo. Sin esto la interfaz solo puede mostrar un
+        // mensaje genérico derivado del estado de la orden.
+        //
+        // Se seleccionan campos, NO el modelo entero: `requestedBy` y
+        // `processedBy` identifican a personal interno, y `notes` puede llevar
+        // anotaciones de operación. Nada de eso es del comprador.
+        refunds: {
+          select: {
+            id: true,
+            amount: true,
+            reason: true,
+            status: true,
+            requestedAt: true,
+            processedAt: true,
+          },
+          orderBy: { requestedAt: 'desc' },
+        },
       },
     });
     if (!order) throw new NotFoundException('Order not found');
@@ -965,8 +983,23 @@ export class OrdersService {
             title: true,
             slug: true,
             startsAt: true,
+            // «Mis boletos» tiene que poder avisar de un evento cancelado sin
+            // que el comprador entre orden por orden.
+            status: true,
+            cancelledAt: true,
             venue: { select: { name: true, city: true } },
           },
+        },
+        // Mismo criterio que el detalle: solo lo que es del comprador.
+        refunds: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            requestedAt: true,
+            processedAt: true,
+          },
+          orderBy: { requestedAt: 'desc' },
         },
         items: {
           select: {

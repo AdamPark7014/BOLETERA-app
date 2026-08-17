@@ -1,15 +1,43 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { EventStatus, Prisma } from '@prisma/client';
+import {
+  EventStatus,
+  Prisma,
+  SalePhaseKind,
+  SalePhaseStatus,
+  SalesChannel,
+} from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { SaleWindowService } from './sale-window.service';
 
 type EventMetadata = Record<string, unknown>;
+
+/** Alta/edición de una fase de venta. En edición todo es opcional. */
+export type SalePhaseInput = {
+  name: string;
+  kind?: SalePhaseKind;
+  code?: string | null;
+  startsAt: Date | string;
+  endsAt: Date | string;
+  status?: SalePhaseStatus;
+  channels?: SalesChannel[];
+  allocationPercent?: number | null;
+  maxPerOrder?: number | null;
+  discountPercent?: number | null;
+  priority?: number;
+  notes?: string | null;
+};
+
+export type SalePhasePatch = Partial<SalePhaseInput>;
 
 @Injectable()
 export class EventManagementService {
   private logger = new Logger(EventManagementService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private saleWindow: SaleWindowService,
+  ) {}
 
   private slugify(text: string) {
     return `${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
@@ -400,6 +428,208 @@ export class EventManagementService {
     return events;
   }
 
+  // ==================== VENTANA DE VENTA (SalePhase) ====================
+
+  /** El evento debe existir y ser del tenant que pide. */
+  private async assertEventInOrg(eventId: string, orgId: string) {
+    const event = await this.prisma.event.findFirst({
+      where: { id: eventId, organizationId: orgId },
+      select: { id: true, title: true, startsAt: true, organizationId: true },
+    });
+    if (!event) throw new NotFoundException('Event not found');
+    return event;
+  }
+
+  /**
+   * Reglas de negocio de una fase de venta.
+   *
+   * La importante es la que el asistente de alta ya validaba en pantalla: la
+   * venta no puede cerrar después de que empiece el evento. La excepción es la
+   * venta en puerta (DOOR), que por definición ocurre con el evento en marcha.
+   */
+  private normalizeSalePhase(
+    input: SalePhasePatch,
+    context: { eventStartsAt: Date; current?: { startsAt: Date; endsAt: Date; kind: SalePhaseKind } },
+  ) {
+    const startsAt = input.startsAt ? new Date(input.startsAt) : context.current?.startsAt;
+    const endsAt = input.endsAt ? new Date(input.endsAt) : context.current?.endsAt;
+    const kind = input.kind ?? context.current?.kind ?? SalePhaseKind.PUBLIC;
+
+    if (!startsAt || Number.isNaN(startsAt.getTime())) {
+      throw new BadRequestException('startsAt inválido');
+    }
+    if (!endsAt || Number.isNaN(endsAt.getTime())) {
+      throw new BadRequestException('endsAt inválido');
+    }
+    if (endsAt <= startsAt) {
+      throw new BadRequestException('La fase debe cerrar después de abrir.');
+    }
+    if (kind !== SalePhaseKind.DOOR && endsAt > context.eventStartsAt) {
+      throw new BadRequestException(
+        'La venta no puede cerrar después de que empiece el evento (solo la fase DOOR puede).',
+      );
+    }
+    if (
+      input.allocationPercent != null &&
+      (input.allocationPercent < 1 || input.allocationPercent > 100)
+    ) {
+      throw new BadRequestException('allocationPercent debe estar entre 1 y 100');
+    }
+    if (
+      input.discountPercent != null &&
+      (input.discountPercent < 0 || input.discountPercent > 100)
+    ) {
+      throw new BadRequestException('discountPercent debe estar entre 0 y 100');
+    }
+    if (input.maxPerOrder != null && input.maxPerOrder < 1) {
+      throw new BadRequestException('maxPerOrder debe ser al menos 1');
+    }
+
+    // El código viaja normalizado para que la comprobación en la venta no dependa
+    // de cómo lo escribió el comprador.
+    const code = input.code === undefined ? undefined : input.code?.trim().toUpperCase() || null;
+
+    return { startsAt, endsAt, kind, code };
+  }
+
+  /**
+   * La suma de cupos reservados no puede pasar del 100% del aforo: dos fases
+   * pidiendo el 70% cada una es una promesa que el inventario no puede cumplir.
+   */
+  private async assertAllocationFits(
+    eventId: string,
+    allocationPercent: number | null | undefined,
+    excludePhaseId?: string,
+  ) {
+    if (allocationPercent == null) return;
+    const others = await this.prisma.salePhase.aggregate({
+      where: {
+        eventId,
+        status: { not: SalePhaseStatus.CANCELLED },
+        ...(excludePhaseId ? { id: { not: excludePhaseId } } : {}),
+      },
+      _sum: { allocationPercent: true },
+    });
+    const total = (others._sum.allocationPercent ?? 0) + allocationPercent;
+    if (total > 100) {
+      throw new BadRequestException(
+        `La suma de cupos por fase no puede pasar de 100% (quedaría en ${total}%).`,
+      );
+    }
+  }
+
+  async listSalePhases(eventId: string, orgId: string) {
+    await this.assertEventInOrg(eventId, orgId);
+    const phases = await this.prisma.salePhase.findMany({
+      where: { eventId },
+      orderBy: [{ startsAt: 'asc' }, { priority: 'asc' }],
+    });
+    // La decisión vigente viaja con la lista: es lo que el panel necesita para
+    // pintar "vendiendo ahora" sin recalcular la regla por su cuenta.
+    const window = await this.saleWindow.checkSaleWindow(eventId);
+    return { eventId, phases, window };
+  }
+
+  async createSalePhase(eventId: string, orgId: string, input: SalePhaseInput) {
+    const event = await this.assertEventInOrg(eventId, orgId);
+    if (!input.name?.trim()) throw new BadRequestException('name es obligatorio');
+
+    const { startsAt, endsAt, kind, code } = this.normalizeSalePhase(input, {
+      eventStartsAt: event.startsAt,
+    });
+    await this.assertAllocationFits(eventId, input.allocationPercent);
+
+    try {
+      const phase = await this.prisma.salePhase.create({
+        data: {
+          eventId,
+          name: input.name.trim(),
+          kind,
+          code: code ?? null,
+          startsAt,
+          endsAt,
+          status: input.status ?? SalePhaseStatus.SCHEDULED,
+          channels: input.channels ?? [],
+          allocationPercent: input.allocationPercent ?? null,
+          maxPerOrder: input.maxPerOrder ?? null,
+          discountPercent: input.discountPercent ?? null,
+          priority: input.priority ?? 100,
+          notes: input.notes ?? null,
+        },
+      });
+      this.logger.log(`Sale phase creada en ${eventId}: ${phase.name} (${phase.kind})`);
+      return phase;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BadRequestException('Ya existe una fase con ese nombre en el evento.');
+      }
+      throw error;
+    }
+  }
+
+  async updateSalePhase(
+    eventId: string,
+    phaseId: string,
+    orgId: string,
+    patch: SalePhasePatch,
+  ) {
+    const event = await this.assertEventInOrg(eventId, orgId);
+    const current = await this.prisma.salePhase.findFirst({ where: { id: phaseId, eventId } });
+    if (!current) throw new NotFoundException('Sale phase not found');
+
+    const { startsAt, endsAt, kind, code } = this.normalizeSalePhase(patch, {
+      eventStartsAt: event.startsAt,
+      current,
+    });
+    if (patch.allocationPercent !== undefined) {
+      await this.assertAllocationFits(eventId, patch.allocationPercent, phaseId);
+    }
+
+    return this.prisma.salePhase.update({
+      where: { id: phaseId },
+      data: {
+        ...(patch.name != null ? { name: patch.name.trim() } : {}),
+        kind,
+        startsAt,
+        endsAt,
+        ...(code !== undefined ? { code } : {}),
+        ...(patch.status != null ? { status: patch.status } : {}),
+        ...(patch.channels != null ? { channels: patch.channels } : {}),
+        ...(patch.allocationPercent !== undefined
+          ? { allocationPercent: patch.allocationPercent }
+          : {}),
+        ...(patch.maxPerOrder !== undefined ? { maxPerOrder: patch.maxPerOrder } : {}),
+        ...(patch.discountPercent !== undefined ? { discountPercent: patch.discountPercent } : {}),
+        ...(patch.priority != null ? { priority: patch.priority } : {}),
+        ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+      },
+    });
+  }
+
+  /**
+   * Cancelar en vez de borrar cuando la fase ya abrió: hay órdenes que se
+   * vendieron bajo sus condiciones y el reporte tiene que poder explicarlas.
+   */
+  async removeSalePhase(eventId: string, phaseId: string, orgId: string) {
+    await this.assertEventInOrg(eventId, orgId);
+    const phase = await this.prisma.salePhase.findFirst({ where: { id: phaseId, eventId } });
+    if (!phase) throw new NotFoundException('Sale phase not found');
+
+    if (phase.startsAt <= new Date()) {
+      const cancelled = await this.prisma.salePhase.update({
+        where: { id: phaseId },
+        data: { status: SalePhaseStatus.CANCELLED },
+      });
+      return { deleted: false, cancelled: true, phase: cancelled };
+    }
+
+    await this.prisma.salePhase.delete({ where: { id: phaseId } });
+    return { deleted: true, cancelled: false, phase };
+  }
+
   async getEventHub(eventId: string, orgId: string) {
     const event = await this.prisma.event.findFirst({
       where: { id: eventId, organizationId: orgId },
@@ -407,6 +637,7 @@ export class EventManagementService {
         venue: { select: { id: true, name: true, slug: true } },
         offers: true,
         seatMap: true,
+        salePhases: { orderBy: [{ startsAt: 'asc' }, { priority: 'asc' }] },
         _count: { select: { tickets: true, orders: true } },
       },
     });
@@ -418,6 +649,9 @@ export class EventManagementService {
     const held = await this.prisma.ticket.count({
       where: { eventId, status: 'HELD' },
     });
+    const blocked = await this.prisma.ticket.count({
+      where: { eventId, status: 'BLOCKED' },
+    });
 
     const channelOrders = await this.prisma.order.groupBy({
       by: ['channel'],
@@ -426,18 +660,24 @@ export class EventManagementService {
       _count: true,
     });
 
+    const saleWindow = await this.saleWindow.checkSaleWindow(eventId);
+
     return {
       event,
       inventory: {
         total: event.totalCapacity,
         sold,
         held,
-        available: Math.max(0, event.totalCapacity - sold - held),
+        /** Retirado de la venta por bloqueo operativo (no caduca solo). */
+        blocked,
+        available: Math.max(0, event.totalCapacity - sold - held - blocked),
         occupancyPercent: event.totalCapacity
           ? Math.round((sold / event.totalCapacity) * 100)
           : 0,
       },
       channels: channelOrders,
+      /** Ventana de venta vigente resuelta con las fases del evento. */
+      saleWindow,
       metadata: event.metadata,
     };
   }

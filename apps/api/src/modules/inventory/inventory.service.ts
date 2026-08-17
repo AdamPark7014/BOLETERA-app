@@ -8,6 +8,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import type { MessageEvent } from '@nestjs/common';
+import { SaleWindowService } from '../event-management/sale-window.service';
 import { HoldStatus, Prisma, SalesChannel, TicketStatus } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { Observable, concatMap, filter, finalize, interval, map, shareReplay } from 'rxjs';
@@ -133,6 +134,7 @@ export class InventoryService {
     private redis: RedisService,
     private quotas: ChannelQuotaService,
     private waitlist: WaitlistService,
+    private saleWindow: SaleWindowService,
   ) {}
 
   private holdTtl(channel: SalesChannel) {
@@ -411,6 +413,11 @@ export class InventoryService {
 
     // Se reserva cupo de sesión ANTES de tocar la BD; todo lo que venga después
     // va dentro del try para devolverlo si la reserva no llega a cuajar.
+    // La ventana de venta se comprueba ANTES de tocar inventario: apartar fuera
+    // de horario y descubrirlo al cobrar deja butacas retenidas por una compra
+    // que nunca podrá completarse.
+    await this.saleWindow.assertSaleWindowOpen(dto.eventId, { channel });
+
     await this.assertSessionBudget(dto, channel, quantity);
 
     const ttl = this.holdTtl(channel);

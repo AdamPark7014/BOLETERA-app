@@ -25,7 +25,26 @@ import {
   waitlistAvailableEmail,
 } from './email-templates';
 import { NOTIFICATION_QUEUE, NotificationJob } from './notification.service';
+import {
+  COMPENSATION_LEGAL_NOTE,
+  formatPolicyDate,
+  refundDeadlines,
+  refundMethodLabel,
+  refundNeedsBankAccount,
+  refundPolicy,
+  refundStatusCopy,
+} from './refund-policy';
 import { TicketPdfService } from './ticket-pdf.service';
+
+/**
+ * Marca de la bonificación del art. 92 Bis dentro de `Refund.notes`.
+ *
+ * `EventCancellationService` asienta la bonificación como un `Refund` aparte
+ * —no es devolución del cobro, es indemnización— y la única señal que deja en
+ * el registro es este prefijo en la nota. Si allá cambia el texto, aquí la
+ * bonificación se contaría como dinero devuelto y el correo diría de más.
+ */
+const COMPENSATION_NOTE_PREFIX = 'BONIFICACIÓN';
 
 /**
  * Ventana de la marca de "ya enviado".
@@ -414,9 +433,56 @@ export class NotificationProcessor {
     });
   }
 
+  /**
+   * Aviso de reembolso.
+   *
+   * Todo lo que el comprador necesita saber se resuelve AQUÍ, contra la base, y
+   * no se le pide a quien encola: `payment.service` y `EventCancellationService`
+   * siguen llamando igual (orderId, email, importe) y aun así el correo sale
+   * completo. Acoplar el contenido al llamador habría significado tocar dos
+   * módulos ajenos para que dijeran lo mismo de dos maneras.
+   */
   private async sendRefund(payload: Extract<NotificationJob, { type: 'refund.notification' }>) {
     const order = await this.loadOrder(payload.orderId);
+    const refunds = await this.prisma.refund.findMany({
+      where: { orderId: payload.orderId },
+      orderBy: { requestedAt: 'asc' },
+      select: { amount: true, status: true, notes: true, requestedAt: true },
+    });
+
+    const isCompensation = (notes: string | null) =>
+      Boolean(notes?.trimStart().startsWith(COMPENSATION_NOTE_PREFIX));
+
+    const compensationTotal = refunds
+      .filter((r) => isCompensation(r.notes))
+      .reduce((sum, r) => sum + Number(r.amount), 0);
+
+    // El estado que se comunica es el de ESTE reembolso, no el del último de la
+    // orden: en una cancelación coexisten devolución y bonificación, y una
+    // puede estar liquidada mientras la otra no.
+    const settlement = refunds.filter((r) => !isCompensation(r.notes));
+    const match =
+      settlement.find((r) => Math.abs(Number(r.amount) - Number(payload.amount)) < 0.01) ??
+      settlement[settlement.length - 1];
+
+    const policy = refundPolicy(this.config);
+    // El plazo cuenta desde que se asentó la devolución, no desde que sale el
+    // correo: un reintento de cola horas después no puede correr la fecha.
+    const deadlines = refundDeadlines(policy, match?.requestedAt ?? new Date());
+    const methodLabel = refundMethodLabel(order?.paymentMethod);
+    const sentBy = formatPolicyDate(deadlines.sentBy);
+    const visibleBy = formatPolicyDate(deadlines.visibleBy);
+    const copy = refundStatusCopy(match?.status ?? 'PENDING', { methodLabel, sentBy, visibleBy });
+
+    const eventCancelled = order?.event?.status === 'CANCELLED';
+    // El desglose solo se enseña cuando lo devuelto es de verdad el cobro
+    // íntegro; inventar un reparto sobre un importe parcial sería aritmética
+    // falsa en un documento que el comprador guarda como comprobante.
+    const isFull =
+      order != null && Math.abs(Number(payload.amount) - Number(order.totalAmount)) < 0.01;
+
     await this.sendOnce(`refund:${payload.orderId}:${payload.email}:${payload.amount}`, async () => {
+      const accessToken = order ? await this.mintAccessToken(order.id) : null;
       await this.mail.sendDocument(
         payload.email,
         renderEmailDocument(
@@ -426,8 +492,28 @@ export class NotificationProcessor {
             amount: payload.amount,
             currency: String(order?.currency ?? 'MXN'),
             eventTitle: order?.event?.title ?? 'tu evento',
-            reason: payload.reason ?? null,
-            partial: payload.partial ?? false,
+            reason:
+              payload.reason ?? (eventCancelled ? 'Cancelación del evento' : null),
+            partial: payload.partial ?? !isFull,
+            breakdown:
+              isFull && order
+                ? {
+                    tickets: order.subtotal,
+                    fees: order.fees,
+                    tax: order.taxAmount,
+                    discount: order.discountAmount,
+                  }
+                : null,
+            compensation: compensationTotal > 0 ? compensationTotal : null,
+            compensationNote: compensationTotal > 0 ? COMPENSATION_LEGAL_NOTE : null,
+            statusHeadline: copy.headline,
+            statusDetail: copy.detail,
+            methodLabel,
+            sentBy,
+            visibleBy,
+            eventCancelled,
+            needsBankAccount: refundNeedsBankAccount(order?.paymentMethod),
+            accessUrl: order ? this.orderUrl(order.publicId, accessToken) : null,
           }),
         ),
       );

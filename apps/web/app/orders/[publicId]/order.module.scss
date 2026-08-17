@@ -538,3 +538,260 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* --- Reembolsos: cuánto, por qué medio y para cuándo -------------------- */
+/* Nada depende solo del color: cada tono lleva su titular en texto (WCAG
+   1.4.1) y todos los pares cumplen 4.5:1 sobre su propio fondo. */
+
+.refundedTag {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+}
+
+.cancelBanner {
+  text-align: left;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #b91c1c;
+  background: #fef2f2;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1rem;
+  color: #7f1d1d;
+
+  h2 {
+    font-size: 1.05rem;
+    margin: 0 0 0.4rem;
+    color: #7f1d1d;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+}
+
+.cancelKicker {
+  margin: 0 0 0.3rem !important;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #991b1b;
+}
+
+.refundPanel {
+  text-align: left;
+  border: 1px solid #e5e5e5;
+  border-left: 4px solid #525252;
+  background: #fff;
+  padding: 1.05rem 1.15rem;
+  margin-bottom: 1rem;
+
+  h2 {
+    font-size: 1.05rem;
+    margin: 0 0 0.45rem;
+    color: #0a0a0a;
+  }
+
+  h3 {
+    font-size: 0.9rem;
+    margin: 0 0 0.3rem;
+    color: #0a0a0a;
+  }
+}
+
+.tone_progress {
+  border-left-color: #1d4ed8;
+  background: #f5f8ff;
+}
+
+.tone_done {
+  border-left-color: #047857;
+  background: #f3fbf7;
+}
+
+.tone_alert {
+  border-left-color: #b91c1c;
+  background: #fef6f6;
+}
+
+.refundKicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #404040;
+}
+
+.refundDetail {
+  margin: 0 0 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #262626;
+}
+
+.refundRows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #e5e5e5;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid #ededed;
+    font-size: 0.85rem;
+    color: #404040;
+  }
+
+  strong {
+    color: #0a0a0a;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.refundRowStrong {
+  font-weight: 700;
+  color: #0a0a0a !important;
+
+  strong {
+    font-size: 0.98rem;
+  }
+}
+
+.refundNote {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #525252;
+}
+
+.compensation {
+  margin-top: 0.95rem;
+  border: 1px solid #a7f3d0;
+  background: #ecfdf5;
+  padding: 0.8rem 0.9rem;
+  color: #065f46;
+
+  h3 {
+    color: #065f46 !important;
+  }
+
+  p {
+    margin: 0 0 0.4rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+    color: #065f46;
+  }
+}
+
+.bankAccountNote {
+  margin-top: 0.95rem;
+  border: 1px solid #fde68a;
+  background: #fffbeb;
+  padding: 0.8rem 0.9rem;
+  color: #78350f;
+
+  h3 {
+    color: #78350f !important;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+}
+
+.ticketsVoidNote {
+  margin: 0 0 0.7rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid #b91c1c;
+  background: #fef2f2;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #7f1d1d;
+}
+
+/* --- Línea de tiempo: qué pasó y cuándo, con fechas reales -------------- */
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    position: relative;
+    display: flex;
+    gap: 0.7rem;
+    padding: 0 0 0.9rem 0;
+
+    /* La línea que une los hitos. Decorativa: el orden lo da el <ol>. */
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0.28rem;
+      top: 0.85rem;
+      bottom: 0;
+      width: 1px;
+      background: #d4d4d4;
+    }
+
+    &:last-child::before {
+      display: none;
+    }
+  }
+}
+
+.timelineDot {
+  flex: 0 0 auto;
+  width: 0.62rem;
+  height: 0.62rem;
+  margin-top: 0.28rem;
+  border-radius: 50%;
+  background: #047857;
+}
+
+.timelineFuture {
+  .timelineDot {
+    background: #fff;
+    border: 2px solid #737373;
+  }
+}
+
+.timelineLabel {
+  margin: 0;
+  font-size: 0.87rem;
+  font-weight: 700;
+  color: #0a0a0a;
+}
+
+.timelineTag {
+  font-weight: 600;
+  color: #525252;
+}
+
+.timelineDate {
+  margin: 0.1rem 0 0;
+  font-size: 0.8rem;
+  color: #525252;
+}
+
+.timelineDetail {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #525252;
+}

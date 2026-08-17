@@ -54,6 +54,20 @@ export type EventSeatMap = $Result.DefaultSelection<Prisma.$EventSeatMapPayload>
  */
 export type SeatHold = $Result.DefaultSelection<Prisma.$SeatHoldPayload>
 /**
+ * Model InventoryBlock
+ * Bloqueo operativo de inventario: retira butacas de la venta y NO caduca.
+ * 
+ * `SeatHold` es una reserva efímera (TTL de minutos) pensada para un carrito o
+ * una taquilla: el barrendero la libera sola. Retener butacas de producción,
+ * prensa o cortesías durante toda una temporada es otra cosa — solo termina
+ * cuando alguien la libera a propósito. Por eso vive en su propia tabla, con
+ * motivo obligatorio y rastro de quién bloqueó y quién liberó.
+ * 
+ * El boleto pasa a `TicketStatus.BLOCKED`: así toda consulta de disponibilidad
+ * existente (todas filtran `status = AVAILABLE`) lo respeta sin cambiar nada.
+ */
+export type InventoryBlock = $Result.DefaultSelection<Prisma.$InventoryBlockPayload>
+/**
  * Model TenantTheme
  * 
  */
@@ -347,7 +361,8 @@ export const TicketStatus: {
   REFUNDED: 'REFUNDED',
   TRANSFERRED: 'TRANSFERRED',
   RESOLD: 'RESOLD',
-  EXPIRED: 'EXPIRED'
+  EXPIRED: 'EXPIRED',
+  BLOCKED: 'BLOCKED'
 };
 
 export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
@@ -978,6 +993,16 @@ export class PrismaClient<
     * ```
     */
   get seatHold(): Prisma.SeatHoldDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.inventoryBlock`: Exposes CRUD operations for the **InventoryBlock** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more InventoryBlocks
+    * const inventoryBlocks = await prisma.inventoryBlock.findMany()
+    * ```
+    */
+  get inventoryBlock(): Prisma.InventoryBlockDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.tenantTheme`: Exposes CRUD operations for the **TenantTheme** model.
@@ -1817,6 +1842,7 @@ export namespace Prisma {
     Seat: 'Seat',
     EventSeatMap: 'EventSeatMap',
     SeatHold: 'SeatHold',
+    InventoryBlock: 'InventoryBlock',
     TenantTheme: 'TenantTheme',
     AccessZone: 'AccessZone',
     TicketScan: 'TicketScan',
@@ -1874,7 +1900,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "organization" | "venue" | "venueLayout" | "section" | "seatRow" | "seat" | "eventSeatMap" | "seatHold" | "tenantTheme" | "accessZone" | "ticketScan" | "paymentIntent" | "auditEvent" | "cashierShift" | "event" | "eventSeries" | "salePhase" | "venueBlackout" | "offer" | "ticket" | "order" | "orderItem" | "payment" | "refund" | "user" | "session" | "posTerminal" | "posCashierSession" | "resaleListing" | "resaleOffer" | "dynamicPrice" | "promotion" | "fraudFlag" | "eventAnalytics" | "promoterPayout" | "cart" | "wishlist" | "review" | "waitlistEntry" | "ticketTransfer" | "apiKey" | "fiscalProfile" | "cfdiInvoice" | "seasonPass" | "seasonPassEvent" | "seasonPassPurchase" | "orgInvitation"
+      modelProps: "organization" | "venue" | "venueLayout" | "section" | "seatRow" | "seat" | "eventSeatMap" | "seatHold" | "inventoryBlock" | "tenantTheme" | "accessZone" | "ticketScan" | "paymentIntent" | "auditEvent" | "cashierShift" | "event" | "eventSeries" | "salePhase" | "venueBlackout" | "offer" | "ticket" | "order" | "orderItem" | "payment" | "refund" | "user" | "session" | "posTerminal" | "posCashierSession" | "resaleListing" | "resaleOffer" | "dynamicPrice" | "promotion" | "fraudFlag" | "eventAnalytics" | "promoterPayout" | "cart" | "wishlist" | "review" | "waitlistEntry" | "ticketTransfer" | "apiKey" | "fiscalProfile" | "cfdiInvoice" | "seasonPass" | "seasonPassEvent" | "seasonPassPurchase" | "orgInvitation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2467,6 +2493,80 @@ export namespace Prisma {
           count: {
             args: Prisma.SeatHoldCountArgs<ExtArgs>
             result: $Utils.Optional<SeatHoldCountAggregateOutputType> | number
+          }
+        }
+      }
+      InventoryBlock: {
+        payload: Prisma.$InventoryBlockPayload<ExtArgs>
+        fields: Prisma.InventoryBlockFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.InventoryBlockFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.InventoryBlockFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>
+          }
+          findFirst: {
+            args: Prisma.InventoryBlockFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.InventoryBlockFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>
+          }
+          findMany: {
+            args: Prisma.InventoryBlockFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>[]
+          }
+          create: {
+            args: Prisma.InventoryBlockCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>
+          }
+          createMany: {
+            args: Prisma.InventoryBlockCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.InventoryBlockCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>[]
+          }
+          delete: {
+            args: Prisma.InventoryBlockDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>
+          }
+          update: {
+            args: Prisma.InventoryBlockUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>
+          }
+          deleteMany: {
+            args: Prisma.InventoryBlockDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.InventoryBlockUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.InventoryBlockUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>[]
+          }
+          upsert: {
+            args: Prisma.InventoryBlockUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InventoryBlockPayload>
+          }
+          aggregate: {
+            args: Prisma.InventoryBlockAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateInventoryBlock>
+          }
+          groupBy: {
+            args: Prisma.InventoryBlockGroupByArgs<ExtArgs>
+            result: $Utils.Optional<InventoryBlockGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.InventoryBlockCountArgs<ExtArgs>
+            result: $Utils.Optional<InventoryBlockCountAggregateOutputType> | number
           }
         }
       }
@@ -5460,6 +5560,7 @@ export namespace Prisma {
     seat?: SeatOmit
     eventSeatMap?: EventSeatMapOmit
     seatHold?: SeatHoldOmit
+    inventoryBlock?: InventoryBlockOmit
     tenantTheme?: TenantThemeOmit
     accessZone?: AccessZoneOmit
     ticketScan?: TicketScanOmit
@@ -5889,11 +5990,13 @@ export namespace Prisma {
   export type SeatCountOutputType = {
     tickets: number
     holds: number
+    inventoryBlocks: number
   }
 
   export type SeatCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tickets?: boolean | SeatCountOutputTypeCountTicketsArgs
     holds?: boolean | SeatCountOutputTypeCountHoldsArgs
+    inventoryBlocks?: boolean | SeatCountOutputTypeCountInventoryBlocksArgs
   }
 
   // Custom InputTypes
@@ -5919,6 +6022,13 @@ export namespace Prisma {
    */
   export type SeatCountOutputTypeCountHoldsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SeatHoldWhereInput
+  }
+
+  /**
+   * SeatCountOutputType without action
+   */
+  export type SeatCountOutputTypeCountInventoryBlocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InventoryBlockWhereInput
   }
 
 
@@ -5968,6 +6078,7 @@ export namespace Prisma {
     waitlistEntries: number
     seasonPassEvents: number
     salePhases: number
+    inventoryBlocks: number
   }
 
   export type EventCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5981,6 +6092,7 @@ export namespace Prisma {
     waitlistEntries?: boolean | EventCountOutputTypeCountWaitlistEntriesArgs
     seasonPassEvents?: boolean | EventCountOutputTypeCountSeasonPassEventsArgs
     salePhases?: boolean | EventCountOutputTypeCountSalePhasesArgs
+    inventoryBlocks?: boolean | EventCountOutputTypeCountInventoryBlocksArgs
   }
 
   // Custom InputTypes
@@ -6062,6 +6174,13 @@ export namespace Prisma {
    */
   export type EventCountOutputTypeCountSalePhasesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SalePhaseWhereInput
+  }
+
+  /**
+   * EventCountOutputType without action
+   */
+  export type EventCountOutputTypeCountInventoryBlocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InventoryBlockWhereInput
   }
 
 
@@ -6153,12 +6272,14 @@ export namespace Prisma {
     fraudFlags: number
     transfers: number
     scans: number
+    inventoryBlocks: number
   }
 
   export type TicketCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     fraudFlags?: boolean | TicketCountOutputTypeCountFraudFlagsArgs
     transfers?: boolean | TicketCountOutputTypeCountTransfersArgs
     scans?: boolean | TicketCountOutputTypeCountScansArgs
+    inventoryBlocks?: boolean | TicketCountOutputTypeCountInventoryBlocksArgs
   }
 
   // Custom InputTypes
@@ -6191,6 +6312,13 @@ export namespace Prisma {
    */
   export type TicketCountOutputTypeCountScansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TicketScanWhereInput
+  }
+
+  /**
+   * TicketCountOutputType without action
+   */
+  export type TicketCountOutputTypeCountInventoryBlocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InventoryBlockWhereInput
   }
 
 
@@ -13661,6 +13789,7 @@ export namespace Prisma {
     row?: boolean | Seat$rowArgs<ExtArgs>
     tickets?: boolean | Seat$ticketsArgs<ExtArgs>
     holds?: boolean | Seat$holdsArgs<ExtArgs>
+    inventoryBlocks?: boolean | Seat$inventoryBlocksArgs<ExtArgs>
     _count?: boolean | SeatCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["seat"]>
 
@@ -13722,6 +13851,7 @@ export namespace Prisma {
     row?: boolean | Seat$rowArgs<ExtArgs>
     tickets?: boolean | Seat$ticketsArgs<ExtArgs>
     holds?: boolean | Seat$holdsArgs<ExtArgs>
+    inventoryBlocks?: boolean | Seat$inventoryBlocksArgs<ExtArgs>
     _count?: boolean | SeatCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type SeatIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -13740,6 +13870,7 @@ export namespace Prisma {
       row: Prisma.$SeatRowPayload<ExtArgs> | null
       tickets: Prisma.$TicketPayload<ExtArgs>[]
       holds: Prisma.$SeatHoldPayload<ExtArgs>[]
+      inventoryBlocks: Prisma.$InventoryBlockPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -14153,6 +14284,7 @@ export namespace Prisma {
     row<T extends Seat$rowArgs<ExtArgs> = {}>(args?: Subset<T, Seat$rowArgs<ExtArgs>>): Prisma__SeatRowClient<$Result.GetResult<Prisma.$SeatRowPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     tickets<T extends Seat$ticketsArgs<ExtArgs> = {}>(args?: Subset<T, Seat$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     holds<T extends Seat$holdsArgs<ExtArgs> = {}>(args?: Subset<T, Seat$holdsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SeatHoldPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    inventoryBlocks<T extends Seat$inventoryBlocksArgs<ExtArgs> = {}>(args?: Subset<T, Seat$inventoryBlocksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14655,6 +14787,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SeatHoldScalarFieldEnum | SeatHoldScalarFieldEnum[]
+  }
+
+  /**
+   * Seat.inventoryBlocks
+   */
+  export type Seat$inventoryBlocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    where?: InventoryBlockWhereInput
+    orderBy?: InventoryBlockOrderByWithRelationInput | InventoryBlockOrderByWithRelationInput[]
+    cursor?: InventoryBlockWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: InventoryBlockScalarFieldEnum | InventoryBlockScalarFieldEnum[]
   }
 
   /**
@@ -16971,6 +17127,1218 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: SeatHoldInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model InventoryBlock
+   */
+
+  export type AggregateInventoryBlock = {
+    _count: InventoryBlockCountAggregateOutputType | null
+    _min: InventoryBlockMinAggregateOutputType | null
+    _max: InventoryBlockMaxAggregateOutputType | null
+  }
+
+  export type InventoryBlockMinAggregateOutputType = {
+    id: string | null
+    eventId: string | null
+    ticketId: string | null
+    seatId: string | null
+    reason: string | null
+    category: string | null
+    label: string | null
+    blockedBy: string | null
+    releasedAt: Date | null
+    releasedBy: string | null
+    releaseReason: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type InventoryBlockMaxAggregateOutputType = {
+    id: string | null
+    eventId: string | null
+    ticketId: string | null
+    seatId: string | null
+    reason: string | null
+    category: string | null
+    label: string | null
+    blockedBy: string | null
+    releasedAt: Date | null
+    releasedBy: string | null
+    releaseReason: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type InventoryBlockCountAggregateOutputType = {
+    id: number
+    eventId: number
+    ticketId: number
+    seatId: number
+    reason: number
+    category: number
+    label: number
+    blockedBy: number
+    releasedAt: number
+    releasedBy: number
+    releaseReason: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type InventoryBlockMinAggregateInputType = {
+    id?: true
+    eventId?: true
+    ticketId?: true
+    seatId?: true
+    reason?: true
+    category?: true
+    label?: true
+    blockedBy?: true
+    releasedAt?: true
+    releasedBy?: true
+    releaseReason?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type InventoryBlockMaxAggregateInputType = {
+    id?: true
+    eventId?: true
+    ticketId?: true
+    seatId?: true
+    reason?: true
+    category?: true
+    label?: true
+    blockedBy?: true
+    releasedAt?: true
+    releasedBy?: true
+    releaseReason?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type InventoryBlockCountAggregateInputType = {
+    id?: true
+    eventId?: true
+    ticketId?: true
+    seatId?: true
+    reason?: true
+    category?: true
+    label?: true
+    blockedBy?: true
+    releasedAt?: true
+    releasedBy?: true
+    releaseReason?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type InventoryBlockAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which InventoryBlock to aggregate.
+     */
+    where?: InventoryBlockWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InventoryBlocks to fetch.
+     */
+    orderBy?: InventoryBlockOrderByWithRelationInput | InventoryBlockOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: InventoryBlockWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InventoryBlocks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InventoryBlocks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned InventoryBlocks
+    **/
+    _count?: true | InventoryBlockCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: InventoryBlockMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: InventoryBlockMaxAggregateInputType
+  }
+
+  export type GetInventoryBlockAggregateType<T extends InventoryBlockAggregateArgs> = {
+        [P in keyof T & keyof AggregateInventoryBlock]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateInventoryBlock[P]>
+      : GetScalarType<T[P], AggregateInventoryBlock[P]>
+  }
+
+
+
+
+  export type InventoryBlockGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InventoryBlockWhereInput
+    orderBy?: InventoryBlockOrderByWithAggregationInput | InventoryBlockOrderByWithAggregationInput[]
+    by: InventoryBlockScalarFieldEnum[] | InventoryBlockScalarFieldEnum
+    having?: InventoryBlockScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: InventoryBlockCountAggregateInputType | true
+    _min?: InventoryBlockMinAggregateInputType
+    _max?: InventoryBlockMaxAggregateInputType
+  }
+
+  export type InventoryBlockGroupByOutputType = {
+    id: string
+    eventId: string
+    ticketId: string
+    seatId: string | null
+    reason: string
+    category: string
+    label: string | null
+    blockedBy: string
+    releasedAt: Date | null
+    releasedBy: string | null
+    releaseReason: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: InventoryBlockCountAggregateOutputType | null
+    _min: InventoryBlockMinAggregateOutputType | null
+    _max: InventoryBlockMaxAggregateOutputType | null
+  }
+
+  type GetInventoryBlockGroupByPayload<T extends InventoryBlockGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<InventoryBlockGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof InventoryBlockGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], InventoryBlockGroupByOutputType[P]>
+            : GetScalarType<T[P], InventoryBlockGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type InventoryBlockSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    eventId?: boolean
+    ticketId?: boolean
+    seatId?: boolean
+    reason?: boolean
+    category?: boolean
+    label?: boolean
+    blockedBy?: boolean
+    releasedAt?: boolean
+    releasedBy?: boolean
+    releaseReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+    seat?: boolean | InventoryBlock$seatArgs<ExtArgs>
+  }, ExtArgs["result"]["inventoryBlock"]>
+
+  export type InventoryBlockSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    eventId?: boolean
+    ticketId?: boolean
+    seatId?: boolean
+    reason?: boolean
+    category?: boolean
+    label?: boolean
+    blockedBy?: boolean
+    releasedAt?: boolean
+    releasedBy?: boolean
+    releaseReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+    seat?: boolean | InventoryBlock$seatArgs<ExtArgs>
+  }, ExtArgs["result"]["inventoryBlock"]>
+
+  export type InventoryBlockSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    eventId?: boolean
+    ticketId?: boolean
+    seatId?: boolean
+    reason?: boolean
+    category?: boolean
+    label?: boolean
+    blockedBy?: boolean
+    releasedAt?: boolean
+    releasedBy?: boolean
+    releaseReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+    seat?: boolean | InventoryBlock$seatArgs<ExtArgs>
+  }, ExtArgs["result"]["inventoryBlock"]>
+
+  export type InventoryBlockSelectScalar = {
+    id?: boolean
+    eventId?: boolean
+    ticketId?: boolean
+    seatId?: boolean
+    reason?: boolean
+    category?: boolean
+    label?: boolean
+    blockedBy?: boolean
+    releasedAt?: boolean
+    releasedBy?: boolean
+    releaseReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type InventoryBlockOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "ticketId" | "seatId" | "reason" | "category" | "label" | "blockedBy" | "releasedAt" | "releasedBy" | "releaseReason" | "createdAt" | "updatedAt", ExtArgs["result"]["inventoryBlock"]>
+  export type InventoryBlockInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+    seat?: boolean | InventoryBlock$seatArgs<ExtArgs>
+  }
+  export type InventoryBlockIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+    seat?: boolean | InventoryBlock$seatArgs<ExtArgs>
+  }
+  export type InventoryBlockIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+    seat?: boolean | InventoryBlock$seatArgs<ExtArgs>
+  }
+
+  export type $InventoryBlockPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "InventoryBlock"
+    objects: {
+      event: Prisma.$EventPayload<ExtArgs>
+      ticket: Prisma.$TicketPayload<ExtArgs>
+      seat: Prisma.$SeatPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      eventId: string
+      /**
+       * Unidad de inventario retirada. Es el ancla real del bloqueo.
+       */
+      ticketId: string
+      /**
+       * Nulo en admisión general (boleto sin butaca asignada).
+       */
+      seatId: string | null
+      /**
+       * Motivo obligatorio: un bloqueo sin motivo es inventario perdido sin dueño.
+       */
+      reason: string
+      /**
+       * Categoría libre para agrupar en reportes (ver `HoldReasonCategory` en la API).
+       */
+      category: string
+      /**
+       * Etiqueta operativa opcional: "prensa", "produccion-gira", "palco-patrocinador".
+       */
+      label: string | null
+      blockedBy: string
+      releasedAt: Date | null
+      releasedBy: string | null
+      releaseReason: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["inventoryBlock"]>
+    composites: {}
+  }
+
+  type InventoryBlockGetPayload<S extends boolean | null | undefined | InventoryBlockDefaultArgs> = $Result.GetResult<Prisma.$InventoryBlockPayload, S>
+
+  type InventoryBlockCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<InventoryBlockFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: InventoryBlockCountAggregateInputType | true
+    }
+
+  export interface InventoryBlockDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['InventoryBlock'], meta: { name: 'InventoryBlock' } }
+    /**
+     * Find zero or one InventoryBlock that matches the filter.
+     * @param {InventoryBlockFindUniqueArgs} args - Arguments to find a InventoryBlock
+     * @example
+     * // Get one InventoryBlock
+     * const inventoryBlock = await prisma.inventoryBlock.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends InventoryBlockFindUniqueArgs>(args: SelectSubset<T, InventoryBlockFindUniqueArgs<ExtArgs>>): Prisma__InventoryBlockClient<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one InventoryBlock that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {InventoryBlockFindUniqueOrThrowArgs} args - Arguments to find a InventoryBlock
+     * @example
+     * // Get one InventoryBlock
+     * const inventoryBlock = await prisma.inventoryBlock.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends InventoryBlockFindUniqueOrThrowArgs>(args: SelectSubset<T, InventoryBlockFindUniqueOrThrowArgs<ExtArgs>>): Prisma__InventoryBlockClient<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first InventoryBlock that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InventoryBlockFindFirstArgs} args - Arguments to find a InventoryBlock
+     * @example
+     * // Get one InventoryBlock
+     * const inventoryBlock = await prisma.inventoryBlock.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends InventoryBlockFindFirstArgs>(args?: SelectSubset<T, InventoryBlockFindFirstArgs<ExtArgs>>): Prisma__InventoryBlockClient<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first InventoryBlock that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InventoryBlockFindFirstOrThrowArgs} args - Arguments to find a InventoryBlock
+     * @example
+     * // Get one InventoryBlock
+     * const inventoryBlock = await prisma.inventoryBlock.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends InventoryBlockFindFirstOrThrowArgs>(args?: SelectSubset<T, InventoryBlockFindFirstOrThrowArgs<ExtArgs>>): Prisma__InventoryBlockClient<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more InventoryBlocks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InventoryBlockFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all InventoryBlocks
+     * const inventoryBlocks = await prisma.inventoryBlock.findMany()
+     * 
+     * // Get first 10 InventoryBlocks
+     * const inventoryBlocks = await prisma.inventoryBlock.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const inventoryBlockWithIdOnly = await prisma.inventoryBlock.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends InventoryBlockFindManyArgs>(args?: SelectSubset<T, InventoryBlockFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a InventoryBlock.
+     * @param {InventoryBlockCreateArgs} args - Arguments to create a InventoryBlock.
+     * @example
+     * // Create one InventoryBlock
+     * const InventoryBlock = await prisma.inventoryBlock.create({
+     *   data: {
+     *     // ... data to create a InventoryBlock
+     *   }
+     * })
+     * 
+     */
+    create<T extends InventoryBlockCreateArgs>(args: SelectSubset<T, InventoryBlockCreateArgs<ExtArgs>>): Prisma__InventoryBlockClient<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many InventoryBlocks.
+     * @param {InventoryBlockCreateManyArgs} args - Arguments to create many InventoryBlocks.
+     * @example
+     * // Create many InventoryBlocks
+     * const inventoryBlock = await prisma.inventoryBlock.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends InventoryBlockCreateManyArgs>(args?: SelectSubset<T, InventoryBlockCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many InventoryBlocks and returns the data saved in the database.
+     * @param {InventoryBlockCreateManyAndReturnArgs} args - Arguments to create many InventoryBlocks.
+     * @example
+     * // Create many InventoryBlocks
+     * const inventoryBlock = await prisma.inventoryBlock.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many InventoryBlocks and only return the `id`
+     * const inventoryBlockWithIdOnly = await prisma.inventoryBlock.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends InventoryBlockCreateManyAndReturnArgs>(args?: SelectSubset<T, InventoryBlockCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a InventoryBlock.
+     * @param {InventoryBlockDeleteArgs} args - Arguments to delete one InventoryBlock.
+     * @example
+     * // Delete one InventoryBlock
+     * const InventoryBlock = await prisma.inventoryBlock.delete({
+     *   where: {
+     *     // ... filter to delete one InventoryBlock
+     *   }
+     * })
+     * 
+     */
+    delete<T extends InventoryBlockDeleteArgs>(args: SelectSubset<T, InventoryBlockDeleteArgs<ExtArgs>>): Prisma__InventoryBlockClient<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one InventoryBlock.
+     * @param {InventoryBlockUpdateArgs} args - Arguments to update one InventoryBlock.
+     * @example
+     * // Update one InventoryBlock
+     * const inventoryBlock = await prisma.inventoryBlock.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends InventoryBlockUpdateArgs>(args: SelectSubset<T, InventoryBlockUpdateArgs<ExtArgs>>): Prisma__InventoryBlockClient<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more InventoryBlocks.
+     * @param {InventoryBlockDeleteManyArgs} args - Arguments to filter InventoryBlocks to delete.
+     * @example
+     * // Delete a few InventoryBlocks
+     * const { count } = await prisma.inventoryBlock.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends InventoryBlockDeleteManyArgs>(args?: SelectSubset<T, InventoryBlockDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more InventoryBlocks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InventoryBlockUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many InventoryBlocks
+     * const inventoryBlock = await prisma.inventoryBlock.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends InventoryBlockUpdateManyArgs>(args: SelectSubset<T, InventoryBlockUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more InventoryBlocks and returns the data updated in the database.
+     * @param {InventoryBlockUpdateManyAndReturnArgs} args - Arguments to update many InventoryBlocks.
+     * @example
+     * // Update many InventoryBlocks
+     * const inventoryBlock = await prisma.inventoryBlock.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more InventoryBlocks and only return the `id`
+     * const inventoryBlockWithIdOnly = await prisma.inventoryBlock.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends InventoryBlockUpdateManyAndReturnArgs>(args: SelectSubset<T, InventoryBlockUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one InventoryBlock.
+     * @param {InventoryBlockUpsertArgs} args - Arguments to update or create a InventoryBlock.
+     * @example
+     * // Update or create a InventoryBlock
+     * const inventoryBlock = await prisma.inventoryBlock.upsert({
+     *   create: {
+     *     // ... data to create a InventoryBlock
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the InventoryBlock we want to update
+     *   }
+     * })
+     */
+    upsert<T extends InventoryBlockUpsertArgs>(args: SelectSubset<T, InventoryBlockUpsertArgs<ExtArgs>>): Prisma__InventoryBlockClient<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of InventoryBlocks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InventoryBlockCountArgs} args - Arguments to filter InventoryBlocks to count.
+     * @example
+     * // Count the number of InventoryBlocks
+     * const count = await prisma.inventoryBlock.count({
+     *   where: {
+     *     // ... the filter for the InventoryBlocks we want to count
+     *   }
+     * })
+    **/
+    count<T extends InventoryBlockCountArgs>(
+      args?: Subset<T, InventoryBlockCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], InventoryBlockCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a InventoryBlock.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InventoryBlockAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends InventoryBlockAggregateArgs>(args: Subset<T, InventoryBlockAggregateArgs>): Prisma.PrismaPromise<GetInventoryBlockAggregateType<T>>
+
+    /**
+     * Group by InventoryBlock.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InventoryBlockGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends InventoryBlockGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: InventoryBlockGroupByArgs['orderBy'] }
+        : { orderBy?: InventoryBlockGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, InventoryBlockGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetInventoryBlockGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the InventoryBlock model
+   */
+  readonly fields: InventoryBlockFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for InventoryBlock.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__InventoryBlockClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    event<T extends EventDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EventDefaultArgs<ExtArgs>>): Prisma__EventClient<$Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    ticket<T extends TicketDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TicketDefaultArgs<ExtArgs>>): Prisma__TicketClient<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    seat<T extends InventoryBlock$seatArgs<ExtArgs> = {}>(args?: Subset<T, InventoryBlock$seatArgs<ExtArgs>>): Prisma__SeatClient<$Result.GetResult<Prisma.$SeatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the InventoryBlock model
+   */
+  interface InventoryBlockFieldRefs {
+    readonly id: FieldRef<"InventoryBlock", 'String'>
+    readonly eventId: FieldRef<"InventoryBlock", 'String'>
+    readonly ticketId: FieldRef<"InventoryBlock", 'String'>
+    readonly seatId: FieldRef<"InventoryBlock", 'String'>
+    readonly reason: FieldRef<"InventoryBlock", 'String'>
+    readonly category: FieldRef<"InventoryBlock", 'String'>
+    readonly label: FieldRef<"InventoryBlock", 'String'>
+    readonly blockedBy: FieldRef<"InventoryBlock", 'String'>
+    readonly releasedAt: FieldRef<"InventoryBlock", 'DateTime'>
+    readonly releasedBy: FieldRef<"InventoryBlock", 'String'>
+    readonly releaseReason: FieldRef<"InventoryBlock", 'String'>
+    readonly createdAt: FieldRef<"InventoryBlock", 'DateTime'>
+    readonly updatedAt: FieldRef<"InventoryBlock", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * InventoryBlock findUnique
+   */
+  export type InventoryBlockFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * Filter, which InventoryBlock to fetch.
+     */
+    where: InventoryBlockWhereUniqueInput
+  }
+
+  /**
+   * InventoryBlock findUniqueOrThrow
+   */
+  export type InventoryBlockFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * Filter, which InventoryBlock to fetch.
+     */
+    where: InventoryBlockWhereUniqueInput
+  }
+
+  /**
+   * InventoryBlock findFirst
+   */
+  export type InventoryBlockFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * Filter, which InventoryBlock to fetch.
+     */
+    where?: InventoryBlockWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InventoryBlocks to fetch.
+     */
+    orderBy?: InventoryBlockOrderByWithRelationInput | InventoryBlockOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for InventoryBlocks.
+     */
+    cursor?: InventoryBlockWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InventoryBlocks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InventoryBlocks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of InventoryBlocks.
+     */
+    distinct?: InventoryBlockScalarFieldEnum | InventoryBlockScalarFieldEnum[]
+  }
+
+  /**
+   * InventoryBlock findFirstOrThrow
+   */
+  export type InventoryBlockFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * Filter, which InventoryBlock to fetch.
+     */
+    where?: InventoryBlockWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InventoryBlocks to fetch.
+     */
+    orderBy?: InventoryBlockOrderByWithRelationInput | InventoryBlockOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for InventoryBlocks.
+     */
+    cursor?: InventoryBlockWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InventoryBlocks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InventoryBlocks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of InventoryBlocks.
+     */
+    distinct?: InventoryBlockScalarFieldEnum | InventoryBlockScalarFieldEnum[]
+  }
+
+  /**
+   * InventoryBlock findMany
+   */
+  export type InventoryBlockFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * Filter, which InventoryBlocks to fetch.
+     */
+    where?: InventoryBlockWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InventoryBlocks to fetch.
+     */
+    orderBy?: InventoryBlockOrderByWithRelationInput | InventoryBlockOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing InventoryBlocks.
+     */
+    cursor?: InventoryBlockWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InventoryBlocks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InventoryBlocks.
+     */
+    skip?: number
+    distinct?: InventoryBlockScalarFieldEnum | InventoryBlockScalarFieldEnum[]
+  }
+
+  /**
+   * InventoryBlock create
+   */
+  export type InventoryBlockCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * The data needed to create a InventoryBlock.
+     */
+    data: XOR<InventoryBlockCreateInput, InventoryBlockUncheckedCreateInput>
+  }
+
+  /**
+   * InventoryBlock createMany
+   */
+  export type InventoryBlockCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many InventoryBlocks.
+     */
+    data: InventoryBlockCreateManyInput | InventoryBlockCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * InventoryBlock createManyAndReturn
+   */
+  export type InventoryBlockCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * The data used to create many InventoryBlocks.
+     */
+    data: InventoryBlockCreateManyInput | InventoryBlockCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * InventoryBlock update
+   */
+  export type InventoryBlockUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * The data needed to update a InventoryBlock.
+     */
+    data: XOR<InventoryBlockUpdateInput, InventoryBlockUncheckedUpdateInput>
+    /**
+     * Choose, which InventoryBlock to update.
+     */
+    where: InventoryBlockWhereUniqueInput
+  }
+
+  /**
+   * InventoryBlock updateMany
+   */
+  export type InventoryBlockUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update InventoryBlocks.
+     */
+    data: XOR<InventoryBlockUpdateManyMutationInput, InventoryBlockUncheckedUpdateManyInput>
+    /**
+     * Filter which InventoryBlocks to update
+     */
+    where?: InventoryBlockWhereInput
+    /**
+     * Limit how many InventoryBlocks to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * InventoryBlock updateManyAndReturn
+   */
+  export type InventoryBlockUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * The data used to update InventoryBlocks.
+     */
+    data: XOR<InventoryBlockUpdateManyMutationInput, InventoryBlockUncheckedUpdateManyInput>
+    /**
+     * Filter which InventoryBlocks to update
+     */
+    where?: InventoryBlockWhereInput
+    /**
+     * Limit how many InventoryBlocks to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * InventoryBlock upsert
+   */
+  export type InventoryBlockUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * The filter to search for the InventoryBlock to update in case it exists.
+     */
+    where: InventoryBlockWhereUniqueInput
+    /**
+     * In case the InventoryBlock found by the `where` argument doesn't exist, create a new InventoryBlock with this data.
+     */
+    create: XOR<InventoryBlockCreateInput, InventoryBlockUncheckedCreateInput>
+    /**
+     * In case the InventoryBlock was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<InventoryBlockUpdateInput, InventoryBlockUncheckedUpdateInput>
+  }
+
+  /**
+   * InventoryBlock delete
+   */
+  export type InventoryBlockDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    /**
+     * Filter which InventoryBlock to delete.
+     */
+    where: InventoryBlockWhereUniqueInput
+  }
+
+  /**
+   * InventoryBlock deleteMany
+   */
+  export type InventoryBlockDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which InventoryBlocks to delete
+     */
+    where?: InventoryBlockWhereInput
+    /**
+     * Limit how many InventoryBlocks to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * InventoryBlock.seat
+   */
+  export type InventoryBlock$seatArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Seat
+     */
+    select?: SeatSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Seat
+     */
+    omit?: SeatOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SeatInclude<ExtArgs> | null
+    where?: SeatWhereInput
+  }
+
+  /**
+   * InventoryBlock without action
+   */
+  export type InventoryBlockDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
   }
 
 
@@ -24165,6 +25533,7 @@ export namespace Prisma {
     waitlistEntries?: boolean | Event$waitlistEntriesArgs<ExtArgs>
     seasonPassEvents?: boolean | Event$seasonPassEventsArgs<ExtArgs>
     salePhases?: boolean | Event$salePhasesArgs<ExtArgs>
+    inventoryBlocks?: boolean | Event$inventoryBlocksArgs<ExtArgs>
     _count?: boolean | EventCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["event"]>
 
@@ -24331,6 +25700,7 @@ export namespace Prisma {
     waitlistEntries?: boolean | Event$waitlistEntriesArgs<ExtArgs>
     seasonPassEvents?: boolean | Event$seasonPassEventsArgs<ExtArgs>
     salePhases?: boolean | Event$salePhasesArgs<ExtArgs>
+    inventoryBlocks?: boolean | Event$inventoryBlocksArgs<ExtArgs>
     _count?: boolean | EventCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type EventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -24361,6 +25731,7 @@ export namespace Prisma {
       waitlistEntries: Prisma.$WaitlistEntryPayload<ExtArgs>[]
       seasonPassEvents: Prisma.$SeasonPassEventPayload<ExtArgs>[]
       salePhases: Prisma.$SalePhasePayload<ExtArgs>[]
+      inventoryBlocks: Prisma.$InventoryBlockPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -24833,6 +26204,7 @@ export namespace Prisma {
     waitlistEntries<T extends Event$waitlistEntriesArgs<ExtArgs> = {}>(args?: Subset<T, Event$waitlistEntriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WaitlistEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     seasonPassEvents<T extends Event$seasonPassEventsArgs<ExtArgs> = {}>(args?: Subset<T, Event$seasonPassEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SeasonPassEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     salePhases<T extends Event$salePhasesArgs<ExtArgs> = {}>(args?: Subset<T, Event$salePhasesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SalePhasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    inventoryBlocks<T extends Event$inventoryBlocksArgs<ExtArgs> = {}>(args?: Subset<T, Event$inventoryBlocksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -25577,6 +26949,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SalePhaseScalarFieldEnum | SalePhaseScalarFieldEnum[]
+  }
+
+  /**
+   * Event.inventoryBlocks
+   */
+  export type Event$inventoryBlocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    where?: InventoryBlockWhereInput
+    orderBy?: InventoryBlockOrderByWithRelationInput | InventoryBlockOrderByWithRelationInput[]
+    cursor?: InventoryBlockWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: InventoryBlockScalarFieldEnum | InventoryBlockScalarFieldEnum[]
   }
 
   /**
@@ -30932,6 +32328,7 @@ export namespace Prisma {
     fraudFlags?: boolean | Ticket$fraudFlagsArgs<ExtArgs>
     transfers?: boolean | Ticket$transfersArgs<ExtArgs>
     scans?: boolean | Ticket$scansArgs<ExtArgs>
+    inventoryBlocks?: boolean | Ticket$inventoryBlocksArgs<ExtArgs>
     _count?: boolean | TicketCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["ticket"]>
 
@@ -31019,6 +32416,7 @@ export namespace Prisma {
     fraudFlags?: boolean | Ticket$fraudFlagsArgs<ExtArgs>
     transfers?: boolean | Ticket$transfersArgs<ExtArgs>
     scans?: boolean | Ticket$scansArgs<ExtArgs>
+    inventoryBlocks?: boolean | Ticket$inventoryBlocksArgs<ExtArgs>
     _count?: boolean | TicketCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type TicketIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -31045,6 +32443,7 @@ export namespace Prisma {
       fraudFlags: Prisma.$FraudFlagPayload<ExtArgs>[]
       transfers: Prisma.$TicketTransferPayload<ExtArgs>[]
       scans: Prisma.$TicketScanPayload<ExtArgs>[]
+      inventoryBlocks: Prisma.$InventoryBlockPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -31468,6 +32867,7 @@ export namespace Prisma {
     fraudFlags<T extends Ticket$fraudFlagsArgs<ExtArgs> = {}>(args?: Subset<T, Ticket$fraudFlagsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FraudFlagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     transfers<T extends Ticket$transfersArgs<ExtArgs> = {}>(args?: Subset<T, Ticket$transfersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TicketTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     scans<T extends Ticket$scansArgs<ExtArgs> = {}>(args?: Subset<T, Ticket$scansArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TicketScanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    inventoryBlocks<T extends Ticket$inventoryBlocksArgs<ExtArgs> = {}>(args?: Subset<T, Ticket$inventoryBlocksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryBlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -32038,6 +33438,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TicketScanScalarFieldEnum | TicketScanScalarFieldEnum[]
+  }
+
+  /**
+   * Ticket.inventoryBlocks
+   */
+  export type Ticket$inventoryBlocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InventoryBlock
+     */
+    select?: InventoryBlockSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the InventoryBlock
+     */
+    omit?: InventoryBlockOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InventoryBlockInclude<ExtArgs> | null
+    where?: InventoryBlockWhereInput
+    orderBy?: InventoryBlockOrderByWithRelationInput | InventoryBlockOrderByWithRelationInput[]
+    cursor?: InventoryBlockWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: InventoryBlockScalarFieldEnum | InventoryBlockScalarFieldEnum[]
   }
 
   /**
@@ -49336,6 +50760,7 @@ export namespace Prisma {
     grossRevenue: Decimal | null
     commission: Decimal | null
     netAmount: Decimal | null
+    currency: $Enums.Currency | null
     status: $Enums.PayoutStatus | null
     method: $Enums.PaymentMethod | null
     referenceId: string | null
@@ -49352,6 +50777,7 @@ export namespace Prisma {
     grossRevenue: Decimal | null
     commission: Decimal | null
     netAmount: Decimal | null
+    currency: $Enums.Currency | null
     status: $Enums.PayoutStatus | null
     method: $Enums.PaymentMethod | null
     referenceId: string | null
@@ -49368,6 +50794,7 @@ export namespace Prisma {
     grossRevenue: number
     commission: number
     netAmount: number
+    currency: number
     status: number
     method: number
     referenceId: number
@@ -49398,6 +50825,7 @@ export namespace Prisma {
     grossRevenue?: true
     commission?: true
     netAmount?: true
+    currency?: true
     status?: true
     method?: true
     referenceId?: true
@@ -49414,6 +50842,7 @@ export namespace Prisma {
     grossRevenue?: true
     commission?: true
     netAmount?: true
+    currency?: true
     status?: true
     method?: true
     referenceId?: true
@@ -49430,6 +50859,7 @@ export namespace Prisma {
     grossRevenue?: true
     commission?: true
     netAmount?: true
+    currency?: true
     status?: true
     method?: true
     referenceId?: true
@@ -49533,6 +50963,7 @@ export namespace Prisma {
     grossRevenue: Decimal
     commission: Decimal
     netAmount: Decimal
+    currency: $Enums.Currency
     status: $Enums.PayoutStatus
     method: $Enums.PaymentMethod
     referenceId: string | null
@@ -49568,6 +50999,7 @@ export namespace Prisma {
     grossRevenue?: boolean
     commission?: boolean
     netAmount?: boolean
+    currency?: boolean
     status?: boolean
     method?: boolean
     referenceId?: boolean
@@ -49585,6 +51017,7 @@ export namespace Prisma {
     grossRevenue?: boolean
     commission?: boolean
     netAmount?: boolean
+    currency?: boolean
     status?: boolean
     method?: boolean
     referenceId?: boolean
@@ -49602,6 +51035,7 @@ export namespace Prisma {
     grossRevenue?: boolean
     commission?: boolean
     netAmount?: boolean
+    currency?: boolean
     status?: boolean
     method?: boolean
     referenceId?: boolean
@@ -49619,6 +51053,7 @@ export namespace Prisma {
     grossRevenue?: boolean
     commission?: boolean
     netAmount?: boolean
+    currency?: boolean
     status?: boolean
     method?: boolean
     referenceId?: boolean
@@ -49627,7 +51062,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type PromoterPayoutOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "periodStart" | "periodEnd" | "grossRevenue" | "commission" | "netAmount" | "status" | "method" | "referenceId" | "processedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["promoterPayout"]>
+  export type PromoterPayoutOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "periodStart" | "periodEnd" | "grossRevenue" | "commission" | "netAmount" | "currency" | "status" | "method" | "referenceId" | "processedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["promoterPayout"]>
   export type PromoterPayoutInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }
@@ -49651,6 +51086,12 @@ export namespace Prisma {
       grossRevenue: Prisma.Decimal
       commission: Prisma.Decimal
       netAmount: Prisma.Decimal
+      /**
+       * Moneda de la liquidación. Las órdenes ya son multi-moneda; sin este campo
+       * sumar importes de distintas monedas en un mismo pago era un error mudo.
+       * MXN por defecto: es lo que asumía la tabla hasta ahora.
+       */
+      currency: $Enums.Currency
       status: $Enums.PayoutStatus
       method: $Enums.PaymentMethod
       referenceId: string | null
@@ -50088,6 +51529,7 @@ export namespace Prisma {
     readonly grossRevenue: FieldRef<"PromoterPayout", 'Decimal'>
     readonly commission: FieldRef<"PromoterPayout", 'Decimal'>
     readonly netAmount: FieldRef<"PromoterPayout", 'Decimal'>
+    readonly currency: FieldRef<"PromoterPayout", 'Currency'>
     readonly status: FieldRef<"PromoterPayout", 'PayoutStatus'>
     readonly method: FieldRef<"PromoterPayout", 'PaymentMethod'>
     readonly referenceId: FieldRef<"PromoterPayout", 'String'>
@@ -64654,6 +66096,25 @@ export namespace Prisma {
   export type SeatHoldScalarFieldEnum = (typeof SeatHoldScalarFieldEnum)[keyof typeof SeatHoldScalarFieldEnum]
 
 
+  export const InventoryBlockScalarFieldEnum: {
+    id: 'id',
+    eventId: 'eventId',
+    ticketId: 'ticketId',
+    seatId: 'seatId',
+    reason: 'reason',
+    category: 'category',
+    label: 'label',
+    blockedBy: 'blockedBy',
+    releasedAt: 'releasedAt',
+    releasedBy: 'releasedBy',
+    releaseReason: 'releaseReason',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type InventoryBlockScalarFieldEnum = (typeof InventoryBlockScalarFieldEnum)[keyof typeof InventoryBlockScalarFieldEnum]
+
+
   export const TenantThemeScalarFieldEnum: {
     id: 'id',
     organizationId: 'organizationId',
@@ -65181,6 +66642,7 @@ export namespace Prisma {
     grossRevenue: 'grossRevenue',
     commission: 'commission',
     netAmount: 'netAmount',
+    currency: 'currency',
     status: 'status',
     method: 'method',
     referenceId: 'referenceId',
@@ -66664,6 +68126,7 @@ export namespace Prisma {
     row?: XOR<SeatRowNullableScalarRelationFilter, SeatRowWhereInput> | null
     tickets?: TicketListRelationFilter
     holds?: SeatHoldListRelationFilter
+    inventoryBlocks?: InventoryBlockListRelationFilter
   }
 
   export type SeatOrderByWithRelationInput = {
@@ -66684,6 +68147,7 @@ export namespace Prisma {
     row?: SeatRowOrderByWithRelationInput
     tickets?: TicketOrderByRelationAggregateInput
     holds?: SeatHoldOrderByRelationAggregateInput
+    inventoryBlocks?: InventoryBlockOrderByRelationAggregateInput
   }
 
   export type SeatWhereUniqueInput = Prisma.AtLeast<{
@@ -66708,6 +68172,7 @@ export namespace Prisma {
     row?: XOR<SeatRowNullableScalarRelationFilter, SeatRowWhereInput> | null
     tickets?: TicketListRelationFilter
     holds?: SeatHoldListRelationFilter
+    inventoryBlocks?: InventoryBlockListRelationFilter
   }, "id" | "sectionId_label">
 
   export type SeatOrderByWithAggregationInput = {
@@ -66911,6 +68376,107 @@ export namespace Prisma {
     releasedAt?: DateTimeNullableWithAggregatesFilter<"SeatHold"> | Date | string | null
     status?: EnumHoldStatusWithAggregatesFilter<"SeatHold"> | $Enums.HoldStatus
     createdAt?: DateTimeWithAggregatesFilter<"SeatHold"> | Date | string
+  }
+
+  export type InventoryBlockWhereInput = {
+    AND?: InventoryBlockWhereInput | InventoryBlockWhereInput[]
+    OR?: InventoryBlockWhereInput[]
+    NOT?: InventoryBlockWhereInput | InventoryBlockWhereInput[]
+    id?: StringFilter<"InventoryBlock"> | string
+    eventId?: StringFilter<"InventoryBlock"> | string
+    ticketId?: StringFilter<"InventoryBlock"> | string
+    seatId?: StringNullableFilter<"InventoryBlock"> | string | null
+    reason?: StringFilter<"InventoryBlock"> | string
+    category?: StringFilter<"InventoryBlock"> | string
+    label?: StringNullableFilter<"InventoryBlock"> | string | null
+    blockedBy?: StringFilter<"InventoryBlock"> | string
+    releasedAt?: DateTimeNullableFilter<"InventoryBlock"> | Date | string | null
+    releasedBy?: StringNullableFilter<"InventoryBlock"> | string | null
+    releaseReason?: StringNullableFilter<"InventoryBlock"> | string | null
+    createdAt?: DateTimeFilter<"InventoryBlock"> | Date | string
+    updatedAt?: DateTimeFilter<"InventoryBlock"> | Date | string
+    event?: XOR<EventScalarRelationFilter, EventWhereInput>
+    ticket?: XOR<TicketScalarRelationFilter, TicketWhereInput>
+    seat?: XOR<SeatNullableScalarRelationFilter, SeatWhereInput> | null
+  }
+
+  export type InventoryBlockOrderByWithRelationInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    ticketId?: SortOrder
+    seatId?: SortOrderInput | SortOrder
+    reason?: SortOrder
+    category?: SortOrder
+    label?: SortOrderInput | SortOrder
+    blockedBy?: SortOrder
+    releasedAt?: SortOrderInput | SortOrder
+    releasedBy?: SortOrderInput | SortOrder
+    releaseReason?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    event?: EventOrderByWithRelationInput
+    ticket?: TicketOrderByWithRelationInput
+    seat?: SeatOrderByWithRelationInput
+  }
+
+  export type InventoryBlockWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: InventoryBlockWhereInput | InventoryBlockWhereInput[]
+    OR?: InventoryBlockWhereInput[]
+    NOT?: InventoryBlockWhereInput | InventoryBlockWhereInput[]
+    eventId?: StringFilter<"InventoryBlock"> | string
+    ticketId?: StringFilter<"InventoryBlock"> | string
+    seatId?: StringNullableFilter<"InventoryBlock"> | string | null
+    reason?: StringFilter<"InventoryBlock"> | string
+    category?: StringFilter<"InventoryBlock"> | string
+    label?: StringNullableFilter<"InventoryBlock"> | string | null
+    blockedBy?: StringFilter<"InventoryBlock"> | string
+    releasedAt?: DateTimeNullableFilter<"InventoryBlock"> | Date | string | null
+    releasedBy?: StringNullableFilter<"InventoryBlock"> | string | null
+    releaseReason?: StringNullableFilter<"InventoryBlock"> | string | null
+    createdAt?: DateTimeFilter<"InventoryBlock"> | Date | string
+    updatedAt?: DateTimeFilter<"InventoryBlock"> | Date | string
+    event?: XOR<EventScalarRelationFilter, EventWhereInput>
+    ticket?: XOR<TicketScalarRelationFilter, TicketWhereInput>
+    seat?: XOR<SeatNullableScalarRelationFilter, SeatWhereInput> | null
+  }, "id">
+
+  export type InventoryBlockOrderByWithAggregationInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    ticketId?: SortOrder
+    seatId?: SortOrderInput | SortOrder
+    reason?: SortOrder
+    category?: SortOrder
+    label?: SortOrderInput | SortOrder
+    blockedBy?: SortOrder
+    releasedAt?: SortOrderInput | SortOrder
+    releasedBy?: SortOrderInput | SortOrder
+    releaseReason?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: InventoryBlockCountOrderByAggregateInput
+    _max?: InventoryBlockMaxOrderByAggregateInput
+    _min?: InventoryBlockMinOrderByAggregateInput
+  }
+
+  export type InventoryBlockScalarWhereWithAggregatesInput = {
+    AND?: InventoryBlockScalarWhereWithAggregatesInput | InventoryBlockScalarWhereWithAggregatesInput[]
+    OR?: InventoryBlockScalarWhereWithAggregatesInput[]
+    NOT?: InventoryBlockScalarWhereWithAggregatesInput | InventoryBlockScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"InventoryBlock"> | string
+    eventId?: StringWithAggregatesFilter<"InventoryBlock"> | string
+    ticketId?: StringWithAggregatesFilter<"InventoryBlock"> | string
+    seatId?: StringNullableWithAggregatesFilter<"InventoryBlock"> | string | null
+    reason?: StringWithAggregatesFilter<"InventoryBlock"> | string
+    category?: StringWithAggregatesFilter<"InventoryBlock"> | string
+    label?: StringNullableWithAggregatesFilter<"InventoryBlock"> | string | null
+    blockedBy?: StringWithAggregatesFilter<"InventoryBlock"> | string
+    releasedAt?: DateTimeNullableWithAggregatesFilter<"InventoryBlock"> | Date | string | null
+    releasedBy?: StringNullableWithAggregatesFilter<"InventoryBlock"> | string | null
+    releaseReason?: StringNullableWithAggregatesFilter<"InventoryBlock"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"InventoryBlock"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"InventoryBlock"> | Date | string
   }
 
   export type TenantThemeWhereInput = {
@@ -67434,6 +69000,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryListRelationFilter
     seasonPassEvents?: SeasonPassEventListRelationFilter
     salePhases?: SalePhaseListRelationFilter
+    inventoryBlocks?: InventoryBlockListRelationFilter
   }
 
   export type EventOrderByWithRelationInput = {
@@ -67495,6 +69062,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryOrderByRelationAggregateInput
     seasonPassEvents?: SeasonPassEventOrderByRelationAggregateInput
     salePhases?: SalePhaseOrderByRelationAggregateInput
+    inventoryBlocks?: InventoryBlockOrderByRelationAggregateInput
   }
 
   export type EventWhereUniqueInput = Prisma.AtLeast<{
@@ -67559,6 +69127,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryListRelationFilter
     seasonPassEvents?: SeasonPassEventListRelationFilter
     salePhases?: SalePhaseListRelationFilter
+    inventoryBlocks?: InventoryBlockListRelationFilter
   }, "id" | "externalId" | "slug">
 
   export type EventOrderByWithAggregationInput = {
@@ -68135,6 +69704,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagListRelationFilter
     transfers?: TicketTransferListRelationFilter
     scans?: TicketScanListRelationFilter
+    inventoryBlocks?: InventoryBlockListRelationFilter
   }
 
   export type TicketOrderByWithRelationInput = {
@@ -68165,6 +69735,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagOrderByRelationAggregateInput
     transfers?: TicketTransferOrderByRelationAggregateInput
     scans?: TicketScanOrderByRelationAggregateInput
+    inventoryBlocks?: InventoryBlockOrderByRelationAggregateInput
   }
 
   export type TicketWhereUniqueInput = Prisma.AtLeast<{
@@ -68199,6 +69770,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagListRelationFilter
     transfers?: TicketTransferListRelationFilter
     scans?: TicketScanListRelationFilter
+    inventoryBlocks?: InventoryBlockListRelationFilter
   }, "id" | "code" | "eventId_seatId">
 
   export type TicketOrderByWithAggregationInput = {
@@ -69692,6 +71264,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
     commission?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"PromoterPayout"> | $Enums.Currency
     status?: EnumPayoutStatusFilter<"PromoterPayout"> | $Enums.PayoutStatus
     method?: EnumPaymentMethodFilter<"PromoterPayout"> | $Enums.PaymentMethod
     referenceId?: StringNullableFilter<"PromoterPayout"> | string | null
@@ -69709,6 +71282,7 @@ export namespace Prisma {
     grossRevenue?: SortOrder
     commission?: SortOrder
     netAmount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     method?: SortOrder
     referenceId?: SortOrderInput | SortOrder
@@ -69729,6 +71303,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
     commission?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"PromoterPayout"> | $Enums.Currency
     status?: EnumPayoutStatusFilter<"PromoterPayout"> | $Enums.PayoutStatus
     method?: EnumPaymentMethodFilter<"PromoterPayout"> | $Enums.PaymentMethod
     referenceId?: StringNullableFilter<"PromoterPayout"> | string | null
@@ -69746,6 +71321,7 @@ export namespace Prisma {
     grossRevenue?: SortOrder
     commission?: SortOrder
     netAmount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     method?: SortOrder
     referenceId?: SortOrderInput | SortOrder
@@ -69770,6 +71346,7 @@ export namespace Prisma {
     grossRevenue?: DecimalWithAggregatesFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
     commission?: DecimalWithAggregatesFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalWithAggregatesFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyWithAggregatesFilter<"PromoterPayout"> | $Enums.Currency
     status?: EnumPayoutStatusWithAggregatesFilter<"PromoterPayout"> | $Enums.PayoutStatus
     method?: EnumPaymentMethodWithAggregatesFilter<"PromoterPayout"> | $Enums.PaymentMethod
     referenceId?: StringNullableWithAggregatesFilter<"PromoterPayout"> | string | null
@@ -71609,6 +73186,7 @@ export namespace Prisma {
     row?: SeatRowCreateNestedOneWithoutSeatsInput
     tickets?: TicketCreateNestedManyWithoutSeatInput
     holds?: SeatHoldCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutSeatInput
   }
 
   export type SeatUncheckedCreateInput = {
@@ -71627,6 +73205,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutSeatInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutSeatInput
   }
 
   export type SeatUpdateInput = {
@@ -71645,6 +73224,7 @@ export namespace Prisma {
     row?: SeatRowUpdateOneWithoutSeatsNestedInput
     tickets?: TicketUpdateManyWithoutSeatNestedInput
     holds?: SeatHoldUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutSeatNestedInput
   }
 
   export type SeatUncheckedUpdateInput = {
@@ -71663,6 +73243,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutSeatNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutSeatNestedInput
   }
 
   export type SeatCreateManyInput = {
@@ -71880,6 +73461,115 @@ export namespace Prisma {
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InventoryBlockCreateInput = {
+    id?: string
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    event: EventCreateNestedOneWithoutInventoryBlocksInput
+    ticket: TicketCreateNestedOneWithoutInventoryBlocksInput
+    seat?: SeatCreateNestedOneWithoutInventoryBlocksInput
+  }
+
+  export type InventoryBlockUncheckedCreateInput = {
+    id?: string
+    eventId: string
+    ticketId: string
+    seatId?: string | null
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InventoryBlockUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    event?: EventUpdateOneRequiredWithoutInventoryBlocksNestedInput
+    ticket?: TicketUpdateOneRequiredWithoutInventoryBlocksNestedInput
+    seat?: SeatUpdateOneWithoutInventoryBlocksNestedInput
+  }
+
+  export type InventoryBlockUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    seatId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InventoryBlockCreateManyInput = {
+    id?: string
+    eventId: string
+    ticketId: string
+    seatId?: string | null
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InventoryBlockUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InventoryBlockUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    seatId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type TenantThemeCreateInput = {
@@ -72449,6 +74139,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateInput = {
@@ -72507,6 +74198,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventUpdateInput = {
@@ -72565,6 +74257,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateInput = {
@@ -72623,6 +74316,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type EventCreateManyInput = {
@@ -73302,6 +74996,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferCreateNestedManyWithoutTicketInput
     scans?: TicketScanCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateInput = {
@@ -73328,6 +75023,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
     scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUpdateInput = {
@@ -73354,6 +75050,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateInput = {
@@ -73380,6 +75077,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketCreateManyInput = {
@@ -75080,6 +76778,7 @@ export namespace Prisma {
     grossRevenue: Decimal | DecimalJsLike | number | string
     commission: Decimal | DecimalJsLike | number | string
     netAmount: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
     status?: $Enums.PayoutStatus
     method?: $Enums.PaymentMethod
     referenceId?: string | null
@@ -75097,6 +76796,7 @@ export namespace Prisma {
     grossRevenue: Decimal | DecimalJsLike | number | string
     commission: Decimal | DecimalJsLike | number | string
     netAmount: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
     status?: $Enums.PayoutStatus
     method?: $Enums.PaymentMethod
     referenceId?: string | null
@@ -75112,6 +76812,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     commission?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPayoutStatusFieldUpdateOperationsInput | $Enums.PayoutStatus
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     referenceId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -75129,6 +76830,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     commission?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPayoutStatusFieldUpdateOperationsInput | $Enums.PayoutStatus
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     referenceId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -75145,6 +76847,7 @@ export namespace Prisma {
     grossRevenue: Decimal | DecimalJsLike | number | string
     commission: Decimal | DecimalJsLike | number | string
     netAmount: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
     status?: $Enums.PayoutStatus
     method?: $Enums.PaymentMethod
     referenceId?: string | null
@@ -75160,6 +76863,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     commission?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPayoutStatusFieldUpdateOperationsInput | $Enums.PayoutStatus
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     referenceId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -75176,6 +76880,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     commission?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPayoutStatusFieldUpdateOperationsInput | $Enums.PayoutStatus
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     referenceId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77284,11 +78989,21 @@ export namespace Prisma {
     none?: SeatHoldWhereInput
   }
 
+  export type InventoryBlockListRelationFilter = {
+    every?: InventoryBlockWhereInput
+    some?: InventoryBlockWhereInput
+    none?: InventoryBlockWhereInput
+  }
+
   export type TicketOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type SeatHoldOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type InventoryBlockOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -77482,6 +79197,59 @@ export namespace Prisma {
     _max?: NestedEnumHoldStatusFilter<$PrismaModel>
   }
 
+  export type TicketScalarRelationFilter = {
+    is?: TicketWhereInput
+    isNot?: TicketWhereInput
+  }
+
+  export type InventoryBlockCountOrderByAggregateInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    ticketId?: SortOrder
+    seatId?: SortOrder
+    reason?: SortOrder
+    category?: SortOrder
+    label?: SortOrder
+    blockedBy?: SortOrder
+    releasedAt?: SortOrder
+    releasedBy?: SortOrder
+    releaseReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InventoryBlockMaxOrderByAggregateInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    ticketId?: SortOrder
+    seatId?: SortOrder
+    reason?: SortOrder
+    category?: SortOrder
+    label?: SortOrder
+    blockedBy?: SortOrder
+    releasedAt?: SortOrder
+    releasedBy?: SortOrder
+    releaseReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InventoryBlockMinOrderByAggregateInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    ticketId?: SortOrder
+    seatId?: SortOrder
+    reason?: SortOrder
+    category?: SortOrder
+    label?: SortOrder
+    blockedBy?: SortOrder
+    releasedAt?: SortOrder
+    releasedBy?: SortOrder
+    releaseReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
   export type TenantThemeCountOrderByAggregateInput = {
     id?: SortOrder
     organizationId?: SortOrder
@@ -77596,11 +79364,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type TicketScalarRelationFilter = {
-    is?: TicketWhereInput
-    isNot?: TicketWhereInput
   }
 
   export type AccessZoneNullableScalarRelationFilter = {
@@ -79753,6 +81516,7 @@ export namespace Prisma {
     grossRevenue?: SortOrder
     commission?: SortOrder
     netAmount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     method?: SortOrder
     referenceId?: SortOrder
@@ -79775,6 +81539,7 @@ export namespace Prisma {
     grossRevenue?: SortOrder
     commission?: SortOrder
     netAmount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     method?: SortOrder
     referenceId?: SortOrder
@@ -79791,6 +81556,7 @@ export namespace Prisma {
     grossRevenue?: SortOrder
     commission?: SortOrder
     netAmount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     method?: SortOrder
     referenceId?: SortOrder
@@ -81619,6 +83385,13 @@ export namespace Prisma {
     connect?: SeatHoldWhereUniqueInput | SeatHoldWhereUniqueInput[]
   }
 
+  export type InventoryBlockCreateNestedManyWithoutSeatInput = {
+    create?: XOR<InventoryBlockCreateWithoutSeatInput, InventoryBlockUncheckedCreateWithoutSeatInput> | InventoryBlockCreateWithoutSeatInput[] | InventoryBlockUncheckedCreateWithoutSeatInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutSeatInput | InventoryBlockCreateOrConnectWithoutSeatInput[]
+    createMany?: InventoryBlockCreateManySeatInputEnvelope
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+  }
+
   export type TicketUncheckedCreateNestedManyWithoutSeatInput = {
     create?: XOR<TicketCreateWithoutSeatInput, TicketUncheckedCreateWithoutSeatInput> | TicketCreateWithoutSeatInput[] | TicketUncheckedCreateWithoutSeatInput[]
     connectOrCreate?: TicketCreateOrConnectWithoutSeatInput | TicketCreateOrConnectWithoutSeatInput[]
@@ -81631,6 +83404,13 @@ export namespace Prisma {
     connectOrCreate?: SeatHoldCreateOrConnectWithoutSeatInput | SeatHoldCreateOrConnectWithoutSeatInput[]
     createMany?: SeatHoldCreateManySeatInputEnvelope
     connect?: SeatHoldWhereUniqueInput | SeatHoldWhereUniqueInput[]
+  }
+
+  export type InventoryBlockUncheckedCreateNestedManyWithoutSeatInput = {
+    create?: XOR<InventoryBlockCreateWithoutSeatInput, InventoryBlockUncheckedCreateWithoutSeatInput> | InventoryBlockCreateWithoutSeatInput[] | InventoryBlockUncheckedCreateWithoutSeatInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutSeatInput | InventoryBlockCreateOrConnectWithoutSeatInput[]
+    createMany?: InventoryBlockCreateManySeatInputEnvelope
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
   }
 
   export type SectionUpdateOneRequiredWithoutSeatsNestedInput = {
@@ -81679,6 +83459,20 @@ export namespace Prisma {
     deleteMany?: SeatHoldScalarWhereInput | SeatHoldScalarWhereInput[]
   }
 
+  export type InventoryBlockUpdateManyWithoutSeatNestedInput = {
+    create?: XOR<InventoryBlockCreateWithoutSeatInput, InventoryBlockUncheckedCreateWithoutSeatInput> | InventoryBlockCreateWithoutSeatInput[] | InventoryBlockUncheckedCreateWithoutSeatInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutSeatInput | InventoryBlockCreateOrConnectWithoutSeatInput[]
+    upsert?: InventoryBlockUpsertWithWhereUniqueWithoutSeatInput | InventoryBlockUpsertWithWhereUniqueWithoutSeatInput[]
+    createMany?: InventoryBlockCreateManySeatInputEnvelope
+    set?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    disconnect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    delete?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    update?: InventoryBlockUpdateWithWhereUniqueWithoutSeatInput | InventoryBlockUpdateWithWhereUniqueWithoutSeatInput[]
+    updateMany?: InventoryBlockUpdateManyWithWhereWithoutSeatInput | InventoryBlockUpdateManyWithWhereWithoutSeatInput[]
+    deleteMany?: InventoryBlockScalarWhereInput | InventoryBlockScalarWhereInput[]
+  }
+
   export type TicketUncheckedUpdateManyWithoutSeatNestedInput = {
     create?: XOR<TicketCreateWithoutSeatInput, TicketUncheckedCreateWithoutSeatInput> | TicketCreateWithoutSeatInput[] | TicketUncheckedCreateWithoutSeatInput[]
     connectOrCreate?: TicketCreateOrConnectWithoutSeatInput | TicketCreateOrConnectWithoutSeatInput[]
@@ -81705,6 +83499,20 @@ export namespace Prisma {
     update?: SeatHoldUpdateWithWhereUniqueWithoutSeatInput | SeatHoldUpdateWithWhereUniqueWithoutSeatInput[]
     updateMany?: SeatHoldUpdateManyWithWhereWithoutSeatInput | SeatHoldUpdateManyWithWhereWithoutSeatInput[]
     deleteMany?: SeatHoldScalarWhereInput | SeatHoldScalarWhereInput[]
+  }
+
+  export type InventoryBlockUncheckedUpdateManyWithoutSeatNestedInput = {
+    create?: XOR<InventoryBlockCreateWithoutSeatInput, InventoryBlockUncheckedCreateWithoutSeatInput> | InventoryBlockCreateWithoutSeatInput[] | InventoryBlockUncheckedCreateWithoutSeatInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutSeatInput | InventoryBlockCreateOrConnectWithoutSeatInput[]
+    upsert?: InventoryBlockUpsertWithWhereUniqueWithoutSeatInput | InventoryBlockUpsertWithWhereUniqueWithoutSeatInput[]
+    createMany?: InventoryBlockCreateManySeatInputEnvelope
+    set?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    disconnect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    delete?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    update?: InventoryBlockUpdateWithWhereUniqueWithoutSeatInput | InventoryBlockUpdateWithWhereUniqueWithoutSeatInput[]
+    updateMany?: InventoryBlockUpdateManyWithWhereWithoutSeatInput | InventoryBlockUpdateManyWithWhereWithoutSeatInput[]
+    deleteMany?: InventoryBlockScalarWhereInput | InventoryBlockScalarWhereInput[]
   }
 
   export type EventCreateNestedOneWithoutSeatMapInput = {
@@ -81771,6 +83579,50 @@ export namespace Prisma {
     delete?: SeatWhereInput | boolean
     connect?: SeatWhereUniqueInput
     update?: XOR<XOR<SeatUpdateToOneWithWhereWithoutHoldsInput, SeatUpdateWithoutHoldsInput>, SeatUncheckedUpdateWithoutHoldsInput>
+  }
+
+  export type EventCreateNestedOneWithoutInventoryBlocksInput = {
+    create?: XOR<EventCreateWithoutInventoryBlocksInput, EventUncheckedCreateWithoutInventoryBlocksInput>
+    connectOrCreate?: EventCreateOrConnectWithoutInventoryBlocksInput
+    connect?: EventWhereUniqueInput
+  }
+
+  export type TicketCreateNestedOneWithoutInventoryBlocksInput = {
+    create?: XOR<TicketCreateWithoutInventoryBlocksInput, TicketUncheckedCreateWithoutInventoryBlocksInput>
+    connectOrCreate?: TicketCreateOrConnectWithoutInventoryBlocksInput
+    connect?: TicketWhereUniqueInput
+  }
+
+  export type SeatCreateNestedOneWithoutInventoryBlocksInput = {
+    create?: XOR<SeatCreateWithoutInventoryBlocksInput, SeatUncheckedCreateWithoutInventoryBlocksInput>
+    connectOrCreate?: SeatCreateOrConnectWithoutInventoryBlocksInput
+    connect?: SeatWhereUniqueInput
+  }
+
+  export type EventUpdateOneRequiredWithoutInventoryBlocksNestedInput = {
+    create?: XOR<EventCreateWithoutInventoryBlocksInput, EventUncheckedCreateWithoutInventoryBlocksInput>
+    connectOrCreate?: EventCreateOrConnectWithoutInventoryBlocksInput
+    upsert?: EventUpsertWithoutInventoryBlocksInput
+    connect?: EventWhereUniqueInput
+    update?: XOR<XOR<EventUpdateToOneWithWhereWithoutInventoryBlocksInput, EventUpdateWithoutInventoryBlocksInput>, EventUncheckedUpdateWithoutInventoryBlocksInput>
+  }
+
+  export type TicketUpdateOneRequiredWithoutInventoryBlocksNestedInput = {
+    create?: XOR<TicketCreateWithoutInventoryBlocksInput, TicketUncheckedCreateWithoutInventoryBlocksInput>
+    connectOrCreate?: TicketCreateOrConnectWithoutInventoryBlocksInput
+    upsert?: TicketUpsertWithoutInventoryBlocksInput
+    connect?: TicketWhereUniqueInput
+    update?: XOR<XOR<TicketUpdateToOneWithWhereWithoutInventoryBlocksInput, TicketUpdateWithoutInventoryBlocksInput>, TicketUncheckedUpdateWithoutInventoryBlocksInput>
+  }
+
+  export type SeatUpdateOneWithoutInventoryBlocksNestedInput = {
+    create?: XOR<SeatCreateWithoutInventoryBlocksInput, SeatUncheckedCreateWithoutInventoryBlocksInput>
+    connectOrCreate?: SeatCreateOrConnectWithoutInventoryBlocksInput
+    upsert?: SeatUpsertWithoutInventoryBlocksInput
+    disconnect?: SeatWhereInput | boolean
+    delete?: SeatWhereInput | boolean
+    connect?: SeatWhereUniqueInput
+    update?: XOR<XOR<SeatUpdateToOneWithWhereWithoutInventoryBlocksInput, SeatUpdateWithoutInventoryBlocksInput>, SeatUncheckedUpdateWithoutInventoryBlocksInput>
   }
 
   export type OrganizationCreateNestedOneWithoutTenantThemeInput = {
@@ -81999,6 +83851,13 @@ export namespace Prisma {
     connect?: SalePhaseWhereUniqueInput | SalePhaseWhereUniqueInput[]
   }
 
+  export type InventoryBlockCreateNestedManyWithoutEventInput = {
+    create?: XOR<InventoryBlockCreateWithoutEventInput, InventoryBlockUncheckedCreateWithoutEventInput> | InventoryBlockCreateWithoutEventInput[] | InventoryBlockUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutEventInput | InventoryBlockCreateOrConnectWithoutEventInput[]
+    createMany?: InventoryBlockCreateManyEventInputEnvelope
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+  }
+
   export type OfferUncheckedCreateNestedManyWithoutEventInput = {
     create?: XOR<OfferCreateWithoutEventInput, OfferUncheckedCreateWithoutEventInput> | OfferCreateWithoutEventInput[] | OfferUncheckedCreateWithoutEventInput[]
     connectOrCreate?: OfferCreateOrConnectWithoutEventInput | OfferCreateOrConnectWithoutEventInput[]
@@ -82073,6 +83932,13 @@ export namespace Prisma {
     connectOrCreate?: SalePhaseCreateOrConnectWithoutEventInput | SalePhaseCreateOrConnectWithoutEventInput[]
     createMany?: SalePhaseCreateManyEventInputEnvelope
     connect?: SalePhaseWhereUniqueInput | SalePhaseWhereUniqueInput[]
+  }
+
+  export type InventoryBlockUncheckedCreateNestedManyWithoutEventInput = {
+    create?: XOR<InventoryBlockCreateWithoutEventInput, InventoryBlockUncheckedCreateWithoutEventInput> | InventoryBlockCreateWithoutEventInput[] | InventoryBlockUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutEventInput | InventoryBlockCreateOrConnectWithoutEventInput[]
+    createMany?: InventoryBlockCreateManyEventInputEnvelope
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
   }
 
   export type EnumEventCategoryFieldUpdateOperationsInput = {
@@ -82259,6 +84125,20 @@ export namespace Prisma {
     deleteMany?: SalePhaseScalarWhereInput | SalePhaseScalarWhereInput[]
   }
 
+  export type InventoryBlockUpdateManyWithoutEventNestedInput = {
+    create?: XOR<InventoryBlockCreateWithoutEventInput, InventoryBlockUncheckedCreateWithoutEventInput> | InventoryBlockCreateWithoutEventInput[] | InventoryBlockUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutEventInput | InventoryBlockCreateOrConnectWithoutEventInput[]
+    upsert?: InventoryBlockUpsertWithWhereUniqueWithoutEventInput | InventoryBlockUpsertWithWhereUniqueWithoutEventInput[]
+    createMany?: InventoryBlockCreateManyEventInputEnvelope
+    set?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    disconnect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    delete?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    update?: InventoryBlockUpdateWithWhereUniqueWithoutEventInput | InventoryBlockUpdateWithWhereUniqueWithoutEventInput[]
+    updateMany?: InventoryBlockUpdateManyWithWhereWithoutEventInput | InventoryBlockUpdateManyWithWhereWithoutEventInput[]
+    deleteMany?: InventoryBlockScalarWhereInput | InventoryBlockScalarWhereInput[]
+  }
+
   export type OfferUncheckedUpdateManyWithoutEventNestedInput = {
     create?: XOR<OfferCreateWithoutEventInput, OfferUncheckedCreateWithoutEventInput> | OfferCreateWithoutEventInput[] | OfferUncheckedCreateWithoutEventInput[]
     connectOrCreate?: OfferCreateOrConnectWithoutEventInput | OfferCreateOrConnectWithoutEventInput[]
@@ -82407,6 +84287,20 @@ export namespace Prisma {
     update?: SalePhaseUpdateWithWhereUniqueWithoutEventInput | SalePhaseUpdateWithWhereUniqueWithoutEventInput[]
     updateMany?: SalePhaseUpdateManyWithWhereWithoutEventInput | SalePhaseUpdateManyWithWhereWithoutEventInput[]
     deleteMany?: SalePhaseScalarWhereInput | SalePhaseScalarWhereInput[]
+  }
+
+  export type InventoryBlockUncheckedUpdateManyWithoutEventNestedInput = {
+    create?: XOR<InventoryBlockCreateWithoutEventInput, InventoryBlockUncheckedCreateWithoutEventInput> | InventoryBlockCreateWithoutEventInput[] | InventoryBlockUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutEventInput | InventoryBlockCreateOrConnectWithoutEventInput[]
+    upsert?: InventoryBlockUpsertWithWhereUniqueWithoutEventInput | InventoryBlockUpsertWithWhereUniqueWithoutEventInput[]
+    createMany?: InventoryBlockCreateManyEventInputEnvelope
+    set?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    disconnect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    delete?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    update?: InventoryBlockUpdateWithWhereUniqueWithoutEventInput | InventoryBlockUpdateWithWhereUniqueWithoutEventInput[]
+    updateMany?: InventoryBlockUpdateManyWithWhereWithoutEventInput | InventoryBlockUpdateManyWithWhereWithoutEventInput[]
+    deleteMany?: InventoryBlockScalarWhereInput | InventoryBlockScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutEventSeriesInput = {
@@ -82734,6 +84628,13 @@ export namespace Prisma {
     connect?: TicketScanWhereUniqueInput | TicketScanWhereUniqueInput[]
   }
 
+  export type InventoryBlockCreateNestedManyWithoutTicketInput = {
+    create?: XOR<InventoryBlockCreateWithoutTicketInput, InventoryBlockUncheckedCreateWithoutTicketInput> | InventoryBlockCreateWithoutTicketInput[] | InventoryBlockUncheckedCreateWithoutTicketInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutTicketInput | InventoryBlockCreateOrConnectWithoutTicketInput[]
+    createMany?: InventoryBlockCreateManyTicketInputEnvelope
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+  }
+
   export type ResaleListingUncheckedCreateNestedOneWithoutTicketInput = {
     create?: XOR<ResaleListingCreateWithoutTicketInput, ResaleListingUncheckedCreateWithoutTicketInput>
     connectOrCreate?: ResaleListingCreateOrConnectWithoutTicketInput
@@ -82759,6 +84660,13 @@ export namespace Prisma {
     connectOrCreate?: TicketScanCreateOrConnectWithoutTicketInput | TicketScanCreateOrConnectWithoutTicketInput[]
     createMany?: TicketScanCreateManyTicketInputEnvelope
     connect?: TicketScanWhereUniqueInput | TicketScanWhereUniqueInput[]
+  }
+
+  export type InventoryBlockUncheckedCreateNestedManyWithoutTicketInput = {
+    create?: XOR<InventoryBlockCreateWithoutTicketInput, InventoryBlockUncheckedCreateWithoutTicketInput> | InventoryBlockCreateWithoutTicketInput[] | InventoryBlockUncheckedCreateWithoutTicketInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutTicketInput | InventoryBlockCreateOrConnectWithoutTicketInput[]
+    createMany?: InventoryBlockCreateManyTicketInputEnvelope
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
   }
 
   export type EnumTicketStatusFieldUpdateOperationsInput = {
@@ -82853,6 +84761,20 @@ export namespace Prisma {
     deleteMany?: TicketScanScalarWhereInput | TicketScanScalarWhereInput[]
   }
 
+  export type InventoryBlockUpdateManyWithoutTicketNestedInput = {
+    create?: XOR<InventoryBlockCreateWithoutTicketInput, InventoryBlockUncheckedCreateWithoutTicketInput> | InventoryBlockCreateWithoutTicketInput[] | InventoryBlockUncheckedCreateWithoutTicketInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutTicketInput | InventoryBlockCreateOrConnectWithoutTicketInput[]
+    upsert?: InventoryBlockUpsertWithWhereUniqueWithoutTicketInput | InventoryBlockUpsertWithWhereUniqueWithoutTicketInput[]
+    createMany?: InventoryBlockCreateManyTicketInputEnvelope
+    set?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    disconnect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    delete?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    update?: InventoryBlockUpdateWithWhereUniqueWithoutTicketInput | InventoryBlockUpdateWithWhereUniqueWithoutTicketInput[]
+    updateMany?: InventoryBlockUpdateManyWithWhereWithoutTicketInput | InventoryBlockUpdateManyWithWhereWithoutTicketInput[]
+    deleteMany?: InventoryBlockScalarWhereInput | InventoryBlockScalarWhereInput[]
+  }
+
   export type ResaleListingUncheckedUpdateOneWithoutTicketNestedInput = {
     create?: XOR<ResaleListingCreateWithoutTicketInput, ResaleListingUncheckedCreateWithoutTicketInput>
     connectOrCreate?: ResaleListingCreateOrConnectWithoutTicketInput
@@ -82903,6 +84825,20 @@ export namespace Prisma {
     update?: TicketScanUpdateWithWhereUniqueWithoutTicketInput | TicketScanUpdateWithWhereUniqueWithoutTicketInput[]
     updateMany?: TicketScanUpdateManyWithWhereWithoutTicketInput | TicketScanUpdateManyWithWhereWithoutTicketInput[]
     deleteMany?: TicketScanScalarWhereInput | TicketScanScalarWhereInput[]
+  }
+
+  export type InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput = {
+    create?: XOR<InventoryBlockCreateWithoutTicketInput, InventoryBlockUncheckedCreateWithoutTicketInput> | InventoryBlockCreateWithoutTicketInput[] | InventoryBlockUncheckedCreateWithoutTicketInput[]
+    connectOrCreate?: InventoryBlockCreateOrConnectWithoutTicketInput | InventoryBlockCreateOrConnectWithoutTicketInput[]
+    upsert?: InventoryBlockUpsertWithWhereUniqueWithoutTicketInput | InventoryBlockUpsertWithWhereUniqueWithoutTicketInput[]
+    createMany?: InventoryBlockCreateManyTicketInputEnvelope
+    set?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    disconnect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    delete?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    connect?: InventoryBlockWhereUniqueInput | InventoryBlockWhereUniqueInput[]
+    update?: InventoryBlockUpdateWithWhereUniqueWithoutTicketInput | InventoryBlockUpdateWithWhereUniqueWithoutTicketInput[]
+    updateMany?: InventoryBlockUpdateManyWithWhereWithoutTicketInput | InventoryBlockUpdateManyWithWhereWithoutTicketInput[]
+    deleteMany?: InventoryBlockScalarWhereInput | InventoryBlockScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutOrdersInput = {
@@ -85281,6 +87217,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutOrganizationInput = {
@@ -85338,6 +87275,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutOrganizationInput = {
@@ -85551,6 +87489,7 @@ export namespace Prisma {
     grossRevenue: Decimal | DecimalJsLike | number | string
     commission: Decimal | DecimalJsLike | number | string
     netAmount: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
     status?: $Enums.PayoutStatus
     method?: $Enums.PaymentMethod
     referenceId?: string | null
@@ -85566,6 +87505,7 @@ export namespace Prisma {
     grossRevenue: Decimal | DecimalJsLike | number | string
     commission: Decimal | DecimalJsLike | number | string
     netAmount: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
     status?: $Enums.PayoutStatus
     method?: $Enums.PaymentMethod
     referenceId?: string | null
@@ -86139,6 +88079,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
     commission?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFilter<"PromoterPayout"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"PromoterPayout"> | $Enums.Currency
     status?: EnumPayoutStatusFilter<"PromoterPayout"> | $Enums.PayoutStatus
     method?: EnumPaymentMethodFilter<"PromoterPayout"> | $Enums.PaymentMethod
     referenceId?: StringNullableFilter<"PromoterPayout"> | string | null
@@ -86536,6 +88477,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutVenueInput = {
@@ -86593,6 +88535,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutVenueInput = {
@@ -87383,6 +89326,7 @@ export namespace Prisma {
     row?: SeatRowCreateNestedOneWithoutSeatsInput
     tickets?: TicketCreateNestedManyWithoutSeatInput
     holds?: SeatHoldCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutSeatInput
   }
 
   export type SeatUncheckedCreateWithoutSectionInput = {
@@ -87400,6 +89344,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutSeatInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutSeatInput
   }
 
   export type SeatCreateOrConnectWithoutSectionInput = {
@@ -87557,6 +89502,7 @@ export namespace Prisma {
     section: SectionCreateNestedOneWithoutSeatsInput
     tickets?: TicketCreateNestedManyWithoutSeatInput
     holds?: SeatHoldCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutSeatInput
   }
 
   export type SeatUncheckedCreateWithoutRowInput = {
@@ -87574,6 +89520,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutSeatInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutSeatInput
   }
 
   export type SeatCreateOrConnectWithoutRowInput = {
@@ -87714,6 +89661,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferCreateNestedManyWithoutTicketInput
     scans?: TicketScanCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutSeatInput = {
@@ -87739,6 +89687,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
     scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutSeatInput = {
@@ -87788,6 +89737,46 @@ export namespace Prisma {
 
   export type SeatHoldCreateManySeatInputEnvelope = {
     data: SeatHoldCreateManySeatInput | SeatHoldCreateManySeatInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type InventoryBlockCreateWithoutSeatInput = {
+    id?: string
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    event: EventCreateNestedOneWithoutInventoryBlocksInput
+    ticket: TicketCreateNestedOneWithoutInventoryBlocksInput
+  }
+
+  export type InventoryBlockUncheckedCreateWithoutSeatInput = {
+    id?: string
+    eventId: string
+    ticketId: string
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InventoryBlockCreateOrConnectWithoutSeatInput = {
+    where: InventoryBlockWhereUniqueInput
+    create: XOR<InventoryBlockCreateWithoutSeatInput, InventoryBlockUncheckedCreateWithoutSeatInput>
+  }
+
+  export type InventoryBlockCreateManySeatInputEnvelope = {
+    data: InventoryBlockCreateManySeatInput | InventoryBlockCreateManySeatInput[]
     skipDuplicates?: boolean
   }
 
@@ -87931,6 +89920,41 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"SeatHold"> | Date | string
   }
 
+  export type InventoryBlockUpsertWithWhereUniqueWithoutSeatInput = {
+    where: InventoryBlockWhereUniqueInput
+    update: XOR<InventoryBlockUpdateWithoutSeatInput, InventoryBlockUncheckedUpdateWithoutSeatInput>
+    create: XOR<InventoryBlockCreateWithoutSeatInput, InventoryBlockUncheckedCreateWithoutSeatInput>
+  }
+
+  export type InventoryBlockUpdateWithWhereUniqueWithoutSeatInput = {
+    where: InventoryBlockWhereUniqueInput
+    data: XOR<InventoryBlockUpdateWithoutSeatInput, InventoryBlockUncheckedUpdateWithoutSeatInput>
+  }
+
+  export type InventoryBlockUpdateManyWithWhereWithoutSeatInput = {
+    where: InventoryBlockScalarWhereInput
+    data: XOR<InventoryBlockUpdateManyMutationInput, InventoryBlockUncheckedUpdateManyWithoutSeatInput>
+  }
+
+  export type InventoryBlockScalarWhereInput = {
+    AND?: InventoryBlockScalarWhereInput | InventoryBlockScalarWhereInput[]
+    OR?: InventoryBlockScalarWhereInput[]
+    NOT?: InventoryBlockScalarWhereInput | InventoryBlockScalarWhereInput[]
+    id?: StringFilter<"InventoryBlock"> | string
+    eventId?: StringFilter<"InventoryBlock"> | string
+    ticketId?: StringFilter<"InventoryBlock"> | string
+    seatId?: StringNullableFilter<"InventoryBlock"> | string | null
+    reason?: StringFilter<"InventoryBlock"> | string
+    category?: StringFilter<"InventoryBlock"> | string
+    label?: StringNullableFilter<"InventoryBlock"> | string | null
+    blockedBy?: StringFilter<"InventoryBlock"> | string
+    releasedAt?: DateTimeNullableFilter<"InventoryBlock"> | Date | string | null
+    releasedBy?: StringNullableFilter<"InventoryBlock"> | string | null
+    releaseReason?: StringNullableFilter<"InventoryBlock"> | string | null
+    createdAt?: DateTimeFilter<"InventoryBlock"> | Date | string
+    updatedAt?: DateTimeFilter<"InventoryBlock"> | Date | string
+  }
+
   export type EventCreateWithoutSeatMapInput = {
     id?: string
     externalId?: string | null
@@ -87986,6 +90010,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutSeatMapInput = {
@@ -88043,6 +90068,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutSeatMapInput = {
@@ -88147,6 +90173,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutSeatMapInput = {
@@ -88204,6 +90231,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type VenueLayoutUpsertWithoutEventMapsInput = {
@@ -88298,6 +90326,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutHoldsInput = {
@@ -88355,6 +90384,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutHoldsInput = {
@@ -88377,6 +90407,7 @@ export namespace Prisma {
     section: SectionCreateNestedOneWithoutSeatsInput
     row?: SeatRowCreateNestedOneWithoutSeatsInput
     tickets?: TicketCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutSeatInput
   }
 
   export type SeatUncheckedCreateWithoutHoldsInput = {
@@ -88394,6 +90425,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutSeatInput
   }
 
   export type SeatCreateOrConnectWithoutHoldsInput = {
@@ -88467,6 +90499,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutHoldsInput = {
@@ -88524,6 +90557,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type SeatUpsertWithoutHoldsInput = {
@@ -88552,6 +90586,7 @@ export namespace Prisma {
     section?: SectionUpdateOneRequiredWithoutSeatsNestedInput
     row?: SeatRowUpdateOneWithoutSeatsNestedInput
     tickets?: TicketUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutSeatNestedInput
   }
 
   export type SeatUncheckedUpdateWithoutHoldsInput = {
@@ -88569,6 +90604,463 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutSeatNestedInput
+  }
+
+  export type EventCreateWithoutInventoryBlocksInput = {
+    id?: string
+    externalId?: string | null
+    slug: string
+    title: string
+    description?: string | null
+    image?: string | null
+    bannerImage?: string | null
+    category?: $Enums.EventCategory
+    genre?: string | null
+    rating?: string | null
+    startsAt: Date | string
+    endsAt?: Date | string | null
+    timezone: string
+    doorsAt?: Date | string | null
+    durationMinutes?: number | null
+    status?: $Enums.EventStatus
+    publishedAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    announceAt?: Date | string | null
+    publishAt?: Date | string | null
+    salesStartAt?: Date | string | null
+    salesEndAt?: Date | string | null
+    rescheduledFrom?: Date | string | null
+    scheduleNote?: string | null
+    seriesOrder?: number | null
+    minPrice?: Decimal | DecimalJsLike | number | string
+    maxPrice?: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    totalCapacity: number
+    holdableCapacity?: number | null
+    allowResale?: boolean
+    transferAllowed?: boolean
+    refundable?: boolean
+    nonTransferable?: boolean
+    holdExpiration?: number
+    enableDynamic?: boolean
+    surgeThreshold?: number
+    surgePriceMultiplier?: number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutEventsInput
+    venue: VenueCreateNestedOneWithoutEventsInput
+    series?: EventSeriesCreateNestedOneWithoutEventsInput
+    offers?: OfferCreateNestedManyWithoutEventInput
+    tickets?: TicketCreateNestedManyWithoutEventInput
+    orders?: OrderCreateNestedManyWithoutEventInput
+    dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    reviews?: ReviewCreateNestedManyWithoutEventInput
+    fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
+    seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    holds?: SeatHoldCreateNestedManyWithoutEventInput
+    waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
+    seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
+    salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+  }
+
+  export type EventUncheckedCreateWithoutInventoryBlocksInput = {
+    id?: string
+    externalId?: string | null
+    slug: string
+    organizationId: string
+    venueId: string
+    title: string
+    description?: string | null
+    image?: string | null
+    bannerImage?: string | null
+    category?: $Enums.EventCategory
+    genre?: string | null
+    rating?: string | null
+    startsAt: Date | string
+    endsAt?: Date | string | null
+    timezone: string
+    doorsAt?: Date | string | null
+    durationMinutes?: number | null
+    status?: $Enums.EventStatus
+    publishedAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    announceAt?: Date | string | null
+    publishAt?: Date | string | null
+    salesStartAt?: Date | string | null
+    salesEndAt?: Date | string | null
+    rescheduledFrom?: Date | string | null
+    scheduleNote?: string | null
+    seriesId?: string | null
+    seriesOrder?: number | null
+    minPrice?: Decimal | DecimalJsLike | number | string
+    maxPrice?: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    totalCapacity: number
+    holdableCapacity?: number | null
+    allowResale?: boolean
+    transferAllowed?: boolean
+    refundable?: boolean
+    nonTransferable?: boolean
+    holdExpiration?: number
+    enableDynamic?: boolean
+    surgeThreshold?: number
+    surgePriceMultiplier?: number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    offers?: OfferUncheckedCreateNestedManyWithoutEventInput
+    tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
+    orders?: OrderUncheckedCreateNestedManyWithoutEventInput
+    dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
+    fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
+    seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
+    waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
+    seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
+    salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+  }
+
+  export type EventCreateOrConnectWithoutInventoryBlocksInput = {
+    where: EventWhereUniqueInput
+    create: XOR<EventCreateWithoutInventoryBlocksInput, EventUncheckedCreateWithoutInventoryBlocksInput>
+  }
+
+  export type TicketCreateWithoutInventoryBlocksInput = {
+    id?: string
+    code: string
+    status?: $Enums.TicketStatus
+    buyerName?: string | null
+    buyerEmail?: string | null
+    seatNumber?: string | null
+    row?: string | null
+    section?: string | null
+    isResale?: boolean
+    originalPrice?: Decimal | DecimalJsLike | number | string | null
+    resalePrice?: Decimal | DecimalJsLike | number | string | null
+    checkedInAt?: Date | string | null
+    usedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    event: EventCreateNestedOneWithoutTicketsInput
+    offer: OfferCreateNestedOneWithoutTicketsInput
+    orderItem?: OrderItemCreateNestedOneWithoutTicketsInput
+    seat?: SeatCreateNestedOneWithoutTicketsInput
+    resaleListing?: ResaleListingCreateNestedOneWithoutTicketInput
+    fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
+    transfers?: TicketTransferCreateNestedManyWithoutTicketInput
+    scans?: TicketScanCreateNestedManyWithoutTicketInput
+  }
+
+  export type TicketUncheckedCreateWithoutInventoryBlocksInput = {
+    id?: string
+    code: string
+    eventId: string
+    offerId: string
+    status?: $Enums.TicketStatus
+    orderItemId?: string | null
+    buyerName?: string | null
+    buyerEmail?: string | null
+    seatId?: string | null
+    seatNumber?: string | null
+    row?: string | null
+    section?: string | null
+    isResale?: boolean
+    originalPrice?: Decimal | DecimalJsLike | number | string | null
+    resalePrice?: Decimal | DecimalJsLike | number | string | null
+    checkedInAt?: Date | string | null
+    usedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    resaleListing?: ResaleListingUncheckedCreateNestedOneWithoutTicketInput
+    fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
+    transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
+    scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+  }
+
+  export type TicketCreateOrConnectWithoutInventoryBlocksInput = {
+    where: TicketWhereUniqueInput
+    create: XOR<TicketCreateWithoutInventoryBlocksInput, TicketUncheckedCreateWithoutInventoryBlocksInput>
+  }
+
+  export type SeatCreateWithoutInventoryBlocksInput = {
+    id?: string
+    label: string
+    x: number
+    y: number
+    rotation?: number
+    coord3d?: NullableJsonNullValueInput | InputJsonValue
+    tier?: string | null
+    viewQuality?: number | null
+    accessible?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    section: SectionCreateNestedOneWithoutSeatsInput
+    row?: SeatRowCreateNestedOneWithoutSeatsInput
+    tickets?: TicketCreateNestedManyWithoutSeatInput
+    holds?: SeatHoldCreateNestedManyWithoutSeatInput
+  }
+
+  export type SeatUncheckedCreateWithoutInventoryBlocksInput = {
+    id?: string
+    sectionId: string
+    rowId?: string | null
+    label: string
+    x: number
+    y: number
+    rotation?: number
+    coord3d?: NullableJsonNullValueInput | InputJsonValue
+    tier?: string | null
+    viewQuality?: number | null
+    accessible?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    tickets?: TicketUncheckedCreateNestedManyWithoutSeatInput
+    holds?: SeatHoldUncheckedCreateNestedManyWithoutSeatInput
+  }
+
+  export type SeatCreateOrConnectWithoutInventoryBlocksInput = {
+    where: SeatWhereUniqueInput
+    create: XOR<SeatCreateWithoutInventoryBlocksInput, SeatUncheckedCreateWithoutInventoryBlocksInput>
+  }
+
+  export type EventUpsertWithoutInventoryBlocksInput = {
+    update: XOR<EventUpdateWithoutInventoryBlocksInput, EventUncheckedUpdateWithoutInventoryBlocksInput>
+    create: XOR<EventCreateWithoutInventoryBlocksInput, EventUncheckedCreateWithoutInventoryBlocksInput>
+    where?: EventWhereInput
+  }
+
+  export type EventUpdateToOneWithWhereWithoutInventoryBlocksInput = {
+    where?: EventWhereInput
+    data: XOR<EventUpdateWithoutInventoryBlocksInput, EventUncheckedUpdateWithoutInventoryBlocksInput>
+  }
+
+  export type EventUpdateWithoutInventoryBlocksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    externalId?: NullableStringFieldUpdateOperationsInput | string | null
+    slug?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: EnumEventCategoryFieldUpdateOperationsInput | $Enums.EventCategory
+    genre?: NullableStringFieldUpdateOperationsInput | string | null
+    rating?: NullableStringFieldUpdateOperationsInput | string | null
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    timezone?: StringFieldUpdateOperationsInput | string
+    doorsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    durationMinutes?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesEndAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rescheduledFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduleNote?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesOrder?: NullableIntFieldUpdateOperationsInput | number | null
+    minPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    maxPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalCapacity?: IntFieldUpdateOperationsInput | number
+    holdableCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    allowResale?: BoolFieldUpdateOperationsInput | boolean
+    transferAllowed?: BoolFieldUpdateOperationsInput | boolean
+    refundable?: BoolFieldUpdateOperationsInput | boolean
+    nonTransferable?: BoolFieldUpdateOperationsInput | boolean
+    holdExpiration?: IntFieldUpdateOperationsInput | number
+    enableDynamic?: BoolFieldUpdateOperationsInput | boolean
+    surgeThreshold?: FloatFieldUpdateOperationsInput | number
+    surgePriceMultiplier?: FloatFieldUpdateOperationsInput | number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutEventsNestedInput
+    venue?: VenueUpdateOneRequiredWithoutEventsNestedInput
+    series?: EventSeriesUpdateOneWithoutEventsNestedInput
+    offers?: OfferUpdateManyWithoutEventNestedInput
+    tickets?: TicketUpdateManyWithoutEventNestedInput
+    orders?: OrderUpdateManyWithoutEventNestedInput
+    dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    reviews?: ReviewUpdateManyWithoutEventNestedInput
+    fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
+    seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    holds?: SeatHoldUpdateManyWithoutEventNestedInput
+    waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
+    seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
+    salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+  }
+
+  export type EventUncheckedUpdateWithoutInventoryBlocksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    externalId?: NullableStringFieldUpdateOperationsInput | string | null
+    slug?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    venueId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: EnumEventCategoryFieldUpdateOperationsInput | $Enums.EventCategory
+    genre?: NullableStringFieldUpdateOperationsInput | string | null
+    rating?: NullableStringFieldUpdateOperationsInput | string | null
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    timezone?: StringFieldUpdateOperationsInput | string
+    doorsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    durationMinutes?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesEndAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rescheduledFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduleNote?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesId?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesOrder?: NullableIntFieldUpdateOperationsInput | number | null
+    minPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    maxPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalCapacity?: IntFieldUpdateOperationsInput | number
+    holdableCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    allowResale?: BoolFieldUpdateOperationsInput | boolean
+    transferAllowed?: BoolFieldUpdateOperationsInput | boolean
+    refundable?: BoolFieldUpdateOperationsInput | boolean
+    nonTransferable?: BoolFieldUpdateOperationsInput | boolean
+    holdExpiration?: IntFieldUpdateOperationsInput | number
+    enableDynamic?: BoolFieldUpdateOperationsInput | boolean
+    surgeThreshold?: FloatFieldUpdateOperationsInput | number
+    surgePriceMultiplier?: FloatFieldUpdateOperationsInput | number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    offers?: OfferUncheckedUpdateManyWithoutEventNestedInput
+    tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
+    orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
+    dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
+    fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
+    seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
+    waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
+    seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
+    salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+  }
+
+  export type TicketUpsertWithoutInventoryBlocksInput = {
+    update: XOR<TicketUpdateWithoutInventoryBlocksInput, TicketUncheckedUpdateWithoutInventoryBlocksInput>
+    create: XOR<TicketCreateWithoutInventoryBlocksInput, TicketUncheckedCreateWithoutInventoryBlocksInput>
+    where?: TicketWhereInput
+  }
+
+  export type TicketUpdateToOneWithWhereWithoutInventoryBlocksInput = {
+    where?: TicketWhereInput
+    data: XOR<TicketUpdateWithoutInventoryBlocksInput, TicketUncheckedUpdateWithoutInventoryBlocksInput>
+  }
+
+  export type TicketUpdateWithoutInventoryBlocksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
+    buyerName?: NullableStringFieldUpdateOperationsInput | string | null
+    buyerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    row?: NullableStringFieldUpdateOperationsInput | string | null
+    section?: NullableStringFieldUpdateOperationsInput | string | null
+    isResale?: BoolFieldUpdateOperationsInput | boolean
+    originalPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    resalePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    checkedInAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    event?: EventUpdateOneRequiredWithoutTicketsNestedInput
+    offer?: OfferUpdateOneRequiredWithoutTicketsNestedInput
+    orderItem?: OrderItemUpdateOneWithoutTicketsNestedInput
+    seat?: SeatUpdateOneWithoutTicketsNestedInput
+    resaleListing?: ResaleListingUpdateOneWithoutTicketNestedInput
+    fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
+    transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
+    scans?: TicketScanUpdateManyWithoutTicketNestedInput
+  }
+
+  export type TicketUncheckedUpdateWithoutInventoryBlocksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    offerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
+    orderItemId?: NullableStringFieldUpdateOperationsInput | string | null
+    buyerName?: NullableStringFieldUpdateOperationsInput | string | null
+    buyerEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    seatId?: NullableStringFieldUpdateOperationsInput | string | null
+    seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    row?: NullableStringFieldUpdateOperationsInput | string | null
+    section?: NullableStringFieldUpdateOperationsInput | string | null
+    isResale?: BoolFieldUpdateOperationsInput | boolean
+    originalPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    resalePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    checkedInAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resaleListing?: ResaleListingUncheckedUpdateOneWithoutTicketNestedInput
+    fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
+    transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
+    scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+  }
+
+  export type SeatUpsertWithoutInventoryBlocksInput = {
+    update: XOR<SeatUpdateWithoutInventoryBlocksInput, SeatUncheckedUpdateWithoutInventoryBlocksInput>
+    create: XOR<SeatCreateWithoutInventoryBlocksInput, SeatUncheckedCreateWithoutInventoryBlocksInput>
+    where?: SeatWhereInput
+  }
+
+  export type SeatUpdateToOneWithWhereWithoutInventoryBlocksInput = {
+    where?: SeatWhereInput
+    data: XOR<SeatUpdateWithoutInventoryBlocksInput, SeatUncheckedUpdateWithoutInventoryBlocksInput>
+  }
+
+  export type SeatUpdateWithoutInventoryBlocksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    x?: FloatFieldUpdateOperationsInput | number
+    y?: FloatFieldUpdateOperationsInput | number
+    rotation?: FloatFieldUpdateOperationsInput | number
+    coord3d?: NullableJsonNullValueInput | InputJsonValue
+    tier?: NullableStringFieldUpdateOperationsInput | string | null
+    viewQuality?: NullableFloatFieldUpdateOperationsInput | number | null
+    accessible?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    section?: SectionUpdateOneRequiredWithoutSeatsNestedInput
+    row?: SeatRowUpdateOneWithoutSeatsNestedInput
+    tickets?: TicketUpdateManyWithoutSeatNestedInput
+    holds?: SeatHoldUpdateManyWithoutSeatNestedInput
+  }
+
+  export type SeatUncheckedUpdateWithoutInventoryBlocksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sectionId?: StringFieldUpdateOperationsInput | string
+    rowId?: NullableStringFieldUpdateOperationsInput | string | null
+    label?: StringFieldUpdateOperationsInput | string
+    x?: FloatFieldUpdateOperationsInput | number
+    y?: FloatFieldUpdateOperationsInput | number
+    rotation?: FloatFieldUpdateOperationsInput | number
+    coord3d?: NullableJsonNullValueInput | InputJsonValue
+    tier?: NullableStringFieldUpdateOperationsInput | string | null
+    viewQuality?: NullableFloatFieldUpdateOperationsInput | number | null
+    accessible?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    tickets?: TicketUncheckedUpdateManyWithoutSeatNestedInput
+    holds?: SeatHoldUncheckedUpdateManyWithoutSeatNestedInput
   }
 
   export type OrganizationCreateWithoutTenantThemeInput = {
@@ -89014,6 +91506,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingCreateNestedOneWithoutTicketInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutScansInput = {
@@ -89039,6 +91532,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUncheckedCreateNestedOneWithoutTicketInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutScansInput = {
@@ -89103,6 +91597,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUpdateOneWithoutTicketNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutScansInput = {
@@ -89128,6 +91623,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUncheckedUpdateOneWithoutTicketNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type AccessZoneUpsertWithoutScansInput = {
@@ -89457,6 +91953,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferCreateNestedManyWithoutTicketInput
     scans?: TicketScanCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutEventInput = {
@@ -89482,6 +91979,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
     scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutEventInput = {
@@ -89856,6 +92354,46 @@ export namespace Prisma {
 
   export type SalePhaseCreateManyEventInputEnvelope = {
     data: SalePhaseCreateManyEventInput | SalePhaseCreateManyEventInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type InventoryBlockCreateWithoutEventInput = {
+    id?: string
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    ticket: TicketCreateNestedOneWithoutInventoryBlocksInput
+    seat?: SeatCreateNestedOneWithoutInventoryBlocksInput
+  }
+
+  export type InventoryBlockUncheckedCreateWithoutEventInput = {
+    id?: string
+    ticketId: string
+    seatId?: string | null
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InventoryBlockCreateOrConnectWithoutEventInput = {
+    where: InventoryBlockWhereUniqueInput
+    create: XOR<InventoryBlockCreateWithoutEventInput, InventoryBlockUncheckedCreateWithoutEventInput>
+  }
+
+  export type InventoryBlockCreateManyEventInputEnvelope = {
+    data: InventoryBlockCreateManyEventInput | InventoryBlockCreateManyEventInput[]
     skipDuplicates?: boolean
   }
 
@@ -90409,6 +92947,22 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"SalePhase"> | Date | string
   }
 
+  export type InventoryBlockUpsertWithWhereUniqueWithoutEventInput = {
+    where: InventoryBlockWhereUniqueInput
+    update: XOR<InventoryBlockUpdateWithoutEventInput, InventoryBlockUncheckedUpdateWithoutEventInput>
+    create: XOR<InventoryBlockCreateWithoutEventInput, InventoryBlockUncheckedCreateWithoutEventInput>
+  }
+
+  export type InventoryBlockUpdateWithWhereUniqueWithoutEventInput = {
+    where: InventoryBlockWhereUniqueInput
+    data: XOR<InventoryBlockUpdateWithoutEventInput, InventoryBlockUncheckedUpdateWithoutEventInput>
+  }
+
+  export type InventoryBlockUpdateManyWithWhereWithoutEventInput = {
+    where: InventoryBlockScalarWhereInput
+    data: XOR<InventoryBlockUpdateManyMutationInput, InventoryBlockUncheckedUpdateManyWithoutEventInput>
+  }
+
   export type OrganizationCreateWithoutEventSeriesInput = {
     id?: string
     name: string
@@ -90638,6 +93192,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutSeriesInput = {
@@ -90695,6 +93250,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutSeriesInput = {
@@ -90964,6 +93520,7 @@ export namespace Prisma {
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutSalePhasesInput = {
@@ -91021,6 +93578,7 @@ export namespace Prisma {
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutSalePhasesInput = {
@@ -91094,6 +93652,7 @@ export namespace Prisma {
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutSalePhasesInput = {
@@ -91151,6 +93710,7 @@ export namespace Prisma {
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type VenueCreateWithoutBlackoutsInput = {
@@ -91352,6 +93912,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutOffersInput = {
@@ -91409,6 +93970,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutOffersInput = {
@@ -91439,6 +94001,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferCreateNestedManyWithoutTicketInput
     scans?: TicketScanCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutOfferInput = {
@@ -91464,6 +94027,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
     scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutOfferInput = {
@@ -91610,6 +94174,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutOffersInput = {
@@ -91667,6 +94232,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type TicketUpsertWithWhereUniqueWithoutOfferInput = {
@@ -91787,6 +94353,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutTicketsInput = {
@@ -91844,6 +94411,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutTicketsInput = {
@@ -91952,6 +94520,7 @@ export namespace Prisma {
     section: SectionCreateNestedOneWithoutSeatsInput
     row?: SeatRowCreateNestedOneWithoutSeatsInput
     holds?: SeatHoldCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutSeatInput
   }
 
   export type SeatUncheckedCreateWithoutTicketsInput = {
@@ -91969,6 +94538,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     holds?: SeatHoldUncheckedCreateNestedManyWithoutSeatInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutSeatInput
   }
 
   export type SeatCreateOrConnectWithoutTicketsInput = {
@@ -92129,6 +94699,46 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type InventoryBlockCreateWithoutTicketInput = {
+    id?: string
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    event: EventCreateNestedOneWithoutInventoryBlocksInput
+    seat?: SeatCreateNestedOneWithoutInventoryBlocksInput
+  }
+
+  export type InventoryBlockUncheckedCreateWithoutTicketInput = {
+    id?: string
+    eventId: string
+    seatId?: string | null
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InventoryBlockCreateOrConnectWithoutTicketInput = {
+    where: InventoryBlockWhereUniqueInput
+    create: XOR<InventoryBlockCreateWithoutTicketInput, InventoryBlockUncheckedCreateWithoutTicketInput>
+  }
+
+  export type InventoryBlockCreateManyTicketInputEnvelope = {
+    data: InventoryBlockCreateManyTicketInput | InventoryBlockCreateManyTicketInput[]
+    skipDuplicates?: boolean
+  }
+
   export type EventUpsertWithoutTicketsInput = {
     update: XOR<EventUpdateWithoutTicketsInput, EventUncheckedUpdateWithoutTicketsInput>
     create: XOR<EventCreateWithoutTicketsInput, EventUncheckedCreateWithoutTicketsInput>
@@ -92195,6 +94805,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutTicketsInput = {
@@ -92252,6 +94863,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type OfferUpsertWithoutTicketsInput = {
@@ -92378,6 +94990,7 @@ export namespace Prisma {
     section?: SectionUpdateOneRequiredWithoutSeatsNestedInput
     row?: SeatRowUpdateOneWithoutSeatsNestedInput
     holds?: SeatHoldUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutSeatNestedInput
   }
 
   export type SeatUncheckedUpdateWithoutTicketsInput = {
@@ -92395,6 +95008,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     holds?: SeatHoldUncheckedUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutSeatNestedInput
   }
 
   export type ResaleListingUpsertWithoutTicketInput = {
@@ -92503,6 +95117,22 @@ export namespace Prisma {
   export type TicketScanUpdateManyWithWhereWithoutTicketInput = {
     where: TicketScanScalarWhereInput
     data: XOR<TicketScanUpdateManyMutationInput, TicketScanUncheckedUpdateManyWithoutTicketInput>
+  }
+
+  export type InventoryBlockUpsertWithWhereUniqueWithoutTicketInput = {
+    where: InventoryBlockWhereUniqueInput
+    update: XOR<InventoryBlockUpdateWithoutTicketInput, InventoryBlockUncheckedUpdateWithoutTicketInput>
+    create: XOR<InventoryBlockCreateWithoutTicketInput, InventoryBlockUncheckedCreateWithoutTicketInput>
+  }
+
+  export type InventoryBlockUpdateWithWhereUniqueWithoutTicketInput = {
+    where: InventoryBlockWhereUniqueInput
+    data: XOR<InventoryBlockUpdateWithoutTicketInput, InventoryBlockUncheckedUpdateWithoutTicketInput>
+  }
+
+  export type InventoryBlockUpdateManyWithWhereWithoutTicketInput = {
+    where: InventoryBlockScalarWhereInput
+    data: XOR<InventoryBlockUpdateManyMutationInput, InventoryBlockUncheckedUpdateManyWithoutTicketInput>
   }
 
   export type OrganizationCreateWithoutOrdersInput = {
@@ -92665,6 +95295,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutOrdersInput = {
@@ -92722,6 +95353,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutOrdersInput = {
@@ -93229,6 +95861,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutOrdersInput = {
@@ -93286,6 +95919,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type UserUpsertWithoutOrdersInput = {
@@ -93689,6 +96323,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferCreateNestedManyWithoutTicketInput
     scans?: TicketScanCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutOrderItemInput = {
@@ -93714,6 +96349,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
     scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutOrderItemInput = {
@@ -95215,6 +97851,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferCreateNestedManyWithoutTicketInput
     scans?: TicketScanCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutResaleListingInput = {
@@ -95240,6 +97877,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
     transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
     scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutResaleListingInput = {
@@ -95313,6 +97951,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutResaleListingInput = {
@@ -95338,6 +97977,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type ResaleOfferUpsertWithWhereUniqueWithoutListingInput = {
@@ -95506,6 +98146,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutDynamicPricesInput = {
@@ -95563,6 +98204,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutDynamicPricesInput = {
@@ -95693,6 +98335,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutDynamicPricesInput = {
@@ -95750,6 +98393,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type OfferUpsertWithoutDynamicPricesInput = {
@@ -95968,6 +98612,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutFraudFlagsInput = {
@@ -96025,6 +98670,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutFraudFlagsInput = {
@@ -96132,6 +98778,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingCreateNestedOneWithoutTicketInput
     transfers?: TicketTransferCreateNestedManyWithoutTicketInput
     scans?: TicketScanCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutFraudFlagsInput = {
@@ -96157,6 +98804,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUncheckedCreateNestedOneWithoutTicketInput
     transfers?: TicketTransferUncheckedCreateNestedManyWithoutTicketInput
     scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutFraudFlagsInput = {
@@ -96293,6 +98941,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutFraudFlagsInput = {
@@ -96350,6 +98999,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type OrderUpsertWithoutFraudFlagsInput = {
@@ -96469,6 +99119,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUpdateOneWithoutTicketNestedInput
     transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutFraudFlagsInput = {
@@ -96494,6 +99145,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUncheckedUpdateOneWithoutTicketNestedInput
     transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type UserUpsertWithoutFraudFlagsInput = {
@@ -97100,6 +99752,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutReviewsInput = {
@@ -97157,6 +99810,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutReviewsInput = {
@@ -97293,6 +99947,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutReviewsInput = {
@@ -97350,6 +100005,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type UserUpsertWithoutReviewsInput = {
@@ -97476,6 +100132,7 @@ export namespace Prisma {
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutWaitlistEntriesInput = {
@@ -97533,6 +100190,7 @@ export namespace Prisma {
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutWaitlistEntriesInput = {
@@ -97606,6 +100264,7 @@ export namespace Prisma {
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutWaitlistEntriesInput = {
@@ -97663,6 +100322,7 @@ export namespace Prisma {
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type TicketCreateWithoutTransfersInput = {
@@ -97688,6 +100348,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingCreateNestedOneWithoutTicketInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutTicketInput
     scans?: TicketScanCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutTransfersInput = {
@@ -97713,6 +100374,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUncheckedCreateNestedOneWithoutTicketInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutTicketInput
     scans?: TicketScanUncheckedCreateNestedManyWithoutTicketInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutTransfersInput = {
@@ -97754,6 +100416,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUpdateOneWithoutTicketNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutTransfersInput = {
@@ -97779,6 +100442,7 @@ export namespace Prisma {
     resaleListing?: ResaleListingUncheckedUpdateOneWithoutTicketNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type OrganizationCreateWithoutApiKeysInput = {
@@ -99153,6 +101817,7 @@ export namespace Prisma {
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
   }
 
   export type EventUncheckedCreateWithoutSeasonPassEventsInput = {
@@ -99210,6 +101875,7 @@ export namespace Prisma {
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutSeasonPassEventsInput = {
@@ -99336,6 +102002,7 @@ export namespace Prisma {
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutSeasonPassEventsInput = {
@@ -99393,6 +102060,7 @@ export namespace Prisma {
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type SeasonPassCreateWithoutPurchasesInput = {
@@ -99872,6 +102540,7 @@ export namespace Prisma {
     grossRevenue: Decimal | DecimalJsLike | number | string
     commission: Decimal | DecimalJsLike | number | string
     netAmount: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
     status?: $Enums.PayoutStatus
     method?: $Enums.PaymentMethod
     referenceId?: string | null
@@ -100129,6 +102798,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutOrganizationInput = {
@@ -100186,6 +102856,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateManyWithoutOrganizationInput = {
@@ -100476,6 +103147,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     commission?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPayoutStatusFieldUpdateOperationsInput | $Enums.PayoutStatus
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     referenceId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100491,6 +103163,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     commission?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPayoutStatusFieldUpdateOperationsInput | $Enums.PayoutStatus
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     referenceId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100506,6 +103179,7 @@ export namespace Prisma {
     grossRevenue?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     commission?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     netAmount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     status?: EnumPayoutStatusFieldUpdateOperationsInput | $Enums.PayoutStatus
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     referenceId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -100899,6 +103573,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutVenueInput = {
@@ -100956,6 +103631,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateManyWithoutVenueInput = {
@@ -101351,6 +104027,7 @@ export namespace Prisma {
     row?: SeatRowUpdateOneWithoutSeatsNestedInput
     tickets?: TicketUpdateManyWithoutSeatNestedInput
     holds?: SeatHoldUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutSeatNestedInput
   }
 
   export type SeatUncheckedUpdateWithoutSectionInput = {
@@ -101368,6 +104045,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutSeatNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutSeatNestedInput
   }
 
   export type SeatUncheckedUpdateManyWithoutSectionInput = {
@@ -101415,6 +104093,7 @@ export namespace Prisma {
     section?: SectionUpdateOneRequiredWithoutSeatsNestedInput
     tickets?: TicketUpdateManyWithoutSeatNestedInput
     holds?: SeatHoldUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutSeatNestedInput
   }
 
   export type SeatUncheckedUpdateWithoutRowInput = {
@@ -101432,6 +104111,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutSeatNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutSeatNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutSeatNestedInput
   }
 
   export type SeatUncheckedUpdateManyWithoutRowInput = {
@@ -101485,6 +104165,21 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type InventoryBlockCreateManySeatInput = {
+    id?: string
+    eventId: string
+    ticketId: string
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type TicketUpdateWithoutSeatInput = {
     id?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
@@ -101508,6 +104203,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutSeatInput = {
@@ -101533,6 +104229,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateManyWithoutSeatInput = {
@@ -101599,6 +104296,51 @@ export namespace Prisma {
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InventoryBlockUpdateWithoutSeatInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    event?: EventUpdateOneRequiredWithoutInventoryBlocksNestedInput
+    ticket?: TicketUpdateOneRequiredWithoutInventoryBlocksNestedInput
+  }
+
+  export type InventoryBlockUncheckedUpdateWithoutSeatInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InventoryBlockUncheckedUpdateManyWithoutSeatInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type TicketScanCreateManyZoneInput = {
@@ -101813,6 +104555,21 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type InventoryBlockCreateManyEventInput = {
+    id?: string
+    ticketId: string
+    seatId?: string | null
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type OfferUpdateWithoutEventInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -101911,6 +104668,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutEventInput = {
@@ -101936,6 +104694,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateManyWithoutEventInput = {
@@ -102351,6 +105110,51 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type InventoryBlockUpdateWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    ticket?: TicketUpdateOneRequiredWithoutInventoryBlocksNestedInput
+    seat?: SeatUpdateOneWithoutInventoryBlocksNestedInput
+  }
+
+  export type InventoryBlockUncheckedUpdateWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    seatId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InventoryBlockUncheckedUpdateManyWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    seatId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type EventCreateManySeriesInput = {
     id?: string
     externalId?: string | null
@@ -102452,6 +105256,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateWithoutSeriesInput = {
@@ -102509,6 +105314,7 @@ export namespace Prisma {
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateManyWithoutSeriesInput = {
@@ -102624,6 +105430,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutOfferInput = {
@@ -102649,6 +105456,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateManyWithoutOfferInput = {
@@ -102786,6 +105594,21 @@ export namespace Prisma {
     scannedAt?: Date | string
   }
 
+  export type InventoryBlockCreateManyTicketInput = {
+    id?: string
+    eventId: string
+    seatId?: string | null
+    reason: string
+    category?: string
+    label?: string | null
+    blockedBy: string
+    releasedAt?: Date | string | null
+    releasedBy?: string | null
+    releaseReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type FraudFlagUpdateWithoutTicketInput = {
     id?: StringFieldUpdateOperationsInput | string
     type?: EnumFraudTypeFieldUpdateOperationsInput | $Enums.FraudType
@@ -102913,6 +105736,51 @@ export namespace Prisma {
     success?: BoolFieldUpdateOperationsInput | boolean
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InventoryBlockUpdateWithoutTicketInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    event?: EventUpdateOneRequiredWithoutInventoryBlocksNestedInput
+    seat?: SeatUpdateOneWithoutInventoryBlocksNestedInput
+  }
+
+  export type InventoryBlockUncheckedUpdateWithoutTicketInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    seatId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InventoryBlockUncheckedUpdateManyWithoutTicketInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    seatId?: NullableStringFieldUpdateOperationsInput | string | null
+    reason?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    blockedBy?: StringFieldUpdateOperationsInput | string
+    releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    releasedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    releaseReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type OrderItemCreateManyOrderInput = {
@@ -103233,6 +106101,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutOrderItemInput = {
@@ -103258,6 +106127,7 @@ export namespace Prisma {
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutTicketNestedInput
     transfers?: TicketTransferUncheckedUpdateManyWithoutTicketNestedInput
     scans?: TicketScanUncheckedUpdateManyWithoutTicketNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateManyWithoutOrderItemInput = {

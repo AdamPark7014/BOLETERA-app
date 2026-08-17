@@ -692,6 +692,15 @@ export class VenueLayoutService {
         where: { eventId, status: { in: [TicketStatus.AVAILABLE, TicketStatus.HELD] } },
       });
 
+      // Los boletos que sobreviven al republicado (vendidos, usados, y ahora
+      // también BLOCKED) siguen ocupando su butaca: `@@unique([eventId, seatId])`
+      // rechazaría crear otra unidad para la misma. Se saltan.
+      const survivors = await tx.ticket.findMany({
+        where: { eventId, seatId: { not: null } },
+        select: { seatId: true },
+      });
+      const occupiedSeatIds = new Set(survivors.map((t) => t.seatId as string));
+
       const offersBySection: Record<string, string> = {};
       const keepZones: string[] = [];
 
@@ -727,7 +736,9 @@ export class VenueLayoutService {
         });
         offersBySection[section.id] = offer.id;
 
+        let created = 0;
         for (const seat of section.seats) {
+          if (occupiedSeatIds.has(seat.id)) continue;
           await tx.ticket.create({
             data: {
               code: generateTicketCode(),
@@ -739,6 +750,16 @@ export class VenueLayoutService {
               row: seat.row?.label ?? (seat.label.includes('-') ? seat.label.split('-')[0] : 'GA'),
               section: section.name,
             },
+          });
+          created += 1;
+        }
+
+        // `totalQuantity` es el aforo físico de la zona; lo que queda a la venta
+        // no lo es si hay butacas vendidas o bloqueadas que sobrevivieron.
+        if (created !== qty) {
+          await tx.offer.update({
+            where: { id: offer.id },
+            data: { remainingQuantity: created },
           });
         }
       }

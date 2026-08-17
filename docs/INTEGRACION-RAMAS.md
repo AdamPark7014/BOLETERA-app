@@ -157,16 +157,33 @@ es lo que devuelve un API caído, y no demuestra nada.
 
 ## Pendiente
 
-**Las migraciones YA NO están congeladas** (ver dominio 5). Queda por conectar: La base de desarrollo está migrada con el
-`_init` de `enterprise-upgrade`; esta rama tiene su propia baseline, que lo
-duplica. Mientras no se resuelva, no se pueden añadir al esquema:
+**Las migraciones ya no están congeladas** (ver dominio 5). Lo que queda es
+conectar código a lo que el esquema fusionado ya permite:
 
-- Bloqueo real de inventario (hoy un «bloqueo» es un hold de 300 s que se
-  libera solo).
-- Ventana de venta (`salesStartAt` / `salesEndAt`): el asistente de alta de
-  evento valida la regla y avisa de que el dato no se persiste.
-- `PromoterPayout.currency`: la tabla de liquidaciones asume MXN mientras las
-  órdenes ya son multi-moneda.
+- **Ventana de venta** — `SalePhase` existe ya en el esquema. El asistente de
+  alta de evento valida la regla y avisa de que el dato no se persiste: falta
+  persistirlo de verdad.
+- **Bloqueo real de inventario** — hoy un «bloqueo» sigue siendo un hold de
+  300 s que se libera solo. Necesita estado propio, no solo esquema.
+- **`PromoterPayout.currency`** — la tabla de liquidaciones asume MXN mientras
+  las órdenes ya son multi-moneda. Ahora se puede añadir.
+- **Pantallas nuevas sobre el sistema de diseño** — la cancelación de evento
+  funciona por API y probada, pero no tiene interfaz; y los plazos de reembolso
+  no se le muestran al comprador.
+
+## Antes de desplegar sobre una base existente
+
+La base de desarrollo ya tiene aplicado `20260730220000_init`. Los dos deltas
+nuevos se aplican encima con `prisma migrate deploy` sin más. En una base creada
+con `db push` y sin historia, marcar primero la baseline:
+
+```bash
+pnpm --filter @boletera/database exec prisma migrate resolve --applied 20260730220000_init
+pnpm --filter @boletera/database exec prisma migrate deploy
+```
+
+Saltarse el `resolve` hace que `deploy` intente recrear todas las tablas, falle,
+y deje la migración marcada como fallida bloqueando los despliegues siguientes.
 
 Cerrar el dominio 4 y luego reconciliar migraciones desde el `_init` existente
 es el camino natural.

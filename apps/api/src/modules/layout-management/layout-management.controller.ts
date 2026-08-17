@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -34,8 +34,33 @@ export type HoldSeatsDto = {
   /** Motivo obligatorio (mín. 8 caracteres). Queda en la bitácora. */
   reason: string;
   category?: HoldReasonCategory;
+  /**
+   * Duración de la reserva en minutos (1..1440). Si no se manda, vale el TTL
+   * por canal de inventario. Para retener sin caducidad, usa `/seats/block`.
+   */
   durationMinutes?: number;
   sessionId?: string;
+};
+
+/** Bloqueo operativo: retira butacas de la venta hasta que alguien las libere. */
+export type BlockSeatsDto = {
+  eventId: string;
+  seatIds: string[];
+  /** Motivo obligatorio (mín. 8 caracteres). Queda en `InventoryBlock`. */
+  reason: string;
+  category?: HoldReasonCategory;
+  /** Etiqueta operativa: "prensa", "produccion-gira", "palco-patrocinador". */
+  label?: string;
+};
+
+export type UnblockSeatsDto = {
+  eventId: string;
+  /** Butacas a devolver a la venta; alternativa a `blockIds`. */
+  seatIds?: string[];
+  blockIds?: string[];
+  /** Motivo obligatorio (mín. 8 caracteres). */
+  reason: string;
+  category?: HoldReasonCategory;
 };
 
 export type ReleaseSeatsDto = {
@@ -97,6 +122,56 @@ export class LayoutManagementController {
       { userId: user.sub, organizationId: user.organizationId, role: user.role },
       { reason: data.reason, category: data.category },
       data.sessionId,
+      data.durationMinutes,
+    );
+  }
+
+  @Post(':layoutId/seats/block')
+  @Roles(...INVENTORY_STAFF_ROLES)
+  @ApiOperation({ summary: 'Bloqueo de inventario sin caducidad (motivo obligatorio)' })
+  async blockSeats(
+    @Param('layoutId') layoutId: string,
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+    @Body() data: BlockSeatsDto,
+  ) {
+    return await this.layoutService.blockSeats(
+      layoutId,
+      data.eventId,
+      data.seatIds,
+      { userId: user.sub, organizationId: user.organizationId, role: user.role },
+      { reason: data.reason, category: data.category },
+      data.label,
+    );
+  }
+
+  @Post(':layoutId/seats/unblock')
+  @Roles(...INVENTORY_STAFF_ROLES)
+  @ApiOperation({ summary: 'Devolver a la venta butacas bloqueadas (motivo obligatorio)' })
+  async unblockSeats(
+    @Param('layoutId') _layoutId: string,
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+    @Body() data: UnblockSeatsDto,
+  ) {
+    return await this.layoutService.unblockSeats(
+      data.eventId,
+      { seatIds: data.seatIds, blockIds: data.blockIds },
+      { userId: user.sub, organizationId: user.organizationId, role: user.role },
+      { reason: data.reason, category: data.category },
+    );
+  }
+
+  @Get('events/:eventId/blocks')
+  @Roles(...INVENTORY_STAFF_ROLES)
+  @ApiOperation({ summary: 'Bloqueos de inventario de un evento' })
+  async listBlocks(
+    @Param('eventId') eventId: string,
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+    @Query('includeReleased') includeReleased?: string,
+  ) {
+    return await this.layoutService.listBlocks(
+      eventId,
+      { userId: user.sub, organizationId: user.organizationId, role: user.role },
+      includeReleased === 'true',
     );
   }
 

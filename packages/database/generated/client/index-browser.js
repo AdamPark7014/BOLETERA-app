@@ -259,6 +259,22 @@ exports.Prisma.SeatHoldScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.InventoryBlockScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  ticketId: 'ticketId',
+  seatId: 'seatId',
+  reason: 'reason',
+  category: 'category',
+  label: 'label',
+  blockedBy: 'blockedBy',
+  releasedAt: 'releasedAt',
+  releasedBy: 'releasedBy',
+  releaseReason: 'releaseReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.TenantThemeScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -708,6 +724,7 @@ exports.Prisma.PromoterPayoutScalarFieldEnum = {
   grossRevenue: 'grossRevenue',
   commission: 'commission',
   netAmount: 'netAmount',
+  currency: 'currency',
   status: 'status',
   method: 'method',
   referenceId: 'referenceId',
@@ -1048,7 +1065,8 @@ exports.TicketStatus = exports.$Enums.TicketStatus = {
   REFUNDED: 'REFUNDED',
   TRANSFERRED: 'TRANSFERRED',
   RESOLD: 'RESOLD',
-  EXPIRED: 'EXPIRED'
+  EXPIRED: 'EXPIRED',
+  BLOCKED: 'BLOCKED'
 };
 
 exports.OrderStatus = exports.$Enums.OrderStatus = {
@@ -1211,6 +1229,7 @@ exports.Prisma.ModelName = {
   Seat: 'Seat',
   EventSeatMap: 'EventSeatMap',
   SeatHold: 'SeatHold',
+  InventoryBlock: 'InventoryBlock',
   TenantTheme: 'TenantTheme',
   AccessZone: 'AccessZone',
   TicketScan: 'TicketScan',

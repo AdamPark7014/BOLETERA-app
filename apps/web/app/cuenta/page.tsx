@@ -6,6 +6,13 @@ import { useRouter } from 'next/navigation';
 import { Button, EmptyState, Input } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { authHeaders, clearSession, getStoredUser, getToken } from '@/lib/auth';
+import { formatMoney } from '@/lib/pricing';
+import {
+  formatPolicyDate,
+  orderHasRefund,
+  refundDeadlines,
+  refundMethodLabel,
+} from '@/lib/refund-policy';
 import styles from './cuenta.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -34,6 +41,10 @@ type OrderRow = {
   };
   organizationId?: string;
   items?: { tickets?: TicketRow[]; quantity?: number }[];
+  currency?: string;
+  paymentMethod?: string | null;
+  /** Momento en que se asentó la devolución: de ahí sale el plazo prometido. */
+  refundedAt?: string | null;
 };
 
 type TransferRow = {
@@ -51,6 +62,10 @@ const ORDER_STATUS_LABEL: Record<string, string> = {
   PROCESSING: 'Procesando',
   CANCELLED: 'Cancelada',
   REFUNDED: 'Reembolsada',
+  PARTIALLY_REFUNDED: 'Reembolsada en parte',
+  // El comprador no sabe qué es «PENDING_REFUND»; lo que sí sabe es que le
+  // cobraron y no tiene boletos. Se le dice eso.
+  PENDING_REFUND: 'Te cobramos sin poder emitir: devolución en proceso',
   EXPIRED: 'Expirada',
   FAILED: 'Pago rechazado',
 };
@@ -167,6 +182,34 @@ export default function CuentaPage() {
     const upcomingIds = new Set(upcoming.map((o) => o.publicId));
     return orders.filter((o) => !upcomingIds.has(o.publicId));
   }, [orders, upcoming]);
+
+  /*
+   * Reembolsos en curso, arriba y sin abrir orden por orden.
+   *
+   * Es la pregunta que el comprador viene a hacerse ("¿y mi dinero?") y hasta
+   * ahora obligaba a entrar en cada orden a leer un estado en inglés. La fecha
+   * prometida se calcula desde `refundedAt` —no desde hoy—, así que no se corre
+   * cada vez que se recarga la página.
+   */
+  const refunds = useMemo(
+    () =>
+      orders
+        .filter((o) => orderHasRefund(o.status))
+        .map((o) => {
+          const anchor = o.refundedAt ? new Date(o.refundedAt) : new Date(o.createdAt);
+          const valid = !Number.isNaN(anchor.getTime());
+          const settled = o.status === 'REFUNDED' || o.status === 'PARTIALLY_REFUNDED';
+          return {
+            order: o,
+            settled,
+            // `PENDING_REFUND` es dinero cobrado que aún no tiene devolución
+            // asentada: no hay fecha que prometer todavía, y decir una sería
+            // inventarla.
+            visibleBy: settled && valid ? formatPolicyDate(refundDeadlines(anchor).visibleBy) : null,
+          };
+        }),
+    [orders],
+  );
 
   /** Cualquier mutación puede toparse con la sesión caducada a mitad de camino. */
   function handleAuthFailure(res: Response) {
@@ -311,6 +354,41 @@ export default function CuentaPage() {
           </section>
         ) : (
           <>
+            {refunds.length > 0 && (
+              <section className={styles.refunds} aria-labelledby="refunds-title">
+                <h2 id="refunds-title">
+                  Tu dinero de vuelta ({refunds.length}
+                  {refunds.length === 1 ? ' orden' : ' órdenes'})
+                </h2>
+                <ul className={styles.refundList}>
+                  {refunds.map(({ order, settled, visibleBy }) => (
+                    <li key={order.publicId}>
+                      <div className={styles.refundMain}>
+                        <p className={styles.refundEvent}>{order.event.title}</p>
+                        <p className={styles.refundState}>
+                          {settled
+                            ? 'Reembolso aprobado'
+                            : 'Devolución en proceso: te cobramos y no pudimos emitir tus boletos'}
+                        </p>
+                        <p className={styles.refundWhen}>
+                          {visibleBy
+                            ? `Lo verás abonado a más tardar el ${visibleBy}, por ${refundMethodLabel(order.paymentMethod)}.`
+                            : `Vuelve por ${refundMethodLabel(order.paymentMethod)}. Te avisamos por correo en cuanto quede autorizado, con el importe y la fecha.`}
+                        </p>
+                      </div>
+                      <div className={styles.refundSide}>
+                        <strong>{formatMoney(order.totalAmount, order.currency ?? 'MXN')}</strong>
+                        <Link href={`/orders/${order.publicId}`} className={styles.refundLink}>
+                          Ver detalle
+                          <span className={styles.srOnly}> del reembolso de {order.event.title}</span>
+                        </Link>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             <section className={styles.wallet} aria-labelledby="wallet-title">
               <div className={styles.walletHead}>
                 <h2 id="wallet-title">Próximos</h2>

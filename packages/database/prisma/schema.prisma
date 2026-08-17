@@ -196,6 +196,7 @@ model Seat {
   accessible       Boolean  @default(false)
   tickets          Ticket[]
   holds            SeatHold[]
+  inventoryBlocks  InventoryBlock[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -242,6 +243,48 @@ model SeatHold {
   @@index([eventId, status, expiresAt])
   /// taquilla: session hold sweep
   @@index([sessionId, status])
+}
+
+/// Bloqueo operativo de inventario: retira butacas de la venta y NO caduca.
+///
+/// `SeatHold` es una reserva efímera (TTL de minutos) pensada para un carrito o
+/// una taquilla: el barrendero la libera sola. Retener butacas de producción,
+/// prensa o cortesías durante toda una temporada es otra cosa — solo termina
+/// cuando alguien la libera a propósito. Por eso vive en su propia tabla, con
+/// motivo obligatorio y rastro de quién bloqueó y quién liberó.
+///
+/// El boleto pasa a `TicketStatus.BLOCKED`: así toda consulta de disponibilidad
+/// existente (todas filtran `status = AVAILABLE`) lo respeta sin cambiar nada.
+model InventoryBlock {
+  id               String   @id @default(cuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  /// Unidad de inventario retirada. Es el ancla real del bloqueo.
+  ticketId         String
+  ticket           Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  /// Nulo en admisión general (boleto sin butaca asignada).
+  seatId           String?
+  seat             Seat?    @relation(fields: [seatId], references: [id], onDelete: SetNull)
+
+  /// Motivo obligatorio: un bloqueo sin motivo es inventario perdido sin dueño.
+  reason           String
+  /// Categoría libre para agrupar en reportes (ver `HoldReasonCategory` en la API).
+  category         String   @default("OTRO")
+  /// Etiqueta operativa opcional: "prensa", "produccion-gira", "palco-patrocinador".
+  label            String?
+  blockedBy        String
+  releasedAt       DateTime?
+  releasedBy       String?
+  releaseReason    String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([eventId])
+  /// bloqueos vigentes de un evento (releasedAt = NULL)
+  @@index([eventId, releasedAt])
+  @@index([ticketId, releasedAt])
+  @@index([seatId])
 }
 
 model TenantTheme {
@@ -439,6 +482,7 @@ model Event {
   waitlistEntries  WaitlistEntry[]
   seasonPassEvents SeasonPassEvent[]
   salePhases       SalePhase[]
+  inventoryBlocks  InventoryBlock[]
   
   // Audit
   createdAt        DateTime  @default(now())
@@ -636,6 +680,7 @@ model Ticket {
   fraudFlags       FraudFlag[]
   transfers        TicketTransfer[]
   scans            TicketScan[]
+  inventoryBlocks  InventoryBlock[]
   
   // Audit
   createdAt        DateTime  @default(now())
@@ -1150,6 +1195,10 @@ model PromoterPayout {
   grossRevenue     Decimal @db.Decimal(15, 2)
   commission       Decimal @db.Decimal(12, 2)
   netAmount        Decimal @db.Decimal(15, 2)
+  /// Moneda de la liquidación. Las órdenes ya son multi-moneda; sin este campo
+  /// sumar importes de distintas monedas en un mismo pago era un error mudo.
+  /// MXN por defecto: es lo que asumía la tabla hasta ahora.
+  currency         Currency @default(MXN)
   
   // Status
   status           PayoutStatus @default(PENDING) // PENDING, PROCESSING, COMPLETED, FAILED
@@ -1427,6 +1476,9 @@ enum TicketStatus {
   TRANSFERRED
   RESOLD
   EXPIRED
+  /// Retirado de la venta por decisión operativa (producción, prensa, cortesías).
+  /// No caduca: solo se sale de aquí liberando el bloqueo (ver `InventoryBlock`).
+  BLOCKED
 }
 
 enum OrderStatus {

@@ -1,6 +1,12 @@
-import { Controller, Post, Get, Put, Param, Body, UseGuards, Query } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { EventManagementService } from './event-management.service';
+import {
+  EventManagementService,
+  type SalePhaseInput,
+  type SalePhasePatch,
+} from './event-management.service';
+import { SaleWindowService } from './sale-window.service';
+import { SalesChannel } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -11,7 +17,10 @@ import { CurrentUser } from '../auth/current-user.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class EventManagementController {
-  constructor(private eventService: EventManagementService) {}
+  constructor(
+    private eventService: EventManagementService,
+    private saleWindow: SaleWindowService,
+  ) {}
 
   // ==================== EVENT CREATION ====================
 
@@ -152,6 +161,73 @@ export class EventManagementController {
     }
   ) {
     return await this.eventService.createCampaign(eventId, data);
+  }
+
+  // ==================== VENTANA DE VENTA (FASES) ====================
+
+  @Get(':eventId/sale-phases')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Listar fases de venta del evento y la ventana vigente' })
+  async listSalePhases(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+  ) {
+    return await this.eventService.listSalePhases(eventId, orgId);
+  }
+
+  @Post(':eventId/sale-phases')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Crear fase de venta (preventa, socios, público, puerta)' })
+  async createSalePhase(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+    @Body() data: SalePhaseInput,
+  ) {
+    return await this.eventService.createSalePhase(eventId, orgId, data);
+  }
+
+  @Put(':eventId/sale-phases/:phaseId')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Editar fase de venta' })
+  async updateSalePhase(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+    @Param('phaseId') phaseId: string,
+    @Body() data: SalePhasePatch,
+  ) {
+    return await this.eventService.updateSalePhase(eventId, phaseId, orgId, data);
+  }
+
+  @Delete(':eventId/sale-phases/:phaseId')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Eliminar fase de venta (se cancela si ya abrió)' })
+  async removeSalePhase(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+    @Param('phaseId') phaseId: string,
+  ) {
+    return await this.eventService.removeSalePhase(eventId, phaseId, orgId);
+  }
+
+  /**
+   * Consulta de solo lectura de la ventana de venta. Los módulos del backend
+   * deben usar `SaleWindowService`; esto es para que el panel y la taquilla
+   * puedan preguntar antes de dejar iniciar una compra.
+   */
+  @Get(':eventId/sale-window')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER', 'CUSTOMER')
+  @ApiOperation({ summary: '¿Se puede comprar ahora? (fase vigente, próxima apertura)' })
+  async getSaleWindow(
+    @Param('eventId') eventId: string,
+    @Query('channel') channel?: string,
+    @Query('code') code?: string,
+  ) {
+    const normalized = channel?.toUpperCase();
+    return await this.saleWindow.checkSaleWindow(eventId, {
+      // Un canal desconocido no se fuerza: se ignora y se evalúan todas las fases.
+      channel: normalized && normalized in SalesChannel ? (normalized as SalesChannel) : undefined,
+      code,
+    });
   }
 
   // ==================== CALENDAR VIEW ====================

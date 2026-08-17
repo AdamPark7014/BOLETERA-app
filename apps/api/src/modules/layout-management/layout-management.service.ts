@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -33,6 +34,12 @@ export type ReasonedAction = {
 };
 
 const MIN_REASON_LENGTH = 8;
+
+/**
+ * Tope de una reserva temporal. Más allá de un día ya no es una reserva: es un
+ * bloqueo de inventario y tiene su propia vía (`blockSeats`), que no caduca.
+ */
+const MAX_HOLD_MINUTES = 24 * 60;
 
 @Injectable()
 export class LayoutManagementService {
@@ -218,7 +225,11 @@ export class LayoutManagementService {
   }
 
   /**
-   * Bloqueo administrativo de butacas (cortesías, producción, incidencias).
+   * Reserva temporal de butacas por parte de un operador (apartar mientras se
+   * cierra una venta por teléfono, revisar una incidencia). CADUCA sola.
+   *
+   * Para retener producción o prensa durante una temporada esto no sirve: eso es
+   * `blockSeats`, que no caduca.
    *
    * Antes esta ruta era anónima y creaba holds de canal WEB para cualquier evento.
    * Ahora exige operador autenticado de la organización dueña del evento, motivo
@@ -231,12 +242,23 @@ export class LayoutManagementService {
     operator: OperatorContext,
     action: ReasonedAction,
     sessionId?: string,
+    durationMinutes?: number,
   ) {
     const reasoned = this.assertReason(action);
     const event = await this.assertEventInOrg(eventId, operator);
 
     if (!Array.isArray(seatIds) || seatIds.length === 0) {
       throw new BadRequestException('seatIds es obligatorio');
+    }
+    if (durationMinutes != null) {
+      if (!Number.isFinite(durationMinutes) || durationMinutes < 1) {
+        throw new BadRequestException('durationMinutes debe ser al menos 1');
+      }
+      if (durationMinutes > MAX_HOLD_MINUTES) {
+        throw new BadRequestException(
+          `durationMinutes no puede pasar de ${MAX_HOLD_MINUTES} (un día). Para retener inventario sin caducidad usa /seats/block.`,
+        );
+      }
     }
 
     const hold = await this.inventory.createHold({
@@ -247,6 +269,19 @@ export class LayoutManagementService {
       cashierId: operator.userId,
       skipSessionLimit: true,
     });
+
+    // `inventory.createHold` fija el TTL por canal y no acepta uno a medida, así
+    // que la duración pedida se aplica aquí, sobre los holds recién creados. El
+    // candado de Redis conserva el TTL corto: si otro comprador lo toma después,
+    // el CAS sobre el boleto (que sigue en HELD) lo rechaza igual.
+    let expiresAt = hold.expiresAt;
+    if (durationMinutes != null) {
+      expiresAt = new Date(Date.now() + durationMinutes * 60_000);
+      await this.prisma.seatHold.updateMany({
+        where: { id: { in: hold.holds.map((h) => h.id) } },
+        data: { expiresAt },
+      });
+    }
 
     await this.audit.log({
       action: 'INVENTORY_ADMIN_HOLD',
@@ -260,13 +295,212 @@ export class LayoutManagementService {
         reason: reasoned.reason,
         category: reasoned.category,
         eventTitle: event.title,
+        durationMinutes: durationMinutes ?? null,
+        expiresAt: expiresAt.toISOString(),
       },
     });
 
     this.logger.log(
       `Admin hold: ${seatIds.length} butacas en ${eventId} por ${operator.userId} — ${reasoned.category}`,
     );
-    return { ...hold, reason: reasoned.reason, category: reasoned.category };
+    return { ...hold, expiresAt, reason: reasoned.reason, category: reasoned.category };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Bloqueo operativo de inventario (sin caducidad)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Retira butacas de la venta hasta nueva orden: producción, prensa, palcos de
+   * patrocinador, butacas rotas.
+   *
+   * El boleto pasa a `BLOCKED`, con lo que toda consulta de disponibilidad —que
+   * filtra por `AVAILABLE`— deja de verlo sin que inventario cambie una línea.
+   * El motivo y el rastro (quién, cuándo, por qué) viven en `InventoryBlock`.
+   */
+  async blockSeats(
+    layoutId: string,
+    eventId: string,
+    seatIds: string[],
+    operator: OperatorContext,
+    action: ReasonedAction,
+    label?: string,
+  ) {
+    const reasoned = this.assertReason(action);
+    await this.assertLayoutInOrg(layoutId, operator);
+    const event = await this.assertEventInOrg(eventId, operator);
+
+    if (!Array.isArray(seatIds) || seatIds.length === 0) {
+      throw new BadRequestException('seatIds es obligatorio');
+    }
+    const unique = [...new Set(seatIds)];
+
+    // Todo o nada: un bloqueo a medias deja al operador creyendo que apartó una
+    // fila entera cuando en realidad vendió la mitad.
+    const blocks = await this.prisma.$transaction(async (tx) => {
+      const created = [];
+      for (const seatId of unique) {
+        // CAS de un solo viaje: solo se bloquea lo que estaba realmente libre.
+        const claimed = await tx.$queryRaw<Array<{ id: string }>>`
+          UPDATE "Ticket"
+             SET status = 'BLOCKED'::"TicketStatus", "updatedAt" = now()
+           WHERE id = (
+             SELECT id FROM "Ticket"
+              WHERE "eventId" = ${eventId}
+                AND "seatId" = ${seatId}
+                AND status = 'AVAILABLE'::"TicketStatus"
+              ORDER BY id
+              LIMIT 1
+           )
+             AND status = 'AVAILABLE'::"TicketStatus"
+          RETURNING id`;
+
+        if (!claimed.length) {
+          throw new ConflictException(
+            `La butaca ${seatId} no está disponible (vendida, reservada o ya bloqueada).`,
+          );
+        }
+
+        created.push(
+          await tx.inventoryBlock.create({
+            data: {
+              eventId,
+              ticketId: claimed[0].id,
+              seatId,
+              reason: reasoned.reason,
+              category: reasoned.category ?? 'OTRO',
+              label: label?.trim() || null,
+              blockedBy: operator.userId,
+            },
+          }),
+        );
+      }
+      return created;
+    });
+
+    await this.audit.log({
+      action: 'INVENTORY_BLOCK',
+      entityType: 'Event',
+      entityId: eventId,
+      organizationId: event.organizationId ?? operator.organizationId ?? undefined,
+      userId: operator.userId,
+      metadata: {
+        seatIds: unique,
+        seatCount: unique.length,
+        blockIds: blocks.map((b) => b.id),
+        reason: reasoned.reason,
+        category: reasoned.category,
+        label: label ?? null,
+        eventTitle: event.title,
+      },
+    });
+
+    this.logger.log(
+      `Inventory block: ${unique.length} butacas en ${eventId} por ${operator.userId} — ${reasoned.category}`,
+    );
+    return { eventId, blocked: blocks.length, blocks, reason: reasoned.reason, category: reasoned.category };
+  }
+
+  /**
+   * Devuelve butacas bloqueadas a la venta. Es la única salida de un bloqueo:
+   * nada lo libera por tiempo. Exige motivo igual que el bloqueo.
+   */
+  async unblockSeats(
+    eventId: string,
+    selector: { seatIds?: string[]; blockIds?: string[] },
+    operator: OperatorContext,
+    action: ReasonedAction,
+  ) {
+    const reasoned = this.assertReason(action);
+    const event = await this.assertEventInOrg(eventId, operator);
+
+    const hasSeats = Array.isArray(selector.seatIds) && selector.seatIds.length > 0;
+    const hasBlocks = Array.isArray(selector.blockIds) && selector.blockIds.length > 0;
+    if (!hasSeats && !hasBlocks) {
+      throw new BadRequestException('seatIds o blockIds es obligatorio');
+    }
+
+    const targets = await this.prisma.inventoryBlock.findMany({
+      where: {
+        eventId,
+        releasedAt: null,
+        ...(hasBlocks ? { id: { in: selector.blockIds } } : {}),
+        ...(hasSeats ? { seatId: { in: selector.seatIds } } : {}),
+      },
+      select: { id: true, ticketId: true, seatId: true },
+    });
+
+    const releasedAt = new Date();
+    /** Bloqueos cuyo boleto ya no estaba en BLOCKED: se cierran, pero se avisa. */
+    const mismatched: string[] = [];
+
+    for (const block of targets) {
+      const restored = await this.prisma.$transaction(async (tx) => {
+        const rows = await tx.$queryRaw<Array<{ id: string }>>`
+          UPDATE "Ticket"
+             SET status = 'AVAILABLE'::"TicketStatus", "updatedAt" = now()
+           WHERE id = ${block.ticketId}
+             AND status = 'BLOCKED'::"TicketStatus"
+          RETURNING id`;
+        await tx.inventoryBlock.update({
+          where: { id: block.id },
+          data: {
+            releasedAt,
+            releasedBy: operator.userId,
+            releaseReason: reasoned.reason,
+          },
+        });
+        return rows.length > 0;
+      });
+      if (!restored) mismatched.push(block.id);
+    }
+
+    await this.audit.log({
+      action: 'INVENTORY_UNBLOCK',
+      entityType: 'Event',
+      entityId: eventId,
+      organizationId: event.organizationId ?? operator.organizationId ?? undefined,
+      userId: operator.userId,
+      metadata: {
+        requestedSeatIds: selector.seatIds ?? null,
+        requestedBlockIds: selector.blockIds ?? null,
+        released: targets.length - mismatched.length,
+        closedWithoutRestore: mismatched,
+        reason: reasoned.reason,
+        category: reasoned.category,
+        eventTitle: event.title,
+      },
+    });
+
+    this.logger.log(
+      `Inventory unblock: ${targets.length - mismatched.length}/${targets.length} butacas en ${eventId} por ${operator.userId}`,
+    );
+
+    return {
+      eventId,
+      requested: targets.length,
+      released: targets.length - mismatched.length,
+      /** El bloqueo se cerró pero el boleto ya no estaba bloqueado (revisar). */
+      closedWithoutRestore: mismatched,
+      reason: reasoned.reason,
+      category: reasoned.category,
+    };
+  }
+
+  /** Bloqueos de un evento. Por defecto solo los vigentes. */
+  async listBlocks(eventId: string, operator: OperatorContext, includeReleased = false) {
+    await this.assertEventInOrg(eventId, operator);
+    const blocks = await this.prisma.inventoryBlock.findMany({
+      where: { eventId, ...(includeReleased ? {} : { releasedAt: null }) },
+      orderBy: { createdAt: 'desc' },
+      include: { seat: { select: { id: true, label: true, sectionId: true } } },
+    });
+    return {
+      eventId,
+      total: blocks.length,
+      active: blocks.filter((b) => !b.releasedAt).length,
+      blocks,
+    };
   }
 
   /**
