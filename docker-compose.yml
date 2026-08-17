@@ -1,4 +1,17 @@
-version: '3.9'
+# Despliegue de referencia de Boletera.
+#
+# REGLA: ningún secreto lleva valor por defecto. Todos usan la forma
+# `${VAR:?mensaje}`, que aborta `docker compose up` si la variable no existe.
+#
+# Antes se usaba `${JWT_SECRET:-your-secret-key-change-in-production}`. Ese
+# default de shell hacía que la variable existiera SIEMPRE, así que la
+# validación de arranque de la API (requireJwtSecret) nunca podía dispararse y
+# producción corría con un secreto público: cualquiera firmaba
+# `{"role":"SUPER_ADMIN"}` y obtenía reembolsos, liquidaciones y los datos de
+# todos los tenants (F2-05).
+#
+# Genera cada secreto con:
+#   node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 
 services:
   postgres:
@@ -6,27 +19,50 @@ services:
     container_name: boletera-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: boletera
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8 -A md5"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio (no hay credencial por defecto)}
+      POSTGRES_DB: ${POSTGRES_DB:-boletera}
+      # scram-sha-256 sustituye a md5 (solo aplica al inicializar un volumen nuevo).
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8 -A scram-sha-256"
+    # max_connections debe cubrir: réplicas_api * PRISMA_CONNECTION_LIMIT + worker + margen.
+    command:
+      - postgres
+      - -c
+      - max_connections=${POSTGRES_MAX_CONNECTIONS:-300}
+      - -c
+      - shared_buffers=${POSTGRES_SHARED_BUFFERS:-512MB}
+      - -c
+      - log_min_duration_statement=${POSTGRES_LOG_MIN_DURATION_MS:-1000}
     ports:
-      # Host 5434 because native Windows PostgreSQL services occupy 5432 and 5433
-      - "5434:5432"
+      # Solo loopback: la base nunca debe quedar expuesta a la red del host.
+      # Host 5434 porque los servicios nativos de PostgreSQL en Windows ocupan 5432/5433.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - boletera-network
 
   redis:
     image: redis:7-alpine
     container_name: boletera-redis
     restart: unless-stopped
+    # noeviction: los holds de asiento y los contadores de rate limit NO pueden
+    # desalojarse bajo presión de memoria — desalojar un hold es sobreventa.
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - ${REDIS_MAXMEMORY:-1gb}
+      - --maxmemory-policy
+      - noeviction
     ports:
-      - "6379:6379"
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -34,6 +70,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - boletera-network
 
   api:
     build:
@@ -42,22 +80,89 @@ services:
     container_name: boletera-api
     restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "${API_HOST_PORT:-4000}:4000"
     environment:
       NODE_ENV: production
       API_PORT: 4000
       API_HOST: 0.0.0.0
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/boletera
+      API_PUBLIC_URL: ${API_PUBLIC_URL:?API_PUBLIC_URL es obligatorio (URL pública HTTPS del API; la usa el IPN de Banorte)}
+      WEB_URL: ${WEB_URL:?WEB_URL es obligatorio (origen público del sitio de compra)}
+
+      # Si POSTGRES_PASSWORD lleva caracteres reservados de URL (@ : / ? # &),
+      # hay que percent-encodearlos aquí. Lo más simple es no usarlos.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}@postgres:5432/${POSTGRES_DB:-boletera}?schema=public
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
-      CORS_ORIGIN: http://localhost:3000,http://localhost:3001,http://localhost:3002
-      BANORTE_API_KEY: ${BANORTE_API_KEY:-}
-      BANORTE_API_SECRET: ${BANORTE_API_SECRET:-}
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+
+      # --- Secretos: sin default, el arranque falla si faltan ---
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatorio (mín. 32 caracteres, generado al azar)}
+      # Sin default aquí a propósito: el valor por defecto lo decide el módulo de auth.
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-}
+      REFRESH_TOKEN_EXPIRATION: ${REFRESH_TOKEN_EXPIRATION:-7d}
+      AUTH_CACHE_TTL_MS: ${AUTH_CACHE_TTL_MS:-}
+      # Distinto de JWT_SECRET a propósito: rotar sesiones no debe invalidar
+      # los QR de los boletos ya emitidos, ni al revés.
+      TICKET_QR_SECRET: ${TICKET_QR_SECRET:?TICKET_QR_SECRET es obligatorio y debe ser DISTINTO de JWT_SECRET}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:?INTERNAL_API_SECRET es obligatorio (autentica al worker contra el API)}
+
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN es obligatorio (lista separada por comas de orígenes permitidos)}
+      # Saltos de proxy delante del API. Sin esto el rate limiting ve una sola IP.
+      TRUST_PROXY: ${TRUST_PROXY:-}
+
+      # --- Swagger: cerrado por defecto en producción (F2-19) ---
+      ENABLE_API_DOCS: ${ENABLE_API_DOCS:-false}
+      API_DOCS_USER: ${API_DOCS_USER:-}
+      API_DOCS_PASSWORD: ${API_DOCS_PASSWORD:-}
+
+      # --- Rate limiting distribuido (F1-19 / F2-21) ---
+      THROTTLE_TTL_MS: ${THROTTLE_TTL_MS:-60000}
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT:-120}
+      THROTTLE_BURST_TTL_MS: ${THROTTLE_BURST_TTL_MS:-1000}
+      THROTTLE_BURST_LIMIT: ${THROTTLE_BURST_LIMIT:-10}
+
+      # --- Pool de Prisma (F1-07b) ---
+      PRISMA_CONNECTION_LIMIT: ${PRISMA_CONNECTION_LIMIT:-20}
+      PRISMA_POOL_TIMEOUT: ${PRISMA_POOL_TIMEOUT:-20}
+      PRISMA_CONNECT_TIMEOUT: ${PRISMA_CONNECT_TIMEOUT:-10}
+      PRISMA_TRANSACTION_MAX_WAIT: ${PRISMA_TRANSACTION_MAX_WAIT:-5000}
+      PRISMA_TRANSACTION_TIMEOUT: ${PRISMA_TRANSACTION_TIMEOUT:-10000}
+      PRISMA_LOG_SLOW_QUERIES: ${PRISMA_LOG_SLOW_QUERIES:-false}
+      PRISMA_SLOW_QUERY_MS: ${PRISMA_SLOW_QUERY_MS:-500}
+
+      # --- Pagos Banorte (sin BANORTE_MERCHANT_ID el gateway entra en modo demo,
+      #     que el propio provider bloquea con NODE_ENV=production) ---
+      BANORTE_MERCHANT_ID: ${BANORTE_MERCHANT_ID:?BANORTE_MERCHANT_ID es obligatorio en producción (sin él el gateway queda en modo demo)}
+      BANORTE_AFFILIATION: ${BANORTE_AFFILIATION:-}
+      BANORTE_TERMINAL: ${BANORTE_TERMINAL:-1}
+      BANORTE_USER: ${BANORTE_USER:-}
+      BANORTE_PASSWORD: ${BANORTE_PASSWORD:-}
+      BANORTE_API_SECRET: ${BANORTE_API_SECRET:?BANORTE_API_SECRET es obligatorio}
+      BANORTE_ACCOUNT_CLABE: ${BANORTE_ACCOUNT_CLABE:-}
+      BANORTE_WEBHOOK_SECRET: ${BANORTE_WEBHOOK_SECRET:?BANORTE_WEBHOOK_SECRET es obligatorio (firma del IPN)}
+      # Explícito a false: impide que una variable heredada del shell abra la
+      # puerta a webhooks de pago sin firmar.
+      BANORTE_ALLOW_UNSIGNED_WEBHOOK: "false"
+      BANORTE_PAYWORKS_URL: ${BANORTE_PAYWORKS_URL:-https://eps.banorte.com/secure3d/Solucion3DSecure.htm}
+      BANORTE_QUERY_URL: ${BANORTE_QUERY_URL:-https://eps.banorte.com/secure3d/consultaTransaccion.htm}
+      BANORTE_RETURN_URL: ${BANORTE_RETURN_URL:?BANORTE_RETURN_URL es obligatorio}
+      BANORTE_CANCEL_URL: ${BANORTE_CANCEL_URL:?BANORTE_CANCEL_URL es obligatorio}
+      PAYMENT_STRICT_SETTLEMENT: ${PAYMENT_STRICT_SETTLEMENT:-true}
+
+      # --- Correo ---
       SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@boletera.com}
+      FRAUD_ALERT_EMAIL: ${FRAUD_ALERT_EMAIL:-}
+
+      # --- SSO de admin (opcional; solo si se usa) ---
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+      # GUID del tenant de Azure. Los alias multi-tenant se rechazan en el API.
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-}
+      OAUTH_ADMIN_REDIRECT_URI: ${OAUTH_ADMIN_REDIRECT_URI:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,6 +177,34 @@ services:
     networks:
       - boletera-network
 
+  # Libera los holds vencidos y reconcilia SPEI. Sin este proceso los asientos
+  # retenidos por carritos abandonados no vuelven nunca a inventario: en un
+  # onsale eso es inventario muerto en el minuto 1.
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: boletera-worker
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # El worker usa el PrismaClient de @boletera/database, que no lee las
+      # variables PRISMA_*: los límites del pool van dentro de la propia URL.
+      # Poco cupo a propósito: el worker no debe competir por conexiones con el
+      # checkout durante el pico.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}@postgres:5432/${POSTGRES_DB:-boletera}?schema=public&connection_limit=${WORKER_CONNECTION_LIMIT:-5}&pool_timeout=20
+      REDIS_URL: redis://redis:6379
+      API_INTERNAL_URL: http://api:4000/api/v1
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:?INTERNAL_API_SECRET es obligatorio (debe coincidir con el del API)}
+      WORKER_AUTO_PAYOUT: ${WORKER_AUTO_PAYOUT:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - boletera-network
+
   web:
     build:
       context: .
@@ -81,11 +214,11 @@ services:
     container_name: boletera-web
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${WEB_HOST_PORT:-3000}:3000"
     environment:
       NODE_ENV: production
       PORT: 3000
-      NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/api/v1}
     depends_on:
       - api
     healthcheck:
@@ -106,11 +239,11 @@ services:
     container_name: boletera-admin
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "${ADMIN_HOST_PORT:-3001}:3000"
     environment:
       NODE_ENV: production
       PORT: 3000
-      NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_ADMIN_API_URL:-http://localhost:4000/api/v1}
     depends_on:
       - api
     healthcheck:

@@ -27,12 +27,25 @@ jobs:
         image: redis:7
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/boletera?schema=public
+      # Base efímera que Prisma crea y destruye para reproducir el historial de
+      # migraciones durante la comprobación de deriva.
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/boletera_shadow
       REDIS_URL: redis://localhost:6379
-      JWT_SECRET: ci-test-secret
-      INTERNAL_API_SECRET: ci-internal-secret
+      # Secretos SOLO de CI. Tienen que superar la validación de
+      # apps/api/src/modules/auth/jwt-secret.ts: mínimo 32 caracteres y fuera de
+      # la lista negra de valores de ejemplo (por eso ya no valen 'ci-test-secret'
+      # ni 'ci-internal-secret'). No protegen nada: la base de CI es efímera.
+      JWT_SECRET: ci-4f8a1d3b9c7e2a6d5b0f4c8e1a3d7b9f2c6e0a4d8b1f5c9e
+      TICKET_QR_SECRET: ci-9e2c6a0d4b8f1c5e9a3d7b1f5c9e2a6d0b4f8c1e5a9d3b7f
+      INTERNAL_API_SECRET: ci-7b3f9d1c5a8e2b6f0d4a8c2e6b0f4d8a1c5e9b3f7d1a5c9e
 
     steps:
       - uses: actions/checkout@v4
@@ -50,14 +63,43 @@ jobs:
 
       - run: pnpm db:generate
 
-      - name: Apply schema
-        run: pnpm --filter @boletera/database exec prisma db push --skip-generate
+      # `prisma db push` ya no se usa: sin historial de migraciones no hay forma
+      # de revisar un cambio destructivo antes de que llegue a producción, ni de
+      # saber si la base y schema.prisma siguen coincidiendo.
+      - name: Aplicar migraciones
+        run: pnpm --filter @boletera/database exec prisma migrate deploy
 
-      - name: Typecheck API
-        run: pnpm --filter @boletera/api run check-types
+      # Un cambio de esquema sin su migración rompe el build aquí y no en el
+      # despliegue. Ver packages/database/prisma/migrations/README.md.
+      - name: Verificar deriva entre schema.prisma y las migraciones
+        run: |
+          if ! pnpm --filter @boletera/database exec prisma migrate diff \
+              --from-migrations ./prisma/migrations \
+              --to-schema-datamodel ./prisma/schema.prisma \
+              --shadow-database-url "$SHADOW_DATABASE_URL" \
+              --exit-code; then
+            echo "::error::schema.prisma no coincide con el historial de migraciones."
+            echo "::error::Genera la que falta: pnpm --filter @boletera/database exec prisma migrate dev --name <descripcion>"
+            exit 1
+          fi
 
-      - name: Build payments package
-        run: pnpm --filter @boletera/payments run build
+      # Los frontends resuelven @boletera/venue-engine contra su dist; sin este
+      # paso el typecheck de web falla por un artefacto ausente, no por el código.
+      - name: Compilar paquetes del workspace
+        run: pnpm exec turbo run build --filter='./packages/*'
 
-      - name: API unit tests
-        run: pnpm --filter @boletera/api test -- --passWithNoTests
+      # Cubre api, web, admin, taquilla y los paquetes que declaran check-types.
+      - name: Typecheck (apps y paquetes)
+        run: pnpm exec turbo run check-types
+
+      # El worker no declara script check-types; se invoca tsc directamente.
+      - name: Typecheck worker
+        run: pnpm --filter @boletera/worker exec tsc --noEmit
+
+      - name: Compilar API
+        run: pnpm --filter @boletera/api run build
+
+      # Antes el pipeline no ejecutaba ningún test: solo typecheck y el build de
+      # un paquete. Ahora una prueba en rojo detiene el merge.
+      - name: Tests
+        run: pnpm exec turbo run test -- --passWithNoTests
