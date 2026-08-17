@@ -118,6 +118,9 @@ export function createEvent(
     venueId: string;
     capacity: number;
     basePrice: number;
+    /** Ventana de venta. El asistente la pedía y se descartaba antes de llegar aquí. */
+    salesStartAt?: string;
+    salesEndAt?: string;
   },
 ) {
   return adminApi<EventRow>('/events/manage', token, {

@@ -25038,6 +25038,7 @@ export namespace Prisma {
     status: $Enums.EventStatus | null
     publishedAt: Date | null
     cancelledAt: Date | null
+    cancellationReason: string | null
     announceAt: Date | null
     publishAt: Date | null
     salesStartAt: Date | null
@@ -25084,6 +25085,7 @@ export namespace Prisma {
     status: $Enums.EventStatus | null
     publishedAt: Date | null
     cancelledAt: Date | null
+    cancellationReason: string | null
     announceAt: Date | null
     publishAt: Date | null
     salesStartAt: Date | null
@@ -25130,6 +25132,7 @@ export namespace Prisma {
     status: number
     publishedAt: number
     cancelledAt: number
+    cancellationReason: number
     announceAt: number
     publishAt: number
     salesStartAt: number
@@ -25203,6 +25206,7 @@ export namespace Prisma {
     status?: true
     publishedAt?: true
     cancelledAt?: true
+    cancellationReason?: true
     announceAt?: true
     publishAt?: true
     salesStartAt?: true
@@ -25249,6 +25253,7 @@ export namespace Prisma {
     status?: true
     publishedAt?: true
     cancelledAt?: true
+    cancellationReason?: true
     announceAt?: true
     publishAt?: true
     salesStartAt?: true
@@ -25295,6 +25300,7 @@ export namespace Prisma {
     status?: true
     publishedAt?: true
     cancelledAt?: true
+    cancellationReason?: true
     announceAt?: true
     publishAt?: true
     salesStartAt?: true
@@ -25429,6 +25435,7 @@ export namespace Prisma {
     status: $Enums.EventStatus
     publishedAt: Date | null
     cancelledAt: Date | null
+    cancellationReason: string | null
     announceAt: Date | null
     publishAt: Date | null
     salesStartAt: Date | null
@@ -25495,6 +25502,7 @@ export namespace Prisma {
     status?: boolean
     publishedAt?: boolean
     cancelledAt?: boolean
+    cancellationReason?: boolean
     announceAt?: boolean
     publishAt?: boolean
     salesStartAt?: boolean
@@ -25558,6 +25566,7 @@ export namespace Prisma {
     status?: boolean
     publishedAt?: boolean
     cancelledAt?: boolean
+    cancellationReason?: boolean
     announceAt?: boolean
     publishAt?: boolean
     salesStartAt?: boolean
@@ -25608,6 +25617,7 @@ export namespace Prisma {
     status?: boolean
     publishedAt?: boolean
     cancelledAt?: boolean
+    cancellationReason?: boolean
     announceAt?: boolean
     publishAt?: boolean
     salesStartAt?: boolean
@@ -25658,6 +25668,7 @@ export namespace Prisma {
     status?: boolean
     publishedAt?: boolean
     cancelledAt?: boolean
+    cancellationReason?: boolean
     announceAt?: boolean
     publishAt?: boolean
     salesStartAt?: boolean
@@ -25684,7 +25695,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type EventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "externalId" | "slug" | "organizationId" | "venueId" | "title" | "description" | "image" | "bannerImage" | "category" | "genre" | "rating" | "startsAt" | "endsAt" | "timezone" | "doorsAt" | "durationMinutes" | "status" | "publishedAt" | "cancelledAt" | "announceAt" | "publishAt" | "salesStartAt" | "salesEndAt" | "rescheduledFrom" | "scheduleNote" | "seriesId" | "seriesOrder" | "minPrice" | "maxPrice" | "currency" | "totalCapacity" | "holdableCapacity" | "allowResale" | "transferAllowed" | "refundable" | "nonTransferable" | "holdExpiration" | "enableDynamic" | "surgeThreshold" | "surgePriceMultiplier" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["event"]>
+  export type EventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "externalId" | "slug" | "organizationId" | "venueId" | "title" | "description" | "image" | "bannerImage" | "category" | "genre" | "rating" | "startsAt" | "endsAt" | "timezone" | "doorsAt" | "durationMinutes" | "status" | "publishedAt" | "cancelledAt" | "cancellationReason" | "announceAt" | "publishAt" | "salesStartAt" | "salesEndAt" | "rescheduledFrom" | "scheduleNote" | "seriesId" | "seriesOrder" | "minPrice" | "maxPrice" | "currency" | "totalCapacity" | "holdableCapacity" | "allowResale" | "transferAllowed" | "refundable" | "nonTransferable" | "holdExpiration" | "enableDynamic" | "surgeThreshold" | "surgePriceMultiplier" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["event"]>
   export type EventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     venue?: boolean | VenueDefaultArgs<ExtArgs>
@@ -25760,6 +25771,12 @@ export namespace Prisma {
       status: $Enums.EventStatus
       publishedAt: Date | null
       cancelledAt: Date | null
+      /**
+       * Motivo de la cancelación, tal como se le comunicó al comprador.
+       * Vivía solo en AuditEvent, que es bitácora interna: el asistente veía QUE
+       * se canceló y CUÁNDO, pero nunca por qué.
+       */
+      cancellationReason: string | null
       /**
        * When the event becomes visible in the storefront.
        */
@@ -26254,6 +26271,7 @@ export namespace Prisma {
     readonly status: FieldRef<"Event", 'EventStatus'>
     readonly publishedAt: FieldRef<"Event", 'DateTime'>
     readonly cancelledAt: FieldRef<"Event", 'DateTime'>
+    readonly cancellationReason: FieldRef<"Event", 'String'>
     readonly announceAt: FieldRef<"Event", 'DateTime'>
     readonly publishAt: FieldRef<"Event", 'DateTime'>
     readonly salesStartAt: FieldRef<"Event", 'DateTime'>
@@ -66227,6 +66245,7 @@ export namespace Prisma {
     status: 'status',
     publishedAt: 'publishedAt',
     cancelledAt: 'cancelledAt',
+    cancellationReason: 'cancellationReason',
     announceAt: 'announceAt',
     publishAt: 'publishAt',
     salesStartAt: 'salesStartAt',
@@ -68962,6 +68981,7 @@ export namespace Prisma {
     status?: EnumEventStatusFilter<"Event"> | $Enums.EventStatus
     publishedAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     cancelledAt?: DateTimeNullableFilter<"Event"> | Date | string | null
+    cancellationReason?: StringNullableFilter<"Event"> | string | null
     announceAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     publishAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     salesStartAt?: DateTimeNullableFilter<"Event"> | Date | string | null
@@ -69024,6 +69044,7 @@ export namespace Prisma {
     status?: SortOrder
     publishedAt?: SortOrderInput | SortOrder
     cancelledAt?: SortOrderInput | SortOrder
+    cancellationReason?: SortOrderInput | SortOrder
     announceAt?: SortOrderInput | SortOrder
     publishAt?: SortOrderInput | SortOrder
     salesStartAt?: SortOrderInput | SortOrder
@@ -69089,6 +69110,7 @@ export namespace Prisma {
     status?: EnumEventStatusFilter<"Event"> | $Enums.EventStatus
     publishedAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     cancelledAt?: DateTimeNullableFilter<"Event"> | Date | string | null
+    cancellationReason?: StringNullableFilter<"Event"> | string | null
     announceAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     publishAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     salesStartAt?: DateTimeNullableFilter<"Event"> | Date | string | null
@@ -69151,6 +69173,7 @@ export namespace Prisma {
     status?: SortOrder
     publishedAt?: SortOrderInput | SortOrder
     cancelledAt?: SortOrderInput | SortOrder
+    cancellationReason?: SortOrderInput | SortOrder
     announceAt?: SortOrderInput | SortOrder
     publishAt?: SortOrderInput | SortOrder
     salesStartAt?: SortOrderInput | SortOrder
@@ -69206,6 +69229,7 @@ export namespace Prisma {
     status?: EnumEventStatusWithAggregatesFilter<"Event"> | $Enums.EventStatus
     publishedAt?: DateTimeNullableWithAggregatesFilter<"Event"> | Date | string | null
     cancelledAt?: DateTimeNullableWithAggregatesFilter<"Event"> | Date | string | null
+    cancellationReason?: StringNullableWithAggregatesFilter<"Event"> | string | null
     announceAt?: DateTimeNullableWithAggregatesFilter<"Event"> | Date | string | null
     publishAt?: DateTimeNullableWithAggregatesFilter<"Event"> | Date | string | null
     salesStartAt?: DateTimeNullableWithAggregatesFilter<"Event"> | Date | string | null
@@ -74102,6 +74126,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -74163,6 +74188,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -74220,6 +74246,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -74281,6 +74308,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -74340,6 +74368,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -74385,6 +74414,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -74431,6 +74461,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -79741,6 +79772,7 @@ export namespace Prisma {
     status?: SortOrder
     publishedAt?: SortOrder
     cancelledAt?: SortOrder
+    cancellationReason?: SortOrder
     announceAt?: SortOrder
     publishAt?: SortOrder
     salesStartAt?: SortOrder
@@ -79800,6 +79832,7 @@ export namespace Prisma {
     status?: SortOrder
     publishedAt?: SortOrder
     cancelledAt?: SortOrder
+    cancellationReason?: SortOrder
     announceAt?: SortOrder
     publishAt?: SortOrder
     salesStartAt?: SortOrder
@@ -79846,6 +79879,7 @@ export namespace Prisma {
     status?: SortOrder
     publishedAt?: SortOrder
     cancelledAt?: SortOrder
+    cancellationReason?: SortOrder
     announceAt?: SortOrder
     publishAt?: SortOrder
     salesStartAt?: SortOrder
@@ -87181,6 +87215,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -87240,6 +87275,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -87895,6 +87931,7 @@ export namespace Prisma {
     status?: EnumEventStatusFilter<"Event"> | $Enums.EventStatus
     publishedAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     cancelledAt?: DateTimeNullableFilter<"Event"> | Date | string | null
+    cancellationReason?: StringNullableFilter<"Event"> | string | null
     announceAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     publishAt?: DateTimeNullableFilter<"Event"> | Date | string | null
     salesStartAt?: DateTimeNullableFilter<"Event"> | Date | string | null
@@ -88441,6 +88478,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -88500,6 +88538,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -89974,6 +90013,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -90034,6 +90074,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -90137,6 +90178,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -90197,6 +90239,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -90290,6 +90333,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -90350,6 +90394,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -90463,6 +90508,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -90523,6 +90569,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -90626,6 +90673,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -90686,6 +90734,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -90856,6 +90905,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -90916,6 +90966,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -93156,6 +93207,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -93216,6 +93268,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -93484,6 +93537,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -93544,6 +93598,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -93616,6 +93671,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -93676,6 +93732,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -93876,6 +93933,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -93936,6 +93994,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -94138,6 +94197,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -94198,6 +94258,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -94317,6 +94378,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -94377,6 +94439,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -94769,6 +94832,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -94829,6 +94893,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -95259,6 +95324,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -95319,6 +95385,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -95825,6 +95892,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -95885,6 +95953,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -98110,6 +98179,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -98170,6 +98240,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -98299,6 +98370,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -98359,6 +98431,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -98576,6 +98649,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -98636,6 +98710,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -98905,6 +98980,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -98965,6 +99041,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -99716,6 +99793,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -99776,6 +99854,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -99911,6 +99990,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -99971,6 +100051,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -100096,6 +100177,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -100156,6 +100238,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -100228,6 +100311,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -100288,6 +100372,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -101781,6 +101866,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -101841,6 +101927,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -101966,6 +102053,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -102026,6 +102114,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -102436,6 +102525,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -102762,6 +102852,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -102821,6 +102912,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -102879,6 +102971,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -103427,6 +103520,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -103537,6 +103631,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -103596,6 +103691,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -103654,6 +103750,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -105176,6 +105273,7 @@ export namespace Prisma {
     status?: $Enums.EventStatus
     publishedAt?: Date | string | null
     cancelledAt?: Date | string | null
+    cancellationReason?: string | null
     announceAt?: Date | string | null
     publishAt?: Date | string | null
     salesStartAt?: Date | string | null
@@ -105220,6 +105318,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -105280,6 +105379,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -105338,6 +105438,7 @@ export namespace Prisma {
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
     announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

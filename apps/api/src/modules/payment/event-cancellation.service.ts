@@ -105,7 +105,12 @@ export class EventCancellationService {
     await this.prisma.$transaction([
       this.prisma.event.update({
         where: { id: event.id },
-        data: { status: EventStatus.CANCELLED, cancelledAt: new Date() },
+        data: {
+          status: EventStatus.CANCELLED,
+          cancelledAt: new Date(),
+          // El comprador tiene derecho a saber por qué, no solo que pasó.
+          cancellationReason: input.reason.trim(),
+        },
       }),
       this.prisma.offer.updateMany({
         where: { eventId: event.id },
@@ -223,7 +228,11 @@ export class EventCancellationService {
 
     await this.prisma.event.update({
       where: { id: event.id },
-      data: { status: EventStatus.RESCHEDULED, startsAt: input.newStartsAt },
+      data: {
+        status: EventStatus.RESCHEDULED,
+        startsAt: input.newStartsAt,
+        cancellationReason: input.reason.trim(),
+      },
     });
 
     await this.notifications

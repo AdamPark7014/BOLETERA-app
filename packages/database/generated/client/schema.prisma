@@ -425,9 +425,13 @@ model Event {
   durationMinutes Int?
 
   // Status
-  status      EventStatus @default(DRAFT) // DRAFT, SCHEDULED, LIVE, COMPLETED, CANCELLED
-  publishedAt DateTime?
-  cancelledAt DateTime?
+  status             EventStatus @default(DRAFT) // DRAFT, SCHEDULED, LIVE, COMPLETED, CANCELLED
+  publishedAt        DateTime?
+  cancelledAt        DateTime?
+  /// Motivo de la cancelación, tal como se le comunicó al comprador.
+  /// Vivía solo en AuditEvent, que es bitácora interna: el asistente veía QUE
+  /// se canceló y CUÁNDO, pero nunca por qué.
+  cancellationReason String?
 
   // Scheduling & sale windows (all UTC instants; render with `timezone`)
   /// When the event becomes visible in the storefront.

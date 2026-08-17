@@ -987,6 +987,7 @@ export class OrdersService {
             // que el comprador entre orden por orden.
             status: true,
             cancelledAt: true,
+            cancellationReason: true,
             venue: { select: { name: true, city: true } },
           },
         },

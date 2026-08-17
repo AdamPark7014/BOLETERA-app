@@ -369,6 +369,7 @@ exports.Prisma.EventScalarFieldEnum = {
   status: 'status',
   publishedAt: 'publishedAt',
   cancelledAt: 'cancelledAt',
+  cancellationReason: 'cancellationReason',
   announceAt: 'announceAt',
   publishAt: 'publishAt',
   salesStartAt: 'salesStartAt',

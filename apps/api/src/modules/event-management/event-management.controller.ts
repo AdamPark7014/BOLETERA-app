@@ -40,6 +40,10 @@ export class EventManagementController {
       capacity: number;
       basePrice: number;
       imageUrl?: string;
+      timezone?: string;
+      /** Ventana de venta: el asistente ya la pedía, ahora sí llega y se guarda. */
+      salesStartAt?: string;
+      salesEndAt?: string;
     }
   ) {
     return await this.eventService.createEvent(orgId, data);

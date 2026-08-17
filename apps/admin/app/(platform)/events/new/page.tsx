@@ -457,6 +457,10 @@ export default function NewEventPage() {
         venueId: form.venueId,
         capacity: form.capacity,
         basePrice: form.basePrice,
+        // La ventana de venta se validaba en el asistente y se descartaba antes
+        // de llegar al API. Ahora se envía y se guarda.
+        salesStartAt: form.salesStartAt || undefined,
+        salesEndAt: form.salesEndAt || undefined,
       });
       localStorage.removeItem(DRAFT_KEY);
       router.push(`/events/${event.id}`);

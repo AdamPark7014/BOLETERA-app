@@ -67,8 +67,36 @@ export class EventManagementService {
       basePrice: number;
       imageUrl?: string;
       timezone?: string;
+      /**
+       * Ventana de venta. El asistente de alta ya la pedía y la validaba, pero
+       * no llegaba hasta aquí: el operador configuraba un horario que se
+       * descartaba en silencio. `SaleWindowService` lee estos dos campos.
+       */
+      salesStartAt?: Date | string;
+      salesEndAt?: Date | string;
     },
   ) {
+    const salesStartAt = data.salesStartAt ? new Date(data.salesStartAt) : null;
+    const salesEndAt = data.salesEndAt ? new Date(data.salesEndAt) : null;
+    const startsAt = new Date(data.startDate);
+
+    if (salesStartAt && Number.isNaN(salesStartAt.getTime())) {
+      throw new BadRequestException('salesStartAt inválido');
+    }
+    if (salesEndAt && Number.isNaN(salesEndAt.getTime())) {
+      throw new BadRequestException('salesEndAt inválido');
+    }
+    if (salesStartAt && salesEndAt && salesEndAt <= salesStartAt) {
+      throw new BadRequestException('La venta no puede cerrar antes de abrir');
+    }
+    // Vender después de que el evento empezó no tiene sentido salvo en puerta,
+    // que se modela con una fase DOOR, no con la ventana suelta del evento.
+    if (salesEndAt && salesEndAt > startsAt) {
+      throw new BadRequestException(
+        'La venta no puede cerrar después de que empiece el evento; usa una fase de venta en puerta',
+      );
+    }
+
     const event = await this.prisma.event.create({
       data: {
         title: data.title,
@@ -76,8 +104,10 @@ export class EventManagementService {
         slug: this.slugify(data.title),
         organizationId: orgId,
         venueId: data.venueId,
-        startsAt: new Date(data.startDate),
+        startsAt,
         endsAt: data.endDate ? new Date(data.endDate) : undefined,
+        salesStartAt,
+        salesEndAt,
         timezone: data.timezone ?? 'America/Mexico_City',
         status: EventStatus.DRAFT,
         image: data.imageUrl,
