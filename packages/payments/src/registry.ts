@@ -13,9 +13,9 @@ export function registerProvider(provider: PaymentProvider): void {
  *
  * Cada proveedor declara `supportedChannels` (CashProvider: TAQUILLA/ADMIN),
  * pero nadie lo verificaba: `getProvider('cash')` funcionaba desde una petición
- * web anónima, y `CashProvider.capture()` devuelve éxito incondicional. Eso
- * convertía `POST /orders {"paymentMethod":"CASH"}` en emisión de boletos
- * gratis (F1-01). El canal es ahora parte del contrato del registry.
+ * web anónima y `CashProvider.capture()` devuelve éxito incondicional, así que
+ * `POST /orders {"paymentMethod":"CASH"}` emitía boletos gratis. El canal pasa a
+ * formar parte del contrato del registry.
  */
 export function getProvider(
   id: PaymentProviderId,
@@ -33,9 +33,9 @@ export function getProvider(
 }
 
 /**
- * Métodos de pago admitidos por canal. Es la lista blanca que faltaba: el
- * método llegaba como string libre desde el cuerpo de la petición y decidía
- * el proveedor sin ninguna validación.
+ * Métodos de pago admitidos por canal: la lista blanca que faltaba. El método
+ * llegaba como string libre en el cuerpo de la petición y elegía el proveedor
+ * sin ninguna validación.
  */
 export const CHANNEL_PAYMENT_METHODS: Record<SalesChannelType, readonly string[]> = {
   WEB: ['CARD', 'SPEI', 'OXXO'],

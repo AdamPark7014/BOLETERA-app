@@ -6,11 +6,13 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types src/banorte/webhook.test.ts src/banorte/status-classifier.test.ts src/security/redact.test.ts src/security/idempotency.test.ts src/security/retry.test.ts src/types.money.test.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@boletera/shared": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.9.2"
   }
 }
-

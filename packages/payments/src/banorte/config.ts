@@ -2,6 +2,12 @@
  * Credenciales Banorte — liquidación directa a tu cuenta empresarial.
  * Contrata afiliación e-commerce / Payworks con tu ejecutivo Banorte.
  * Sin BANORTE_MERCHANT_ID el gateway opera en modo demo (solo desarrollo).
+ *
+ * Webhook secret soft-allow:
+ * - Outside production: missing BANORTE_WEBHOOK_SECRET is allowed for local demos
+ *   (verifyBanorteWebhookSignature returns true when secret is empty).
+ * - Production (NODE_ENV=production): missing secret ALWAYS fails verification.
+ *   Never deploy without BANORTE_WEBHOOK_SECRET.
  */
 export type BanorteConfig = {
   merchantId: string;
@@ -18,6 +24,12 @@ export type BanorteConfig = {
   isDemo: boolean;
 };
 
+/**
+ * Demo-only SPEI CLABE placeholder.
+ * NEVER use when `!cfg.isDemo` — production SPEI requires BANORTE_ACCOUNT_CLABE.
+ */
+export const DEMO_SPEI_CLABE = '012180001234567890' as const;
+
 export function validateBanorteProductionConfig(): {
   ready: boolean;
   demo: boolean;
@@ -27,14 +39,17 @@ export function validateBanorteProductionConfig(): {
   const cfg = getBanorteConfig();
   const missing: string[] = [];
   const warnings: string[] = [];
+  const isProd = process.env.NODE_ENV === 'production';
 
   if (!cfg.merchantId) missing.push('BANORTE_MERCHANT_ID');
   if (!cfg.affiliation) missing.push('BANORTE_AFFILIATION');
   if (!cfg.user) missing.push('BANORTE_USER');
   if (!cfg.password) missing.push('BANORTE_API_SECRET');
   if (!cfg.webhookSecret) {
-    if (process.env.NODE_ENV === 'production') missing.push('BANORTE_WEBHOOK_SECRET');
-    else warnings.push('BANORTE_WEBHOOK_SECRET (requerido en producción)');
+    // Soft-allow missing secret outside production for demos ONLY.
+    // Production MUST set BANORTE_WEBHOOK_SECRET — never soft-allow there.
+    if (isProd) missing.push('BANORTE_WEBHOOK_SECRET');
+    else warnings.push('BANORTE_WEBHOOK_SECRET (requerido en producción; soft-allow solo en demo/dev)');
   }
   if (!cfg.accountClabe) warnings.push('BANORTE_ACCOUNT_CLABE (requerido para SPEI)');
 

@@ -1,3 +1,6 @@
+import type { UserRoleValue } from './enums';
+import type { CurrencyCode } from './money';
+
 export interface SeatMapData {
   /** 3 = spatial engine (position/elevation/blocks); 2 = bbox + normalized ids; 1/undefined = legacy */
   version?: 1 | 2 | 3;
@@ -233,7 +236,7 @@ export interface SeatMapBounds {
 export interface JwtPayload {
   sub: string;
   email: string;
-  role: string;
+  role: UserRoleValue | string;
   organizationId?: string;
 }
 
@@ -241,4 +244,23 @@ export interface TenantContext {
   organizationId: string;
   slug: string;
   subdomain?: string;
+}
+
+/** Shared event identity fields used across API, admin and storefront. */
+export interface EventRef {
+  id: string;
+  organizationId: string;
+  slug: string;
+  title: string;
+  timezone: string;
+  currency: CurrencyCode;
+}
+
+/** Shared order identity for cross-app payloads. */
+export interface OrderRef {
+  id: string;
+  publicId: string;
+  organizationId: string;
+  eventId: string;
+  status: string;
 }

@@ -8,16 +8,21 @@ import type {
   RefundResult,
   WebhookResult,
 } from '../types';
-import { getBanorteConfig } from '../banorte/config';
+import { resolveContextMoney } from '../types';
+import { PaymentError } from '../errors';
+import { DEMO_SPEI_CLABE, getBanorteConfig } from '../banorte/config';
 import {
   buildPayworksRedirectUrl,
   buildSpeiReference,
-  classifyBanorteResponse,
-  parseSettlementAmount,
-  parseSettlementCurrency,
+  parseBanorteSettlement,
+  parseBanorteStatusText,
   queryBanorteTransactionStatus,
   verifyBanorteWebhookSignature,
 } from '../banorte/payworks';
+import { IdempotencyGuard } from '../security/idempotency';
+
+/** Process-local intent cache. Export so apps can inspect or replace with Redis. */
+export const banorteIntentIdempotency = new IdempotencyGuard<PaymentIntentResult>();
 
 export class BanorteProvider implements PaymentProvider {
   readonly id = 'banorte' as const;
@@ -31,23 +36,40 @@ export class BanorteProvider implements PaymentProvider {
   }
 
   async createIntent(ctx: PaymentContext): Promise<PaymentIntentResult> {
+    if (ctx.idempotencyKey) {
+      const { value } = await banorteIntentIdempotency.getOrCreate(ctx.idempotencyKey, () =>
+        this.createIntentOnce(ctx),
+      );
+      return value;
+    }
+    return this.createIntentOnce(ctx);
+  }
+
+  private async createIntentOnce(ctx: PaymentContext): Promise<PaymentIntentResult> {
     const cfg = getBanorteConfig();
     const intentId = `banorte_${ctx.orderId}_${Date.now()}`;
     const method = (ctx.paymentMethod ?? 'CARD').toUpperCase();
     const publicId = ctx.metadata?.publicId ?? ctx.orderId;
+    const money = resolveContextMoney(ctx);
 
     if (cfg.isDemo) {
       if (process.env.NODE_ENV === 'production') {
-        throw new Error(
+        throw new PaymentError(
+          'NOT_CONFIGURED',
           'Banorte no está configurado: define BANORTE_MERCHANT_ID y credenciales Payworks. El modo demo no está permitido en producción.',
+          { retryable: false },
         );
       }
-      return this.createDemoIntent(intentId, ctx, method, publicId);
+      return this.createDemoIntent(intentId, method, publicId);
     }
 
     if (method === 'SPEI') {
       if (!cfg.accountClabe) {
-        throw new Error('BANORTE_ACCOUNT_CLABE required for SPEI');
+        throw new PaymentError(
+          'NOT_CONFIGURED',
+          'BANORTE_ACCOUNT_CLABE required for SPEI',
+          { retryable: false },
+        );
       }
       const spei = buildSpeiReference(publicId, cfg.accountClabe);
       return {
@@ -62,6 +84,8 @@ export class BanorteProvider implements PaymentProvider {
           reference: spei.reference,
           merchantId: cfg.merchantId,
           orderId: ctx.orderId,
+          amountMinor: money.amountMinor,
+          currency: money.currency,
         },
       };
     }
@@ -78,6 +102,8 @@ export class BanorteProvider implements PaymentProvider {
           reference: oxxoRef,
           merchantId: cfg.merchantId,
           orderId: ctx.orderId,
+          amountMinor: money.amountMinor,
+          currency: money.currency,
         },
       };
     }
@@ -86,7 +112,8 @@ export class BanorteProvider implements PaymentProvider {
       orderId: ctx.orderId,
       publicId,
       amount: ctx.amount,
-      currency: ctx.currency,
+      amountMinor: money.amountMinor,
+      currency: money.currency,
       buyerEmail: ctx.buyerEmail,
       buyerName: ctx.buyerName,
     });
@@ -102,25 +129,33 @@ export class BanorteProvider implements PaymentProvider {
         affiliation: cfg.affiliation,
         orderId: ctx.orderId,
         settlement: 'direct_banorte_account',
+        amountMinor: money.amountMinor,
+        currency: money.currency,
       },
     };
   }
 
   private createDemoIntent(
     intentId: string,
-    _ctx: PaymentContext,
     method: string,
     publicId: string,
   ): PaymentIntentResult {
     const cfg = getBanorteConfig();
     if (method === 'SPEI') {
-      const spei = buildSpeiReference(publicId, cfg.accountClabe || '012180001234567890');
+      // DEMO_SPEI_CLABE is demo-only — never used when !isDemo (guarded above).
+      const clabe = cfg.accountClabe || DEMO_SPEI_CLABE;
+      const spei = buildSpeiReference(publicId, clabe);
       return {
         intentId,
         externalId: intentId,
         status: 'requires_action',
         reference: spei.reference,
-        metadata: { type: 'SPEI', demo: true, ...spei },
+        metadata: {
+          type: 'SPEI',
+          demo: true,
+          demoClabe: !cfg.accountClabe,
+          ...spei,
+        },
       };
     }
     if (method === 'OXXO') {
@@ -142,34 +177,80 @@ export class BanorteProvider implements PaymentProvider {
     };
   }
 
-  /** Devuelve además el importe liquidado: sin él no hay conciliación posible (F1-05). */
   async getPaymentStatus(externalId: string): Promise<PaymentStatusResult> {
     const cfg = getBanorteConfig();
     if (cfg.isDemo) return { status: 'pending' };
     return queryBanorteTransactionStatus(cfg, externalId);
   }
 
+  /**
+   * Capture is safe to retry: never invents a second charge.
+   * Live Banorte settlements confirm via Payworks/IPN — capture reports awaiting.
+   */
   async capture(intentId: string, externalId?: string): Promise<PaymentCaptureResult> {
     const cfg = getBanorteConfig();
+    const id = externalId ?? intentId;
+
     if (cfg.isDemo) {
-      return { success: true, externalId: externalId ?? intentId, paidAt: new Date() };
+      return { success: true, externalId: id, paidAt: new Date() };
     }
+
+    // Idempotent: querying status never creates a charge. Safe under retry.
+    const queried = await queryBanorteTransactionStatus(cfg, id);
+    if (queried.status === 'completed') {
+      return { success: true, externalId: id, paidAt: new Date() };
+    }
+    if (queried.status === 'declined' || queried.status === 'failed') {
+      return {
+        success: false,
+        externalId: id,
+        error: 'Payment declined by Banorte',
+        errorCode: 'DECLINED',
+      };
+    }
+    if (queried.status === 'cancelled') {
+      return {
+        success: false,
+        externalId: id,
+        error: 'Payment cancelled',
+        errorCode: 'CANCELLED',
+      };
+    }
+    if (queried.status === 'expired') {
+      return {
+        success: false,
+        externalId: id,
+        error: 'Payment expired',
+        errorCode: 'EXPIRED',
+      };
+    }
+
     return {
       success: false,
-      externalId: externalId ?? intentId,
+      externalId: id,
       error: 'Awaiting Banorte confirmation (Payworks/IPN)',
+      errorCode: 'AWAITING_CONFIRMATION',
     };
   }
 
+  /**
+   * Refund is safe to retry: never invents a second charge or duplicate refund id.
+   * Live Banorte refunds are portal-driven; we return a structured, non-invented result.
+   */
   async refund(paymentId: string, amount: number): Promise<RefundResult> {
     const cfg = getBanorteConfig();
+    // Deterministic refund id so retries do not invent a second refund reference.
+    const refundId = `banorte_ref_${paymentId}`;
+
     if (cfg.isDemo) {
-      return { success: true, refundId: `banorte_ref_${paymentId}` };
+      return { success: true, refundId };
     }
+
     return {
       success: false,
       refundId: '',
       error: `Solicitar devolución ${amount} en portal Banorte comercios — pago ${paymentId}`,
+      errorCode: 'PROVIDER_ERROR',
     };
   }
 
@@ -177,7 +258,9 @@ export class BanorteProvider implements PaymentProvider {
     const cfg = getBanorteConfig();
     const raw = typeof payload === 'string' ? payload : JSON.stringify(payload);
     if (!verifyBanorteWebhookSignature(raw, signature, cfg.webhookSecret)) {
-      throw new Error('Invalid Banorte webhook signature');
+      throw new PaymentError('INVALID_SIGNATURE', 'Invalid Banorte webhook signature', {
+        retryable: false,
+      });
     }
 
     const body =
@@ -185,32 +268,40 @@ export class BanorteProvider implements PaymentProvider {
         ? (payload as Record<string, string>)
         : (JSON.parse(raw) as Record<string, string>);
 
+    const statusRaw = body.status ?? body.ESTATUS ?? body.response ?? '';
     const orderId = body.orderId ?? body.REFERENCIA ?? body.metadata_orderId;
     const intentId = body.intentId ?? body.transaction_id;
 
-    // Mismo criterio que la consulta de estado: código explícito, sin subcadenas.
-    const fields: Record<string, string> = {};
-    for (const [key, value] of Object.entries(body)) {
-      if (value === null || value === undefined || typeof value === 'object') continue;
-      const upper = key.toUpperCase();
-      if (!(upper in fields)) fields[upper] = String(value);
+    // Lo liquidado viaja con TODOS los veredictos, no solo con el aprobado:
+    // un rechazo con importe también sirve para auditar el descuadre.
+    const settlement = parseBanorteSettlement(body);
+    const rawCode = String(body.CODIGO_RESPUESTA ?? body.codigo_respuesta ?? statusRaw ?? '');
+    const base = { orderId, intentId, ...settlement, rawCode };
+
+    const approved =
+      statusRaw.toLowerCase() === 'approved' ||
+      statusRaw.toLowerCase() === 'aprobada' ||
+      statusRaw.toLowerCase() === 'success' ||
+      statusRaw === '00' ||
+      body.resultado === 'A';
+
+    if (approved) {
+      return { ...base, status: 'completed' };
     }
 
-    const { status, rawCode } = classifyBanorteResponse(fields);
-
-    /*
-     * F1-05: el IPN traía el importe y se descartaba. Sin él nadie podía
-     * comparar lo cobrado contra lo debido y la conciliación era imposible por
-     * construcción. Los nombres de campo (IMPORTE / MONEDA) siguen el formato
-     * Payworks documentado; confírmalos contra el manual de la afiliación.
-     */
-    const amount = parseSettlementAmount(
-      body.IMPORTE ?? body.amount ?? body.monto ?? body.MONTO ?? body.importe,
-    );
-    const currency = parseSettlementCurrency(
-      body.MONEDA ?? body.currency ?? body.moneda ?? body.CURRENCY,
-    );
-
-    return { orderId, intentId, status, amount, currency, rawCode };
+    const parsed = parseBanorteStatusText(statusRaw || JSON.stringify(body));
+    if (parsed === 'declined') {
+      return { ...base, status: 'declined' };
+    }
+    if (parsed === 'cancelled') {
+      return { ...base, status: 'cancelled' };
+    }
+    if (parsed === 'expired') {
+      return { ...base, status: 'expired' };
+    }
+    if (parsed === 'failed' || statusRaw.toLowerCase() === 'failed') {
+      return { ...base, status: 'failed' };
+    }
+    return { ...base, status: 'pending' };
   }
 }

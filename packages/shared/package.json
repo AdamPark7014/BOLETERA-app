@@ -14,7 +14,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "smoke": "node scripts/smoke-scheduling.cjs",
+    "test": "pnpm build && node --test scripts/money.test.cjs scripts/scheduling.test.cjs && node scripts/smoke-scheduling.cjs"
   },
   "devDependencies": {
     "typescript": "^5.9.2"
