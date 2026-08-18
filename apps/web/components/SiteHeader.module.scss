@@ -80,15 +80,34 @@
   }
 
   &.overHero {
-    background: transparent;
+    /*
+     * Velo propio en lugar de `transparent`.
+     *
+     * La barra se pinta sobre el hero, pero el hero puede no estar: la home fija
+     * el tema oscuro de antemano y si la cartelera no carga —API caída, o sin
+     * evento destacado— el fondo real es la página blanca. Con transparencia
+     * total el texto claro quedaba en ~1.05:1 de contraste: el logotipo
+     * literalmente desaparecía.
+     *
+     * El degradado conserva la sensación de barra flotante sobre la imagen y a
+     * la vez garantiza un fondo oscuro propio cuando no hay nada detrás.
+     */
+    /*
+     * Las opacidades no son estéticas, son el suelo de contraste: sobre blanco,
+     * 0.72 compone un gris ~79 y 0.62 uno ~103, que dan 8.1:1 y 5.4:1 contra el
+     * texto claro. Con 0.55 el resultado era 4.2:1 — por debajo del mínimo.
+     * Bajar de 0.62 vuelve a romperlo.
+     */
+    background: linear-gradient(
+      to bottom,
+      rgba(10, 10, 10, 0.72),
+      rgba(10, 10, 10, 0.62)
+    );
     border-bottom-color: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
 
-    /*
-     * Sin fondo propio, el texto cae sobre la foto del hero. La sombra asegura
-     * legibilidad aunque el póster tenga zonas claras justo ahí.
-     */
+    /* La sombra sigue ayudando cuando el póster tiene zonas claras. */
     .brand,
     .navLink,
     .navActive,
