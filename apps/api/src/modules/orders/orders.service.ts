@@ -1,6 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import {
   BadRequestException,
+  Logger,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -83,6 +84,8 @@ function toBuyerRefund<T extends { notes: string | null }>(refund: T): T {
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private prisma: PrismaService,
     private pricing: PricingService,
@@ -303,7 +306,11 @@ export class OrdersService {
     }
 
     if (fraudResult.recommendedAction === 'REVIEW') {
-      await this.notifications.enqueueFraudAlert(publicId, fraudResult.score, 'REVIEW');
+      // Una alerta de revisión que no se puede encolar no justifica rechazar una
+      // compra que el propio motor consideró aceptable.
+      await this.afterSale(publicId, 'alerta de fraude', () =>
+        this.notifications.enqueueFraudAlert(publicId, fraudResult.score, 'REVIEW'),
+      );
     }
 
     await this.quotas.assertAvailable(dto.eventId, channel, holds.length);
@@ -523,9 +530,11 @@ export class OrdersService {
       // quien compra sin cuenta, así que va con la credencial en claro que
       // acabamos de generar: sin ella el enlace de la orden daría 403.
       if (isDeferredMethod(method)) {
-        await this.notifications.enqueuePaymentPending(order.id, dto.buyerEmail, {
-          accessToken,
-        });
+        await this.afterSale(order.id, 'aviso de pago pendiente', () =>
+          this.notifications.enqueuePaymentPending(order.id, dto.buyerEmail, {
+            accessToken,
+          }),
+        );
       }
 
       return {
@@ -691,12 +700,16 @@ export class OrdersService {
     // El token en claro solo existe en esta petición (en BD queda su hash), y el
     // correo es el único sitio donde puede recibirlo quien compró sin cuenta:
     // sin él, el enlace a la orden le devuelve 403 y se queda sin boletos.
-    await this.notifications.enqueueOrderConfirmation(order.id, dto.buyerEmail, buyerName, {
-      accessToken,
-    });
+    await this.afterSale(order.id, 'correo de confirmación', () =>
+      this.notifications.enqueueOrderConfirmation(order.id, dto.buyerEmail, buyerName, {
+        accessToken,
+      }),
+    );
 
     if (dto.promotionCode) {
-      await this.campaigns.recordPromotionUse(dto.eventId, dto.promotionCode);
+      await this.afterSale(order.id, 'registro de uso de promoción', () =>
+        this.campaigns.recordPromotionUse(dto.eventId, dto.promotionCode!),
+      );
     }
 
     const full = await this.prisma.order.findUnique({
@@ -780,6 +793,28 @@ export class OrdersService {
 
   private hashToken(token: string) {
     return createHash('sha256').update(token).digest('hex');
+  }
+
+  /**
+   * Ejecuta un efecto posterior a la venta sin dejar que tumbe la venta.
+   *
+   * El cobro ya se hizo y los boletos ya están emitidos: si falla encolar un
+   * correo, la respuesta correcta NO es un 500. Con Redis caído, `enqueue…`
+   * lanzaba `MaxRetriesPerRequestError` y el comprador recibía «error» sobre una
+   * compra que en realidad había prosperado — el peor resultado posible, porque
+   * lo normal es que vuelva a intentarlo y pague dos veces.
+   *
+   * Se registra con el identificador de la orden para poder reenviar a mano.
+   */
+  private async afterSale(orderId: string, what: string, run: () => Promise<unknown>) {
+    try {
+      await run();
+    } catch (error) {
+      this.logger.error(
+        `Orden ${orderId} completada, pero falló «${what}»: ` +
+          `${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   /** Group holds into offer lines (explicit items[] or legacy offerId + holdIds). */

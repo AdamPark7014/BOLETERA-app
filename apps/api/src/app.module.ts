@@ -197,6 +197,25 @@ async function createThrottlerOptions(): Promise<ThrottlerModuleOptions> {
   };
 }
 
+
+/** Descompone REDIS_URL en host/puerto/credenciales para poder añadir opciones. */
+function parseRedisUrl(raw?: string): { host: string; port: number; password?: string; db?: number } {
+  const fallback = { host: '127.0.0.1', port: 6379 };
+  if (!raw) return fallback;
+  try {
+    const url = new URL(raw);
+    const db = url.pathname.replace('/', '');
+    return {
+      host: url.hostname || fallback.host,
+      port: Number(url.port) || fallback.port,
+      ...(url.password ? { password: decodeURIComponent(url.password) } : {}),
+      ...(db ? { db: Number(db) } : {}),
+    };
+  } catch {
+    return fallback;
+  }
+}
+
 @Module({
   imports: [
     // Config
@@ -220,8 +239,27 @@ async function createThrottlerOptions(): Promise<ThrottlerModuleOptions> {
   CommonModule,
     TenantModule,
     PrismaModule,
+    /**
+     * Cola de trabajos.
+     *
+     * `maxRetriesPerRequest: 1` y `enableOfflineQueue: false` a propósito: con
+     * los valores por defecto de ioredis (20 reintentos con espera creciente y
+     * cola en memoria), encolar un correo con Redis caído tarda decenas de
+     * segundos ANTES de fallar, y durante ese tiempo la petición de compra se
+     * queda bloqueada aunque el cobro ya esté hecho y los boletos emitidos.
+     *
+     * Una cola caída debe rechazar de inmediato para que quien la llama decida:
+     * en el camino de venta, registrar y seguir (ver `OrdersService.afterSale`).
+     * El trabajo se pierde, sí — pero ya se perdía; lo que se gana es no
+     * arrastrar la venta con él.
+     */
     BullModule.forRoot({
-      redis: process.env.REDIS_URL || 'redis://localhost:6379',
+      redis: {
+        ...parseRedisUrl(process.env.REDIS_URL),
+        maxRetriesPerRequest: 1,
+        enableOfflineQueue: false,
+        connectTimeout: 2_000,
+      },
     }),
     
     // Core Modules

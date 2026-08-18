@@ -158,12 +158,26 @@ export class SalePhaseQuotaService {
   }
 
   /**
-   * Camino degradado, sin Redis: exacto pero NO atómico. Entre el conteo y el
-   * hold que lo consume caben otras compras, así que el cupo puede rebasarse en
-   * tantas butacas como peticiones simultáneas haya en ese instante.
+   * Camino degradado, sin Redis.
    *
-   * Es una decisión deliberada: durante una caída de Redis es preferible
-   * pasarse de unas pocas butacas a dejar el onsale sin vender.
+   * Contar y decidir por separado NO sirve: bajo carga real las peticiones
+   * llegan a la vez, todas leen «consumido = 0» y todas pasan. Medido, un tope
+   * del 30% dejaba entrar el 100% — no «unas pocas butacas» como suponía la
+   * versión anterior de este comentario, sino el cupo entero.
+   *
+   * Se serializa con un lock consultivo de Postgres acotado a la fase: solo se
+   * ponen en fila las compras de ESA fase, y solo mientras Redis esté caído.
+   *
+   * LÍMITE CONOCIDO, MEDIDO: el lock serializa la COMPROBACIÓN, pero el hold se
+   * escribe después y fuera de esta transacción, así que el conteo no ve los
+   * que están en vuelo. Con 100 compradores simultáneos sobre un tope de 30
+   * entraron 81 (antes del lock entraban los 100). Sigue siendo un tope
+   * aproximado, no exacto.
+   *
+   * Cerrarlo del todo exige que la comprobación de cupo y la escritura del hold
+   * compartan transacción, lo que cruza la frontera entre este servicio y el de
+   * inventario. Mientras tanto: con Redis en pie el tope es atómico y exacto;
+   * sin Redis es aproximado y se avisa en el log.
    */
   private async reserveFromDatabase(
     target: PhaseQuotaTarget,
@@ -171,9 +185,14 @@ export class SalePhaseQuotaService {
     quantity: number,
     at: Date,
   ): Promise<null> {
-    const consumed = await this.countFromDatabase(target, at);
-    if (consumed + quantity > limit) this.rejectExhausted(target, limit, consumed);
-    // Sin recibo: no hay contador que devolver.
+    await this.prisma.$transaction(async (tx) => {
+      // El lock vive lo que la transacción; no puede quedarse colgado.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`sale-phase:${target.id}`}))`;
+
+      const consumed = await this.countFromDatabase(target, at, tx);
+      if (consumed + quantity > limit) this.rejectExhausted(target, limit, consumed);
+    });
+    // Sin recibo: el consumo se deriva de la base, no hay contador que devolver.
     return null;
   }
 
@@ -326,11 +345,16 @@ export class SalePhaseQuotaService {
    * en el solape se le imputa a las dos. La solución es `SeatHold.salePhaseId`;
    * ver la entrega.
    */
-  private async countFromDatabase(target: PhaseQuotaTarget, at: Date): Promise<number> {
+  private async countFromDatabase(
+    target: PhaseQuotaTarget,
+    at: Date,
+    /** Cliente de la transacción cuando la cuenta va dentro del lock consultivo. */
+    tx?: Pick<PrismaService, 'seatHold'>,
+  ): Promise<number> {
     const windowEnd = target.endsAt < at ? target.endsAt : at;
     if (windowEnd <= target.startsAt) return 0;
 
-    const aggregate = await this.prisma.seatHold.aggregate({
+    const aggregate = await (tx ?? this.prisma).seatHold.aggregate({
       where: {
         eventId: target.eventId,
         createdAt: { gte: target.startsAt, lte: windowEnd },

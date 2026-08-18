@@ -80,6 +80,25 @@ function Sparkline() {
   );
 }
 
+/**
+ * Cuentas sembradas por `pnpm db:seed`.
+ *
+ * Solo fuera de producción: en un entorno real esto sería regalar credenciales.
+ * Existe porque sin ello no hay forma de saber con qué entrar a un entorno
+ * recién levantado salvo leyendo el script de siembra — que es exactamente lo
+ * que le pasa a quien estrena el proyecto.
+ *
+ * Rellena el formulario pero NO envía: quien entra sigue viendo qué credencial
+ * está usando, y el gesto sigue siendo suyo.
+ */
+const DEMO_ACCOUNTS =
+  process.env.NODE_ENV === 'production'
+    ? []
+    : [
+        { label: 'Administrador', email: 'admin@demo.boletera.com', password: 'Admin123!' },
+        { label: 'Taquilla', email: 'taquilla@demo.boletera.com', password: 'Admin123!' },
+      ];
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -293,6 +312,29 @@ export default function LoginPage() {
                 />
                 <span>Mantener sesión iniciada en este dispositivo</span>
               </label>
+
+              {DEMO_ACCOUNTS.length > 0 && (
+                <div className={styles.demo}>
+                  <span className={styles.demoLabel}>Acceso de demostración</span>
+                  <div className={styles.demoRow}>
+                    {DEMO_ACCOUNTS.map((account) => (
+                      <button
+                        key={account.email}
+                        type="button"
+                        className={styles.demoBtn}
+                        onClick={() => {
+                          setEmail(account.email);
+                          setPassword(account.password);
+                          setError('');
+                        }}
+                      >
+                        {account.label}
+                      </button>
+                    ))}
+                  </div>
+                  <small>Rellena el formulario; sigue haciendo falta pulsar «Entrar».</small>
+                </div>
+              )}
 
               {error && (
                 <div className={styles.error} role="alert">
