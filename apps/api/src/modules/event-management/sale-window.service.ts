@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { RedisService } from '../../common/redis.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { resolvePhaseStatus } from './sale-phase-status';
+import { ProfecoDisclosureService } from './profeco-disclosure.service';
 import {
   SalePhaseQuotaService,
   type PhaseQuotaHandle,
@@ -22,7 +23,8 @@ export type SaleWindowReason =
   | 'CODE_REQUIRED'
   | 'CHANNEL_NOT_ALLOWED'
   | 'EVENT_NOT_ON_SALE'
-  | 'EVENT_NOT_FOUND';
+  | 'EVENT_NOT_FOUND'
+  | 'DISCLOSURE_NOT_PUBLISHED';
 
 export type SaleWindowPhaseView = {
   id: string;
@@ -55,7 +57,32 @@ export type SaleWindowDecision = {
   maxPerOrder: number | null;
   /** Descuento de la fase vigente, para que el precio salga de un solo sitio. */
   discountPercent: number | null;
+  /**
+   * Incumplimiento de los lineamientos de PROFECO, si lo hay.
+   *
+   * Viaja SIEMPRE, bloquee o no, para que el backoffice pueda enseñarlo antes
+   * de que llegue una revisión. Que la venta siga abierta no significa que el
+   * evento esté en regla.
+   */
+  complianceWarning: string | null;
 };
+
+/**
+ * Qué hacer cuando un evento masivo no cumple la divulgación previa.
+ *
+ * Por omisión AVISA, no bloquea. Bloquear la venta es una decisión de negocio
+ * con consecuencias inmediatas —en esta base hay eventos por encima del umbral
+ * que ya están vendiendo—, y tomarla en silencio desde el código sería peor que
+ * el problema que resuelve. Poner `block` es un acto deliberado.
+ *
+ *   off   — no comprobar.
+ *   warn  — comprobar, registrar y adjuntar el aviso a la decisión (por omisión).
+ *   block — denegar la venta con motivo `DISCLOSURE_NOT_PUBLISHED`.
+ */
+const ENFORCEMENT = (() => {
+  const raw = (process.env.PROFECO_ENFORCE_DISCLOSURE ?? 'warn').toLowerCase();
+  return raw === 'block' || raw === 'off' ? raw : 'warn';
+})();
 
 export type SaleWindowQuery = {
   /** Instante a evaluar. Por defecto, ahora. Útil para simular en el alta. */
@@ -106,6 +133,13 @@ type EventWindowRow = {
   salePhases: SalePhaseRow[];
 };
 
+/** Lo que resuelve la ventana: decisión, aforo y el evento ya cargado. */
+type ResolvedWindow = {
+  decision: SaleWindowDecision;
+  capacity: number;
+  event: EventWindowRow | null;
+};
+
 /** Estados en los que un evento no admite venta, pase lo que pase con las fases. */
 const NON_SELLABLE_EVENT_STATUS: EventStatus[] = [
   EventStatus.DRAFT,
@@ -129,6 +163,7 @@ export class SaleWindowService {
     private prisma: PrismaService,
     private quota: SalePhaseQuotaService,
     private redis: RedisService,
+    private profeco: ProfecoDisclosureService,
   ) {}
 
   /**
@@ -140,14 +175,72 @@ export class SaleWindowService {
   }
 
   /**
-   * El aforo sale de aquí y no de una consulta aparte porque el cupo de fase se
-   * comprueba en el camino caliente del onsale: leerlo dos veces por intento de
-   * reserva es una consulta de más por cada compra.
+   * Decide si la venta está abierta y superpone el cumplimiento de PROFECO.
+   *
+   * La comprobacion va AQUI, envolviendo, y no repartida por los tres puntos de
+   * retorno de `resolveWindow`: si estuviera duplicada, bastaria anadir un
+   * cuarto camino de salida para abrir un agujero silencioso por el que vender
+   * un evento que no cumple.
    */
   private async resolve(
     eventId: string,
     query: SaleWindowQuery = {},
-  ): Promise<{ decision: SaleWindowDecision; capacity: number }> {
+  ): Promise<ResolvedWindow> {
+    const resolved = await this.resolveWindow(eventId, query);
+
+    // Si la venta ya esta cerrada por otro motivo, no hay nada que anadir.
+    if (ENFORCEMENT === 'off' || !resolved.decision.allowed || !resolved.event) return resolved;
+
+    let verdict;
+    try {
+      // Se le pasan el aforo y la fecha de venta que `resolveWindow` YA cargó:
+      // volver a consultarlos aquí sería una consulta de más por cada intento
+      // de reserva, en el punto más caliente del onsale.
+      verdict = await this.profeco.check(eventId, query.at ?? new Date(), {
+        salesStartAt: resolved.event.salesStartAt,
+        totalCapacity: resolved.event.totalCapacity,
+      });
+    } catch (error) {
+      // Un fallo comprobando NO puede tumbar la venta: seria convertir una
+      // funcion de cumplimiento en una caida de ingresos.
+      this.logger.error(
+        `No se pudo comprobar la divulgacion de ${eventId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return resolved;
+    }
+
+    if (verdict.compliant) return resolved;
+
+    this.logger.warn(
+      `PROFECO · evento ${eventId} vendiendo sin cumplir (${verdict.reason}): ${verdict.message}`,
+    );
+
+    if (ENFORCEMENT === 'block') {
+      return {
+        ...resolved,
+        decision: this.deny('DISCLOSURE_NOT_PUBLISHED', verdict.message, {
+          nextOpensAt: verdict.earliestSaleAt,
+        }),
+      };
+    }
+
+    return {
+      ...resolved,
+      decision: { ...resolved.decision, complianceWarning: verdict.message },
+    };
+  }
+
+  /**
+   * El aforo sale de aquí y no de una consulta aparte porque el cupo de fase se
+   * comprueba en el camino caliente del onsale: leerlo dos veces por intento de
+   * reserva es una consulta de más por cada compra.
+   */
+  private async resolveWindow(
+    eventId: string,
+    query: SaleWindowQuery = {},
+  ): Promise<ResolvedWindow> {
     const at = query.at ?? new Date();
 
     const event = await this.prisma.event.findUnique({
@@ -175,6 +268,7 @@ export class SaleWindowService {
       return {
         decision: this.deny('EVENT_NOT_FOUND', 'El evento no existe.', { nextOpensAt: null }),
         capacity: 0,
+        event: null,
       };
     }
 
@@ -193,6 +287,8 @@ export class SaleWindowService {
     return {
       decision: this.decide(event, query, at),
       capacity: event.totalCapacity ?? 0,
+      // El evento viaja para que el cumplimiento no tenga que volver a leerlo.
+      event,
     };
   }
 
@@ -246,6 +342,7 @@ export class SaleWindowService {
         closesAt: phase.endsAt,
         maxPerOrder: phase.maxPerOrder,
         discountPercent: phase.discountPercent,
+        complianceWarning: null,
       };
     }
 
@@ -411,6 +508,7 @@ export class SaleWindowService {
         closesAt: null,
         maxPerOrder: null,
         discountPercent: null,
+        complianceWarning: null,
       };
     }
     if (salesStartAt && salesStartAt > at) {
@@ -430,6 +528,7 @@ export class SaleWindowService {
       closesAt,
       maxPerOrder: null,
       discountPercent: null,
+      complianceWarning: null,
     };
   }
 
@@ -447,6 +546,7 @@ export class SaleWindowService {
       closesAt: null,
       maxPerOrder: null,
       discountPercent: null,
+      complianceWarning: null,
     };
   }
 

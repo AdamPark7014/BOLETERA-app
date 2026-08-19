@@ -482,6 +482,7 @@ model Event {
   reviews          Review[]
   fraudFlags       FraudFlag[]
   seatMap          EventSeatMap?
+  disclosures      EventDisclosure[]
   holds            SeatHold[]
   waitlistEntries  WaitlistEntry[]
   seasonPassEvents SeasonPassEvent[]
@@ -1791,4 +1792,34 @@ model OrgInvitation {
   @@unique([organizationId, email])
   @@index([email, acceptedAt])
   @@index([expiresAt])
+}
+
+/// Instantanea de la divulgacion previa a la venta que exige PROFECO.
+///
+/// Los lineamientos publicados en el DOF el 19 de febrero de 2026 obligan a
+/// publicar, AL MENOS 24 HORAS ANTES de la primera venta y para eventos de mas
+/// de 20.000 asistentes: plano del recinto con secciones, numero de asientos
+/// por seccion, terminos, y PRECIO TOTAL por seccion.
+///
+/// No basta con una fecha en el evento: si PROFECO audita, hay que poder probar
+/// QUE se publico, no solo cuando. Por eso se guarda el contenido entero e
+/// inmutable, con su hash, en vez de un campo `divulgadoEn`.
+///
+/// Nunca se actualiza una fila: republicar crea otra. El historial ES la prueba.
+model EventDisclosure {
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  /// Instante de publicacion. De aqui sale el computo de las 24 horas.
+  publishedAt DateTime @default(now())
+  /// Lo divulgado, tal cual se sirvio al publico.
+  payload     Json
+  /// SHA-256 del payload canonico: demuestra que no se altero despues.
+  contentHash String
+  /// Aforo declarado al publicar. Decide si aplicaban los lineamientos.
+  capacity    Int
+  publishedBy String?
+
+  @@index([eventId, publishedAt])
 }

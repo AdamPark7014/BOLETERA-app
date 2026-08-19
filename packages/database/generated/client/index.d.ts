@@ -266,6 +266,22 @@ export type SeasonPassPurchase = $Result.DefaultSelection<Prisma.$SeasonPassPurc
  * El SSO autentica; la elevación de rol SOLO ocurre contra una invitación viva.
  */
 export type OrgInvitation = $Result.DefaultSelection<Prisma.$OrgInvitationPayload>
+/**
+ * Model EventDisclosure
+ * Instantanea de la divulgacion previa a la venta que exige PROFECO.
+ * 
+ * Los lineamientos publicados en el DOF el 19 de febrero de 2026 obligan a
+ * publicar, AL MENOS 24 HORAS ANTES de la primera venta y para eventos de mas
+ * de 20.000 asistentes: plano del recinto con secciones, numero de asientos
+ * por seccion, terminos, y PRECIO TOTAL por seccion.
+ * 
+ * No basta con una fecha en el evento: si PROFECO audita, hay que poder probar
+ * QUE se publico, no solo cuando. Por eso se guarda el contenido entero e
+ * inmutable, con su hash, en vez de un campo `divulgadoEn`.
+ * 
+ * Nunca se actualiza una fila: republicar crea otra. El historial ES la prueba.
+ */
+export type EventDisclosure = $Result.DefaultSelection<Prisma.$EventDisclosurePayload>
 
 /**
  * Enums
@@ -1393,6 +1409,16 @@ export class PrismaClient<
     * ```
     */
   get orgInvitation(): Prisma.OrgInvitationDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.eventDisclosure`: Exposes CRUD operations for the **EventDisclosure** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more EventDisclosures
+    * const eventDisclosures = await prisma.eventDisclosure.findMany()
+    * ```
+    */
+  get eventDisclosure(): Prisma.EventDisclosureDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1881,7 +1907,8 @@ export namespace Prisma {
     SeasonPass: 'SeasonPass',
     SeasonPassEvent: 'SeasonPassEvent',
     SeasonPassPurchase: 'SeasonPassPurchase',
-    OrgInvitation: 'OrgInvitation'
+    OrgInvitation: 'OrgInvitation',
+    EventDisclosure: 'EventDisclosure'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1900,7 +1927,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "organization" | "venue" | "venueLayout" | "section" | "seatRow" | "seat" | "eventSeatMap" | "seatHold" | "inventoryBlock" | "tenantTheme" | "accessZone" | "ticketScan" | "paymentIntent" | "auditEvent" | "cashierShift" | "event" | "eventSeries" | "salePhase" | "venueBlackout" | "offer" | "ticket" | "order" | "orderItem" | "payment" | "refund" | "user" | "session" | "posTerminal" | "posCashierSession" | "resaleListing" | "resaleOffer" | "dynamicPrice" | "promotion" | "fraudFlag" | "eventAnalytics" | "promoterPayout" | "cart" | "wishlist" | "review" | "waitlistEntry" | "ticketTransfer" | "apiKey" | "fiscalProfile" | "cfdiInvoice" | "seasonPass" | "seasonPassEvent" | "seasonPassPurchase" | "orgInvitation"
+      modelProps: "organization" | "venue" | "venueLayout" | "section" | "seatRow" | "seat" | "eventSeatMap" | "seatHold" | "inventoryBlock" | "tenantTheme" | "accessZone" | "ticketScan" | "paymentIntent" | "auditEvent" | "cashierShift" | "event" | "eventSeries" | "salePhase" | "venueBlackout" | "offer" | "ticket" | "order" | "orderItem" | "payment" | "refund" | "user" | "session" | "posTerminal" | "posCashierSession" | "resaleListing" | "resaleOffer" | "dynamicPrice" | "promotion" | "fraudFlag" | "eventAnalytics" | "promoterPayout" | "cart" | "wishlist" | "review" | "waitlistEntry" | "ticketTransfer" | "apiKey" | "fiscalProfile" | "cfdiInvoice" | "seasonPass" | "seasonPassEvent" | "seasonPassPurchase" | "orgInvitation" | "eventDisclosure"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5456,6 +5483,80 @@ export namespace Prisma {
           }
         }
       }
+      EventDisclosure: {
+        payload: Prisma.$EventDisclosurePayload<ExtArgs>
+        fields: Prisma.EventDisclosureFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.EventDisclosureFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.EventDisclosureFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>
+          }
+          findFirst: {
+            args: Prisma.EventDisclosureFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.EventDisclosureFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>
+          }
+          findMany: {
+            args: Prisma.EventDisclosureFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>[]
+          }
+          create: {
+            args: Prisma.EventDisclosureCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>
+          }
+          createMany: {
+            args: Prisma.EventDisclosureCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.EventDisclosureCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>[]
+          }
+          delete: {
+            args: Prisma.EventDisclosureDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>
+          }
+          update: {
+            args: Prisma.EventDisclosureUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>
+          }
+          deleteMany: {
+            args: Prisma.EventDisclosureDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.EventDisclosureUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.EventDisclosureUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>[]
+          }
+          upsert: {
+            args: Prisma.EventDisclosureUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EventDisclosurePayload>
+          }
+          aggregate: {
+            args: Prisma.EventDisclosureAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateEventDisclosure>
+          }
+          groupBy: {
+            args: Prisma.EventDisclosureGroupByArgs<ExtArgs>
+            result: $Utils.Optional<EventDisclosureGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.EventDisclosureCountArgs<ExtArgs>
+            result: $Utils.Optional<EventDisclosureCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -5600,6 +5701,7 @@ export namespace Prisma {
     seasonPassEvent?: SeasonPassEventOmit
     seasonPassPurchase?: SeasonPassPurchaseOmit
     orgInvitation?: OrgInvitationOmit
+    eventDisclosure?: EventDisclosureOmit
   }
 
   /* Types for Logging */
@@ -6074,6 +6176,7 @@ export namespace Prisma {
     dynamicPrices: number
     reviews: number
     fraudFlags: number
+    disclosures: number
     holds: number
     waitlistEntries: number
     seasonPassEvents: number
@@ -6088,6 +6191,7 @@ export namespace Prisma {
     dynamicPrices?: boolean | EventCountOutputTypeCountDynamicPricesArgs
     reviews?: boolean | EventCountOutputTypeCountReviewsArgs
     fraudFlags?: boolean | EventCountOutputTypeCountFraudFlagsArgs
+    disclosures?: boolean | EventCountOutputTypeCountDisclosuresArgs
     holds?: boolean | EventCountOutputTypeCountHoldsArgs
     waitlistEntries?: boolean | EventCountOutputTypeCountWaitlistEntriesArgs
     seasonPassEvents?: boolean | EventCountOutputTypeCountSeasonPassEventsArgs
@@ -6146,6 +6250,13 @@ export namespace Prisma {
    */
   export type EventCountOutputTypeCountFraudFlagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: FraudFlagWhereInput
+  }
+
+  /**
+   * EventCountOutputType without action
+   */
+  export type EventCountOutputTypeCountDisclosuresArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EventDisclosureWhereInput
   }
 
   /**
@@ -25537,6 +25648,7 @@ export namespace Prisma {
     reviews?: boolean | Event$reviewsArgs<ExtArgs>
     fraudFlags?: boolean | Event$fraudFlagsArgs<ExtArgs>
     seatMap?: boolean | Event$seatMapArgs<ExtArgs>
+    disclosures?: boolean | Event$disclosuresArgs<ExtArgs>
     holds?: boolean | Event$holdsArgs<ExtArgs>
     waitlistEntries?: boolean | Event$waitlistEntriesArgs<ExtArgs>
     seasonPassEvents?: boolean | Event$seasonPassEventsArgs<ExtArgs>
@@ -25707,6 +25819,7 @@ export namespace Prisma {
     reviews?: boolean | Event$reviewsArgs<ExtArgs>
     fraudFlags?: boolean | Event$fraudFlagsArgs<ExtArgs>
     seatMap?: boolean | Event$seatMapArgs<ExtArgs>
+    disclosures?: boolean | Event$disclosuresArgs<ExtArgs>
     holds?: boolean | Event$holdsArgs<ExtArgs>
     waitlistEntries?: boolean | Event$waitlistEntriesArgs<ExtArgs>
     seasonPassEvents?: boolean | Event$seasonPassEventsArgs<ExtArgs>
@@ -25738,6 +25851,7 @@ export namespace Prisma {
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
       fraudFlags: Prisma.$FraudFlagPayload<ExtArgs>[]
       seatMap: Prisma.$EventSeatMapPayload<ExtArgs> | null
+      disclosures: Prisma.$EventDisclosurePayload<ExtArgs>[]
       holds: Prisma.$SeatHoldPayload<ExtArgs>[]
       waitlistEntries: Prisma.$WaitlistEntryPayload<ExtArgs>[]
       seasonPassEvents: Prisma.$SeasonPassEventPayload<ExtArgs>[]
@@ -26217,6 +26331,7 @@ export namespace Prisma {
     reviews<T extends Event$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, Event$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     fraudFlags<T extends Event$fraudFlagsArgs<ExtArgs> = {}>(args?: Subset<T, Event$fraudFlagsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FraudFlagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     seatMap<T extends Event$seatMapArgs<ExtArgs> = {}>(args?: Subset<T, Event$seatMapArgs<ExtArgs>>): Prisma__EventSeatMapClient<$Result.GetResult<Prisma.$EventSeatMapPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    disclosures<T extends Event$disclosuresArgs<ExtArgs> = {}>(args?: Subset<T, Event$disclosuresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     holds<T extends Event$holdsArgs<ExtArgs> = {}>(args?: Subset<T, Event$holdsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SeatHoldPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     waitlistEntries<T extends Event$waitlistEntriesArgs<ExtArgs> = {}>(args?: Subset<T, Event$waitlistEntriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WaitlistEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     seasonPassEvents<T extends Event$seasonPassEventsArgs<ExtArgs> = {}>(args?: Subset<T, Event$seasonPassEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SeasonPassEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -26871,6 +26986,30 @@ export namespace Prisma {
      */
     include?: EventSeatMapInclude<ExtArgs> | null
     where?: EventSeatMapWhereInput
+  }
+
+  /**
+   * Event.disclosures
+   */
+  export type Event$disclosuresArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    where?: EventDisclosureWhereInput
+    orderBy?: EventDisclosureOrderByWithRelationInput | EventDisclosureOrderByWithRelationInput[]
+    cursor?: EventDisclosureWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EventDisclosureScalarFieldEnum | EventDisclosureScalarFieldEnum[]
   }
 
   /**
@@ -59082,7 +59221,8 @@ export namespace Prisma {
       serie: string
       nextFolio: number
       /**
-       * * PAC credentials — sandbox when pacMode=sandbox
+       * *
+       *    * PAC credentials — sandbox when pacMode=sandbox
        */
       pacMode: string
       pacProvider: string | null
@@ -65939,6 +66079,1132 @@ export namespace Prisma {
 
 
   /**
+   * Model EventDisclosure
+   */
+
+  export type AggregateEventDisclosure = {
+    _count: EventDisclosureCountAggregateOutputType | null
+    _avg: EventDisclosureAvgAggregateOutputType | null
+    _sum: EventDisclosureSumAggregateOutputType | null
+    _min: EventDisclosureMinAggregateOutputType | null
+    _max: EventDisclosureMaxAggregateOutputType | null
+  }
+
+  export type EventDisclosureAvgAggregateOutputType = {
+    capacity: number | null
+  }
+
+  export type EventDisclosureSumAggregateOutputType = {
+    capacity: number | null
+  }
+
+  export type EventDisclosureMinAggregateOutputType = {
+    id: string | null
+    eventId: string | null
+    publishedAt: Date | null
+    contentHash: string | null
+    capacity: number | null
+    publishedBy: string | null
+  }
+
+  export type EventDisclosureMaxAggregateOutputType = {
+    id: string | null
+    eventId: string | null
+    publishedAt: Date | null
+    contentHash: string | null
+    capacity: number | null
+    publishedBy: string | null
+  }
+
+  export type EventDisclosureCountAggregateOutputType = {
+    id: number
+    eventId: number
+    publishedAt: number
+    payload: number
+    contentHash: number
+    capacity: number
+    publishedBy: number
+    _all: number
+  }
+
+
+  export type EventDisclosureAvgAggregateInputType = {
+    capacity?: true
+  }
+
+  export type EventDisclosureSumAggregateInputType = {
+    capacity?: true
+  }
+
+  export type EventDisclosureMinAggregateInputType = {
+    id?: true
+    eventId?: true
+    publishedAt?: true
+    contentHash?: true
+    capacity?: true
+    publishedBy?: true
+  }
+
+  export type EventDisclosureMaxAggregateInputType = {
+    id?: true
+    eventId?: true
+    publishedAt?: true
+    contentHash?: true
+    capacity?: true
+    publishedBy?: true
+  }
+
+  export type EventDisclosureCountAggregateInputType = {
+    id?: true
+    eventId?: true
+    publishedAt?: true
+    payload?: true
+    contentHash?: true
+    capacity?: true
+    publishedBy?: true
+    _all?: true
+  }
+
+  export type EventDisclosureAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EventDisclosure to aggregate.
+     */
+    where?: EventDisclosureWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EventDisclosures to fetch.
+     */
+    orderBy?: EventDisclosureOrderByWithRelationInput | EventDisclosureOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: EventDisclosureWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EventDisclosures from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EventDisclosures.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned EventDisclosures
+    **/
+    _count?: true | EventDisclosureCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: EventDisclosureAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: EventDisclosureSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: EventDisclosureMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: EventDisclosureMaxAggregateInputType
+  }
+
+  export type GetEventDisclosureAggregateType<T extends EventDisclosureAggregateArgs> = {
+        [P in keyof T & keyof AggregateEventDisclosure]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateEventDisclosure[P]>
+      : GetScalarType<T[P], AggregateEventDisclosure[P]>
+  }
+
+
+
+
+  export type EventDisclosureGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EventDisclosureWhereInput
+    orderBy?: EventDisclosureOrderByWithAggregationInput | EventDisclosureOrderByWithAggregationInput[]
+    by: EventDisclosureScalarFieldEnum[] | EventDisclosureScalarFieldEnum
+    having?: EventDisclosureScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: EventDisclosureCountAggregateInputType | true
+    _avg?: EventDisclosureAvgAggregateInputType
+    _sum?: EventDisclosureSumAggregateInputType
+    _min?: EventDisclosureMinAggregateInputType
+    _max?: EventDisclosureMaxAggregateInputType
+  }
+
+  export type EventDisclosureGroupByOutputType = {
+    id: string
+    eventId: string
+    publishedAt: Date
+    payload: JsonValue
+    contentHash: string
+    capacity: number
+    publishedBy: string | null
+    _count: EventDisclosureCountAggregateOutputType | null
+    _avg: EventDisclosureAvgAggregateOutputType | null
+    _sum: EventDisclosureSumAggregateOutputType | null
+    _min: EventDisclosureMinAggregateOutputType | null
+    _max: EventDisclosureMaxAggregateOutputType | null
+  }
+
+  type GetEventDisclosureGroupByPayload<T extends EventDisclosureGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<EventDisclosureGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof EventDisclosureGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], EventDisclosureGroupByOutputType[P]>
+            : GetScalarType<T[P], EventDisclosureGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type EventDisclosureSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    eventId?: boolean
+    publishedAt?: boolean
+    payload?: boolean
+    contentHash?: boolean
+    capacity?: boolean
+    publishedBy?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["eventDisclosure"]>
+
+  export type EventDisclosureSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    eventId?: boolean
+    publishedAt?: boolean
+    payload?: boolean
+    contentHash?: boolean
+    capacity?: boolean
+    publishedBy?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["eventDisclosure"]>
+
+  export type EventDisclosureSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    eventId?: boolean
+    publishedAt?: boolean
+    payload?: boolean
+    contentHash?: boolean
+    capacity?: boolean
+    publishedBy?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["eventDisclosure"]>
+
+  export type EventDisclosureSelectScalar = {
+    id?: boolean
+    eventId?: boolean
+    publishedAt?: boolean
+    payload?: boolean
+    contentHash?: boolean
+    capacity?: boolean
+    publishedBy?: boolean
+  }
+
+  export type EventDisclosureOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "publishedAt" | "payload" | "contentHash" | "capacity" | "publishedBy", ExtArgs["result"]["eventDisclosure"]>
+  export type EventDisclosureInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+  }
+  export type EventDisclosureIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+  }
+  export type EventDisclosureIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+  }
+
+  export type $EventDisclosurePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "EventDisclosure"
+    objects: {
+      event: Prisma.$EventPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      eventId: string
+      /**
+       * Instante de publicacion. De aqui sale el computo de las 24 horas.
+       */
+      publishedAt: Date
+      /**
+       * Lo divulgado, tal cual se sirvio al publico.
+       */
+      payload: Prisma.JsonValue
+      /**
+       * SHA-256 del payload canonico: demuestra que no se altero despues.
+       */
+      contentHash: string
+      /**
+       * Aforo declarado al publicar. Decide si aplicaban los lineamientos.
+       */
+      capacity: number
+      publishedBy: string | null
+    }, ExtArgs["result"]["eventDisclosure"]>
+    composites: {}
+  }
+
+  type EventDisclosureGetPayload<S extends boolean | null | undefined | EventDisclosureDefaultArgs> = $Result.GetResult<Prisma.$EventDisclosurePayload, S>
+
+  type EventDisclosureCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<EventDisclosureFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: EventDisclosureCountAggregateInputType | true
+    }
+
+  export interface EventDisclosureDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['EventDisclosure'], meta: { name: 'EventDisclosure' } }
+    /**
+     * Find zero or one EventDisclosure that matches the filter.
+     * @param {EventDisclosureFindUniqueArgs} args - Arguments to find a EventDisclosure
+     * @example
+     * // Get one EventDisclosure
+     * const eventDisclosure = await prisma.eventDisclosure.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends EventDisclosureFindUniqueArgs>(args: SelectSubset<T, EventDisclosureFindUniqueArgs<ExtArgs>>): Prisma__EventDisclosureClient<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one EventDisclosure that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {EventDisclosureFindUniqueOrThrowArgs} args - Arguments to find a EventDisclosure
+     * @example
+     * // Get one EventDisclosure
+     * const eventDisclosure = await prisma.eventDisclosure.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends EventDisclosureFindUniqueOrThrowArgs>(args: SelectSubset<T, EventDisclosureFindUniqueOrThrowArgs<ExtArgs>>): Prisma__EventDisclosureClient<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first EventDisclosure that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EventDisclosureFindFirstArgs} args - Arguments to find a EventDisclosure
+     * @example
+     * // Get one EventDisclosure
+     * const eventDisclosure = await prisma.eventDisclosure.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends EventDisclosureFindFirstArgs>(args?: SelectSubset<T, EventDisclosureFindFirstArgs<ExtArgs>>): Prisma__EventDisclosureClient<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first EventDisclosure that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EventDisclosureFindFirstOrThrowArgs} args - Arguments to find a EventDisclosure
+     * @example
+     * // Get one EventDisclosure
+     * const eventDisclosure = await prisma.eventDisclosure.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends EventDisclosureFindFirstOrThrowArgs>(args?: SelectSubset<T, EventDisclosureFindFirstOrThrowArgs<ExtArgs>>): Prisma__EventDisclosureClient<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more EventDisclosures that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EventDisclosureFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all EventDisclosures
+     * const eventDisclosures = await prisma.eventDisclosure.findMany()
+     * 
+     * // Get first 10 EventDisclosures
+     * const eventDisclosures = await prisma.eventDisclosure.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const eventDisclosureWithIdOnly = await prisma.eventDisclosure.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends EventDisclosureFindManyArgs>(args?: SelectSubset<T, EventDisclosureFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a EventDisclosure.
+     * @param {EventDisclosureCreateArgs} args - Arguments to create a EventDisclosure.
+     * @example
+     * // Create one EventDisclosure
+     * const EventDisclosure = await prisma.eventDisclosure.create({
+     *   data: {
+     *     // ... data to create a EventDisclosure
+     *   }
+     * })
+     * 
+     */
+    create<T extends EventDisclosureCreateArgs>(args: SelectSubset<T, EventDisclosureCreateArgs<ExtArgs>>): Prisma__EventDisclosureClient<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many EventDisclosures.
+     * @param {EventDisclosureCreateManyArgs} args - Arguments to create many EventDisclosures.
+     * @example
+     * // Create many EventDisclosures
+     * const eventDisclosure = await prisma.eventDisclosure.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends EventDisclosureCreateManyArgs>(args?: SelectSubset<T, EventDisclosureCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many EventDisclosures and returns the data saved in the database.
+     * @param {EventDisclosureCreateManyAndReturnArgs} args - Arguments to create many EventDisclosures.
+     * @example
+     * // Create many EventDisclosures
+     * const eventDisclosure = await prisma.eventDisclosure.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many EventDisclosures and only return the `id`
+     * const eventDisclosureWithIdOnly = await prisma.eventDisclosure.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends EventDisclosureCreateManyAndReturnArgs>(args?: SelectSubset<T, EventDisclosureCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a EventDisclosure.
+     * @param {EventDisclosureDeleteArgs} args - Arguments to delete one EventDisclosure.
+     * @example
+     * // Delete one EventDisclosure
+     * const EventDisclosure = await prisma.eventDisclosure.delete({
+     *   where: {
+     *     // ... filter to delete one EventDisclosure
+     *   }
+     * })
+     * 
+     */
+    delete<T extends EventDisclosureDeleteArgs>(args: SelectSubset<T, EventDisclosureDeleteArgs<ExtArgs>>): Prisma__EventDisclosureClient<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one EventDisclosure.
+     * @param {EventDisclosureUpdateArgs} args - Arguments to update one EventDisclosure.
+     * @example
+     * // Update one EventDisclosure
+     * const eventDisclosure = await prisma.eventDisclosure.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends EventDisclosureUpdateArgs>(args: SelectSubset<T, EventDisclosureUpdateArgs<ExtArgs>>): Prisma__EventDisclosureClient<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more EventDisclosures.
+     * @param {EventDisclosureDeleteManyArgs} args - Arguments to filter EventDisclosures to delete.
+     * @example
+     * // Delete a few EventDisclosures
+     * const { count } = await prisma.eventDisclosure.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends EventDisclosureDeleteManyArgs>(args?: SelectSubset<T, EventDisclosureDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more EventDisclosures.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EventDisclosureUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many EventDisclosures
+     * const eventDisclosure = await prisma.eventDisclosure.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends EventDisclosureUpdateManyArgs>(args: SelectSubset<T, EventDisclosureUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more EventDisclosures and returns the data updated in the database.
+     * @param {EventDisclosureUpdateManyAndReturnArgs} args - Arguments to update many EventDisclosures.
+     * @example
+     * // Update many EventDisclosures
+     * const eventDisclosure = await prisma.eventDisclosure.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more EventDisclosures and only return the `id`
+     * const eventDisclosureWithIdOnly = await prisma.eventDisclosure.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends EventDisclosureUpdateManyAndReturnArgs>(args: SelectSubset<T, EventDisclosureUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one EventDisclosure.
+     * @param {EventDisclosureUpsertArgs} args - Arguments to update or create a EventDisclosure.
+     * @example
+     * // Update or create a EventDisclosure
+     * const eventDisclosure = await prisma.eventDisclosure.upsert({
+     *   create: {
+     *     // ... data to create a EventDisclosure
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the EventDisclosure we want to update
+     *   }
+     * })
+     */
+    upsert<T extends EventDisclosureUpsertArgs>(args: SelectSubset<T, EventDisclosureUpsertArgs<ExtArgs>>): Prisma__EventDisclosureClient<$Result.GetResult<Prisma.$EventDisclosurePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of EventDisclosures.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EventDisclosureCountArgs} args - Arguments to filter EventDisclosures to count.
+     * @example
+     * // Count the number of EventDisclosures
+     * const count = await prisma.eventDisclosure.count({
+     *   where: {
+     *     // ... the filter for the EventDisclosures we want to count
+     *   }
+     * })
+    **/
+    count<T extends EventDisclosureCountArgs>(
+      args?: Subset<T, EventDisclosureCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], EventDisclosureCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a EventDisclosure.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EventDisclosureAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends EventDisclosureAggregateArgs>(args: Subset<T, EventDisclosureAggregateArgs>): Prisma.PrismaPromise<GetEventDisclosureAggregateType<T>>
+
+    /**
+     * Group by EventDisclosure.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EventDisclosureGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends EventDisclosureGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: EventDisclosureGroupByArgs['orderBy'] }
+        : { orderBy?: EventDisclosureGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, EventDisclosureGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetEventDisclosureGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the EventDisclosure model
+   */
+  readonly fields: EventDisclosureFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for EventDisclosure.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__EventDisclosureClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    event<T extends EventDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EventDefaultArgs<ExtArgs>>): Prisma__EventClient<$Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the EventDisclosure model
+   */
+  interface EventDisclosureFieldRefs {
+    readonly id: FieldRef<"EventDisclosure", 'String'>
+    readonly eventId: FieldRef<"EventDisclosure", 'String'>
+    readonly publishedAt: FieldRef<"EventDisclosure", 'DateTime'>
+    readonly payload: FieldRef<"EventDisclosure", 'Json'>
+    readonly contentHash: FieldRef<"EventDisclosure", 'String'>
+    readonly capacity: FieldRef<"EventDisclosure", 'Int'>
+    readonly publishedBy: FieldRef<"EventDisclosure", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * EventDisclosure findUnique
+   */
+  export type EventDisclosureFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * Filter, which EventDisclosure to fetch.
+     */
+    where: EventDisclosureWhereUniqueInput
+  }
+
+  /**
+   * EventDisclosure findUniqueOrThrow
+   */
+  export type EventDisclosureFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * Filter, which EventDisclosure to fetch.
+     */
+    where: EventDisclosureWhereUniqueInput
+  }
+
+  /**
+   * EventDisclosure findFirst
+   */
+  export type EventDisclosureFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * Filter, which EventDisclosure to fetch.
+     */
+    where?: EventDisclosureWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EventDisclosures to fetch.
+     */
+    orderBy?: EventDisclosureOrderByWithRelationInput | EventDisclosureOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EventDisclosures.
+     */
+    cursor?: EventDisclosureWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EventDisclosures from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EventDisclosures.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EventDisclosures.
+     */
+    distinct?: EventDisclosureScalarFieldEnum | EventDisclosureScalarFieldEnum[]
+  }
+
+  /**
+   * EventDisclosure findFirstOrThrow
+   */
+  export type EventDisclosureFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * Filter, which EventDisclosure to fetch.
+     */
+    where?: EventDisclosureWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EventDisclosures to fetch.
+     */
+    orderBy?: EventDisclosureOrderByWithRelationInput | EventDisclosureOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EventDisclosures.
+     */
+    cursor?: EventDisclosureWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EventDisclosures from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EventDisclosures.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EventDisclosures.
+     */
+    distinct?: EventDisclosureScalarFieldEnum | EventDisclosureScalarFieldEnum[]
+  }
+
+  /**
+   * EventDisclosure findMany
+   */
+  export type EventDisclosureFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * Filter, which EventDisclosures to fetch.
+     */
+    where?: EventDisclosureWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EventDisclosures to fetch.
+     */
+    orderBy?: EventDisclosureOrderByWithRelationInput | EventDisclosureOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing EventDisclosures.
+     */
+    cursor?: EventDisclosureWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EventDisclosures from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EventDisclosures.
+     */
+    skip?: number
+    distinct?: EventDisclosureScalarFieldEnum | EventDisclosureScalarFieldEnum[]
+  }
+
+  /**
+   * EventDisclosure create
+   */
+  export type EventDisclosureCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * The data needed to create a EventDisclosure.
+     */
+    data: XOR<EventDisclosureCreateInput, EventDisclosureUncheckedCreateInput>
+  }
+
+  /**
+   * EventDisclosure createMany
+   */
+  export type EventDisclosureCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many EventDisclosures.
+     */
+    data: EventDisclosureCreateManyInput | EventDisclosureCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * EventDisclosure createManyAndReturn
+   */
+  export type EventDisclosureCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * The data used to create many EventDisclosures.
+     */
+    data: EventDisclosureCreateManyInput | EventDisclosureCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * EventDisclosure update
+   */
+  export type EventDisclosureUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * The data needed to update a EventDisclosure.
+     */
+    data: XOR<EventDisclosureUpdateInput, EventDisclosureUncheckedUpdateInput>
+    /**
+     * Choose, which EventDisclosure to update.
+     */
+    where: EventDisclosureWhereUniqueInput
+  }
+
+  /**
+   * EventDisclosure updateMany
+   */
+  export type EventDisclosureUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update EventDisclosures.
+     */
+    data: XOR<EventDisclosureUpdateManyMutationInput, EventDisclosureUncheckedUpdateManyInput>
+    /**
+     * Filter which EventDisclosures to update
+     */
+    where?: EventDisclosureWhereInput
+    /**
+     * Limit how many EventDisclosures to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * EventDisclosure updateManyAndReturn
+   */
+  export type EventDisclosureUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * The data used to update EventDisclosures.
+     */
+    data: XOR<EventDisclosureUpdateManyMutationInput, EventDisclosureUncheckedUpdateManyInput>
+    /**
+     * Filter which EventDisclosures to update
+     */
+    where?: EventDisclosureWhereInput
+    /**
+     * Limit how many EventDisclosures to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * EventDisclosure upsert
+   */
+  export type EventDisclosureUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * The filter to search for the EventDisclosure to update in case it exists.
+     */
+    where: EventDisclosureWhereUniqueInput
+    /**
+     * In case the EventDisclosure found by the `where` argument doesn't exist, create a new EventDisclosure with this data.
+     */
+    create: XOR<EventDisclosureCreateInput, EventDisclosureUncheckedCreateInput>
+    /**
+     * In case the EventDisclosure was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<EventDisclosureUpdateInput, EventDisclosureUncheckedUpdateInput>
+  }
+
+  /**
+   * EventDisclosure delete
+   */
+  export type EventDisclosureDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+    /**
+     * Filter which EventDisclosure to delete.
+     */
+    where: EventDisclosureWhereUniqueInput
+  }
+
+  /**
+   * EventDisclosure deleteMany
+   */
+  export type EventDisclosureDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EventDisclosures to delete
+     */
+    where?: EventDisclosureWhereInput
+    /**
+     * Limit how many EventDisclosures to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * EventDisclosure without action
+   */
+  export type EventDisclosureDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EventDisclosure
+     */
+    select?: EventDisclosureSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EventDisclosure
+     */
+    omit?: EventDisclosureOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventDisclosureInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -66872,6 +68138,19 @@ export namespace Prisma {
   };
 
   export type OrgInvitationScalarFieldEnum = (typeof OrgInvitationScalarFieldEnum)[keyof typeof OrgInvitationScalarFieldEnum]
+
+
+  export const EventDisclosureScalarFieldEnum: {
+    id: 'id',
+    eventId: 'eventId',
+    publishedAt: 'publishedAt',
+    payload: 'payload',
+    contentHash: 'contentHash',
+    capacity: 'capacity',
+    publishedBy: 'publishedBy'
+  };
+
+  export type EventDisclosureScalarFieldEnum = (typeof EventDisclosureScalarFieldEnum)[keyof typeof EventDisclosureScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -69016,6 +70295,7 @@ export namespace Prisma {
     reviews?: ReviewListRelationFilter
     fraudFlags?: FraudFlagListRelationFilter
     seatMap?: XOR<EventSeatMapNullableScalarRelationFilter, EventSeatMapWhereInput> | null
+    disclosures?: EventDisclosureListRelationFilter
     holds?: SeatHoldListRelationFilter
     waitlistEntries?: WaitlistEntryListRelationFilter
     seasonPassEvents?: SeasonPassEventListRelationFilter
@@ -69079,6 +70359,7 @@ export namespace Prisma {
     reviews?: ReviewOrderByRelationAggregateInput
     fraudFlags?: FraudFlagOrderByRelationAggregateInput
     seatMap?: EventSeatMapOrderByWithRelationInput
+    disclosures?: EventDisclosureOrderByRelationAggregateInput
     holds?: SeatHoldOrderByRelationAggregateInput
     waitlistEntries?: WaitlistEntryOrderByRelationAggregateInput
     seasonPassEvents?: SeasonPassEventOrderByRelationAggregateInput
@@ -69145,6 +70426,7 @@ export namespace Prisma {
     reviews?: ReviewListRelationFilter
     fraudFlags?: FraudFlagListRelationFilter
     seatMap?: XOR<EventSeatMapNullableScalarRelationFilter, EventSeatMapWhereInput> | null
+    disclosures?: EventDisclosureListRelationFilter
     holds?: SeatHoldListRelationFilter
     waitlistEntries?: WaitlistEntryListRelationFilter
     seasonPassEvents?: SeasonPassEventListRelationFilter
@@ -72423,6 +73705,73 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"OrgInvitation"> | Date | string
   }
 
+  export type EventDisclosureWhereInput = {
+    AND?: EventDisclosureWhereInput | EventDisclosureWhereInput[]
+    OR?: EventDisclosureWhereInput[]
+    NOT?: EventDisclosureWhereInput | EventDisclosureWhereInput[]
+    id?: StringFilter<"EventDisclosure"> | string
+    eventId?: StringFilter<"EventDisclosure"> | string
+    publishedAt?: DateTimeFilter<"EventDisclosure"> | Date | string
+    payload?: JsonFilter<"EventDisclosure">
+    contentHash?: StringFilter<"EventDisclosure"> | string
+    capacity?: IntFilter<"EventDisclosure"> | number
+    publishedBy?: StringNullableFilter<"EventDisclosure"> | string | null
+    event?: XOR<EventScalarRelationFilter, EventWhereInput>
+  }
+
+  export type EventDisclosureOrderByWithRelationInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    publishedAt?: SortOrder
+    payload?: SortOrder
+    contentHash?: SortOrder
+    capacity?: SortOrder
+    publishedBy?: SortOrderInput | SortOrder
+    event?: EventOrderByWithRelationInput
+  }
+
+  export type EventDisclosureWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: EventDisclosureWhereInput | EventDisclosureWhereInput[]
+    OR?: EventDisclosureWhereInput[]
+    NOT?: EventDisclosureWhereInput | EventDisclosureWhereInput[]
+    eventId?: StringFilter<"EventDisclosure"> | string
+    publishedAt?: DateTimeFilter<"EventDisclosure"> | Date | string
+    payload?: JsonFilter<"EventDisclosure">
+    contentHash?: StringFilter<"EventDisclosure"> | string
+    capacity?: IntFilter<"EventDisclosure"> | number
+    publishedBy?: StringNullableFilter<"EventDisclosure"> | string | null
+    event?: XOR<EventScalarRelationFilter, EventWhereInput>
+  }, "id">
+
+  export type EventDisclosureOrderByWithAggregationInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    publishedAt?: SortOrder
+    payload?: SortOrder
+    contentHash?: SortOrder
+    capacity?: SortOrder
+    publishedBy?: SortOrderInput | SortOrder
+    _count?: EventDisclosureCountOrderByAggregateInput
+    _avg?: EventDisclosureAvgOrderByAggregateInput
+    _max?: EventDisclosureMaxOrderByAggregateInput
+    _min?: EventDisclosureMinOrderByAggregateInput
+    _sum?: EventDisclosureSumOrderByAggregateInput
+  }
+
+  export type EventDisclosureScalarWhereWithAggregatesInput = {
+    AND?: EventDisclosureScalarWhereWithAggregatesInput | EventDisclosureScalarWhereWithAggregatesInput[]
+    OR?: EventDisclosureScalarWhereWithAggregatesInput[]
+    NOT?: EventDisclosureScalarWhereWithAggregatesInput | EventDisclosureScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"EventDisclosure"> | string
+    eventId?: StringWithAggregatesFilter<"EventDisclosure"> | string
+    publishedAt?: DateTimeWithAggregatesFilter<"EventDisclosure"> | Date | string
+    payload?: JsonWithAggregatesFilter<"EventDisclosure">
+    contentHash?: StringWithAggregatesFilter<"EventDisclosure"> | string
+    capacity?: IntWithAggregatesFilter<"EventDisclosure"> | number
+    publishedBy?: StringNullableWithAggregatesFilter<"EventDisclosure"> | string | null
+  }
+
   export type OrganizationCreateInput = {
     id?: string
     name: string
@@ -74160,6 +75509,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -74220,6 +75570,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -74280,6 +75631,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -74340,6 +75692,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -78067,6 +79420,75 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type EventDisclosureCreateInput = {
+    id?: string
+    publishedAt?: Date | string
+    payload: JsonNullValueInput | InputJsonValue
+    contentHash: string
+    capacity: number
+    publishedBy?: string | null
+    event: EventCreateNestedOneWithoutDisclosuresInput
+  }
+
+  export type EventDisclosureUncheckedCreateInput = {
+    id?: string
+    eventId: string
+    publishedAt?: Date | string
+    payload: JsonNullValueInput | InputJsonValue
+    contentHash: string
+    capacity: number
+    publishedBy?: string | null
+  }
+
+  export type EventDisclosureUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publishedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payload?: JsonNullValueInput | InputJsonValue
+    contentHash?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    publishedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    event?: EventUpdateOneRequiredWithoutDisclosuresNestedInput
+  }
+
+  export type EventDisclosureUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    publishedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payload?: JsonNullValueInput | InputJsonValue
+    contentHash?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    publishedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type EventDisclosureCreateManyInput = {
+    id?: string
+    eventId: string
+    publishedAt?: Date | string
+    payload: JsonNullValueInput | InputJsonValue
+    contentHash: string
+    capacity: number
+    publishedBy?: string | null
+  }
+
+  export type EventDisclosureUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publishedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payload?: JsonNullValueInput | InputJsonValue
+    contentHash?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    publishedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type EventDisclosureUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    publishedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payload?: JsonNullValueInput | InputJsonValue
+    contentHash?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    publishedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -79705,6 +81127,12 @@ export namespace Prisma {
     isNot?: EventSeatMapWhereInput | null
   }
 
+  export type EventDisclosureListRelationFilter = {
+    every?: EventDisclosureWhereInput
+    some?: EventDisclosureWhereInput
+    none?: EventDisclosureWhereInput
+  }
+
   export type WaitlistEntryListRelationFilter = {
     every?: WaitlistEntryWhereInput
     some?: WaitlistEntryWhereInput
@@ -79736,6 +81164,10 @@ export namespace Prisma {
   }
 
   export type FraudFlagOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type EventDisclosureOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -82289,6 +83721,42 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type EventDisclosureCountOrderByAggregateInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    publishedAt?: SortOrder
+    payload?: SortOrder
+    contentHash?: SortOrder
+    capacity?: SortOrder
+    publishedBy?: SortOrder
+  }
+
+  export type EventDisclosureAvgOrderByAggregateInput = {
+    capacity?: SortOrder
+  }
+
+  export type EventDisclosureMaxOrderByAggregateInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    publishedAt?: SortOrder
+    contentHash?: SortOrder
+    capacity?: SortOrder
+    publishedBy?: SortOrder
+  }
+
+  export type EventDisclosureMinOrderByAggregateInput = {
+    id?: SortOrder
+    eventId?: SortOrder
+    publishedAt?: SortOrder
+    contentHash?: SortOrder
+    capacity?: SortOrder
+    publishedBy?: SortOrder
+  }
+
+  export type EventDisclosureSumOrderByAggregateInput = {
+    capacity?: SortOrder
+  }
+
   export type OrgInvitationCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<OrgInvitationCreateWithoutOrganizationInput, OrgInvitationUncheckedCreateWithoutOrganizationInput> | OrgInvitationCreateWithoutOrganizationInput[] | OrgInvitationUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: OrgInvitationCreateOrConnectWithoutOrganizationInput | OrgInvitationCreateOrConnectWithoutOrganizationInput[]
@@ -83857,6 +85325,13 @@ export namespace Prisma {
     connect?: EventSeatMapWhereUniqueInput
   }
 
+  export type EventDisclosureCreateNestedManyWithoutEventInput = {
+    create?: XOR<EventDisclosureCreateWithoutEventInput, EventDisclosureUncheckedCreateWithoutEventInput> | EventDisclosureCreateWithoutEventInput[] | EventDisclosureUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: EventDisclosureCreateOrConnectWithoutEventInput | EventDisclosureCreateOrConnectWithoutEventInput[]
+    createMany?: EventDisclosureCreateManyEventInputEnvelope
+    connect?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+  }
+
   export type SeatHoldCreateNestedManyWithoutEventInput = {
     create?: XOR<SeatHoldCreateWithoutEventInput, SeatHoldUncheckedCreateWithoutEventInput> | SeatHoldCreateWithoutEventInput[] | SeatHoldUncheckedCreateWithoutEventInput[]
     connectOrCreate?: SeatHoldCreateOrConnectWithoutEventInput | SeatHoldCreateOrConnectWithoutEventInput[]
@@ -83938,6 +85413,13 @@ export namespace Prisma {
     create?: XOR<EventSeatMapCreateWithoutEventInput, EventSeatMapUncheckedCreateWithoutEventInput>
     connectOrCreate?: EventSeatMapCreateOrConnectWithoutEventInput
     connect?: EventSeatMapWhereUniqueInput
+  }
+
+  export type EventDisclosureUncheckedCreateNestedManyWithoutEventInput = {
+    create?: XOR<EventDisclosureCreateWithoutEventInput, EventDisclosureUncheckedCreateWithoutEventInput> | EventDisclosureCreateWithoutEventInput[] | EventDisclosureUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: EventDisclosureCreateOrConnectWithoutEventInput | EventDisclosureCreateOrConnectWithoutEventInput[]
+    createMany?: EventDisclosureCreateManyEventInputEnvelope
+    connect?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
   }
 
   export type SeatHoldUncheckedCreateNestedManyWithoutEventInput = {
@@ -84103,6 +85585,20 @@ export namespace Prisma {
     update?: XOR<XOR<EventSeatMapUpdateToOneWithWhereWithoutEventInput, EventSeatMapUpdateWithoutEventInput>, EventSeatMapUncheckedUpdateWithoutEventInput>
   }
 
+  export type EventDisclosureUpdateManyWithoutEventNestedInput = {
+    create?: XOR<EventDisclosureCreateWithoutEventInput, EventDisclosureUncheckedCreateWithoutEventInput> | EventDisclosureCreateWithoutEventInput[] | EventDisclosureUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: EventDisclosureCreateOrConnectWithoutEventInput | EventDisclosureCreateOrConnectWithoutEventInput[]
+    upsert?: EventDisclosureUpsertWithWhereUniqueWithoutEventInput | EventDisclosureUpsertWithWhereUniqueWithoutEventInput[]
+    createMany?: EventDisclosureCreateManyEventInputEnvelope
+    set?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+    disconnect?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+    delete?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+    connect?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+    update?: EventDisclosureUpdateWithWhereUniqueWithoutEventInput | EventDisclosureUpdateWithWhereUniqueWithoutEventInput[]
+    updateMany?: EventDisclosureUpdateManyWithWhereWithoutEventInput | EventDisclosureUpdateManyWithWhereWithoutEventInput[]
+    deleteMany?: EventDisclosureScalarWhereInput | EventDisclosureScalarWhereInput[]
+  }
+
   export type SeatHoldUpdateManyWithoutEventNestedInput = {
     create?: XOR<SeatHoldCreateWithoutEventInput, SeatHoldUncheckedCreateWithoutEventInput> | SeatHoldCreateWithoutEventInput[] | SeatHoldUncheckedCreateWithoutEventInput[]
     connectOrCreate?: SeatHoldCreateOrConnectWithoutEventInput | SeatHoldCreateOrConnectWithoutEventInput[]
@@ -84265,6 +85761,20 @@ export namespace Prisma {
     delete?: EventSeatMapWhereInput | boolean
     connect?: EventSeatMapWhereUniqueInput
     update?: XOR<XOR<EventSeatMapUpdateToOneWithWhereWithoutEventInput, EventSeatMapUpdateWithoutEventInput>, EventSeatMapUncheckedUpdateWithoutEventInput>
+  }
+
+  export type EventDisclosureUncheckedUpdateManyWithoutEventNestedInput = {
+    create?: XOR<EventDisclosureCreateWithoutEventInput, EventDisclosureUncheckedCreateWithoutEventInput> | EventDisclosureCreateWithoutEventInput[] | EventDisclosureUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: EventDisclosureCreateOrConnectWithoutEventInput | EventDisclosureCreateOrConnectWithoutEventInput[]
+    upsert?: EventDisclosureUpsertWithWhereUniqueWithoutEventInput | EventDisclosureUpsertWithWhereUniqueWithoutEventInput[]
+    createMany?: EventDisclosureCreateManyEventInputEnvelope
+    set?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+    disconnect?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+    delete?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+    connect?: EventDisclosureWhereUniqueInput | EventDisclosureWhereUniqueInput[]
+    update?: EventDisclosureUpdateWithWhereUniqueWithoutEventInput | EventDisclosureUpdateWithWhereUniqueWithoutEventInput[]
+    updateMany?: EventDisclosureUpdateManyWithWhereWithoutEventInput | EventDisclosureUpdateManyWithWhereWithoutEventInput[]
+    deleteMany?: EventDisclosureScalarWhereInput | EventDisclosureScalarWhereInput[]
   }
 
   export type SeatHoldUncheckedUpdateManyWithoutEventNestedInput = {
@@ -86196,6 +87706,20 @@ export namespace Prisma {
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutInvitationsInput, OrganizationUpdateWithoutInvitationsInput>, OrganizationUncheckedUpdateWithoutInvitationsInput>
   }
 
+  export type EventCreateNestedOneWithoutDisclosuresInput = {
+    create?: XOR<EventCreateWithoutDisclosuresInput, EventUncheckedCreateWithoutDisclosuresInput>
+    connectOrCreate?: EventCreateOrConnectWithoutDisclosuresInput
+    connect?: EventWhereUniqueInput
+  }
+
+  export type EventUpdateOneRequiredWithoutDisclosuresNestedInput = {
+    create?: XOR<EventCreateWithoutDisclosuresInput, EventUncheckedCreateWithoutDisclosuresInput>
+    connectOrCreate?: EventCreateOrConnectWithoutDisclosuresInput
+    upsert?: EventUpsertWithoutDisclosuresInput
+    connect?: EventWhereUniqueInput
+    update?: XOR<XOR<EventUpdateToOneWithWhereWithoutDisclosuresInput, EventUpdateWithoutDisclosuresInput>, EventUncheckedUpdateWithoutDisclosuresInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -87248,6 +88772,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -87307,6 +88832,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -88511,6 +90037,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -88570,6 +90097,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -90046,6 +91574,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -90105,6 +91634,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -90211,6 +91741,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -90270,6 +91801,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -90367,6 +91899,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
@@ -90426,6 +91959,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
@@ -90542,6 +92076,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
@@ -90601,6 +92136,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
@@ -90707,6 +92243,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -90766,6 +92303,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -90939,6 +92477,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -90998,6 +92537,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -92258,6 +93798,34 @@ export namespace Prisma {
     create: XOR<EventSeatMapCreateWithoutEventInput, EventSeatMapUncheckedCreateWithoutEventInput>
   }
 
+  export type EventDisclosureCreateWithoutEventInput = {
+    id?: string
+    publishedAt?: Date | string
+    payload: JsonNullValueInput | InputJsonValue
+    contentHash: string
+    capacity: number
+    publishedBy?: string | null
+  }
+
+  export type EventDisclosureUncheckedCreateWithoutEventInput = {
+    id?: string
+    publishedAt?: Date | string
+    payload: JsonNullValueInput | InputJsonValue
+    contentHash: string
+    capacity: number
+    publishedBy?: string | null
+  }
+
+  export type EventDisclosureCreateOrConnectWithoutEventInput = {
+    where: EventDisclosureWhereUniqueInput
+    create: XOR<EventDisclosureCreateWithoutEventInput, EventDisclosureUncheckedCreateWithoutEventInput>
+  }
+
+  export type EventDisclosureCreateManyEventInputEnvelope = {
+    data: EventDisclosureCreateManyEventInput | EventDisclosureCreateManyEventInput[]
+    skipDuplicates?: boolean
+  }
+
   export type SeatHoldCreateWithoutEventInput = {
     id?: string
     offerId?: string | null
@@ -92882,6 +94450,35 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type EventDisclosureUpsertWithWhereUniqueWithoutEventInput = {
+    where: EventDisclosureWhereUniqueInput
+    update: XOR<EventDisclosureUpdateWithoutEventInput, EventDisclosureUncheckedUpdateWithoutEventInput>
+    create: XOR<EventDisclosureCreateWithoutEventInput, EventDisclosureUncheckedCreateWithoutEventInput>
+  }
+
+  export type EventDisclosureUpdateWithWhereUniqueWithoutEventInput = {
+    where: EventDisclosureWhereUniqueInput
+    data: XOR<EventDisclosureUpdateWithoutEventInput, EventDisclosureUncheckedUpdateWithoutEventInput>
+  }
+
+  export type EventDisclosureUpdateManyWithWhereWithoutEventInput = {
+    where: EventDisclosureScalarWhereInput
+    data: XOR<EventDisclosureUpdateManyMutationInput, EventDisclosureUncheckedUpdateManyWithoutEventInput>
+  }
+
+  export type EventDisclosureScalarWhereInput = {
+    AND?: EventDisclosureScalarWhereInput | EventDisclosureScalarWhereInput[]
+    OR?: EventDisclosureScalarWhereInput[]
+    NOT?: EventDisclosureScalarWhereInput | EventDisclosureScalarWhereInput[]
+    id?: StringFilter<"EventDisclosure"> | string
+    eventId?: StringFilter<"EventDisclosure"> | string
+    publishedAt?: DateTimeFilter<"EventDisclosure"> | Date | string
+    payload?: JsonFilter<"EventDisclosure">
+    contentHash?: StringFilter<"EventDisclosure"> | string
+    capacity?: IntFilter<"EventDisclosure"> | number
+    publishedBy?: StringNullableFilter<"EventDisclosure"> | string | null
+  }
+
   export type SeatHoldUpsertWithWhereUniqueWithoutEventInput = {
     where: SeatHoldWhereUniqueInput
     update: XOR<SeatHoldUpdateWithoutEventInput, SeatHoldUncheckedUpdateWithoutEventInput>
@@ -93240,6 +94837,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -93299,6 +94897,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -93571,6 +95170,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -93630,6 +95230,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -93705,6 +95306,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -93764,6 +95366,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -93966,6 +95569,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -94025,6 +95629,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -94230,6 +95835,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -94289,6 +95895,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -94411,6 +96018,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -94470,6 +96078,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -94865,6 +96474,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -94924,6 +96534,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -95357,6 +96968,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -95416,6 +97028,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -95925,6 +97538,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -95984,6 +97598,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -98212,6 +99827,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -98271,6 +99887,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -98403,6 +100020,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -98462,6 +100080,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -98682,6 +100301,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -98741,6 +100361,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -99013,6 +100634,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -99072,6 +100694,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -99826,6 +101449,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
@@ -99885,6 +101509,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
@@ -100023,6 +101648,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -100082,6 +101708,7 @@ export namespace Prisma {
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -100211,6 +101838,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
@@ -100270,6 +101898,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
@@ -100345,6 +101974,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
@@ -100404,6 +102034,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
@@ -101900,6 +103531,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
     holds?: SeatHoldCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseCreateNestedManyWithoutEventInput
@@ -101959,6 +103591,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
     holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
     waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
     salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
@@ -102087,6 +103720,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
@@ -102146,6 +103780,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
@@ -102466,6 +104101,262 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type EventCreateWithoutDisclosuresInput = {
+    id?: string
+    externalId?: string | null
+    slug: string
+    title: string
+    description?: string | null
+    image?: string | null
+    bannerImage?: string | null
+    category?: $Enums.EventCategory
+    genre?: string | null
+    rating?: string | null
+    startsAt: Date | string
+    endsAt?: Date | string | null
+    timezone: string
+    doorsAt?: Date | string | null
+    durationMinutes?: number | null
+    status?: $Enums.EventStatus
+    publishedAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    cancellationReason?: string | null
+    announceAt?: Date | string | null
+    publishAt?: Date | string | null
+    salesStartAt?: Date | string | null
+    salesEndAt?: Date | string | null
+    rescheduledFrom?: Date | string | null
+    scheduleNote?: string | null
+    seriesOrder?: number | null
+    minPrice?: Decimal | DecimalJsLike | number | string
+    maxPrice?: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    totalCapacity: number
+    holdableCapacity?: number | null
+    allowResale?: boolean
+    transferAllowed?: boolean
+    refundable?: boolean
+    nonTransferable?: boolean
+    holdExpiration?: number
+    enableDynamic?: boolean
+    surgeThreshold?: number
+    surgePriceMultiplier?: number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutEventsInput
+    venue: VenueCreateNestedOneWithoutEventsInput
+    series?: EventSeriesCreateNestedOneWithoutEventsInput
+    offers?: OfferCreateNestedManyWithoutEventInput
+    tickets?: TicketCreateNestedManyWithoutEventInput
+    orders?: OrderCreateNestedManyWithoutEventInput
+    dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    reviews?: ReviewCreateNestedManyWithoutEventInput
+    fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
+    seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    holds?: SeatHoldCreateNestedManyWithoutEventInput
+    waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
+    seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
+    salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
+  }
+
+  export type EventUncheckedCreateWithoutDisclosuresInput = {
+    id?: string
+    externalId?: string | null
+    slug: string
+    organizationId: string
+    venueId: string
+    title: string
+    description?: string | null
+    image?: string | null
+    bannerImage?: string | null
+    category?: $Enums.EventCategory
+    genre?: string | null
+    rating?: string | null
+    startsAt: Date | string
+    endsAt?: Date | string | null
+    timezone: string
+    doorsAt?: Date | string | null
+    durationMinutes?: number | null
+    status?: $Enums.EventStatus
+    publishedAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    cancellationReason?: string | null
+    announceAt?: Date | string | null
+    publishAt?: Date | string | null
+    salesStartAt?: Date | string | null
+    salesEndAt?: Date | string | null
+    rescheduledFrom?: Date | string | null
+    scheduleNote?: string | null
+    seriesId?: string | null
+    seriesOrder?: number | null
+    minPrice?: Decimal | DecimalJsLike | number | string
+    maxPrice?: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    totalCapacity: number
+    holdableCapacity?: number | null
+    allowResale?: boolean
+    transferAllowed?: boolean
+    refundable?: boolean
+    nonTransferable?: boolean
+    holdExpiration?: number
+    enableDynamic?: boolean
+    surgeThreshold?: number
+    surgePriceMultiplier?: number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    offers?: OfferUncheckedCreateNestedManyWithoutEventInput
+    tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
+    orders?: OrderUncheckedCreateNestedManyWithoutEventInput
+    dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
+    fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
+    seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
+    waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
+    seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
+    salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
+  }
+
+  export type EventCreateOrConnectWithoutDisclosuresInput = {
+    where: EventWhereUniqueInput
+    create: XOR<EventCreateWithoutDisclosuresInput, EventUncheckedCreateWithoutDisclosuresInput>
+  }
+
+  export type EventUpsertWithoutDisclosuresInput = {
+    update: XOR<EventUpdateWithoutDisclosuresInput, EventUncheckedUpdateWithoutDisclosuresInput>
+    create: XOR<EventCreateWithoutDisclosuresInput, EventUncheckedCreateWithoutDisclosuresInput>
+    where?: EventWhereInput
+  }
+
+  export type EventUpdateToOneWithWhereWithoutDisclosuresInput = {
+    where?: EventWhereInput
+    data: XOR<EventUpdateWithoutDisclosuresInput, EventUncheckedUpdateWithoutDisclosuresInput>
+  }
+
+  export type EventUpdateWithoutDisclosuresInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    externalId?: NullableStringFieldUpdateOperationsInput | string | null
+    slug?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: EnumEventCategoryFieldUpdateOperationsInput | $Enums.EventCategory
+    genre?: NullableStringFieldUpdateOperationsInput | string | null
+    rating?: NullableStringFieldUpdateOperationsInput | string | null
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    timezone?: StringFieldUpdateOperationsInput | string
+    doorsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    durationMinutes?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesEndAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rescheduledFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduleNote?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesOrder?: NullableIntFieldUpdateOperationsInput | number | null
+    minPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    maxPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalCapacity?: IntFieldUpdateOperationsInput | number
+    holdableCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    allowResale?: BoolFieldUpdateOperationsInput | boolean
+    transferAllowed?: BoolFieldUpdateOperationsInput | boolean
+    refundable?: BoolFieldUpdateOperationsInput | boolean
+    nonTransferable?: BoolFieldUpdateOperationsInput | boolean
+    holdExpiration?: IntFieldUpdateOperationsInput | number
+    enableDynamic?: BoolFieldUpdateOperationsInput | boolean
+    surgeThreshold?: FloatFieldUpdateOperationsInput | number
+    surgePriceMultiplier?: FloatFieldUpdateOperationsInput | number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutEventsNestedInput
+    venue?: VenueUpdateOneRequiredWithoutEventsNestedInput
+    series?: EventSeriesUpdateOneWithoutEventsNestedInput
+    offers?: OfferUpdateManyWithoutEventNestedInput
+    tickets?: TicketUpdateManyWithoutEventNestedInput
+    orders?: OrderUpdateManyWithoutEventNestedInput
+    dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    reviews?: ReviewUpdateManyWithoutEventNestedInput
+    fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
+    seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    holds?: SeatHoldUpdateManyWithoutEventNestedInput
+    waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
+    seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
+    salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
+  }
+
+  export type EventUncheckedUpdateWithoutDisclosuresInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    externalId?: NullableStringFieldUpdateOperationsInput | string | null
+    slug?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    venueId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: EnumEventCategoryFieldUpdateOperationsInput | $Enums.EventCategory
+    genre?: NullableStringFieldUpdateOperationsInput | string | null
+    rating?: NullableStringFieldUpdateOperationsInput | string | null
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    timezone?: StringFieldUpdateOperationsInput | string
+    doorsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    durationMinutes?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesEndAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rescheduledFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduleNote?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesId?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesOrder?: NullableIntFieldUpdateOperationsInput | number | null
+    minPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    maxPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalCapacity?: IntFieldUpdateOperationsInput | number
+    holdableCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    allowResale?: BoolFieldUpdateOperationsInput | boolean
+    transferAllowed?: BoolFieldUpdateOperationsInput | boolean
+    refundable?: BoolFieldUpdateOperationsInput | boolean
+    nonTransferable?: BoolFieldUpdateOperationsInput | boolean
+    holdExpiration?: IntFieldUpdateOperationsInput | number
+    enableDynamic?: BoolFieldUpdateOperationsInput | boolean
+    surgeThreshold?: FloatFieldUpdateOperationsInput | number
+    surgePriceMultiplier?: FloatFieldUpdateOperationsInput | number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    offers?: OfferUncheckedUpdateManyWithoutEventNestedInput
+    tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
+    orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
+    dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
+    fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
+    seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
+    waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
+    seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
+    salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
   }
 
   export type OrgInvitationCreateManyOrganizationInput = {
@@ -102885,6 +104776,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -102944,6 +104836,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -103664,6 +105557,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -103723,6 +105617,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
@@ -104597,6 +106492,15 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
   }
 
+  export type EventDisclosureCreateManyEventInput = {
+    id?: string
+    publishedAt?: Date | string
+    payload: JsonNullValueInput | InputJsonValue
+    contentHash: string
+    capacity: number
+    publishedBy?: string | null
+  }
+
   export type SeatHoldCreateManyEventInput = {
     id?: string
     seatId?: string | null
@@ -105042,6 +106946,33 @@ export namespace Prisma {
     resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type EventDisclosureUpdateWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publishedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payload?: JsonNullValueInput | InputJsonValue
+    contentHash?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    publishedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type EventDisclosureUncheckedUpdateWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publishedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payload?: JsonNullValueInput | InputJsonValue
+    contentHash?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    publishedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type EventDisclosureUncheckedUpdateManyWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publishedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    payload?: JsonNullValueInput | InputJsonValue
+    contentHash?: StringFieldUpdateOperationsInput | string
+    capacity?: IntFieldUpdateOperationsInput | number
+    publishedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type SeatHoldUpdateWithoutEventInput = {
     id?: StringFieldUpdateOperationsInput | string
     offerId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -105351,6 +107282,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
@@ -105410,6 +107342,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
     holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
     waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput

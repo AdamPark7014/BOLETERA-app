@@ -899,6 +899,16 @@ exports.Prisma.OrgInvitationScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.EventDisclosureScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  publishedAt: 'publishedAt',
+  payload: 'payload',
+  contentHash: 'contentHash',
+  capacity: 'capacity',
+  publishedBy: 'publishedBy'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1269,7 +1279,8 @@ exports.Prisma.ModelName = {
   SeasonPass: 'SeasonPass',
   SeasonPassEvent: 'SeasonPassEvent',
   SeasonPassPurchase: 'SeasonPassPurchase',
-  OrgInvitation: 'OrgInvitation'
+  OrgInvitation: 'OrgInvitation',
+  EventDisclosure: 'EventDisclosure'
 };
 
 /**
