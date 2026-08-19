@@ -5,6 +5,7 @@ import { ChannelManagementModule } from '../channel-management/channel-managemen
 import { WaitlistModule } from '../waitlist/waitlist.module';
 import { InventoryController } from './inventory.controller';
 import { WaitingRoomController } from './waiting-room.controller';
+import { GuestSessionService } from './guest-session.service';
 import { WaitingRoomService } from './waiting-room.service';
 import { InventoryService } from './inventory.service';
 
@@ -13,7 +14,7 @@ import { InventoryService } from './inventory.service';
   // TAQUILLA y la propiedad de un hold se resuelven con el token, no con headers.
   imports: [AuthModule, ChannelManagementModule, WaitlistModule, EventManagementModule],
   controllers: [WaitingRoomController, InventoryController],
-  providers: [WaitingRoomService, InventoryService],
+  providers: [GuestSessionService, WaitingRoomService, InventoryService],
   exports: [WaitingRoomService, InventoryService],
 })
 export class InventoryModule {}

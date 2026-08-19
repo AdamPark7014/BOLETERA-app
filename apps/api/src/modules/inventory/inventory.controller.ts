@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { GuestSessionService } from './guest-session.service';
 import { SalesChannel, TicketStatus } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { EventOrgAccessGuard } from '../auth/event-org-access.guard';
@@ -31,6 +32,36 @@ const STAFF_ROLES = ['TAQUILLA', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER'];
 /** Los holds públicos se ratonean; el tope global (120/min) es demasiado laxo aquí. */
 const HOLD_THROTTLE = { default: { limit: 30, ttl: 60_000 } };
 
+/**
+ * Emisión de identidades de invitado.
+ *
+ * Configurable y con un techo generoso a propósito: detrás de un NAT
+ * corporativo o del CGNAT de una operadora móvil, cientos de compradores
+ * legítimos comparten una sola IP. Un límite estrecho aquí no frena al bot
+ * —que rota proxies— y en cambio deja fuera a una oficina entera en pleno
+ * onsale. El valor de este límite es dejar rastro y poner un techo, no ser la
+ * defensa principal: esa es la firma, que sí es infalsificable.
+ */
+const SESSION_THROTTLE = {
+  default: {
+    limit: positiveIntEnv('GUEST_SESSION_ISSUE_LIMIT', 60),
+    ttl: 60_000,
+  },
+};
+
+/**
+ * Lee un entero positivo del entorno.
+ *
+ * `Number(process.env.X ?? 60)` NO sirve: `??` solo cubre null y undefined, asi
+ * que una variable definida pero VACIA da `Number('') === 0` — y un limite de 0
+ * bloquea a todos los compradores con un 429 sin que nada lo delate. Un valor
+ * invalido tiene que caer al valor por omision, no a cero.
+ */
+function positiveIntEnv(name: string, fallback: number): number {
+  const parsed = Number(process.env[name]);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
 const AVAILABILITY_CACHE_HEADER = 'public, max-age=5, stale-while-revalidate=30';
 
 type PublicUser = { sub?: string; email?: string; role?: string } | undefined;
@@ -41,6 +72,7 @@ export class InventoryController {
   constructor(
     private inventory: InventoryService,
     private waitingRoom: WaitingRoomService,
+    private guestSession: GuestSessionService,
   ) {}
 
   /**
@@ -107,6 +139,21 @@ export class InventoryController {
   // ---------------------------------------------------------------------------
   // Holds públicos — canal SIEMPRE WEB (F1-13)
   // ---------------------------------------------------------------------------
+
+  /**
+   * Emite una identidad de invitado firmada.
+   *
+   * Es el unico sitio donde nacen, lo que la convierte en el punto estrecho
+   * donde limitar y contar el acaparamiento. Va limitada por IP: pedir mil
+   * identidades por minuto no es un comprador.
+   */
+  @Post('session')
+  @Throttle(SESSION_THROTTLE)
+  @ApiOperation({ summary: 'Emitir identidad de invitado firmada por el servidor' })
+  issueGuestSession() {
+    const session = this.guestSession.issue();
+    return { sessionId: session.token, expiresAt: session.expiresAt.toISOString() };
+  }
 
   @Post('holds/best-available')
   @UseGuards(OptionalJwtAuthGuard)
@@ -299,11 +346,20 @@ export class InventoryController {
   }
 
   /** Un hold anónimo sin `sessionId` no se puede atribuir ni liberar con seguridad. */
+  /**
+   * Identidad con la que se contabilizan los topes por comprador.
+   *
+   * Antes bastaba con que el cliente mandara ALGUNA cadena, asi que el limite
+   * por comprador se imponia sobre un valor que el comprador elige: un bot
+   * cambiaba de `sessionId` en cada peticion y el tope desaparecia. Ahora la
+   * identidad la emite y la firma el servidor (`GuestSessionService`), y una
+   * firma que no cuadra se rechaza siempre.
+   */
   private requireIdentity(sessionId: string | undefined, user: PublicUser): string | undefined {
-    const trimmed = sessionId?.trim();
-    if (!trimmed && !user?.sub) {
+    const verified = this.guestSession.verify(sessionId);
+    if (!verified && !user?.sub) {
       throw new BadRequestException('sessionId is required for guest holds');
     }
-    return trimmed || undefined;
+    return verified?.id;
   }
 }
