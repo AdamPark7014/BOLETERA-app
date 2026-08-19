@@ -13,6 +13,8 @@
  */
 
 export {
+  ensureGuestSession,
+  renewGuestSession,
   getGuestSessionId,
   peekGuestSessionId,
   resetGuestSessionId,

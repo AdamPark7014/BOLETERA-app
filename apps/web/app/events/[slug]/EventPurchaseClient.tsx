@@ -11,7 +11,7 @@ import {
   describeNetworkError,
   type InventoryError,
 } from '@/components/seatmap/errors';
-import { getGuestSessionId, resetGuestSessionId } from '@/components/seatmap/session';
+import { ensureGuestSession, renewGuestSession } from '@/components/seatmap/session';
 import { HoldErrorNotice } from '@/components/seatmap/HoldErrorNotice';
 import {
   flatSeats,
@@ -302,15 +302,20 @@ export function EventPurchaseClient({
    *    UUID nuevo por petición, lo que rompía el tope de 10 boletos y hacía
    *    imposible liberar el propio hold (DELETE → 403).
    *  · NUNCA `x-channel` ni `x-cashier-id` en rutas públicas → 403.
-   *  · Un 400 por `sessionId` es un bug del cliente: se regenera la sesión y se
-   *    reintenta una vez, sin enseñar nada al comprador.
+   *  · La identidad la EMITE Y FIRMA el servidor (`POST /inventory/session`).
+   *    Antes la inventaba el navegador, asi que el tope por comprador se
+   *    imponia sobre un valor que el comprador elegia y bastaba con cambiarlo
+   *    en cada peticion para saltarselo.
+   *  · Un 400 por `sessionId` (caducada o de una version anterior) se resuelve
+   *    pidiendo otra al servidor y reintentando una vez, sin enseñar nada al
+   *    comprador.
    *  · `queuePass` en todo hold cuando la sala nos admitió. En eventos sin sala
    *    el API lo ignora; en eventos con sala, su ausencia es un 403.
    */
   const postHold = useCallback(
     async (endpoint: string, body: Record<string, unknown>): Promise<HoldResponse> => {
       for (let attempt = 0; attempt < 2; attempt++) {
-        const sessionId = attempt === 0 ? getGuestSessionId() : resetGuestSessionId();
+        const sessionId = attempt === 0 ? await ensureGuestSession() : await renewGuestSession();
         let res: Response;
         try {
           res = await fetch(endpoint, {

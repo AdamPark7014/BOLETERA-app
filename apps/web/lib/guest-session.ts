@@ -16,6 +16,19 @@
 
 export const GUEST_SESSION_STORAGE_KEY = 'boletera_guest_session';
 
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
+/**
+ * Una identidad emitida por el servidor tiene forma `v2.<id>.<emitido>.<firma>`.
+ * Sirve para distinguir la nuestra de una local heredada sin volver a pedirla.
+ */
+function isServerIssued(value: string | null | undefined): boolean {
+  return Boolean(value && value.startsWith('v2.') && value.split('.').length === 4);
+}
+
+/** Vuelo en curso: dos selecciones de butaca casi a la vez no piden dos identidades. */
+let inFlight: Promise<string> | null = null;
+
 /** Cache en memoria: evita releer localStorage en cada selección de butaca. */
 let cachedSessionId: string | null = null;
 
@@ -58,6 +71,71 @@ export function getGuestSessionId(): string {
     cachedSessionId = cachedSessionId ?? randomId();
     return cachedSessionId;
   }
+}
+
+/**
+ * Obtiene una identidad EMITIDA Y FIRMADA POR EL SERVIDOR.
+ *
+ * Antes el navegador se inventaba el identificador, asi que el tope de boletos
+ * por comprador se imponia sobre un valor que el propio comprador elegia: bastaba
+ * con mandar uno distinto en cada peticion para saltarselo. Ahora la identidad la
+ * emite el API y el navegador solo la guarda y la devuelve.
+ *
+ * Si el API no responde se cae al identificador local de siempre: quedarse sin
+ * poder comprar por no haber podido pedir una identidad seria un remedio peor que
+ * la enfermedad. El API acepta los locales mientras `GUEST_SESSION_STRICT` este
+ * apagado, que es lo que permite hacer la transicion sin tumbar carritos.
+ */
+export async function ensureGuestSession(): Promise<string> {
+  const stored = peekGuestSessionId();
+  if (isServerIssued(stored)) {
+    cachedSessionId = stored;
+    return stored as string;
+  }
+  if (inFlight) return inFlight;
+
+  inFlight = (async () => {
+    try {
+      const res = await fetch(`${API}/inventory/session`, { method: 'POST' });
+      if (res.ok) {
+        const body = (await res.json()) as { sessionId?: string };
+        if (isServerIssued(body?.sessionId)) {
+          cachedSessionId = body.sessionId as string;
+          try {
+            window.localStorage.setItem(GUEST_SESSION_STORAGE_KEY, cachedSessionId);
+          } catch {
+            /* almacenamiento bloqueado: vale con la copia en memoria */
+          }
+          return cachedSessionId;
+        }
+      }
+    } catch {
+      /* sin red o API caida: seguimos con el identificador local */
+    }
+    return getGuestSessionId();
+  })();
+
+  try {
+    return await inFlight;
+  } finally {
+    inFlight = null;
+  }
+}
+
+/**
+ * Pide una identidad nueva al servidor. Se usa cuando el API rechaza la actual
+ * (caducada o de una version anterior), para reintentar una vez sin molestar al
+ * comprador.
+ */
+export async function renewGuestSession(): Promise<string> {
+  cachedSessionId = null;
+  inFlight = null;
+  try {
+    window.localStorage.removeItem(GUEST_SESSION_STORAGE_KEY);
+  } catch {
+    /* almacenamiento bloqueado */
+  }
+  return ensureGuestSession();
 }
 
 /** Lee el identificador sin crearlo. Útil para no ensuciar el almacenamiento. */
