@@ -346,3 +346,71 @@
     animation: none !important;
   }
 }
+
+// --- Cumplimiento PROFECO ----------------------------------------------------
+// Colores por token del sistema, nunca literales: es lo que mantiene una sola
+// familia de gris en todo el backoffice.
+
+.muted {
+  color: var(--bl-text-tertiary);
+  font-size: var(--bl-text-sm);
+}
+
+.error {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  color: var(--bl-danger-text);
+  background: var(--bl-danger-subtle);
+  border: 1px solid var(--bl-danger-border);
+  border-left-width: 4px;
+  border-radius: var(--bl-radius-md);
+}
+
+// El incumplimiento se lee distinto del texto normal: quien entra a esta
+// pestaña viene a saber si puede vender, y esa frase es la respuesta.
+.warnText {
+  margin: 0 0 0.75rem;
+  color: var(--bl-danger-text);
+  font-weight: 600;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+
+  dt {
+    color: var(--bl-text-tertiary);
+    font-size: var(--bl-text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0.15rem 0 0;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.panelActions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 1rem 0 0.5rem;
+}
+
+.warnList {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 0.6rem 0.75rem;
+    color: var(--bl-warning-text);
+    background: var(--bl-warning-subtle);
+    border-radius: var(--bl-radius-md);
+    font-size: var(--bl-text-sm);
+  }
+}

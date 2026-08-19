@@ -20,6 +20,7 @@ import { useToast } from '@/components/Toast/ToastProvider';
 import { ApiStateBoundary, useSession } from '../_shared/api-state';
 import { LiveInventoryPanel } from '../_shared/LiveInventoryPanel';
 import { InventoryBlocksPanel } from '../_shared/InventoryBlocksPanel';
+import { CompliancePanel } from './CompliancePanel';
 import {
   countOf,
   getAvailability,
@@ -36,7 +37,7 @@ const Venue3DViewer = dynamic(
 
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
 
-type Tab = 'overview' | 'live' | 'blocks' | 'channels' | 'map3d' | 'pricing';
+type Tab = 'overview' | 'live' | 'blocks' | 'channels' | 'map3d' | 'pricing' | 'compliance';
 
 const TAB_LABEL: Record<Tab, string> = {
   overview: 'Resumen',
@@ -45,6 +46,7 @@ const TAB_LABEL: Record<Tab, string> = {
   channels: 'Canales',
   map3d: 'Mapa 3D',
   pricing: 'Precios',
+  compliance: 'Cumplimiento',
 };
 type ChannelPct = { web: number; taquilla: number; api: number };
 
@@ -321,7 +323,7 @@ export default function EventHubPage() {
       </div>
 
       <nav className={platform.tabs} aria-label="Secciones del evento">
-        {(['overview', 'live', 'blocks', 'channels', 'map3d', 'pricing'] as Tab[]).map((t) => (
+        {(['overview', 'live', 'blocks', 'channels', 'map3d', 'pricing', 'compliance'] as Tab[]).map((t) => (
           <button
             key={t}
             type="button"
@@ -471,6 +473,15 @@ export default function EventHubPage() {
             <Link href={`/venues/${venueId}/map`}>mapa del venue</Link>
           </p>
         </section>
+      )}
+
+      {tab === 'compliance' && (
+        <CompliancePanel
+          eventId={id}
+          // Publicar arranca un reloj legal y deja constancia fechada: no es una
+          // acción de solo lectura y no la ofrece cualquiera.
+          canWrite={['PROMOTER', 'ADMIN', 'SUPER_ADMIN'].includes(session.role ?? '')}
+        />
       )}
 
       {tab === 'pricing' && (
