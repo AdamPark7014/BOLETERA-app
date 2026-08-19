@@ -97,6 +97,47 @@
   --bl-viz-6: #{$viz-6};
   --bl-viz-7: #{$viz-7};
   --bl-viz-8: #{$viz-8};
+
+  // ---------------------------------------------------------------------------
+  // Rampa neutra cruda.
+  //
+  // Se expone porque las apps la necesitan para matices que no son un rol
+  // semantico (el fondo de la barra lateral, un separador de filas). Mientras no
+  // estuvo disponible, cada app se invento la suya: el backoffice adopto zinc
+  // (#18181b, #71717a) y la tienda neutral puro (#171717, #737373). En una misma
+  // pantalla llegaban a convivir cinco familias de gris con cromas de 0 a 21, y
+  // eso no se lee como diseno sino como suciedad.
+  //
+  // Es una rampa de UN SOLO MATIZ (H 217.5) con croma que sube al centro y baja
+  // en los extremos. El croma nunca es cero: el gris puro es lo que da el aspecto
+  // de plantilla sin terminar.
+  //
+  // PREFIERE SIEMPRE EL ROL SEMANTICO (--bl-text-primary, --bl-border...). Estos
+  // valores no cambian con el tema, asi que usarlos directamente en una pantalla
+  // que soporta modo oscuro es un error.
+  // ---------------------------------------------------------------------------
+  --bl-gray-0: #{$gray-0};
+  --bl-gray-25: #{$gray-25};
+  --bl-gray-50: #{$gray-50};
+  --bl-gray-100: #{$gray-100};
+  --bl-gray-150: #{$gray-150};
+  --bl-gray-200: #{$gray-200};
+  --bl-gray-300: #{$gray-300};
+  --bl-gray-400: #{$gray-400};
+  --bl-gray-500: #{$gray-500};
+  --bl-gray-600: #{$gray-600};
+  --bl-gray-700: #{$gray-700};
+  --bl-gray-800: #{$gray-800};
+  --bl-gray-850: #{$gray-850};
+  --bl-gray-900: #{$gray-900};
+  --bl-gray-950: #{$gray-950};
+
+  // Acento de marca, tambien crudo (el relleno rosa es identidad, no tema).
+  --bl-accent-50: #{$accent-50};
+  --bl-accent-300: #{$accent-300};
+  --bl-accent-500: #{$accent-500};
+  --bl-accent-600: #{$accent-600};
+  --bl-accent-700: #{$accent-700};
 }
 
 // -----------------------------------------------------------------------------

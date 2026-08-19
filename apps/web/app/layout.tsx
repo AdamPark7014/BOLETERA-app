@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Bebas_Neue, Space_Grotesk } from "next/font/google";
 import { CartBar } from "@/components/CartBar";
 import { SiteFooter } from "@/components/SiteFooter";
+// El sistema de diseno va PRIMERO: define los --bl-* de los que
+// derivan los tokens locales. Sin esta linea cada pantalla caia a
+// su reserva codificada a mano y las familias de gris no concordaban.
+import "@boletera/ui/src/styles/theme.scss";
 import "./globals.css";
 
 const headingFont = Bebas_Neue({

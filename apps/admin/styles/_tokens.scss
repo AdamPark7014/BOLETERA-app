@@ -1,79 +1,98 @@
 /**
  * Tokens del backoffice.
  *
- * No es una identidad nueva: es el inventario de lo que ya se repetía a mano en
- * `shell.module.scss`, `_styles/platform.module.scss`, `dashboard.module.scss`,
- * `payments.module.scss` y `Session.module.scss`. Cada valor de aquí sale de al
- * menos dos archivos distintos; se les da nombre para poder cambiarlos en un
- * sitio y para que las pantallas nuevas no inventen un gris más.
+ * YA NO DEFINEN COLOR PROPIO: derivan de `@boletera/ui` (`theme.scss`), que el
+ * layout raiz importa antes que esta hoja. Los nombres se conservan todos para
+ * que ninguna de las pantallas existentes tenga que tocarse.
+ *
+ * Por que cambio: este archivo codificaba la rampa *zinc* (#18181b, #71717a,
+ * #e4e4e7) mientras la tienda codificaba *neutral* puro (#171717, #737373) y el
+ * sistema de diseno traia la suya. Midiendo los estilos computados de una sola
+ * pantalla del backoffice aparecian cinco familias de gris a la vez, con cromas
+ * de 0 a 21 — tres grises distintos compitiendo solo para el texto secundario.
+ * Se percibe como suciedad, no como intencion.
+ *
+ * La regla a partir de aqui: **el color se define en un unico sitio**, y es
+ * `packages/ui/src/styles/_variables.scss`. Aqui solo se le pone el nombre que
+ * el backoffice ya usaba.
  *
  * Se declaran como custom properties (no como variables de Sass) porque los
- * módulos CSS se compilan por separado: `var()` cruza esa frontera, `$var` no.
+ * modulos CSS se compilan por separado: `var()` cruza esa frontera, `$var` no.
  */
 
 :root {
-  /* ---- Escala neutra (zinc) — la que ya usaba todo el admin ---------- */
-  --c-ink-950: #0a0a0a; /* texto máximo contraste, logo */
-  --c-ink-900: #18181b; /* texto principal, sidebar, botón primario */
-  --c-ink-800: #262626; /* hover del botón primario */
-  --c-ink-700: #3f3f46; /* texto secundario fuerte */
-  --c-ink-600: #52525b;
-  --c-ink-500: #71717a; /* texto atenuado (muted) */
-  --c-ink-400: #a1a1aa;
-  --c-ink-300: #d4d4d8; /* borde marcado */
-  --c-ink-200: #e4e4e7; /* borde estándar */
-  --c-ink-150: #f0f0f2; /* separador de filas de tabla */
-  --c-ink-100: #f4f4f5; /* fondo de página */
-  --c-ink-75: #f7f7f8; /* fondo del shell */
-  --c-ink-50: #fafafa; /* superficie suave / texto sobre oscuro */
-  --c-white: #ffffff;
+  /* ---- Escala neutra — alias sobre la rampa unica del sistema -------- */
+  --c-ink-950: var(--bl-gray-950);
+  --c-ink-900: var(--bl-gray-900); /* texto principal, barra lateral */
+  --c-ink-800: var(--bl-gray-800);
+  --c-ink-700: var(--bl-gray-700); /* texto secundario fuerte */
+  --c-ink-600: var(--bl-gray-600);
+  --c-ink-500: var(--bl-gray-500); /* texto atenuado */
+  --c-ink-400: var(--bl-gray-400); /* iconos y deshabilitado: NUNCA texto */
+  --c-ink-300: var(--bl-gray-300); /* borde marcado */
+  --c-ink-200: var(--bl-gray-200); /* borde estandar */
+  --c-ink-150: var(--bl-gray-150); /* separador de filas */
+  --c-ink-100: var(--bl-gray-100); /* fondo de pagina */
+  --c-ink-75: var(--bl-gray-50); /* fondo del shell */
+  --c-ink-50: var(--bl-gray-25); /* superficie suave */
+  --c-white: var(--bl-gray-0);
 
-  /* ---- Roles semánticos --------------------------------------------- */
-  --color-bg: var(--c-ink-75);
-  --color-surface: var(--c-white);
-  --color-surface-soft: var(--c-ink-50);
-  --color-border: var(--c-ink-200);
-  --color-border-strong: var(--c-ink-300);
-  --color-border-subtle: var(--c-ink-150);
-  --color-text: var(--c-ink-900);
-  --color-text-soft: var(--c-ink-700);
-  --color-text-muted: var(--c-ink-500);
-  --color-text-invert: var(--c-ink-50);
+  /* ---- Roles semanticos ---------------------------------------------
+   * Apuntan al rol equivalente del sistema, no a un paso de la rampa: asi
+   * siguen al tema claro/oscuro en vez de quedarse fijos en claro.
+   */
+  --color-bg: var(--bl-surface);
+  --color-surface: var(--bl-elevated);
+  --color-surface-soft: var(--bl-surface-sunken);
+  --color-border: var(--bl-border);
+  --color-border-strong: var(--bl-border-strong);
+  --color-border-subtle: var(--bl-border-subtle);
+  --color-text: var(--bl-text-primary);
+  --color-text-soft: var(--bl-text-secondary);
+  --color-text-muted: var(--bl-text-tertiary);
+  --color-text-invert: var(--bl-text-inverse);
 
-  /* Acento de marca: el rosa que ya marcaba el enlace activo del menú. */
-  --color-accent: #e11d48;
-  --color-accent-soft: #fb7185;
-  --color-accent-wash: rgba(225, 29, 72, 0.12);
+  /* Acento de marca. #e11d48 da 4.70:1 sobre blanco: sirve de relleno con
+     texto blanco encima, pero NO como texto normal sobre claro. Por eso el
+     rol de texto usa el paso 700 (#be123c, 6.29:1). */
+  --color-accent: var(--bl-accent);
+  --color-accent-text: var(--bl-accent-text);
+  --color-accent-soft: var(--bl-accent-300);
+  --color-accent-wash: var(--bl-accent-subtle);
 
-  /* Estados. Los tonos de texto son los que ya cumplían 4.5:1 sobre su wash. */
-  --color-success: #16a34a;
-  --color-success-text: #166534;
-  --color-success-wash: #f0fdf4;
-  --color-success-border: #bbf7d0;
+  /* ---- Estados — tambien del sistema --------------------------------- */
+  --color-success: var(--bl-success);
+  --color-success-text: var(--bl-success-text);
+  --color-success-wash: var(--bl-success-subtle);
+  --color-success-border: var(--bl-success-border);
 
-  --color-warning: #a16207;
-  --color-warning-text: #854d0e;
-  --color-warning-wash: #fefce8;
-  --color-warning-border: #fde68a;
+  --color-warning: var(--bl-warning);
+  --color-warning-text: var(--bl-warning-text);
+  --color-warning-wash: var(--bl-warning-subtle);
+  --color-warning-border: var(--bl-warning-border);
 
-  --color-danger: #b91c1c;
-  --color-danger-text: #991b1b;
-  --color-danger-wash: #fef2f2;
-  --color-danger-border: #fecaca;
+  --color-danger: var(--bl-danger);
+  --color-danger-text: var(--bl-danger-text);
+  --color-danger-wash: var(--bl-danger-subtle);
+  --color-danger-border: var(--bl-danger-border);
 
-  --color-info: #4338ca;
-  --color-info-wash: #eef2ff;
-  --color-info-border: #c7d2fe;
+  --color-info: var(--bl-info);
+  --color-info-wash: var(--bl-info-subtle);
+  --color-info-border: var(--bl-info-border);
 
-  /* Superficie oscura del sidebar y sus transparencias. */
-  --color-sidebar: #18181b;
-  --color-sidebar-border: #27272a;
-  --on-dark-1: rgba(250, 250, 250, 0.92); /* texto principal sobre oscuro */
-  --on-dark-2: rgba(250, 250, 250, 0.72); /* enlace en reposo */
-  --on-dark-3: rgba(250, 250, 250, 0.55); /* iconos, metadatos */
-  --on-dark-4: rgba(250, 250, 250, 0.4); /* rótulos de grupo */
-  --on-dark-line: rgba(255, 255, 255, 0.08);
-  --on-dark-fill: rgba(255, 255, 255, 0.05);
+  /* ---- Barra lateral oscura ------------------------------------------
+   * Se mantiene oscura en ambos temas (es la identidad del backoffice), pero
+   * ahora con el neutro del sistema en vez de zinc. Los textos sobre ella se
+   * expresan en opacidad para que el contraste acompane al fondo.
+   */
+  --color-sidebar: var(--bl-gray-900);
+  --color-sidebar-border: var(--bl-gray-800);
+  --on-dark-1: rgba(248, 249, 251, 0.94); /* texto principal sobre oscuro */
+  --on-dark-2: rgba(248, 249, 251, 0.74); /* enlace en reposo */
+  --on-dark-3: rgba(248, 249, 251, 0.58); /* iconos, metadatos */
+  --on-dark-4: rgba(248, 249, 251, 0.44); /* rotulos de grupo */
+  --on-dark-line: rgba(255, 255, 255, 0.09);
+  --on-dark-fill: rgba(255, 255, 255, 0.06);
 
   /* ---- Tipografía ---------------------------------------------------- */
   --font-sans: var(--font-body), 'Space Grotesk', system-ui, sans-serif;
@@ -126,20 +145,20 @@
   /* ---- Movimiento y foco --------------------------------------------- */
   --transition-fast: 0.15s ease;
   /* WCAG 2.2 (2.4.11/2.4.13): anillo visible y separado del control. */
-  --focus-ring: 2px solid var(--c-ink-900);
-  --focus-ring-invert: 2px solid #fafafa;
+  --focus-ring: 2px solid var(--bl-focus-ring);
+  --focus-ring-invert: 2px solid var(--bl-gray-25);
   --focus-offset: 2px;
   /* WCAG 2.2 (2.5.8): objetivo mínimo. */
   --tap-min: 24px;
 
   /* Compatibilidad con los alias antiguos que aún leen otras pantallas. */
   --sidebar: var(--color-sidebar);
-  --bg: var(--c-ink-100);
+  --bg: var(--color-bg);
   --surface: var(--color-surface);
   --border: var(--color-border);
   --text: var(--color-text);
   --muted: var(--color-text-muted);
-  --accent: var(--c-ink-900);
+  --accent: var(--color-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {

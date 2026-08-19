@@ -2,6 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk } from 'next/font/google';
 import { ReauthDialog } from '@/components/ReauthDialog';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
+// El sistema de diseno va PRIMERO: define los --bl-* de los que
+// derivan los tokens locales. Sin esta linea cada pantalla caia a
+// su reserva codificada a mano y las familias de gris no concordaban.
+import '@boletera/ui/src/styles/theme.scss';
 import './globals.scss';
 
 const body = Space_Grotesk({ subsets: ['latin'], variable: '--font-body' });

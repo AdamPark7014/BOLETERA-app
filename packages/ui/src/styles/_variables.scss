@@ -25,7 +25,11 @@ $gray-150: #e9ebf1;
 $gray-200: #e0e3ea;
 $gray-300: #cbd0db;
 $gray-400: #9ba3b4;
-$gray-500: #6f7887;
+// AA: 4.46:1 sobre blanco y 4.23:1 sobre $gray-50 con el valor anterior
+// (#6f7887) — por debajo del 4.5 que exige WCAG AA para texto normal, y
+// este paso es --bl-text-tertiary. Se oscurece lo mínimo conservando matiz
+// (H 217.5) y saturacion: ahora 4.84:1 sobre blanco y 4.60:1 sobre $gray-50.
+$gray-500: #6a7281;
 $gray-600: #545c6b;
 $gray-700: #3d4451;
 $gray-800: #272c36;

@@ -1,12 +1,36 @@
+// Hoja global del backoffice.
+//
+// `styles/_tokens.scss` NO SE IMPORTABA DESDE NINGUN SITIO. Todas las pantallas
+// escribian `var(--color-surface, #fff)`, `var(--color-text, #18181b)`... y como
+// esas variables no existian, TODAS caian a su reserva en linea. Es decir: la
+// capa de tokens del backoffice estaba muerta y cada modulo pintaba con su
+// propio gris zinc codificado a mano.
+//
+// Dos consecuencias, las dos visibles:
+//
+//  1. En tema claro convivian cinco familias de gris (zinc de las reservas,
+//     neutral puro heredado, y el frio del sistema), con cromas de 0 a 21. Tres
+//     grises distintos solo para el texto secundario.
+//  2. En tema oscuro se rompia de verdad: el armazon leia `--bl-*` y se ponia
+//     oscuro, mientras el contenido seguia pintando las reservas CLARAS. Fondo
+//     #0b0d11 con tarjetas #ffffff en la misma ventana.
+//
+// Importar el parcial arregla ambos, porque ahora `--color-*` apunta a los roles
+// semanticos del sistema y sigue al tema por si solo.
+@use '../styles/tokens';
+
 :root {
-  --sidebar: #18181b;
-  --bg: var(--bl-surface, #f4f4f5);
-  --surface: var(--bl-elevated, #ffffff);
-  --border: var(--bl-border, #e4e4e7);
-  --text: var(--bl-text-primary, #18181b);
-  --muted: var(--bl-text-secondary, #71717a);
-  --accent: var(--bl-accent, #18181b);
-  --ink-900: var(--bl-text-primary, #18181b);
+  // Alias cortos heredados. Se conservan porque varias pantallas aun los leen,
+  // pero ya sin reserva propia: si el sistema no cargara, hay que verlo, no
+  // taparlo con un gris distinto.
+  --sidebar: var(--color-sidebar);
+  --bg: var(--color-bg);
+  --surface: var(--color-surface);
+  --border: var(--color-border);
+  --text: var(--color-text);
+  --muted: var(--color-text-muted);
+  --accent: var(--color-accent);
+  --ink-900: var(--color-text);
 }
 
 * {
@@ -34,7 +58,7 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--bl-focus-ring, #3b82f6);
+  outline: 2px solid var(--bl-focus-ring);
   outline-offset: 2px;
 }
 
