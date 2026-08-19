@@ -1,4 +1,5 @@
 import { InjectQueue } from '@nestjs/bull';
+import type { OnModuleInit } from '@nestjs/common';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -75,7 +76,7 @@ function jobOptions(overrides: JobOptions = {}): JobOptions {
 }
 
 @Injectable()
-export class NotificationService {
+export class NotificationService implements OnModuleInit {
   private readonly logger = new Logger(NotificationService.name);
 
   constructor(
@@ -83,6 +84,33 @@ export class NotificationService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {}
+
+  /**
+   * Bull deja que los errores de su worker suban como rechazos sin capturar.
+   *
+   * Con `enableOfflineQueue: false` —necesario para que encolar falle rápido en
+   * vez de secuestrar la petición de compra— el worker sondea Redis y cada
+   * sondeo falla mientras esté caído. Sin este manejador, el primero de esos
+   * rechazos tumba el proceso entero: el API se moría a los pocos segundos de
+   * arrancar sin Redis.
+   *
+   * Con él, la cola queda inservible pero el API sigue vendiendo. Los avisos se
+   * pierden y se registran; la venta, que es lo que no se puede perder, no.
+   */
+  onModuleInit(): void {
+    this.queue.on('error', (error: Error) => {
+      const message = error?.message ?? String(error);
+      if (message === this.lastQueueError) return; // no inundar el log
+      this.lastQueueError = message;
+      this.logger.error(
+        `Cola de notificaciones no disponible (${message}). ` +
+          'Las compras siguen funcionando; los avisos quedan sin enviar.',
+      );
+    });
+  }
+
+  /** Último error de cola registrado, para no repetir la misma línea sin fin. */
+  private lastQueueError: string | null = null;
 
   // ==================== ORDER NOTIFICATIONS ====================
 

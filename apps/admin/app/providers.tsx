@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider as UiToastProvider } from '@boletera/ui';
 import { SessionProvider } from '@/lib/use-session';
+import { SessionProvider as PanelSessionProvider } from '@/components/Session/SessionProvider';
 import { isRetryableError } from '@/lib/http';
 import { queryKeys } from '@/lib/query-keys';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -46,7 +47,17 @@ export function Providers({ children }: { children: ReactNode }) {
     <ErrorBoundary>
       <SessionProvider>
         <QueryClientProvider client={queryClient}>
-          <UiToastProvider>{children}</UiToastProvider>
+          {/*
+            Dos proveedores de sesión conviven tras la integración de ramas:
+            `lib/use-session` alimenta el shell y las consultas, y
+            `components/Session` aporta las capacidades por rol que usan el
+            panel, la bitácora y la pantalla de equipo. Ambos derivan del mismo
+            token, así que no pueden discrepar; montar solo uno dejaba a las
+            pantallas del otro reventando contra su propio ErrorBoundary.
+          */}
+          <PanelSessionProvider>
+            <UiToastProvider>{children}</UiToastProvider>
+          </PanelSessionProvider>
         </QueryClientProvider>
       </SessionProvider>
     </ErrorBoundary>

@@ -256,8 +256,16 @@ function parseRedisUrl(raw?: string): { host: string; port: number; password?: s
     BullModule.forRoot({
       redis: {
         ...parseRedisUrl(process.env.REDIS_URL),
+        // Lo que causaba el cuelgue eran los 20 reintentos con espera creciente
+        // del valor por defecto: encolar con Redis caído tardaba decenas de
+        // segundos ANTES de fallar, y la compra se quedaba esperando aunque el
+        // cobro ya estuviera hecho. Con 1 reintento falla rápido y
+        // `OrdersService.afterSale` lo registra y sigue.
+        //
+        // `enableOfflineQueue` se queda en true: ponerlo en false rompe el
+        // ARRANQUE, porque BullMQ emite comandos mientras la conexión todavía se
+        // está estableciendo y no hay dónde almacenarlos.
         maxRetriesPerRequest: 1,
-        enableOfflineQueue: false,
         connectTimeout: 2_000,
       },
     }),

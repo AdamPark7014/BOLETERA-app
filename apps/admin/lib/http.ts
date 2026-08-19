@@ -140,6 +140,24 @@ type RefreshResult = {
 let refreshPromise: Promise<void> | null = null;
 let authGeneration = 0;
 
+/**
+ * El backend puede no ofrecer renovación por cookie.
+ *
+ * Esta interfaz nació contra un API con refresh-token en cookie; contra uno que
+ * solo emite Bearer, `/auth/refresh` responde 404. Sin recordarlo, cada 401
+ * dispara otro intento de refresh que vuelve a fallar, y la pantalla de login
+ * entra en un bucle que martillea el API y nunca deja iniciar sesión.
+ *
+ * Una vez que sabemos que no existe, un 401 significa simplemente «no hay
+ * sesión», que es la respuesta correcta en esa pantalla.
+ */
+let refreshSupported = true;
+
+/** `true` si el backend ofrece renovación de sesión sin volver a pedir clave. */
+export function isRefreshSupported(): boolean {
+  return refreshSupported;
+}
+
 async function performRefresh(): Promise<void> {
   const headers = new Headers({ 'Content-Type': 'application/json' });
   addCsrfHeader(headers);
@@ -150,6 +168,10 @@ async function performRefresh(): Promise<void> {
   });
 
   if (!response.ok) {
+    if (response.status === 404) {
+      refreshSupported = false;
+      throw new AuthenticationError('Sesión no iniciada', null);
+    }
     const details = await errorBody(response);
     throw new AuthenticationError(
       messageFromBody(details, response.status),
@@ -200,7 +222,7 @@ async function executeRequest<T>(
   });
 
   if (!response.ok) {
-    if (response.status === 401 && auth && !retried) {
+    if (response.status === 401 && auth && !retried && refreshSupported) {
       try {
         if (authGeneration === requestGeneration) {
           await refreshAuthentication();

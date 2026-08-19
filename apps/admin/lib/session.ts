@@ -83,7 +83,24 @@ export const cookieTokenStorage: TokenStorage = {
     browserStorage()?.setItem(ORGANIZATION_KEY, organizationId),
 };
 
-let activeTokenStorage: TokenStorage = cookieTokenStorage;
+/**
+ * Almacenamiento por defecto: localStorage, NO el de cookie.
+ *
+ * `cookieTokenStorage` guarda el token solo en memoria y borra el de
+ * localStorage, porque asume un backend que renueva la sesión con una cookie
+ * `httpOnly` y un endpoint `/auth/refresh`. Este API es solo Bearer: no emite
+ * cookies y no tiene esa ruta.
+ *
+ * Con el de cookie, iniciar sesión funcionaba pero la sesión moría en la primera
+ * navegación completa —el token en memoria se perdía y el de localStorage ya
+ * había sido borrado—, así que el usuario volvía al login una y otra vez sin
+ * ningún mensaje de error.
+ *
+ * Cuando el API gane refresh por cookie, vuelve a `cookieTokenStorage`: guardar
+ * el token en localStorage lo expone a XSS, y esa es la razón por la que la otra
+ * implementación existe.
+ */
+let activeTokenStorage: TokenStorage = localTokenStorage;
 
 export function getTokenStorage(): TokenStorage {
   return activeTokenStorage;
