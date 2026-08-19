@@ -333,7 +333,7 @@
   gap: 0.85rem;
   align-items: start;
   padding: 0.85rem 0;
-  border-bottom: 1px solid #f0f0f2;
+  border-bottom: 1px solid var(--bl-border-subtle);
 
   &:first-child {
     padding-top: 0;

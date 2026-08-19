@@ -32,7 +32,7 @@ $success: #16a34a;
 .modeOn {
   background: $ink;
   border-color: $ink;
-  color: #fff;
+  color: var(--bl-text-inverse);
 }
 
 .modeOff {
@@ -114,7 +114,7 @@ $success: #16a34a;
 .dayOn {
   background: $ink;
   border-color: $ink;
-  color: #fff;
+  color: var(--bl-text-inverse);
 }
 
 .dayOff {
@@ -219,7 +219,7 @@ $success: #16a34a;
 .tag {
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
-  background: #f4f4f5;
+  background: var(--bl-surface-sunken);
   color: $muted;
   font-size: 0.6875rem;
   font-weight: 600;
@@ -242,7 +242,7 @@ $success: #16a34a;
   margin-right: 0.35rem;
   padding: 0.05rem 0.3rem;
   border-radius: 4px;
-  background: #f4f4f5;
+  background: var(--bl-surface-sunken);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.625rem;

@@ -28,7 +28,7 @@
 
 .viewport {
   position: relative;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--bl-border);
   background: #0a0a0b;
   overflow: hidden;
   min-height: 520px;
@@ -67,7 +67,7 @@
 
 .fps {
   font-variant-numeric: tabular-nums;
-  color: #a3a3a3;
+  color: var(--bl-text-disabled);
 }
 
 .sidePanels {
@@ -80,8 +80,8 @@
 }
 
 .panel {
-  border: 1px solid #e5e5e5;
-  background: #fff;
+  border: 1px solid var(--bl-border);
+  background: var(--bl-elevated);
   padding: 0.85rem 0.9rem;
 }
 
@@ -91,7 +91,7 @@
   font-weight: 650;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: #525252;
+  color: var(--bl-text-secondary);
 }
 
 .panelBody {
@@ -113,18 +113,18 @@
 
 .fieldLabel {
   font-size: 0.75rem;
-  color: #737373;
+  color: var(--bl-text-tertiary);
 }
 
 .fieldInput,
 .fieldSelect,
 .fieldRange {
   width: 100%;
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--bl-border-strong);
   border-radius: 6px;
   padding: 0.4rem 0.5rem;
   font: inherit;
-  background: #fff;
+  background: var(--bl-elevated);
 }
 
 .fieldRange {
@@ -135,13 +135,13 @@
 .hint {
   margin: 0;
   font-size: 0.75rem;
-  color: #737373;
+  color: var(--bl-text-tertiary);
   line-height: 1.4;
 }
 
 .chipBtn {
-  border: 1px solid #d4d4d4;
-  background: #fff;
+  border: 1px solid var(--bl-border-strong);
+  background: var(--bl-elevated);
   border-radius: 6px;
   padding: 0.35rem 0.55rem;
   font-size: 0.8rem;
@@ -154,8 +154,8 @@
 
 .chipBtnActive {
   border-color: #171717;
-  background: #171717;
-  color: #fafafa;
+  background: var(--bl-gray-900);
+  color: var(--bl-text-inverse);
 }
 
 .chipBtn:disabled {
@@ -188,7 +188,7 @@
 }
 
 .inspectorList dt {
-  color: #737373;
+  color: var(--bl-text-tertiary);
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -197,7 +197,7 @@
 .inspectorList dd {
   margin: 0;
   font-weight: 550;
-  color: #171717;
+  color: var(--bl-text-primary);
 }
 
 .gradePremium {
@@ -217,7 +217,7 @@
 }
 
 .gradeBlocked {
-  color: #525252;
+  color: var(--bl-text-secondary);
 }
 
 .statusBar {
@@ -226,11 +226,11 @@
   gap: 0.75rem 1.25rem;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid #e5e5e5;
-  background: #fafafa;
+  border: 1px solid var(--bl-border);
+  background: var(--bl-surface);
   padding: 0.55rem 0.75rem;
   font-size: 0.8rem;
-  color: #525252;
+  color: var(--bl-text-secondary);
 }
 
 .statusMeta {
@@ -267,13 +267,13 @@
 .msg {
   margin: 0;
   font-size: 0.875rem;
-  color: #404040;
+  color: var(--bl-text-secondary);
 }
 
 .skeletonViewport {
   min-height: 520px;
-  border: 1px solid #e5e5e5;
-  background: linear-gradient(90deg, #f5f5f5 25%, #ebebeb 37%, #f5f5f5 63%);
+  border: 1px solid var(--bl-border);
+  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, #ebebeb 37%, #f5f5f5 63%);
   background-size: 400% 100%;
   animation: shimmer 1.2s ease infinite;
 }
@@ -302,7 +302,7 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.72rem;
-  color: #737373;
+  color: var(--bl-text-tertiary);
 }
 
 .sightScale {
@@ -320,7 +320,7 @@
 }
 
 .summaryGrid span {
-  color: #737373;
+  color: var(--bl-text-tertiary);
 }
 
 .summaryGrid strong {

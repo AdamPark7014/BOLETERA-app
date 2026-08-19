@@ -1,7 +1,7 @@
 .page {
   display: grid;
   gap: 1.25rem;
-  color: var(--color-fg, #18181b);
+  color: var(--color-fg, var(--bl-text-primary));
   padding-bottom: 2rem;
 }
 
@@ -21,16 +21,16 @@
 .field label {
   font-size: 0.75rem;
   font-weight: 650;
-  color: var(--color-fg-muted, #52525b);
+  color: var(--color-fg-muted, var(--bl-text-secondary));
 }
 
 .field input,
 .field select {
   height: 2.25rem;
-  border: 1px solid var(--color-border, #d4d4d8);
+  border: 1px solid var(--color-border, var(--bl-border-strong));
   border-radius: 0.6rem;
   padding: 0 0.75rem;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--bl-elevated));
   color: inherit;
   font: inherit;
 }
@@ -56,7 +56,7 @@
 
 .banner p {
   margin: 0;
-  color: var(--color-fg-muted, #52525b);
+  color: var(--color-fg-muted, var(--bl-text-secondary));
   font-size: 0.82rem;
   line-height: 1.45;
 }
@@ -76,7 +76,7 @@
 
 .muted {
   margin: 0;
-  color: var(--color-fg-muted, #71717a);
+  color: var(--color-fg-muted, var(--bl-text-tertiary));
   font-size: 0.8rem;
 }
 
@@ -111,9 +111,9 @@
   display: grid;
   gap: 0.45rem;
   padding: 0.9rem 1rem;
-  border: 1px solid var(--color-border, #e4e4e7);
+  border: 1px solid var(--color-border, var(--bl-border));
   border-radius: 0.75rem;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--bl-elevated));
 }
 
 .opportunityHead {
@@ -125,7 +125,7 @@
 
 .opportunityBody {
   margin: 0;
-  color: var(--color-fg-muted, #52525b);
+  color: var(--color-fg-muted, var(--bl-text-secondary));
   font-size: 0.82rem;
   line-height: 1.45;
 }
@@ -136,9 +136,9 @@
   display: grid;
   gap: 0.45rem;
   padding: 0.9rem 1rem;
-  border: 1px solid var(--color-border, #e4e4e7);
+  border: 1px solid var(--color-border, var(--bl-border));
   border-radius: 0.75rem;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--bl-elevated));
 }
 
 .ruleHead,
@@ -162,7 +162,7 @@
 .triggerBody,
 .historyBody {
   margin: 0;
-  color: var(--color-fg-muted, #52525b);
+  color: var(--color-fg-muted, var(--bl-text-secondary));
   font-size: 0.82rem;
   line-height: 1.45;
 }
@@ -190,7 +190,7 @@
   display: grid;
   gap: 0.25rem;
   font-size: 0.8rem;
-  color: var(--color-fg-muted, #52525b);
+  color: var(--color-fg-muted, var(--bl-text-secondary));
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 

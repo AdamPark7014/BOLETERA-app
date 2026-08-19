@@ -90,7 +90,12 @@
   --on-dark-1: rgba(248, 249, 251, 0.94); /* texto principal sobre oscuro */
   --on-dark-2: rgba(248, 249, 251, 0.74); /* enlace en reposo */
   --on-dark-3: rgba(248, 249, 251, 0.58); /* iconos, metadatos */
-  --on-dark-4: rgba(248, 249, 251, 0.44); /* rotulos de grupo */
+  /* 0.47 es el minimo que da 4.61:1 sobre la barra: son TEXTO (rotulos de
+     grupo), asi que les aplica el 4.5 de AA, no el 3:1 de componente. */
+  --on-dark-4: rgba(248, 249, 251, 0.47);
+  /* Controles deliberadamente tenues (el boton de favorito). Estaba en 0.28,
+     que da 2.45:1 y no llega ni al 3:1 que WCAG 1.4.11 pide a un control. */
+  --on-dark-5: rgba(248, 249, 251, 0.34);
   --on-dark-line: rgba(255, 255, 255, 0.09);
   --on-dark-fill: rgba(255, 255, 255, 0.06);
 

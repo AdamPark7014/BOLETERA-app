@@ -15,23 +15,23 @@
   gap: 0.4rem;
   min-height: 2.25rem;
   padding: 0.35rem 0.85rem;
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--bl-border-strong);
   border-radius: 999px;
-  background: #f4f4f5;
-  color: #52525b;
+  background: var(--bl-surface-sunken);
+  color: var(--bl-text-secondary);
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 
   &[data-state='current'] {
-    background: #18181b;
+    background: var(--bl-gray-900);
     border-color: #18181b;
-    color: #fff;
+    color: var(--bl-text-inverse);
   }
 
   &[data-state='done'] {
-    background: #e4e4e7;
-    color: #27272a;
+    background: var(--bl-surface-active);
+    color: var(--bl-text-secondary);
   }
 
   &:focus-visible {
@@ -49,7 +49,7 @@
   padding: 0 0.3rem;
   border-radius: 999px;
   background: #b91c1c;
-  color: #fff;
+  color: var(--bl-text-inverse);
   font-size: 0.6875rem;
   font-weight: 700;
 }
@@ -81,7 +81,7 @@
 
 .draftStamp {
   font-size: 0.8125rem;
-  color: #52525b;
+  color: var(--bl-text-secondary);
 }
 
 .primaryBtn,
@@ -105,8 +105,8 @@
 
 .primaryBtn {
   border: 1px solid #18181b;
-  background: #18181b;
-  color: #fff;
+  background: var(--bl-gray-900);
+  color: var(--bl-text-inverse);
 
   &:hover:not(:disabled) {
     background: #3f3f46;
@@ -120,12 +120,12 @@
 }
 
 .ghostBtn {
-  border: 1px solid #d4d4d4;
-  background: #fff;
-  color: #18181b;
+  border: 1px solid var(--bl-border-strong);
+  background: var(--bl-elevated);
+  color: var(--bl-text-primary);
 
   &:hover {
-    background: #f4f4f5;
+    background: var(--bl-surface-sunken);
   }
 }
 
@@ -158,12 +158,12 @@
 .hint {
   font-size: 0.8125rem;
   line-height: 1.55;
-  color: #52525b;
+  color: var(--bl-text-secondary);
 }
 
 .mapStatus {
   font-size: 0.875rem;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 
   a {
     color: #1d4ed8;
@@ -178,20 +178,20 @@
 .summary {
   line-height: 1.75;
   font-size: 0.9375rem;
-  color: #27272a;
+  color: var(--bl-text-secondary);
 }
 
 .issues {
   margin-top: 1.5rem;
   padding: 1rem;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--bl-border);
   border-radius: 10px;
-  background: #fafafa;
+  background: var(--bl-surface);
 
   h2 {
     margin: 0 0 0.75rem;
     font-size: 0.9375rem;
-    color: #18181b;
+    color: var(--bl-text-primary);
   }
 
   ul {
@@ -223,7 +223,7 @@
   min-width: 3.6rem;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
-  color: #fff;
+  color: var(--bl-text-inverse);
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -234,7 +234,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #18181b;
+  color: var(--bl-text-primary);
   font: inherit;
   font-size: 0.875rem;
   font-weight: 600;
@@ -257,5 +257,5 @@
   margin: 0.2rem 0 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: #52525b;
+  color: var(--bl-text-secondary);
 }

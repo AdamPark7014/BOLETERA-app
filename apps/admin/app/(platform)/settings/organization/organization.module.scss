@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
-  color: #18181b;
+  color: var(--bl-text-primary);
 }
 
 .tabsSlot {
@@ -35,8 +35,8 @@
 .card {
   min-width: 0;
   padding: 1.1rem 1.2rem 1.25rem;
-  background: #fff;
-  border: 1px solid #e4e4e7;
+  background: var(--bl-elevated);
+  border: 1px solid var(--bl-border);
   border-radius: 14px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
@@ -57,7 +57,7 @@
 
   p {
     margin: 0.25rem 0 0;
-    color: #71717a;
+    color: var(--bl-text-tertiary);
     font-size: 0.8rem;
   }
 }
@@ -92,17 +92,17 @@
   gap: 0.35rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 }
 
 .roleSelect {
   min-height: 2.5rem;
   width: 100%;
   padding: 0.45rem 0.65rem;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--bl-border);
   border-radius: 8px;
-  background: #fff;
-  color: #18181b;
+  background: var(--bl-elevated);
+  color: var(--bl-text-primary);
   font: inherit;
   font-size: 0.8125rem;
 }
@@ -126,7 +126,7 @@
 
   span {
     font-size: 0.72rem;
-    color: #71717a;
+    color: var(--bl-text-tertiary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -151,7 +151,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.65rem 0;
-  border-top: 1px solid #f0f0f2;
+  border-top: 1px solid var(--bl-border-subtle);
   font-size: 0.8125rem;
 
   &:first-child {
@@ -160,7 +160,7 @@
   }
 
   span {
-    color: #71717a;
+    color: var(--bl-text-tertiary);
   }
 
   strong {
@@ -181,8 +181,8 @@
   align-items: start;
   padding: 0.65rem 0.75rem;
   border-radius: 8px;
-  background: #fafafa;
-  border: 1px solid #f0f0f2;
+  background: var(--bl-surface);
+  border: 1px solid var(--bl-border-subtle);
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -213,8 +213,8 @@
   gap: 0.5rem;
   padding: 0.5rem 0.6rem;
   border-radius: 8px;
-  background: #fafafa;
-  border: 1px solid #f0f0f2;
+  background: var(--bl-surface);
+  border: 1px solid var(--bl-border-subtle);
   font-size: 0.8125rem;
 }
 
@@ -232,7 +232,7 @@
 }
 
 .muted {
-  color: #71717a;
+  color: var(--bl-text-tertiary);
   font-size: 0.75rem;
 }
 

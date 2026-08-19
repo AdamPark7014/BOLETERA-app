@@ -30,7 +30,7 @@ export type CrmWorkspaceParams = {
  * métricas, waitlist, partners, audit y señales AI opcionales.
  *
  * Límites documentados en la UI:
- * - useOrders no envía filtros/paginación al backend en este cliente.
+ * - useOrders ya envía filtros y paginación al backend (antes no lo hacía).
  * - RFM/LTV/churn locales son heurísticos sobre la muestra recibida.
  * - AI segmentation/recommendations pueden ser insuficientes o fallar.
  */

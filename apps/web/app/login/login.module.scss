@@ -142,7 +142,7 @@
   gap: var(--space-3xs);
   padding: var(--space-3xs);
   margin-bottom: var(--space-lg);
-  background: #f5f5f5;
+  background: var(--bl-surface-sunken);
   border-radius: 10px;
 }
 
@@ -305,7 +305,7 @@
   cursor: pointer;
 
   &:hover {
-    background: #f5f5f5;
+    background: var(--bl-surface-sunken);
     color: var(--text-primary);
   }
 }

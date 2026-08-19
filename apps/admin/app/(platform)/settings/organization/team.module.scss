@@ -55,7 +55,7 @@ $danger: #b91c1c;
     padding: 0.5rem 0.65rem;
     font-size: 0.8125rem;
     color: $ink;
-    background: #fff;
+    background: var(--bl-elevated);
     border: 1px solid $border;
     border-radius: 8px;
   }
@@ -97,7 +97,7 @@ $danger: #b91c1c;
 }
 
 .tabOn {
-  color: #fafafa;
+  color: var(--bl-text-inverse);
   background: $ink;
   border-color: $ink;
 }
@@ -125,7 +125,7 @@ $danger: #b91c1c;
 
 .expired {
   color: $muted;
-  background: #fafafa;
+  background: var(--bl-surface);
   border-color: $border;
 }
 

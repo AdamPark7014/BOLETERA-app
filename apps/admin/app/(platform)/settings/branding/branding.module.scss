@@ -1,10 +1,10 @@
 .page {
-  --brand-ink: #18181b;
-  --brand-muted: #71717a;
-  --brand-border: #e4e4e7;
-  --brand-border-strong: #d4d4d8;
-  --brand-surface: #ffffff;
-  --brand-sunken: #fafafa;
+  --brand-ink: var(--bl-text-primary);
+  --brand-muted: var(--bl-text-tertiary);
+  --brand-border: var(--bl-border);
+  --brand-border-strong: var(--bl-border-strong);
+  --brand-surface: var(--bl-elevated);
+  --brand-sunken: var(--bl-surface);
   --brand-radius: 12px;
   --brand-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
@@ -538,7 +538,7 @@
 .ticketShell {
   display: grid;
   grid-template-columns: 0.45rem 1fr;
-  background: #fff;
+  background: var(--bl-elevated);
 }
 
 .ticketAccent {
@@ -618,7 +618,7 @@
   height: 2.75rem;
   border-radius: 0.35rem;
   background:
-    linear-gradient(#18181b 0 0) 0 0 / 35% 35%,
+    linear-gradient(var(--bl-gray-900) 0 0) 0 0 / 35% 35%,
     linear-gradient(#18181b 0 0) 100% 0 / 35% 35%,
     linear-gradient(#18181b 0 0) 0 100% / 35% 35%,
     linear-gradient(#18181b 0 0) 100% 100% / 25% 25%,
@@ -628,7 +628,7 @@
 }
 
 .emailShell {
-  background: #fff;
+  background: var(--bl-elevated);
 }
 
 .emailBar {
@@ -663,7 +663,7 @@
 
 .emailBody p {
   margin: 0;
-  color: #52525b;
+  color: var(--bl-text-secondary);
   font-size: 0.82rem;
   line-height: 1.45;
 }
@@ -686,7 +686,7 @@
 .confirmList {
   margin: 0;
   padding-left: 1.1rem;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
   font-size: 0.88rem;
   line-height: 1.55;
 
@@ -697,7 +697,7 @@
 
 .confirmCopy {
   margin: 0;
-  color: #52525b;
+  color: var(--bl-text-secondary);
   font-size: 0.88rem;
   line-height: 1.45;
 }

@@ -23,15 +23,15 @@
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.8125rem;
-  color: var(--color-fg-muted, #52525b);
+  color: var(--color-fg-muted, var(--bl-text-secondary));
 }
 
 .field input,
 .field select {
   font: inherit;
-  color: var(--color-fg, #18181b);
-  background: var(--color-bg, #fff);
-  border: 1px solid var(--color-border, #e4e4e7);
+  color: var(--color-fg, var(--bl-text-primary));
+  background: var(--color-bg, var(--bl-elevated));
+  border: 1px solid var(--color-border, var(--bl-border));
   border-radius: var(--radius-md, 8px);
   padding: 0.55rem 0.7rem;
   min-width: 7rem;
@@ -46,7 +46,7 @@
 .hint {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-fg-muted, #71717a);
+  color: var(--color-fg-muted, var(--bl-text-tertiary));
   line-height: 1.5;
 }
 
@@ -64,7 +64,7 @@
 .table td {
   text-align: left;
   padding: 0.7rem 0.65rem;
-  border-bottom: 1px solid var(--color-border, #e4e4e7);
+  border-bottom: 1px solid var(--color-border, var(--bl-border));
   vertical-align: middle;
 }
 
@@ -72,7 +72,7 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-fg-muted, #71717a);
+  color: var(--color-fg-muted, var(--bl-text-tertiary));
   font-weight: 600;
 }
 

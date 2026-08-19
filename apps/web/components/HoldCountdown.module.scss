@@ -8,8 +8,8 @@
   gap: 0.15rem 1rem;
   margin-bottom: 1.25rem;
   padding: 0.85rem 1rem;
-  background: #fff;
-  border: 1px solid #d4d4d8;
+  background: var(--bl-elevated);
+  border: 1px solid var(--bl-border-strong);
   border-radius: 10px;
 }
 
@@ -20,7 +20,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   /* 4.6:1 sobre #fff — #71717a se quedaba en 4.2:1 (WCAG 2.2 AA) */
-  color: #52525b;
+  color: var(--bl-text-secondary);
   align-self: end;
 }
 
@@ -30,14 +30,14 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  color: #18181b;
+  color: var(--bl-text-primary);
   line-height: 1;
 }
 
 .hint {
   grid-area: hint;
   font-size: 0.8rem;
-  color: #52525b;
+  color: var(--bl-text-secondary);
 }
 
 .renew {
@@ -47,11 +47,11 @@
   padding: 0.45rem 0.8rem;
   border: 1px solid #a1a1aa;
   border-radius: 6px;
-  background: #fff;
+  background: var(--bl-elevated);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #18181b;
+  color: var(--bl-text-primary);
   cursor: pointer;
 
   &:hover:not(:disabled) {

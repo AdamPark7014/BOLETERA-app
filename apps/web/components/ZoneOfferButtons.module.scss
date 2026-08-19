@@ -19,7 +19,7 @@ $accent: #e11d48;
   padding: 0.85rem 0.9rem;
   margin: 0.35rem 0 0;
   border: 1px solid $line;
-  background: #fff;
+  background: var(--bl-elevated);
   cursor: pointer;
   font: inherit;
   text-align: left;
@@ -46,7 +46,7 @@ $accent: #e11d48;
   }
 
   &:hover {
-    border-color: #d4d4d4;
+    border-color: var(--bl-border-strong);
   }
 }
 

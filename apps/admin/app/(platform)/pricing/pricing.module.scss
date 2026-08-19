@@ -22,16 +22,16 @@
   label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #52525b;
+    color: var(--bl-text-secondary);
   }
 
   select {
     height: 2.25rem;
     padding: 0 0.75rem;
-    border: 1px solid #e4e4e7;
+    border: 1px solid var(--bl-border);
     border-radius: 0.5rem;
-    background: #fff;
-    color: #18181b;
+    background: var(--bl-elevated);
+    color: var(--bl-text-primary);
     font-size: 0.875rem;
   }
 }
@@ -57,7 +57,7 @@
   border: 1px solid color-mix(in srgb, #2563eb 35%, #e4e4e7);
   background: color-mix(in srgb, #2563eb 8%, #fff);
   font-size: 0.8125rem;
-  color: #52525b;
+  color: var(--bl-text-secondary);
 }
 
 .kpiGrid {
@@ -86,8 +86,8 @@
   gap: 0.85rem;
   min-width: 0;
   padding: 1rem 1.1rem;
-  background: #fff;
-  border: 1px solid #e4e4e7;
+  background: var(--bl-elevated);
+  border: 1px solid var(--bl-border);
   border-radius: 12px;
 }
 
@@ -103,20 +103,20 @@
     font-size: 0.9375rem;
     font-weight: 600;
     letter-spacing: -0.01em;
-    color: #18181b;
+    color: var(--bl-text-primary);
   }
 }
 
 .muted {
   margin: 0.15rem 0 0;
-  color: #71717a;
+  color: var(--bl-text-tertiary);
   font-size: 0.75rem;
   line-height: 1.4;
 }
 
 .summaryLine {
   margin: 0;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
   font-size: 0.8125rem;
   line-height: 1.45;
 }
@@ -140,7 +140,7 @@
 
 .pagerMeta {
   margin: 0;
-  color: #71717a;
+  color: var(--bl-text-tertiary);
   font-size: 0.75rem;
 }
 
@@ -154,10 +154,10 @@
 .sizeSelect {
   height: 2rem;
   padding: 0 0.5rem;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--bl-border);
   border-radius: 0.5rem;
-  background: #fff;
-  color: #18181b;
+  background: var(--bl-elevated);
+  color: var(--bl-text-primary);
   font-size: 0.8125rem;
 }
 
@@ -201,26 +201,26 @@
   padding: 0.75rem 0.85rem;
   border: 1px solid #f4f4f5;
   border-radius: 0.75rem;
-  background: #fafafa;
+  background: var(--bl-surface);
 }
 
 .recTitle {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #18181b;
+  color: var(--bl-text-primary);
 }
 
 .recBody {
   margin: 0;
-  color: #52525b;
+  color: var(--bl-text-secondary);
   font-size: 0.8125rem;
   line-height: 1.45;
 }
 
 .recAction {
   margin: 0;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
   font-size: 0.75rem;
   font-weight: 500;
 }
@@ -256,11 +256,11 @@
 
   strong {
     font-size: 0.8125rem;
-    color: #18181b;
+    color: var(--bl-text-primary);
   }
 
   span {
-    color: #71717a;
+    color: var(--bl-text-tertiary);
     font-size: 0.75rem;
     line-height: 1.4;
   }
@@ -270,7 +270,7 @@
   font-variant-numeric: tabular-nums;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #18181b;
+  color: var(--bl-text-primary);
   white-space: nowrap;
 }
 
@@ -287,11 +287,11 @@
   padding: 0.75rem 0.85rem;
   border: 1px solid #f4f4f5;
   border-radius: 0.75rem;
-  background: #fafafa;
+  background: var(--bl-surface);
 
   dt {
     margin: 0;
-    color: #71717a;
+    color: var(--bl-text-tertiary);
     font-size: 0.75rem;
   }
 
@@ -299,7 +299,7 @@
     margin: 0;
     font-size: 0.9375rem;
     font-weight: 600;
-    color: #18181b;
+    color: var(--bl-text-primary);
     font-variant-numeric: tabular-nums;
   }
 }
@@ -307,7 +307,7 @@
 .amount {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: #18181b;
+  color: var(--bl-text-primary);
 }
 
 .deltaUp {
@@ -323,7 +323,7 @@
 }
 
 .deltaHold {
-  color: #71717a;
+  color: var(--bl-text-tertiary);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
@@ -331,7 +331,7 @@
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.75rem;
-  color: #52525b;
+  color: var(--bl-text-secondary);
 }
 
 .hubLink {
@@ -339,15 +339,15 @@
   align-items: center;
   height: 2rem;
   padding: 0 0.75rem;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--bl-border);
   border-radius: 0.5rem;
-  color: #18181b;
+  color: var(--bl-text-primary);
   font-size: 0.8125rem;
   font-weight: 500;
   text-decoration: none;
 
   &:hover {
-    background: #fafafa;
+    background: var(--bl-surface);
   }
 }
 
@@ -369,13 +369,13 @@
 
   dt {
     margin: 0;
-    color: #71717a;
+    color: var(--bl-text-tertiary);
     font-size: 0.75rem;
   }
 
   dd {
     margin: 0;
-    color: #18181b;
+    color: var(--bl-text-primary);
     font-size: 0.875rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
@@ -390,16 +390,16 @@
   label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #52525b;
+    color: var(--bl-text-secondary);
   }
 
   textarea {
     min-height: 4.5rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid #e4e4e7;
+    border: 1px solid var(--bl-border);
     border-radius: 0.5rem;
-    background: #fff;
-    color: #18181b;
+    background: var(--bl-elevated);
+    color: var(--bl-text-primary);
     font: inherit;
     resize: vertical;
   }

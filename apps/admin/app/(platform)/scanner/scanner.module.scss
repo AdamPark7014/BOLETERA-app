@@ -14,7 +14,7 @@ $border: #d4d4d4;
     min-height: 48px; // puerta: objetivo grande, no los 24px del mínimo WCAG
     padding: 0.75rem 1.5rem;
     background: $ink;
-    color: #fff;
+    color: var(--bl-text-inverse);
     border: none;
     border-radius: 8px;
     font-size: 1rem;
@@ -67,7 +67,7 @@ $border: #d4d4d4;
 }
 
 .secondary {
-  background: #fff !important;
+  background: var(--bl-elevated) !important;
   color: $ink !important;
   border: 1px solid $border !important;
 }
@@ -125,7 +125,7 @@ $border: #d4d4d4;
   max-height: 240px;
   margin-top: 0.75rem;
   border-radius: 8px;
-  background: #000;
+  background: var(--bl-gray-900);
 }
 
 // --- Veredictos -------------------------------------------------------------

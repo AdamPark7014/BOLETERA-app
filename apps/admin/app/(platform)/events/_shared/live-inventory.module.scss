@@ -21,7 +21,7 @@
   margin: 0;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 }
 
 .dot {
@@ -44,23 +44,23 @@
 }
 
 .muted {
-  color: #52525b;
+  color: var(--bl-text-secondary);
   font-weight: 400;
 }
 
 .refreshBtn {
   min-height: 2.25rem;
   padding: 0.4rem 0.85rem;
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--bl-border-strong);
   border-radius: 8px;
-  background: #fff;
-  color: #18181b;
+  background: var(--bl-elevated);
+  color: var(--bl-text-primary);
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
 
   &:hover {
-    background: #f4f4f5;
+    background: var(--bl-surface-sunken);
   }
   &:focus-visible {
     outline: 3px solid #1d4ed8;
@@ -91,28 +91,28 @@
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.9rem 1rem;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--bl-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--bl-elevated);
 
   span {
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #52525b;
+    color: var(--bl-text-secondary);
   }
 
   strong {
     font-size: 1.6rem;
     line-height: 1.15;
     font-variant-numeric: tabular-nums;
-    color: #18181b;
+    color: var(--bl-text-primary);
   }
 
   small {
     font-size: 0.75rem;
-    color: #52525b;
+    color: var(--bl-text-secondary);
   }
 }
 
@@ -156,7 +156,7 @@
   padding: 0.1rem 0.45rem;
   border-radius: 4px;
   background: #a16207;
-  color: #fff;
+  color: var(--bl-text-inverse);
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -166,7 +166,7 @@
 .sectionTitle {
   margin: 0 0 0.6rem;
   font-size: 0.9375rem;
-  color: #18181b;
+  color: var(--bl-text-primary);
 }
 
 .table {
@@ -178,7 +178,7 @@
   td {
     padding: 0.5rem 0.65rem;
     text-align: left;
-    border-bottom: 1px solid #e4e4e7;
+    border-bottom: 1px solid var(--bl-border);
     font-variant-numeric: tabular-nums;
   }
 
@@ -186,12 +186,12 @@
     font-size: 0.75rem;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: #52525b;
+    color: var(--bl-text-secondary);
   }
 
   tbody th {
     font-weight: 600;
-    color: #18181b;
+    color: var(--bl-text-primary);
   }
 }
 
@@ -201,7 +201,7 @@
   height: 0.5rem;
   margin-right: 0.5rem;
   border-radius: 999px;
-  background: #e4e4e7;
+  background: var(--bl-surface-active);
   overflow: hidden;
   vertical-align: middle;
 }
@@ -209,17 +209,17 @@
 .meterFill {
   display: block;
   height: 100%;
-  background: #18181b;
+  background: var(--bl-gray-900);
 }
 
 .meterLabel {
   font-size: 0.8125rem;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 }
 
 .breakdown {
   font-size: 0.875rem;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 
   summary {
     cursor: pointer;
@@ -266,17 +266,17 @@
   gap: 0.3rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 
   input,
   select,
   textarea {
     padding: 0.5rem 0.65rem;
-    border: 1px solid #d4d4d4;
+    border: 1px solid var(--bl-border-strong);
     border-radius: 8px;
     font: inherit;
     font-weight: 400;
-    color: #18181b;
+    color: var(--bl-text-primary);
     min-height: 2.5rem;
 
     &:focus-visible {
@@ -293,7 +293,7 @@
 .fieldHint {
   font-size: 0.75rem;
   font-weight: 400;
-  color: #52525b;
+  color: var(--bl-text-secondary);
 }
 
 .fieldError {
@@ -317,8 +317,8 @@
   padding: 0.5rem 1.1rem;
   border: 1px solid #18181b;
   border-radius: 8px;
-  background: #18181b;
-  color: #fff;
+  background: var(--bl-gray-900);
+  color: var(--bl-text-inverse);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -348,11 +348,11 @@
 
 .warnNote {
   padding: 0.7rem 0.9rem;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--bl-border);
   border-left: 5px solid #a16207;
   border-radius: 8px;
-  background: #fafafa;
-  color: #3f3f46;
+  background: var(--bl-surface);
+  color: var(--bl-text-secondary);
   font-size: 0.8125rem;
   line-height: 1.6;
 }

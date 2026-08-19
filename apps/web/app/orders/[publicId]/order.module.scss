@@ -1,6 +1,6 @@
 .shell {
   min-height: 100vh;
-  color: #0a0a0a;
+  color: var(--bl-text-primary);
   background:
     radial-gradient(100% 60% at 50% -10%, rgba(225, 29, 72, 0.07), transparent 55%),
     linear-gradient(180deg, #fafafa 0%, #f4f4f5 50%, #fafafa 100%);
@@ -28,11 +28,11 @@
 }
 
 .stepActive {
-  color: #be123c;
+  color: var(--bl-accent-text);
 }
 
 .stepTodo {
-  color: #737373;
+  color: var(--bl-text-tertiary);
 }
 
 .hero {
@@ -68,13 +68,13 @@
 
 .sub {
   margin: 0;
-  color: #737373;
+  color: var(--bl-text-tertiary);
   font-size: 0.9rem;
 
   code {
     font-family: ui-monospace, monospace;
     font-size: 0.85rem;
-    color: #404040;
+    color: var(--bl-text-secondary);
   }
 }
 
@@ -84,8 +84,8 @@
   gap: 1rem;
   padding: 1.1rem 1.15rem;
   margin-bottom: 1rem;
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  background: var(--bl-elevated);
+  border: 1px solid var(--bl-border);
 
   h2 {
     margin: 0 0 0.35rem;
@@ -95,7 +95,7 @@
   p {
     margin: 0.2rem 0 0;
     font-size: 0.88rem;
-    color: #525252;
+    color: var(--bl-text-secondary);
   }
 
   @media (max-width: 560px) {
@@ -109,7 +109,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #737373 !important;
+  color: var(--bl-text-tertiary) !important;
 }
 
 .eventSide {
@@ -125,7 +125,7 @@
 
     span {
       font-size: 0.7rem;
-      color: #737373;
+      color: var(--bl-text-tertiary);
       font-weight: 600;
     }
   }
@@ -133,8 +133,8 @@
 
 .section {
   text-align: left;
-  border: 1px solid #e5e5e5;
-  background: #fff;
+  border: 1px solid var(--bl-border);
+  background: var(--bl-elevated);
   padding: 1.05rem 1.15rem;
   margin-bottom: 1rem;
 
@@ -160,7 +160,7 @@
   font: inherit;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #be123c;
+  color: var(--bl-accent-text);
   text-decoration: none;
   cursor: pointer;
 
@@ -169,7 +169,7 @@
   }
 
   &:disabled {
-    color: #737373;
+    color: var(--bl-text-tertiary);
     cursor: not-allowed;
   }
 
@@ -191,23 +191,23 @@
     padding: 0.55rem 0;
     border-top: 1px solid #f5f5f5;
     font-size: 0.875rem;
-    color: #404040;
+    color: var(--bl-text-secondary);
 
     code {
       font-family: ui-monospace, monospace;
-      color: #0a0a0a;
+      color: var(--bl-text-primary);
       font-weight: 600;
     }
   }
 }
 
 .muted {
-  color: #737373 !important;
+  color: var(--bl-text-tertiary) !important;
   border-top: none !important;
 }
 
 .textLink {
-  color: #e11d48;
+  color: var(--bl-accent-text);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
@@ -230,23 +230,23 @@
 }
 
 .link {
-  background: #e11d48;
-  color: #fff;
+  background: var(--bl-accent);
+  color: var(--bl-text-inverse);
 
   &:hover {
-    background: #be123c;
+    background: var(--bl-accent-hover);
   }
 }
 
 .secondary {
-  background: #0a0a0a;
-  color: #fff;
+  background: var(--bl-gray-900);
+  color: var(--bl-text-inverse);
 }
 
 .ghost {
-  background: #fff;
-  color: #0a0a0a;
-  border: 1px solid #e5e5e5;
+  background: var(--bl-elevated);
+  color: var(--bl-text-primary);
+  border: 1px solid var(--bl-border);
 }
 
 .actions {
@@ -270,9 +270,9 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 0.3rem 0.5rem;
-    border: 1px solid #e5e5e5;
-    background: #fff;
-    color: #525252;
+    border: 1px solid var(--bl-border);
+    background: var(--bl-elevated);
+    color: var(--bl-text-secondary);
   }
 }
 
@@ -280,11 +280,11 @@
   margin: 0.75rem 0 1rem;
   line-height: 1.55;
   font-size: 0.9rem;
-  color: #404040;
+  color: var(--bl-text-secondary);
 
   code {
     font-family: ui-monospace, monospace;
-    background: #f5f5f5;
+    background: var(--bl-surface-sunken);
     padding: 0.15rem 0.4rem;
   }
 }
@@ -309,9 +309,9 @@
 
   code {
     font-family: ui-monospace, monospace;
-    background: #f5f5f5;
+    background: var(--bl-surface-sunken);
     padding: 0.1rem 0.35rem;
-    color: #262626;
+    color: var(--bl-text-secondary);
   }
 
   .actions {
@@ -363,11 +363,11 @@
     gap: 1rem;
     padding: 0.4rem 0;
     font-size: 0.9rem;
-    color: #404040;
+    color: var(--bl-text-secondary);
 
     strong {
       font-variant-numeric: tabular-nums;
-      color: #171717;
+      color: var(--bl-text-primary);
     }
   }
 }
@@ -375,10 +375,10 @@
 .breakdownTotal {
   margin-top: 0.35rem;
   padding-top: 0.6rem !important;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--bl-border);
   font-weight: 700;
   font-size: 1rem !important;
-  color: #0a0a0a !important;
+  color: var(--bl-text-primary) !important;
 }
 
 .totalNote {
@@ -396,7 +396,7 @@
   padding-left: 1.15rem;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #404040;
+  color: var(--bl-text-secondary);
 
   li {
     margin-bottom: 0.3rem;
@@ -411,8 +411,8 @@
 
 .copyField {
   padding: 0.75rem 0.85rem;
-  border: 1px solid #d4d4d4;
-  background: #fafafa;
+  border: 1px solid var(--bl-border-strong);
+  background: var(--bl-surface);
 }
 
 .copyLabel {
@@ -422,7 +422,7 @@
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #525252;
+  color: var(--bl-text-secondary);
 }
 
 .copyRow {
@@ -437,14 +437,14 @@
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #0a0a0a;
+  color: var(--bl-text-primary);
   word-break: break-all;
 }
 
 .amount {
   font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
-  color: #0a0a0a;
+  color: var(--bl-text-primary);
 }
 
 .copyBtn {
@@ -454,15 +454,15 @@
   min-height: 2.75rem;
   padding: 0.5rem 0.8rem;
   border: 1px solid #525252;
-  background: #fff;
+  background: var(--bl-elevated);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #171717;
+  color: var(--bl-text-primary);
   cursor: pointer;
 
   &:hover {
-    background: #f5f5f5;
+    background: var(--bl-surface-sunken);
   }
 
   &:focus-visible {
@@ -483,7 +483,7 @@
   margin: 1rem 0 0;
   font-size: 0.85rem;
   line-height: 1.55;
-  color: #404040;
+  color: var(--bl-text-secondary);
 }
 
 /* --- Esqueleto de carga: la página no se bloquea con un spinner --- */
@@ -585,22 +585,22 @@
 
 .refundPanel {
   text-align: left;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--bl-border);
   border-left: 4px solid #525252;
-  background: #fff;
+  background: var(--bl-elevated);
   padding: 1.05rem 1.15rem;
   margin-bottom: 1rem;
 
   h2 {
     font-size: 1.05rem;
     margin: 0 0 0.45rem;
-    color: #0a0a0a;
+    color: var(--bl-text-primary);
   }
 
   h3 {
     font-size: 0.9rem;
     margin: 0 0 0.3rem;
-    color: #0a0a0a;
+    color: var(--bl-text-primary);
   }
 }
 
@@ -625,21 +625,21 @@
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #404040;
+  color: var(--bl-text-secondary);
 }
 
 .refundDetail {
   margin: 0 0 0.85rem;
   font-size: 0.88rem;
   line-height: 1.55;
-  color: #262626;
+  color: var(--bl-text-secondary);
 }
 
 .refundRows {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--bl-border);
 
   li {
     display: flex;
@@ -648,11 +648,11 @@
     padding: 0.45rem 0;
     border-bottom: 1px solid #ededed;
     font-size: 0.85rem;
-    color: #404040;
+    color: var(--bl-text-secondary);
   }
 
   strong {
-    color: #0a0a0a;
+    color: var(--bl-text-primary);
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
@@ -660,7 +660,7 @@
 
 .refundRowStrong {
   font-weight: 700;
-  color: #0a0a0a !important;
+  color: var(--bl-text-primary) !important;
 
   strong {
     font-size: 0.98rem;
@@ -671,7 +671,7 @@
   margin: 0.75rem 0 0;
   font-size: 0.8rem;
   line-height: 1.5;
-  color: #525252;
+  color: var(--bl-text-secondary);
 }
 
 .compensation {
@@ -766,7 +766,7 @@
 
 .timelineFuture {
   .timelineDot {
-    background: #fff;
+    background: var(--bl-elevated);
     border: 2px solid #737373;
   }
 }
@@ -775,23 +775,23 @@
   margin: 0;
   font-size: 0.87rem;
   font-weight: 700;
-  color: #0a0a0a;
+  color: var(--bl-text-primary);
 }
 
 .timelineTag {
   font-weight: 600;
-  color: #525252;
+  color: var(--bl-text-secondary);
 }
 
 .timelineDate {
   margin: 0.1rem 0 0;
   font-size: 0.8rem;
-  color: #525252;
+  color: var(--bl-text-secondary);
 }
 
 .timelineDetail {
   margin: 0.2rem 0 0;
   font-size: 0.8rem;
   line-height: 1.45;
-  color: #525252;
+  color: var(--bl-text-secondary);
 }

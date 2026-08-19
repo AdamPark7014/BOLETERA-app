@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
-  color: #18181b;
+  color: var(--bl-text-primary);
   padding-bottom: 2rem;
 }
 
@@ -30,9 +30,9 @@
   gap: 0.65rem;
   padding: 1.05rem 1.1rem;
   text-align: left;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--bl-border);
   border-radius: 14px;
-  background: #fff;
+  background: var(--bl-elevated);
   cursor: pointer;
   font: inherit;
   color: inherit;
@@ -40,7 +40,7 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
-    border-color: #d4d4d8;
+    border-color: var(--bl-border-strong);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   }
 
@@ -51,7 +51,7 @@
 
   &[data-selected='true'] {
     border-color: #a1a1aa;
-    background: #fafafa;
+    background: var(--bl-surface);
   }
 }
 
@@ -70,7 +70,7 @@
 
 .cardSummary {
   margin: 0;
-  color: #52525b;
+  color: var(--bl-text-secondary);
   font-size: 0.8125rem;
   line-height: 1.45;
   flex: 1;
@@ -86,8 +86,8 @@
 .sideCard {
   min-width: 0;
   padding: 1.1rem 1.2rem 1.25rem;
-  background: #fff;
-  border: 1px solid #e4e4e7;
+  background: var(--bl-elevated);
+  border: 1px solid var(--bl-border);
   border-radius: 14px;
 }
 
@@ -101,7 +101,7 @@
 
   p {
     margin: 0.25rem 0 0;
-    color: #71717a;
+    color: var(--bl-text-tertiary);
     font-size: 0.8rem;
   }
 }
@@ -122,7 +122,7 @@
   align-items: center;
   padding: 0.55rem 0.65rem;
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--bl-surface);
   border: 1px solid transparent;
   width: 100%;
   text-align: left;
@@ -131,8 +131,8 @@
   cursor: pointer;
 
   &:hover {
-    border-color: #d4d4d8;
-    background: #fff;
+    border-color: var(--bl-border-strong);
+    background: var(--bl-elevated);
   }
 
   strong {
@@ -142,7 +142,7 @@
 
   span {
     font-size: 0.72rem;
-    color: #71717a;
+    color: var(--bl-text-tertiary);
   }
 }
 
@@ -170,7 +170,7 @@
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 }
 
 .sectionTitle {
@@ -186,7 +186,7 @@
   gap: 0.45rem;
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 }
 
 .credentialList {
@@ -203,8 +203,8 @@
     gap: 0.35rem;
     padding: 0.65rem 0.7rem;
     border-radius: 8px;
-    background: #fafafa;
-    border: 1px solid #f0f0f2;
+    background: var(--bl-surface);
+    border: 1px solid var(--bl-border-subtle);
   }
 
   strong {
@@ -222,7 +222,7 @@
 
   code {
     font-size: 0.75rem;
-    color: #52525b;
+    color: var(--bl-text-secondary);
   }
 }
 
@@ -233,8 +233,8 @@
   flex-wrap: wrap;
   padding: 0.55rem 0.65rem;
   border-radius: 8px;
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
+  background: var(--bl-surface);
+  border: 1px solid var(--bl-border);
 
   code {
     flex: 1;
@@ -259,7 +259,7 @@
 
   dt {
     margin: 0;
-    color: #71717a;
+    color: var(--bl-text-tertiary);
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -278,13 +278,13 @@
 }
 
 .muted {
-  color: #71717a;
+  color: var(--bl-text-tertiary);
   font-size: 0.75rem;
   line-height: 1.45;
 }
 
 .inlineLink {
-  color: #18181b;
+  color: var(--bl-text-primary);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -301,8 +301,8 @@
   margin: 0;
   padding: 0.75rem 0.9rem;
   border-radius: 10px;
-  background: #f4f4f5;
-  color: #52525b;
+  background: var(--bl-surface-sunken);
+  color: var(--bl-text-secondary);
   font-size: 0.8rem;
   line-height: 1.45;
 }

@@ -9,7 +9,7 @@ export function QueryLoading({
   label?: string;
 }) {
   return (
-    <div role="status" aria-live="polite" style={{ padding: '2rem', color: '#737373' }}>
+    <div role="status" aria-live="polite" style={{ padding: '2rem', color: 'var(--bl-text-tertiary)' }}>
       {label}
     </div>
   );
@@ -49,7 +49,7 @@ export function QueryEmpty({
   action?: ReactNode;
 }) {
   return (
-    <div style={{ padding: '2rem', textAlign: 'center', color: '#737373' }}>
+    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--bl-text-tertiary)' }}>
       <strong>{title}</strong>
       {description && <p>{description}</p>}
       {action}

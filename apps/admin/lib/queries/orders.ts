@@ -20,11 +20,60 @@ export type OrderRow = {
 
 export type OrderDetail = OrderRow & Record<string, unknown>;
 
+/**
+ * Sobre de GET /admin/orders. El endpoint NO devuelve un array.
+ *
+ * Importa el detalle: el array vive en `.data`, y react-query envuelve a su vez
+ * el resultado en otro `.data`. La colisión de nombres es justo la trampa que
+ * hacía escribir `query.data ?? []` creyendo tener la lista — se obtenía el
+ * sobre, el `??` no saltaba porque el sobre existe, y el CRM reventaba con
+ * «orders is not iterable» al recorrerlo.
+ */
+export type OrdersEnvelope = {
+  data: OrderRow[];
+  nextCursor: string | null;
+  hasMore: boolean;
+  limit: number;
+  filters?: Record<string, unknown>;
+  warnings?: string[];
+};
+
+/**
+ * Lista de órdenes.
+ *
+ * Los filtros SE ENVÍAN al backend. Antes solo entraban en la clave de caché:
+ * cada juego de filtros abría una entrada distinta que guardaba exactamente la
+ * misma respuesta sin filtrar, así que `useOrders({ limit: 500 })` devolvía la
+ * página por defecto mientras aparentaba estar acotado.
+ *
+ * Devuelve el array ya desenvuelto, que es lo que espera todo el que la usa.
+ * Para paginar, usa `useOrdersPage`.
+ */
 export function useOrders(filters: Record<string, unknown> = {}) {
   return useQuery({
     queryKey: queryKeys.orders.list(filters),
-    queryFn: ({ signal }) => http<OrderRow[]>('/admin/orders', { signal }),
+    queryFn: ({ signal }) => http<OrdersEnvelope>(ordersPath(filters), { signal }),
+    select: (envelope) => envelope.data ?? [],
   });
+}
+
+/** Igual que `useOrders`, pero conserva el sobre (cursor, hasMore, avisos). */
+export function useOrdersPage(filters: Record<string, unknown> = {}) {
+  return useQuery({
+    queryKey: queryKeys.orders.list(filters),
+    queryFn: ({ signal }) => http<OrdersEnvelope>(ordersPath(filters), { signal }),
+  });
+}
+
+/** Serializa los filtros a query string, omitiendo vacíos y nulos. */
+function ordersPath(filters: Record<string, unknown>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value === undefined || value === null || value === '') continue;
+    params.set(key, String(value));
+  }
+  const qs = params.toString();
+  return qs ? `/admin/orders?${qs}` : '/admin/orders';
 }
 
 export function useOrder(orderId: string) {

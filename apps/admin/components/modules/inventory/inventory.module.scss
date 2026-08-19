@@ -1,9 +1,9 @@
 .page {
-  --ink: #18181b;
-  --muted: #71717a;
-  --border: #e4e4e7;
-  --surface: #fff;
-  --sunken: #fafafa;
+  --ink: var(--bl-text-primary);
+  --muted: var(--bl-text-tertiary);
+  --border: var(--bl-border);
+  --surface: var(--bl-elevated);
+  --sunken: var(--bl-surface);
   --radius: 12px;
 
   display: flex;

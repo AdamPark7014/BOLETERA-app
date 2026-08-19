@@ -14,12 +14,12 @@
   padding: 0.7rem 1.1rem;
   font-size: 0.875rem;
   font-weight: 700;
-  background: #e11d48;
-  color: #fff;
+  background: var(--bl-accent);
+  color: var(--bl-text-inverse);
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: #be123c;
+    background: var(--bl-accent-hover);
   }
 
   &:disabled {
@@ -32,5 +32,5 @@
   margin: 0;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #be123c;
+  color: var(--bl-accent-text);
 }

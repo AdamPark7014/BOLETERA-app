@@ -505,7 +505,7 @@
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #171717;
+  color: var(--bl-text-primary);
 }
 
 .refundState {
@@ -527,7 +527,7 @@
   margin: 0.2rem 0 0;
   font-size: 0.83rem;
   line-height: 1.45;
-  color: #404040;
+  color: var(--bl-text-secondary);
 }
 
 .refundSide {
@@ -539,7 +539,7 @@
 
   strong {
     font-size: 1rem;
-    color: #171717;
+    color: var(--bl-text-primary);
     font-variant-numeric: tabular-nums;
   }
 }

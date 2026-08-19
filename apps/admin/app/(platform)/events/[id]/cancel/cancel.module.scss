@@ -17,8 +17,8 @@
     padding: 0.65rem 0.75rem;
     font: inherit;
     color: inherit;
-    background: var(--color-surface, #fff);
-    border: 1px solid var(--color-border, #d4d4d8);
+    background: var(--color-surface, var(--bl-elevated));
+    border: 1px solid var(--color-border, var(--bl-border-strong));
     border-radius: var(--radius-md, 8px);
     resize: vertical;
 
@@ -30,7 +30,7 @@
 }
 
 .hint {
-  color: var(--color-text-muted, #52525b);
+  color: var(--color-text-muted, var(--bl-text-secondary));
   font-size: var(--text-xs, 0.8125rem);
 }
 
@@ -69,8 +69,8 @@
   padding: 1rem;
   text-align: left;
   cursor: pointer;
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #d4d4d8);
+  background: var(--color-surface, var(--bl-elevated));
+  border: 1px solid var(--color-border, var(--bl-border-strong));
   border-radius: var(--radius-lg, 12px);
   transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
 
@@ -79,7 +79,7 @@
   }
 
   span {
-    color: var(--color-text-muted, #52525b);
+    color: var(--color-text-muted, var(--bl-text-secondary));
     font-size: var(--text-sm, 0.875rem);
   }
 
@@ -117,7 +117,7 @@
 
 .placeholder {
   margin: 0;
-  color: var(--color-text-muted, #52525b);
+  color: var(--color-text-muted, var(--bl-text-secondary));
   font-size: var(--text-sm, 0.875rem);
 }
 

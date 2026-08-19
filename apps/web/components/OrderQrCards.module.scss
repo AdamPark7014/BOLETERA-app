@@ -34,7 +34,7 @@
 
 .card {
   padding: 1rem;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--bl-border);
   border-radius: 8px;
   text-align: center;
 
@@ -45,6 +45,6 @@
 
   :global(code) {
     font-size: 0.75rem;
-    color: #525252;
+    color: var(--bl-text-secondary);
   }
 }

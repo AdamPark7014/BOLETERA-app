@@ -215,7 +215,7 @@ $line: rgba(250, 250, 250, 0.14);
   color: $panel; // 19.2:1
 
   &:hover {
-    background: #fff;
+    background: var(--bl-elevated);
   }
 }
 

@@ -37,7 +37,7 @@
   cursor: pointer;
   border: 1px solid rgba(251, 113, 133, 0.5);
   background: transparent;
-  color: #fff;
+  color: var(--bl-text-inverse);
 
   &:hover {
     background: rgba(251, 113, 133, 0.18);
@@ -50,6 +50,6 @@
 }
 
 .retry {
-  background: #e11d48;
-  border-color: #e11d48;
+  background: var(--bl-accent);
+  border-color: var(--bl-accent);
 }

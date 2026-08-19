@@ -1,10 +1,10 @@
 .wrap {
-  --ink: #18181b;
-  --muted: #71717a;
-  --border: #e4e4e7;
-  --border-strong: #d4d4d8;
-  --surface: #ffffff;
-  --sunken: #fafafa;
+  --ink: var(--bl-text-primary);
+  --muted: var(--bl-text-tertiary);
+  --border: var(--bl-border);
+  --border-strong: var(--bl-border-strong);
+  --surface: var(--bl-elevated);
+  --sunken: var(--bl-surface);
   --success: #16a34a;
   --danger: #dc2626;
   --warning: #ca8a04;
@@ -288,7 +288,7 @@
   th,
   td {
     padding: 0.7rem 0.65rem;
-    border-bottom: 1px solid #f0f0f2;
+    border-bottom: 1px solid var(--bl-border-subtle);
     vertical-align: middle;
   }
 
@@ -353,7 +353,7 @@
 .fieldLabel {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
 }
 
 .input {
@@ -447,7 +447,7 @@
 .alertAction {
   margin: 0;
   font-size: 0.8125rem;
-  color: #3f3f46;
+  color: var(--bl-text-secondary);
   line-height: 1.45;
 }
 
@@ -458,7 +458,7 @@
 .skeleton {
   min-height: 6rem;
   border-radius: 0.9rem;
-  background: linear-gradient(90deg, #f4f4f5 25%, #fafafa 45%, #f4f4f5 65%);
+  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, #fafafa 45%, #f4f4f5 65%);
   background-size: 220% 100%;
   animation: pulse 1.4s infinite;
 }
@@ -473,7 +473,7 @@
   height: 3rem;
   width: 100%;
   border-radius: 8px;
-  background: linear-gradient(90deg, #f4f4f5 0%, #e4e4e7 50%, #f4f4f5 100%);
+  background: linear-gradient(90deg, var(--bl-surface-sunken) 0%, #e4e4e7 50%, #f4f4f5 100%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }

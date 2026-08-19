@@ -1,10 +1,10 @@
 .page {
-  --hub-ink: #18181b;
-  --hub-muted: #71717a;
-  --hub-border: #e4e4e7;
-  --hub-border-strong: #d4d4d8;
-  --hub-surface: #ffffff;
-  --hub-sunken: #fafafa;
+  --hub-ink: var(--bl-text-primary);
+  --hub-muted: var(--bl-text-tertiary);
+  --hub-border: var(--bl-border);
+  --hub-border-strong: var(--bl-border-strong);
+  --hub-surface: var(--bl-elevated);
+  --hub-sunken: var(--bl-surface);
   --hub-success: #16a34a;
   --hub-danger: #dc2626;
   --hub-warning: #ca8a04;

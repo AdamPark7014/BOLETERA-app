@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
-  color: var(--color-fg, #18181b);
+  color: var(--color-fg, var(--bl-text-primary));
   padding-bottom: 2rem;
 }
 
@@ -28,8 +28,8 @@
 .card {
   min-width: 0;
   padding: 1.1rem 1.2rem 1.25rem;
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #e4e4e7);
+  background: var(--color-surface, var(--bl-elevated));
+  border: 1px solid var(--color-border, var(--bl-border));
   border-radius: 14px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
@@ -50,7 +50,7 @@
 
   p {
     margin: 0.25rem 0 0;
-    color: var(--color-fg-muted, #71717a);
+    color: var(--color-fg-muted, var(--bl-text-tertiary));
     font-size: 0.8rem;
   }
 }
@@ -66,8 +66,8 @@
   gap: 0.65rem;
   padding: 0.7rem 0.9rem;
   border-radius: 10px;
-  border: 1px solid var(--color-border, #e4e4e7);
-  background: #fafafa;
+  border: 1px solid var(--color-border, var(--bl-border));
+  background: var(--bl-surface);
   font-size: 0.8125rem;
 }
 
@@ -96,7 +96,7 @@
 
   span {
     display: block;
-    color: var(--color-fg-muted, #71717a);
+    color: var(--color-fg-muted, var(--bl-text-tertiary));
     font-size: 0.75rem;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -110,8 +110,8 @@
   width: 2rem;
   height: 2rem;
   border-radius: 999px;
-  background: #f4f4f5;
-  color: #3f3f46;
+  background: var(--bl-surface-sunken);
+  color: var(--bl-text-secondary);
   font-size: 0.7rem;
   font-weight: 700;
   flex-shrink: 0;
@@ -127,9 +127,9 @@
   display: grid;
   gap: 0.55rem;
   padding: 0.95rem 1rem;
-  border: 1px solid var(--color-border, #e4e4e7);
+  border: 1px solid var(--color-border, var(--bl-border));
   border-radius: 12px;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--bl-elevated));
 }
 
 .roleCardHead {
@@ -147,7 +147,7 @@
 
 .roleCardSummary {
   margin: 0.2rem 0 0;
-  color: var(--color-fg-muted, #71717a);
+  color: var(--color-fg-muted, var(--bl-text-tertiary));
   font-size: 0.75rem;
   line-height: 1.4;
 }
@@ -163,7 +163,7 @@
 
 .muted {
   margin: 0;
-  color: var(--color-fg-muted, #71717a);
+  color: var(--color-fg-muted, var(--bl-text-tertiary));
   font-size: 0.8rem;
 }
 
@@ -186,7 +186,7 @@
   display: grid;
   gap: 0.35rem;
   font-size: 0.8rem;
-  color: var(--color-fg-muted, #52525b);
+  color: var(--color-fg-muted, var(--bl-text-secondary));
 
   span {
     font-weight: 600;
@@ -196,12 +196,12 @@
 .roleSelect {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--color-border, #d4d4d8);
+  border: 1px solid var(--color-border, var(--bl-border-strong));
   border-radius: 0.6rem;
   padding: 0.65rem 0.75rem;
   font: inherit;
   color: inherit;
-  background: var(--color-surface, #fff);
+  background: var(--color-surface, var(--bl-elevated));
 }
 
 .modalFooter {
@@ -232,7 +232,7 @@
   gap: 0.75rem;
   padding: 0.55rem 0.65rem;
   border-radius: 10px;
-  background: #fafafa;
+  background: var(--bl-surface);
   border: 1px solid #f4f4f5;
   font-size: 0.8125rem;
 }
@@ -247,7 +247,7 @@
   }
 
   span {
-    color: var(--color-fg-muted, #71717a);
+    color: var(--color-fg-muted, var(--bl-text-tertiary));
     font-size: 0.72rem;
     overflow: hidden;
     text-overflow: ellipsis;

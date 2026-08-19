@@ -14,8 +14,8 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 0.85rem;
-  background: #0a0a0a;
-  color: #fafafa;
+  background: var(--bl-gray-900);
+  color: var(--bl-text-inverse);
   border: 1px solid #222;
 
   h3 {
@@ -29,14 +29,14 @@
   > button {
     padding: 0.5rem 0.75rem;
     border: 1px solid #333;
-    background: #171717;
-    color: #fafafa;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-inverse);
     cursor: pointer;
     font: inherit;
     font-size: 0.8rem;
 
     &:hover:not(:disabled) {
-      border-color: #e11d48;
+      border-color: var(--bl-accent);
     }
   }
 }
@@ -69,7 +69,7 @@
   padding: 0.4rem 0.45rem;
   border: 1px solid #2a2a2a;
   background: #141414;
-  color: #fafafa;
+  color: var(--bl-text-inverse);
   cursor: pointer;
   font: inherit;
   text-align: left;
@@ -99,20 +99,20 @@
 }
 
 .secActive {
-  border-color: #e11d48;
+  border-color: var(--bl-accent);
   background: rgba(225, 29, 72, 0.15);
 }
 
 .iconBtn {
   border: none;
   background: transparent;
-  color: #737373;
+  color: var(--bl-text-tertiary);
   cursor: pointer;
   font-size: 1rem;
   padding: 0.2rem 0.35rem;
 
   &:hover {
-    color: #e11d48;
+    color: var(--bl-accent-text);
   }
 }
 
@@ -124,13 +124,13 @@
   button {
     padding: 0.45rem;
     border: 1px solid #333;
-    background: #171717;
-    color: #fafafa;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-inverse);
     cursor: pointer;
     font-size: 0.75rem;
 
     &:hover:not(:disabled) {
-      border-color: #e11d48;
+      border-color: var(--bl-accent);
     }
 
     &:disabled {
@@ -147,14 +147,14 @@
   button {
     padding: 0.45rem 0.6rem;
     border: 1px solid #333;
-    background: #171717;
-    color: #fafafa;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-inverse);
     cursor: pointer;
     font-size: 0.75rem;
     text-align: left;
 
     &:hover:not(:disabled) {
-      border-color: #e11d48;
+      border-color: var(--bl-accent);
     }
   }
 }
@@ -263,7 +263,7 @@
     padding: 0.35rem 0.4rem;
     border: 1px solid #333;
     background: #141414;
-    color: #fafafa;
+    color: var(--bl-text-inverse);
     font: inherit;
     font-size: 0.8rem;
     text-transform: none;
@@ -341,7 +341,7 @@
   padding: 0.08rem 0.3rem;
   border-radius: 3px;
   background: #b45309;
-  color: #fff;
+  color: var(--bl-text-inverse);
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -375,7 +375,7 @@
   cursor: pointer;
 
   &:hover {
-    color: #fff;
+    color: var(--bl-text-inverse);
   }
 
   &:focus-visible {
@@ -431,7 +431,7 @@
   align-items: center;
   gap: 0.6rem;
   padding: 0.5rem;
-  background: #0a0a0a;
+  background: var(--bl-gray-900);
   border: 1px solid #222;
 }
 
@@ -449,13 +449,13 @@
   button {
     padding: 0.45rem 0.7rem;
     border: 1px solid #333;
-    background: #171717;
-    color: #fafafa;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-inverse);
     font-size: 0.75rem;
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      border-color: #e11d48;
+      border-color: var(--bl-accent);
     }
 
     &:disabled {
@@ -466,9 +466,9 @@
 }
 
 .primary {
-  background: #e11d48 !important;
-  color: #fff !important;
-  border-color: #e11d48 !important;
+  background: var(--bl-accent) !important;
+  color: var(--bl-text-inverse) !important;
+  border-color: var(--bl-accent) !important;
 }
 
 .ai {
@@ -480,15 +480,15 @@
     padding: 0.5rem 0.75rem;
     border: 1px solid #333;
     background: #141414;
-    color: #fafafa;
+    color: var(--bl-text-inverse);
     font-size: 0.875rem;
   }
 
   button {
     padding: 0.5rem 0.85rem;
-    border: 1px solid #e11d48;
-    background: #e11d48;
-    color: #fff;
+    border: 1px solid var(--bl-accent);
+    background: var(--bl-accent);
+    color: var(--bl-text-inverse);
     cursor: pointer;
     font-size: 0.8rem;
   }
@@ -500,7 +500,7 @@
   min-height: 360px;
   overflow: hidden;
   border: 1px solid #171717;
-  background: #0a0a0a;
+  background: var(--bl-gray-900);
   touch-action: none;
 }
 
@@ -512,7 +512,7 @@
 
 .stageHandle {
   fill: rgba(255, 255, 255, 0.06);
-  stroke: #fafafa;
+  stroke: var(--bl-text-inverse);
   stroke-opacity: 0.35;
   stroke-width: 1;
   cursor: ew-resize;
@@ -564,8 +564,8 @@
   max-height: min(88vh, 840px);
   display: flex;
   flex-direction: column;
-  background: #111;
-  color: #fafafa;
+  background: var(--bl-gray-900);
+  color: var(--bl-text-inverse);
   border: 1px solid #333;
   border-radius: 12px;
   overflow: hidden;
@@ -587,13 +587,13 @@
   p {
     margin: 0.25rem 0 0;
     font-size: 0.8rem;
-    color: #a3a3a3;
+    color: var(--bl-text-disabled);
   }
 
   button {
     border: 1px solid #404040;
-    background: #1a1a1a;
-    color: #fafafa;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-inverse);
     padding: 0.4rem 0.7rem;
     cursor: pointer;
   }
@@ -612,7 +612,7 @@
     flex-direction: column;
     gap: 0.25rem;
     font-size: 0.72rem;
-    color: #a3a3a3;
+    color: var(--bl-text-disabled);
   }
 
   select,
@@ -621,8 +621,8 @@
     font-size: 0.8rem;
     padding: 0.4rem 0.55rem;
     border: 1px solid #404040;
-    background: #1a1a1a;
-    color: #fafafa;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-inverse);
     cursor: pointer;
   }
 }
@@ -649,8 +649,8 @@
   th {
     position: sticky;
     top: 0;
-    background: #171717;
-    color: #a3a3a3;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-disabled);
     font-size: 0.7rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -666,8 +666,8 @@
     font-size: 0.78rem;
     padding: 0.25rem 0.35rem;
     border: 1px solid #404040;
-    background: #0a0a0a;
-    color: #fafafa;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-inverse);
   }
 }
 
@@ -687,8 +687,8 @@
     font-size: 0.85rem;
     padding: 0.5rem 0.85rem;
     border: 1px solid #404040;
-    background: #1a1a1a;
-    color: #fafafa;
+    background: var(--bl-gray-900);
+    color: var(--bl-text-inverse);
     cursor: pointer;
   }
 }
@@ -697,9 +697,9 @@
   font: inherit;
   font-size: 0.85rem;
   padding: 0.5rem 0.85rem;
-  background: #e11d48 !important;
-  border-color: #e11d48 !important;
-  color: #fff !important;
+  background: var(--bl-accent) !important;
+  border-color: var(--bl-accent) !important;
+  color: var(--bl-text-inverse) !important;
   cursor: pointer;
 }
 

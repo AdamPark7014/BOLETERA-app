@@ -32,9 +32,9 @@
   display: inline-flex;
   margin: .75rem 0 .25rem;
   padding: .3rem .55rem;
-  border: 1px solid var(--color-border, #d4d4d4);
+  border: 1px solid var(--color-border, var(--bl-border-strong));
   border-radius: 999px;
-  color: var(--color-text-secondary, #525252);
+  color: var(--color-text-secondary, var(--bl-text-secondary));
   font-size: .68rem;
   font-weight: 700;
   letter-spacing: .07em;
@@ -58,7 +58,7 @@
   grid-template-columns: auto 1fr;
   gap: .7rem;
   padding: .85rem 0;
-  border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
+  border-bottom: 1px solid var(--color-border-subtle, var(--bl-border));
 }
 
 .alert:last-child {
@@ -67,7 +67,7 @@
 
 .alert p {
   margin: .25rem 0 .15rem;
-  color: var(--color-text-secondary, #525252);
+  color: var(--color-text-secondary, var(--bl-text-secondary));
   font-size: .875rem;
   line-height: 1.45;
 }
@@ -78,7 +78,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem;
-  border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
+  border-bottom: 1px solid var(--color-border-subtle, var(--bl-border));
 }
 
 .listHeader > :last-child {
@@ -86,7 +86,7 @@
 }
 
 .records li + li {
-  border-top: 1px solid var(--color-border-subtle, #e5e5e5);
+  border-top: 1px solid var(--color-border-subtle, var(--bl-border));
 }
 
 .record {
@@ -105,7 +105,7 @@
 }
 
 .record:hover {
-  background: var(--color-surface-hover, #fafafa);
+  background: var(--color-surface-hover, var(--bl-surface));
 }
 
 .record:focus-visible {
@@ -120,14 +120,14 @@
 
 .record small {
   margin-top: .2rem;
-  color: var(--color-text-secondary, #525252);
+  color: var(--color-text-secondary, var(--bl-text-secondary));
 }
 
 .recordStatus {
   display: inline-flex;
   align-items: center;
   gap: .45rem;
-  color: var(--color-text-secondary, #525252);
+  color: var(--color-text-secondary, var(--bl-text-secondary));
   font-size: .82rem;
   white-space: nowrap;
 }
@@ -141,9 +141,9 @@
   display: block;
   overflow-wrap: anywhere;
   padding: .65rem .75rem;
-  border: 1px solid var(--color-border-subtle, #e5e5e5);
+  border: 1px solid var(--color-border-subtle, var(--bl-border));
   border-radius: .5rem;
-  background: var(--color-surface-subtle, #fafafa);
+  background: var(--color-surface-subtle, var(--bl-surface));
   font-size: .78rem;
 }
 
@@ -153,7 +153,7 @@
 }
 
 .drawerBody p {
-  color: var(--color-text-secondary, #525252);
+  color: var(--color-text-secondary, var(--bl-text-secondary));
   line-height: 1.6;
 }
 

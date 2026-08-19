@@ -39,7 +39,7 @@ $danger: #b91c1c;
   gap: 0.375rem;
   padding: 0.625rem 1rem;
   background: $ink;
-  color: #fff;
+  color: var(--bl-text-inverse);
   border: 1px solid $ink;
   border-radius: 9px;
   font-size: 0.875rem;
@@ -156,7 +156,7 @@ $danger: #b91c1c;
   }
   td {
     padding: 0.875rem;
-    border-bottom: 1px solid #f0f0f2;
+    border-bottom: 1px solid var(--bl-border-subtle);
     color: $ink;
     vertical-align: top;
   }
@@ -188,8 +188,8 @@ $danger: #b91c1c;
   }
 
   &.draft {
-    background: #f5f5f5;
-    color: #525252;
+    background: var(--bl-surface-sunken);
+    color: var(--bl-text-secondary);
   }
   &.scheduled {
     background: #eef2ff;
@@ -200,8 +200,8 @@ $danger: #b91c1c;
     color: #047857;
   }
   &.completed {
-    background: #f5f5f5;
-    color: #737373;
+    background: var(--bl-surface-sunken);
+    color: var(--bl-text-tertiary);
   }
 }
 

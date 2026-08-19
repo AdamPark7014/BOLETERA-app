@@ -3,7 +3,7 @@
   background:
     radial-gradient(110% 70% at 100% -5%, rgba(225, 29, 72, 0.06), transparent 55%),
     linear-gradient(180deg, #fafafa 0%, #f4f4f5 50%, #fafafa 100%);
-  color: #0a0a0a;
+  color: var(--bl-text-primary);
 }
 
 .page {
@@ -33,11 +33,11 @@
 }
 
 .stepActive {
-  color: #e11d48;
+  color: var(--bl-accent-text);
 }
 
 .stepTodo {
-  color: #a3a3a3;
+  color: var(--bl-text-disabled);
 }
 
 .hero {
@@ -53,7 +53,7 @@
 
   p {
     margin: 0;
-    color: #737373;
+    color: var(--bl-text-tertiary);
     font-size: 0.95rem;
   }
 }
@@ -71,8 +71,8 @@
 }
 
 .formCol {
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  background: var(--bl-elevated);
+  border: 1px solid var(--bl-border);
   padding: 1.2rem 1.25rem 1.35rem;
 }
 
@@ -88,17 +88,17 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 0.3rem 0.5rem;
-    border: 1px solid #e5e5e5;
-    color: #525252;
+    border: 1px solid var(--bl-border);
+    color: var(--bl-text-secondary);
   }
 }
 
 .banorteNote {
   margin: 0 0 1.1rem;
   padding: 0.7rem 0.8rem;
-  background: #fafafa;
-  border: 1px solid #e5e5e5;
-  color: #404040;
+  background: var(--bl-surface);
+  border: 1px solid var(--bl-border);
+  color: var(--bl-text-secondary);
   font-size: 0.86rem;
   line-height: 1.4;
 }
@@ -141,13 +141,13 @@
     padding: 0.75rem 0.85rem;
     /* Borde con contraste 3:1 contra el fondo (WCAG 2.2 · 1.4.11) */
     border: 1px solid #8f8f8f;
-    background: #fff;
+    background: var(--bl-elevated);
     font: inherit;
     font-size: 1rem; /* 16px evita el zoom automático de iOS al enfocar */
     font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
-    color: #171717;
+    color: var(--bl-text-primary);
 
     &:focus-visible {
       outline: 2px solid #9f1239;
@@ -218,14 +218,14 @@
   width: 100%;
   padding: 0.8rem 0.9rem;
   border: 1px solid #8f8f8f;
-  background: #fff;
+  background: var(--bl-elevated);
   text-align: left;
   cursor: pointer;
   font: inherit;
 
   strong {
     font-size: 0.95rem;
-    color: #0a0a0a;
+    color: var(--bl-text-primary);
   }
 
   span {
@@ -268,12 +268,12 @@
 .promoBtn {
   padding: 0.65rem 0.9rem;
   border: 1px solid #8f8f8f;
-  background: #fff;
+  background: var(--bl-elevated);
   cursor: pointer;
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #171717;
+  color: var(--bl-text-primary);
 
   &:disabled {
     opacity: 0.55;
@@ -363,8 +363,8 @@
   width: 100%;
   padding: 0.95rem 1.25rem;
   /* #e11d48 sobre blanco daba 3.9:1 en texto blanco; #be123c llega a 5.9:1 */
-  background: #be123c;
-  color: #fff;
+  background: var(--bl-accent-hover);
+  color: var(--bl-text-inverse);
   border: none;
   font: inherit;
   font-size: 0.95rem;
@@ -390,11 +390,11 @@
 .fine {
   margin: 0.85rem 0 0;
   font-size: 0.75rem;
-  color: #a3a3a3;
+  color: var(--bl-text-disabled);
   line-height: 1.45;
 
   a {
-    color: #737373;
+    color: var(--bl-text-tertiary);
     text-decoration: underline;
     text-underline-offset: 0.15em;
   }
@@ -415,8 +415,8 @@
 
 .lineItems {
   padding: 1rem 1.1rem;
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  background: var(--bl-elevated);
+  border: 1px solid var(--bl-border);
 }
 
 .summaryKicker {
@@ -425,20 +425,20 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #737373;
+  color: var(--bl-text-tertiary);
 }
 
 .lineItems h2 {
   margin: 0 0 0.35rem;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #0a0a0a;
+  color: var(--bl-text-primary);
 }
 
 .lineMeta {
   margin: 0;
   font-size: 0.8125rem;
-  color: #737373;
+  color: var(--bl-text-tertiary);
   line-height: 1.4;
 }
 
@@ -456,12 +456,12 @@
   gap: 0.75rem;
   padding: 0.25rem 0;
   font-size: 0.875rem;
-  color: #404040;
+  color: var(--bl-text-secondary);
 
   em {
     font-style: normal;
     font-weight: 700;
-    color: #0a0a0a;
+    color: var(--bl-text-primary);
   }
 }
 
@@ -474,16 +474,16 @@
     font-size: 0.72rem;
     font-weight: 600;
     padding: 0.25rem 0.45rem;
-    background: #fafafa;
-    border: 1px solid #e5e5e5;
-    color: #404040;
+    background: var(--bl-surface);
+    border: 1px solid var(--bl-border);
+    color: var(--bl-text-secondary);
   }
 }
 
 .summary {
   padding: 1rem 1.1rem;
-  background: #0a0a0a;
-  color: #fafafa;
+  background: var(--bl-gray-900);
+  color: var(--bl-text-inverse);
   border: 1px solid #171717;
 
   div {
@@ -500,7 +500,7 @@
   padding-top: 0.55rem !important;
   border-top: 1px solid rgba(255, 255, 255, 0.14);
   font-weight: 700;
-  color: #fff !important;
+  color: var(--bl-text-inverse) !important;
   font-size: 1rem !important;
 }
 
@@ -515,10 +515,10 @@
 .backCart {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #737373;
+  color: var(--bl-text-tertiary);
   text-decoration: none;
 
   &:hover {
-    color: #e11d48;
+    color: var(--bl-accent-text);
   }
 }
