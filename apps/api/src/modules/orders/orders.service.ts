@@ -18,7 +18,12 @@ import {
   HoldStatus,
   UserRole,
 } from '@prisma/client';
-import { buildQrPayload, generateTicketCode } from '@boletera/crypto';
+import {
+  QR_ROTATION_SECONDS,
+  buildQrPayload,
+  deriveTicketKeyHex,
+  generateTicketCode,
+} from '@boletera/crypto';
 import {
   initDefaultProviders,
   getProvider,
@@ -1111,6 +1116,51 @@ export class OrdersService {
       publicId: order.publicId,
       eventTitle: order.event.title,
       tickets: mapped,
+    };
+  }
+
+  /**
+   * Cartera para la APP MOVIL: los boletos con su clave de firma.
+   *
+   * Es lo que permite que el QR rotativo funcione SIN CONEXION. El telefono
+   * recibe la clave derivada de cada boleto —jamas el secreto maestro— y calcula
+   * en local el codigo de cada ventana de 15 s. Sin esto, el comprador depende
+   * de tener cobertura justo en la puerta, que es donde peor la hay: un recinto
+   * lleno satura la red movil y la fila se detiene.
+   *
+   * Mismo control de acceso que los QR: la clave ES la credencial de entrada.
+   * No se registra en logs por la misma razon.
+   */
+  async getWalletForOrder(publicId: string, requester: OrderRequester) {
+    const order = await this.getByPublicId(publicId);
+    await this.assertOrderAccess(order, requester);
+    if (order.status !== OrderStatus.COMPLETED) {
+      throw new BadRequestException('Order not completed');
+    }
+
+    const secret = requireTicketQrSecret();
+    const tickets = order.items.flatMap((i) => i.tickets);
+
+    return {
+      publicId: order.publicId,
+      event: {
+        id: order.eventId,
+        title: order.event.title,
+        startsAt: order.event.startsAt,
+        venue: order.event.venue?.name ?? null,
+      },
+      /** Segundos que dura cada ventana; el telefono usa el mismo valor. */
+      rotationSeconds: QR_ROTATION_SECONDS,
+      tickets: tickets.map((t) => ({
+        id: t.id,
+        code: t.code,
+        section: t.section,
+        row: t.row,
+        seatNumber: t.seatNumber,
+        status: t.status,
+        /** Clave por boleto en hexadecimal. Guardala cifrada en el dispositivo. */
+        signingKey: deriveTicketKeyHex(t.id, order.eventId, secret),
+      })),
     };
   }
 

@@ -171,6 +171,26 @@ export function buildQrPayload(ticketId: string, eventId: string, secret: string
 }
 
 /**
+ * Clave por boleto para que la APP MOVIL genere el QR rotativo SIN CONEXION.
+ *
+ * Es el mismo diseño que usa SafeTix: el telefono recibe la clave derivada de SU
+ * boleto —nunca el secreto maestro— y calcula en local el codigo de cada ventana
+ * de 15 s. Comprometer un telefono expone ESE boleto, no el sistema entero.
+ *
+ * Esto es lo que permite que el QR rotativo funcione en la puerta aunque no haya
+ * cobertura, que es justo donde falla: un recinto lleno satura la red movil.
+ *
+ * ENTREGALA SOLO al dueño autenticado del boleto, y nunca la registres en logs.
+ */
+export function deriveTicketKeyHex(
+  ticketId: string,
+  eventId: string,
+  secret: string,
+): string {
+  return deriveTicketKey(secret, ticketId, eventId).toString('hex');
+}
+
+/**
  * Huella corta y estable de un boleto para el manifiesto offline (F2-15).
  *
  * No rota con el tiempo: sirve para que el escáner detecte que su copia local fue

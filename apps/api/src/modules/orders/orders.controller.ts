@@ -75,6 +75,20 @@ export class OrdersController {
     return this.orders.getQrCodesForOrder(publicId, this.requester(req, accessToken));
   }
 
+  /**
+   * Cartera para la app movil. La clave que devuelve ES credencial de entrada:
+   * mismo control que los QR, y nunca en logs ni en la URL.
+   */
+  @Get(':publicId/wallet')
+  @UseGuards(OptionalJwtAuthGuard)
+  wallet(
+    @Param('publicId') publicId: string,
+    @Request() req: OptionalAuthRequest,
+    @Query('accessToken') accessToken?: string,
+  ) {
+    return this.orders.getWalletForOrder(publicId, this.requester(req, accessToken));
+  }
+
   @Get(':publicId/tickets.pdf')
   @UseGuards(OptionalJwtAuthGuard)
   @Header('Content-Type', 'application/pdf')
