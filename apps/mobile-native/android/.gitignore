@@ -1,0 +1,9 @@
+# Salida de compilación y estado local: nada de esto se comparte.
+build/
+.gradle/
+local.properties
+*.apk
+*.aab
+*.iml
+.idea/
+captures/

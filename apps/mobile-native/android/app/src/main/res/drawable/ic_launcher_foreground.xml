@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Boleto con la muesca lateral: la silueta se reconoce a 48 dp sin texto. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,38 L78,38 A4,4 0 0 1 82,42 L82,50 A6,6 0 0 0 82,62 L82,70 A4,4 0 0 1 78,74 L30,74 A4,4 0 0 1 26,70 L26,62 A6,6 0 0 0 26,50 L26,42 A4,4 0 0 1 30,38 Z" />
+    <path
+        android:fillColor="#E11D48"
+        android:pathData="M54,44 L54,48 M54,53 L54,59 M54,64 L54,68"
+        android:strokeColor="#E11D48"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+</vector>
