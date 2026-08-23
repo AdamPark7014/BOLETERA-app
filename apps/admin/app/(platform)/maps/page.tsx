@@ -94,7 +94,7 @@ export default function MapsCreatorPage() {
           style={{ display: 'grid', gap: '0.75rem', maxWidth: 720 }}
         >
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 12, color: '#737373' }}>Nombre del venue</span>
+            <span style={{ fontSize: 12, color: 'var(--bl-gray-500)' }}>Nombre del venue</span>
             <input
               required
               value={name}
@@ -104,7 +104,7 @@ export default function MapsCreatorPage() {
             />
           </label>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 12, color: '#737373' }}>Ciudad</span>
+            <span style={{ fontSize: 12, color: 'var(--bl-gray-500)' }}>Ciudad</span>
             <input
               value={city}
               onChange={(e) => setCity(e.target.value)}
@@ -112,7 +112,7 @@ export default function MapsCreatorPage() {
             />
           </label>
           <div>
-            <span style={{ fontSize: 12, color: '#737373' }}>Base inicial</span>
+            <span style={{ fontSize: 12, color: 'var(--bl-gray-500)' }}>Base inicial</span>
             <div
               style={{
                 display: 'grid',
@@ -136,12 +136,12 @@ export default function MapsCreatorPage() {
                   }}
                 >
                   <strong style={{ display: 'block', fontSize: 13 }}>{t.label}</strong>
-                  <span style={{ fontSize: 11, color: '#737373' }}>{t.hint}</span>
+                  <span style={{ fontSize: 11, color: 'var(--bl-gray-500)' }}>{t.hint}</span>
                 </button>
               ))}
             </div>
           </div>
-          {error && <p style={{ color: '#b91c1c', margin: 0 }}>{error}</p>}
+          {error && <p style={{ color: 'var(--bl-danger-text)', margin: 0 }}>{error}</p>}
           <button type="submit" className={platform.primaryBtn} disabled={creating || !name.trim()}>
             {creating ? 'Creando…' : 'Crear y abrir estudio 3D'}
           </button>
@@ -175,7 +175,7 @@ export default function MapsCreatorPage() {
                 <td>
                   <strong>{v.name}</strong>
                   <br />
-                  <small style={{ color: '#737373' }}>
+                  <small style={{ color: 'var(--bl-gray-500)' }}>
                     {v.city ?? '—'} · {v.slug}
                   </small>
                 </td>

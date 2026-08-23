@@ -112,7 +112,7 @@
 }
 
 .resolutionBox textarea:focus-visible {
-  outline: 3px solid #a5b4fc;
+  outline: 3px solid var(--bl-info-border);
   outline-offset: 2px;
 }
 
@@ -183,7 +183,7 @@
 }
 
 .anomaly {
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-weight: 650;
 }
 

@@ -47,7 +47,7 @@ export default function BrandingPage() {
       <button type="button" onClick={save} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
         Guardar
       </button>
-      {saved && <p style={{ marginTop: '0.5rem', color: '#737373' }}>Guardado.</p>}
+      {saved && <p style={{ marginTop: '0.5rem', color: 'var(--bl-gray-500)' }}>Guardado.</p>}
     </div>
   );
 }

@@ -202,7 +202,7 @@
   &:nth-child(4) {
     background:
       linear-gradient(160deg, rgba(10, 10, 10, 0.25), rgba(10, 10, 10, 0.9)),
-      linear-gradient(135deg, #14532d, #166534 50%, var(--ink-950));
+      linear-gradient(135deg, var(--bl-success-text), var(--bl-success-text) 50%, var(--ink-950));
   }
 }
 

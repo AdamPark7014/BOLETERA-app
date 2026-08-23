@@ -111,9 +111,9 @@ export default function TaquillaLoginPage() {
         <div className={styles.topLeft}>
           <span className={styles.brand}>
             <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <rect width="32" height="32" rx="9" fill="#f4f4f5" />
-              <path d="M9 11h14M9 16h14M9 21h9" stroke="#18181b" strokeWidth="2.4" strokeLinecap="round" />
-              <circle cx="22" cy="21" r="2.5" fill="#18181b" />
+              <rect width="32" height="32" rx="9" fill="var(--bl-gray-100)" />
+              <path d="M9 11h14M9 16h14M9 21h9" stroke="var(--bl-gray-900)" strokeWidth="2.4" strokeLinecap="round" />
+              <circle cx="22" cy="21" r="2.5" fill="var(--bl-gray-900)" />
             </svg>
             BOLETERA · TAQUILLA
           </span>

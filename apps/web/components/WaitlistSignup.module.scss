@@ -93,7 +93,7 @@
 }
 
 .error {
-  /* #ef4444 daba 3.76:1 sobre blanco; este tono cumple 6.5:1. */
+  /* var(--bl-danger) daba 3.76:1 sobre blanco; este tono cumple 6.5:1. */
   margin: var(--space-xs) 0 0;
   color: var(--color-danger-text);
   font-size: var(--text-base);

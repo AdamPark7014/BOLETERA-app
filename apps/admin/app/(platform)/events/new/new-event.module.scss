@@ -25,7 +25,7 @@
 
   &[data-state='current'] {
     background: var(--bl-gray-900);
-    border-color: #18181b;
+    border-color: var(--bl-gray-900);
     color: var(--bl-text-inverse);
   }
 
@@ -35,7 +35,7 @@
   }
 
   &:focus-visible {
-    outline: 3px solid #1d4ed8;
+    outline: 3px solid var(--bl-info-text);
     outline-offset: 2px;
   }
 }
@@ -48,7 +48,7 @@
   height: 1.25rem;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: #b91c1c;
+  background: var(--bl-danger-text);
   color: var(--bl-text-inverse);
   font-size: 0.6875rem;
   font-weight: 700;
@@ -63,9 +63,9 @@
   margin-bottom: 1.25rem;
   padding: 0.85rem 1rem;
   border: 1px solid #bfdbfe;
-  border-left: 5px solid #1d4ed8;
+  border-left: 5px solid var(--bl-info-text);
   border-radius: 10px;
-  background: #eff6ff;
+  background: var(--bl-info-subtle);
 
   p {
     margin: 0;
@@ -98,23 +98,23 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: 3px solid #1d4ed8;
+    outline: 3px solid var(--bl-info-text);
     outline-offset: 2px;
   }
 }
 
 .primaryBtn {
-  border: 1px solid #18181b;
+  border: 1px solid var(--bl-gray-900);
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
 
   &:hover:not(:disabled) {
-    background: #3f3f46;
+    background: var(--bl-gray-700);
   }
 
   &:disabled {
-    background: #a1a1aa;
-    border-color: #a1a1aa;
+    background: var(--bl-gray-400);
+    border-color: var(--bl-gray-400);
     cursor: not-allowed;
   }
 }
@@ -140,18 +140,18 @@
 .blockedNote {
   margin: 0;
   font-size: 0.8125rem;
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-weight: 600;
 }
 
 .submitError {
   margin-bottom: 1rem;
   padding: 0.7rem 0.9rem;
-  border: 1px solid #fca5a5;
-  border-left: 5px solid #b91c1c;
+  border: 1px solid var(--bl-danger-border);
+  border-left: 5px solid var(--bl-danger-text);
   border-radius: 8px;
-  background: #fef2f2;
-  color: #7f1d1d;
+  background: var(--bl-danger-subtle);
+  color: var(--bl-danger-text);
   font-size: 0.875rem;
 }
 
@@ -166,10 +166,10 @@
   color: var(--bl-text-secondary);
 
   a {
-    color: #1d4ed8;
+    color: var(--bl-info-text);
 
     &:focus-visible {
-      outline: 3px solid #1d4ed8;
+      outline: 3px solid var(--bl-info-text);
       outline-offset: 2px;
     }
   }
@@ -211,10 +211,10 @@
 
   /* La severidad se distingue por la etiqueta de texto, no solo por el color. */
   li[data-severity='error'] .issueTag {
-    background: #b91c1c;
+    background: var(--bl-danger-text);
   }
   li[data-severity='warning'] .issueTag {
-    background: #a16207;
+    background: var(--bl-warning-text);
   }
 }
 
@@ -244,11 +244,11 @@
   cursor: pointer;
 
   &:hover {
-    color: #1d4ed8;
+    color: var(--bl-info-text);
   }
 
   &:focus-visible {
-    outline: 3px solid #1d4ed8;
+    outline: 3px solid var(--bl-info-text);
     outline-offset: 2px;
   }
 }

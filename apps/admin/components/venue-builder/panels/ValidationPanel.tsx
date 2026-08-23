@@ -40,7 +40,7 @@ async function runValidation(scene: SeatMapData): Promise<ValidationState> {
         })),
         ...pathOverlay.bottlenecks.map((bn) => ({
           points: bn.points.map(([x, y]) => ({ x, y })),
-          color: '#ef4444',
+          color: 'var(--bl-danger)',
           width: 3,
         })),
       ],

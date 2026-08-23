@@ -357,7 +357,7 @@ export default function EventHubPage() {
               ))}
             </tbody>
           </table>
-          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#737373' }}>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--bl-gray-500)' }}>
             Asignación: Web {channels.web}% · Taquilla {channels.taquilla}% · API {channels.api}%
           </p>
         </section>
@@ -449,7 +449,7 @@ export default function EventHubPage() {
         <section className={platform.panel}>
           <h2>Vista 3D + asientos en vivo</h2>
           {venueMapData && seatsFor3d.length === 0 ? (
-            <p style={{ fontSize: '0.8125rem', color: '#737373' }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--bl-gray-500)' }}>
               El venue todavía no tiene asientos en su layout.
             </p>
           ) : (
@@ -468,7 +468,7 @@ export default function EventHubPage() {
               mapData={normalizedVenueMap}
             />
           )}
-          <p style={{ marginTop: '0.75rem', fontSize: '0.8125rem', color: '#737373' }}>
+          <p style={{ marginTop: '0.75rem', fontSize: '0.8125rem', color: 'var(--bl-gray-500)' }}>
             Publica inventario antes de vender. Editor:{' '}
             <Link href={`/venues/${venueId}/map`}>mapa del venue</Link>
           </p>

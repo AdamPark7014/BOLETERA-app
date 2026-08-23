@@ -15,8 +15,8 @@
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.35;
-  // #fecdd3 sobre el fondo compuesto ≈ 9:1
-  color: #fecdd3;
+  // var(--bl-accent-border) sobre el fondo compuesto ≈ 9:1
+  color: var(--bl-accent-border);
 }
 
 .actions {
@@ -44,7 +44,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #fafafa;
+    outline: 2px solid var(--bl-gray-25);
     outline-offset: 2px;
   }
 }

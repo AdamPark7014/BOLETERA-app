@@ -4,7 +4,7 @@
   max-width: 36rem;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 2.5rem;
-  color: #fafafa;
+  color: var(--bl-gray-25);
 }
 
 .bg {
@@ -19,7 +19,7 @@
   margin: 0 0 0.75rem;
   padding: 0.75rem 1rem;
   background: rgba(244, 244, 245, 0.15);
-  color: #a1a1aa;
+  color: var(--bl-gray-400);
   border-radius: 8px;
   font-size: 0.875rem;
 }
@@ -37,7 +37,7 @@
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  color: #fafafa;
+  color: var(--bl-gray-25);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 9px;
@@ -75,7 +75,7 @@
     min-height: 60px;
     padding: 0.625rem 0.75rem;
     font-size: 1.25rem;
-    color: #fafafa;
+    color: var(--bl-gray-25);
     background: transparent;
     border: none;
     outline: none;
@@ -86,8 +86,8 @@
     padding: 0 1.5rem;
     font-size: 1rem;
     font-weight: 700;
-    color: #18181b;
-    background: #f4f4f5;
+    color: var(--bl-gray-900);
+    background: var(--bl-gray-100);
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -97,7 +97,7 @@
     font-size: 0.6875rem;
     font-family: ui-monospace, monospace;
     padding: 0.2rem 0.4rem;
-    color: #e4e4e7;
+    color: var(--bl-gray-200);
     background: rgba(244, 244, 245, 0.1);
     border: 1px solid rgba(244, 244, 245, 0.25);
     border-radius: 4px;
@@ -105,7 +105,7 @@
 }
 
 .error {
-  color: #fca5a5;
+  color: var(--bl-danger-border);
   font-size: 0.875rem;
 }
 
@@ -131,7 +131,7 @@
 .ok {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #86efac;
+  color: var(--bl-success-border);
   background: rgba(34, 197, 94, 0.12);
   padding: 0.25rem 0.5rem;
   border-radius: 999px;
@@ -194,7 +194,7 @@
 
   code {
     font-family: ui-monospace, monospace;
-    color: #e4e4e7;
+    color: var(--bl-gray-200);
   }
 }
 
@@ -210,7 +210,7 @@
     padding: 0 0.75rem;
     font-size: 0.9375rem;
     font-weight: 700;
-    color: #fafafa;
+    color: var(--bl-gray-25);
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
@@ -219,7 +219,7 @@
 }
 
 .danger {
-  color: #fecaca !important;
+  color: var(--bl-danger-border) !important;
   border-color: rgba(248, 113, 113, 0.4) !important;
   background: rgba(239, 68, 68, 0.12) !important;
 }

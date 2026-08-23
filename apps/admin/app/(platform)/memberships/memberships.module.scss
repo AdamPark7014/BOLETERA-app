@@ -117,7 +117,7 @@
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: #047857;
+    background: var(--bl-success-text);
   }
 }
 
@@ -227,7 +227,7 @@
 
 .formError {
   margin: 0;
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-size: 0.8rem;
 }
 

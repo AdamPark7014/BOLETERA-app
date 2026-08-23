@@ -5,8 +5,8 @@
   --border-strong: var(--bl-border-strong);
   --surface: var(--bl-elevated);
   --sunken: var(--bl-surface);
-  --success: #16a34a;
-  --danger: #dc2626;
+  --success: var(--bl-success);
+  --danger: var(--bl-danger);
   --warning: #ca8a04;
   --accent: #4f46e5;
   --radius: 12px;
@@ -81,7 +81,7 @@
 }
 
 .eventSelect:focus-visible {
-  outline: 3px solid #a5b4fc;
+  outline: 3px solid var(--bl-info-border);
   outline-offset: 2px;
 }
 
@@ -132,8 +132,8 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.875rem 1rem;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
+  border: 1px solid var(--bl-danger-border);
+  background: var(--bl-danger-subtle);
   border-radius: var(--radius);
 
   strong {
@@ -144,7 +144,7 @@
   p {
     margin: 0.2rem 0 0;
     font-size: 0.8125rem;
-    color: #7f1d1d;
+    color: var(--bl-danger-text);
   }
 }
 
@@ -394,7 +394,7 @@
   top: 0.25rem;
   bottom: 0.25rem;
   border-radius: 6px;
-  background: #a5b4fc;
+  background: var(--bl-info-border);
   min-width: 0.5rem;
 }
 
@@ -403,15 +403,15 @@
 }
 
 .calendarBarDraft {
-  background: #d4d4d8;
+  background: var(--bl-gray-300);
 }
 
 .calendarBarPaused {
-  background: #fbbf24;
+  background: var(--bl-warning);
 }
 
 .calendarBarEnded {
-  background: #a1a1aa;
+  background: var(--bl-gray-400);
 }
 
 .promoList,
@@ -484,8 +484,8 @@
 }
 
 .detailCardSelected {
-  border-color: #c7d2fe;
-  background: #eef2ff;
+  border-color: var(--bl-info-border);
+  background: var(--bl-info-subtle);
 }
 
 .detailHead {
@@ -515,9 +515,9 @@
 
 .callout {
   padding: 0.85rem;
-  border: 1px solid #c7d2fe;
+  border: 1px solid var(--bl-info-border);
   border-radius: 0.7rem;
-  background: #eef2ff;
+  background: var(--bl-info-subtle);
   color: #312e81;
   font-size: 0.8rem;
   line-height: 1.45;
@@ -534,7 +534,7 @@
 .skeleton {
   min-height: 6rem;
   border-radius: 0.9rem;
-  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, #fafafa 45%, #f4f4f5 65%);
+  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, var(--bl-gray-25) 45%, var(--bl-gray-100) 65%);
   background-size: 220% 100%;
   animation: pulse 1.4s infinite;
 }
@@ -549,7 +549,7 @@
   height: 3rem;
   width: 100%;
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--bl-surface-sunken) 0%, #e4e4e7 50%, #f4f4f5 100%);
+  background: linear-gradient(90deg, var(--bl-surface-sunken) 0%, var(--bl-gray-200) 50%, var(--bl-gray-100) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
@@ -602,7 +602,7 @@
 .fieldError,
 .formError {
   font-size: 0.75rem;
-  color: #b91c1c;
+  color: var(--bl-danger-text);
 }
 
 .formError {
@@ -610,8 +610,8 @@
   margin: 0;
   padding: 0.65rem 0.75rem;
   border-radius: 8px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--bl-danger-subtle);
+  border: 1px solid var(--bl-danger-border);
 }
 
 .input {
@@ -625,12 +625,12 @@
 }
 
 .input:focus-visible {
-  outline: 3px solid #a5b4fc;
+  outline: 3px solid var(--bl-info-border);
   outline-offset: 2px;
 }
 
 .input[aria-invalid='true'] {
-  border-color: #fca5a5;
+  border-color: var(--bl-danger-border);
 }
 
 .modalFooter {

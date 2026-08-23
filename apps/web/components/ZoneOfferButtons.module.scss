@@ -1,7 +1,7 @@
-$ink: #0a0a0a;
-$mute: #737373;
-$line: #e5e5e5;
-$accent: #e11d48;
+$ink: var(--bl-gray-950);
+$mute: var(--bl-gray-500);
+$line: var(--bl-gray-200);
+$accent: var(--bl-accent);
 
 .list {
   list-style: none;

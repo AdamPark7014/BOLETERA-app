@@ -461,8 +461,8 @@
 
 .refunds {
   margin-bottom: var(--space-lg);
-  border: 1px solid #c7d2fe;
-  border-left: 4px solid #1d4ed8;
+  border: 1px solid var(--bl-info-border);
+  border-left: 4px solid var(--bl-info-text);
   background: #f5f8ff;
   padding: 1rem 1.1rem;
 
@@ -559,7 +559,7 @@
 .refundLink {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #1d4ed8;
+  color: var(--bl-info-text);
   text-decoration: underline;
 
   &:focus-visible {

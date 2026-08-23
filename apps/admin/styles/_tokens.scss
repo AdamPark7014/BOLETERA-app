@@ -5,8 +5,8 @@
  * layout raiz importa antes que esta hoja. Los nombres se conservan todos para
  * que ninguna de las pantallas existentes tenga que tocarse.
  *
- * Por que cambio: este archivo codificaba la rampa *zinc* (#18181b, #71717a,
- * #e4e4e7) mientras la tienda codificaba *neutral* puro (#171717, #737373) y el
+ * Por que cambio: este archivo codificaba la rampa *zinc* (var(--bl-gray-900), var(--bl-gray-500),
+ * var(--bl-gray-200)) mientras la tienda codificaba *neutral* puro (var(--bl-gray-900), var(--bl-gray-500)) y el
  * sistema de diseno traia la suya. Midiendo los estilos computados de una sola
  * pantalla del backoffice aparecian cinco familias de gris a la vez, con cromas
  * de 0 a 21 — tres grises distintos compitiendo solo para el texto secundario.
@@ -52,9 +52,9 @@
   --color-text-muted: var(--bl-text-tertiary);
   --color-text-invert: var(--bl-text-inverse);
 
-  /* Acento de marca. #e11d48 da 4.70:1 sobre blanco: sirve de relleno con
+  /* Acento de marca. var(--bl-accent) da 4.70:1 sobre blanco: sirve de relleno con
      texto blanco encima, pero NO como texto normal sobre claro. Por eso el
-     rol de texto usa el paso 700 (#be123c, 6.29:1). */
+     rol de texto usa el paso 700 (var(--bl-accent-text), 6.29:1). */
   --color-accent: var(--bl-accent);
   --color-accent-text: var(--bl-accent-text);
   --color-accent-soft: var(--bl-accent-300);

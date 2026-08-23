@@ -26,15 +26,15 @@
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 
   &:focus-visible {
-    outline: 2px solid #635bff;
+    outline: 2px solid var(--bl-focus-ring);
     outline-offset: 2px;
   }
 }
 
 .primaryLink {
-  background: #0a2540;
+  background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
-  border: 1px solid #0a2540;
+  border: 1px solid var(--bl-gray-900);
 
   &:hover {
     background: #0f3358;
@@ -43,12 +43,12 @@
 
 .secondaryLink {
   background: var(--bl-elevated);
-  color: #0a2540;
-  border: 1px solid #e3e8ee;
+  color: var(--bl-gray-900);
+  border: 1px solid var(--bl-gray-200);
 
   &:hover {
     border-color: #c1c9d2;
-    background: #f6f9fc;
+    background: var(--bl-gray-50);
   }
 }
 
@@ -69,7 +69,7 @@
 .calendarCard,
 .dayDetail {
   background: var(--bl-elevated);
-  border: 1px solid #e3e8ee;
+  border: 1px solid var(--bl-gray-200);
   border-radius: 12px;
   padding: 1rem 1.1rem 1.15rem;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
@@ -106,7 +106,7 @@
   }
 
   small {
-    color: #697386;
+    color: var(--bl-gray-500);
     font-size: 0.72rem;
   }
 }
@@ -125,22 +125,22 @@
     gap: 0.3rem;
     font-size: 0.72rem;
     font-weight: 600;
-    color: #697386;
+    color: var(--bl-gray-500);
   }
 
   select {
     min-width: 11rem;
     min-height: 2.15rem;
     padding: 0.4rem 0.65rem;
-    border: 1px solid #e3e8ee;
+    border: 1px solid var(--bl-gray-200);
     border-radius: 8px;
     background: var(--bl-elevated);
-    color: #0a2540;
+    color: var(--bl-gray-900);
     font: inherit;
     font-size: 0.8125rem;
 
     &:focus-visible {
-      outline: 2px solid #635bff;
+      outline: 2px solid var(--bl-focus-ring);
       outline-offset: 2px;
     }
   }
@@ -160,14 +160,14 @@
   align-items: center;
   margin-bottom: 0.95rem;
   padding: 0.65rem 0.8rem;
-  border: 1px solid #e3e8ee;
+  border: 1px solid var(--bl-gray-200);
   border-radius: 10px;
-  background: #f6f9fc;
+  background: var(--bl-gray-50);
   font-size: 0.78rem;
   color: #425466;
 
   strong {
-    color: #0a2540;
+    color: var(--bl-gray-900);
   }
 
   kbd {
@@ -227,7 +227,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #697386;
+  color: var(--bl-gray-500);
   padding: 0.3rem 0;
 }
 
@@ -237,7 +237,7 @@
   flex-direction: column;
   gap: 0.3rem;
   padding: 0.45rem;
-  border: 1px solid #e3e8ee;
+  border: 1px solid var(--bl-gray-200);
   border-radius: 10px;
   background: var(--bl-elevated);
   text-align: left;
@@ -252,7 +252,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #635bff;
+    outline: 2px solid var(--bl-focus-ring);
     outline-offset: 2px;
   }
 
@@ -271,19 +271,19 @@
 }
 
 .today {
-  border-color: #635bff;
+  border-color: var(--bl-focus-ring);
   box-shadow: inset 0 0 0 1px rgba(99, 91, 255, 0.35);
 }
 
 .selected {
   background: #f0f4ff;
-  border-color: #635bff;
+  border-color: var(--bl-focus-ring);
 }
 
 .dayNumber {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #0a2540;
+  color: var(--bl-gray-900);
 }
 
 .dayEvents {
@@ -327,7 +327,7 @@
 
 .moreEvents {
   font-size: 0.65rem;
-  color: #697386;
+  color: var(--bl-gray-500);
   font-weight: 600;
 }
 
@@ -351,7 +351,7 @@
   gap: 0.4rem;
   min-height: 12rem;
   padding: 0.55rem;
-  border: 1px solid #e3e8ee;
+  border: 1px solid var(--bl-gray-200);
   border-radius: 10px;
   background: var(--bl-elevated);
 
@@ -363,11 +363,11 @@
     padding-bottom: 0.35rem;
     border-bottom: 1px solid #eef2f7;
     text-transform: capitalize;
-    color: #697386;
+    color: var(--bl-gray-500);
     font-size: 0.72rem;
 
     strong {
-      color: #0a2540;
+      color: var(--bl-gray-900);
       font-size: 1rem;
     }
   }
@@ -401,7 +401,7 @@
   }
 
   span {
-    color: #697386;
+    color: var(--bl-gray-500);
     font-size: 0.75rem;
     text-transform: capitalize;
   }
@@ -419,7 +419,7 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.7rem 0.8rem;
-  border: 1px solid #e3e8ee;
+  border: 1px solid var(--bl-gray-200);
   border-radius: 10px;
   border-left-width: 3px;
   text-decoration: none;
@@ -433,18 +433,18 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #635bff;
+    outline: 2px solid var(--bl-focus-ring);
     outline-offset: 2px;
   }
 
   strong {
     font-size: 0.875rem;
-    color: #0a2540;
+    color: var(--bl-gray-900);
   }
 
   span,
   small {
-    color: #697386;
+    color: var(--bl-gray-500);
     font-size: 0.75rem;
   }
 
@@ -463,7 +463,7 @@
   time {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #0a2540;
+    color: var(--bl-gray-900);
   }
 }
 
@@ -485,7 +485,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #697386;
+  color: var(--bl-gray-500);
 }
 
 .noEvents {
@@ -497,14 +497,14 @@
 .statusDraft,
 .statusUnknown,
 .statusCompleted {
-  color: #697386;
+  color: var(--bl-gray-500);
   border-left-color: #a3acb9;
-  background: #f6f9fc;
+  background: var(--bl-gray-50);
 }
 
 .statusScheduled {
   color: #3d4eac;
-  border-left-color: #635bff;
+  border-left-color: var(--bl-focus-ring);
   background: #f0f4ff;
 }
 

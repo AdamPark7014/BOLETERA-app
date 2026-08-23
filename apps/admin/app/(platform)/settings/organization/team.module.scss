@@ -1,10 +1,10 @@
-$ink: #18181b;
-$ink-soft: #3f3f46;
-$muted: #71717a;
-$border: #e4e4e7;
-$success: #16a34a;
-$warning: #a16207;
-$danger: #b91c1c;
+$ink: var(--bl-gray-900);
+$ink-soft: var(--bl-gray-700);
+$muted: var(--bl-gray-500);
+$border: var(--bl-gray-200);
+$success: var(--bl-success);
+$warning: var(--bl-warning-text);
+$danger: var(--bl-danger-text);
 
 .alertError,
 .alertOk {
@@ -17,14 +17,14 @@ $danger: #b91c1c;
 
 .alertError {
   color: $danger;
-  background: #fef2f2;
-  border-color: #fecaca;
+  background: var(--bl-danger-subtle);
+  border-color: var(--bl-danger-border);
 }
 
 .alertOk {
   color: $success;
-  background: #f0fdf4;
-  border-color: #bbf7d0;
+  background: var(--bl-success-subtle);
+  border-color: var(--bl-success-border);
 }
 
 .inviteForm {
@@ -113,14 +113,14 @@ $danger: #b91c1c;
 
 .pending {
   color: $warning;
-  background: #fefce8;
-  border-color: #fde68a;
+  background: var(--bl-warning-subtle);
+  border-color: var(--bl-warning-border);
 }
 
 .accepted {
   color: $success;
-  background: #f0fdf4;
-  border-color: #bbf7d0;
+  background: var(--bl-success-subtle);
+  border-color: var(--bl-success-border);
 }
 
 .expired {
@@ -140,12 +140,12 @@ $danger: #b91c1c;
   font-weight: 600;
   color: $danger;
   background: transparent;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--bl-danger-border);
   border-radius: 8px;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: #fef2f2;
+    background: var(--bl-danger-subtle);
   }
 
   &:disabled {

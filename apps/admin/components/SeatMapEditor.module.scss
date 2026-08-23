@@ -160,8 +160,8 @@
 }
 
 .dangerBtn {
-  border-color: #7f1d1d !important;
-  color: #fca5a5 !important;
+  border-color: var(--bl-danger-text) !important;
+  color: var(--bl-danger-border) !important;
 }
 
 .sideHint {
@@ -210,7 +210,7 @@
   height: 0.5rem;
   border-radius: 50%;
   background: rgba(34, 197, 94, 0.9);
-  border: 1px solid #14532d;
+  border: 1px solid var(--bl-success-text);
 }
 
 .swatchAisle {
@@ -340,7 +340,7 @@
   min-width: 3.1rem;
   padding: 0.08rem 0.3rem;
   border-radius: 3px;
-  background: #b45309;
+  background: var(--bl-warning-text);
   color: var(--bl-text-inverse);
   font-size: 0.6rem;
   font-weight: 700;
@@ -348,11 +348,11 @@
   text-align: center;
 
   li[data-severity='error'] & {
-    background: #dc2626;
+    background: var(--bl-danger);
   }
 
   &[data-ok] {
-    background: #15803d;
+    background: var(--bl-success-text);
   }
 }
 
@@ -440,7 +440,7 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   padding-right: 0.6rem;
-  border-right: 1px solid #262626;
+  border-right: 1px solid var(--bl-gray-800);
 
   &:last-of-type {
     border-right: none;
@@ -499,7 +499,7 @@
   height: min(68vh, 640px);
   min-height: 360px;
   overflow: hidden;
-  border: 1px solid #171717;
+  border: 1px solid var(--bl-gray-900);
   background: var(--bl-gray-900);
   touch-action: none;
 }
@@ -591,7 +591,7 @@
   }
 
   button {
-    border: 1px solid #404040;
+    border: 1px solid var(--bl-gray-700);
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     padding: 0.4rem 0.7rem;
@@ -620,7 +620,7 @@
     font: inherit;
     font-size: 0.8rem;
     padding: 0.4rem 0.55rem;
-    border: 1px solid #404040;
+    border: 1px solid var(--bl-gray-700);
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     cursor: pointer;
@@ -642,7 +642,7 @@
   td {
     text-align: left;
     padding: 0.45rem 0.7rem;
-    border-bottom: 1px solid #262626;
+    border-bottom: 1px solid var(--bl-gray-800);
     vertical-align: middle;
   }
 
@@ -658,14 +658,14 @@
 
   code {
     font-size: 0.72rem;
-    color: #d4d4d4;
+    color: var(--bl-gray-300);
   }
 
   select {
     font: inherit;
     font-size: 0.78rem;
     padding: 0.25rem 0.35rem;
-    border: 1px solid #404040;
+    border: 1px solid var(--bl-gray-700);
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
   }
@@ -686,7 +686,7 @@
     font: inherit;
     font-size: 0.85rem;
     padding: 0.5rem 0.85rem;
-    border: 1px solid #404040;
+    border: 1px solid var(--bl-gray-700);
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     cursor: pointer;

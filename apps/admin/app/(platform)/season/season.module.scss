@@ -121,15 +121,15 @@
 }
 
 .bar_agotado {
-  background: #b91c1c;
+  background: var(--bl-danger-text);
 }
 
 .bar_critico {
-  background: #a16207;
+  background: var(--bl-warning-text);
 }
 
 .bar_estable {
-  background: #047857;
+  background: var(--bl-success-text);
 }
 
 .stackCell {
@@ -205,7 +205,7 @@
 
 .formError {
   margin: 0;
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-size: 0.8rem;
 }
 

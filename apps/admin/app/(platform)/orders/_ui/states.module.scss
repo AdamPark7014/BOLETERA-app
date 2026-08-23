@@ -25,7 +25,7 @@
 
 .hint {
   font-size: 0.8125rem;
-  /* #52525b sobre blanco = 7.4:1 */
+  /* var(--bl-gray-600) sobre blanco = 7.4:1 */
   color: var(--bl-text-secondary);
 }
 
@@ -41,12 +41,12 @@
 
 .iconWarn {
   background: #fef3c7;
-  color: #854d0e;
+  color: var(--bl-warning-text);
 }
 
 .iconError {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--bl-danger-subtle);
+  color: var(--bl-danger-text);
 }
 
 .actionRow {
@@ -66,7 +66,7 @@
   min-height: 36px;
   min-width: 44px;
   padding: 0.5rem 0.875rem;
-  border: 1px solid #18181b;
+  border: 1px solid var(--bl-gray-900);
   border-radius: 8px;
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
@@ -76,7 +76,7 @@
   text-decoration: none;
 
   &:hover {
-    background: #27272a;
+    background: var(--bl-gray-800);
   }
 }
 
@@ -93,7 +93,7 @@
 
 .action:focus-visible,
 .actionGhost:focus-visible {
-  outline: 2px solid #18181b;
+  outline: 2px solid var(--bl-gray-900);
   outline-offset: 2px;
 }
 
@@ -108,7 +108,7 @@
 .skelRow {
   height: 38px;
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, #ececee 37%, #f4f4f5 63%);
+  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, #ececee 37%, var(--bl-gray-100) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -166,21 +166,21 @@
 .noticeWarn {
   composes: notice;
   border-color: #fcd34d;
-  background: #fffbeb;
+  background: var(--bl-warning-subtle);
   color: #713f12;
 }
 
 .noticeDanger {
   composes: notice;
-  border-color: #fca5a5;
-  background: #fef2f2;
-  color: #991b1b;
+  border-color: var(--bl-danger-border);
+  background: var(--bl-danger-subtle);
+  color: var(--bl-danger-text);
 }
 
 .noticeInfo {
   composes: notice;
   border-color: #bfdbfe;
-  background: #eff6ff;
+  background: var(--bl-info-subtle);
   color: #1e3a8a;
 }
 

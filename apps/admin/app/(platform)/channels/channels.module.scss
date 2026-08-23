@@ -5,8 +5,8 @@
   --border-strong: var(--bl-border-strong);
   --surface: var(--bl-elevated);
   --sunken: var(--bl-surface);
-  --success: #16a34a;
-  --danger: #dc2626;
+  --success: var(--bl-success);
+  --danger: var(--bl-danger);
   --warning: #ca8a04;
   --accent: #4f46e5;
   --radius: 12px;
@@ -82,7 +82,7 @@
 
 .eventSelect:focus-visible,
 .input:focus-visible {
-  outline: 3px solid #a5b4fc;
+  outline: 3px solid var(--bl-info-border);
   outline-offset: 2px;
 }
 
@@ -93,8 +93,8 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.875rem 1rem;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
+  border: 1px solid var(--bl-danger-border);
+  background: var(--bl-danger-subtle);
   border-radius: var(--radius);
 
   strong {
@@ -105,16 +105,16 @@
   p {
     margin: 0.2rem 0 0;
     font-size: 0.8125rem;
-    color: #7f1d1d;
+    color: var(--bl-danger-text);
   }
 }
 
 .successBanner {
   padding: 0.75rem 1rem;
-  border: 1px solid #bbf7d0;
-  background: #f0fdf4;
+  border: 1px solid var(--bl-success-border);
+  background: var(--bl-success-subtle);
   border-radius: var(--radius);
-  color: #166534;
+  color: var(--bl-success-text);
   font-size: 0.875rem;
 }
 
@@ -391,13 +391,13 @@
 }
 
 .totalOk {
-  color: #047857;
+  color: var(--bl-success-text);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .totalBad {
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -411,9 +411,9 @@
 .callout {
   margin-top: 0.85rem;
   padding: 0.85rem;
-  border: 1px solid #c7d2fe;
+  border: 1px solid var(--bl-info-border);
   border-radius: 0.7rem;
-  background: #eef2ff;
+  background: var(--bl-info-subtle);
   color: #312e81;
   font-size: 0.8rem;
   line-height: 1.45;
@@ -458,7 +458,7 @@
 .skeleton {
   min-height: 6rem;
   border-radius: 0.9rem;
-  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, #fafafa 45%, #f4f4f5 65%);
+  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, var(--bl-gray-25) 45%, var(--bl-gray-100) 65%);
   background-size: 220% 100%;
   animation: pulse 1.4s infinite;
 }
@@ -473,7 +473,7 @@
   height: 3rem;
   width: 100%;
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--bl-surface-sunken) 0%, #e4e4e7 50%, #f4f4f5 100%);
+  background: linear-gradient(90deg, var(--bl-surface-sunken) 0%, var(--bl-gray-200) 50%, var(--bl-gray-100) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }

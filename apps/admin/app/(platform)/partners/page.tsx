@@ -54,7 +54,7 @@ export default function PartnersPage() {
         <section className={platform.panel} style={{ borderColor: '#10b981' }}>
           <h2>Copia tu clave ahora</h2>
           <code style={{ wordBreak: 'break-all', fontSize: '0.85rem' }}>{secret}</code>
-          <p style={{ marginTop: '0.75rem', color: '#737373' }}>
+          <p style={{ marginTop: '0.75rem', color: 'var(--bl-gray-500)' }}>
             Solo se muestra una vez. Guárdala en tu vault.
           </p>
           <button type="button" className={platform.ghostBtn} onClick={() => setSecret(null)}>
@@ -125,7 +125,7 @@ export default function PartnersPage() {
             ))}
           </tbody>
         </table>
-        {!keys.length && <p style={{ marginTop: '1rem', color: '#737373' }}>Sin API keys.</p>}
+        {!keys.length && <p style={{ marginTop: '1rem', color: 'var(--bl-gray-500)' }}>Sin API keys.</p>}
       </section>
     </div>
   );

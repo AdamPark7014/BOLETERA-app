@@ -6,19 +6,19 @@
   margin: 2rem auto;
   padding: 1.75rem;
   border: 1px solid var(--bl-border-strong);
-  border-left: 6px solid #737373;
+  border-left: 6px solid var(--bl-gray-500);
   border-radius: 12px;
   background: var(--bl-elevated);
 
   /* El borde de color nunca es la única señal: el distintivo lleva texto. */
   &[data-tone='auth'] {
-    border-left-color: #1d4ed8;
+    border-left-color: var(--bl-info-text);
   }
   &[data-tone='denied'] {
-    border-left-color: #b91c1c;
+    border-left-color: var(--bl-danger-text);
   }
   &[data-tone='missing'] {
-    border-left-color: #a16207;
+    border-left-color: var(--bl-warning-text);
   }
   &[data-tone='fault'] {
     border-left-color: #7c2d12;
@@ -83,18 +83,18 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: 3px solid #1d4ed8;
+    outline: 3px solid var(--bl-info-text);
     outline-offset: 2px;
   }
 }
 
 .primaryAction {
-  border: 1px solid #18181b;
+  border: 1px solid var(--bl-gray-900);
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
 
   &:hover {
-    background: #3f3f46;
+    background: var(--bl-gray-700);
   }
 }
 
@@ -119,7 +119,7 @@
     font-weight: 600;
 
     &:focus-visible {
-      outline: 3px solid #1d4ed8;
+      outline: 3px solid var(--bl-info-text);
       outline-offset: 2px;
     }
   }
@@ -147,7 +147,7 @@
   width: 1rem;
   height: 1rem;
   border: 2px solid var(--bl-border-strong);
-  border-top-color: #18181b;
+  border-top-color: var(--bl-gray-900);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

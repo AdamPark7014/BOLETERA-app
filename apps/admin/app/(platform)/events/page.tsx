@@ -166,7 +166,7 @@ export default function EventsPage() {
                   <td>
                     <strong>{new Date(e.startsAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</strong>
                     <br />
-                    <small style={{ color: '#737373' }}>
+                    <small style={{ color: 'var(--bl-gray-500)' }}>
                       {new Date(e.startsAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                     </small>
                   </td>

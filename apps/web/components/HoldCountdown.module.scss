@@ -19,7 +19,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  /* 4.6:1 sobre #fff — #71717a se quedaba en 4.2:1 (WCAG 2.2 AA) */
+  /* 4.6:1 sobre #fff — var(--bl-gray-500) se quedaba en 4.2:1 (WCAG 2.2 AA) */
   color: var(--bl-text-secondary);
   align-self: end;
 }
@@ -45,7 +45,7 @@
   justify-self: start;
   margin-top: 0.5rem;
   padding: 0.45rem 0.8rem;
-  border: 1px solid #a1a1aa;
+  border: 1px solid var(--bl-gray-400);
   border-radius: 6px;
   background: var(--bl-elevated);
   font: inherit;
@@ -55,7 +55,7 @@
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: #52525b;
+    border-color: var(--bl-gray-600);
   }
 
   &:disabled {
@@ -70,16 +70,16 @@
 }
 
 .urgent {
-  border-color: #d97706;
-  background: #fffbeb;
+  border-color: var(--bl-warning);
+  background: var(--bl-warning-subtle);
 
   .time {
-    /* #a16207 sobre #fffbeb ≈ 4.6:1; se mantiene y se refuerza el borde */
-    color: #92400e;
+    /* var(--bl-warning-text) sobre var(--bl-warning-subtle) ≈ 4.6:1; se mantiene y se refuerza el borde */
+    color: var(--bl-warning-text);
   }
 
   .label {
-    color: #92400e;
+    color: var(--bl-warning-text);
   }
 
   .hint {
@@ -88,16 +88,16 @@
 }
 
 .expired {
-  border-color: #b91c1c;
-  background: #fef2f2;
+  border-color: var(--bl-danger-text);
+  background: var(--bl-danger-subtle);
 
   .time,
   .label {
-    color: #991b1b;
+    color: var(--bl-danger-text);
   }
 
   .hint {
-    color: #7f1d1d;
+    color: var(--bl-danger-text);
   }
 }
 

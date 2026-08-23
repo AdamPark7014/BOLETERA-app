@@ -38,7 +38,8 @@
     "smoke:api": "node apps/api/scripts/smoke-interactive-status.cjs",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f postgres"
+    "docker:logs": "docker-compose logs -f postgres",
+    "check-color": "node scripts/check-color-tokens.mjs"
   },
   "workspaces": [
     "apps/*",

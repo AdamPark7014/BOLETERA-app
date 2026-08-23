@@ -20,7 +20,7 @@ function Sparkline() {
       <path
         d="M0,80 C40,70 60,40 100,45 C140,50 160,20 200,28 C240,36 260,55 320,30"
         fill="none"
-        stroke="#fafafa"
+        stroke="var(--bl-gray-25)"
         strokeOpacity="0.85"
         strokeWidth="1.5"
       />

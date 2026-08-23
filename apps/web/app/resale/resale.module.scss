@@ -224,7 +224,7 @@
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
-  /* #16a34a daba 3.3:1 sobre blanco. */
+  /* var(--bl-success) daba 3.3:1 sobre blanco. */
   color: var(--color-success-text);
 }
 
@@ -271,7 +271,7 @@
 }
 
 .id {
-  /* Era #a3a3a3 (2.5:1). */
+  /* Era var(--bl-gray-400) (2.5:1). */
   font-size: var(--text-xs);
   color: var(--text-muted);
   font-family: ui-monospace, monospace;

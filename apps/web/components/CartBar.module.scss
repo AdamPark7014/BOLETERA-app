@@ -46,7 +46,7 @@
 }
 
 .urgent {
-  color: #fb7185 !important;
+  color: var(--bl-accent-hover) !important;
 }
 
 .panel {
@@ -102,7 +102,7 @@
       padding: 0 0.15rem;
 
       &:hover {
-        color: #fb7185;
+        color: var(--bl-accent-hover);
       }
     }
   }

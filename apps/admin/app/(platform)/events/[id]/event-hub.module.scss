@@ -5,8 +5,8 @@
   --hub-border-strong: var(--bl-border-strong);
   --hub-surface: var(--bl-elevated);
   --hub-sunken: var(--bl-surface);
-  --hub-success: #16a34a;
-  --hub-danger: #dc2626;
+  --hub-success: var(--bl-success);
+  --hub-danger: var(--bl-danger);
   --hub-warning: #ca8a04;
   --hub-radius: 12px;
   --hub-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -312,9 +312,9 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.875rem 1rem;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--bl-danger-border);
   border-radius: 10px;
-  background: #fef2f2;
+  background: var(--bl-danger-subtle);
 }
 
 .errorBanner strong {

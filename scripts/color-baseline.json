@@ -1,0 +1,10 @@
+{
+  "literales": 517,
+  "porApp": {
+    "admin": 300,
+    "api": 53,
+    "taquilla": 39,
+    "web": 118,
+    "ui": 7
+  }
+}

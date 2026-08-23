@@ -73,7 +73,7 @@ export default function VenuesPage() {
                 <td>
                   <strong>{v.name}</strong>
                   <br />
-                  <small style={{ color: '#737373' }}>{v.slug}</small>
+                  <small style={{ color: 'var(--bl-gray-500)' }}>{v.slug}</small>
                 </td>
                 <td>{v.totalCapacity?.toLocaleString() ?? '—'}</td>
                 <td style={{ display: 'flex', gap: '0.5rem' }}>
@@ -88,7 +88,7 @@ export default function VenuesPage() {
             ))}
             {!loading && venues.length === 0 && (
               <tr>
-                <td colSpan={3} style={{ color: '#525252' }}>
+                <td colSpan={3} style={{ color: 'var(--bl-gray-600)' }}>
                   Tu organización todavía no tiene recintos registrados.
                 </td>
               </tr>

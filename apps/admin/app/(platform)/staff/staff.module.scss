@@ -73,13 +73,13 @@
 
 .alertWarning {
   border-color: #fcd34d;
-  background: #fffbeb;
-  color: #92400e;
+  background: var(--bl-warning-subtle);
+  color: var(--bl-warning-text);
 }
 
 .alertInfo {
   border-color: #93c5fd;
-  background: #eff6ff;
+  background: var(--bl-info-subtle);
   color: #1e40af;
 }
 
@@ -213,7 +213,7 @@
 
 .formError {
   margin: 0;
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-size: 0.8125rem;
 }
 
@@ -233,7 +233,7 @@
   padding: 0.55rem 0.65rem;
   border-radius: 10px;
   background: var(--bl-surface);
-  border: 1px solid #f4f4f5;
+  border: 1px solid var(--bl-gray-100);
   font-size: 0.8125rem;
 }
 

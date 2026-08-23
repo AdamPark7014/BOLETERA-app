@@ -525,8 +525,8 @@ export function PosSeatMap({
               if (item.type === 'led') {
                 return (
                   <g key={item.id} transform={`translate(${item.x} ${item.y})`} style={{ pointerEvents: 'none' }}>
-                    <rect x={-26} y={-8} width={52} height={16} rx={2} fill="#1a0510" stroke="#be123c" strokeWidth={1} />
-                    <rect x={-22} y={-5} width={44} height={10} rx={1} fill="#be123c" opacity={0.55} />
+                    <rect x={-26} y={-8} width={52} height={16} rx={2} fill="#1a0510" stroke="var(--bl-accent-text)" strokeWidth={1} />
+                    <rect x={-22} y={-5} width={44} height={10} rx={1} fill="var(--bl-accent-text)" opacity={0.55} />
                     <text y={-12} textAnchor="middle" fontSize={7} fontWeight={700} fill="#fda4af">
                       LED
                     </text>
@@ -536,9 +536,9 @@ export function PosSeatMap({
               if (item.type === 'speaker') {
                 return (
                   <g key={item.id} transform={`translate(${item.x} ${item.y})`} style={{ pointerEvents: 'none' }}>
-                    <rect x={-7} y={-10} width={14} height={20} rx={2} fill="#0f0f12" stroke="#404040" strokeWidth={1} />
-                    <circle cx={0} cy={-4} r={3.4} fill="#27272a" />
-                    <circle cx={0} cy={5} r={2.4} fill="#27272a" />
+                    <rect x={-7} y={-10} width={14} height={20} rx={2} fill="#0f0f12" stroke="var(--bl-gray-700)" strokeWidth={1} />
+                    <circle cx={0} cy={-4} r={3.4} fill="var(--bl-gray-800)" />
+                    <circle cx={0} cy={5} r={2.4} fill="var(--bl-gray-800)" />
                   </g>
                 );
               }
@@ -552,7 +552,7 @@ export function PosSeatMap({
                       height={8}
                       rx={1}
                       fill="rgba(34,197,94,0.35)"
-                      stroke="#22c55e"
+                      stroke="var(--bl-success)"
                       strokeWidth={1.2}
                     />
                     <text y={-8} textAnchor="middle" fontSize={7} fill="#86efac" fontWeight={700}>
@@ -568,7 +568,7 @@ export function PosSeatMap({
               if (levelFilter !== 'ALL' && f.levelId && f.levelId !== levelFilter) return null;
               return (
               <g key={f.id} style={{ pointerEvents: 'none' }}>
-                <circle cx={f.x} cy={f.y} r={6} fill="rgba(250,250,250,0.92)" stroke="#e11d48" strokeWidth={2} />
+                <circle cx={f.x} cy={f.y} r={6} fill="rgba(250,250,250,0.92)" stroke="var(--bl-accent)" strokeWidth={2} />
                 <text
                   x={f.x}
                   y={f.y - 10}

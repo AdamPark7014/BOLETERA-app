@@ -1,11 +1,11 @@
 // Panel oscuro a propósito: la sala sustituye al selector de butacas y debe
 // leerse como "otro sitio", no como un bloque más de la ficha del evento.
 // Todos los pares de color están por encima de 4.5:1 sobre $panel (WCAG 2.2 AA).
-$panel: #0a0a0a;
-$panel-2: #171717;
-$paper: #fafafa; // 19.2:1 sobre $panel
+$panel: var(--bl-gray-950);
+$panel-2: var(--bl-gray-900);
+$paper: var(--bl-gray-25); // 19.2:1 sobre $panel
 $mute: #c9c9c9; // 11.4:1 sobre $panel
-$accent: #fb7185; // 8.1:1 sobre $panel
+$accent: var(--bl-accent-hover); // 8.1:1 sobre $panel
 $accent-soft: rgba(251, 113, 133, 0.14);
 $line: rgba(250, 250, 250, 0.14);
 
@@ -67,7 +67,7 @@ $line: rgba(250, 250, 250, 0.14);
   background: $accent-soft;
   font-size: 0.9375rem;
   line-height: 1.5;
-  color: #fecdd3; // 9.6:1 sobre el fondo del aviso
+  color: var(--bl-accent-border); // 9.6:1 sobre el fondo del aviso
 }
 
 // --- antes de la apertura ----------------------------------------------------

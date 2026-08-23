@@ -44,15 +44,15 @@
 }
 
 .success {
-  border-left: 3px solid #16a34a;
+  border-left: 3px solid var(--bl-success);
 }
 
 .error {
-  border-left: 3px solid #b91c1c;
+  border-left: 3px solid var(--bl-danger-text);
 }
 
 .info {
-  border-left: 3px solid #18181b;
+  border-left: 3px solid var(--bl-gray-900);
 }
 
 @keyframes slide-in {

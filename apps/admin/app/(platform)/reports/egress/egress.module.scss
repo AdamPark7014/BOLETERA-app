@@ -11,7 +11,7 @@
 }
 
 .error {
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-size: 0.9rem;
   margin: 0;
 }
@@ -54,13 +54,13 @@
 }
 
 .kpiWarn {
-  background: linear-gradient(145deg, var(--bl-elevated) 0%, #fffbeb 100%) !important;
-  border-color: #fde68a !important;
+  background: linear-gradient(145deg, var(--bl-elevated) 0%, var(--bl-warning-subtle) 100%) !important;
+  border-color: var(--bl-warning-border) !important;
 }
 
 .kpiCritical {
-  background: linear-gradient(145deg, var(--bl-elevated) 0%, #fff1f2 100%) !important;
-  border-color: #fecdd3 !important;
+  background: linear-gradient(145deg, var(--bl-elevated) 0%, var(--bl-accent-subtle) 100%) !important;
+  border-color: var(--bl-accent-border) !important;
 }
 
 .filters {
@@ -83,7 +83,7 @@
 
 .tabOn {
   background: var(--bl-gray-900);
-  border-color: #0a0a0a;
+  border-color: var(--bl-gray-950);
   color: var(--bl-text-inverse);
 }
 
@@ -98,17 +98,17 @@
 }
 
 .badgeOk {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--bl-success-subtle);
+  color: var(--bl-success-text);
 }
 
 .badgeWarn {
-  background: #fffbeb;
-  color: #b45309;
+  background: var(--bl-warning-subtle);
+  color: var(--bl-warning-text);
 }
 
 .badgeCritical {
-  background: #fff1f2;
+  background: var(--bl-accent-subtle);
   color: var(--bl-accent-text);
 }
 

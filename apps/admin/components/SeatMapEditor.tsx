@@ -241,7 +241,7 @@ function FurnitureGlyph({
           stroke={selected ? '#fff' : '#be123c'}
           strokeWidth={selected ? 2 : 1}
         />
-        <rect x={-22} y={-5} width={44} height={10} rx={1} fill="#be123c" opacity={0.55} />
+        <rect x={-22} y={-5} width={44} height={10} rx={1} fill="var(--bl-accent-text)" opacity={0.55} />
       </g>
     );
   }
@@ -258,8 +258,8 @@ function FurnitureGlyph({
           stroke={selected ? '#fff' : '#404040'}
           strokeWidth={selected ? 2 : 1}
         />
-        <circle cx={0} cy={-4} r={3.4} fill="#27272a" />
-        <circle cx={0} cy={5} r={2.4} fill="#27272a" />
+        <circle cx={0} cy={-4} r={3.4} fill="var(--bl-gray-800)" />
+        <circle cx={0} cy={5} r={2.4} fill="var(--bl-gray-800)" />
       </g>
     );
   }
@@ -271,7 +271,7 @@ function FurnitureGlyph({
         width={18}
         height={26}
         rx={2}
-        fill="#18181b"
+        fill="var(--bl-gray-900)"
         stroke={selected ? '#fff' : '#52525b'}
         strokeWidth={selected ? 2 : 1}
       />
@@ -1135,7 +1135,7 @@ export function SeatMapEditor({
       id,
       name: `Sección ${String.fromCharCode(65 + idx)}`,
       slug: `sec-${idx}`,
-      color: '#e11d48',
+      color: 'var(--bl-accent)',
       seats: [],
     };
     updateSections([...map.sections, sec]);
@@ -1768,7 +1768,7 @@ export function SeatMapEditor({
       id,
       name: `Zona GA ${idx + 1}`,
       slug: `ga-${idx}`,
-      color: '#f59e0b',
+      color: 'var(--bl-warning)',
       seats: [],
       shape: { points: gaDraft.map((p) => [Math.round(p.x), Math.round(p.y)] as [number, number]) },
     };
@@ -3950,7 +3950,7 @@ export function SeatMapEditor({
                         y1={bounds.minY}
                         x2={x}
                         y2={bounds.minY + bounds.height}
-                        stroke="#52525b"
+                        stroke="var(--bl-gray-600)"
                         strokeWidth={0.5}
                       />
                     );
@@ -3966,7 +3966,7 @@ export function SeatMapEditor({
                         y1={y}
                         x2={bounds.minX + bounds.width}
                         y2={y}
-                        stroke="#52525b"
+                        stroke="var(--bl-gray-600)"
                         strokeWidth={0.5}
                       />
                     );
@@ -4003,7 +4003,7 @@ export function SeatMapEditor({
                 width={stage.width}
                 height={22}
                 rx={3}
-                fill="#e11d48"
+                fill="var(--bl-accent)"
                 onPointerDown={handleStagePointerDown}
                 style={{ cursor: tool === 'select' ? 'move' : 'default' }}
               />
@@ -4047,7 +4047,7 @@ export function SeatMapEditor({
                     (viewportRef.current as HTMLElement | null)?.setPointerCapture(e.pointerId);
                   }}
                 >
-                  <circle cx={f.x} cy={f.y} r={7} fill="rgba(250,250,250,0.9)" stroke="#e11d48" strokeWidth={2} />
+                  <circle cx={f.x} cy={f.y} r={7} fill="rgba(250,250,250,0.9)" stroke="var(--bl-accent)" strokeWidth={2} />
                   <text
                     x={f.x}
                     y={f.y - 12}
@@ -4132,7 +4132,7 @@ export function SeatMapEditor({
                                 ? '#fb923c'
                                 : '#67e8f9'
                       }
-                      stroke="#0a0a0a"
+                      stroke="var(--bl-gray-950)"
                       strokeWidth={1}
                     />
                   ))}
@@ -4157,7 +4157,7 @@ export function SeatMapEditor({
                         height={14}
                         rx={2}
                         fill={sec.id === activeSection?.id ? '#fbbf24' : '#a1a1aa'}
-                        stroke="#0a0a0a"
+                        stroke="var(--bl-gray-950)"
                         strokeWidth={1.5}
                       />
                       <title>{`Bloque ${block.label ?? block.id} — arrastra para mover`}</title>
@@ -4336,7 +4336,7 @@ export function SeatMapEditor({
                       <polyline
                         points={pts.map(([px, py]) => `${px},${py}`).join(' ')}
                         fill="none"
-                        stroke="#22c55e"
+                        stroke="var(--bl-success)"
                         strokeWidth={ex.width ?? 32}
                         strokeLinecap="round"
                         opacity={0.7}
@@ -4371,12 +4371,12 @@ export function SeatMapEditor({
                   <polyline
                     points={gaDraft.map((p) => `${p.x},${p.y}`).join(' ')}
                     fill="none"
-                    stroke="#f59e0b"
+                    stroke="var(--bl-warning)"
                     strokeWidth={2}
                     strokeDasharray="4 3"
                   />
                   {gaDraft.map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r={4} fill="#f59e0b" />
+                    <circle key={i} cx={p.x} cy={p.y} r={4} fill="var(--bl-warning)" />
                   ))}
                 </>
               )}

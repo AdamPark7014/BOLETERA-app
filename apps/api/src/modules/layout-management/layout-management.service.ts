@@ -138,7 +138,7 @@ export class LayoutManagementService {
           id: sec.sectionId,
           name: sec.name,
           slug: sec.sectionId,
-          color: '#737373',
+          color: 'var(--bl-gray-500)',
           seats,
         };
       }),

@@ -3,7 +3,7 @@
   color: var(--bl-text-primary);
   background:
     radial-gradient(100% 60% at 50% -10%, rgba(225, 29, 72, 0.07), transparent 55%),
-    linear-gradient(180deg, #fafafa 0%, #f4f4f5 50%, #fafafa 100%);
+    linear-gradient(180deg, var(--bl-gray-25) 0%, var(--bl-gray-100) 50%, var(--bl-gray-25) 100%);
 }
 
 .page {
@@ -24,7 +24,7 @@
 }
 
 .stepDone {
-  color: #16a34a;
+  color: var(--bl-success);
 }
 
 .stepActive {
@@ -46,7 +46,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #16a34a;
+  color: var(--bl-success);
 }
 
 .pending {
@@ -55,7 +55,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #d97706;
+  color: var(--bl-warning);
 }
 
 .hero h1 {
@@ -174,7 +174,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #9f1239;
+    outline: 2px solid var(--bl-accent-text);
     outline-offset: 2px;
   }
 }
@@ -189,7 +189,7 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 0.55rem 0;
-    border-top: 1px solid #f5f5f5;
+    border-top: 1px solid var(--bl-gray-100);
     font-size: 0.875rem;
     color: var(--bl-text-secondary);
 
@@ -301,8 +301,8 @@
   }
 
   p {
-    /* #737373 se quedaba en 4.4:1 sobre el fondo claro (WCAG AA pide 4.5:1) */
-    color: #595959;
+    /* var(--bl-gray-500) se quedaba en 4.4:1 sobre el fondo claro (WCAG AA pide 4.5:1) */
+    color: var(--bl-gray-600);
     margin: 0 0 1rem;
     line-height: 1.6;
   }
@@ -320,15 +320,15 @@
 }
 
 .error {
-  color: #b91c1c;
+  color: var(--bl-danger-text);
 }
 
 .errorBox {
   margin: 1rem 0 0;
   padding: 0.75rem 0.85rem;
-  border: 1px solid #b91c1c;
-  background: #fef2f2;
-  color: #991b1b;
+  border: 1px solid var(--bl-danger-text);
+  background: var(--bl-danger-subtle);
+  color: var(--bl-danger-text);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -337,14 +337,14 @@
   margin: 0.65rem 0 0;
   font-size: 0.82rem;
   line-height: 1.55;
-  color: #595959;
+  color: var(--bl-gray-600);
 }
 
 .demoNote {
   margin: 0 0 0.9rem;
   padding: 0.65rem 0.8rem;
-  border: 1px solid #d97706;
-  background: #fffbeb;
+  border: 1px solid var(--bl-warning);
+  background: var(--bl-warning-subtle);
   color: #78350f;
   font-size: 0.85rem;
   font-weight: 600;
@@ -384,7 +384,7 @@
 .totalNote {
   font-size: 0.7rem;
   line-height: 1.4;
-  color: #595959;
+  color: var(--bl-gray-600);
   font-weight: 500;
   max-width: 14rem;
 }
@@ -453,7 +453,7 @@
   min-width: 5rem;
   min-height: 2.75rem;
   padding: 0.5rem 0.8rem;
-  border: 1px solid #525252;
+  border: 1px solid var(--bl-gray-600);
   background: var(--bl-elevated);
   font: inherit;
   font-size: 0.8rem;
@@ -466,7 +466,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #9f1239;
+    outline: 2px solid var(--bl-accent-text);
     outline-offset: 2px;
   }
 }
@@ -476,7 +476,7 @@
   margin-top: 0.4rem;
   font-size: 0.75rem;
   line-height: 1.45;
-  color: #595959;
+  color: var(--bl-gray-600);
 }
 
 .instructionsNote {
@@ -549,22 +549,22 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #1d4ed8;
+  color: var(--bl-info-text);
 }
 
 .cancelBanner {
   text-align: left;
-  border: 1px solid #fecaca;
-  border-left: 4px solid #b91c1c;
-  background: #fef2f2;
+  border: 1px solid var(--bl-danger-border);
+  border-left: 4px solid var(--bl-danger-text);
+  background: var(--bl-danger-subtle);
   padding: 1rem 1.15rem;
   margin-bottom: 1rem;
-  color: #7f1d1d;
+  color: var(--bl-danger-text);
 
   h2 {
     font-size: 1.05rem;
     margin: 0 0 0.4rem;
-    color: #7f1d1d;
+    color: var(--bl-danger-text);
   }
 
   p {
@@ -580,13 +580,13 @@
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #991b1b;
+  color: var(--bl-danger-text);
 }
 
 .refundPanel {
   text-align: left;
   border: 1px solid var(--bl-border);
-  border-left: 4px solid #525252;
+  border-left: 4px solid var(--bl-gray-600);
   background: var(--bl-elevated);
   padding: 1.05rem 1.15rem;
   margin-bottom: 1rem;
@@ -605,17 +605,17 @@
 }
 
 .tone_progress {
-  border-left-color: #1d4ed8;
+  border-left-color: var(--bl-info-text);
   background: #f5f8ff;
 }
 
 .tone_done {
-  border-left-color: #047857;
+  border-left-color: var(--bl-success-text);
   background: #f3fbf7;
 }
 
 .tone_alert {
-  border-left-color: #b91c1c;
+  border-left-color: var(--bl-danger-text);
   background: #fef6f6;
 }
 
@@ -677,7 +677,7 @@
 .compensation {
   margin-top: 0.95rem;
   border: 1px solid #a7f3d0;
-  background: #ecfdf5;
+  background: var(--bl-success-subtle);
   padding: 0.8rem 0.9rem;
   color: #065f46;
 
@@ -699,8 +699,8 @@
 
 .bankAccountNote {
   margin-top: 0.95rem;
-  border: 1px solid #fde68a;
-  background: #fffbeb;
+  border: 1px solid var(--bl-warning-border);
+  background: var(--bl-warning-subtle);
   padding: 0.8rem 0.9rem;
   color: #78350f;
 
@@ -718,11 +718,11 @@
 .ticketsVoidNote {
   margin: 0 0 0.7rem;
   padding: 0.55rem 0.7rem;
-  border-left: 3px solid #b91c1c;
-  background: #fef2f2;
+  border-left: 3px solid var(--bl-danger-text);
+  background: var(--bl-danger-subtle);
   font-size: 0.82rem;
   line-height: 1.45;
-  color: #7f1d1d;
+  color: var(--bl-danger-text);
 }
 
 /* --- Línea de tiempo: qué pasó y cuándo, con fechas reales -------------- */
@@ -746,7 +746,7 @@
       top: 0.85rem;
       bottom: 0;
       width: 1px;
-      background: #d4d4d4;
+      background: var(--bl-gray-300);
     }
 
     &:last-child::before {
@@ -761,13 +761,13 @@
   height: 0.62rem;
   margin-top: 0.28rem;
   border-radius: 50%;
-  background: #047857;
+  background: var(--bl-success-text);
 }
 
 .timelineFuture {
   .timelineDot {
     background: var(--bl-elevated);
-    border: 2px solid #737373;
+    border: 2px solid var(--bl-gray-500);
   }
 }
 

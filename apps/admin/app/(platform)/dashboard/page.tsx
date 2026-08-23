@@ -10,11 +10,11 @@ import type { Capability } from '@/lib/permissions';
 import styles from './dashboard.module.scss';
 
 const channelMeta: Record<string, { color: string; label: string }> = {
-  WEB: { color: '#52525b', label: 'Web' },
-  TAQUILLA: { color: '#18181b', label: 'Taquilla POS' },
-  API: { color: '#71717a', label: 'API' },
-  ADMIN: { color: '#a1a1aa', label: 'Admin' },
-  RESALE: { color: '#3f3f46', label: 'Reventa' },
+  WEB: { color: 'var(--bl-gray-600)', label: 'Web' },
+  TAQUILLA: { color: 'var(--bl-gray-900)', label: 'Taquilla POS' },
+  API: { color: 'var(--bl-gray-500)', label: 'API' },
+  ADMIN: { color: 'var(--bl-gray-400)', label: 'Admin' },
+  RESALE: { color: 'var(--bl-gray-700)', label: 'Reventa' },
 };
 
 function fmtCurrency(n: number | undefined) {
@@ -256,7 +256,7 @@ export default function DashboardPage() {
       <section className={styles.kpis} aria-busy={loading}>
         <article className={`${styles.kpi} ${styles.kpiHero}`}>
           <div className={styles.kpiTop}>
-            <span className={styles.kpiIcon} style={{ background: '#f4f4f5', color: '#18181b' }}>
+            <span className={styles.kpiIcon} style={{ background: 'var(--bl-gray-100)', color: 'var(--bl-gray-900)' }}>
               <StatIcon kind="cash" />
             </span>
             <span className={styles.kpiLabel}>Ingresos hoy</span>
@@ -269,7 +269,7 @@ export default function DashboardPage() {
 
         <article className={styles.kpi}>
           <div className={styles.kpiTop}>
-            <span className={styles.kpiIcon} style={{ background: '#17171715', color: '#171717' }}>
+            <span className={styles.kpiIcon} style={{ background: '#17171715', color: 'var(--bl-gray-900)' }}>
               <StatIcon kind="cart" />
             </span>
             <span className={styles.kpiLabel}>Órdenes hoy</span>
@@ -282,7 +282,7 @@ export default function DashboardPage() {
 
         <article className={styles.kpi}>
           <div className={styles.kpiTop}>
-            <span className={styles.kpiIcon} style={{ background: '#f4f4f5', color: '#52525b' }}>
+            <span className={styles.kpiIcon} style={{ background: 'var(--bl-gray-100)', color: 'var(--bl-gray-600)' }}>
               <StatIcon kind="terminal" />
             </span>
             <span className={styles.kpiLabel}>Terminales POS</span>
@@ -295,7 +295,7 @@ export default function DashboardPage() {
 
         <article className={styles.kpi}>
           <div className={styles.kpiTop}>
-            <span className={styles.kpiIcon} style={{ background: '#f4f4f5', color: '#3f3f46' }}>
+            <span className={styles.kpiIcon} style={{ background: 'var(--bl-gray-100)', color: 'var(--bl-gray-700)' }}>
               <StatIcon kind="pulse" />
             </span>
             <span className={styles.kpiLabel}>Holds activos</span>
@@ -425,7 +425,7 @@ export default function DashboardPage() {
               <div key={o.publicId} className={styles.activityRow}>
                 <span
                   className={styles.actTag}
-                  style={{ color: '#3f3f46', background: '#f4f4f5', borderColor: '#e4e4e7' }}
+                  style={{ color: 'var(--bl-gray-700)', background: 'var(--bl-gray-100)', borderColor: 'var(--bl-gray-200)' }}
                 >
                   {o.channel || 'WEB'}
                 </span>

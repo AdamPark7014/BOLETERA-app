@@ -1,12 +1,12 @@
-$ink: #18181b;
-$ink-soft: #3f3f46;
-$muted: #71717a;
-$border: #e4e4e7;
+$ink: var(--bl-gray-900);
+$ink-soft: var(--bl-gray-700);
+$muted: var(--bl-gray-500);
+$border: var(--bl-gray-200);
 $surface: #ffffff;
-$surface-soft: #fafafa;
-$danger: #b91c1c;
-$warning: #a16207;
-$success: #16a34a;
+$surface-soft: var(--bl-gray-25);
+$danger: var(--bl-danger-text);
+$warning: var(--bl-warning-text);
+$success: var(--bl-success);
 
 .wrap {
   display: flex;
@@ -157,12 +157,12 @@ $success: #16a34a;
 }
 
 .badgeBlocking {
-  background: #fef2f2;
+  background: var(--bl-danger-subtle);
   color: $danger;
 }
 
 .badgeWarn {
-  background: #fffbeb;
+  background: var(--bl-warning-subtle);
   color: $warning;
 }
 
@@ -261,7 +261,7 @@ $success: #16a34a;
 
   &:hover {
     color: $ink;
-    border-color: #a1a1aa;
+    border-color: var(--bl-gray-400);
   }
 }
 

@@ -46,7 +46,7 @@
 
 .field select:focus-visible,
 .field textarea:focus-visible {
-  outline: 3px solid #a5b4fc;
+  outline: 3px solid var(--bl-info-border);
   outline-offset: 2px;
 }
 
@@ -54,9 +54,9 @@
   display: grid;
   gap: 0.35rem;
   padding: 0.9rem 1rem;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--bl-warning-border);
   border-radius: 0.75rem;
-  background: #fffbeb;
+  background: var(--bl-warning-subtle);
 }
 
 .banner strong {
@@ -152,7 +152,7 @@
 }
 
 .bulletsWarn {
-  color: #92400e;
+  color: var(--bl-warning-text);
 }
 
 .kpiCited {
@@ -441,7 +441,7 @@
 .chatBubbleUser {
   justify-self: end;
   max-width: min(36rem, 92%);
-  background: #eff6ff;
+  background: var(--bl-info-subtle);
   border-color: #bfdbfe;
 }
 
@@ -515,7 +515,7 @@
 }
 
 .chatComposer textarea:focus-visible {
-  outline: 3px solid #a5b4fc;
+  outline: 3px solid var(--bl-info-border);
   outline-offset: 2px;
 }
 

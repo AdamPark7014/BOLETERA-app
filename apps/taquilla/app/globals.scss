@@ -1,19 +1,19 @@
 :root {
   --bg: #111113;
   --bg-deep: #0c0c0e;
-  --surface: #18181b;
+  --surface: var(--bl-gray-900);
   --surface-2: #1f1f23;
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
-  --text: #f4f4f5;
-  --muted: #a1a1aa;
-  --muted-2: #71717a;
-  --accent: #f4f4f5;
-  --accent-fg: #18181b;
+  --text: var(--bl-gray-100);
+  --muted: var(--bl-gray-400);
+  --muted-2: var(--bl-gray-500);
+  --accent: var(--bl-gray-100);
+  --accent-fg: var(--bl-gray-900);
   --success: #4ade80;
   --success-bg: rgba(74, 222, 128, 0.1);
   --success-border: rgba(74, 222, 128, 0.28);
-  --warn: #fbbf24;
+  --warn: var(--bl-warning);
   --warn-bg: rgba(251, 191, 36, 0.1);
   --warn-border: rgba(251, 191, 36, 0.28);
   --danger: #f87171;

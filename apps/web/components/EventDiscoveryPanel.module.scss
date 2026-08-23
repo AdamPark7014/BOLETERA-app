@@ -248,7 +248,7 @@
     color: var(--text-heading);
     min-width: 0;
 
-    /* #a3a3a3 daba 2.5:1 sobre blanco: el marcador de posición era ilegible. */
+    /* var(--bl-gray-400) daba 2.5:1 sobre blanco: el marcador de posición era ilegible. */
     &::placeholder {
       color: var(--text-placeholder);
       opacity: 1;
@@ -587,7 +587,7 @@
 }
 
 .rowWeekday {
-  /* Era #a3a3a3 (2.5:1). */
+  /* Era var(--bl-gray-400) (2.5:1). */
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;

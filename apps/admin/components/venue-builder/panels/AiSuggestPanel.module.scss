@@ -178,11 +178,11 @@
 }
 
 .diff_removed .diffKind {
-  color: #fca5a5;
+  color: var(--bl-danger-border);
 }
 
 .diff_changed .diffKind {
-  color: #fbbf24;
+  color: var(--bl-warning);
 }
 
 .diff_unchanged .diffKind {

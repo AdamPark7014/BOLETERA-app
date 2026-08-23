@@ -77,8 +77,8 @@
 }
 
 .venueCardSelected {
-  border-color: #18181b;
-  box-shadow: inset 0 0 0 1px #18181b;
+  border-color: var(--bl-gray-900);
+  box-shadow: inset 0 0 0 1px var(--bl-gray-900);
 }
 
 .cardButton {
@@ -96,7 +96,7 @@
 }
 
 .cardButton:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--bl-info);
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -188,7 +188,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--bl-info);
     outline-offset: 2px;
   }
 }
@@ -272,7 +272,7 @@
   flex-direction: column;
   gap: 0.55rem;
   padding-top: 0.35rem;
-  border-top: 1px solid #f4f4f5;
+  border-top: 1px solid var(--bl-gray-100);
 
   h3 {
     margin: 0;
@@ -346,12 +346,12 @@
 }
 
 .primaryLink:hover {
-  background: #27272a;
+  background: var(--bl-gray-800);
 }
 
 .primaryLink:focus-visible,
 .secondaryLink:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--bl-info);
   outline-offset: 2px;
 }
 
@@ -395,7 +395,7 @@
   }
 
   select:focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--bl-info);
     outline-offset: 2px;
   }
 }

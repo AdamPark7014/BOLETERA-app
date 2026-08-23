@@ -116,7 +116,7 @@ export default function WaitlistPage() {
 
       {loading && <LoadingView label="Cargando lista de espera…" />}
       {!loading && !rows.length && (
-        <p style={{ color: '#525252' }}>Sin registros en lista de espera para tu organización.</p>
+        <p style={{ color: 'var(--bl-gray-600)' }}>Sin registros en lista de espera para tu organización.</p>
       )}
     </div>
   );

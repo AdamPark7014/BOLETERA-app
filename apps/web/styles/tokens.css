@@ -4,7 +4,7 @@
  * LA RAMPA NEUTRA YA NO SE DEFINE AQUI: deriva de `@boletera/ui`, que el layout
  * raiz importa antes que esta hoja. La capa semantica de abajo no cambia.
  *
- * Por que: la tienda codificaba *neutral puro* (#171717, #737373, #e5e5e5,
+ * Por que: la tienda codificaba *neutral puro* (var(--bl-gray-900), var(--bl-gray-500), var(--bl-gray-200),
  * croma 0) mientras el backoffice usaba *zinc* y el sistema de diseno su propio
  * neutro frio. Los tres viajan en los mismos componentes de `packages/ui`, asi
  * que en una misma pantalla se veian grises que no concuerdan entre si. El gris
@@ -37,24 +37,24 @@
   --paper-0: var(--bl-gray-0);
 
   /* Marca */
-  --accent-700: #9f1239;
-  --accent-600: #be123c;
-  --accent-500: #e11d48;
-  --accent-300: #fb7185;
-  --accent-50: #fff1f2;
+  --accent-700: var(--bl-accent-text);
+  --accent-600: var(--bl-accent-text);
+  --accent-500: var(--bl-accent);
+  --accent-300: var(--bl-accent-hover);
+  --accent-50: var(--bl-accent-subtle);
 
   /* Estado */
   --success-700: #065f46;
-  --success-600: #15803d;
-  --success-500: #16a34a;
+  --success-600: var(--bl-success-text);
+  --success-500: var(--bl-success);
   --success-100: #a7f3d0;
-  --success-50: #ecfdf5;
-  --danger-700: #991b1b;
-  --danger-600: #b91c1c;
-  --danger-100: #fecaca;
-  --danger-50: #fef2f2;
-  --warning-600: #d97706;
-  --warning-50: #fffbeb;
+  --success-50: var(--bl-success-subtle);
+  --danger-700: var(--bl-danger-text);
+  --danger-600: var(--bl-danger-text);
+  --danger-100: var(--bl-danger-border);
+  --danger-50: var(--bl-danger-subtle);
+  --warning-600: var(--bl-warning);
+  --warning-50: var(--bl-warning-subtle);
 
 /*
  * IMPORTANTE — usar SIEMPRE pasos crudos (--bl-gray-*), nunca roles de tema.
@@ -96,8 +96,8 @@
   --text-heading: var(--ink-900);
   --text-secondary: var(--ink-700);
   /*
-   * AA: el gris de apoyo era #737373. Sobre blanco da 4.74:1 (pasa por poco),
-   * pero casi todas las superficies del sitio son #fafafa o #f4f4f5, donde cae
+   * AA: el gris de apoyo era var(--bl-gray-500). Sobre blanco da 4.74:1 (pasa por poco),
+   * pero casi todas las superficies del sitio son var(--bl-gray-25) o var(--bl-gray-100), donde cae
    * a 4.54:1 y 4.31:1 → reprueba. #6b6b6b es 4 puntos más oscuro (diferencia
    * imperceptible) y da 4.85:1 sobre la superficie más clara que usamos.
    */
@@ -111,9 +111,9 @@
   --color-accent: var(--accent-500);
   --color-accent-hover: var(--accent-600);
   /*
-   * AA: #e11d48 como TEXTO sobre superficies claras da 4.27:1 sobre #f4f4f5.
-   * Para texto y enlaces usamos el tono que ya existía en el repo (#be123c,
-   * 17 apariciones), que da 5.7:1. #e11d48 se reserva para rellenos, donde el
+   * AA: var(--bl-accent) como TEXTO sobre superficies claras da 4.27:1 sobre var(--bl-gray-100).
+   * Para texto y enlaces usamos el tono que ya existía en el repo (var(--bl-accent-text),
+   * 17 apariciones), que da 5.7:1. var(--bl-accent) se reserva para rellenos, donde el
    * texto blanco encima sí cumple (4.70:1).
    */
   --color-accent-text: var(--accent-600);

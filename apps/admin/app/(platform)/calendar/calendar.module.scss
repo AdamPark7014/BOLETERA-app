@@ -29,7 +29,7 @@
     color: var(--bl-text-primary);
 
     &:hover {
-      border-color: #a3a3a3;
+      border-color: var(--bl-gray-400);
     }
   }
 }
@@ -86,7 +86,7 @@
   color: inherit;
 
   &:hover {
-    border-color: #a3a3a3;
+    border-color: var(--bl-gray-400);
   }
 
   @media (max-width: 800px) {
@@ -96,11 +96,11 @@
 
 .today {
   border-color: var(--bl-accent);
-  box-shadow: inset 0 0 0 1px #e11d48;
+  box-shadow: inset 0 0 0 1px var(--bl-accent);
 }
 
 .selected {
-  background: #fff1f2;
+  background: var(--bl-accent-subtle);
   border-color: var(--bl-accent);
 }
 

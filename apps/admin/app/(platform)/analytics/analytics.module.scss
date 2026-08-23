@@ -23,12 +23,12 @@
 
 .tabOn {
   background: var(--bl-gray-900);
-  border-color: #0a0a0a;
+  border-color: var(--bl-gray-950);
   color: var(--bl-text-inverse);
 }
 
 .error {
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-size: 0.9rem;
 }
 
@@ -72,8 +72,8 @@
 }
 
 .kpiHero {
-  background: linear-gradient(145deg, var(--bl-elevated) 0%, #fff1f2 100%) !important;
-  border-color: #fecdd3 !important;
+  background: linear-gradient(145deg, var(--bl-elevated) 0%, var(--bl-accent-subtle) 100%) !important;
+  border-color: var(--bl-accent-border) !important;
 }
 
 .panel {
@@ -154,7 +154,7 @@
 
 .barFill {
   height: 100%;
-  background: linear-gradient(90deg, var(--bl-accent), #fb7185);
+  background: linear-gradient(90deg, var(--bl-accent), var(--bl-accent-hover));
   border-radius: 999px;
   min-width: 0.35rem;
 }

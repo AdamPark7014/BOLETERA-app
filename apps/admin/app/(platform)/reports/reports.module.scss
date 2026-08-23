@@ -25,7 +25,7 @@
 
   &:hover,
   &:focus-visible {
-    border-color: #a1a1aa;
+    border-color: var(--bl-gray-400);
     box-shadow: 0 1px 0 rgba(24, 24, 27, 0.04);
     outline: none;
   }
@@ -127,7 +127,7 @@
   padding: 0.75rem 0.85rem;
   border-radius: 10px;
   background: var(--bl-surface);
-  border: 1px solid #f4f4f5;
+  border: 1px solid var(--bl-gray-100);
 
   span {
     display: block;

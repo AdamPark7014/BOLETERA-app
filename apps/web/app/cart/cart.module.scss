@@ -1,16 +1,16 @@
-$ink: #0a0a0a;
-// #737373 se quedaba en 4.4:1 sobre el fondo claro; WCAG 2.2 AA pide 4.5:1
-$mute: #595959;
-$line: #e5e5e5;
-$accent: #be123c;
-$paper: #fafafa;
+$ink: var(--bl-gray-950);
+// var(--bl-gray-500) se quedaba en 4.4:1 sobre el fondo claro; WCAG 2.2 AA pide 4.5:1
+$mute: var(--bl-gray-600);
+$line: var(--bl-gray-200);
+$accent: var(--bl-accent-text);
+$paper: var(--bl-gray-25);
 
 .shell {
   min-height: 100vh;
   color: $ink;
   background:
     radial-gradient(110% 70% at 100% -5%, rgba(225, 29, 72, 0.06), transparent 55%),
-    linear-gradient(180deg, #fafafa 0%, #f4f4f5 50%, #fafafa 100%);
+    linear-gradient(180deg, var(--bl-gray-25) 0%, var(--bl-gray-100) 50%, var(--bl-gray-25) 100%);
 }
 
 .page {
@@ -84,7 +84,7 @@ $paper: #fafafa;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #16a34a;
+  color: var(--bl-success);
 }
 
 .card h2 {
@@ -174,7 +174,7 @@ $paper: #fafafa;
   display: inline;
   font-size: 0.78rem;
   font-weight: 500;
-  color: #595959;
+  color: var(--bl-gray-600);
 }
 
 .actions {
@@ -226,7 +226,7 @@ $paper: #fafafa;
   text-decoration: none;
 
   &:hover {
-    border-color: #a3a3a3;
+    border-color: var(--bl-gray-400);
   }
 }
 

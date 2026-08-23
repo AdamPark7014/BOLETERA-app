@@ -152,7 +152,7 @@
   gap: 0.75rem;
   align-items: center;
   padding: 0.4rem 0;
-  border-bottom: 1px solid #f4f4f5;
+  border-bottom: 1px solid var(--bl-gray-100);
 
   &:last-child {
     border-bottom: 0;
@@ -169,7 +169,7 @@
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f4f4f5;
+  border-bottom: 1px solid var(--bl-gray-100);
 
   &:last-child {
     border-bottom: 0;
@@ -216,7 +216,7 @@
 }
 
 .deltaBad {
-  color: #b91c1c;
+  color: var(--bl-danger-text);
   font-weight: 600;
 }
 
@@ -231,10 +231,10 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.75rem 0.85rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--bl-danger-subtle);
+  border: 1px solid var(--bl-danger-border);
   border-radius: 10px;
-  color: #991b1b;
+  color: var(--bl-danger-text);
   font-size: 0.875rem;
 
   p {
@@ -278,7 +278,7 @@
   vertical-align: top;
   height: 5.5rem;
   padding: 0.35rem;
-  border: 1px solid #f4f4f5;
+  border: 1px solid var(--bl-gray-100);
   background: var(--bl-elevated);
 }
 
@@ -288,7 +288,7 @@
 }
 
 .calendarCellToday {
-  box-shadow: inset 0 0 0 1px #18181b;
+  box-shadow: inset 0 0 0 1px var(--bl-gray-900);
 }
 
 .calendarDay {
@@ -338,7 +338,7 @@
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #18181b;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--bl-gray-900);
   }
 }
 
@@ -348,7 +348,7 @@
 
   &:hover,
   &:focus-visible {
-    background: #27272a;
+    background: var(--bl-gray-800);
   }
 }
 

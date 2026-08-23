@@ -239,13 +239,13 @@
     background: var(--muted-2);
 
     &:nth-child(1) {
-      background: #a1a1aa;
+      background: var(--bl-gray-400);
     }
     &:nth-child(2) {
-      background: #71717a;
+      background: var(--bl-gray-500);
     }
     &:nth-child(3) {
-      background: #52525b;
+      background: var(--bl-gray-600);
     }
   }
 }

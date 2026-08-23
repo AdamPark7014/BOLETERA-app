@@ -37,36 +37,36 @@
 
 .permissionBanner {
   justify-content: flex-start;
-  border-color: #fde68a;
-  background: #fffbeb;
+  border-color: var(--bl-warning-border);
+  background: var(--bl-warning-subtle);
   color: #713f12;
 }
 
 .statusDirty {
-  border-color: #fde68a;
-  background: #fffbeb;
+  border-color: var(--bl-warning-border);
+  background: var(--bl-warning-subtle);
   color: #713f12;
 }
 
 .statusSaved {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-  color: #14532d;
+  border-color: var(--bl-success-border);
+  background: var(--bl-success-subtle);
+  color: var(--bl-success-text);
 }
 
 .statusError {
-  border-color: #fecaca;
-  background: #fef2f2;
-  color: #7f1d1d;
+  border-color: var(--bl-danger-border);
+  background: var(--bl-danger-subtle);
+  color: var(--bl-danger-text);
 }
 
 .formError {
   margin: 0;
   padding: 0.7rem 0.85rem;
   border-radius: 0.7rem;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #7f1d1d;
+  border: 1px solid var(--bl-danger-border);
+  background: var(--bl-danger-subtle);
+  color: var(--bl-danger-text);
   font-size: 0.84rem;
 }
 
@@ -132,7 +132,7 @@
   }
 
   &:focus-visible {
-    outline: 3px solid #a5b4fc;
+    outline: 3px solid var(--bl-info-border);
     outline-offset: 2px;
   }
 }
@@ -155,21 +155,21 @@
 }
 
 .checkOk {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-  color: #14532d;
+  border-color: var(--bl-success-border);
+  background: var(--bl-success-subtle);
+  color: var(--bl-success-text);
 }
 
 .checkWarn {
-  border-color: #fde68a;
-  background: #fffbeb;
+  border-color: var(--bl-warning-border);
+  background: var(--bl-warning-subtle);
   color: #713f12;
 }
 
 .checkBad {
-  border-color: #fecaca;
-  background: #fef2f2;
-  color: #7f1d1d;
+  border-color: var(--bl-danger-border);
+  background: var(--bl-danger-subtle);
+  color: var(--bl-danger-text);
 }
 
 .checkTitle {
@@ -264,8 +264,8 @@
   gap: 0.35rem;
   padding: 0.75rem 0.85rem;
   border-radius: 0.7rem;
-  border: 1px solid #bbf7d0;
-  background: #f0fdf4;
+  border: 1px solid var(--bl-success-border);
+  background: var(--bl-success-subtle);
 
   code {
     font-size: 0.85rem;
@@ -274,7 +274,7 @@
 
   p {
     margin: 0;
-    color: #14532d;
+    color: var(--bl-success-text);
     font-size: 0.78rem;
     line-height: 1.4;
   }
@@ -619,10 +619,10 @@
   border-radius: 0.35rem;
   background:
     linear-gradient(var(--bl-gray-900) 0 0) 0 0 / 35% 35%,
-    linear-gradient(#18181b 0 0) 100% 0 / 35% 35%,
-    linear-gradient(#18181b 0 0) 0 100% / 35% 35%,
-    linear-gradient(#18181b 0 0) 100% 100% / 25% 25%,
-    repeating-linear-gradient(90deg, #18181b 0 2px, transparent 2px 5px);
+    linear-gradient(var(--bl-gray-900) 0 0) 100% 0 / 35% 35%,
+    linear-gradient(var(--bl-gray-900) 0 0) 0 100% / 35% 35%,
+    linear-gradient(var(--bl-gray-900) 0 0) 100% 100% / 25% 25%,
+    repeating-linear-gradient(90deg, var(--bl-gray-900) 0 2px, transparent 2px 5px);
   background-repeat: no-repeat;
   opacity: 0.85;
 }

@@ -72,7 +72,7 @@ function Sparkline() {
       <path
         d="M0,80 C40,70 60,40 100,45 C140,50 160,20 200,28 C240,36 260,55 320,30"
         fill="none"
-        stroke="#fafafa"
+        stroke="var(--bl-gray-25)"
         strokeOpacity="0.85"
         strokeWidth="1.5"
       />
@@ -161,9 +161,9 @@ export default function LoginPage() {
             <div className={styles.logoBlock}>
               <div className={styles.logoMark}>
                 <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                  <rect width="32" height="32" rx="9" fill="#fafafa" />
-                  <path d="M9 11h14M9 16h14M9 21h9" stroke="#0a0a0a" strokeWidth="2.2" strokeLinecap="round" />
-                  <circle cx="22" cy="21" r="2.5" fill="#0a0a0a" />
+                  <rect width="32" height="32" rx="9" fill="var(--bl-gray-25)" />
+                  <path d="M9 11h14M9 16h14M9 21h9" stroke="var(--bl-gray-950)" strokeWidth="2.2" strokeLinecap="round" />
+                  <circle cx="22" cy="21" r="2.5" fill="var(--bl-gray-950)" />
                 </svg>
               </div>
               <div>
@@ -238,9 +238,9 @@ export default function LoginPage() {
             <div className={styles.mobileBrand}>
               <div className={styles.logoMark}>
                 <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                  <rect width="32" height="32" rx="9" fill="#0a0a0a" />
-                  <path d="M9 11h14M9 16h14M9 21h9" stroke="#fafafa" strokeWidth="2.2" strokeLinecap="round" />
-                  <circle cx="22" cy="21" r="2.5" fill="#fafafa" />
+                  <rect width="32" height="32" rx="9" fill="var(--bl-gray-950)" />
+                  <path d="M9 11h14M9 16h14M9 21h9" stroke="var(--bl-gray-25)" strokeWidth="2.2" strokeLinecap="round" />
+                  <circle cx="22" cy="21" r="2.5" fill="var(--bl-gray-25)" />
                 </svg>
               </div>
               <div>

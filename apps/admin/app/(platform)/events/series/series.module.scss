@@ -83,9 +83,9 @@
   border-radius: var(--radius-md, 8px);
   font-size: 0.8125rem;
   line-height: 1.45;
-  background: color-mix(in srgb, #ef4444 10%, transparent);
-  color: #991b1b;
-  border: 1px solid color-mix(in srgb, #ef4444 30%, transparent);
+  background: color-mix(in srgb, var(--bl-danger) 10%, transparent);
+  color: var(--bl-danger-text);
+  border: 1px solid color-mix(in srgb, var(--bl-danger) 30%, transparent);
 }
 
 .tableWrap {

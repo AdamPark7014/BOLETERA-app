@@ -1,9 +1,9 @@
-$ink: #0a0a0a;
-$ink-2: #171717;
-$mute: #737373;
-$line: #e5e5e5;
-$paper: #f4f4f5;
-$accent: #e11d48;
+$ink: var(--bl-gray-950);
+$ink-2: var(--bl-gray-900);
+$mute: var(--bl-gray-500);
+$line: var(--bl-gray-200);
+$paper: var(--bl-gray-100);
+$accent: var(--bl-accent);
 
 .page {
   position: relative;
@@ -11,7 +11,7 @@ $accent: #e11d48;
   color: $ink;
   background:
     radial-gradient(100% 60% at 100% 0%, rgba(225, 29, 72, 0.06), transparent 50%),
-    linear-gradient(180deg, #fafafa 0%, $paper 40%, #fafafa 100%);
+    linear-gradient(180deg, var(--bl-gray-25) 0%, $paper 40%, var(--bl-gray-25) 100%);
 }
 
 .hero {
@@ -98,7 +98,7 @@ $accent: #e11d48;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #fb7185;
+  color: var(--bl-accent-hover);
 }
 
 .heroCopy h1 {
@@ -306,7 +306,7 @@ $accent: #e11d48;
 
 .purchase {
   background: var(--bl-gray-900);
-  border: 1px solid #171717;
+  border: 1px solid var(--bl-gray-900);
   padding: 0;
   overflow: hidden;
   color: var(--bl-text-inverse);
@@ -327,7 +327,7 @@ $accent: #e11d48;
 
   .qtyPanel {
     background: #141414;
-    border-color: #262626;
+    border-color: var(--bl-gray-800);
   }
 
   .qtyTitle {
@@ -490,7 +490,7 @@ $accent: #e11d48;
   padding: 0.9rem 1rem;
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
-  border: 1px solid #171717;
+  border: 1px solid var(--bl-gray-900);
 
   @media (max-width: 560px) {
     flex-direction: column;

@@ -53,9 +53,9 @@ function OauthCallbackHandler() {
     <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', fontFamily: 'system-ui' }}>
       <div style={{ textAlign: 'center' }}>
         <h1>{error ? 'No se pudo iniciar sesión' : 'Completando SSO…'}</h1>
-        {error && <p style={{ color: '#b91c1c' }}>{error}</p>}
+        {error && <p style={{ color: 'var(--bl-danger-text)' }}>{error}</p>}
         {error && (
-          <a href="/login" style={{ color: '#2563eb' }}>
+          <a href="/login" style={{ color: 'var(--bl-info)' }}>
             Volver al login
           </a>
         )}

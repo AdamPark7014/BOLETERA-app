@@ -532,7 +532,7 @@ export class AdminService {
           id: 'suggested-a',
           name: 'Sección A (sugerida)',
           slug: 'a',
-          color: '#404040',
+          color: 'var(--bl-gray-700)',
           seats: Array.from({ length: 10 }, (_, i) => ({
             id: `sug-${i}`,
             label: `A-${i + 1}`,

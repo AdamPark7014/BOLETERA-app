@@ -114,7 +114,7 @@
   }
 
   span {
-    /* Era 0.62rem en #e11d48 (4.3:1 sobre la pastilla clara). */
+    /* Era 0.62rem en var(--bl-accent) (4.3:1 sobre la pastilla clara). */
     font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: var(--tracking-wide);

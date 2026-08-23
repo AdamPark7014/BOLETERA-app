@@ -31,7 +31,7 @@
   }
 
   /**
-   * contraste: la bajada del encabezado vive sobre el fondo de página (#f4f4f5),
+   * contraste: la bajada del encabezado vive sobre el fondo de página (var(--bl-gray-100)),
    * no sobre una tarjeta blanca. Con `--color-text-muted` daba 4.40:1; con
    * `--c-ink-600` da 7.03:1.
    */
@@ -235,8 +235,8 @@
 }
 
 /**
- * contraste: `draft` (#525252 sobre #f5f5f5) ya cumplía, pero `completed`
- * (#737373 sobre #f5f5f5) daba 4.35:1. La diferencia de gris entre ambos no
+ * contraste: `draft` (var(--bl-gray-600) sobre var(--bl-gray-100)) ya cumplía, pero `completed`
+ * (var(--bl-gray-500) sobre var(--bl-gray-100)) daba 4.35:1. La diferencia de gris entre ambos no
  * significaba nada — quien lee el badge lee "Borrador" o "Finalizado" — así que
  * los dos comparten ahora el neutro que sí cumple (7.03:1) y se distinguen por
  * el texto, no por el tono.

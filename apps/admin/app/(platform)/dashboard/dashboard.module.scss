@@ -42,9 +42,9 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #166534;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  color: var(--bl-success-text);
+  background: var(--bl-success-subtle);
+  border: 1px solid var(--bl-success-border);
   padding: 0.25rem 0.625rem;
   border-radius: 999px;
 }
@@ -53,7 +53,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #16a34a;
+  background: var(--bl-success);
 }
 
 .lead {
@@ -132,8 +132,8 @@
 }
 
 .kpiHero {
-  background: linear-gradient(145deg, var(--bl-elevated) 0%, #fff1f2 100%);
-  border-color: #fecdd3;
+  background: linear-gradient(145deg, var(--bl-elevated) 0%, var(--bl-accent-subtle) 100%);
+  border-color: var(--bl-accent-border);
 }
 
 .kpiTop {
@@ -179,7 +179,7 @@
 }
 
 .trendUp {
-  color: #16a34a;
+  color: var(--bl-success);
   font-weight: 600;
 }
 
@@ -200,7 +200,7 @@
 
   div {
     height: 100%;
-    background: #52525b;
+    background: var(--bl-gray-600);
     border-radius: 999px;
   }
 }
@@ -242,9 +242,9 @@
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: #166534;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  color: var(--bl-success-text);
+  background: var(--bl-success-subtle);
+  border: 1px solid var(--bl-success-border);
   padding: 0.25rem 0.5rem;
   border-radius: 6px;
   text-transform: uppercase;
