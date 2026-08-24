@@ -1,7 +1,7 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
   margin-top: 0.85rem;
 }
 
@@ -11,8 +11,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.7rem 1.1rem;
-  font-size: 0.875rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
+  font-size: var(--bl-text-md);
   font-weight: 700;
   background: var(--bl-accent);
   color: var(--bl-text-inverse);
@@ -29,8 +29,8 @@
 }
 
 .error {
-  margin: 0;
-  font-size: 0.8rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   color: var(--bl-accent-text);
 }

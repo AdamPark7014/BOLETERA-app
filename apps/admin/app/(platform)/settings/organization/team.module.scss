@@ -9,9 +9,9 @@ $danger: var(--bl-danger-text);
 .alertError,
 .alertOk {
   margin-bottom: 1rem;
-  padding: 0.7rem 0.9rem;
-  font-size: 0.8125rem;
-  border-radius: 10px;
+  padding: var(--bl-space-3) var(--bl-space-4);
+  font-size: var(--bl-text-sm);
+  border-radius: var(--bl-radius-lg);
   border: 1px solid;
 }
 
@@ -30,7 +30,7 @@ $danger: var(--bl-danger-text);
 .inviteForm {
   display: grid;
   grid-template-columns: minmax(220px, 2fr) minmax(150px, 1fr) minmax(120px, 1fr) auto;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   align-items: end;
 
   @media (max-width: 900px) {
@@ -40,10 +40,10 @@ $danger: var(--bl-danger-text);
 
 .field {
   display: grid;
-  gap: 0.3rem;
+  gap: var(--bl-space-1);
 
   label {
-    font-size: 0.6875rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -52,18 +52,18 @@ $danger: var(--bl-danger-text);
 
   input,
   select {
-    padding: 0.5rem 0.65rem;
-    font-size: 0.8125rem;
+    padding: var(--bl-space-2) var(--bl-space-2-5);
+    font-size: var(--bl-text-sm);
     color: $ink;
     background: var(--bl-elevated);
     border: 1px solid $border;
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
   }
 }
 
 .hint {
-  margin: 0.75rem 0 0;
-  font-size: 0.75rem;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: $muted;
 }
 
@@ -71,22 +71,22 @@ $danger: var(--bl-danger-text);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--bl-space-4);
   margin-bottom: 0.75rem;
   flex-wrap: wrap;
 }
 
 .tabs {
   display: flex;
-  gap: 0.375rem;
+  gap: var(--bl-space-1-5);
 }
 
 .tab,
 .tabOn {
-  padding: 0.35rem 0.7rem;
-  font-size: 0.75rem;
+  padding: var(--bl-space-1-5) var(--bl-space-3);
+  font-size: var(--bl-text-xs);
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   cursor: pointer;
   border: 1px solid $border;
 }
@@ -104,10 +104,10 @@ $danger: var(--bl-danger-text);
 
 .badge {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.6875rem;
+  padding: var(--bl-space-0-5) var(--bl-space-2);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   border: 1px solid;
 }
 
@@ -131,17 +131,17 @@ $danger: var(--bl-danger-text);
 
 .soon {
   color: $warning;
-  font-size: 0.6875rem;
+  font-size: var(--bl-text-2xs);
 }
 
 .revokeBtn {
-  padding: 0.3rem 0.65rem;
-  font-size: 0.72rem;
+  padding: var(--bl-space-1) var(--bl-space-2-5);
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   color: $danger;
   background: transparent;
   border: 1px solid var(--bl-danger-border);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   cursor: pointer;
 
   &:hover:not(:disabled) {
@@ -155,9 +155,9 @@ $danger: var(--bl-danger-text);
 }
 
 .empty {
-  margin: 0;
-  padding: 1.25rem 0;
-  font-size: 0.8125rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-5) var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   color: $muted;
   text-align: center;
 }

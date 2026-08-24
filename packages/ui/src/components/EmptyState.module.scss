@@ -50,7 +50,7 @@
 }
 
 .title {
-  margin: 0;
+  margin: var(--bl-space-0);
   @include type('lg', $weight-semibold);
   color: $c-text-primary;
   text-wrap: balance;
@@ -69,7 +69,7 @@
   flex-direction: column;
   gap: $space-1;
   margin: $space-4 0 0;
-  padding: 0;
+  padding: var(--bl-space-0);
   list-style: none;
   @include type('sm');
   color: $c-text-tertiary;

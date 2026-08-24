@@ -30,5 +30,6 @@ export { TicketTransferModule } from './ticket-transfer/ticket-transfer.module';
 export { PartnersModule } from './partners/partners.module';
 export { BillingModule } from './billing/billing.module';
 export { SeasonModule } from './season/season.module';
+export { MetricsModule } from './metrics/metrics.module';
 
 

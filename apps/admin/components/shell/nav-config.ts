@@ -10,6 +10,8 @@ export type NavItemDef = {
   keywords?: readonly string[];
   /** Matching for nested routes. Defaults to href prefix with special cases. */
   match?: 'exact' | 'prefix' | 'events' | 'reports';
+  /** Only visible to SUPER_ADMIN (platform-wide tools). */
+  superAdminOnly?: boolean;
 };
 
 export type NavGroupDef = {
@@ -89,6 +91,14 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
     label: 'Venues y mapas',
     showVenues: true,
     items: [
+      {
+        id: 'venues-list',
+        href: '/venues',
+        label: 'Venues',
+        icon: 'building',
+        keywords: ['recintos', 'sedes'],
+        match: 'exact',
+      },
       {
         id: 'maps',
         href: '/maps',
@@ -312,6 +322,43 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
     ],
   },
   {
+    id: 'platform',
+    label: 'Plataforma',
+    defaultCollapsed: true,
+    items: [
+      {
+        id: 'platform-control',
+        href: '/platform/control',
+        label: 'Control global',
+        icon: 'fraud',
+        keywords: ['super', 'búsqueda global'],
+        superAdminOnly: true,
+      },
+      {
+        id: 'platform-health',
+        href: '/platform/health',
+        label: 'Salud operativa',
+        icon: 'audit',
+        keywords: ['reconciliación', 'diagnóstico'],
+        superAdminOnly: true,
+      },
+      {
+        id: 'platform-caps',
+        href: '/platform',
+        label: 'Capacidades',
+        icon: 'platform',
+        keywords: ['módulos', 'features'],
+      },
+      {
+        id: 'audit',
+        href: '/audit',
+        label: 'Auditoría',
+        icon: 'audit',
+        keywords: ['logs', 'actividad'],
+      },
+    ],
+  },
+  {
     id: 'settings',
     label: 'Configuración',
     defaultCollapsed: true,
@@ -334,8 +381,22 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
   },
 ] as const;
 
-export function flattenNavItems(): NavItemDef[] {
-  return NAV_GROUPS.flatMap((group) => [...group.items]);
+export function flattenNavItems(role?: string | null): NavItemDef[] {
+  return filterNavGroupsForRole(NAV_GROUPS, role).flatMap((group) => [...group.items]);
+}
+
+/** Hide platform-wide entries from non–super-admins. */
+export function filterNavGroupsForRole(
+  groups: readonly NavGroupDef[],
+  role?: string | null,
+): NavGroupDef[] {
+  const isSuperAdmin = role?.toUpperCase() === 'SUPER_ADMIN';
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !item.superAdminOnly || isSuperAdmin),
+    }))
+    .filter((group) => group.items.length > 0 || group.showVenues);
 }
 
 export function isNavItemActive(pathname: string, item: NavItemDef): boolean {

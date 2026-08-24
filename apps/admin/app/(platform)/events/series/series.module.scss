@@ -21,8 +21,8 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.8125rem;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-sm);
   color: var(--color-fg-muted, var(--bl-text-secondary));
 }
 
@@ -34,7 +34,7 @@
   background: var(--color-bg, var(--bl-elevated));
   border: 1px solid var(--color-border, var(--bl-border));
   border-radius: var(--radius-md, 8px);
-  padding: 0.55rem 0.7rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
 }
 
 .field textarea {
@@ -60,8 +60,8 @@
 }
 
 .hint {
-  margin: 0;
-  font-size: 0.75rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: var(--color-fg-muted, var(--bl-text-tertiary));
   line-height: 1.45;
 }
@@ -78,10 +78,10 @@
 }
 
 .alertDanger {
-  margin: 0.75rem 0 0;
-  padding: 0.75rem 0.9rem;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-3) var(--bl-space-4);
   border-radius: var(--radius-md, 8px);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
   background: color-mix(in srgb, var(--bl-danger) 10%, transparent);
   color: var(--bl-danger-text);
@@ -95,19 +95,19 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
 }
 
 .table th,
 .table td {
   text-align: left;
-  padding: 0.7rem 0.65rem;
+  padding: var(--bl-space-3) var(--bl-space-2-5);
   border-bottom: 1px solid var(--color-border, var(--bl-border));
   vertical-align: top;
 }
 
 .table th {
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-fg-muted, var(--bl-text-tertiary));
@@ -127,14 +127,14 @@
 
 .muted {
   color: var(--color-fg-muted, var(--bl-text-tertiary));
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   margin-top: 0.2rem;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 @media (max-width: 960px) {

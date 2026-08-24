@@ -30,8 +30,8 @@
 .list {
   display: flex;
   flex-direction: column;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
@@ -72,7 +72,7 @@
 }
 
 .sentence {
-  margin: 0;
+  margin: var(--bl-space-0);
   @include type('sm');
   color: $c-text-secondary;
   text-wrap: pretty;

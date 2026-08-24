@@ -25,8 +25,8 @@ $paper: var(--bl-gray-25);
 }
 
 .eyebrow {
-  margin: 0 0 0.4rem;
-  font-size: 0.7rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -34,7 +34,7 @@ $paper: var(--bl-gray-25);
 }
 
 .hero h1 {
-  margin: 0 0 0.45rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
   font-family: var(--font-heading), 'Bebas Neue', sans-serif;
   font-size: clamp(2.4rem, 5vw, 3.4rem);
   letter-spacing: 0.03em;
@@ -42,16 +42,16 @@ $paper: var(--bl-gray-25);
 }
 
 .lead {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: $mute;
-  font-size: 0.98rem;
+  font-size: var(--bl-text-lg);
   line-height: 1.5;
 }
 
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 18.5rem;
-  gap: 1.25rem 1.5rem;
+  gap: var(--bl-space-5) var(--bl-space-6);
   align-items: start;
 
   @media (max-width: 900px) {
@@ -62,25 +62,25 @@ $paper: var(--bl-gray-25);
 .list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--bl-space-4);
 }
 
 .card {
   background: var(--bl-elevated);
   border: 1px solid $line;
-  padding: 1.15rem 1.2rem 1.1rem;
+  padding: var(--bl-space-5) var(--bl-space-5) var(--bl-space-4);
 }
 
 .cardTop {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: flex-start;
 }
 
 .kicker {
-  margin: 0 0 0.25rem;
-  font-size: 0.65rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -88,8 +88,8 @@ $paper: var(--bl-gray-25);
 }
 
 .card h2 {
-  margin: 0;
-  font-size: 1.2rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xl);
   line-height: 1.2;
 
   a {
@@ -103,9 +103,9 @@ $paper: var(--bl-gray-25);
 }
 
 .meta {
-  margin: 0.35rem 0 0;
+  margin: var(--bl-space-1-5) var(--bl-space-0) var(--bl-space-0);
   color: $mute;
-  font-size: 0.88rem;
+  font-size: var(--bl-text-md);
 }
 
 .timer {
@@ -116,7 +116,7 @@ $paper: var(--bl-gray-25);
 
   span {
     display: block;
-    font-size: 0.62rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -124,7 +124,7 @@ $paper: var(--bl-gray-25);
   }
 
   strong {
-    font-size: 1.35rem;
+    font-size: var(--bl-text-2xl);
     font-family: var(--font-heading), 'Bebas Neue', sans-serif;
     letter-spacing: 0.04em;
   }
@@ -137,13 +137,13 @@ $paper: var(--bl-gray-25);
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-  gap: 0.75rem 1rem;
-  margin: 1rem 0 0;
-  padding: 0.85rem 0 0;
+  gap: var(--bl-space-3) var(--bl-space-4);
+  margin: var(--bl-space-4) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
   border-top: 1px solid $line;
 
   dt {
-    font-size: 0.62rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -151,8 +151,8 @@ $paper: var(--bl-gray-25);
   }
 
   dd {
-    margin: 0.15rem 0 0;
-    font-size: 0.9rem;
+    margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
+    font-size: var(--bl-text-md);
     font-weight: 600;
   }
 }
@@ -164,7 +164,7 @@ $paper: var(--bl-gray-25);
   }
 
   dd {
-    font-size: 1.05rem;
+    font-size: var(--bl-text-lg);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
@@ -172,7 +172,7 @@ $paper: var(--bl-gray-25);
 
 .factNote {
   display: inline;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   font-weight: 500;
   color: var(--bl-gray-600);
 }
@@ -180,7 +180,7 @@ $paper: var(--bl-gray-25);
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   margin-top: 1rem;
 }
 
@@ -189,12 +189,12 @@ $paper: var(--bl-gray-25);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.7rem 1.15rem;
+  padding: var(--bl-space-3) var(--bl-space-5);
   border: none;
   background: $accent;
   color: var(--bl-text-inverse);
   font: inherit;
-  font-size: 0.88rem;
+  font-size: var(--bl-text-md);
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -208,19 +208,19 @@ $paper: var(--bl-gray-25);
 .primaryWide {
   width: 100%;
   margin-top: 0.35rem;
-  padding: 0.85rem 1rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
 }
 
 .ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 0.95rem;
+  padding: var(--bl-space-2-5) var(--bl-space-4);
   border: 1px solid $line;
   background: var(--bl-elevated);
   color: $ink;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: var(--bl-text-md);
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
@@ -234,12 +234,12 @@ $paper: var(--bl-gray-25);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 0.95rem;
+  padding: var(--bl-space-2-5) var(--bl-space-4);
   border: none;
   background: transparent;
   color: $mute;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: var(--bl-text-md);
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
@@ -251,42 +251,42 @@ $paper: var(--bl-gray-25);
 }
 
 .expiredBlock {
-  padding: 1rem 1.1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   border: 1px dashed var(--bl-border-strong);
   background: rgba(255, 255, 255, 0.65);
 
   h3 {
-    margin: 0 0 0.25rem;
-    font-size: 0.95rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
+    font-size: var(--bl-text-lg);
   }
 
   > p {
-    margin: 0 0 0.75rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
     color: $mute;
-    font-size: 0.85rem;
+    font-size: var(--bl-text-md);
   }
 
   ul {
     list-style: none;
-    margin: 0;
-    padding: 0;
+    margin: var(--bl-space-0);
+    padding: var(--bl-space-0);
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: var(--bl-space-2);
   }
 
   li {
     display: flex;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: var(--bl-space-3);
     align-items: center;
-    font-size: 0.9rem;
+    font-size: var(--bl-text-md);
   }
 
   a,
   button {
     font: inherit;
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
     font-weight: 600;
     color: $mute;
     background: none;
@@ -302,12 +302,12 @@ $paper: var(--bl-gray-25);
   top: 5rem;
   background: var(--bl-elevated);
   border: 1px solid $line;
-  padding: 1.15rem 1.2rem 1.2rem;
+  padding: var(--bl-space-5) var(--bl-space-5) var(--bl-space-5);
 
   h2 {
-    margin: 0 0 0.85rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
     font-family: var(--font-heading), 'Bebas Neue', sans-serif;
-    font-size: 1.55rem;
+    font-size: var(--bl-text-3xl);
     letter-spacing: 0.04em;
   }
 
@@ -318,17 +318,17 @@ $paper: var(--bl-gray-25);
 
 .summaryRows {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: var(--bl-space-2);
 
   li {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    font-size: 0.9rem;
+    gap: var(--bl-space-4);
+    font-size: var(--bl-text-md);
     color: $mute;
 
     strong {
@@ -346,7 +346,7 @@ $paper: var(--bl-gray-25);
   color: $ink !important;
 
   strong {
-    font-size: 1.1rem;
+    font-size: var(--bl-text-xl);
   }
 }
 
@@ -355,18 +355,18 @@ $paper: var(--bl-gray-25);
 }
 
 .hint {
-  margin: 0.85rem 0 0;
-  font-size: 0.78rem;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: $mute;
   line-height: 1.4;
 }
 
 .multiNote {
-  margin: 0.85rem 0 0;
-  padding: 0.65rem 0.75rem;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-2-5) var(--bl-space-3);
   background: $paper;
   border: 1px solid $line;
-  font-size: 0.82rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
   line-height: 1.4;
 }
@@ -374,15 +374,15 @@ $paper: var(--bl-gray-25);
 .trust {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
   margin-top: 1rem;
 
   span {
-    font-size: 0.62rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 0.3rem 0.45rem;
+    padding: var(--bl-space-1) var(--bl-space-2);
     border: 1px solid $line;
     color: var(--bl-text-secondary);
   }
@@ -391,7 +391,7 @@ $paper: var(--bl-gray-25);
 .summaryFooter {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-top: 1rem;
   padding-top: 0.85rem;
   border-top: 1px solid $line;
@@ -399,7 +399,7 @@ $paper: var(--bl-gray-25);
   a,
   button {
     font: inherit;
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
     font-weight: 600;
     color: $mute;
     background: none;
@@ -414,28 +414,28 @@ $paper: var(--bl-gray-25);
   max-width: 28rem;
   margin: 1rem auto 0;
   text-align: center;
-  padding: 2.5rem 1.25rem;
+  padding: var(--bl-space-10) var(--bl-space-5);
   background: var(--bl-elevated);
   border: 1px solid $line;
 
   h2 {
-    margin: 1rem 0 0.4rem;
+    margin: var(--bl-space-4) var(--bl-space-0) var(--bl-space-1-5);
     font-family: var(--font-heading), 'Bebas Neue', sans-serif;
-    font-size: 2rem;
+    font-size: var(--bl-text-4xl);
     letter-spacing: 0.04em;
   }
 
   p {
-    margin: 0 0 1.25rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-5);
     color: $mute;
-    font-size: 0.95rem;
+    font-size: var(--bl-text-lg);
   }
 }
 
 .emptyArt {
   display: flex;
   justify-content: center;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
 
   span {
     width: 2.4rem;
@@ -448,6 +448,6 @@ $paper: var(--bl-gray-25);
 .emptyActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   justify-content: center;
 }

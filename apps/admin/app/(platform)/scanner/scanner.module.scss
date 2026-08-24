@@ -12,12 +12,12 @@ $border: var(--bl-gray-300);
 
   :global(button) {
     min-height: 48px; // puerta: objetivo grande, no los 24px del mínimo WCAG
-    padding: 0.75rem 1.5rem;
+    padding: var(--bl-space-3) var(--bl-space-6);
     background: $ink;
     color: var(--bl-text-inverse);
     border: none;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: var(--bl-radius-md);
+    font-size: var(--bl-text-lg);
     font-weight: 600;
     cursor: pointer;
 
@@ -34,24 +34,24 @@ $border: var(--bl-gray-300);
 }
 
 .field {
-  margin: 1rem 0;
+  margin: var(--bl-space-4) var(--bl-space-0);
 
   label {
     display: block;
     margin-bottom: 0.35rem;
     color: $ink;
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
     font-weight: 600;
   }
 
   input,
   textarea {
     width: 100%;
-    padding: 0.75rem;
+    padding: var(--bl-space-3);
     border: 1px solid $border;
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
     font-family: ui-monospace, monospace;
-    font-size: 1rem; // 16px: evita el zoom automático de iOS al enfocar
+    font-size: var(--bl-text-lg); // 16px: evita el zoom automático de iOS al enfocar
 
     &:focus-visible {
       outline: 3px solid var(--bl-info);
@@ -62,7 +62,7 @@ $border: var(--bl-gray-300);
 
 .actions {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   flex-wrap: wrap;
 }
 
@@ -74,19 +74,19 @@ $border: var(--bl-gray-300);
 
 .hint {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: center;
   flex-wrap: wrap;
   color: $muted;
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
 }
 
 .pillOnline,
 .pillOffline,
 .pillQueued {
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.8125rem;
+  border-radius: var(--bl-radius-full);
+  font-size: var(--bl-text-sm);
   font-weight: 600;
 }
 
@@ -106,25 +106,25 @@ $border: var(--bl-gray-300);
 }
 
 .warnBanner {
-  margin: 0.75rem 0;
-  padding: 0.75rem 0.9rem;
+  margin: var(--bl-space-3) var(--bl-space-0);
+  padding: var(--bl-space-3) var(--bl-space-4);
   color: #7c2d12;
   background: #fff7ed;
   border: 1px solid #fed7aa;
   border-left: 4px solid #c2410c;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  border-radius: var(--bl-radius-md);
+  font-size: var(--bl-text-md);
 }
 
 .camera {
-  margin: 1rem 0;
+  margin: var(--bl-space-4) var(--bl-space-0);
 }
 
 .video {
   width: 100%;
   max-height: 240px;
   margin-top: 0.75rem;
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-gray-900);
 }
 
@@ -133,32 +133,32 @@ $border: var(--bl-gray-300);
 
 %verdict {
   margin-top: 1.25rem;
-  padding: 1rem 1.1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   border: 1px solid;
   border-left-width: 6px;
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
 
   strong {
     display: block;
     margin-bottom: 0.35rem;
-    font-size: 1.125rem;
+    font-size: var(--bl-text-xl);
   }
 
   p {
-    margin: 0.25rem 0;
-    font-size: 0.9375rem;
+    margin: var(--bl-space-1) var(--bl-space-0);
+    font-size: var(--bl-text-md);
   }
 
   ul {
-    margin: 0.5rem 0 0;
+    margin: var(--bl-space-2) var(--bl-space-0) var(--bl-space-0);
     padding-left: 1.1rem;
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
   }
 
   :global(code) {
     display: block;
     margin-top: 0.5rem;
-    font-size: 0.9375rem;
+    font-size: var(--bl-text-md);
   }
 }
 
@@ -199,7 +199,7 @@ $border: var(--bl-gray-300);
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);

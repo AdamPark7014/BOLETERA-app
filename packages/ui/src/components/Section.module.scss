@@ -21,7 +21,7 @@
 }
 
 .title {
-  margin: 0;
+  margin: var(--bl-space-0);
   @include type('lg', $weight-semibold);
   color: $c-text-primary;
 }

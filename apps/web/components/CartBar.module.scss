@@ -5,15 +5,15 @@
   z-index: 50;
   width: min(20rem, calc(100vw - 1.5rem));
   color: var(--bl-text-inverse);
-  font-size: 0.85rem;
+  font-size: var(--bl-text-md);
 }
 
 .toggle {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.7rem 0.85rem;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: var(--bl-gray-900);
   color: inherit;
@@ -27,9 +27,9 @@
   place-items: center;
   min-width: 1.35rem;
   height: 1.35rem;
-  padding: 0 0.3rem;
+  padding: var(--bl-space-0) var(--bl-space-1);
   background: var(--bl-accent);
-  font-size: 0.72rem;
+  font-size: var(--bl-text-xs);
   font-weight: 800;
 }
 
@@ -51,23 +51,23 @@
 
 .panel {
   margin-top: 0.4rem;
-  padding: 0.75rem;
+  padding: var(--bl-space-3);
   background: var(--bl-gray-900);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 
   ul {
     list-style: none;
-    margin: 0 0 0.65rem;
-    padding: 0;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2-5);
+    padding: var(--bl-space-0);
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: var(--bl-space-2);
   }
 
   li {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--bl-space-2);
     align-items: flex-start;
 
     div {
@@ -79,7 +79,7 @@
     }
 
     strong {
-      font-size: 0.82rem;
+      font-size: var(--bl-text-sm);
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
@@ -87,7 +87,7 @@
     }
 
     span {
-      font-size: 0.72rem;
+      font-size: var(--bl-text-xs);
       color: rgba(250, 250, 250, 0.55);
       font-variant-numeric: tabular-nums;
     }
@@ -97,9 +97,9 @@
       border: none;
       color: rgba(250, 250, 250, 0.55);
       cursor: pointer;
-      font-size: 1.15rem;
+      font-size: var(--bl-text-xl);
       line-height: 1;
-      padding: 0 0.15rem;
+      padding: var(--bl-space-0) var(--bl-space-0-5);
 
       &:hover {
         color: var(--bl-accent-hover);
@@ -113,11 +113,11 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 0.65rem 0.75rem;
+  padding: var(--bl-space-2-5) var(--bl-space-3);
   background: var(--bl-accent);
   color: var(--bl-text-inverse);
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: var(--bl-text-sm);
   text-decoration: none;
 
   &:hover {

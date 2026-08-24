@@ -31,6 +31,17 @@ import {
   type AvailabilitySnapshot,
 } from '../_shared/inventory-api';
 import platform from '../../_styles/platform.module.scss';
+import hubStyles from './event-hub.module.scss';
+import {
+  Badge,
+  Button,
+  KpiCard,
+  PageHeader,
+  Section,
+  Tabs,
+  type BadgeTone,
+  type TabItem,
+} from '@boletera/ui';
 
 const Venue3DViewer = dynamic(
   () => import('@boletera/venue-3d').then((m) => m.Venue3DViewer),
@@ -50,6 +61,33 @@ const TAB_LABEL: Record<Tab, string> = {
   pricing: 'Precios',
   compliance: 'Cumplimiento',
 };
+
+const TAB_ITEMS: TabItem[] = (
+  ['overview', 'live', 'blocks', 'channels', 'map3d', 'pricing', 'compliance'] as Tab[]
+).map((id) => ({ id, label: TAB_LABEL[id] }));
+
+const STATUS_LABEL: Record<string, string> = {
+  DRAFT: 'Borrador',
+  SCHEDULED: 'Programado',
+  LIVE: 'En vivo',
+  COMPLETED: 'Finalizado',
+  CANCELLED: 'Cancelado',
+};
+
+function statusTone(status: string): BadgeTone {
+  switch (status) {
+    case 'LIVE':
+      return 'success';
+    case 'SCHEDULED':
+      return 'info';
+    case 'DRAFT':
+      return 'warning';
+    case 'CANCELLED':
+      return 'danger';
+    default:
+      return 'neutral';
+  }
+}
 type ChannelPct = { web: number; taquilla: number; api: number };
 
 function parseChannelAllocation(metadata: Record<string, unknown>): ChannelPct {
@@ -275,58 +313,73 @@ export default function EventHubPage() {
   const occupancy = availability ? occupancyPercent(availability) : inventory.occupancyPercent;
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>{event.title}</h1>
-          <p>
-            {event.venue?.name} · {new Date(event.startsAt).toLocaleString('es-MX')} ·{' '}
-            {occupancy}% ocupación · {event.status}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className={platform.primaryBtn}
-            disabled={publishing || !canPublish}
-            title={
-              canPublish
-                ? undefined
-                : publishBlockerHint
-                  ? `Bloqueado: ${publishBlockerHint}`
-                  : 'Completa el checklist de publicación'
-            }
-            onClick={async () => {
-              if (!canPublish) {
-                toast.error('Completa los requisitos del checklist antes de publicar.');
-                return;
+    <div className={hubStyles.hub}>
+      <PageHeader
+        eyebrow={
+          <span className={hubStyles.statusRow}>
+            <Badge tone={statusTone(event.status)} variant="soft">
+              {STATUS_LABEL[event.status] ?? event.status}
+            </Badge>
+            <span>{occupancy}% ocupación</span>
+          </span>
+        }
+        title={event.title}
+        breadcrumbs={[
+          { label: 'Eventos', href: '/events' },
+          { label: event.title },
+        ]}
+        description={`${event.venue?.name ?? 'Sin recinto'} · ${new Date(event.startsAt).toLocaleString('es-MX')}`}
+        actions={
+          <div className={hubStyles.actions}>
+            <Button
+              disabled={publishing || !canPublish}
+              title={
+                canPublish
+                  ? undefined
+                  : publishBlockerHint
+                    ? `Bloqueado: ${publishBlockerHint}`
+                    : 'Completa el checklist de publicación'
               }
-              if (!confirm('¿Publicar el inventario de este evento? Esto genera los boletos vendibles a partir del mapa guardado.')) return;
-              if (!token || !id) return;
-              setPublishing(true);
-              try {
-                const r = await publishEvent(token, id);
-                toast.success(`Publicado: ${r.totalSeats} boletos en ${r.sections} zonas`);
-                reload();
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : 'Error al publicar');
-              } finally {
-                setPublishing(false);
-              }
-            }}
-          >
-            {publishing ? 'Publicando…' : 'Publicar inventario'}
-          </button>
-          {venueId && (
-            <Link href={`/venues/${venueId}/map`} className={platform.ghostBtn}>
-              Editor de mapa
+              onClick={async () => {
+                if (!canPublish) {
+                  toast.error('Completa los requisitos del checklist antes de publicar.');
+                  return;
+                }
+                if (
+                  !confirm(
+                    '¿Publicar el inventario de este evento? Esto genera los boletos vendibles a partir del mapa guardado.',
+                  )
+                ) {
+                  return;
+                }
+                if (!token || !id) return;
+                setPublishing(true);
+                try {
+                  const r = await publishEvent(token, id);
+                  toast.success(`Publicado: ${r.totalSeats} boletos en ${r.sections} zonas`);
+                  reload();
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Error al publicar');
+                } finally {
+                  setPublishing(false);
+                }
+              }}
+              loading={publishing}
+              loadingLabel="Publicando…"
+            >
+              Publicar inventario
+            </Button>
+            {venueId ? (
+              <Link href={`/venues/${venueId}/map`} className={platform.ghostBtn}>
+                Editor de mapa
+              </Link>
+            ) : null}
+            <Link href="/events" className={platform.ghostBtn}>
+              ← Eventos
             </Link>
-          )}
-          <Link href="/events" className={platform.ghostBtn}>
-            ← Eventos
-          </Link>
-        </div>
-      </header>
+          </div>
+        }
+      />
 
       {token && (
         <EventPublishValidationPanel
@@ -337,41 +390,33 @@ export default function EventHubPage() {
         />
       )}
 
-      <div className={platform.cardGrid}>
-        <article className={platform.statCard}>
-          <span>Vendidos</span>
-          <strong>{sold.toLocaleString('es-MX')}</strong>
-          <small>de {totalTickets.toLocaleString('es-MX')}</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Disponibles</span>
-          <strong>{availableSeats.toLocaleString('es-MX')}</strong>
-        </article>
-        <article className={platform.statCard}>
-          <span>En hold</span>
-          <strong>{held.toLocaleString('es-MX')}</strong>
-          {availability && <small>{availability.activeHolds} holds activos</small>}
-        </article>
-        <article className={platform.statCard}>
-          <span>Órdenes</span>
-          <strong>{event._count?.orders ?? 0}</strong>
-        </article>
-      </div>
+      <Section columns={4} gap="md" className={hubStyles.kpiStrip}>
+        <KpiCard
+          label="Vendidos"
+          value={sold.toLocaleString('es-MX')}
+          hint={`de ${totalTickets.toLocaleString('es-MX')}`}
+          tone="accent"
+        />
+        <KpiCard label="Disponibles" value={availableSeats.toLocaleString('es-MX')} tone="success" />
+        <KpiCard
+          label="En hold"
+          value={held.toLocaleString('es-MX')}
+          hint={availability ? `${availability.activeHolds} holds activos` : undefined}
+          tone="warning"
+        />
+        <KpiCard label="Órdenes" value={(event._count?.orders ?? 0).toLocaleString('es-MX')} />
+      </Section>
 
-      <nav className={platform.tabs} aria-label="Secciones del evento">
-        {(['overview', 'live', 'blocks', 'channels', 'map3d', 'pricing', 'compliance'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            aria-current={tab === t ? 'page' : undefined}
-            className={tab === t ? platform.active : ''}
-            onClick={() => setTab(t)}
-          >
-            {TAB_LABEL[t]}
-          </button>
-        ))}
-      </nav>
+      <Tabs
+        items={TAB_ITEMS}
+        value={tab}
+        onValueChange={(id) => setTab(id as Tab)}
+        variant="pill"
+        label="Secciones del evento"
+        className={hubStyles.tabs}
+      />
 
+      <div className={hubStyles.tabPanel}>
       {tab === 'overview' && (
         <section className={platform.panel}>
           <h2>Ventas por canal</h2>
@@ -574,6 +619,7 @@ export default function EventHubPage() {
           </table>
         </section>
       )}
+      </div>
     </div>
   );
 }

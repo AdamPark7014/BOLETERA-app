@@ -2,11 +2,11 @@
   width: 100%;
   margin-top: 1.5rem;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
 
   :global(th),
   :global(td) {
-    padding: 0.75rem;
+    padding: var(--bl-space-3);
     text-align: left;
     border-bottom: 1px solid var(--bl-border);
   }
@@ -20,24 +20,24 @@
 .kpis {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
+  gap: var(--bl-space-4);
   margin-top: 1.5rem;
 
   :global(article) {
-    padding: 1rem;
+    padding: var(--bl-space-4);
     background: var(--bl-elevated);
     border: 1px solid var(--bl-border);
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
 
     :global(span) {
       display: block;
-      font-size: 0.75rem;
+      font-size: var(--bl-text-xs);
       color: var(--bl-text-tertiary);
       margin-bottom: 0.25rem;
     }
 
     :global(strong) {
-      font-size: 1.25rem;
+      font-size: var(--bl-text-2xl);
     }
   }
 }

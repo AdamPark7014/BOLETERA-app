@@ -3,9 +3,9 @@
 .group {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--bl-space-0-5);
   flex: none;
-  padding: 2px;
+  padding: var(--bl-space-0-5);
   background: $c-surface-sunken;
   border: 1px solid $c-border-subtle;
   border-radius: $radius-md;

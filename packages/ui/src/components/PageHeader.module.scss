@@ -21,8 +21,8 @@
   align-items: center;
   flex-wrap: wrap;
   gap: $space-1-5;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
   @include type('xs');
   color: $c-text-tertiary;
@@ -74,7 +74,7 @@
 }
 
 .title {
-  margin: 0;
+  margin: var(--bl-space-0);
   @include type('3xl', $weight-semibold);
   color: $c-text-primary;
   text-wrap: balance;

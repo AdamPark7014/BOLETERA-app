@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--bl-space-5);
   min-width: 0;
   color: var(--bl-text-primary);
 }
@@ -9,7 +9,7 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(17rem, 0.85fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: start;
 
   @media (max-width: 1100px) {
@@ -20,15 +20,15 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--bl-space-4);
 }
 
 .card {
   min-width: 0;
-  padding: 1.1rem 1.2rem 1.25rem;
+  padding: var(--bl-space-4) var(--bl-space-5) var(--bl-space-5);
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  border-radius: 14px;
+  border-radius: var(--bl-radius-lg);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
@@ -36,37 +36,37 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 1rem;
   flex-wrap: wrap;
 
   h2 {
-    margin: 0;
-    font-size: 1.05rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-lg);
     letter-spacing: -0.01em;
   }
 
   p {
-    margin: 0.25rem 0 0;
+    margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
     color: var(--bl-text-tertiary);
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
   }
 }
 
 .alerts {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .alert {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.7rem 0.9rem;
-  border-radius: 10px;
+  gap: var(--bl-space-2-5);
+  padding: var(--bl-space-3) var(--bl-space-4);
+  border-radius: var(--bl-radius-lg);
   border: 1px solid var(--bl-border);
   background: var(--bl-surface);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 .filters {
@@ -77,7 +77,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 0.65rem;
   flex-wrap: wrap;
 }
@@ -90,26 +90,26 @@
 
   small {
     color: var(--bl-text-tertiary);
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
   }
 }
 
 .adoptionCell {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--bl-space-1);
   min-width: 120px;
 
   small {
     color: var(--bl-text-tertiary);
-    font-size: 0.68rem;
+    font-size: var(--bl-text-2xs);
   }
 }
 
 .bar {
   height: 6px;
   margin-top: 0.3rem;
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   background: #ececef;
   overflow: hidden;
 
@@ -124,27 +124,27 @@
 .stackCell {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--bl-space-0-5);
   align-items: flex-end;
 
   small {
     color: var(--bl-text-tertiary);
-    font-size: 0.68rem;
+    font-size: var(--bl-text-2xs);
   }
 }
 
 .sideList {
   list-style: none;
-  margin: 0.75rem 0 0;
-  padding: 0;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-0);
 }
 
 .sideList li {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.7rem 0;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-3) var(--bl-space-0);
   border-top: 1px solid var(--bl-border-subtle);
 
   &:first-child {
@@ -154,20 +154,20 @@
 
   strong {
     display: block;
-    font-size: 0.8125rem;
+    font-size: var(--bl-text-sm);
   }
 
   small {
     display: block;
     margin-top: 0.2rem;
     color: var(--bl-text-tertiary);
-    font-size: 0.7rem;
+    font-size: var(--bl-text-2xs);
   }
 }
 
 .rate {
   font-variant-numeric: tabular-nums;
-  font-size: 0.9rem;
+  font-size: var(--bl-text-md);
 }
 
 .inlineBadge {
@@ -177,7 +177,7 @@
 .renewalGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--bl-space-4);
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
@@ -186,13 +186,13 @@
 
 .formGrid {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 }
 
 .fieldRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 
   @media (max-width: 560px) {
     grid-template-columns: 1fr;
@@ -202,8 +202,8 @@
 .selectField {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.8125rem;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-sm);
 
   span {
     color: var(--bl-text-secondary);
@@ -212,9 +212,9 @@
 
   select {
     min-height: 2.5rem;
-    padding: 0.45rem 0.65rem;
+    padding: var(--bl-space-2) var(--bl-space-2-5);
     border: 1px solid var(--bl-border);
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
     background: var(--bl-elevated);
     font: inherit;
   }
@@ -222,43 +222,43 @@
 
 .muted {
   color: var(--bl-text-tertiary);
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
 }
 
 .formError {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--bl-danger-text);
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
 }
 
 .modalFooter {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   flex-wrap: wrap;
 }
 
 .sortSelect {
   min-height: 2.25rem;
-  padding: 0.4rem 0.65rem;
+  padding: var(--bl-space-1-5) var(--bl-space-2-5);
   border: 1px solid var(--bl-border);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-elevated);
   color: var(--bl-text-primary);
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 .panelSkeleton {
   display: grid;
-  gap: 0.55rem;
+  gap: var(--bl-space-2);
 }
 
 .srOnly {
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
@@ -269,19 +269,19 @@
 .unavailableBanner {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 1.1rem;
-  border-radius: 14px;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-4) var(--bl-space-4);
+  border-radius: var(--bl-radius-lg);
   border: 1px solid var(--bl-border);
   background: var(--bl-surface);
 
   strong {
-    font-size: 0.95rem;
+    font-size: var(--bl-text-lg);
   }
 
   p {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--bl-text-secondary);
-    font-size: 0.8125rem;
+    font-size: var(--bl-text-sm);
   }
 }

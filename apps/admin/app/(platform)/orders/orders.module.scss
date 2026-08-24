@@ -1,7 +1,7 @@
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   align-items: center;
   margin-bottom: 1rem;
 }
@@ -13,10 +13,10 @@
   flex: 1;
   min-width: 240px;
   max-width: 400px;
-  padding: 0 0.625rem 0 0.75rem;
+  padding: var(--bl-space-0) var(--bl-space-2-5) var(--bl-space-0) var(--bl-space-3);
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  border-radius: 9px;
+  border-radius: var(--bl-radius-md);
   color: var(--bl-text-tertiary);
   transition: border-color 0.15s, box-shadow 0.15s;
 
@@ -30,8 +30,8 @@
     border: none;
     outline: none;
     background: transparent;
-    padding: 0.5rem 0.5rem;
-    font-size: 0.875rem;
+    padding: var(--bl-space-2) var(--bl-space-2);
+    font-size: var(--bl-text-md);
     color: var(--bl-text-primary);
 
     &::placeholder {
@@ -42,11 +42,11 @@
 
 .filters {
   display: flex;
-  gap: 0.25rem;
+  gap: var(--bl-space-1);
   background: var(--bl-elevated);
-  padding: 0.25rem;
+  padding: var(--bl-space-1);
   border: 1px solid var(--bl-border);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
 }
 
 .filter,
@@ -54,17 +54,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
+  gap: var(--bl-space-1-5);
   min-height: 32px;
   min-width: 32px;
-  padding: 0.4375rem 0.75rem;
-  font-size: 0.8125rem;
+  padding: var(--bl-space-1-5) var(--bl-space-3);
+  font-size: var(--bl-text-sm);
   font-weight: 500;
   /* var(--bl-gray-600) sobre #fff = 7.4:1; el var(--bl-gray-500) anterior se quedaba en 4.4:1. */
   color: var(--bl-text-secondary);
   background: transparent;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--bl-radius-sm);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 
@@ -91,12 +91,12 @@
 
 .code {
   display: inline-block;
-  padding: 0.125rem 0.375rem;
+  padding: var(--bl-space-0-5) var(--bl-space-1-5);
   font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-primary);
   background: var(--bl-surface-sunken);
-  border-radius: 4px;
+  border-radius: var(--bl-radius-xs);
 }
 
 .chDot {
@@ -110,10 +110,10 @@
 .gateway {
   display: inline-flex;
   flex-direction: column;
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 
   small {
-    font-size: 0.6875rem;
+    font-size: var(--bl-text-2xs);
     color: var(--bl-text-tertiary);
     text-transform: capitalize;
   }
@@ -122,10 +122,10 @@
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--bl-space-1);
   padding: 0.2rem 0.5rem;
   border-radius: 5px;
-  font-size: 0.6875rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -168,32 +168,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 2.5rem 1rem;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-10) var(--bl-space-4);
   text-align: center;
   color: var(--bl-text-tertiary);
 
   p {
-    margin: 0;
+    margin: var(--bl-space-0);
   }
 }
 
 .detailGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1.5rem;
+  gap: var(--bl-space-6);
   margin-bottom: 1.5rem;
 
   h2 {
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--bl-text-tertiary);
-    margin: 0 0 0.35rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
   }
 
   p {
-    margin: 0;
+    margin: var(--bl-space-0);
     line-height: 1.45;
   }
 }
@@ -201,14 +201,14 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .detailMsg {
-  padding: 0.75rem 1rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   background: #fff7ed;
   border: 1px solid #fed7aa;
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   color: #9a3412;
   margin-bottom: 1rem;
 }
@@ -219,11 +219,11 @@
 
 .refundList {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .refundRow {
@@ -231,8 +231,8 @@
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.875rem 0;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-3) var(--bl-space-0);
   border-bottom: 1px solid var(--bl-border);
 
   &:last-child {
@@ -254,7 +254,7 @@
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
@@ -273,8 +273,8 @@
 }
 
 .scopeNote {
-  margin: 0 0 1rem;
-  font-size: 0.8125rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
+  font-size: var(--bl-text-sm);
   line-height: 1.5;
   color: var(--bl-text-secondary);
 }
@@ -287,7 +287,7 @@
     display: block;
     margin-top: 0.2rem;
     color: var(--bl-text-secondary);
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
   }
 }
 
@@ -304,7 +304,7 @@
   &:focus-visible {
     outline: 2px solid var(--bl-gray-900);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: var(--bl-radius-xs);
   }
 
   &:hover code {
@@ -316,12 +316,12 @@
   display: inline-flex;
   align-items: center;
   min-height: 36px;
-  padding: 0.5rem 0.875rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
   border: 1px solid var(--bl-gray-900);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   cursor: pointer;
 
   &:disabled {
@@ -336,10 +336,10 @@
 }
 
 .lookupError {
-  margin: 0.5rem 0 0;
+  margin: var(--bl-space-2) var(--bl-space-0) var(--bl-space-0);
   text-align: center;
   color: var(--bl-danger-text);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 /* ── Detalle ────────────────────────────────────────────────────────────── */
@@ -347,7 +347,7 @@
 .detailCols {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: start;
 
   @media (max-width: 900px) {
@@ -358,11 +358,11 @@
 .breakdown {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
 
   th,
   td {
-    padding: 0.5rem 0;
+    padding: var(--bl-space-2) var(--bl-space-0);
     border-bottom: 1px solid var(--bl-border-subtle);
     text-align: left;
     font-weight: 400;
@@ -402,13 +402,13 @@
 /* Línea de tiempo: creada → intento → liquidada → emitida → reembolsada. */
 .timeline {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
 }
 
 .tlItem {
   position: relative;
-  padding: 0 0 1.125rem 1.75rem;
+  padding: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4) var(--bl-space-7);
 
   &:last-child {
     padding-bottom: 0;
@@ -429,8 +429,8 @@
   }
 
   p {
-    margin: 0;
-    font-size: 0.875rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     font-weight: 500;
     color: var(--bl-text-primary);
   }
@@ -438,7 +438,7 @@
   small {
     display: block;
     margin-top: 0.125rem;
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     color: var(--bl-text-secondary);
   }
 }
@@ -479,7 +479,7 @@
 .tlState {
   display: inline-block;
   margin-left: 0.375rem;
-  font-size: 0.6875rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -489,17 +489,17 @@
 .ticketTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 
   th,
   td {
-    padding: 0.5rem 0.5rem 0.5rem 0;
+    padding: var(--bl-space-2) var(--bl-space-2) var(--bl-space-2) var(--bl-space-0);
     border-bottom: 1px solid var(--bl-border-subtle);
     text-align: left;
   }
 
   th {
-    font-size: 0.6875rem;
+    font-size: var(--bl-text-2xs);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--bl-text-secondary);
@@ -509,16 +509,16 @@
 .metaList {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.375rem 1rem;
-  margin: 0;
-  font-size: 0.875rem;
+  gap: var(--bl-space-1-5) var(--bl-space-4);
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
 
   dt {
     color: var(--bl-text-secondary);
   }
 
   dd {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--bl-text-primary);
     word-break: break-word;
   }
@@ -527,29 +527,29 @@
 .refundForm {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   align-items: flex-end;
-  padding: 1rem;
+  padding: var(--bl-space-4);
   border: 1px solid var(--bl-border);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-surface);
   margin-bottom: 1rem;
 
   label {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.8125rem;
+    gap: var(--bl-space-1);
+    font-size: var(--bl-text-sm);
     color: var(--bl-text-secondary);
   }
 
   input,
   select {
     min-height: 36px;
-    padding: 0.4375rem 0.625rem;
+    padding: var(--bl-space-1-5) var(--bl-space-2-5);
     border: 1px solid var(--bl-border-strong);
-    border-radius: 8px;
-    font-size: 0.875rem;
+    border-radius: var(--bl-radius-md);
+    font-size: var(--bl-text-md);
     background: var(--bl-elevated);
     color: var(--bl-text-primary);
 
@@ -561,25 +561,25 @@
 }
 
 .nextStep {
-  margin: 0.375rem 0 0;
-  padding: 0.5rem 0.625rem;
-  border-radius: 6px;
+  margin: var(--bl-space-1-5) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-2) var(--bl-space-2-5);
+  border-radius: var(--bl-radius-sm);
   background: var(--bl-elevated);
   border: 1px dashed var(--bl-border-strong);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 }
 
 .stepBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.15rem 0.45rem;
+  gap: var(--bl-space-1);
+  padding: var(--bl-space-0-5) var(--bl-space-2);
   margin-right: 0.375rem;
   border-radius: 5px;
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
-  font-size: 0.6875rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
 }
 

@@ -1,14 +1,14 @@
 .studio {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   min-height: calc(100vh - 6rem);
 }
 
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   align-items: stretch;
   min-height: 640px;
 }
@@ -22,7 +22,7 @@
 .viewportColumn {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   min-width: 0;
 }
 
@@ -56,12 +56,12 @@
   left: 0.75rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.6rem;
-  border-radius: 6px;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-1-5) var(--bl-space-2-5);
+  border-radius: var(--bl-radius-sm);
   background: rgba(10, 10, 12, 0.72);
   color: #f5f5f4;
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   pointer-events: none;
 }
 
@@ -73,7 +73,7 @@
 .sidePanels {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   min-width: 0;
   max-height: calc(100vh - 10rem);
   overflow: auto;
@@ -82,12 +82,12 @@
 .panel {
   border: 1px solid var(--bl-border);
   background: var(--bl-elevated);
-  padding: 0.85rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
 }
 
 .panelTitle {
-  margin: 0 0 0.55rem;
-  font-size: 0.8rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
+  font-size: var(--bl-text-sm);
   font-weight: 650;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -96,23 +96,23 @@
 
 .panelBody {
   display: grid;
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
 }
 
 .row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   align-items: center;
 }
 
 .field {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--bl-space-1);
 }
 
 .fieldLabel {
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-tertiary);
 }
 
@@ -121,20 +121,20 @@
 .fieldRange {
   width: 100%;
   border: 1px solid var(--bl-border-strong);
-  border-radius: 6px;
-  padding: 0.4rem 0.5rem;
+  border-radius: var(--bl-radius-sm);
+  padding: var(--bl-space-1-5) var(--bl-space-2);
   font: inherit;
   background: var(--bl-elevated);
 }
 
 .fieldRange {
-  padding: 0;
+  padding: var(--bl-space-0);
   border: none;
 }
 
 .hint {
-  margin: 0;
-  font-size: 0.75rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-tertiary);
   line-height: 1.4;
 }
@@ -142,9 +142,9 @@
 .chipBtn {
   border: 1px solid var(--bl-border-strong);
   background: var(--bl-elevated);
-  border-radius: 6px;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.8rem;
+  border-radius: var(--bl-radius-sm);
+  padding: var(--bl-space-1-5) var(--bl-space-2);
+  font-size: var(--bl-text-sm);
   cursor: pointer;
 }
 
@@ -167,35 +167,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  gap: var(--bl-space-2);
+  font-size: var(--bl-text-md);
 }
 
 .toggleRow label {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
   cursor: pointer;
 }
 
 .inspectorList {
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
   display: grid;
-  gap: 0.35rem;
-  font-size: 0.85rem;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-md);
 }
 
 .inspectorList dt {
   color: var(--bl-text-tertiary);
-  font-size: 0.72rem;
+  font-size: var(--bl-text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .inspectorList dd {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-weight: 550;
   color: var(--bl-text-primary);
 }
@@ -223,27 +223,27 @@
 .statusBar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
+  gap: var(--bl-space-3) var(--bl-space-5);
   align-items: center;
   justify-content: space-between;
   border: 1px solid var(--bl-border);
   background: var(--bl-surface);
-  padding: 0.55rem 0.75rem;
-  font-size: 0.8rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 }
 
 .statusMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .srOnly {
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
@@ -254,19 +254,19 @@
 .toolbarWrap {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .toolbarActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   align-items: center;
 }
 
 .msg {
-  margin: 0;
-  font-size: 0.875rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   color: var(--bl-text-secondary);
 }
 
@@ -300,23 +300,23 @@
 .legendScale {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.72rem;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-tertiary);
 }
 
 .sightScale {
   flex: 1;
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   background: linear-gradient(90deg, var(--bl-gray-700), #be4646, #b48c32, #38a078, var(--bl-success));
 }
 
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.35rem;
-  font-size: 0.78rem;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-xs);
 }
 
 .summaryGrid span {

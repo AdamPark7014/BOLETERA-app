@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: var(--bl-space-6);
   background: var(--bl-surface-sunken);
   color: var(--bl-text-primary);
 }
@@ -30,7 +30,7 @@
   width: 100%;
   max-width: 64rem;
   grid-template-columns: 1fr;
-  border-radius: 16px;
+  border-radius: var(--bl-radius-xl);
   overflow: hidden;
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
@@ -60,13 +60,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--bl-space-4);
 }
 
 .logoBlock {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .logoMark {
@@ -83,16 +83,16 @@
 }
 
 .logoText {
-  margin: 0;
-  font-size: 0.875rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   font-weight: 700;
   letter-spacing: 0.14em;
   color: var(--bl-text-inverse);
 }
 
 .logoSub {
-  margin: 0;
-  font-size: 0.6875rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -102,14 +102,14 @@
 .badgeLive {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   padding: 0.3125rem 0.625rem;
-  font-size: 0.6875rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 500;
   color: var(--bl-text-disabled);
   background: var(--bl-gray-800);
   border: 1px solid var(--bl-gray-700);
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
 }
 
 .dot {
@@ -120,12 +120,12 @@
 }
 
 .brandHero {
-  margin: 2rem 0 1.5rem;
+  margin: var(--bl-space-8) var(--bl-space-0) var(--bl-space-6);
 }
 
 .brandKicker {
-  margin: 0 0 0.625rem;
-  font-size: 0.75rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2-5);
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -133,8 +133,8 @@
 }
 
 .brandTitle {
-  margin: 0 0 0.75rem;
-  font-size: 1.75rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
+  font-size: var(--bl-text-3xl);
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -142,30 +142,111 @@
 }
 
 .brandCopy {
-  margin: 0;
-  font-size: 0.9375rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   line-height: 1.55;
   color: var(--bl-text-disabled);
   max-width: 22rem;
 }
 
+.shellCompact {
+  @media (min-width: 900px) {
+    grid-template-columns: 1fr;
+    max-width: 28rem;
+  }
+
+  .brand {
+    display: none;
+  }
+}
+
+.capabilityCards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-3);
+  margin-bottom: 1.5rem;
+}
+
+.capabilityCard {
+  position: relative;
+  overflow: hidden;
+  padding: var(--bl-space-4);
+  background: linear-gradient(145deg, rgba(225, 29, 72, 0.12) 0%, var(--bl-gray-800) 55%);
+  border: 1px solid var(--bl-gray-700);
+  border-radius: var(--bl-radius-lg);
+
+  strong {
+    display: block;
+    font-size: var(--bl-text-md);
+    font-weight: 600;
+    color: var(--bl-text-inverse);
+  }
+
+  span {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: var(--bl-text-sm);
+    line-height: 1.45;
+    color: var(--bl-text-disabled);
+  }
+
+  .spark {
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 55%;
+    height: 3.5rem;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+.capabilityRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--bl-space-2-5);
+}
+
+.capabilityMini {
+  padding: var(--bl-space-3) var(--bl-space-2-5);
+  background: var(--bl-gray-800);
+  border: 1px solid var(--bl-gray-700);
+  border-radius: var(--bl-radius-lg);
+
+  strong {
+    display: block;
+    font-size: var(--bl-text-xs);
+    font-weight: 600;
+    color: var(--bl-text-inverse);
+  }
+
+  span {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: var(--bl-text-2xs);
+    line-height: 1.4;
+    color: var(--bl-text-tertiary);
+  }
+}
+
 .statCards {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 1.5rem;
 }
 
 .statCard {
   position: relative;
-  padding: 1rem 1.125rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   background: var(--bl-gray-800);
   border: 1px solid var(--bl-gray-700);
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
 
   span {
     display: block;
-    font-size: 0.6875rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -175,7 +256,7 @@
   strong {
     display: block;
     margin-top: 0.25rem;
-    font-size: 1.5rem;
+    font-size: var(--bl-text-3xl);
     font-weight: 600;
     letter-spacing: -0.02em;
     color: var(--bl-text-inverse);
@@ -185,7 +266,7 @@
   small {
     display: block;
     margin-top: 0.25rem;
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     color: var(--bl-text-tertiary);
   }
 }
@@ -201,18 +282,18 @@
 .statRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.625rem;
+  gap: var(--bl-space-2-5);
 }
 
 .miniStat {
-  padding: 0.75rem 0.625rem;
+  padding: var(--bl-space-3) var(--bl-space-2-5);
   background: var(--bl-gray-800);
   border: 1px solid var(--bl-gray-700);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
 
   span {
     display: block;
-    font-size: 0.625rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 500;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -222,7 +303,7 @@
   strong {
     display: block;
     margin-top: 0.25rem;
-    font-size: 1rem;
+    font-size: var(--bl-text-lg);
     font-weight: 600;
     color: var(--bl-text-inverse);
     font-feature-settings: 'tnum';
@@ -230,18 +311,18 @@
 }
 
 .features {
-  margin: 0 0 1.5rem;
-  padding: 0;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-6);
+  padding: var(--bl-space-0);
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: var(--bl-space-2-5);
 
   li {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    font-size: 0.8125rem;
+    gap: var(--bl-space-2-5);
+    font-size: var(--bl-text-sm);
     color: var(--bl-text-disabled);
   }
 }
@@ -255,8 +336,8 @@
 }
 
 .brandFooter {
-  margin: 0;
-  font-size: 0.6875rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   color: var(--bl-text-secondary);
   letter-spacing: 0.04em;
 }
@@ -265,11 +346,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2.5rem 1.75rem;
+  padding: var(--bl-space-10) var(--bl-space-7);
   background: var(--bl-elevated);
 
   @media (min-width: 900px) {
-    padding: 2.5rem 3rem;
+    padding: var(--bl-space-10) var(--bl-space-12);
   }
 }
 
@@ -281,7 +362,7 @@
 .mobileBrand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 1.75rem;
 
   @media (min-width: 900px) {
@@ -293,16 +374,16 @@
   margin-bottom: 1.75rem;
 
   h1 {
-    margin: 0 0 0.5rem;
-    font-size: 1.5rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
+    font-size: var(--bl-text-3xl);
     font-weight: 600;
     letter-spacing: -0.02em;
     color: var(--bl-text-primary);
   }
 
   p {
-    margin: 0;
-    font-size: 0.875rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     color: var(--bl-text-tertiary);
     line-height: 1.5;
   }
@@ -311,16 +392,16 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.125rem;
+  gap: var(--bl-space-4);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.4375rem;
+  gap: var(--bl-space-1-5);
 
   label {
-    font-size: 0.8125rem;
+    font-size: var(--bl-text-sm);
     font-weight: 500;
     color: var(--bl-text-secondary);
   }
@@ -333,7 +414,7 @@
 }
 
 .forgot {
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-tertiary);
   text-decoration: none;
 
@@ -349,12 +430,12 @@
 
   input {
     width: 100%;
-    padding: 0.75rem 0.875rem 0.75rem 2.625rem;
-    font-size: 0.9375rem;
+    padding: var(--bl-space-3) var(--bl-space-3) var(--bl-space-3) var(--bl-space-10);
+    font-size: var(--bl-text-md);
     color: var(--bl-text-primary);
     background: var(--bl-surface);
     border: 1px solid var(--bl-border);
-    border-radius: 10px;
+    border-radius: var(--bl-radius-lg);
     transition: border-color 0.15s, box-shadow 0.15s;
 
     &::placeholder {
@@ -388,11 +469,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.375rem;
+  padding: var(--bl-space-1-5);
   color: var(--bl-text-tertiary);
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--bl-radius-sm);
   cursor: pointer;
 
   &:hover {
@@ -404,8 +485,8 @@
 .remember {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
+  gap: var(--bl-space-2);
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
   cursor: pointer;
 
@@ -414,7 +495,7 @@
     width: 1rem;
     height: 1rem;
     border: 1px solid var(--bl-border-strong);
-    border-radius: 4px;
+    border-radius: var(--bl-radius-xs);
     background: var(--bl-elevated);
     cursor: pointer;
     position: relative;
@@ -441,14 +522,37 @@
 .error {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.75rem 0.875rem;
-  font-size: 0.8125rem;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-3) var(--bl-space-3);
+  font-size: var(--bl-text-sm);
   line-height: 1.4;
   color: var(--bl-danger-text);
   background: var(--bl-danger-subtle);
   border: 1px solid var(--bl-danger-border);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  a {
+    color: inherit;
+    font-weight: 600;
+  }
+}
+
+.success {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-3);
+  font-size: var(--bl-text-sm);
+  line-height: 1.4;
+  color: var(--bl-success-text);
+  background: var(--bl-success-subtle);
+  border: 1px solid var(--bl-success-border);
+  border-radius: var(--bl-radius-lg);
 
   svg {
     flex-shrink: 0;
@@ -456,20 +560,59 @@
   }
 }
 
+.info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-3);
+  font-size: var(--bl-text-sm);
+  line-height: 1.4;
+  color: var(--bl-info-text);
+  background: var(--bl-info-subtle);
+  border: 1px solid var(--bl-info-border);
+  border-radius: var(--bl-radius-lg);
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  a {
+    color: inherit;
+    font-weight: 600;
+  }
+}
+
+.eyeBtnInline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--bl-space-1);
+  color: var(--bl-text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: var(--bl-radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--bl-text-primary);
+  }
+}
+
 .submit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   width: 100%;
   margin-top: 0.25rem;
-  padding: 0.875rem 1rem;
-  font-size: 0.9375rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
+  font-size: var(--bl-text-md);
   font-weight: 600;
   color: var(--bl-text-inverse);
   background: var(--bl-gray-900);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
 
@@ -505,9 +648,9 @@
 .divider {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  margin: 1.5rem 0 1rem;
-  font-size: 0.75rem;
+  gap: var(--bl-space-3);
+  margin: var(--bl-space-6) var(--bl-space-0) var(--bl-space-4);
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-disabled);
 
   &::before,
@@ -522,21 +665,21 @@
 .ssoRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.625rem;
+  gap: var(--bl-space-2-5);
 }
 
 .ssoBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 0.75rem;
-  font-size: 0.8125rem;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-2-5) var(--bl-space-3);
+  font-size: var(--bl-text-sm);
   font-weight: 500;
   color: var(--bl-text-secondary);
   background: var(--bl-surface);
   border: 1px solid var(--bl-border);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 
@@ -552,8 +695,8 @@
 }
 
 .footer {
-  margin: 1.75rem 0 0;
-  font-size: 0.8125rem;
+  margin: var(--bl-space-7) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   text-align: center;
   color: var(--bl-text-tertiary);
 
@@ -573,15 +716,15 @@
    fuera de producción (ver DEMO_ACCOUNTS en page.tsx). */
 .demo {
   display: grid;
-  gap: 0.5rem;
-  padding: 0.75rem 0.85rem;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px dashed rgba(120, 120, 130, 0.45);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   background: rgba(120, 120, 130, 0.06);
 }
 
 .demoLabel {
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -591,20 +734,20 @@
 .demoRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .demoBtn {
   /* 40px de alto: cómodo en táctil sin parecer una acción principal. */
   min-height: 40px;
-  padding: 0.45rem 0.9rem;
+  padding: var(--bl-space-2) var(--bl-space-4);
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   font-weight: 600;
   color: var(--bl-text-primary);
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border-strong);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   cursor: pointer;
   transition: border-color 120ms ease, background 120ms ease;
 
@@ -621,7 +764,7 @@
 
 .demo small {
   color: var(--bl-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
 }
 
 @media (prefers-reduced-motion: reduce) {

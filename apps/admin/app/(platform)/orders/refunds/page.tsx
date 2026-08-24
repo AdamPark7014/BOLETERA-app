@@ -3,15 +3,8 @@
 /**
  * Cola de reembolsos abiertos.
  *
- * Un reembolso queda `PENDING` hasta que alguien lo ejecuta en el portal
- * Banorte y lo cierra con `POST /payments/refunds/:id/complete`. Hasta ahora no
- * había ninguna pantalla que los listara, así que un reembolso a medias era
- * invisible: el cliente sin su dinero y el inventario sin liberar.
- *
- * Limitación del API: **no existe** un `GET` de reembolsos. Esta cola se deriva
- * pidiendo el detalle de las órdenes recientes que pueden tener reembolso. Se
- * dice explícitamente en pantalla para que nadie la lea como "no hay pendientes
- * en toda la historia".
+ * Usa `GET /payments/refunds` con filtro `status=PENDING` — el endpoint
+ * dedicado reemplaza el escaneo N+1 de órdenes recientes.
  */
 
 import { useCallback, useState } from 'react';
@@ -20,101 +13,54 @@ import { adminApi, ApiError, getStoredToken } from '@/lib/api';
 import { useToast } from '@/components/Toast/ToastProvider';
 import platform from '../../_styles/platform.module.scss';
 import styles from '../orders.module.scss';
-import { EmptyBlock, Notice, ResourceView } from '../_ui/States';
+import { EmptyBlock, ResourceView } from '../_ui/States';
 import { useResource } from '../_ui/useResource';
 import { formatDateTime, formatMoney, toNumber } from '../_ui/format';
-import { isRefundOpen, orderStatusMeta, refundStatusMeta } from '../_ui/orderModel';
+import { orderStatusMeta, refundStatusMeta } from '../_ui/orderModel';
 
-type OrderRow = {
+type RefundRow = {
   id: string;
-  publicId: string;
-  status: string;
+  amount: string;
   currency: string;
-  totalAmount: string;
-  buyerEmail: string | null;
-  buyerName: string | null;
-  event: { title: string };
-};
-
-type OrderDetail = OrderRow & {
-  payment: { amount?: string | null; status?: string | null } | null;
-  refunds: {
+  reason: string;
+  status: string;
+  notes: string | null;
+  requestedBy: string;
+  requestedAt: string;
+  pendingForHours: number | null;
+  order: {
     id: string;
-    amount: string;
+    publicId: string;
     status: string;
-    reason: string;
-    notes: string | null;
-    requestedAt: string;
-    requestedBy: string | null;
-  }[];
+    buyerEmail: string;
+    buyerName: string;
+    event: { title: string };
+  };
 };
 
-type QueueRow = {
-  order: OrderDetail;
-  refund: OrderDetail['refunds'][number];
+type RefundListResponse = {
+  data: RefundRow[];
+  hasMore: boolean;
+  limit: number;
 };
 
 type Queue = {
-  rows: QueueRow[];
-  /** Órdenes en `PENDING_REFUND` que ni siquiera tienen solicitud registrada. */
-  unrequested: OrderDetail[];
-  scanned: number;
-  totalRecent: number;
-  /** Detalles que no se pudieron leer; se reportan en vez de omitirse. */
-  failed: number;
+  rows: RefundRow[];
+  total: number;
 };
-
-/** Estados de orden que pueden arrastrar un reembolso abierto. */
-const CANDIDATE_STATUSES = new Set([
-  'PENDING_REFUND',
-  'REFUNDED',
-  'PARTIALLY_REFUNDED',
-  'FAILED',
-  'CANCELLED',
-]);
-
-const CONCURRENCY = 5;
-
-/** Pide los detalles en tandas para no disparar 50 peticiones a la vez. */
-async function mapLimited<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<PromiseSettledResult<R>[]> {
-  const results: PromiseSettledResult<R>[] = [];
-  for (let i = 0; i < items.length; i += limit) {
-    const chunk = items.slice(i, i + limit);
-    results.push(...(await Promise.allSettled(chunk.map(fn))));
-  }
-  return results;
-}
 
 export default function RefundsQueuePage() {
   const resource = useResource<Queue>(
     useCallback(async ({ token, signal }) => {
-      const orders = await adminApi<OrderRow[]>('/admin/orders', token, { signal });
-      const candidates = orders.filter((o) => CANDIDATE_STATUSES.has(o.status));
-      const settled = await mapLimited(candidates, CONCURRENCY, (o) =>
-        adminApi<OrderDetail>(`/admin/orders/${o.id}`, token, { signal }),
+      const response = await adminApi<RefundListResponse>(
+        '/payments/refunds?status=PENDING&limit=100&sort=oldest',
+        token,
+        { signal },
       );
-
-      const rows: QueueRow[] = [];
-      const unrequested: OrderDetail[] = [];
-      let failed = 0;
-      for (const result of settled) {
-        if (result.status === 'rejected') {
-          failed += 1;
-          continue;
-        }
-        const detail = result.value;
-        const open = (detail.refunds ?? []).filter((r) => isRefundOpen(r.status));
-        for (const refund of open) rows.push({ order: detail, refund });
-        if (detail.status === 'PENDING_REFUND' && (detail.refunds ?? []).length === 0) {
-          unrequested.push(detail);
-        }
-      }
-      rows.sort((a, b) => a.refund.requestedAt.localeCompare(b.refund.requestedAt));
-      return { rows, unrequested, scanned: candidates.length, totalRecent: orders.length, failed };
+      const rows = [...response.data].sort((a, b) =>
+        a.requestedAt.localeCompare(b.requestedAt),
+      );
+      return { rows, total: rows.length };
     }, []),
     { requiresOrg: false },
   );
@@ -167,48 +113,20 @@ function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
     }
   }
 
-  const pendingTotal = queue.rows.reduce((s, r) => s + toNumber(r.refund.amount), 0);
-  const currency = queue.rows[0]?.order.currency ?? 'MXN';
+  const pendingTotal = queue.rows.reduce((s, r) => s + toNumber(r.amount), 0);
+  const currency = queue.rows[0]?.currency ?? 'MXN';
 
   return (
     <>
       <p className={styles.scopeNote}>
-        Revisadas <strong>{queue.scanned}</strong> de las {queue.totalRecent} órdenes más recientes.
-        El API todavía no expone un listado de reembolsos, así que esta cola se arma consultando
-        orden por orden: <strong>no cubre el histórico completo</strong>.
+        Mostrando <strong>{queue.total}</strong> reembolso(s) con estado pendiente en tu
+        organización.
       </p>
-
-      {queue.failed > 0 && (
-        <Notice tone="warn" title={`${queue.failed} orden(es) no se pudieron revisar`}>
-          <p>
-            Sus reembolsos podrían no aparecer en esta cola. Vuelve a cargar; si persiste, revisa
-            esas órdenes una por una.
-          </p>
-        </Notice>
-      )}
-
-      {queue.unrequested.length > 0 && (
-        <Notice
-          tone="danger"
-          title={`${queue.unrequested.length} orden(es) en reembolso obligado sin solicitud`}
-        >
-          <p>
-            Se cobró y no se emitieron boletos, y nadie ha registrado siquiera el reembolso:{' '}
-            {queue.unrequested.map((o, i) => (
-              <span key={o.id}>
-                {i > 0 && ', '}
-                <Link href={`/orders/${o.id}`}>{o.publicId}</Link>
-              </span>
-            ))}
-            .
-          </p>
-        </Notice>
-      )}
 
       <section className={platform.panel}>
         {queue.rows.length === 0 ? (
           <EmptyBlock
-            title="Ningún reembolso abierto entre las órdenes revisadas"
+            title="Ningún reembolso pendiente"
             hint="Los reembolsos completados no aparecen aquí; consúltalos en el detalle de cada orden."
           />
         ) : (
@@ -236,8 +154,9 @@ function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
                 </tr>
               </thead>
               <tbody>
-                {queue.rows.map(({ order, refund }) => {
+                {queue.rows.map((refund) => {
                   const rmeta = refundStatusMeta(refund.status);
+                  const order = refund.order;
                   return (
                     <tr key={refund.id} className={styles.rowAlert}>
                       <th scope="row" className={styles.rowHead}>
@@ -255,7 +174,7 @@ function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
                       </td>
                       <td>{refund.reason}</td>
                       <td className={styles.numeric}>
-                        {formatMoney(refund.amount, order.currency)}
+                        {formatMoney(refund.amount, refund.currency)}
                       </td>
                       <td>
                         {formatDateTime(refund.requestedAt)}
@@ -265,6 +184,14 @@ function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
                             <small className={styles.subtle}>por {refund.requestedBy}</small>
                           </>
                         )}
+                        {refund.pendingForHours != null && refund.pendingForHours >= 24 ? (
+                          <>
+                            <br />
+                            <small className={styles.subtle}>
+                              {Math.round(refund.pendingForHours)} h en cola
+                            </small>
+                          </>
+                        ) : null}
                       </td>
                       <td>
                         <span className={`${styles.status} ${styles.canceled}`}>{rmeta.label}</span>

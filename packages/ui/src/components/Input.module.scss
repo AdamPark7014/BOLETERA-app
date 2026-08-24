@@ -126,13 +126,13 @@
 }
 
 .hint {
-  margin: 0;
+  margin: var(--bl-space-0);
   @include type('xs');
   color: $c-text-tertiary;
 }
 
 .errorText {
-  margin: 0;
+  margin: var(--bl-space-0);
   @include type('xs', $weight-medium);
   color: $c-danger-text;
 }

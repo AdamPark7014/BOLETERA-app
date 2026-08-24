@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--bl-space-5);
   min-width: 0;
   color: var(--bl-text-primary);
   padding-bottom: 2rem;
@@ -10,7 +10,7 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(16rem, 0.8fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: start;
 
   @media (max-width: 1100px) {
@@ -21,17 +21,17 @@
 .catalog {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  padding: 1.05rem 1.1rem;
+  gap: var(--bl-space-2-5);
+  padding: var(--bl-space-4) var(--bl-space-4);
   text-align: left;
   border: 1px solid var(--bl-border);
-  border-radius: 14px;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-elevated);
   cursor: pointer;
   font: inherit;
@@ -59,19 +59,19 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .cardTitle {
-  margin: 0;
-  font-size: 1rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-lg);
   letter-spacing: -0.01em;
 }
 
 .cardSummary {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--bl-text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
   flex: 1;
 }
@@ -79,49 +79,49 @@
 .cardMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
   align-items: center;
 }
 
 .sideCard {
   min-width: 0;
-  padding: 1.1rem 1.2rem 1.25rem;
+  padding: var(--bl-space-4) var(--bl-space-5) var(--bl-space-5);
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  border-radius: 14px;
+  border-radius: var(--bl-radius-lg);
 }
 
 .sideHead {
   margin-bottom: 0.85rem;
 
   h2 {
-    margin: 0;
-    font-size: 1.05rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-lg);
   }
 
   p {
-    margin: 0.25rem 0 0;
+    margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
     color: var(--bl-text-tertiary);
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
   }
 }
 
 .healthList {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
 .healthRow {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
   align-items: center;
-  padding: 0.55rem 0.65rem;
-  border-radius: 8px;
+  padding: var(--bl-space-2) var(--bl-space-2-5);
+  border-radius: var(--bl-radius-md);
   background: var(--bl-surface);
   border: 1px solid transparent;
   width: 100%;
@@ -137,11 +137,11 @@
 
   strong {
     display: block;
-    font-size: 0.8125rem;
+    font-size: var(--bl-text-sm);
   }
 
   span {
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
     color: var(--bl-text-tertiary);
   }
 }
@@ -149,42 +149,42 @@
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   margin-bottom: 0.85rem;
 }
 
 .drawerBody {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: var(--bl-space-5);
 }
 
 .drawerHealth {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--bl-space-2);
   flex-wrap: wrap;
 }
 
 .summary {
-  margin: 0;
-  font-size: 0.875rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   line-height: 1.5;
   color: var(--bl-text-secondary);
 }
 
 .sectionTitle {
-  margin: 0 0 0.55rem;
-  font-size: 0.8125rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
+  font-size: var(--bl-text-sm);
   font-weight: 600;
 }
 
 .steps {
-  margin: 0;
+  margin: var(--bl-space-0);
   padding-left: 1.15rem;
   display: grid;
-  gap: 0.45rem;
-  font-size: 0.8125rem;
+  gap: var(--bl-space-2);
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
   color: var(--bl-text-secondary);
 }
@@ -192,24 +192,24 @@
 .credentialList {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 
   li {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    padding: 0.65rem 0.7rem;
-    border-radius: 8px;
+    gap: var(--bl-space-1-5);
+    padding: var(--bl-space-2-5) var(--bl-space-3);
+    border-radius: var(--bl-radius-md);
     background: var(--bl-surface);
     border: 1px solid var(--bl-border-subtle);
   }
 
   strong {
     display: block;
-    font-size: 0.8125rem;
+    font-size: var(--bl-text-sm);
   }
 }
 
@@ -217,11 +217,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   flex-wrap: wrap;
 
   code {
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     color: var(--bl-text-secondary);
   }
 }
@@ -229,10 +229,10 @@
 .copyRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   flex-wrap: wrap;
-  padding: 0.55rem 0.65rem;
-  border-radius: 8px;
+  padding: var(--bl-space-2) var(--bl-space-2-5);
+  border-radius: var(--bl-radius-md);
   background: var(--bl-surface);
   border: 1px solid var(--bl-border);
 
@@ -240,34 +240,34 @@
     flex: 1;
     min-width: 0;
     word-break: break-all;
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
   }
 }
 
 .chipRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
   margin-bottom: 0.45rem;
 }
 
 .metaList {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin: 0;
+  gap: var(--bl-space-3);
+  margin: var(--bl-space-0);
 
   dt {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--bl-text-tertiary);
-    font-size: 0.7rem;
+    font-size: var(--bl-text-2xs);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 
   dd {
     margin: 0.2rem 0 0;
-    font-size: 0.8125rem;
+    font-size: var(--bl-text-sm);
     font-weight: 500;
     word-break: break-word;
   }
@@ -279,7 +279,7 @@
 
 .muted {
   color: var(--bl-text-tertiary);
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.45;
 }
 
@@ -293,16 +293,16 @@
 .modalFooter {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   flex-wrap: wrap;
 }
 
 .note {
-  margin: 0;
-  padding: 0.75rem 0.9rem;
-  border-radius: 10px;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-3) var(--bl-space-4);
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-surface-sunken);
   color: var(--bl-text-secondary);
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
 }

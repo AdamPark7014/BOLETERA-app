@@ -13,7 +13,7 @@
   padding: 2.5rem var(--layout-gutter) var(--space-lg);
   display: grid;
   grid-template-columns: 1.4fr repeat(4, 1fr);
-  gap: 1.75rem;
+  gap: var(--bl-space-7);
 
   @include bp.below(bp.$bp-lg) {
     grid-template-columns: 1fr 1fr;
@@ -31,12 +31,12 @@
 .brand {
   margin: 0 0 var(--space-3xs);
   font-family: var(--font-family-heading);
-  font-size: 1.35rem;
+  font-size: var(--bl-text-2xl);
   letter-spacing: var(--tracking-widest);
 }
 
 .tagline {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-size: var(--text-sm);
   color: var(--text-muted);
   line-height: var(--leading-normal);
@@ -55,8 +55,8 @@
 
   ul {
     list-style: none;
-    margin: 0;
-    padding: 0;
+    margin: var(--bl-space-0);
+    padding: var(--bl-space-0);
   }
 
   a {

@@ -9,7 +9,7 @@
     "prisma:generate": "prisma generate && node ./scripts/sync-prisma-client.mjs",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:seed": "tsx scripts/seed.ts",
+    "prisma:seed": "node --env-file=.env --import tsx scripts/seed.ts",
     "prisma:studio": "prisma studio",
     "prisma:reset": "prisma migrate reset"
   },

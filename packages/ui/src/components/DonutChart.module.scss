@@ -31,7 +31,7 @@
 .centerValue {
   fill: $c-text-primary;
   font-family: $font-sans;
-  font-size: 20px;
+  font-size: var(--bl-text-2xl);
   font-weight: 600;
   text-anchor: middle;
   dominant-baseline: middle;
@@ -41,7 +41,7 @@
 .centerLabel {
   fill: $c-text-tertiary;
   font-family: $font-sans;
-  font-size: 11px;
+  font-size: var(--bl-text-2xs);
   text-anchor: middle;
   dominant-baseline: middle;
 }
@@ -52,8 +52,8 @@
   gap: $space-1-5;
   flex: 1;
   min-width: 0;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
   overflow-y: auto;
   max-height: 100%;

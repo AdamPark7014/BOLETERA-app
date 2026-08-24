@@ -5,17 +5,17 @@
     'label time'
     'hint hint'
     'renew renew';
-  gap: 0.15rem 1rem;
+  gap: var(--bl-space-0-5) var(--bl-space-4);
   margin-bottom: 1.25rem;
-  padding: 0.85rem 1rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border-strong);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
 }
 
 .label {
   grid-area: label;
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -26,7 +26,7 @@
 
 .time {
   grid-area: time;
-  font-size: 1.5rem;
+  font-size: var(--bl-text-3xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -36,7 +36,7 @@
 
 .hint {
   grid-area: hint;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 }
 
@@ -44,12 +44,12 @@
   grid-area: renew;
   justify-self: start;
   margin-top: 0.5rem;
-  padding: 0.45rem 0.8rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
   border: 1px solid var(--bl-gray-400);
-  border-radius: 6px;
+  border-radius: var(--bl-radius-sm);
   background: var(--bl-elevated);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   font-weight: 700;
   color: var(--bl-text-primary);
   cursor: pointer;
@@ -107,7 +107,7 @@
   width: 1px;
   height: 1px;
   margin: -1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   overflow: hidden;
   clip: rect(0 0 0 0);
   clip-path: inset(50%);

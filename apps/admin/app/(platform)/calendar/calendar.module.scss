@@ -1,21 +1,21 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--bl-space-5);
 }
 
 .panel {
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  border-radius: 12px;
-  padding: 1rem 1.1rem 1.15rem;
+  border-radius: var(--bl-radius-lg);
+  padding: var(--bl-space-4) var(--bl-space-4) var(--bl-space-5);
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   margin-bottom: 1rem;
 
   button {
@@ -23,9 +23,9 @@
     height: 2.25rem;
     border: 1px solid var(--bl-border);
     background: var(--bl-surface);
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
     cursor: pointer;
-    font-size: 1rem;
+    font-size: var(--bl-text-lg);
     color: var(--bl-text-primary);
 
     &:hover {
@@ -37,7 +37,7 @@
 .monthTitle {
   flex: 1;
   text-align: center;
-  font-size: 1.05rem;
+  font-size: var(--bl-text-lg);
   text-transform: capitalize;
   min-width: 10rem;
 }
@@ -52,36 +52,36 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 }
 
 .weekday {
   text-align: center;
-  font-size: 0.68rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--bl-text-tertiary);
-  padding: 0.35rem 0;
+  padding: var(--bl-space-1-5) var(--bl-space-0);
 }
 
 .emptyCell {
   min-height: 5.5rem;
   background: var(--bl-surface);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
 }
 
 .dayCell {
   min-height: 5.5rem;
-  padding: 0.4rem;
+  padding: var(--bl-space-1-5);
   border: 1px solid var(--bl-border);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-elevated);
   text-align: left;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--bl-space-1);
   font: inherit;
   color: inherit;
 
@@ -105,18 +105,18 @@
 }
 
 .dayNum {
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   font-weight: 700;
   color: var(--bl-text-secondary);
 }
 
 .dots {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--bl-space-0-5);
   min-height: 0;
 
   @media (max-width: 800px) {
@@ -126,8 +126,8 @@
 
 .dots li {
   display: flex;
-  gap: 0.25rem;
-  font-size: 0.62rem;
+  gap: var(--bl-space-1);
+  font-size: var(--bl-text-2xs);
   line-height: 1.2;
   color: var(--bl-text-secondary);
   white-space: nowrap;
@@ -146,7 +146,7 @@
 }
 
 .more {
-  font-size: 0.62rem;
+  font-size: var(--bl-text-2xs);
   color: var(--bl-text-tertiary);
   font-weight: 600;
 }
@@ -154,48 +154,48 @@
 .detail {
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  border-radius: 12px;
-  padding: 1rem 1.1rem;
+  border-radius: var(--bl-radius-lg);
+  padding: var(--bl-space-4) var(--bl-space-4);
 
   h2 {
-    margin: 0 0 0.75rem;
-    font-size: 1rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
+    font-size: var(--bl-text-lg);
   }
 }
 
 .muted {
   color: var(--bl-text-tertiary);
-  font-size: 0.9rem;
-  margin: 0;
+  font-size: var(--bl-text-md);
+  margin: var(--bl-space-0);
 }
 
 .eventList {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 
   li {
     display: flex;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: var(--bl-space-3);
     align-items: center;
-    padding: 0.7rem 0.8rem;
+    padding: var(--bl-space-3) var(--bl-space-3);
     border: 1px solid var(--bl-border);
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
   }
 
   strong {
     display: block;
-    font-size: 0.9rem;
+    font-size: var(--bl-text-md);
   }
 
   span {
     display: block;
     margin-top: 0.15rem;
-    font-size: 0.78rem;
+    font-size: var(--bl-text-xs);
     color: var(--bl-text-tertiary);
   }
 }

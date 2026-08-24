@@ -24,7 +24,7 @@
 }
 
 .eyebrow {
-  margin: 0 0 0.35rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-widest);
@@ -41,7 +41,7 @@
 }
 
 .user {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--text-secondary);
   font-size: var(--text-md);
 }
@@ -57,7 +57,7 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--control-height-md);
-  padding: 0.55rem 0.9rem;
+  padding: var(--bl-space-2) var(--bl-space-4);
   background: var(--color-accent);
   color: var(--text-on-accent);
   font-size: var(--text-base);
@@ -71,7 +71,7 @@
 
 .logout {
   min-height: var(--control-height-md);
-  padding: 0.55rem 0.9rem;
+  padding: var(--bl-space-2) var(--bl-space-4);
   background: transparent;
   border: 1px solid var(--color-border);
   cursor: pointer;
@@ -93,14 +93,14 @@
   line-height: var(--leading-normal);
 
   h2 {
-    margin: 0;
+    margin: var(--bl-space-0);
     font-family: var(--font-family-heading);
     font-size: var(--text-2xl);
     letter-spacing: var(--tracking-wide);
   }
 
   p {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--text-secondary);
   }
 }
@@ -123,7 +123,7 @@
 
 .retry {
   min-height: var(--control-height-md);
-  padding: 0.55rem 0.9rem;
+  padding: var(--bl-space-2) var(--bl-space-4);
   border: 1px solid var(--color-border-strong);
   background: var(--color-surface);
   font: inherit;
@@ -155,8 +155,8 @@
 
 .walletList {
   list-style: none;
-  padding: 0;
-  margin: 0;
+  padding: var(--bl-space-0);
+  margin: var(--bl-space-0);
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -165,7 +165,7 @@
 .walletCard {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 0.9rem;
+  gap: var(--bl-space-4);
   align-items: start;
   border: 1px solid var(--color-border);
   padding: var(--space-md) 1.05rem;
@@ -187,7 +187,7 @@
   line-height: 1.05;
 
   strong {
-    font-size: 1.15rem;
+    font-size: var(--bl-text-xl);
   }
 
   span {
@@ -214,12 +214,12 @@
 
 .walletTitle {
   display: block;
-  font-size: 1.05rem;
+  font-size: var(--bl-text-lg);
   line-height: var(--leading-snug);
 }
 
 .walletMeta {
-  margin: 0.3rem 0 0;
+  margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
   font-size: var(--text-sm);
   color: var(--text-secondary);
 }
@@ -236,8 +236,8 @@
  * acciones: es la razón por la que esta tarjeta dejó de ser una entrada.
  */
 .walletCancelled {
-  margin: 0.4rem 0 0;
-  padding: 0.45rem 0.6rem;
+  margin: var(--bl-space-1-5) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-2) var(--bl-space-2-5);
   border-left: 3px solid #b42318;
   background: #fef3f2;
   font-size: var(--text-xs);
@@ -283,7 +283,7 @@
   align-items: center;
   justify-content: center;
   min-height: var(--control-height-md);
-  padding: 0.55rem 0.85rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
   background: var(--ink-900);
   color: var(--text-on-accent) !important;
   text-decoration: none !important;
@@ -300,7 +300,7 @@
   width: 100%;
   margin: var(--space-xs) 0 0;
   min-height: var(--control-height-md);
-  padding: 0.7rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   cursor: pointer;
@@ -311,8 +311,8 @@
 
 .list {
   list-style: none;
-  padding: 0;
-  margin: 0;
+  padding: var(--bl-space-0);
+  margin: var(--bl-space-0);
 
   li {
     border: 1px solid var(--color-border);
@@ -339,7 +339,7 @@
 }
 
 .section {
-  margin: 1.75rem 0;
+  margin: var(--bl-space-7) var(--bl-space-0);
   padding-top: 1.35rem;
   border-top: 1px solid var(--color-border);
 
@@ -347,7 +347,7 @@
     font-family: var(--font-family-heading);
     font-size: var(--text-2xl);
     letter-spacing: var(--tracking-wide);
-    margin: 0 0 0.85rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
   }
 }
 
@@ -464,10 +464,10 @@
   border: 1px solid var(--bl-info-border);
   border-left: 4px solid var(--bl-info-text);
   background: #f5f8ff;
-  padding: 1rem 1.1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
 
   h2 {
-    margin: 0 0 0.75rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
     font-family: var(--font-family-heading);
     font-size: var(--text-xl);
     letter-spacing: var(--tracking-wide);
@@ -477,16 +477,16 @@
 
 .refundList {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
 
   li {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 0.9rem;
-    padding: 0.7rem 0;
+    gap: var(--bl-space-4);
+    padding: var(--bl-space-3) var(--bl-space-0);
     border-top: 1px solid #dbe4ff;
   }
 
@@ -502,15 +502,15 @@
 }
 
 .refundEvent {
-  margin: 0;
-  font-size: 0.95rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-lg);
   font-weight: 700;
   color: var(--bl-text-primary);
 }
 
 .refundState {
-  margin: 0.15rem 0 0;
-  font-size: 0.83rem;
+  margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   color: #1e40af;
 }
@@ -525,7 +525,7 @@
 
 .refundWhen {
   margin: 0.2rem 0 0;
-  font-size: 0.83rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
   color: var(--bl-text-secondary);
 }
@@ -535,10 +535,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.25rem;
+  gap: var(--bl-space-1);
 
   strong {
-    font-size: 1rem;
+    font-size: var(--bl-text-lg);
     color: var(--bl-text-primary);
     font-variant-numeric: tabular-nums;
   }
@@ -549,7 +549,7 @@
  * porque NO es parte de la devolución: se suma a ella.
  */
 .refundBonus {
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   color: #1e40af;
   font-variant-numeric: tabular-nums;
@@ -557,7 +557,7 @@
 }
 
 .refundLink {
-  font-size: 0.82rem;
+  font-size: var(--bl-text-sm);
   font-weight: 700;
   color: var(--bl-info-text);
   text-decoration: underline;
@@ -573,7 +573,7 @@
   width: 1px;
   height: 1px;
   margin: -1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   overflow: hidden;
   clip: rect(0 0 0 0);
   clip-path: inset(50%);

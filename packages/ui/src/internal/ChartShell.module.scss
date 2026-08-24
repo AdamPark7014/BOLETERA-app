@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: $space-2;
-  margin: 0;
+  margin: var(--bl-space-0);
   min-width: 0;
   font-family: $font-sans;
 }
@@ -45,7 +45,7 @@
   display: flex;
   align-items: center;
   gap: $space-2;
-  margin: 0;
+  margin: var(--bl-space-0);
   @include type('xs');
   color: $c-text-secondary;
 }
@@ -75,8 +75,8 @@
   align-items: center;
   gap: $space-4;
   flex-wrap: wrap;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 

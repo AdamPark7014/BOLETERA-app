@@ -1,14 +1,14 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: var(--bl-space-2);
   color: var(--bl-text-inverse);
 }
 
 .connError {
-  margin: 0;
-  padding: 0.65rem 0.85rem;
-  font-size: 0.8rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-2-5) var(--bl-space-3);
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   color: var(--bl-accent-border);
   background: rgba(159, 18, 57, 0.28);
@@ -16,7 +16,7 @@
 }
 
 .liveOn {
-  font-size: 0.62rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -25,7 +25,7 @@
 }
 
 .liveOff {
-  font-size: 0.62rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -38,8 +38,8 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.65rem;
-  padding: 0.55rem 0.7rem;
+  gap: var(--bl-space-2-5);
+  padding: var(--bl-space-2) var(--bl-space-3);
   background: var(--bl-gray-950);
   border: 1px solid #1c1c1f;
 }
@@ -49,14 +49,14 @@
 .loadBar {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.5rem 0.7rem;
+  gap: var(--bl-space-1);
+  padding: var(--bl-space-2) var(--bl-space-3);
   background: var(--bl-gray-950);
   border: 1px solid #1c1c1f;
 
   p {
-    margin: 0;
-    font-size: 0.7rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-2xs);
     font-weight: 600;
     // Contraste ≥7:1 sobre var(--bl-gray-950).
     color: rgba(250, 250, 250, 0.78);
@@ -79,23 +79,23 @@
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 0.85rem;
+  gap: var(--bl-space-2) var(--bl-space-3);
   list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 0.7rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: rgba(250, 250, 250, 0.78);
 
   li {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: var(--bl-space-1-5);
   }
 
   em {
     font-style: normal;
-    font-size: 0.62rem;
+    font-size: var(--bl-text-2xs);
     color: rgba(250, 250, 250, 0.55);
     font-variant-numeric: tabular-nums;
   }
@@ -110,7 +110,7 @@
 
 .zoomBtns {
   display: flex;
-  gap: 0.3rem;
+  gap: var(--bl-space-1);
   align-items: center;
 
   button {
@@ -122,9 +122,9 @@
     color: rgba(250, 250, 250, 0.9);
     font: inherit;
     font-weight: 600;
-    font-size: 0.78rem;
+    font-size: var(--bl-text-xs);
     cursor: pointer;
-    padding: 0 0.55rem;
+    padding: var(--bl-space-0) var(--bl-space-2);
     transition: border-color 0.15s, color 0.15s, background 0.15s;
 
     &:hover {
@@ -153,15 +153,15 @@
 .heatBar {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.55rem 0.7rem;
+  gap: var(--bl-space-1-5);
+  padding: var(--bl-space-2) var(--bl-space-3);
   background: var(--bl-gray-950);
   border: 1px solid #1c1c1f;
 }
 
 .egressHint {
-  margin: 0;
-  font-size: 0.72rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   color: #fbcfe8;
 }
@@ -169,11 +169,11 @@
 .egressLegend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 0.9rem;
+  gap: var(--bl-space-2) var(--bl-space-4);
   list-style: none;
-  margin: 0;
-  padding: 0.35rem 0.7rem;
-  font-size: 0.68rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-1-5) var(--bl-space-3);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: rgba(250, 250, 250, 0.75);
   background: rgba(244, 114, 182, 0.06);
@@ -182,7 +182,7 @@
   li {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: var(--bl-space-1-5);
   }
 }
 
@@ -236,7 +236,7 @@
 .heatLabels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.65rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: rgba(250, 250, 250, 0.45);
 }
@@ -244,8 +244,8 @@
 .priceFilter {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.7rem;
+  gap: var(--bl-space-1);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: var(--bl-text-inverse);
 
@@ -257,7 +257,7 @@
 
 .sections {
   display: flex;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
   overflow-x: auto;
   padding-bottom: 0.05rem;
   scrollbar-width: thin;
@@ -268,16 +268,16 @@
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   // Objetivo táctil ≥24 px con holgura: estos son los atajos de navegación
   // por zona cuando el zoom aún no permite tocar butacas.
   min-height: 2.5rem;
   border: 1px solid #2a2a2e;
   background: #121214;
   font: inherit;
-  font-size: 0.72rem;
+  font-size: var(--bl-text-xs);
   font-weight: 600;
-  padding: 0.4rem 0.7rem;
+  padding: var(--bl-space-1-5) var(--bl-space-3);
   cursor: pointer;
   color: rgba(250, 250, 250, 0.85);
   transition: border-color 0.15s, background 0.15s;
@@ -291,7 +291,7 @@
 
   em {
     font-style: normal;
-    font-size: 0.64rem;
+    font-size: var(--bl-text-2xs);
     color: rgba(250, 250, 250, 0.58);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
@@ -368,12 +368,12 @@
   pointer-events: none;
 
   span {
-    font-size: 0.6rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 700;
     letter-spacing: 0.28em;
     text-transform: uppercase;
     color: rgba(250, 250, 250, 0.5);
-    padding: 0.28rem 0.75rem;
+    padding: var(--bl-space-1) var(--bl-space-3);
     background: rgba(9, 9, 11, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
@@ -395,8 +395,8 @@
   left: 0.7rem;
   right: 0.7rem;
   bottom: 0.55rem;
-  margin: 0;
-  font-size: 0.66rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   letter-spacing: 0.02em;
   // 0.55 sobre #09090b ≈ 5.2:1 — el texto de ayuda también cuenta para 1.4.3.
   color: rgba(250, 250, 250, 0.55);
@@ -407,26 +407,26 @@
 .tray {
   border: 1px solid #1c1c1f;
   background: var(--bl-gray-950);
-  padding: 0.75rem 0.85rem;
+  padding: var(--bl-space-3) var(--bl-space-3);
 }
 
 .trayHead {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .trayTitle {
-  margin: 0;
-  font-size: 0.9rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   font-weight: 700;
   color: var(--bl-text-inverse);
 }
 
 .traySub {
-  margin: 0.15rem 0 0;
-  font-size: 0.75rem;
+  margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: rgba(250, 250, 250, 0.45);
 }
 
@@ -435,9 +435,9 @@
   background: transparent;
   color: rgba(250, 250, 250, 0.75);
   font: inherit;
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
-  padding: 0.3rem 0.55rem;
+  padding: var(--bl-space-1) var(--bl-space-2);
   cursor: pointer;
 
   &:hover {
@@ -448,11 +448,11 @@
 
 .trayList {
   list-style: none;
-  margin: 0.65rem 0 0;
-  padding: 0;
+  margin: var(--bl-space-2-5) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: var(--bl-space-1);
   max-height: 8.5rem;
   overflow-y: auto;
 
@@ -460,33 +460,33 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.45rem 0.5rem;
+    gap: var(--bl-space-3);
+    padding: var(--bl-space-2) var(--bl-space-2);
     background: var(--bl-gray-900);
     border: 1px solid #1a1a1d;
   }
 
   strong {
     display: block;
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
     color: var(--bl-text-inverse);
   }
 
   span {
     display: block;
     margin-top: 0.08rem;
-    font-size: 0.68rem;
+    font-size: var(--bl-text-2xs);
     color: rgba(250, 250, 250, 0.45);
   }
 
   button {
     border: none;
     background: transparent;
-    font-size: 1.05rem;
+    font-size: var(--bl-text-lg);
     line-height: 1;
     cursor: pointer;
     color: rgba(250, 250, 250, 0.4);
-    padding: 0.15rem 0.3rem;
+    padding: var(--bl-space-0-5) var(--bl-space-1);
 
     &:hover {
       color: var(--bl-accent-text);
@@ -495,9 +495,9 @@
 }
 
 .focus {
-  margin: 0;
+  margin: var(--bl-space-0);
   min-height: 1.15rem;
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   // 0.7 sobre el fondo #09090b ≈ 8:1 (antes 0.48 ≈ 4.0:1, por debajo de AA).
   color: rgba(250, 250, 250, 0.7);
@@ -505,18 +505,18 @@
 }
 
 .actionMessage {
-  margin: 0;
+  margin: var(--bl-space-0);
   min-height: 1.1rem;
-  font-size: 0.74rem;
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   color: #a5f3fc;
   padding: 0 0.1rem;
 }
 
 .empty {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: rgba(250, 250, 250, 0.5);
-  font-size: 0.88rem;
-  padding: 1.5rem;
+  font-size: var(--bl-text-md);
+  padding: var(--bl-space-6);
   text-align: center;
 }

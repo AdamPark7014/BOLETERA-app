@@ -8,7 +8,7 @@
 
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: var(--bl-space-5);
   min-width: 0;
   color: var(--ink);
 }
@@ -16,14 +16,14 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: center;
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   align-items: center;
   justify-content: space-between;
 }
@@ -31,16 +31,16 @@
 .filterMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: center;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 0.9fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: start;
 }
 
@@ -48,46 +48,46 @@
 .sideCol {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
   min-width: 0;
 }
 
 .zoneCell {
   display: flex;
   flex-direction: column;
-  gap: 0.12rem;
+  gap: var(--bl-space-0-5);
   min-width: 0;
 
   strong {
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
   }
 
   span {
     color: var(--muted);
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
   }
 }
 
 .drawerBody {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 }
 
 .metaGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.65rem;
-  margin: 0;
+  gap: var(--bl-space-2-5);
+  margin: var(--bl-space-0);
 
   dt {
     color: var(--muted);
-    font-size: 0.7rem;
+    font-size: var(--bl-text-2xs);
   }
 
   dd {
-    margin: 0.15rem 0 0;
-    font-size: 0.875rem;
+    margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
+    font-size: var(--bl-text-md);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
@@ -96,9 +96,9 @@
 .eventList {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
@@ -107,9 +107,9 @@
   flex-direction: column;
   gap: 0.2rem;
   width: 100%;
-  padding: 0.7rem 0.8rem;
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   background: var(--surface);
   color: inherit;
   text-align: left;
@@ -133,16 +133,16 @@
 .venueRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
 }
 
 .venueChip {
   appearance: none;
   border: 1px solid var(--border);
   background: var(--sunken);
-  border-radius: 999px;
-  padding: 0.28rem 0.7rem;
-  font-size: 0.75rem;
+  border-radius: var(--bl-radius-full);
+  padding: var(--bl-space-1) var(--bl-space-3);
+  font-size: var(--bl-text-xs);
   color: var(--ink);
   cursor: pointer;
 }
@@ -154,31 +154,31 @@
 }
 
 .liveBlock {
-  padding: 0.75rem 0.85rem;
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   background: var(--sunken);
 }
 
 .liveTitle {
-  margin: 0 0 0.55rem;
-  font-size: 0.8rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
+  font-size: var(--bl-text-sm);
   font-weight: 650;
 }
 
 .liveList {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-1-5);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 
   li {
     display: flex;
     justify-content: space-between;
-    gap: 0.75rem;
-    font-size: 0.8rem;
+    gap: var(--bl-space-3);
+    font-size: var(--bl-text-sm);
   }
 
   span {
@@ -191,9 +191,9 @@
 }
 
 .muted {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--muted);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 @media (max-width: 1100px) {

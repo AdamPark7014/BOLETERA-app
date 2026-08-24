@@ -18,7 +18,7 @@
   padding: 1.25rem var(--layout-gutter) 2.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: var(--bl-space-4);
 }
 
 /* —— Hero a sangre —— */
@@ -79,14 +79,14 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
   min-height: inherit;
   max-width: var(--layout-max);
   margin: 0 auto;
   padding: clamp(6.5rem, 14vh, 8rem) var(--layout-gutter-wide) clamp(2rem, 5vh, 3.25rem);
 
   h1 {
-    margin: 0;
+    margin: var(--bl-space-0);
     max-width: 16ch;
     font-family: var(--font-family-heading);
     font-size: var(--display-xl);
@@ -97,7 +97,7 @@
 }
 
 .brandMark {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-family: var(--font-family-heading);
   font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   letter-spacing: 0.28em;
@@ -105,7 +105,7 @@
 }
 
 .heroSupport {
-  margin: 0;
+  margin: var(--bl-space-0);
   max-width: 36rem;
   font-size: var(--text-md);
   line-height: var(--leading-normal);
@@ -131,7 +131,7 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--control-height-md);
-  padding: 0.85rem 1.35rem;
+  padding: var(--bl-space-3) var(--bl-space-5);
   background: var(--color-accent);
   color: var(--text-on-accent);
   font-size: var(--text-base);
@@ -143,9 +143,9 @@
 .trust {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 0.65rem;
+  gap: var(--bl-space-2) var(--bl-space-2-5);
   align-items: center;
-  margin: 0;
+  margin: var(--bl-space-0);
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-wide);
@@ -157,7 +157,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(10rem, 14rem);
   gap: var(--space-xs);
-  padding: 0.55rem;
+  padding: var(--bl-space-2);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-md);
@@ -181,8 +181,8 @@
   left: 0;
   right: 0;
   top: calc(100% + 0.35rem);
-  margin: 0;
-  padding: 0.35rem 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-1-5) var(--bl-space-0);
   list-style: none;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -197,10 +197,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.15rem;
+  gap: var(--bl-space-0-5);
   width: 100%;
   min-height: var(--control-height-md);
-  padding: 0.65rem 0.9rem;
+  padding: var(--bl-space-2-5) var(--bl-space-4);
   border: none;
   background: transparent;
   text-align: left;
@@ -225,7 +225,7 @@
 .fieldGrow {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--bl-space-2);
   min-width: 0;
   padding: var(--space-sm) 0.9rem;
   background: var(--color-surface-sunken);
@@ -263,7 +263,7 @@
   font-size: var(--text-base);
   color: var(--text-heading);
   min-height: var(--control-height-md);
-  padding: 0 0.9rem;
+  padding: var(--bl-space-0) var(--bl-space-4);
   cursor: pointer;
 
   &:focus-visible {
@@ -286,7 +286,7 @@
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
   border: none;
   background: var(--color-surface-inverse);
   font: inherit;
@@ -306,7 +306,7 @@
     font-size: var(--text-xs);
     color: rgba(250, 250, 250, 0.78);
     background: rgba(255, 255, 255, 0.14);
-    padding: 0.12rem 0.4rem;
+    padding: var(--bl-space-0-5) var(--bl-space-1-5);
   }
 
   &:hover {
@@ -348,7 +348,7 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   min-height: var(--control-height-sm);
-  padding: 0.45rem 0.85rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
   cursor: pointer;
   color: var(--text-heading);
   transition:
@@ -385,7 +385,7 @@
 }
 
 .listTitle {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-family: var(--font-family-heading);
   font-size: var(--display-md);
   letter-spacing: var(--tracking-wide);
@@ -427,7 +427,7 @@
   font-size: var(--text-sm);
   color: var(--text-heading);
   min-height: var(--control-height-sm);
-  padding: 0.45rem 0.65rem;
+  padding: var(--bl-space-2) var(--bl-space-2-5);
   cursor: pointer;
 }
 
@@ -445,7 +445,7 @@
 }
 
 .noticeTitle {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
   color: var(--color-danger-strong);
@@ -454,8 +454,8 @@
 /* —— Rejilla de pósters (home por defecto) —— */
 .posterGrid {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1.15rem var(--space-md);
@@ -503,8 +503,8 @@
   min-width: 0;
 
   h3 {
-    margin: 0;
-    font-size: 1.05rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-lg);
     font-weight: var(--weight-bold);
     line-height: var(--leading-snug);
     transition: color var(--duration-fast);
@@ -515,7 +515,7 @@
   }
 
   > p:not(.rowCat) {
-    margin: 0;
+    margin: var(--bl-space-0);
     font-size: var(--text-xs);
     color: var(--text-muted);
     white-space: nowrap;
@@ -533,8 +533,8 @@
 /* —— Lista (resultados filtrados) —— */
 .list {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
 }
 
 .row {
@@ -564,7 +564,7 @@
 
   @include bp.below(bp.$bp-md) {
     grid-template-columns: 4.5rem 3.1rem minmax(0, 1fr);
-    gap: 0.7rem;
+    gap: var(--bl-space-3);
 
     .rowSide {
       grid-column: 2 / -1;
@@ -582,7 +582,7 @@
   line-height: 1.05;
 
   strong {
-    font-size: 1.5rem;
+    font-size: var(--bl-text-3xl);
   }
 }
 
@@ -606,8 +606,8 @@
   min-width: 0;
 
   h3 {
-    margin: 0;
-    font-size: 1.1rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-xl);
     font-weight: var(--weight-bold);
     transition: color var(--duration-fast);
     white-space: nowrap;
@@ -626,7 +626,7 @@
 }
 
 .rowCat {
-  margin: 0 0 0.15rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-0-5);
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-wider);
@@ -635,7 +635,7 @@
 }
 
 .rowDot {
-  margin: 0 0.35rem;
+  margin: var(--bl-space-0) var(--bl-space-1-5);
   opacity: 0.6;
 }
 
@@ -676,14 +676,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
   border: 1px dashed var(--color-border);
   background: var(--color-surface);
 }
 
 .emptyTitle {
-  margin: 0;
-  font-size: 1.1rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xl);
   font-weight: var(--weight-bold);
   color: var(--text-primary);
 }

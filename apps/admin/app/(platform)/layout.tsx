@@ -15,7 +15,6 @@ import {
   LogoMark,
   ShellIcon,
   ThemeProvider,
-  type IconName,
 } from '@/components/shell';
 import {
   ShellCommandPalette,
@@ -27,142 +26,14 @@ import { useShellPrefs, type ShellPrefs } from '@/components/shell/use-shell-pre
 import { usePrefetchNavigation } from '@/lib/prefetch';
 import { useVenues } from '@/lib/queries';
 import { useSession } from '@/lib/use-session';
+import {
+  NAV_GROUPS,
+  filterNavGroupsForRole,
+  flattenNavItems,
+  isNavItemActive,
+  type NavItemDef,
+} from '@/components/shell/nav-config';
 import styles from './shell.module.scss';
-
-/* -------------------------------------------------------------------------- */
-/* Nav catalog                                                                */
-/* -------------------------------------------------------------------------- */
-
-type NavMatch = 'exact' | 'prefix' | 'events' | 'reports';
-
-type NavItemDef = {
-  id: string;
-  href: string;
-  label: string;
-  icon: IconName;
-  match?: NavMatch;
-};
-
-type NavGroupDef = {
-  id: string;
-  label: string;
-  items: readonly NavItemDef[];
-  showVenues?: boolean;
-  defaultCollapsed?: boolean;
-};
-
-const NAV_GROUPS: readonly NavGroupDef[] = [
-  {
-    id: 'operation',
-    label: 'Operación',
-    items: [
-      { id: 'dashboard', href: '/dashboard', label: 'Inicio', icon: 'home', match: 'exact' },
-      { id: 'events', href: '/events', label: 'Eventos', icon: 'events', match: 'events' },
-      { id: 'calendar', href: '/calendar', label: 'Calendario', icon: 'calendar' },
-      { id: 'series', href: '/events/series', label: 'Series', icon: 'series' },
-      { id: 'orders', href: '/orders', label: 'Órdenes', icon: 'orders' },
-      { id: 'waitlist', href: '/waitlist', label: 'Lista de espera', icon: 'waitlist' },
-    ],
-  },
-  {
-    id: 'venues',
-    label: 'Venues y mapas',
-    showVenues: true,
-    items: [
-      { id: 'venues-list', href: '/venues', label: 'Venues', icon: 'building', match: 'exact' },
-      { id: 'maps', href: '/maps', label: 'Creador de mapas', icon: 'mapPin' },
-    ],
-  },
-  {
-    id: 'revenue',
-    label: 'Revenue',
-    items: [
-      { id: 'channels', href: '/channels', label: 'Canales', icon: 'channels' },
-      { id: 'campaigns', href: '/campaigns', label: 'Campañas', icon: 'campaigns' },
-      { id: 'pricing', href: '/pricing', label: 'Pricing', icon: 'payments' },
-      { id: 'crm', href: '/crm', label: 'CRM', icon: 'partners' },
-      { id: 'resale', href: '/resale', label: 'Reventa', icon: 'resale' },
-      { id: 'memberships', href: '/memberships', label: 'Membresías', icon: 'season' },
-      { id: 'sponsorships', href: '/sponsorships', label: 'Patrocinios', icon: 'campaigns' },
-      { id: 'season', href: '/season', label: 'Abonos', icon: 'season' },
-    ],
-  },
-  {
-    id: 'inventory',
-    label: 'Inventario y reservas',
-    items: [
-      { id: 'inventory', href: '/inventory', label: 'Inventario', icon: 'orders' },
-      { id: 'reservations', href: '/reservations', label: 'Reservas', icon: 'calendar' },
-    ],
-  },
-  {
-    id: 'access',
-    label: 'Accesos y staff',
-    items: [
-      { id: 'scanner', href: '/scanner', label: 'Escáner', icon: 'scanner' },
-      { id: 'access-control', href: '/access-control', label: 'Control de acceso', icon: 'fraud' },
-      { id: 'staff', href: '/staff', label: 'Staff', icon: 'team' },
-    ],
-  },
-  {
-    id: 'finance',
-    label: 'Finanzas',
-    items: [
-      { id: 'payouts', href: '/payouts', label: 'Liquidaciones', icon: 'payouts' },
-      { id: 'billing', href: '/billing/cfdi', label: 'Facturación', icon: 'billing' },
-    ],
-  },
-  {
-    id: 'intelligence',
-    label: 'Inteligencia',
-    items: [
-      { id: 'analytics', href: '/analytics', label: 'Analítica', icon: 'analytics' },
-      { id: 'ai', href: '/ai', label: 'IA', icon: 'analytics' },
-      { id: 'automations', href: '/automations', label: 'Automatizaciones', icon: 'series' },
-      { id: 'reports', href: '/reports', label: 'Reportes', icon: 'reports', match: 'reports' },
-      { id: 'fraud', href: '/fraud', label: 'Antifraude', icon: 'fraud' },
-      { id: 'egress', href: '/reports/egress', label: 'Egress', icon: 'egress' },
-    ],
-  },
-  {
-    id: 'platform',
-    label: 'Plataforma',
-    defaultCollapsed: true,
-    items: [
-      { id: 'platform-caps', href: '/platform', label: 'Capacidades', icon: 'platform' },
-      { id: 'platform-control', href: '/platform/control', label: 'Control global', icon: 'fraud' },
-      { id: 'platform-health', href: '/platform/health', label: 'Salud operativa', icon: 'audit' },
-      { id: 'partners', href: '/partners', label: 'Partners', icon: 'partners' },
-      { id: 'integrations', href: '/integrations', label: 'Integraciones', icon: 'platform' },
-      { id: 'api-management', href: '/api-management', label: 'API', icon: 'external' },
-      { id: 'audit', href: '/audit', label: 'Auditoría', icon: 'audit' },
-      { id: 'team', href: '/settings/organization', label: 'Equipo', icon: 'team' },
-      { id: 'branding', href: '/settings/branding', label: 'Marca', icon: 'branding' },
-      { id: 'payments', href: '/settings/payments', label: 'Pagos Banorte', icon: 'payments' },
-    ],
-  },
-];
-
-function flattenNavItems(): NavItemDef[] {
-  return NAV_GROUPS.flatMap((group) => [...group.items]);
-}
-
-function isNavItemActive(pathname: string, item: NavItemDef): boolean {
-  const match = item.match ?? 'prefix';
-  if (match === 'exact') return pathname === item.href;
-  if (match === 'events') {
-    if (pathname === '/events') return true;
-    if (!pathname.startsWith('/events/')) return false;
-    return !pathname.startsWith('/events/series');
-  }
-  if (match === 'reports') {
-    if (pathname === '/reports') return true;
-    if (!pathname.startsWith('/reports/')) return false;
-    return !pathname.startsWith('/reports/egress');
-  }
-  if (pathname === item.href) return true;
-  return pathname.startsWith(`${item.href}/`);
-}
 
 /* -------------------------------------------------------------------------- */
 /* Sidebar                                                                    */
@@ -254,7 +125,12 @@ function AdminSidebar({
   onOpenCommand: () => void;
   onOpenShortcuts: () => void;
 }) {
+  const { role } = useSession();
   const { data: venues = [] } = useVenues();
+  const visibleGroups = useMemo(
+    () => filterNavGroupsForRole(NAV_GROUPS, role),
+    [role],
+  );
   const [localCollapsed, setLocalCollapsed] = useState<ReadonlySet<string>>(() => {
     return new Set(
       NAV_GROUPS.filter((g) => g.defaultCollapsed).map((g) => g.id),
@@ -263,9 +139,9 @@ function AdminSidebar({
 
   const itemsByHref = useMemo(() => {
     const map = new Map<string, NavItemDef>();
-    for (const item of flattenNavItems()) map.set(item.href, item);
+    for (const item of flattenNavItems(role)) map.set(item.href, item);
     return map;
-  }, []);
+  }, [role]);
 
   const favoriteItems = useMemo(() => {
     return prefs.favorites
@@ -383,7 +259,7 @@ function AdminSidebar({
           </div>
         ) : null}
 
-        {NAV_GROUPS.map((group) => {
+        {visibleGroups.map((group) => {
           const collapsed = isGroupClosed(group.id);
 
           return (

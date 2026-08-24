@@ -66,7 +66,7 @@
 }
 
 .title {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-family: $font-sans;
   @include type('xl', $weight-semibold);
   color: $c-text-primary;
@@ -86,7 +86,7 @@
   width: 28px;
   height: 28px;
   margin: -2px -2px 0 0;
-  padding: 0;
+  padding: var(--bl-space-0);
   border: none;
   border-radius: $radius-sm;
   background: transparent;

@@ -1,26 +1,26 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--bl-space-5);
   min-width: 0;
 }
 
 .catalog {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .catalogCard {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  padding: 0.95rem 1rem;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-4) var(--bl-space-4);
   text-decoration: none;
   color: inherit;
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
   transition: border-color 0.15s, box-shadow 0.15s;
 
   &:hover,
@@ -31,15 +31,15 @@
   }
 
   h3 {
-    margin: 0;
-    font-size: 0.9375rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     font-weight: 600;
     letter-spacing: -0.01em;
   }
 
   p {
-    margin: 0;
-    font-size: 0.8125rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-sm);
     line-height: 1.4;
     color: var(--bl-text-tertiary);
   }
@@ -48,19 +48,19 @@
 .catalogMeta {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   margin-top: 0.15rem;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
   min-width: 0;
-  padding: 1rem 1.1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
 }
 
 .panelHead {
@@ -68,11 +68,11 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 
   h2 {
-    margin: 0;
-    font-size: 0.9375rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     font-weight: 600;
     letter-spacing: -0.01em;
   }
@@ -81,7 +81,7 @@
 .chartsRow {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
 
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
@@ -89,34 +89,34 @@
 }
 
 .muted {
-  margin: 0;
-  font-size: 0.8125rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-tertiary);
 }
 
 .refCell {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--bl-space-0-5);
   min-width: 0;
 }
 
 .code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: center;
 }
 
 .statStrip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr 1fr;
@@ -124,14 +124,14 @@
 }
 
 .statItem {
-  padding: 0.75rem 0.85rem;
-  border-radius: 10px;
+  padding: var(--bl-space-3) var(--bl-space-3);
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-surface);
   border: 1px solid var(--bl-gray-100);
 
   span {
     display: block;
-    font-size: 0.7rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -140,14 +140,14 @@
   }
 
   strong {
-    font-size: 1.15rem;
+    font-size: var(--bl-text-xl);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
   }
 }
 
 .footerNote {
-  margin: 0;
-  font-size: 0.75rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-disabled);
 }

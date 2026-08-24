@@ -3,16 +3,16 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.6rem;
-  padding: 0.7rem 0.85rem;
+  gap: var(--bl-space-2-5);
+  padding: var(--bl-space-3) var(--bl-space-3);
   background: rgba(159, 18, 57, 0.28);
   border: 1px solid rgba(251, 113, 133, 0.4);
 }
 
 .text {
-  margin: 0;
+  margin: var(--bl-space-0);
   flex: 1 1 16rem;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   line-height: 1.35;
   // var(--bl-accent-border) sobre el fondo compuesto ≈ 9:1
@@ -21,7 +21,7 @@
 
 .actions {
   display: flex;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   flex: 0 0 auto;
 }
 
@@ -30,9 +30,9 @@
   // 40 px de alto: muy por encima del mínimo de 24×24 (WCAG 2.2 §2.5.8), que
   // es lo mínimo exigible en un control que aparece durante un error de pago.
   min-height: 2.5rem;
-  padding: 0 0.85rem;
+  padding: var(--bl-space-0) var(--bl-space-3);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   font-weight: 700;
   cursor: pointer;
   border: 1px solid rgba(251, 113, 133, 0.5);

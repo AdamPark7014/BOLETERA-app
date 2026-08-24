@@ -1,30 +1,30 @@
 .msg {
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
+  padding: var(--bl-space-3) var(--bl-space-4);
+  font-size: var(--bl-text-md);
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
 }
 
 .section {
   margin-bottom: 1.25rem;
-  padding: 1rem 1.125rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
 
   h2 {
-    margin: 0 0 0.5rem;
-    font-size: 0.9375rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
+    font-size: var(--bl-text-md);
     font-weight: 600;
     color: var(--text);
   }
 
   p {
-    margin: 0 0 0.75rem;
-    font-size: 0.8125rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
+    font-size: var(--bl-text-sm);
     color: var(--muted);
     line-height: 1.45;
   }
@@ -34,12 +34,12 @@
     width: 100%;
     margin-bottom: 0.625rem;
     min-height: 56px;
-    padding: 0 0.85rem;
-    font-size: 1.0625rem;
+    padding: var(--bl-space-0) var(--bl-space-3);
+    font-size: var(--bl-text-lg);
     color: var(--text);
     background: var(--bg-deep);
     border: 1px solid var(--border-strong);
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
 
     &:focus {
       outline: none;
@@ -50,13 +50,13 @@
   button {
     margin-top: 0.25rem;
     min-height: 56px;
-    padding: 0 1.25rem;
-    font-size: 0.9375rem;
+    padding: var(--bl-space-0) var(--bl-space-5);
+    font-size: var(--bl-text-md);
     font-weight: 600;
     color: var(--accent-fg);
     background: var(--accent);
     border: none;
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
     cursor: pointer;
 
     &:hover {
@@ -67,28 +67,28 @@
 
 .list {
   list-style: none;
-  padding: 0;
-  margin: 0 0 0.75rem;
+  padding: var(--bl-space-0);
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: var(--bl-space-1-5);
 
   li {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    padding: 0.75rem 0.875rem;
+    gap: var(--bl-space-0-5);
+    padding: var(--bl-space-3) var(--bl-space-3);
     background: var(--bg-deep);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
   }
 
   strong {
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
   }
 
   span {
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     color: var(--muted);
   }
 }

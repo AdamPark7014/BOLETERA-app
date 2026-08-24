@@ -92,7 +92,7 @@
 // ---------------------------------------------------------------- underline
 
 .underline {
-  gap: 0;
+  gap: var(--bl-space-0);
   border-bottom: 1px solid $c-border;
 
   .tab::after {

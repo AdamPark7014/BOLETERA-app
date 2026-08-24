@@ -15,9 +15,9 @@
 .steps {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem 1rem;
+  gap: var(--bl-space-2-5) var(--bl-space-4);
   margin-bottom: 1.15rem;
-  font-size: 0.72rem;
+  font-size: var(--bl-text-xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -44,7 +44,7 @@
   margin-bottom: 1rem;
 
   h1 {
-    margin: 0 0 0.3rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
     font-family: var(--font-heading), 'Bebas Neue', sans-serif;
     font-size: clamp(2.2rem, 4.5vw, 3rem);
     letter-spacing: 0.03em;
@@ -52,16 +52,16 @@
   }
 
   p {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--bl-text-tertiary);
-    font-size: 0.95rem;
+    font-size: var(--bl-text-lg);
   }
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 20rem;
-  gap: 1.25rem 1.5rem;
+  gap: var(--bl-space-5) var(--bl-space-6);
   align-items: start;
   margin-top: 1.25rem;
 
@@ -73,33 +73,33 @@
 .formCol {
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  padding: 1.2rem 1.25rem 1.35rem;
+  padding: var(--bl-space-5) var(--bl-space-5) var(--bl-space-5);
 }
 
 .trust {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   margin-bottom: 0.9rem;
 
   span {
-    font-size: 0.64rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 0.3rem 0.5rem;
+    padding: var(--bl-space-1) var(--bl-space-2);
     border: 1px solid var(--bl-border);
     color: var(--bl-text-secondary);
   }
 }
 
 .banorteNote {
-  margin: 0 0 1.1rem;
-  padding: 0.7rem 0.8rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
+  padding: var(--bl-space-3) var(--bl-space-3);
   background: var(--bl-surface);
   border: 1px solid var(--bl-border);
   color: var(--bl-text-secondary);
-  font-size: 0.86rem;
+  font-size: var(--bl-text-md);
   line-height: 1.4;
 }
 
@@ -112,7 +112,7 @@
 .fieldGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
   margin-bottom: 1rem;
 
   @media (max-width: 640px) {
@@ -127,7 +127,7 @@
   label {
     display: block;
     margin-bottom: 0.4rem;
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -138,12 +138,12 @@
   input {
     display: block;
     width: 100%;
-    padding: 0.75rem 0.85rem;
+    padding: var(--bl-space-3) var(--bl-space-3);
     /* Borde con contraste 3:1 contra el fondo (WCAG 2.2 · 1.4.11) */
     border: 1px solid #8f8f8f;
     background: var(--bl-elevated);
     font: inherit;
-    font-size: 1rem; /* 16px evita el zoom automático de iOS al enfocar */
+    font-size: var(--bl-text-lg); /* 16px evita el zoom automático de iOS al enfocar */
     font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
@@ -176,7 +176,7 @@
 .fieldHint {
   display: block;
   margin-top: 0.35rem;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.4;
   color: var(--bl-gray-600);
 }
@@ -184,7 +184,7 @@
 .fieldError {
   display: block;
   margin-top: 0.35rem;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.4;
   font-weight: 600;
   color: var(--bl-danger-text);
@@ -192,11 +192,11 @@
 
 .methods {
   border: none;
-  margin: 0 0 1rem;
-  padding: 0;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
+  padding: var(--bl-space-0);
 
   legend {
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -207,16 +207,16 @@
 
 .methodGrid {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .methodCard {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.15rem;
+  gap: var(--bl-space-0-5);
   width: 100%;
-  padding: 0.8rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid #8f8f8f;
   background: var(--bl-elevated);
   text-align: left;
@@ -224,12 +224,12 @@
   font: inherit;
 
   strong {
-    font-size: 0.95rem;
+    font-size: var(--bl-text-lg);
     color: var(--bl-text-primary);
   }
 
   span {
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
     color: var(--bl-gray-600);
   }
 
@@ -250,15 +250,15 @@
 }
 
 .methodNote {
-  margin: 0.6rem 0 0;
-  font-size: 0.8rem;
+  margin: var(--bl-space-2-5) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
   color: #4b4b4b;
 }
 
 .promoRow {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 
   input {
     flex: 1;
@@ -266,12 +266,12 @@
 }
 
 .promoBtn {
-  padding: 0.65rem 0.9rem;
+  padding: var(--bl-space-2-5) var(--bl-space-4);
   border: 1px solid #8f8f8f;
   background: var(--bl-elevated);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   font-weight: 700;
   color: var(--bl-text-primary);
 
@@ -289,7 +289,7 @@
 .promoOk {
   display: block;
   margin-top: 0.35rem;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   color: var(--bl-success-text);
   font-weight: 600;
   text-transform: none;
@@ -299,7 +299,7 @@
 .promoErr {
   display: block;
   margin-top: 0.35rem;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   color: var(--bl-danger-text);
   font-weight: 600;
   text-transform: none;
@@ -307,18 +307,18 @@
 }
 
 .warn {
-  margin: 0 0 1rem;
-  padding: 0.7rem 0.85rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid var(--bl-warning);
   background: var(--bl-warning-subtle);
   color: #78350f;
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   line-height: 1.45;
 }
 
 .priceChange {
-  margin: 0 0 1rem;
-  padding: 0.8rem 0.9rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--bl-warning);
   background: var(--bl-warning-subtle);
   color: #78350f;
@@ -326,28 +326,28 @@
   strong {
     display: block;
     margin-bottom: 0.3rem;
-    font-size: 0.9rem;
+    font-size: var(--bl-text-md);
     color: #7c2d12;
   }
 
   p {
-    margin: 0;
-    font-size: 0.85rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     line-height: 1.5;
   }
 }
 
 .error {
-  margin: 0 0 1rem;
-  padding: 0.75rem 0.85rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid var(--bl-danger-text);
   background: var(--bl-danger-subtle);
   color: var(--bl-danger-text);
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   line-height: 1.5;
 
   p {
-    margin: 0;
+    margin: var(--bl-space-0);
   }
 
   a {
@@ -361,13 +361,13 @@
 
 .pay {
   width: 100%;
-  padding: 0.95rem 1.25rem;
+  padding: var(--bl-space-4) var(--bl-space-5);
   /* var(--bl-accent) sobre blanco daba 3.9:1 en texto blanco; var(--bl-accent-text) llega a 5.9:1 */
   background: var(--bl-accent-hover);
   color: var(--bl-text-inverse);
   border: none;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: var(--bl-text-lg);
   font-weight: 700;
   cursor: pointer;
 
@@ -388,8 +388,8 @@
 }
 
 .fine {
-  margin: 0.85rem 0 0;
-  font-size: 0.75rem;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-disabled);
   line-height: 1.45;
 
@@ -403,7 +403,7 @@
 .summaryCol {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   position: sticky;
   top: 5rem;
 
@@ -414,14 +414,14 @@
 }
 
 .lineItems {
-  padding: 1rem 1.1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
 }
 
 .summaryKicker {
-  margin: 0 0 0.35rem;
-  font-size: 0.64rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -429,15 +429,15 @@
 }
 
 .lineItems h2 {
-  margin: 0 0 0.35rem;
-  font-size: 1.1rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+  font-size: var(--bl-text-xl);
   font-weight: 700;
   color: var(--bl-text-primary);
 }
 
 .lineMeta {
-  margin: 0;
-  font-size: 0.8125rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-tertiary);
   line-height: 1.4;
 }
@@ -445,17 +445,17 @@
 .zoneList,
 .seatList {
   list-style: none;
-  margin: 0.75rem 0 0;
-  padding: 0.65rem 0 0;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-2-5) var(--bl-space-0) var(--bl-space-0);
   border-top: 1px solid var(--bl-gray-100);
 }
 
 .zoneList li {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.25rem 0;
-  font-size: 0.875rem;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-1) var(--bl-space-0);
+  font-size: var(--bl-text-md);
   color: var(--bl-text-secondary);
 
   em {
@@ -468,12 +468,12 @@
 .seatList {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 
   li {
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
     font-weight: 600;
-    padding: 0.25rem 0.45rem;
+    padding: var(--bl-space-1) var(--bl-space-2);
     background: var(--bl-surface);
     border: 1px solid var(--bl-border);
     color: var(--bl-text-secondary);
@@ -481,7 +481,7 @@
 }
 
 .summary {
-  padding: 1rem 1.1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
   border: 1px solid var(--bl-gray-900);
@@ -489,8 +489,8 @@
   div {
     display: flex;
     justify-content: space-between;
-    font-size: 0.875rem;
-    padding: 0.3rem 0;
+    font-size: var(--bl-text-md);
+    padding: var(--bl-space-1) var(--bl-space-0);
     color: rgba(250, 250, 250, 0.75);
   }
 }
@@ -506,14 +506,14 @@
 
 /* Transparencia PROFECO: el total ya lleva cargos e IVA, y se dice. */
 .totalNote {
-  margin: 0.6rem 0 0;
-  font-size: 0.74rem;
+  margin: var(--bl-space-2-5) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   line-height: 1.45;
   color: rgba(250, 250, 250, 0.82);
 }
 
 .backCart {
-  font-size: 0.82rem;
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   color: var(--bl-text-tertiary);
   text-decoration: none;

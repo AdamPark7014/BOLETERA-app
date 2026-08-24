@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { allInPrice, priceBreakdown } from '../../common/pricing-rates';
 import { EventCategory, EventStatus, Prisma } from '@prisma/client';
+import { isPublicCatalogEvent, publicCatalogEventWhere } from '../../common/event-visibility';
 import { PrismaService } from '../prisma/prisma.service';
 
 const CATEGORIES = new Set(Object.values(EventCategory));
@@ -39,7 +40,12 @@ export class DiscoveryService {
     const to = params.to ? new Date(params.to) : range?.lte;
 
     const where: Prisma.EventWhereInput = {
-      status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+      AND: [
+        publicCatalogEventWhere(),
+        {
+          status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+        },
+      ],
       ...(params.orgId ? { organizationId: params.orgId } : {}),
       ...(params.city
         ? { venue: { city: { equals: params.city, mode: 'insensitive' } } }
@@ -157,6 +163,9 @@ export class DiscoveryService {
       },
     });
     if (!event) throw new NotFoundException('Event not found');
+    if (!isPublicCatalogEvent(event.metadata)) {
+      throw new NotFoundException('Event not found');
+    }
     const posterAspect =
       ((event.metadata as { posterAspect?: string } | null)?.posterAspect) ?? undefined;
 
@@ -187,7 +196,12 @@ export class DiscoveryService {
     const take = Math.min(Math.max(params.limit ?? 8, 1), 12);
     const events = await this.prisma.event.findMany({
       where: {
-        status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+        AND: [
+          publicCatalogEventWhere(),
+          {
+            status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+          },
+        ],
         ...(params.orgId ? { organizationId: params.orgId } : {}),
         OR: [
           { title: { contains: q, mode: 'insensitive' } },
@@ -222,7 +236,12 @@ export class DiscoveryService {
   async facets(orgId?: string) {
     const events = await this.prisma.event.findMany({
       where: {
-        status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+        AND: [
+          publicCatalogEventWhere(),
+          {
+            status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+          },
+        ],
         ...(orgId ? { organizationId: orgId } : {}),
       },
       select: {
@@ -258,7 +277,12 @@ export class DiscoveryService {
           ? { city: { equals: params.city, mode: 'insensitive' } }
           : {}),
         events: {
-          some: { status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] } },
+          some: {
+            AND: [
+              publicCatalogEventWhere(),
+              { status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] } },
+            ],
+          },
         },
       },
       take,
@@ -274,7 +298,12 @@ export class DiscoveryService {
         _count: {
           select: {
             events: {
-              where: { status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] } },
+              where: {
+                AND: [
+                  publicCatalogEventWhere(),
+                  { status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] } },
+                ],
+              },
             },
           },
         },

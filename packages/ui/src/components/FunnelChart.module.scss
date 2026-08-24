@@ -17,7 +17,7 @@
 .stageLabel {
   fill: $c-text-secondary;
   font-family: $font-sans;
-  font-size: 12px;
+  font-size: var(--bl-text-xs);
   font-weight: 500;
   dominant-baseline: middle;
 }
@@ -25,7 +25,7 @@
 .stageValue {
   fill: #ffffff;
   font-family: $font-sans;
-  font-size: 12px;
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   dominant-baseline: middle;
   font-variant-numeric: tabular-nums;
@@ -38,7 +38,7 @@
 .conversion {
   fill: $c-text-tertiary;
   font-family: $font-sans;
-  font-size: 11px;
+  font-size: var(--bl-text-2xs);
   dominant-baseline: middle;
   font-variant-numeric: tabular-nums;
 }

@@ -118,7 +118,7 @@
   align-items: center;
   gap: $space-1;
   min-width: 0;
-  padding: 0;
+  padding: var(--bl-space-0);
   border: none;
   background: transparent;
   color: inherit;
@@ -200,7 +200,7 @@
   input[type='checkbox'] {
     width: 14px;
     height: 14px;
-    margin: 0;
+    margin: var(--bl-space-0);
     accent-color: $c-accent;
     cursor: pointer;
   }
@@ -212,7 +212,7 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  padding: 0;
+  padding: var(--bl-space-0);
   border: none;
   border-radius: $radius-xs;
   background: transparent;

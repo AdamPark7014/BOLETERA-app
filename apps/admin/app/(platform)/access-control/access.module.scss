@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--bl-space-5);
   min-width: 0;
   color: var(--color-fg, var(--bl-text-primary));
   padding-bottom: 2rem;
@@ -11,14 +11,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   flex-wrap: wrap;
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(16rem, 0.75fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: start;
 
   @media (max-width: 1100px) {
@@ -29,16 +29,16 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--bl-space-4);
   min-width: 0;
 }
 
 .card {
   min-width: 0;
-  padding: 1.1rem 1.2rem 1.25rem;
+  padding: var(--bl-space-4) var(--bl-space-5) var(--bl-space-5);
   background: var(--color-surface, var(--bl-elevated));
   border: 1px solid var(--color-border, var(--bl-border));
-  border-radius: 14px;
+  border-radius: var(--bl-radius-lg);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
@@ -46,20 +46,20 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 1rem;
   flex-wrap: wrap;
 
   h2 {
-    margin: 0;
-    font-size: 1.05rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-lg);
     letter-spacing: -0.01em;
   }
 
   p {
-    margin: 0.25rem 0 0;
+    margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
     color: var(--color-fg-muted, var(--bl-text-tertiary));
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
   }
 }
 
@@ -68,9 +68,9 @@
 .policyList,
 .incidentList {
   display: grid;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
@@ -79,10 +79,10 @@
 .policyRow,
 .incidentRow {
   display: grid;
-  gap: 0.35rem;
-  padding: 0.85rem 0.95rem;
+  gap: var(--bl-space-1-5);
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--color-border, var(--bl-border));
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
   background: var(--color-surface, var(--bl-elevated));
 }
 
@@ -93,7 +93,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   flex-wrap: wrap;
 }
 
@@ -101,8 +101,8 @@
 .deviceTitle,
 .policyTitle,
 .incidentTitle {
-  margin: 0;
-  font-size: 0.9rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   font-weight: 650;
 }
 
@@ -110,15 +110,15 @@
 .deviceHint,
 .policyHint,
 .incidentHint {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--color-fg-muted, var(--bl-text-tertiary));
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.45;
 }
 
 .barTrack {
   height: 0.35rem;
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   background: var(--bl-surface-sunken);
   overflow: hidden;
 }
@@ -132,23 +132,23 @@
 .permList {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-1-5);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
 .muted {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--color-fg-muted, var(--bl-text-tertiary));
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
 }
 
 .sideList {
   display: grid;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
@@ -156,17 +156,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 10px;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-2) var(--bl-space-2-5);
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-surface);
   border: 1px solid var(--bl-gray-100);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 .scannerLink {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   text-decoration: none;
 }

@@ -4,7 +4,7 @@
   z-index: 50;
   display: grid;
   place-items: center;
-  padding: 1rem;
+  padding: var(--bl-space-4);
   background: rgba(0, 0, 0, 0.62);
 }
 
@@ -15,29 +15,29 @@
   background: #111827;
   color: #e5e7eb;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1rem 1.1rem 1.15rem;
+  border-radius: var(--bl-radius-lg);
+  padding: var(--bl-space-4) var(--bl-space-4) var(--bl-space-5);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 }
 
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 
   h2 {
-    margin: 0;
-    font-size: 1rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-lg);
   }
 }
 
 .promptEcho {
-  margin: 0.25rem 0 0;
-  font-size: 0.78rem;
+  margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-disabled);
   line-height: 1.35;
 }
@@ -45,20 +45,20 @@
 .sideBySide {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
   min-height: 12rem;
 }
 
 .previewPane {
-  margin: 0;
+  margin: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
   min-width: 0;
 }
 
 .previewCaption {
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--bl-text-disabled);
@@ -67,7 +67,7 @@
 .previewHost {
   position: relative;
   height: 11rem;
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: #070a0f;
   overflow: hidden;
@@ -80,26 +80,26 @@
 }
 
 .previewEmpty {
-  margin: 0;
+  margin: var(--bl-space-0);
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 0.75rem;
+  padding: var(--bl-space-3);
   text-align: center;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-disabled);
 }
 
 .diffSection {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
 }
 
 .diffTitle {
-  margin: 0;
-  font-size: 0.72rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--bl-text-disabled);
@@ -108,17 +108,17 @@
 .diffBlock {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .diffStats {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 0.85rem;
-  font-size: 0.78rem;
+  gap: var(--bl-space-2) var(--bl-space-3);
+  font-size: var(--bl-text-xs);
   color: #d1d5db;
 
   strong {
@@ -129,25 +129,25 @@
 
 .diffList {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   max-height: 9rem;
   overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: #0b0f14;
 }
 
 .diffList li {
   display: grid;
   grid-template-columns: 5.5rem minmax(0, 1fr) auto;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   align-items: center;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.75rem;
+  padding: var(--bl-space-1-5) var(--bl-space-2);
+  font-size: var(--bl-text-xs);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 
   &:last-child {
@@ -156,7 +156,7 @@
 }
 
 .diffKind {
-  font-size: 0.68rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -170,7 +170,7 @@
 .diffSeats {
   color: var(--bl-text-disabled);
   font-variant-numeric: tabular-nums;
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
 }
 
 .diff_added .diffKind {
@@ -193,12 +193,12 @@
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
 }
 
 .loadingHint {
-  margin: 0.35rem 0 0;
-  font-size: 0.75rem;
+  margin: var(--bl-space-1-5) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: #38bdf8;
 }
 

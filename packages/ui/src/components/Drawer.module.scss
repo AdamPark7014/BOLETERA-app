@@ -106,7 +106,7 @@
 }
 
 .title {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-family: $font-sans;
   @include type('lg', $weight-semibold);
   color: $c-text-primary;
@@ -125,7 +125,7 @@
   flex: none;
   width: 28px;
   height: 28px;
-  padding: 0;
+  padding: var(--bl-space-0);
   border: none;
   border-radius: $radius-sm;
   background: transparent;

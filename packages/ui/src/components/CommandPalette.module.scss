@@ -144,7 +144,7 @@
 .optionText {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: var(--bl-space-px);
   flex: 1;
   min-width: 0;
 }
@@ -188,7 +188,7 @@
 }
 
 .empty {
-  margin: 0;
+  margin: var(--bl-space-0);
   padding: $space-8 $space-4;
   text-align: center;
   @include type('sm');

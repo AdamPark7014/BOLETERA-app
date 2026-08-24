@@ -5,7 +5,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 1.25rem 1.25rem 0;
+  padding: var(--bl-space-5) var(--bl-space-5) var(--bl-space-0);
   margin: 0 auto;
   color: var(--text);
 }
@@ -38,7 +38,7 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 1.25rem;
 }
 
@@ -49,11 +49,11 @@
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  font-size: 1.375rem;
+  font-size: var(--bl-text-2xl);
   color: var(--muted);
   background: var(--surface);
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   text-decoration: none;
   transition:
     background 0.15s,
@@ -71,8 +71,8 @@
 }
 
 .eyebrow {
-  margin: 0;
-  font-size: 0.625rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -80,8 +80,8 @@
 }
 
 .headerCenter h1 {
-  margin: 0.125rem 0 0;
-  font-size: 1.25rem;
+  margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-2xl);
   font-weight: 600;
   letter-spacing: -0.015em;
   color: var(--text);
@@ -93,7 +93,7 @@
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   flex-wrap: wrap;
   justify-content: flex-end;
 }

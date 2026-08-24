@@ -7,10 +7,12 @@ import { useVenues } from '@/lib/queries';
 import { LogoMark, ShellIcon } from './icons';
 import {
   NAV_GROUPS,
+  filterNavGroupsForRole,
   flattenNavItems,
   isNavItemActive,
   type NavItemDef,
 } from './nav-config';
+import { useSession } from '@/lib/use-session';
 import type { ShellPrefs } from './use-shell-prefs';
 import { ShellUserMenu } from './ShellUserMenu';
 import styles from '@/app/(platform)/shell.module.scss';
@@ -99,12 +101,17 @@ function ShellSidebarComponent({
   onOpenCommand,
   onOpenShortcuts,
 }: ShellSidebarProps) {
+  const { role } = useSession();
   const { data: venues = [] } = useVenues();
+  const visibleGroups = useMemo(
+    () => filterNavGroupsForRole(NAV_GROUPS, role),
+    [role],
+  );
   const itemsByHref = useMemo(() => {
     const map = new Map<string, NavItemDef>();
-    for (const item of flattenNavItems()) map.set(item.href, item);
+    for (const item of flattenNavItems(role)) map.set(item.href, item);
     return map;
-  }, []);
+  }, [role]);
 
   const favoriteItems = useMemo(() => {
     return prefs.favorites
@@ -200,7 +207,7 @@ function ShellSidebarComponent({
           </div>
         ) : null}
 
-        {NAV_GROUPS.map((group) => {
+        {visibleGroups.map((group) => {
           const collapsed = prefs.isGroupCollapsed(group.id);
           return (
             <div key={group.id} className={styles.navGroup}>

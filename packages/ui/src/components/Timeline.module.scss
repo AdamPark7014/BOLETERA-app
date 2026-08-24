@@ -3,8 +3,8 @@
 .timeline {
   display: flex;
   flex-direction: column;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
   min-width: 0;
   font-family: $font-sans;

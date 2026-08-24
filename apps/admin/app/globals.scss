@@ -42,7 +42,7 @@ html {
 }
 
 body {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-family: var(--font-body), var(--bl-font-sans, 'Space Grotesk'), system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);

@@ -22,7 +22,7 @@
 
 .title {
   margin: 0 0 var(--space-2);
-  font-size: 1.15rem;
+  font-size: var(--bl-text-xl);
   color: var(--color-text);
 }
 
@@ -39,7 +39,7 @@
   color: var(--color-text-muted);
 
   code {
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
   }
 }
 
@@ -57,7 +57,7 @@
 }
 
 .input {
-  padding: 0.55rem 0.7rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
   font-size: var(--text-base);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -73,7 +73,7 @@
 
 .error {
   margin: var(--space-1) 0 0;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   color: var(--color-danger);
 }
 
@@ -142,7 +142,7 @@
 
 .warningText {
   flex: 1;
-  margin: 0;
+  margin: var(--bl-space-0);
   font-size: var(--text-md);
   line-height: var(--leading-normal);
 }

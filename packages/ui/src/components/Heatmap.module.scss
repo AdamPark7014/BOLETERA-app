@@ -3,14 +3,14 @@
 .axisLabel {
   fill: $c-text-tertiary;
   font-family: $font-sans;
-  font-size: 11px;
+  font-size: var(--bl-text-2xs);
   dominant-baseline: middle;
 }
 
 .rowLabel {
   fill: $c-text-secondary;
   font-family: $font-sans;
-  font-size: 11px;
+  font-size: var(--bl-text-2xs);
   font-weight: 500;
   dominant-baseline: middle;
 }

@@ -1,18 +1,18 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .connError {
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.75rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-2) var(--bl-space-3);
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   color: var(--bl-accent-border);
   background: rgba(225, 29, 72, 0.18);
   border: 1px solid rgba(225, 29, 72, 0.45);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
 }
 
 .toolbar {
@@ -20,27 +20,27 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-2) var(--bl-space-3);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 0.85rem;
+  gap: var(--bl-space-2) var(--bl-space-3);
   list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 0.7rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   color: rgba(250, 250, 250, 0.65);
 
   li {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: var(--bl-space-1);
   }
 
   em {
@@ -53,7 +53,7 @@
 .levelBar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 }
 
 .levelBtn,
@@ -61,10 +61,10 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: transparent;
   color: rgba(250, 250, 250, 0.7);
-  font-size: 0.68rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
-  padding: 0.28rem 0.55rem;
-  border-radius: 6px;
+  padding: var(--bl-space-1) var(--bl-space-2);
+  border-radius: var(--bl-radius-sm);
   cursor: pointer;
 }
 
@@ -77,8 +77,8 @@
 .viewHeatBar {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  font-size: 0.65rem;
+  gap: var(--bl-space-2);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: rgba(250, 250, 250, 0.5);
 }
@@ -86,14 +86,14 @@
 .priceHeatPanel {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
 }
 
 .priceFilter {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.7rem;
+  gap: var(--bl-space-1);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: var(--bl-gray-25);
 
@@ -138,12 +138,12 @@
 }
 
 .liveOn {
-  font-size: 0.65rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: var(--bl-success-border);
 }
 .liveOff {
-  font-size: 0.65rem;
+  font-size: var(--bl-text-2xs);
   color: rgba(250, 250, 250, 0.4);
 }
 
@@ -152,10 +152,10 @@
   height: min(52vh, 420px);
   min-height: 280px;
   overflow: hidden;
-  padding: 0;
+  padding: var(--bl-space-0);
   background: #0a0a0c;
   border: 1px solid rgba(244, 244, 245, 0.12);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
 }
 
 .stage {
@@ -164,9 +164,9 @@
   left: 0;
   right: 0;
   z-index: 2;
-  margin: 0;
+  margin: var(--bl-space-0);
   text-align: center;
-  font-size: 0.6rem;
+  font-size: var(--bl-text-2xs);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(244, 244, 245, 0.5);
@@ -203,14 +203,14 @@
 }
 
 .focusHint {
-  margin: 0;
-  font-size: 0.75rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   color: rgba(250, 250, 250, 0.55);
 }
 
 .egressHint {
-  margin: 0;
-  font-size: 0.72rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   color: #fbcfe8;
 }
@@ -218,21 +218,21 @@
 .egressLegend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 0.85rem;
+  gap: var(--bl-space-1-5) var(--bl-space-3);
   list-style: none;
-  margin: 0;
-  padding: 0.4rem 0.65rem;
-  font-size: 0.68rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-1-5) var(--bl-space-2-5);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: rgba(250, 250, 250, 0.72);
   background: rgba(244, 114, 182, 0.07);
   border: 1px solid rgba(244, 114, 182, 0.2);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
 
   li {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: var(--bl-space-1);
   }
 }
 
@@ -272,10 +272,10 @@
 }
 
 .empty {
-  margin: 0;
-  padding: 1rem;
-  font-size: 0.875rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-4);
+  font-size: var(--bl-text-md);
   color: rgba(250, 250, 250, 0.5);
   border: 1px dashed rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
 }

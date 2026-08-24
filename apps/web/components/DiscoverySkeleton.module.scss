@@ -57,7 +57,7 @@
   padding: clamp(6.5rem, 14vh, 8rem) var(--layout-gutter-wide) clamp(2rem, 5vh, 3.25rem);
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
 }
 
 .brandMark {
@@ -100,7 +100,7 @@
   padding: 1.25rem var(--layout-gutter) var(--space-xl);
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: var(--bl-space-4);
 }
 
 .search {
@@ -157,8 +157,8 @@
 
 .grid {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1.15rem var(--space-md);

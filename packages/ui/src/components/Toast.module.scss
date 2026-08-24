@@ -37,7 +37,7 @@
 }
 
 .title {
-  margin: 0;
+  margin: var(--bl-space-0);
   @include type('md', $weight-semibold);
   color: $c-text-primary;
 }
@@ -74,7 +74,7 @@
   flex: none;
   width: 22px;
   height: 22px;
-  padding: 0;
+  padding: var(--bl-space-0);
   border: none;
   border-radius: $radius-sm;
   background: transparent;

@@ -88,26 +88,25 @@ export function AuthShell({ children, compact = false }: AuthShellProps) {
             </p>
           </div>
 
-          <div className={styles.statCards}>
-            <div className={styles.statCard}>
-              <span>Ventas hoy</span>
-              <strong>$284,930</strong>
-              <small className={styles.up}>▲ 12.4% vs ayer</small>
+          <div className={styles.capabilityCards}>
+            <article className={styles.capabilityCard}>
+              <strong>Inventario en tiempo real</strong>
+              <span>Holds, bloqueos y mapa 3D sincronizados entre canales.</span>
               <Sparkline />
-            </div>
-            <div className={styles.statRow}>
-              <div className={styles.miniStat}>
-                <span>Órdenes</span>
-                <strong>1,283</strong>
-              </div>
-              <div className={styles.miniStat}>
-                <span>Terminales</span>
-                <strong>24/26</strong>
-              </div>
-              <div className={styles.miniStat}>
-                <span>Scan rate</span>
-                <strong>98.7%</strong>
-              </div>
+            </article>
+            <div className={styles.capabilityRow}>
+              <article className={styles.capabilityMini}>
+                <strong>Multi-canal</strong>
+                <span>Web, taquilla, API y admin</span>
+              </article>
+              <article className={styles.capabilityMini}>
+                <strong>Liquidaciones</strong>
+                <span>Payouts y reportes fiscales</span>
+              </article>
+              <article className={styles.capabilityMini}>
+                <strong>Cumplimiento</strong>
+                <span>Checklist legal antes de publicar</span>
+              </article>
             </div>
           </div>
 

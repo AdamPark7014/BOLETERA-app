@@ -20,7 +20,28 @@ import {
 } from './session';
 import { http, logoutSession, revokeAllSessions } from './http';
 
+import { PermissionKey } from '@boletera/shared';
+import { hasCapability, type Capability } from './permissions';
+
 export type Permission = string;
+
+/** Maps legacy admin permission strings to API permission keys. */
+const PERMISSION_ALIASES: Record<string, string> = {
+  'event:read': PermissionKey.EVENTS_READ,
+  'event:write': PermissionKey.EVENTS_PUBLISH,
+  'order:read': PermissionKey.REPORTS_READ,
+  'price:write': PermissionKey.VENUES_EDIT,
+  'memberships.manage': PermissionKey.EVENTS_READ,
+  'sponsorships.manage': PermissionKey.EVENTS_READ,
+};
+
+function normalizePermission(permission: Permission): string {
+  return PERMISSION_ALIASES[permission] ?? permission;
+}
+
+function isCapability(value: string): value is Capability {
+  return value.includes('.') && !value.includes(':');
+}
 
 export type SessionContextValue = {
   status: 'loading' | 'authenticated' | 'unauthenticated';
@@ -37,7 +58,7 @@ export type SessionContextValue = {
 
 const SessionContext = createContext<SessionContextValue | null>(null);
 
-const ADMIN_ROLES = new Set(['ADMIN', 'SUPER_ADMIN', 'OWNER']);
+const SUPER_ADMIN_ROLE = 'SUPER_ADMIN';
 
 type MeResponse = {
   id: string;
@@ -144,11 +165,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const can = useCallback(
     (permission: Permission) => {
       if (!session) return false;
-      if (ADMIN_ROLES.has(session.user.role.toUpperCase())) return true;
-      return (
-        session.user.permissions.includes(permission) ||
+      if (session.user.role.toUpperCase() === SUPER_ADMIN_ROLE) return true;
+      const normalized = normalizePermission(permission);
+      if (
+        session.user.permissions.includes(normalized) ||
         session.user.permissions.includes('*')
-      );
+      ) {
+        return true;
+      }
+      if (isCapability(permission)) {
+        return hasCapability(session.user.role, permission);
+      }
+      return false;
     },
     [session],
   );

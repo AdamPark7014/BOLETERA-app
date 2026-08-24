@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--bl-space-5);
   min-width: 0;
 }
 
@@ -10,40 +10,40 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .eventSelect {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
   min-width: 16rem;
 
   label {
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     font-weight: 600;
     color: var(--bl-text-secondary);
   }
 
   select {
     height: 2.25rem;
-    padding: 0 0.75rem;
+    padding: var(--bl-space-0) var(--bl-space-3);
     border: 1px solid var(--bl-border);
-    border-radius: 0.5rem;
+    border-radius: var(--bl-radius-md);
     background: var(--bl-elevated);
     color: var(--bl-text-primary);
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
   }
 }
 
 .permissionNote {
-  margin: 0;
-  padding: 0.75rem 1rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--bl-warning-border);
-  border-radius: 0.75rem;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-warning-subtle);
   color: var(--bl-warning-text);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
 }
 
@@ -51,56 +51,56 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.65rem 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
+  gap: var(--bl-space-2-5) var(--bl-space-4);
+  padding: var(--bl-space-3) var(--bl-space-4);
+  border-radius: var(--bl-radius-lg);
   border: 1px solid color-mix(in srgb, var(--bl-info) 35%, var(--bl-gray-200));
   background: color-mix(in srgb, var(--bl-info) 8%, #fff);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 }
 
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: start;
 }
 
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--bl-space-4);
   min-width: 0;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
   min-width: 0;
-  padding: 1rem 1.1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
 }
 
 .cardHead {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 
   h2,
   h3 {
-    margin: 0;
-    font-size: 0.9375rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--bl-text-primary);
@@ -108,16 +108,16 @@
 }
 
 .muted {
-  margin: 0.15rem 0 0;
+  margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
   color: var(--bl-text-tertiary);
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.4;
 }
 
 .summaryLine {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--bl-text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
 }
 
@@ -126,7 +126,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .pager {
@@ -134,31 +134,31 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   padding-top: 0.25rem;
 }
 
 .pagerMeta {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--bl-text-tertiary);
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
 }
 
 .pagerControls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .sizeSelect {
   height: 2rem;
-  padding: 0 0.5rem;
+  padding: var(--bl-space-0) var(--bl-space-2);
   border: 1px solid var(--bl-border);
-  border-radius: 0.5rem;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-elevated);
   color: var(--bl-text-primary);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 .bulkBar {
@@ -166,80 +166,80 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.7rem 0.85rem;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid #dbeafe;
-  border-radius: 0.75rem;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-info-subtle);
 }
 
 .bulkMeta {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: #1e3a8a;
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 .bulkActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .recs {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-3);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
 .rec {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.75rem 0.85rem;
+  gap: var(--bl-space-1-5);
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid var(--bl-gray-100);
-  border-radius: 0.75rem;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-surface);
 }
 
 .recTitle {
-  margin: 0;
-  font-size: 0.875rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   font-weight: 600;
   color: var(--bl-text-primary);
 }
 
 .recBody {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--bl-text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
 }
 
 .recAction {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--bl-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   font-weight: 500;
 }
 
 .factorList {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
 .factor {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.55rem;
+  gap: var(--bl-space-2);
   align-items: start;
-  padding: 0.55rem 0;
+  padding: var(--bl-space-2) var(--bl-space-0);
   border-bottom: 1px solid var(--bl-gray-100);
 
   &:last-child {
@@ -251,24 +251,24 @@
 .factorMeta {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--bl-space-0-5);
   min-width: 0;
 
   strong {
-    font-size: 0.8125rem;
+    font-size: var(--bl-text-sm);
     color: var(--bl-text-primary);
   }
 
   span {
     color: var(--bl-text-tertiary);
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     line-height: 1.4;
   }
 }
 
 .factorValue {
   font-variant-numeric: tabular-nums;
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   color: var(--bl-text-primary);
   white-space: nowrap;
@@ -277,27 +277,27 @@
 .signalGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .signalItem {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  padding: 0.75rem 0.85rem;
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid var(--bl-gray-100);
-  border-radius: 0.75rem;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-surface);
 
   dt {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--bl-text-tertiary);
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
   }
 
   dd {
-    margin: 0;
-    font-size: 0.9375rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     font-weight: 600;
     color: var(--bl-text-primary);
     font-variant-numeric: tabular-nums;
@@ -330,7 +330,7 @@
 
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   color: var(--bl-text-secondary);
 }
 
@@ -338,11 +338,11 @@
   display: inline-flex;
   align-items: center;
   height: 2rem;
-  padding: 0 0.75rem;
+  padding: var(--bl-space-0) var(--bl-space-3);
   border: 1px solid var(--bl-border);
-  border-radius: 0.5rem;
+  border-radius: var(--bl-radius-md);
   color: var(--bl-text-primary);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   font-weight: 500;
   text-decoration: none;
 
@@ -354,29 +354,29 @@
 .drawerStack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--bl-space-4);
 }
 
 .drawerMeta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 
   div {
     display: grid;
-    gap: 0.15rem;
+    gap: var(--bl-space-0-5);
   }
 
   dt {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--bl-text-tertiary);
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
   }
 
   dd {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--bl-text-primary);
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
@@ -385,19 +385,19 @@
 .noteField {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 
   label {
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     font-weight: 600;
     color: var(--bl-text-secondary);
   }
 
   textarea {
     min-height: 4.5rem;
-    padding: 0.65rem 0.75rem;
+    padding: var(--bl-space-2-5) var(--bl-space-3);
     border: 1px solid var(--bl-border);
-    border-radius: 0.5rem;
+    border-radius: var(--bl-radius-md);
     background: var(--bl-elevated);
     color: var(--bl-text-primary);
     font: inherit;
@@ -408,19 +408,19 @@
 .historyList {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2-5);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
 .historyItem {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.65rem 0.75rem;
+  gap: var(--bl-space-1);
+  padding: var(--bl-space-2-5) var(--bl-space-3);
   border: 1px solid var(--bl-gray-100);
-  border-radius: 0.75rem;
+  border-radius: var(--bl-radius-lg);
 }
 
 .historyHead {
@@ -428,7 +428,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 @media (max-width: 1200px) {

@@ -12,7 +12,7 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: var(--bl-space-5);
 }
 
 .head {
@@ -22,7 +22,7 @@
   gap: var(--space-md);
 
   h2 {
-    margin: 0;
+    margin: var(--bl-space-0);
     font-family: var(--font-family-heading);
     font-size: var(--display-md);
     letter-spacing: var(--tracking-wide);
@@ -59,7 +59,7 @@
 }
 
 .fallbackTitle {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
   color: var(--text-primary);
@@ -77,8 +77,8 @@
 
 .trending {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-md);
@@ -147,7 +147,7 @@
   justify-content: flex-end;
   gap: 0.2rem;
   min-height: 8.5rem;
-  padding: 1.15rem 1.05rem;
+  padding: var(--bl-space-5) var(--bl-space-4);
   overflow: hidden;
   color: var(--text-inverse);
   text-decoration: none;
@@ -173,7 +173,7 @@
 
   strong {
     font-family: var(--font-family-heading);
-    font-size: 1.65rem;
+    font-size: var(--bl-text-3xl);
     letter-spacing: var(--tracking-wide);
     line-height: 1;
   }
@@ -208,11 +208,11 @@
 
 .venues {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 
   @include bp.below(bp.$bp-lg) {
     grid-template-columns: repeat(2, minmax(0, 1fr));

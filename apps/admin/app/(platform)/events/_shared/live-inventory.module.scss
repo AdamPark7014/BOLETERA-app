@@ -3,7 +3,7 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--bl-space-5);
 }
 
 .statusBar {
@@ -11,15 +11,15 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .connection {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  font-size: 0.875rem;
+  gap: var(--bl-space-2);
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   font-weight: 600;
   color: var(--bl-text-secondary);
 }
@@ -50,12 +50,12 @@
 
 .refreshBtn {
   min-height: 2.25rem;
-  padding: 0.4rem 0.85rem;
+  padding: var(--bl-space-1-5) var(--bl-space-3);
   border: 1px solid var(--bl-border-strong);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-elevated);
   color: var(--bl-text-primary);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   cursor: pointer;
 
@@ -69,34 +69,34 @@
 }
 
 .alertBanner {
-  margin: 0;
-  padding: 0.75rem 1rem;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--bl-danger-border);
   border-left: 5px solid var(--bl-danger-text);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-danger-subtle);
   color: var(--bl-danger-text);
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   line-height: 1.5;
 }
 
 .kpis {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .kpi {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.9rem 1rem;
+  gap: var(--bl-space-0-5);
+  padding: var(--bl-space-4) var(--bl-space-4);
   border: 1px solid var(--bl-border);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-elevated);
 
   span {
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -104,42 +104,42 @@
   }
 
   strong {
-    font-size: 1.6rem;
+    font-size: var(--bl-text-3xl);
     line-height: 1.15;
     font-variant-numeric: tabular-nums;
     color: var(--bl-text-primary);
   }
 
   small {
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     color: var(--bl-text-secondary);
   }
 }
 
 .alerts {
-  padding: 0.9rem 1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   border: 1px solid #fcd34d;
   border-left: 5px solid var(--bl-warning-text);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-warning-subtle);
 
   h3 {
-    margin: 0 0 0.6rem;
-    font-size: 0.9375rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2-5);
+    font-size: var(--bl-text-md);
     color: #713f12;
   }
 
   ul {
-    margin: 0;
-    padding: 0;
+    margin: var(--bl-space-0);
+    padding: var(--bl-space-0);
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: var(--bl-space-1-5);
   }
 
   li {
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
     color: #422006;
     line-height: 1.5;
   }
@@ -154,36 +154,36 @@
   min-width: 4.5rem;
   margin-right: 0.5rem;
   padding: 0.1rem 0.45rem;
-  border-radius: 4px;
+  border-radius: var(--bl-radius-xs);
   background: var(--bl-warning-text);
   color: var(--bl-text-inverse);
-  font-size: 0.6875rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-align: center;
 }
 
 .sectionTitle {
-  margin: 0 0 0.6rem;
-  font-size: 0.9375rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2-5);
+  font-size: var(--bl-text-md);
   color: var(--bl-text-primary);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
 
   th,
   td {
-    padding: 0.5rem 0.65rem;
+    padding: var(--bl-space-2) var(--bl-space-2-5);
     text-align: left;
     border-bottom: 1px solid var(--bl-border);
     font-variant-numeric: tabular-nums;
   }
 
   thead th {
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     letter-spacing: 0.03em;
     text-transform: uppercase;
     color: var(--bl-text-secondary);
@@ -200,7 +200,7 @@
   width: 4.5rem;
   height: 0.5rem;
   margin-right: 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   background: var(--bl-surface-active);
   overflow: hidden;
   vertical-align: middle;
@@ -213,17 +213,17 @@
 }
 
 .meterLabel {
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 }
 
 .breakdown {
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   color: var(--bl-text-secondary);
 
   summary {
     cursor: pointer;
-    padding: 0.35rem 0;
+    padding: var(--bl-space-1-5) var(--bl-space-0);
     font-weight: 600;
 
     &:focus-visible {
@@ -233,7 +233,7 @@
   }
 
   ul {
-    margin: 0.5rem 0;
+    margin: var(--bl-space-2) var(--bl-space-0);
     padding-left: 1.25rem;
     columns: 2;
   }
@@ -243,7 +243,7 @@
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
@@ -256,24 +256,24 @@
 .blockForm {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
   max-width: 42rem;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.8125rem;
+  gap: var(--bl-space-1);
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   color: var(--bl-text-secondary);
 
   input,
   select,
   textarea {
-    padding: 0.5rem 0.65rem;
+    padding: var(--bl-space-2) var(--bl-space-2-5);
     border: 1px solid var(--bl-border-strong);
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
     font: inherit;
     font-weight: 400;
     color: var(--bl-text-primary);
@@ -291,7 +291,7 @@
 }
 
 .fieldHint {
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   font-weight: 400;
   color: var(--bl-text-secondary);
 }
@@ -299,8 +299,8 @@
 .fieldError {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8125rem;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   color: var(--bl-danger-text);
 }
@@ -308,18 +308,18 @@
 .formRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   align-items: flex-end;
 }
 
 .submitBtn {
   min-height: 2.5rem;
-  padding: 0.5rem 1.1rem;
+  padding: var(--bl-space-2) var(--bl-space-4);
   border: 1px solid var(--bl-gray-900);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   font-weight: 600;
   cursor: pointer;
 
@@ -336,23 +336,23 @@
 }
 
 .result {
-  padding: 0.7rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--bl-success-border);
   border-left: 5px solid var(--bl-success-text);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-success-subtle);
   color: var(--bl-success-text);
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   line-height: 1.5;
 }
 
 .warnNote {
-  padding: 0.7rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--bl-border);
   border-left: 5px solid var(--bl-warning-text);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-surface);
   color: var(--bl-text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.6;
 }

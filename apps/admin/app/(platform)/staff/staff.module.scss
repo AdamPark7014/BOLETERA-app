@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--bl-space-5);
   min-width: 0;
   color: var(--color-fg, var(--bl-text-primary));
   padding-bottom: 2rem;
@@ -10,7 +10,7 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(16rem, 0.75fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: start;
 
   @media (max-width: 1100px) {
@@ -21,16 +21,16 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--bl-space-4);
   min-width: 0;
 }
 
 .card {
   min-width: 0;
-  padding: 1.1rem 1.2rem 1.25rem;
+  padding: var(--bl-space-4) var(--bl-space-5) var(--bl-space-5);
   background: var(--color-surface, var(--bl-elevated));
   border: 1px solid var(--color-border, var(--bl-border));
-  border-radius: 14px;
+  border-radius: var(--bl-radius-lg);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
@@ -38,37 +38,37 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 1rem;
   flex-wrap: wrap;
 
   h2 {
-    margin: 0;
-    font-size: 1.05rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-lg);
     letter-spacing: -0.01em;
   }
 
   p {
-    margin: 0.25rem 0 0;
+    margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
     color: var(--color-fg-muted, var(--bl-text-tertiary));
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
   }
 }
 
 .alerts {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .alert {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.7rem 0.9rem;
-  border-radius: 10px;
+  gap: var(--bl-space-2-5);
+  padding: var(--bl-space-3) var(--bl-space-4);
+  border-radius: var(--bl-radius-lg);
   border: 1px solid var(--color-border, var(--bl-border));
   background: var(--bl-surface);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 .alertWarning {
@@ -86,18 +86,18 @@
 .memberCell {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: var(--bl-space-3);
   min-width: 0;
 
   strong {
     display: block;
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
   }
 
   span {
     display: block;
     color: var(--color-fg-muted, var(--bl-text-tertiary));
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -109,10 +109,10 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   background: var(--bl-surface-sunken);
   color: var(--bl-text-secondary);
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -120,15 +120,15 @@
 .roleGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .roleCard {
   display: grid;
-  gap: 0.55rem;
-  padding: 0.95rem 1rem;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-4) var(--bl-space-4);
   border: 1px solid var(--color-border, var(--bl-border));
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
   background: var(--color-surface, var(--bl-elevated));
 }
 
@@ -136,46 +136,46 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .roleCardTitle {
-  margin: 0;
-  font-size: 0.92rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   font-weight: 650;
 }
 
 .roleCardSummary {
   margin: 0.2rem 0 0;
   color: var(--color-fg-muted, var(--bl-text-tertiary));
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.4;
 }
 
 .permList {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-1-5);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
 .muted {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--color-fg-muted, var(--bl-text-tertiary));
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
 }
 
 .formGrid {
   display: grid;
-  gap: 0.9rem;
+  gap: var(--bl-space-4);
 }
 
 .fieldRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 
   @media (max-width: 560px) {
     grid-template-columns: 1fr;
@@ -184,8 +184,8 @@
 
 .selectField {
   display: grid;
-  gap: 0.35rem;
-  font-size: 0.8rem;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-sm);
   color: var(--color-fg-muted, var(--bl-text-secondary));
 
   span {
@@ -197,8 +197,8 @@
   width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--color-border, var(--bl-border-strong));
-  border-radius: 0.6rem;
-  padding: 0.65rem 0.75rem;
+  border-radius: var(--bl-radius-md);
+  padding: var(--bl-space-2-5) var(--bl-space-3);
   font: inherit;
   color: inherit;
   background: var(--color-surface, var(--bl-elevated));
@@ -207,21 +207,21 @@
 .modalFooter {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   flex-wrap: wrap;
 }
 
 .formError {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--bl-danger-text);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 .sideList {
   display: grid;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
@@ -229,12 +229,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 10px;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-2) var(--bl-space-2-5);
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-surface);
   border: 1px solid var(--bl-gray-100);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
 }
 
 .sideMeta {
@@ -243,12 +243,12 @@
   min-width: 0;
 
   strong {
-    font-size: 0.8125rem;
+    font-size: var(--bl-text-sm);
   }
 
   span {
     color: var(--color-fg-muted, var(--bl-text-tertiary));
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -256,5 +256,5 @@
 }
 
 .emptyPad {
-  padding: 0.5rem 0;
+  padding: var(--bl-space-2) var(--bl-space-0);
 }

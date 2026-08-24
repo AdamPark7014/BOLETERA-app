@@ -3,23 +3,23 @@
 .steps {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   list-style: none;
-  padding: 0;
-  margin: 0 0 1.5rem;
+  padding: var(--bl-space-0);
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-6);
 }
 
 .stepChip {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   min-height: 2.25rem;
-  padding: 0.35rem 0.85rem;
+  padding: var(--bl-space-1-5) var(--bl-space-3);
   border: 1px solid var(--bl-border-strong);
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   background: var(--bl-surface-sunken);
   color: var(--bl-text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   font-weight: 600;
   cursor: pointer;
 
@@ -46,11 +46,11 @@
   justify-content: center;
   min-width: 1.25rem;
   height: 1.25rem;
-  padding: 0 0.3rem;
-  border-radius: 999px;
+  padding: var(--bl-space-0) var(--bl-space-1);
+  border-radius: var(--bl-radius-full);
   background: var(--bl-danger-text);
   color: var(--bl-text-inverse);
-  font-size: 0.6875rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
 }
 
@@ -59,28 +59,28 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 1.25rem;
-  padding: 0.85rem 1rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid #bfdbfe;
   border-left: 5px solid var(--bl-info-text);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-info-subtle);
 
   p {
-    margin: 0;
-    font-size: 0.875rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     color: #1e3a8a;
   }
 }
 
 .draftActions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .draftStamp {
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 }
 
@@ -91,9 +91,9 @@
   justify-content: center;
   min-height: 2.5rem;
   min-width: 2.5rem;
-  padding: 0.5rem 1.1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  padding: var(--bl-space-2) var(--bl-space-4);
+  border-radius: var(--bl-radius-md);
+  font-size: var(--bl-text-md);
   font-weight: 600;
   cursor: pointer;
 
@@ -133,36 +133,36 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-top: 1.5rem;
 }
 
 .blockedNote {
-  margin: 0;
-  font-size: 0.8125rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   color: var(--bl-danger-text);
   font-weight: 600;
 }
 
 .submitError {
   margin-bottom: 1rem;
-  padding: 0.7rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--bl-danger-border);
   border-left: 5px solid var(--bl-danger-text);
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: var(--bl-danger-subtle);
   color: var(--bl-danger-text);
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
 }
 
 .hint {
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.55;
   color: var(--bl-text-secondary);
 }
 
 .mapStatus {
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   color: var(--bl-text-secondary);
 
   a {
@@ -177,36 +177,36 @@
 
 .summary {
   line-height: 1.75;
-  font-size: 0.9375rem;
+  font-size: var(--bl-text-md);
   color: var(--bl-text-secondary);
 }
 
 .issues {
   margin-top: 1.5rem;
-  padding: 1rem;
+  padding: var(--bl-space-4);
   border: 1px solid var(--bl-border);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-surface);
 
   h2 {
-    margin: 0 0 0.75rem;
-    font-size: 0.9375rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
+    font-size: var(--bl-text-md);
     color: var(--bl-text-primary);
   }
 
   ul {
-    margin: 0;
-    padding: 0;
+    margin: var(--bl-space-0);
+    padding: var(--bl-space-0);
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: var(--bl-space-2-5);
   }
 
   li {
     display: flex;
     align-items: flex-start;
-    gap: 0.6rem;
+    gap: var(--bl-space-2-5);
   }
 
   /* La severidad se distingue por la etiqueta de texto, no solo por el color. */
@@ -221,22 +221,22 @@
 .issueTag {
   flex: none;
   min-width: 3.6rem;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
+  padding: var(--bl-space-0-5) var(--bl-space-1-5);
+  border-radius: var(--bl-radius-xs);
   color: var(--bl-text-inverse);
-  font-size: 0.6875rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-align: center;
 }
 
 .issueLink {
-  padding: 0;
+  padding: var(--bl-space-0);
   border: 0;
   background: none;
   color: var(--bl-text-primary);
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   font-weight: 600;
   text-align: left;
   text-decoration: underline;
@@ -255,7 +255,7 @@
 
 .issueHint {
   margin: 0.2rem 0 0;
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.5;
   color: var(--bl-text-secondary);
 }

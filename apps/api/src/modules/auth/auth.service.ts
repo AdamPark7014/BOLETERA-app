@@ -6,6 +6,7 @@ import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { InvitationsService } from './invitations.service';
+import { PermissionsService } from './permissions.service';
 
 /**
  * Alias multi-tenant de Azure AD: aceptan CUALQUIER tenant del mundo (o
@@ -21,6 +22,7 @@ export class AuthService {
     private jwt: JwtService,
     private notifications: NotificationService,
     private invitations: InvitationsService,
+    private permissions: PermissionsService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -85,7 +87,7 @@ export class AuthService {
   }
 
   async me(userId: string) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -96,6 +98,13 @@ export class AuthService {
         organizationId: true,
       },
     });
+    if (!user) return null;
+
+    const permissionKeys = await this.permissions.effectivePermissions(user.id, user.role);
+    return {
+      ...user,
+      permissions: Array.from(permissionKeys).sort(),
+    };
   }
 
   /** OAuth providers — configure GOOGLE_* / MICROSOFT_* env vars. */

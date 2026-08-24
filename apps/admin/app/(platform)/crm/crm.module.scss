@@ -8,7 +8,7 @@
 
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: var(--bl-space-5);
   min-width: 0;
   color: var(--ink);
   padding-bottom: 2rem;
@@ -18,7 +18,7 @@
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
@@ -29,20 +29,20 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: center;
 }
 
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   align-items: center;
   justify-content: space-between;
 }
@@ -50,16 +50,16 @@
 .filterMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: center;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 0.85fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: start;
 }
 
@@ -67,21 +67,21 @@
 .sideCol {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
   min-width: 0;
 }
 
 .segmentGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
 }
 
 .segmentCard {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.85rem 0.95rem;
+  gap: var(--bl-space-1-5);
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -115,54 +115,54 @@
 }
 
 .segmentCount {
-  margin: 0;
-  font-size: 1.25rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-2xl);
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 
 .segmentMeta {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.35;
 }
 
 .nameCell {
   display: flex;
   flex-direction: column;
-  gap: 0.12rem;
+  gap: var(--bl-space-0-5);
   min-width: 0;
 
   strong {
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
   }
 
   span {
     color: var(--muted);
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
   }
 }
 
 .rfmCell {
   font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   letter-spacing: 0.02em;
 }
 
 .listsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 }
 
 .personList {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: grid;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 }
 
 .personBtn {
@@ -170,10 +170,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.65rem;
-  padding: 0.55rem 0.45rem;
+  gap: var(--bl-space-2-5);
+  padding: var(--bl-space-2) var(--bl-space-2);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--bl-radius-md);
   background: transparent;
   text-align: left;
   cursor: pointer;
@@ -181,7 +181,7 @@
 
   strong {
     display: block;
-    font-size: 0.84rem;
+    font-size: var(--bl-text-sm);
   }
 }
 
@@ -197,66 +197,66 @@
 .personMeta {
   display: block;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: var(--bl-text-xs);
   margin-top: 0.1rem;
 }
 
 .recs {
   display: grid;
-  gap: 0.65rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-2-5);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
 .rec {
   display: grid;
-  gap: 0.3rem;
-  padding: 0.8rem;
+  gap: var(--bl-space-1);
+  padding: var(--bl-space-3);
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: var(--bl-radius-lg);
   background: var(--surface);
 }
 
 .recHead {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 }
 
 .recTitle {
-  margin: 0;
-  font-size: 0.88rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   font-weight: 650;
 }
 
 .recBody {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
 }
 
 .recAction {
-  margin: 0;
-  font-size: 0.78rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-xs);
   font-weight: 600;
 }
 
 .signalGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.65rem;
-  margin: 0;
+  gap: var(--bl-space-2-5);
+  margin: var(--bl-space-0);
 
   dt {
     color: var(--muted);
-    font-size: 0.7rem;
+    font-size: var(--bl-text-2xs);
   }
 
   dd {
-    margin: 0.15rem 0 0;
-    font-size: 0.95rem;
+    margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
+    font-size: var(--bl-text-lg);
     font-weight: 650;
     font-variant-numeric: tabular-nums;
   }
@@ -265,38 +265,38 @@
 .drawerBody {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 }
 
 .badgeRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
 }
 
 .metaGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.65rem;
-  margin: 0;
+  gap: var(--bl-space-2-5);
+  margin: var(--bl-space-0);
 
   dt {
     color: var(--muted);
-    font-size: 0.7rem;
+    font-size: var(--bl-text-2xs);
   }
 
   dd {
-    margin: 0.15rem 0 0;
-    font-size: 0.875rem;
+    margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
+    font-size: var(--bl-text-md);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
 }
 
 .muted {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--muted);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
 }
 
@@ -307,23 +307,23 @@
 }
 
 .limits {
-  padding: 0.85rem 1rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px dashed var(--border);
   border-radius: var(--radius);
   background: var(--sunken);
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.45;
 
   strong {
     display: block;
     color: var(--ink);
     margin-bottom: 0.35rem;
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
   }
 
   ul {
-    margin: 0;
+    margin: var(--bl-space-0);
     padding-left: 1.1rem;
   }
 
@@ -335,7 +335,7 @@
 .skeleton {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--bl-space-4);
 }
 
 @media (max-width: 1280px) {

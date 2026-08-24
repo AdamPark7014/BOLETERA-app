@@ -30,7 +30,7 @@ function ShellCommandPaletteComponent({
   onToggleCompact,
 }: ShellCommandPaletteProps) {
   const router = useRouter();
-  const { signOut, revokeAll } = useSession();
+  const { signOut, revokeAll, role } = useSession();
   const { cycle, setPreference } = useTheme();
   const { data: venues = [] } = useVenues();
 
@@ -96,7 +96,7 @@ function ShellCommandPaletteComponent({
       return shortcutHelp;
     }
 
-    const navActions: CommandAction[] = flattenNavItems().map((item) => ({
+    const navActions: CommandAction[] = flattenNavItems(role).map((item) => ({
       id: `nav-${item.id}`,
       label: item.label,
       description: item.href,
@@ -252,6 +252,7 @@ function ShellCommandPaletteComponent({
     onToggleCompact,
     orders,
     revokeAll,
+    role,
     router,
     setPreference,
     signOut,

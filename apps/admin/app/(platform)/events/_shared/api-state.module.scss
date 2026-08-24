@@ -4,10 +4,10 @@
 .stateView {
   max-width: 46rem;
   margin: 2rem auto;
-  padding: 1.75rem;
+  padding: var(--bl-space-7);
   border: 1px solid var(--bl-border-strong);
   border-left: 6px solid var(--bl-gray-500);
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
   background: var(--bl-elevated);
 
   /* El borde de color nunca es la única señal: el distintivo lleva texto. */
@@ -28,34 +28,34 @@
 .stateBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 0 0 0.5rem;
+  gap: var(--bl-space-1-5);
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--bl-radius-full);
   background: var(--bl-surface-sunken);
   color: var(--bl-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
 .stateTitle {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
+  font-size: var(--bl-text-2xl);
   line-height: 1.3;
   color: var(--bl-text-primary);
 }
 
 .stateContext {
-  margin: 0 0 0.35rem;
-  font-size: 0.875rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+  font-size: var(--bl-text-md);
   color: var(--bl-text-secondary);
 }
 
 .stateHint {
-  margin: 0 0 1.25rem;
-  font-size: 0.9375rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-5);
+  font-size: var(--bl-text-md);
   line-height: 1.6;
   /* 4.6:1 sobre blanco. */
   color: var(--bl-text-secondary);
@@ -64,7 +64,7 @@
 .stateActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .primaryAction,
@@ -75,9 +75,9 @@
   /* Objetivo táctil mínimo de 24×24 con holgura. */
   min-height: 2.5rem;
   min-width: 2.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  padding: var(--bl-space-2) var(--bl-space-4);
+  border-radius: var(--bl-radius-md);
+  font-size: var(--bl-text-md);
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -110,12 +110,12 @@
 
 .stateDetails {
   margin-top: 1.25rem;
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 
   summary {
     cursor: pointer;
-    padding: 0.35rem 0;
+    padding: var(--bl-space-1-5) var(--bl-space-0);
     font-weight: 600;
 
     &:focus-visible {
@@ -130,16 +130,16 @@
   }
 
   p {
-    margin: 0.35rem 0;
+    margin: var(--bl-space-1-5) var(--bl-space-0);
   }
 }
 
 .loading {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 2rem 0;
-  font-size: 0.9375rem;
+  gap: var(--bl-space-2-5);
+  padding: var(--bl-space-8) var(--bl-space-0);
+  font-size: var(--bl-text-md);
   color: var(--bl-text-secondary);
 }
 

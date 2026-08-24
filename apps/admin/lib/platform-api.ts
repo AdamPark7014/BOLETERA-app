@@ -8,6 +8,7 @@ export type EventRow = {
   status: string;
   startsAt: string;
   totalCapacity: number;
+  image?: string | null;
   venueId?: string;
   venue?: { name: string; id?: string };
   _count?: { tickets: number; orders: number };

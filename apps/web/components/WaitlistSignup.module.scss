@@ -1,6 +1,6 @@
 .card {
   margin-top: var(--space-md);
-  padding: 1.25rem;
+  padding: var(--bl-space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -61,7 +61,7 @@
 
   input {
     min-height: var(--control-height-md);
-    padding: 0.625rem 0.875rem;
+    padding: var(--bl-space-2-5) var(--bl-space-3);
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-md);
     font: inherit;
@@ -77,7 +77,7 @@
 
 .done {
   margin-top: var(--space-md);
-  padding: 1.25rem;
+  padding: var(--bl-space-5);
   border: 1px solid var(--color-success-border);
   border-radius: var(--radius-lg);
   background: var(--color-success-bg);

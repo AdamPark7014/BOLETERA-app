@@ -43,7 +43,7 @@
 
 /* Aviso de sesión caducada: ocupa el ancho completo encima de la barra. */
 .sessionNotice {
-  margin: 0;
+  margin: var(--bl-space-0);
   padding: var(--space-xs) var(--layout-gutter);
   background: var(--color-danger-bg);
   border-bottom: 1px solid var(--color-danger-border);
@@ -180,7 +180,7 @@
 .searchLabel {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
   padding: var(--space-2xs) 0.7rem;
   min-height: var(--control-height-sm);
   background: rgba(0, 0, 0, 0.04);
@@ -214,7 +214,7 @@
   left: 0;
   right: 0;
   top: calc(100% + 0.35rem);
-  margin: 0;
+  margin: var(--bl-space-0);
   padding: var(--space-3xs) 0;
   list-style: none;
   background: var(--color-surface);
@@ -278,7 +278,7 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: var(--bl-space-2-5);
   min-height: var(--control-height-sm);
   color: var(--text-primary);
   text-decoration: none;
@@ -308,7 +308,7 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: var(--bl-space-0-5);
   flex-wrap: nowrap;
   overflow-x: auto;
 

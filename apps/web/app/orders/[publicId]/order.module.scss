@@ -15,9 +15,9 @@
 .steps {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem 1rem;
+  gap: var(--bl-space-2-5) var(--bl-space-4);
   margin-bottom: 1.15rem;
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -41,8 +41,8 @@
 }
 
 .ok {
-  margin: 0 0 0.35rem;
-  font-size: 0.7rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -50,8 +50,8 @@
 }
 
 .pending {
-  margin: 0 0 0.35rem;
-  font-size: 0.7rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -59,7 +59,7 @@
 }
 
 .hero h1 {
-  margin: 0 0 0.4rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
   font-family: var(--font-heading), 'Bebas Neue', sans-serif;
   font-size: clamp(2.1rem, 4.5vw, 2.9rem);
   letter-spacing: 0.03em;
@@ -67,13 +67,13 @@
 }
 
 .sub {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--bl-text-tertiary);
-  font-size: 0.9rem;
+  font-size: var(--bl-text-md);
 
   code {
     font-family: ui-monospace, monospace;
-    font-size: 0.85rem;
+    font-size: var(--bl-text-md);
     color: var(--bl-text-secondary);
   }
 }
@@ -81,20 +81,20 @@
 .eventCard {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 1.15rem;
+  gap: var(--bl-space-4);
+  padding: var(--bl-space-4) var(--bl-space-5);
   margin-bottom: 1rem;
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
 
   h2 {
-    margin: 0 0 0.35rem;
-    font-size: 1.15rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+    font-size: var(--bl-text-xl);
   }
 
   p {
     margin: 0.2rem 0 0;
-    font-size: 0.88rem;
+    font-size: var(--bl-text-md);
     color: var(--bl-text-secondary);
   }
 
@@ -117,14 +117,14 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
 
   strong {
-    font-size: 1.2rem;
+    font-size: var(--bl-text-xl);
     font-variant-numeric: tabular-nums;
 
     span {
-      font-size: 0.7rem;
+      font-size: var(--bl-text-2xs);
       color: var(--bl-text-tertiary);
       font-weight: 600;
     }
@@ -135,12 +135,12 @@
   text-align: left;
   border: 1px solid var(--bl-border);
   background: var(--bl-elevated);
-  padding: 1.05rem 1.15rem;
+  padding: var(--bl-space-4) var(--bl-space-5);
   margin-bottom: 1rem;
 
   h2 {
-    font-size: 0.95rem;
-    margin: 0;
+    font-size: var(--bl-text-lg);
+    margin: var(--bl-space-0);
   }
 }
 
@@ -148,17 +148,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
   margin-bottom: 0.75rem;
 }
 
 /* Sirve para `<a>` (con token) y para `<button>` (descarga vía fetch con JWT) */
 .pdfLink {
-  padding: 0;
+  padding: var(--bl-space-0);
   border: none;
   background: none;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   font-weight: 700;
   color: var(--bl-accent-text);
   text-decoration: none;
@@ -181,16 +181,16 @@
 
 .ticketList {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
 
   li {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 0.55rem 0;
+    gap: var(--bl-space-4);
+    padding: var(--bl-space-2) var(--bl-space-0);
     border-top: 1px solid var(--bl-gray-100);
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
     color: var(--bl-text-secondary);
 
     code {
@@ -208,7 +208,7 @@
 
 .textLink {
   color: var(--bl-accent-text);
-  font-size: 0.875rem;
+  font-size: var(--bl-text-md);
   font-weight: 600;
   text-decoration: none;
 
@@ -223,8 +223,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.7rem 1.1rem;
-  font-size: 0.875rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
+  font-size: var(--bl-text-md);
   font-weight: 700;
   text-decoration: none;
 }
@@ -252,24 +252,24 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: var(--bl-space-2);
   margin-top: 1.15rem;
 }
 
 .trust {
   list-style: none;
-  margin: 1.5rem 0 0;
-  padding: 0;
+  margin: var(--bl-space-6) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
 
   li {
-    font-size: 0.64rem;
+    font-size: var(--bl-text-2xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 0.3rem 0.5rem;
+    padding: var(--bl-space-1) var(--bl-space-2);
     border: 1px solid var(--bl-border);
     background: var(--bl-elevated);
     color: var(--bl-text-secondary);
@@ -277,33 +277,33 @@
 }
 
 .instructions {
-  margin: 0.75rem 0 1rem;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-4);
   line-height: 1.55;
-  font-size: 0.9rem;
+  font-size: var(--bl-text-md);
   color: var(--bl-text-secondary);
 
   code {
     font-family: ui-monospace, monospace;
     background: var(--bl-surface-sunken);
-    padding: 0.15rem 0.4rem;
+    padding: var(--bl-space-0-5) var(--bl-space-1-5);
   }
 }
 
 .empty {
   text-align: center;
-  padding: 2.5rem 1rem;
+  padding: var(--bl-space-10) var(--bl-space-4);
 
   h1 {
     font-family: var(--font-heading), 'Bebas Neue', sans-serif;
-    font-size: 2rem;
+    font-size: var(--bl-text-4xl);
     letter-spacing: 0.04em;
-    margin: 0 0 0.5rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
   }
 
   p {
     /* var(--bl-gray-500) se quedaba en 4.4:1 sobre el fondo claro (WCAG AA pide 4.5:1) */
     color: var(--bl-gray-600);
-    margin: 0 0 1rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
     line-height: 1.6;
   }
 
@@ -324,29 +324,29 @@
 }
 
 .errorBox {
-  margin: 1rem 0 0;
-  padding: 0.75rem 0.85rem;
+  margin: var(--bl-space-4) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid var(--bl-danger-text);
   background: var(--bl-danger-subtle);
   color: var(--bl-danger-text);
-  font-size: 0.9rem;
+  font-size: var(--bl-text-md);
   line-height: 1.5;
 }
 
 .gateNote {
-  margin: 0.65rem 0 0;
-  font-size: 0.82rem;
+  margin: var(--bl-space-2-5) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   line-height: 1.55;
   color: var(--bl-gray-600);
 }
 
 .demoNote {
-  margin: 0 0 0.9rem;
-  padding: 0.65rem 0.8rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
+  padding: var(--bl-space-2-5) var(--bl-space-3);
   border: 1px solid var(--bl-warning);
   background: var(--bl-warning-subtle);
   color: #78350f;
-  font-size: 0.85rem;
+  font-size: var(--bl-text-md);
   font-weight: 600;
 }
 
@@ -354,15 +354,15 @@
 
 .breakdown {
   list-style: none;
-  margin: 0.75rem 0 0;
-  padding: 0;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-0);
 
   li {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 0.4rem 0;
-    font-size: 0.9rem;
+    gap: var(--bl-space-4);
+    padding: var(--bl-space-1-5) var(--bl-space-0);
+    font-size: var(--bl-text-md);
     color: var(--bl-text-secondary);
 
     strong {
@@ -382,7 +382,7 @@
 }
 
 .totalNote {
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   line-height: 1.4;
   color: var(--bl-gray-600);
   font-weight: 500;
@@ -392,9 +392,9 @@
 /* --- Pago diferido: pasos, datos copiables e importe exacto --- */
 
 .steps2 {
-  margin: 0.9rem 0 1.1rem;
+  margin: var(--bl-space-4) var(--bl-space-0) var(--bl-space-4);
   padding-left: 1.15rem;
-  font-size: 0.9rem;
+  font-size: var(--bl-text-md);
   line-height: 1.6;
   color: var(--bl-text-secondary);
 
@@ -406,11 +406,11 @@
 .payGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .copyField {
-  padding: 0.75rem 0.85rem;
+  padding: var(--bl-space-3) var(--bl-space-3);
   border: 1px solid var(--bl-border-strong);
   background: var(--bl-surface);
 }
@@ -418,7 +418,7 @@
 .copyLabel {
   display: block;
   margin-bottom: 0.35rem;
-  font-size: 0.66rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -429,12 +429,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.6rem;
+  gap: var(--bl-space-2-5);
 }
 
 .copyValue {
   font-family: ui-monospace, monospace;
-  font-size: 1rem;
+  font-size: var(--bl-text-lg);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--bl-text-primary);
@@ -442,7 +442,7 @@
 }
 
 .amount {
-  font-size: 1.05rem;
+  font-size: var(--bl-text-lg);
   font-variant-numeric: tabular-nums;
   color: var(--bl-text-primary);
 }
@@ -452,11 +452,11 @@
   /* 44×44 px de área táctil (WCAG 2.2 · 2.5.8 Target Size) */
   min-width: 5rem;
   min-height: 2.75rem;
-  padding: 0.5rem 0.8rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
   border: 1px solid var(--bl-gray-600);
   background: var(--bl-elevated);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   font-weight: 700;
   color: var(--bl-text-primary);
   cursor: pointer;
@@ -474,14 +474,14 @@
 .copyHint {
   display: block;
   margin-top: 0.4rem;
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   line-height: 1.45;
   color: var(--bl-gray-600);
 }
 
 .instructionsNote {
-  margin: 1rem 0 0;
-  font-size: 0.85rem;
+  margin: var(--bl-space-4) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-md);
   line-height: 1.55;
   color: var(--bl-text-secondary);
 }
@@ -490,12 +490,12 @@
 
 .skeleton {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 }
 
 .skelLine,
 .skelBlock {
-  border-radius: 6px;
+  border-radius: var(--bl-radius-sm);
   background: linear-gradient(90deg, #ececec 25%, #f6f6f6 37%, #ececec 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
@@ -531,7 +531,7 @@
   width: 1px;
   height: 1px;
   margin: -1px;
-  padding: 0;
+  padding: var(--bl-space-0);
   overflow: hidden;
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
@@ -544,8 +544,8 @@
    1.4.1) y todos los pares cumplen 4.5:1 sobre su propio fondo. */
 
 .refundedTag {
-  margin: 0 0 0.35rem;
-  font-size: 0.75rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+  font-size: var(--bl-text-xs);
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -557,26 +557,26 @@
   border: 1px solid var(--bl-danger-border);
   border-left: 4px solid var(--bl-danger-text);
   background: var(--bl-danger-subtle);
-  padding: 1rem 1.15rem;
+  padding: var(--bl-space-4) var(--bl-space-5);
   margin-bottom: 1rem;
   color: var(--bl-danger-text);
 
   h2 {
-    font-size: 1.05rem;
-    margin: 0 0 0.4rem;
+    font-size: var(--bl-text-lg);
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
     color: var(--bl-danger-text);
   }
 
   p {
-    margin: 0;
-    font-size: 0.88rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     line-height: 1.5;
   }
 }
 
 .cancelKicker {
   margin: 0 0 0.3rem !important;
-  font-size: 0.72rem;
+  font-size: var(--bl-text-xs);
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -588,18 +588,18 @@
   border: 1px solid var(--bl-border);
   border-left: 4px solid var(--bl-gray-600);
   background: var(--bl-elevated);
-  padding: 1.05rem 1.15rem;
+  padding: var(--bl-space-4) var(--bl-space-5);
   margin-bottom: 1rem;
 
   h2 {
-    font-size: 1.05rem;
-    margin: 0 0 0.45rem;
+    font-size: var(--bl-text-lg);
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
     color: var(--bl-text-primary);
   }
 
   h3 {
-    font-size: 0.9rem;
-    margin: 0 0 0.3rem;
+    font-size: var(--bl-text-md);
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
     color: var(--bl-text-primary);
   }
 }
@@ -620,8 +620,8 @@
 }
 
 .refundKicker {
-  margin: 0 0 0.25rem;
-  font-size: 0.72rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
+  font-size: var(--bl-text-xs);
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -629,25 +629,25 @@
 }
 
 .refundDetail {
-  margin: 0 0 0.85rem;
-  font-size: 0.88rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
+  font-size: var(--bl-text-md);
   line-height: 1.55;
   color: var(--bl-text-secondary);
 }
 
 .refundRows {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   border-top: 1px solid var(--bl-border);
 
   li {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 0.45rem 0;
+    gap: var(--bl-space-4);
+    padding: var(--bl-space-2) var(--bl-space-0);
     border-bottom: 1px solid #ededed;
-    font-size: 0.85rem;
+    font-size: var(--bl-text-md);
     color: var(--bl-text-secondary);
   }
 
@@ -663,13 +663,13 @@
   color: var(--bl-text-primary) !important;
 
   strong {
-    font-size: 0.98rem;
+    font-size: var(--bl-text-lg);
   }
 }
 
 .refundNote {
-  margin: 0.75rem 0 0;
-  font-size: 0.8rem;
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-sm);
   line-height: 1.5;
   color: var(--bl-text-secondary);
 }
@@ -678,7 +678,7 @@
   margin-top: 0.95rem;
   border: 1px solid #a7f3d0;
   background: var(--bl-success-subtle);
-  padding: 0.8rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   color: #065f46;
 
   h3 {
@@ -686,8 +686,8 @@
   }
 
   p {
-    margin: 0 0 0.4rem;
-    font-size: 0.85rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+    font-size: var(--bl-text-md);
     line-height: 1.5;
   }
 
@@ -701,7 +701,7 @@
   margin-top: 0.95rem;
   border: 1px solid var(--bl-warning-border);
   background: var(--bl-warning-subtle);
-  padding: 0.8rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   color: #78350f;
 
   h3 {
@@ -709,18 +709,18 @@
   }
 
   p {
-    margin: 0;
-    font-size: 0.85rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-md);
     line-height: 1.5;
   }
 }
 
 .ticketsVoidNote {
-  margin: 0 0 0.7rem;
-  padding: 0.55rem 0.7rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
+  padding: var(--bl-space-2) var(--bl-space-3);
   border-left: 3px solid var(--bl-danger-text);
   background: var(--bl-danger-subtle);
-  font-size: 0.82rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
   color: var(--bl-danger-text);
 }
@@ -729,14 +729,14 @@
 
 .timeline {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
 
   li {
     position: relative;
     display: flex;
-    gap: 0.7rem;
-    padding: 0 0 0.9rem 0;
+    gap: var(--bl-space-3);
+    padding: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4) var(--bl-space-0);
 
     /* La línea que une los hitos. Decorativa: el orden lo da el <ol>. */
     &::before {
@@ -772,8 +772,8 @@
 }
 
 .timelineLabel {
-  margin: 0;
-  font-size: 0.87rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-md);
   font-weight: 700;
   color: var(--bl-text-primary);
 }
@@ -785,13 +785,13 @@
 
 .timelineDate {
   margin: 0.1rem 0 0;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 }
 
 .timelineDetail {
   margin: 0.2rem 0 0;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.45;
   color: var(--bl-text-secondary);
 }

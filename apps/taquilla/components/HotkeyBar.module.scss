@@ -4,9 +4,9 @@
   z-index: 40;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--bl-space-2);
   flex-wrap: wrap;
-  padding: 10px 16px;
+  padding: var(--bl-space-2-5) var(--bl-space-4);
   margin-top: auto;
   background: rgba(12, 12, 14, 0.95);
   border-top: 1px solid var(--border);
@@ -14,7 +14,7 @@
 }
 
 .title {
-  font-size: 10px;
+  font-size: var(--bl-text-2xs);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted-2);
@@ -24,10 +24,10 @@
 .item {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 13px;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-sm);
   color: var(--muted);
-  padding: 6px 10px;
+  padding: var(--bl-space-1-5) var(--bl-space-2-5);
   border-radius: var(--radius-sm);
   background: var(--surface);
   border: 1px solid var(--border);
@@ -35,13 +35,13 @@
 
   kbd {
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--bl-text-xs);
     font-weight: 700;
     color: var(--text);
     background: var(--bg-deep);
     border: 1px solid var(--border-strong);
     border-radius: 5px;
-    padding: 2px 7px;
+    padding: var(--bl-space-0-5) var(--bl-space-1-5);
     min-width: 26px;
     text-align: center;
   }
@@ -49,7 +49,7 @@
 
 .help {
   margin-left: auto;
-  font-size: 12px;
+  font-size: var(--bl-text-xs);
   color: var(--muted-2);
 }
 
@@ -59,7 +59,7 @@
   z-index: 210;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: var(--bl-space-6);
   background: rgba(6, 6, 8, 0.9);
 }
 
@@ -70,17 +70,17 @@
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  padding: 26px;
+  padding: var(--bl-space-6);
 
   h2 {
-    margin: 0 0 4px;
-    font-size: 24px;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
+    font-size: var(--bl-text-3xl);
   }
 
   p {
-    margin: 0 0 18px;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
     color: var(--muted);
-    font-size: 14px;
+    font-size: var(--bl-text-md);
   }
 }
 
@@ -88,8 +88,8 @@
   margin-bottom: 18px;
 
   h3 {
-    margin: 0 0 8px;
-    font-size: 12px;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
+    font-size: var(--bl-text-xs);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--muted-2);
@@ -99,18 +99,18 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 8px;
+  gap: var(--bl-space-2);
   list-style: none;
-  padding: 0;
-  margin: 0;
+  padding: var(--bl-space-0);
+  margin: var(--bl-space-0);
 
   li {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 14px;
+    gap: var(--bl-space-2-5);
+    font-size: var(--bl-text-md);
     color: var(--text);
-    padding: 8px 12px;
+    padding: var(--bl-space-2) var(--bl-space-3);
     background: var(--bg-deep);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -119,7 +119,7 @@
 
   kbd {
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--bl-text-xs);
     font-weight: 700;
     background: var(--surface-2);
     border: 1px solid var(--border-strong);
@@ -134,7 +134,7 @@
 .close {
   width: 100%;
   min-height: 52px;
-  font-size: 16px;
+  font-size: var(--bl-text-lg);
   font-weight: 700;
   border-radius: var(--radius-sm);
   border: 1px solid var(--accent);

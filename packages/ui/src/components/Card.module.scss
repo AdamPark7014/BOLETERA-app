@@ -40,7 +40,7 @@
 }
 
 .padding-none {
-  padding: 0;
+  padding: var(--bl-space-0);
 }
 .padding-sm {
   padding: $space-3;
@@ -65,7 +65,7 @@
 }
 
 .title {
-  margin: 0;
+  margin: var(--bl-space-0);
   font-family: $font-sans;
   @include type('lg', $weight-semibold);
   color: $c-text-primary;

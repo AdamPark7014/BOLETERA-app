@@ -1,7 +1,7 @@
 .designer {
   display: grid;
   grid-template-columns: 16rem minmax(0, 1fr);
-  gap: 1rem;
+  gap: var(--bl-space-4);
   min-height: 70vh;
 
   @media (max-width: 900px) {
@@ -12,28 +12,28 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.85rem;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-3);
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
   border: 1px solid #222;
 
   h3 {
-    margin: 0.35rem 0 0;
-    font-size: 0.72rem;
+    margin: var(--bl-space-1-5) var(--bl-space-0) var(--bl-space-0);
+    font-size: var(--bl-text-xs);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: rgba(250, 250, 250, 0.55);
   }
 
   > button {
-    padding: 0.5rem 0.75rem;
+    padding: var(--bl-space-2) var(--bl-space-3);
     border: 1px solid #333;
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     cursor: pointer;
     font: inherit;
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
 
     &:hover:not(:disabled) {
       border-color: var(--bl-accent);
@@ -43,18 +43,18 @@
 
 .secList {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
   max-height: 18rem;
   overflow: auto;
 
   li {
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 0.25rem;
+    gap: var(--bl-space-1);
     align-items: center;
   }
 }
@@ -63,10 +63,10 @@
 .secActive {
   display: grid;
   grid-template-columns: 0.55rem 1fr auto;
-  gap: 0.4rem;
+  gap: var(--bl-space-1-5);
   align-items: center;
   width: 100%;
-  padding: 0.4rem 0.45rem;
+  padding: var(--bl-space-1-5) var(--bl-space-2);
   border: 1px solid var(--bl-gray-800);
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
@@ -78,7 +78,7 @@
     width: 0.55rem;
     height: 0.55rem;
     display: inline-block;
-    border-radius: 999px;
+    border-radius: var(--bl-radius-full);
   }
 
   input {
@@ -87,13 +87,13 @@
     background: transparent;
     color: inherit;
     font: inherit;
-    font-size: 0.78rem;
+    font-size: var(--bl-text-xs);
     min-width: 0;
   }
 
   em {
     font-style: normal;
-    font-size: 0.68rem;
+    font-size: var(--bl-text-2xs);
     color: rgba(250, 250, 250, 0.45);
   }
 }
@@ -108,7 +108,7 @@
   background: transparent;
   color: var(--bl-text-tertiary);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--bl-text-lg);
   padding: 0.2rem 0.35rem;
 
   &:hover {
@@ -119,15 +119,15 @@
 .templateGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 
   button {
-    padding: 0.45rem;
+    padding: var(--bl-space-2);
     border: 1px solid #333;
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
 
     &:hover:not(:disabled) {
       border-color: var(--bl-accent);
@@ -142,15 +142,15 @@
 .stageTools {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 
   button {
-    padding: 0.45rem 0.6rem;
+    padding: var(--bl-space-2) var(--bl-space-2-5);
     border: 1px solid #333;
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     text-align: left;
 
     &:hover:not(:disabled) {
@@ -165,15 +165,15 @@
 }
 
 .sideHint {
-  margin: 0;
-  font-size: 0.68rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   line-height: 1.4;
   color: rgba(250, 250, 250, 0.4);
 }
 
 .egressHint {
-  margin: 0.25rem 0 0;
-  font-size: 0.68rem;
+  margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   line-height: 1.35;
   color: #fbcfe8;
@@ -182,11 +182,11 @@
 .egressLegend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.7rem;
+  gap: var(--bl-space-1-5) var(--bl-space-3);
   list-style: none;
-  margin: 0.35rem 0 0;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.62rem;
+  margin: var(--bl-space-1-5) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-1-5) var(--bl-space-2);
+  font-size: var(--bl-text-2xs);
   font-weight: 600;
   color: rgba(250, 250, 250, 0.72);
   background: rgba(244, 114, 182, 0.06);
@@ -195,7 +195,7 @@
   li {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: var(--bl-space-1);
   }
 }
 
@@ -247,25 +247,25 @@
 .paramGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 }
 
 .paramField {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-size: 0.65rem;
+  font-size: var(--bl-text-2xs);
   color: rgba(250, 250, 250, 0.55);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 
   input {
-    padding: 0.35rem 0.4rem;
+    padding: var(--bl-space-1-5) var(--bl-space-1-5);
     border: 1px solid #333;
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     font: inherit;
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
     text-transform: none;
     letter-spacing: 0;
   }
@@ -273,10 +273,10 @@
 
 .validationPanel {
   margin-top: 0.35rem;
-  padding: 0.55rem 0.6rem;
+  padding: var(--bl-space-2) var(--bl-space-2-5);
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(15, 23, 42, 0.55);
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   color: #e2e8f0;
 }
 
@@ -284,12 +284,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   margin-bottom: 0.45rem;
 
   h3 {
-    margin: 0;
-    font-size: 0.68rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-2xs);
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: rgba(250, 250, 250, 0.55);
@@ -299,7 +299,7 @@
 .validationBadges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--bl-space-1);
   justify-content: flex-end;
 }
 
@@ -309,8 +309,8 @@
   background: rgba(127, 29, 29, 0.35) !important;
 
   p {
-    margin: 0;
-    font-size: 0.68rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-2xs);
     line-height: 1.45;
     color: var(--bl-danger-border);
   }
@@ -318,39 +318,39 @@
 
 .validationSummary {
   list-style: none;
-  margin: 0 0 0.45rem;
-  padding: 0;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
+  padding: var(--bl-space-0);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 
   li {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    font-size: 0.65rem;
+    gap: var(--bl-space-1);
+    font-size: var(--bl-text-2xs);
     color: #cbd5e1;
   }
 }
 
 .validationBanner {
   margin-top: 0.35rem;
-  padding: 0.55rem 0.6rem;
+  padding: var(--bl-space-2) var(--bl-space-2-5);
   border: 1px solid rgba(249, 115, 22, 0.45);
   background: rgba(154, 52, 18, 0.25);
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   color: #fed7aa;
 
   strong {
     display: block;
     margin-bottom: 0.35rem;
-    font-size: 0.68rem;
+    font-size: var(--bl-text-2xs);
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
   ul {
-    margin: 0;
+    margin: var(--bl-space-0);
     padding-left: 1rem;
     display: flex;
     flex-direction: column;
@@ -367,7 +367,7 @@
   border-radius: 3px;
   background: rgba(15, 23, 42, 0.6);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.62rem;
+  font-size: var(--bl-text-2xs);
   line-height: 1.4;
   white-space: nowrap;
 }
@@ -376,7 +376,7 @@
   align-self: center;
   max-width: 16rem;
   overflow: hidden;
-  font-size: 0.65rem;
+  font-size: var(--bl-text-2xs);
   color: #94a3b8;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -391,7 +391,7 @@
   li {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 0.35rem;
+    gap: var(--bl-space-1-5);
     align-items: start;
   }
 }
@@ -404,7 +404,7 @@
   border-radius: 3px;
   background: var(--bl-warning-text);
   color: var(--bl-text-inverse);
-  font-size: 0.6rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-align: center;
@@ -421,14 +421,14 @@
 .issueLink,
 .issueText {
   grid-column: 2;
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   line-height: 1.45;
   text-align: left;
   color: #fed7aa;
 }
 
 .issueLink {
-  padding: 0;
+  padding: var(--bl-space-0);
   border: 0;
   background: none;
   font: inherit;
@@ -449,7 +449,7 @@
 .issueHint {
   grid-column: 2;
   margin: 0.1rem 0 0;
-  font-size: 0.65rem;
+  font-size: var(--bl-text-2xs);
   line-height: 1.4;
   color: rgba(254, 215, 170, 0.8);
 }
@@ -457,15 +457,15 @@
 /* Resumen de accesibilidad con acciones para crear o localizar plazas. */
 .accessBox {
   margin-top: 0.35rem;
-  padding: 0.55rem 0.6rem;
+  padding: var(--bl-space-2) var(--bl-space-2-5);
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(30, 41, 59, 0.6);
-  font-size: 0.7rem;
+  font-size: var(--bl-text-2xs);
   color: #e2e8f0;
 
   h3 {
-    margin: 0 0 0.35rem;
-    font-size: 0.68rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
+    font-size: var(--bl-text-2xs);
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: #cbd5e1;
@@ -474,8 +474,8 @@
   p {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    margin: 0 0 0.45rem;
+    gap: var(--bl-space-1-5);
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
     line-height: 1.4;
   }
 }
@@ -483,7 +483,7 @@
 .main {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
   min-width: 0;
 }
 
@@ -491,8 +491,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem;
+  gap: var(--bl-space-2-5);
+  padding: var(--bl-space-2);
   background: var(--bl-gray-900);
   border: 1px solid #222;
 }
@@ -500,7 +500,7 @@
 .toolGroup {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
   padding-right: 0.6rem;
   border-right: 1px solid var(--bl-gray-800);
 
@@ -509,11 +509,11 @@
   }
 
   button {
-    padding: 0.45rem 0.7rem;
+    padding: var(--bl-space-2) var(--bl-space-3);
     border: 1px solid #333;
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
-    font-size: 0.75rem;
+    font-size: var(--bl-text-xs);
     cursor: pointer;
 
     &:hover:not(:disabled) {
@@ -535,24 +535,24 @@
 
 .ai {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 
   input {
     flex: 1;
-    padding: 0.5rem 0.75rem;
+    padding: var(--bl-space-2) var(--bl-space-3);
     border: 1px solid #333;
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
-    font-size: 0.875rem;
+    font-size: var(--bl-text-md);
   }
 
   button {
-    padding: 0.5rem 0.85rem;
+    padding: var(--bl-space-2) var(--bl-space-3);
     border: 1px solid var(--bl-accent);
     background: var(--bl-accent);
     color: var(--bl-text-inverse);
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: var(--bl-text-sm);
   }
 }
 
@@ -588,8 +588,8 @@
   position: absolute;
   left: 0.65rem;
   bottom: 0.5rem;
-  margin: 0;
-  font-size: 0.68rem;
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-2xs);
   color: rgba(250, 250, 250, 0.45);
   pointer-events: none;
 }
@@ -597,8 +597,8 @@
 .colorPick {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
+  gap: var(--bl-space-1-5);
+  font-size: var(--bl-text-xs);
   color: rgba(250, 250, 250, 0.7);
 
   input {
@@ -606,7 +606,7 @@
     height: 1.5rem;
     border: none;
     background: transparent;
-    padding: 0;
+    padding: var(--bl-space-0);
   }
 }
 
@@ -618,7 +618,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: var(--bl-space-4);
 }
 
 .cadModal {
@@ -629,26 +629,26 @@
   background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
   border: 1px solid #333;
-  border-radius: 12px;
+  border-radius: var(--bl-radius-lg);
   overflow: hidden;
 }
 
 .cadModalHeader {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--bl-space-4);
   align-items: flex-start;
-  padding: 1rem 1.1rem;
+  padding: var(--bl-space-4) var(--bl-space-4);
   border-bottom: 1px solid var(--bl-gray-800);
 
   h2 {
-    margin: 0;
-    font-size: 1.05rem;
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-lg);
   }
 
   p {
-    margin: 0.25rem 0 0;
-    font-size: 0.8rem;
+    margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
+    font-size: var(--bl-text-sm);
     color: var(--bl-text-disabled);
   }
 
@@ -656,7 +656,7 @@
     border: 1px solid var(--bl-gray-700);
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
-    padding: 0.4rem 0.7rem;
+    padding: var(--bl-space-1-5) var(--bl-space-3);
     cursor: pointer;
   }
 }
@@ -664,24 +664,24 @@
 .cadModalToolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: end;
-  padding: 0.75rem 1.1rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border-bottom: 1px solid var(--bl-gray-800);
 
   label {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.72rem;
+    gap: var(--bl-space-1);
+    font-size: var(--bl-text-xs);
     color: var(--bl-text-disabled);
   }
 
   select,
   button {
     font: inherit;
-    font-size: 0.8rem;
-    padding: 0.4rem 0.55rem;
+    font-size: var(--bl-text-sm);
+    padding: var(--bl-space-1-5) var(--bl-space-2);
     border: 1px solid var(--bl-gray-700);
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
@@ -698,12 +698,12 @@
 .cadModalTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
 
   th,
   td {
     text-align: left;
-    padding: 0.45rem 0.7rem;
+    padding: var(--bl-space-2) var(--bl-space-3);
     border-bottom: 1px solid var(--bl-gray-800);
     vertical-align: middle;
   }
@@ -713,20 +713,20 @@
     top: 0;
     background: var(--bl-gray-900);
     color: var(--bl-text-disabled);
-    font-size: 0.7rem;
+    font-size: var(--bl-text-2xs);
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
   code {
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
     color: var(--bl-gray-300);
   }
 
   select {
     font: inherit;
-    font-size: 0.78rem;
-    padding: 0.25rem 0.35rem;
+    font-size: var(--bl-text-xs);
+    padding: var(--bl-space-1) var(--bl-space-1-5);
     border: 1px solid var(--bl-gray-700);
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
@@ -740,14 +740,14 @@
 .cadModalFooter {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 0.85rem 1.1rem;
+  gap: var(--bl-space-2);
+  padding: var(--bl-space-3) var(--bl-space-4);
   border-top: 1px solid var(--bl-gray-800);
 
   button {
     font: inherit;
-    font-size: 0.85rem;
-    padding: 0.5rem 0.85rem;
+    font-size: var(--bl-text-md);
+    padding: var(--bl-space-2) var(--bl-space-3);
     border: 1px solid var(--bl-gray-700);
     background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
@@ -757,8 +757,8 @@
 
 .cadApplyBtn {
   font: inherit;
-  font-size: 0.85rem;
-  padding: 0.5rem 0.85rem;
+  font-size: var(--bl-text-md);
+  padding: var(--bl-space-2) var(--bl-space-3);
   background: var(--bl-accent) !important;
   border-color: var(--bl-accent) !important;
   color: var(--bl-text-inverse) !important;

@@ -14,7 +14,7 @@
   border-bottom: 1px solid var(--color-border);
 
   h1 {
-    margin: 0 0 0.35rem;
+    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
     font-family: var(--font-family-heading);
     font-size: var(--display-lg);
     letter-spacing: var(--tracking-wide);
@@ -22,7 +22,7 @@
   }
 
   p {
-    margin: 0;
+    margin: var(--bl-space-0);
     color: var(--text-muted);
     font-size: var(--text-md);
   }
@@ -52,7 +52,7 @@
 }
 
 .sectionTitle {
-  margin: 0 0 0.85rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
   font-family: var(--font-family-heading);
   font-size: var(--text-2xl);
   letter-spacing: var(--tracking-wide);
@@ -60,8 +60,8 @@
 
 .grid {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-sm);
@@ -74,7 +74,7 @@
 .card {
   display: grid;
   grid-template-columns: 5.5rem 1fr auto;
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
   align-items: center;
   padding: var(--space-sm);
   background: var(--color-surface);
@@ -113,11 +113,11 @@
 .cityGrid,
 .venueGrid {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: var(--bl-space-3);
 
   @include bp.below(bp.$bp-md) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -132,13 +132,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
-  padding: 1.25rem 1.1rem;
+  padding: var(--bl-space-5) var(--bl-space-4);
   background: var(--color-surface-inverse);
   color: var(--text-inverse);
   text-decoration: none;
 
   strong {
-    font-size: 1.05rem;
+    font-size: var(--bl-text-lg);
   }
 
   span {
@@ -260,7 +260,7 @@
   }
 
   p {
-    margin: 0.35rem 0 0;
+    margin: var(--bl-space-1-5) var(--bl-space-0) var(--bl-space-0);
   }
 
   p:first-child {

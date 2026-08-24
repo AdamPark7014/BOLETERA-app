@@ -5,7 +5,7 @@
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   max-width: 22rem;
   pointer-events: none;
 }
@@ -14,14 +14,14 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: 9px;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-3) var(--bl-space-4);
+  border-radius: var(--bl-radius-md);
   border: 1px solid var(--bl-border);
   background: var(--bl-elevated);
   color: var(--bl-text-primary);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  font-size: 0.8125rem;
+  font-size: var(--bl-text-sm);
   line-height: 1.4;
   pointer-events: auto;
   animation: slide-in 0.18s ease-out;
@@ -33,9 +33,9 @@
     color: inherit;
     opacity: 0.5;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: var(--bl-text-lg);
     line-height: 1;
-    padding: 0;
+    padding: var(--bl-space-0);
 
     &:hover {
       opacity: 1;

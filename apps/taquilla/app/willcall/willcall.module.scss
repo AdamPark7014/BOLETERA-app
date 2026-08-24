@@ -1,27 +1,27 @@
 .toast {
-  padding: 0.75rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   margin-bottom: 0.75rem;
   background: rgba(225, 29, 72, 0.15);
   border: 1px solid rgba(225, 29, 72, 0.35);
   color: var(--bl-accent-border);
-  border-radius: 8px;
-  font-size: 0.875rem;
+  border-radius: var(--bl-radius-md);
+  font-size: var(--bl-text-md);
 }
 
 .hint {
-  margin: 0 0 0.85rem;
-  font-size: 0.82rem;
+  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
+  font-size: var(--bl-text-sm);
   color: rgba(250, 250, 250, 0.55);
   line-height: 1.4;
 }
 
 .search {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: center;
-  padding: 0.5rem;
+  padding: var(--bl-space-2);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
   margin-bottom: 1rem;
   background: rgba(255, 255, 255, 0.03);
 
@@ -31,16 +31,16 @@
     border: none;
     color: var(--bl-gray-25);
     outline: none;
-    font-size: 0.95rem;
+    font-size: var(--bl-text-lg);
   }
 
   button {
-    padding: 0.6rem 1rem;
+    padding: var(--bl-space-2-5) var(--bl-space-4);
     font-weight: 700;
     color: #fff;
     background: var(--bl-accent);
     border: none;
-    border-radius: 8px;
+    border-radius: var(--bl-radius-md);
     cursor: pointer;
 
     &:disabled {
@@ -49,31 +49,31 @@
   }
 
   kbd {
-    font-size: 0.65rem;
+    font-size: var(--bl-text-2xs);
     padding: 0.2rem 0.4rem;
     color: var(--bl-gray-200);
     border: 1px solid rgba(244, 244, 245, 0.3);
-    border-radius: 4px;
+    border-radius: var(--bl-radius-xs);
   }
 }
 
 .list {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: var(--bl-space-2-5);
 }
 
 .list li {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.95rem 1rem;
+  gap: var(--bl-space-4);
+  padding: var(--bl-space-4) var(--bl-space-4);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border-radius: var(--bl-radius-lg);
 }
 
 .picked {
@@ -89,22 +89,22 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   margin-bottom: 0.25rem;
 
   strong {
-    font-size: 1rem;
+    font-size: var(--bl-text-lg);
   }
 }
 
 .badgeWait,
 .badgeDone {
-  font-size: 0.65rem;
+  font-size: var(--bl-text-2xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 0.2rem 0.4rem;
-  border-radius: 4px;
+  border-radius: var(--bl-radius-xs);
 }
 
 .badgeWait {
@@ -120,37 +120,37 @@
 .meta {
   display: block;
   margin-top: 0.15rem;
-  font-size: 0.78rem;
+  font-size: var(--bl-text-xs);
   color: rgba(250, 250, 250, 0.5);
 }
 
 .ticketList {
   list-style: none;
-  margin: 0.55rem 0 0;
-  padding: 0;
+  margin: var(--bl-space-2) var(--bl-space-0) var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--bl-space-1);
 
   li {
     display: flex;
-    gap: 0.65rem;
+    gap: var(--bl-space-2-5);
     align-items: baseline;
-    padding: 0;
+    padding: var(--bl-space-0);
     border: none;
     background: transparent;
-    border-radius: 0;
+    border-radius: var(--bl-radius-none);
   }
 
   code {
     font-family: ui-monospace, monospace;
-    font-size: 0.78rem;
+    font-size: var(--bl-text-xs);
     color: var(--bl-gray-25);
   }
 
   em {
     font-style: normal;
-    font-size: 0.72rem;
+    font-size: var(--bl-text-xs);
     color: rgba(250, 250, 250, 0.45);
   }
 }
@@ -158,7 +158,7 @@
 .done {
   display: block;
   margin-top: 0.45rem;
-  font-size: 0.75rem;
+  font-size: var(--bl-text-xs);
   font-style: normal;
   color: var(--bl-success-border);
 }
@@ -166,9 +166,9 @@
 .verify {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: var(--bl-space-2);
   margin-top: 0.65rem;
-  font-size: 0.8rem;
+  font-size: var(--bl-text-sm);
   color: var(--bl-gray-200);
   cursor: pointer;
 
@@ -182,16 +182,16 @@
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--bl-space-1-5);
 
   button {
-    padding: 0.55rem 0.75rem;
-    font-size: 0.75rem;
+    padding: var(--bl-space-2) var(--bl-space-3);
+    font-size: var(--bl-text-xs);
     font-weight: 600;
     color: var(--bl-gray-25);
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 6px;
+    border-radius: var(--bl-radius-sm);
     cursor: pointer;
     white-space: nowrap;
 
@@ -212,5 +212,5 @@
   color: rgba(250, 250, 250, 0.5);
   text-align: center;
   margin-top: 1.5rem;
-  font-size: 0.9rem;
+  font-size: var(--bl-text-md);
 }

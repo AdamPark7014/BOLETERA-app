@@ -1,19 +1,19 @@
 .searchPanel {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 }
 
 .searchRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
   align-items: center;
 }
 
 .searchInput {
   flex: 1 1 16rem;
   min-width: 0;
-  padding: 0.625rem 0.875rem;
+  padding: var(--bl-space-2-5) var(--bl-space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--text-base);
@@ -29,29 +29,29 @@
 }
 
 .searchMeta {
-  margin: 0;
+  margin: var(--bl-space-0);
   color: var(--color-text-muted);
   font-size: var(--text-sm);
 }
 
 .searchGroups {
   display: grid;
-  gap: 1rem;
+  gap: var(--bl-space-4);
 }
 
 .searchGroup {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--bl-space-2);
 }
 
 .searchGroupHead {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--bl-space-3);
 
   h3 {
-    margin: 0;
+    margin: var(--bl-space-0);
     font-size: var(--text-md);
     font-weight: var(--weight-semibold);
     color: var(--color-text);
@@ -66,16 +66,16 @@
 
 .resultList {
   display: grid;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
+  gap: var(--bl-space-1-5);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   list-style: none;
 }
 
 .resultItem {
   display: grid;
-  gap: 0.15rem;
-  padding: 0.65rem 0.75rem;
+  gap: var(--bl-space-0-5);
+  padding: var(--bl-space-2-5) var(--bl-space-3);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   background: var(--color-surface-soft);
@@ -113,13 +113,13 @@
 .quickLinks {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-  gap: 0.65rem;
+  gap: var(--bl-space-2-5);
 }
 
 .quickLink {
   display: grid;
   gap: 0.2rem;
-  padding: 0.85rem 0.9rem;
+  padding: var(--bl-space-3) var(--bl-space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
