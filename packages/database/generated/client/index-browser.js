@@ -194,8 +194,27 @@ exports.Prisma.VenueLayoutScalarFieldEnum = {
   mapData: 'mapData',
   metadata: 'metadata',
   isActive: 'isActive',
+  publishStatus: 'publishStatus',
+  publishedAt: 'publishedAt',
+  publishedBy: 'publishedBy',
+  reviewSubmittedAt: 'reviewSubmittedAt',
+  reviewSubmittedBy: 'reviewSubmittedBy',
+  archivedAt: 'archivedAt',
+  archivedBy: 'archivedBy',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.VenueLayoutSnapshotScalarFieldEnum = {
+  id: 'id',
+  layoutId: 'layoutId',
+  version: 'version',
+  mapData: 'mapData',
+  metadata: 'metadata',
+  publishStatus: 'publishStatus',
+  label: 'label',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SectionScalarFieldEnum = {
@@ -470,6 +489,7 @@ exports.Prisma.OfferScalarFieldEnum = {
 
 exports.Prisma.TicketScalarFieldEnum = {
   id: 'id',
+  keyEpoch: 'keyEpoch',
   code: 'code',
   eventId: 'eventId',
   offerId: 'offerId',
@@ -586,6 +606,28 @@ exports.Prisma.UserScalarFieldEnum = {
   twoFactorSecret: 'twoFactorSecret',
   active: 'active',
   lastLogin: 'lastLogin',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PermissionScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  description: 'description',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.RolePermissionScalarFieldEnum = {
+  id: 'id',
+  role: 'role',
+  permissionId: 'permissionId'
+};
+
+exports.Prisma.UserPermissionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  permissionId: 'permissionId',
+  granted: 'granted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -978,11 +1020,27 @@ exports.AMLStatus = exports.$Enums.AMLStatus = {
   WATCHLIST: 'WATCHLIST'
 };
 
+exports.LayoutPublishStatus = exports.$Enums.LayoutPublishStatus = {
+  DRAFT: 'DRAFT',
+  IN_REVIEW: 'IN_REVIEW',
+  PUBLISHED: 'PUBLISHED',
+  ARCHIVED: 'ARCHIVED'
+};
+
 exports.SalesChannel = exports.$Enums.SalesChannel = {
   WEB: 'WEB',
   TAQUILLA: 'TAQUILLA',
   API: 'API',
-  ADMIN: 'ADMIN'
+  ADMIN: 'ADMIN',
+  PROMOTER: 'PROMOTER',
+  COURTESY: 'COURTESY',
+  CORPORATE: 'CORPORATE',
+  MOBILE: 'MOBILE',
+  PHONE: 'PHONE',
+  INVITATION: 'INVITATION',
+  AFFILIATE: 'AFFILIATE',
+  VIP: 'VIP',
+  RESALE: 'RESALE'
 };
 
 exports.HoldStatus = exports.$Enums.HoldStatus = {
@@ -1129,7 +1187,14 @@ exports.UserRole = exports.$Enums.UserRole = {
   ADMIN: 'ADMIN',
   SUPER_ADMIN: 'SUPER_ADMIN',
   TAQUILLA: 'TAQUILLA',
-  SCANNER: 'SCANNER'
+  TAQUILLA_SUPERVISOR: 'TAQUILLA_SUPERVISOR',
+  TAQUILLA_ADMIN: 'TAQUILLA_ADMIN',
+  SCANNER: 'SCANNER',
+  FINANCE: 'FINANCE',
+  MARKETING: 'MARKETING',
+  SUPPORT: 'SUPPORT',
+  AUDITOR: 'AUDITOR',
+  AFFILIATE: 'AFFILIATE'
 };
 
 exports.PosTerminalStatus = exports.$Enums.PosTerminalStatus = {
@@ -1235,6 +1300,7 @@ exports.Prisma.ModelName = {
   Organization: 'Organization',
   Venue: 'Venue',
   VenueLayout: 'VenueLayout',
+  VenueLayoutSnapshot: 'VenueLayoutSnapshot',
   Section: 'Section',
   SeatRow: 'SeatRow',
   Seat: 'Seat',
@@ -1258,6 +1324,9 @@ exports.Prisma.ModelName = {
   Payment: 'Payment',
   Refund: 'Refund',
   User: 'User',
+  Permission: 'Permission',
+  RolePermission: 'RolePermission',
+  UserPermission: 'UserPermission',
   Session: 'Session',
   PosTerminal: 'PosTerminal',
   PosCashierSession: 'PosCashierSession',

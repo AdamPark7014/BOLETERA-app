@@ -33,6 +33,8 @@ import {
 import type { PaymentProvider, SalesChannelType } from '@boletera/payments';
 import QRCode from 'qrcode';
 import { AuditService } from '../../common/audit.service';
+import { isWebLikeChannel } from '../../common/sales-channel';
+import { isKnownAffiliateRef, normalizeAffiliateRef } from '../../common/affiliate-ref';
 import { isDeferredMethod, paymentDeadline } from '../../common/payment-window';
 import { PrismaService } from '../prisma/prisma.service';
 import { requireTicketQrSecret } from '../auth/jwt-secret';
@@ -48,9 +50,11 @@ import type { OrderRequester } from './orders.dto';
 
 initDefaultProviders();
 
-/** Personal que puede operar el canal de taquilla (y cobrar en efectivo). */
+/** Personal que puede operar canales de taquilla y venta presencial. */
 const BOX_OFFICE_ROLES: UserRole[] = [
   UserRole.TAQUILLA,
+  UserRole.TAQUILLA_SUPERVISOR,
+  UserRole.TAQUILLA_ADMIN,
   UserRole.VENUE_MANAGER,
   UserRole.ADMIN,
   UserRole.SUPER_ADMIN,
@@ -114,6 +118,7 @@ export class OrdersService {
     userId?: string;
     paymentMethod?: string;
     promotionCode?: string;
+    affiliateRef?: string;
     channel?: SalesChannel;
     cashierId?: string;
     idempotencyKey?: string;
@@ -155,6 +160,8 @@ export class OrdersService {
     });
     if (!event) throw new NotFoundException('Event not found');
 
+    const affiliateRef = normalizeAffiliateRef(dto.affiliateRef);
+
     // --- Canal, cajero y cortesías: decisiones de dinero, nunca de headers ---
     const actor = dto.untrustedRequest ? await this.resolveActor(dto.actorUserId) : null;
     const requestedChannel = dto.channel ?? SalesChannel.WEB;
@@ -163,13 +170,34 @@ export class OrdersService {
 
     if (dto.untrustedRequest) {
       const isStaff = !!actor && BOX_OFFICE_ROLES.includes(actor.role);
+      const isAuthenticated = !!actor;
       // `x-channel` queda como telemetría: sin personal autenticado detrás la
-      // venta es WEB, y WEB no admite efectivo (F1-01).
-      if (requestedChannel !== SalesChannel.WEB && !isStaff) {
+      // venta es WEB, salvo MOBILE para usuarios con sesión (app Nexara).
+      if (requestedChannel === SalesChannel.MOBILE && isAuthenticated) {
+        channel = SalesChannel.MOBILE;
+      } else if (requestedChannel !== SalesChannel.WEB && !isStaff) {
         channel = SalesChannel.WEB;
       }
       // El cajero es quien firma el token, no quien manda `x-cashier-id`.
-      cashierId = channel === SalesChannel.TAQUILLA && actor ? actor.id : undefined;
+      cashierId =
+        (channel === SalesChannel.TAQUILLA ||
+          channel === SalesChannel.PROMOTER ||
+          channel === SalesChannel.VIP) &&
+        actor
+          ? actor.id
+          : undefined;
+      // `?ref=` en el cuerpo es la señal de afiliado: no se confía en x-channel.
+      if (affiliateRef) {
+        channel = SalesChannel.AFFILIATE;
+      }
+    } else if (affiliateRef) {
+      channel = SalesChannel.AFFILIATE;
+    }
+
+    if (affiliateRef && !isKnownAffiliateRef(event.metadata, affiliateRef)) {
+      this.logger.warn(
+        `Affiliate ref "${affiliateRef}" not in event ${event.id} partner list — tracking anyway`,
+      );
     }
 
     const compRequested =
@@ -269,6 +297,7 @@ export class OrdersService {
 
     const isComp = compRequested;
     if (isComp) {
+      channel = SalesChannel.COURTESY;
       discountAmount = subtotal + fees + taxAmount;
       fees = 0;
       taxAmount = 0;
@@ -349,6 +378,7 @@ export class OrdersService {
 
     const posOps = {
       ...(dto.posOps ?? {}),
+      ...(affiliateRef ? { affiliateRef } : {}),
       ...(isComp ? { isComp: true, compReason: dto.compReason || 'house' } : {}),
     };
 
@@ -358,7 +388,7 @@ export class OrdersService {
         amount: totalAmount,
         currency: event.currency,
         orderId: 'pending',
-        channel: channel as 'WEB' | 'TAQUILLA' | 'API' | 'ADMIN',
+        channel: channelType,
         buyerEmail: dto.buyerEmail,
         buyerName,
         paymentMethod: method as 'CARD' | 'SPEI' | 'OXXO',
@@ -698,7 +728,7 @@ export class OrdersService {
       entityId: order.id,
       organizationId: event.organizationId,
       userId,
-      metadata: { publicId, channel, totalAmount, fraudScore: fraudResult.score },
+      metadata: { publicId, channel, totalAmount, fraudScore: fraudResult.score, affiliateRef },
       ipAddress: dto.ipAddress,
     });
 
@@ -1094,6 +1124,42 @@ export class OrdersService {
     return orders.map((order) => ({ ...order, refunds: order.refunds.map(toBuyerRefund) }));
   }
 
+  /**
+   * Boletos de la orden que HOY pertenecen a quien pide.
+   *
+   * Comprar la orden no basta: un boleto transferido cambia de portador aunque
+   * la orden siga siendo del comprador original. Sin este filtro, quien regalo
+   * un boleto podia refrescar su cartera y llevarse LA CLAVE NUEVA — con lo que
+   * la subida de `keyEpoch` al transferir no habria servido de nada.
+   *
+   * Regla: el portador es `ticket.buyerEmail` si existe; si no, el comprador de
+   * la orden. Solo se entregan credenciales de boletos cuyo portador coincide
+   * con el solicitante.
+   */
+  private async ticketsHeldByRequester(
+    order: Awaited<ReturnType<OrdersService['getByPublicId']>>,
+    requester: OrderRequester,
+  ) {
+    let email = requester.email?.toLowerCase();
+    if (!email && requester.userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: requester.userId },
+        select: { email: true },
+      });
+      email = user?.email?.toLowerCase();
+    }
+    // Acceso por token de orden (compra de invitado): el token lo recibe el
+    // correo del comprador, asi que el portador por omision es ese correo.
+    if (!email) email = order.buyerEmail?.toLowerCase();
+
+    return order.items
+      .flatMap((i) => i.tickets)
+      .filter((t) => {
+        const portador = (t.buyerEmail ?? order.buyerEmail ?? '').toLowerCase();
+        return portador === email;
+      });
+  }
+
   async getQrCodesForOrder(publicId: string, requester: OrderRequester) {
     const order = await this.getByPublicId(publicId);
     // Los QR son la credencial de entrada: mismo control que la orden.
@@ -1104,10 +1170,12 @@ export class OrdersService {
     // Única fuente de la clave de firma; en producción exige TICKET_QR_SECRET
     // propio, igual que el escáner que va a verificar estos QR.
     const secret = requireTicketQrSecret();
-    const tickets = order.items.flatMap((i) => i.tickets);
+    const tickets = await this.ticketsHeldByRequester(order, requester);
     const mapped = await Promise.all(
       tickets.map(async (t) => {
-        const qrPayload = buildQrPayload(t.id, order.eventId, secret);
+        // Con la epoca vigente: sin ella, el QR web de un boleto transferido
+        // firmaria con la clave vieja y no le funcionaria NI al nuevo dueño.
+        const qrPayload = buildQrPayload(t.id, order.eventId, secret, t.keyEpoch ?? 0);
         const qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 180, margin: 1 });
         return { id: t.id, code: t.code, qrPayload, qrDataUrl };
       }),
@@ -1139,7 +1207,7 @@ export class OrdersService {
     }
 
     const secret = requireTicketQrSecret();
-    const tickets = order.items.flatMap((i) => i.tickets);
+    const tickets = await this.ticketsHeldByRequester(order, requester);
 
     return {
       publicId: order.publicId,
@@ -1159,7 +1227,65 @@ export class OrdersService {
         seatNumber: t.seatNumber,
         status: t.status,
         /** Clave por boleto en hexadecimal. Guardala cifrada en el dispositivo. */
-        signingKey: deriveTicketKeyHex(t.id, order.eventId, secret),
+        signingKey: deriveTicketKeyHex(t.id, order.eventId, secret, t.keyEpoch ?? 0),
+      })),
+    };
+  }
+
+  /**
+   * Cartera del USUARIO: todos los boletos que porta hoy, tenga o no la orden.
+   *
+   * Es el camino del que RECIBE una transferencia: el boleto ya es suyo pero la
+   * orden sigue siendo de quien lo compro, asi que `getWalletForOrder` le
+   * responde 403 — correctamente. Sin esta ruta, aceptar un regalo dejaria al
+   * nuevo dueño sin forma de descargar su clave de firma.
+   */
+  async getWalletForUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const secret = requireTicketQrSecret();
+    const tickets = await this.prisma.ticket.findMany({
+      where: {
+        buyerEmail: { equals: user.email, mode: 'insensitive' },
+        status: { in: [TicketStatus.SOLD, TicketStatus.USED] },
+      },
+      include: {
+        event: { select: { id: true, title: true, startsAt: true, venue: { select: { name: true } } } },
+      },
+      orderBy: { event: { startsAt: 'asc' } },
+      take: 200,
+    });
+
+    // Agrupados por evento, que es como los pinta la app.
+    const porEvento = new Map<string, { event: (typeof tickets)[number]['event']; tickets: typeof tickets }>();
+    for (const t of tickets) {
+      const grupo = porEvento.get(t.event.id) ?? { event: t.event, tickets: [] as typeof tickets };
+      grupo.tickets.push(t);
+      porEvento.set(t.event.id, grupo);
+    }
+
+    return {
+      rotationSeconds: QR_ROTATION_SECONDS,
+      events: [...porEvento.values()].map(({ event, tickets: ts }) => ({
+        event: {
+          id: event.id,
+          title: event.title,
+          startsAt: event.startsAt,
+          venue: event.venue?.name ?? null,
+        },
+        tickets: ts.map((t) => ({
+          id: t.id,
+          code: t.code,
+          section: t.section,
+          row: t.row,
+          seatNumber: t.seatNumber,
+          status: t.status,
+          signingKey: deriveTicketKeyHex(t.id, t.event.id, secret, t.keyEpoch ?? 0),
+        })),
       })),
     };
   }

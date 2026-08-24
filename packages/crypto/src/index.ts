@@ -57,8 +57,17 @@ function currentWindow(now = Date.now()): number {
  * fijo): barato de calcular en cada escaneo y suficiente para que comprometer el
  * material de un boleto no comprometa el resto.
  */
-function deriveTicketKey(masterSecret: string, ticketId: string, eventId: string): Buffer {
-  return createHmac('sha256', masterSecret).update(`${ticketId}:${eventId}`).digest();
+function deriveTicketKey(
+  masterSecret: string,
+  ticketId: string,
+  eventId: string,
+  keyEpoch = 0,
+): Buffer {
+  // La epoca 0 NO se anade al material: asi la clave es identica a la de antes
+  // de que existiera este campo, y las carteras ya descargadas siguen abriendo
+  // la puerta despues de desplegar. Solo transferir cambia la clave.
+  const material = keyEpoch > 0 ? `${ticketId}:${eventId}:${keyEpoch}` : `${ticketId}:${eventId}`;
+  return createHmac('sha256', masterSecret).update(material).digest();
 }
 
 /** Firma v2: la ventana temporal firmada con la clave derivada del boleto. */
@@ -67,8 +76,9 @@ function signWindowV2(
   ticketId: string,
   eventId: string,
   window: number,
+  keyEpoch = 0,
 ): string {
-  const key = deriveTicketKey(masterSecret, ticketId, eventId);
+  const key = deriveTicketKey(masterSecret, ticketId, eventId, keyEpoch);
   return createHmac('sha256', key)
     .update(`v2:${ticketId}:${eventId}:${window}`)
     .digest('hex')
@@ -122,8 +132,13 @@ function matchesAny(signature: string, candidates: string[]): boolean {
  * Devuelve `v2.<32 hex>`. La firma pública no cambia (la llaman `orders`,
  * `notification` y `access` con el mismo secreto maestro de siempre).
  */
-export function signTicketPayload(ticketId: string, eventId: string, secret: string): string {
-  return `${V2_PREFIX}${signWindowV2(secret, ticketId, eventId, currentWindow())}`;
+export function signTicketPayload(
+  ticketId: string,
+  eventId: string,
+  secret: string,
+  keyEpoch = 0,
+): string {
+  return `${V2_PREFIX}${signWindowV2(secret, ticketId, eventId, currentWindow(), keyEpoch)}`;
 }
 
 /**
@@ -138,6 +153,12 @@ export function verifyTicketSignature(
   eventId: string,
   signature: string,
   secret: string,
+  /**
+   * Version vigente de la clave del boleto. Se pasa SIEMPRE la que esta en la
+   * base: firmar con una version anterior es exactamente lo que hace el
+   * telefono de quien ya regalo el boleto, y debe fallar.
+   */
+  keyEpoch = 0,
 ): boolean {
   if (!signature) return false;
 
@@ -148,7 +169,7 @@ export function verifyTicketSignature(
     const raw = signature.slice(V2_PREFIX.length);
     return matchesAny(
       raw,
-      windows.map((w) => signWindowV2(secret, ticketId, eventId, w)),
+      windows.map((w) => signWindowV2(secret, ticketId, eventId, w, keyEpoch)),
     );
   }
 
@@ -165,8 +186,13 @@ export function verifyTicketSignature(
  * en una versión baja y se lea rápido con poca luz. `v` permite al escáner saber
  * qué formato tiene delante sin adivinar.
  */
-export function buildQrPayload(ticketId: string, eventId: string, secret: string): string {
-  const sig = signTicketPayload(ticketId, eventId, secret);
+export function buildQrPayload(
+  ticketId: string,
+  eventId: string,
+  secret: string,
+  keyEpoch = 0,
+): string {
+  const sig = signTicketPayload(ticketId, eventId, secret, keyEpoch);
   return JSON.stringify({ v: QR_PAYLOAD_VERSION, t: ticketId, e: eventId, s: sig });
 }
 
@@ -186,8 +212,9 @@ export function deriveTicketKeyHex(
   ticketId: string,
   eventId: string,
   secret: string,
+  keyEpoch = 0,
 ): string {
-  return deriveTicketKey(secret, ticketId, eventId).toString('hex');
+  return deriveTicketKey(secret, ticketId, eventId, keyEpoch).toString('hex');
 }
 
 /**

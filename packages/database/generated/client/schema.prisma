@@ -133,20 +133,47 @@ model Venue {
 }
 
 model VenueLayout {
-  id        String         @id @default(cuid())
-  venueId   String
-  venue     Venue          @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  name      String
-  version   Int            @default(1)
-  mapData   Json // sections, seats geometry
-  metadata  Json? // venue-level stage/furniture config
-  isActive  Boolean        @default(true)
-  sections  Section[]
-  eventMaps EventSeatMap[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id                String                @id @default(cuid())
+  venueId           String
+  venue             Venue                 @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name              String
+  version           Int                   @default(1)
+  mapData           Json // sections, seats geometry
+  metadata          Json? // venue-level stage/furniture config
+  isActive          Boolean               @default(true)
+  /// Draft → Review → Published → Archived workflow for the seat map editor.
+  publishStatus     LayoutPublishStatus   @default(DRAFT)
+  publishedAt       DateTime?
+  publishedBy       String?
+  reviewSubmittedAt DateTime?
+  reviewSubmittedBy String?
+  archivedAt        DateTime?
+  archivedBy        String?
+  sections          Section[]
+  eventMaps         EventSeatMap[]
+  snapshots         VenueLayoutSnapshot[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
   @@index([venueId])
+  @@index([venueId, publishStatus])
+}
+
+/// Immutable point-in-time copy of a layout for versioning and rollback.
+model VenueLayoutSnapshot {
+  id            String              @id @default(cuid())
+  layoutId      String
+  layout        VenueLayout         @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  version       Int
+  mapData       Json
+  metadata      Json?
+  publishStatus LayoutPublishStatus
+  label         String?
+  createdBy     String?
+  createdAt     DateTime            @default(now())
+
+  @@index([layoutId, version])
+  @@index([layoutId, createdAt])
 }
 
 model Section {
@@ -648,12 +675,23 @@ model Offer {
 }
 
 model Ticket {
-  id      String @id @default(cuid())
-  code    String @unique
-  eventId String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  offerId String
-  offer   Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  /// Version de la clave de firma del QR.
+  ///
+  /// La clave sale de `HMAC(maestro, ticketId:eventId)` y NINGUNO de los dos
+  /// cambia al transferir el boleto, asi que el telefono de quien lo regalo
+  /// seguia generando codigos validos: entraban los dos y el segundo se quedaba
+  /// fuera sin entender por que.
+  ///
+  /// Al aceptar una transferencia esto sube en uno y la clave anterior deja de
+  /// servir. El 0 produce exactamente la misma clave que antes, para que las
+  /// carteras ya descargadas sigan funcionando.
+  keyEpoch Int    @default(0)
+  code     String @unique
+  eventId  String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  offerId  String
+  offer    Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
 
   // Status
   status TicketStatus @default(AVAILABLE) // AVAILABLE, HELD, SOLD, USED, REFUNDED, TRANSFERRED
@@ -921,12 +959,13 @@ model User {
   lastLogin DateTime?
 
   // Relations
-  orders     Order[]
-  reviews    Review[]
-  fraudFlags FraudFlag[] @relation("UserFraudFlags")
-  cart       Cart?
-  wishlist   Wishlist[]
-  sessions   Session[]
+  orders          Order[]
+  reviews         Review[]
+  fraudFlags      FraudFlag[]      @relation("UserFraudFlags")
+  cart            Cart?
+  wishlist        Wishlist[]
+  sessions        Session[]
+  userPermissions UserPermission[]
 
   // Audit
   createdAt DateTime @default(now())
@@ -935,6 +974,48 @@ model User {
   @@index([email])
   @@index([organizationId])
   @@index([role])
+}
+
+// ============================================================================
+// PERMISSIONS (RBAC → ABAC foundation)
+// ============================================================================
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique @db.VarChar(64)
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@index([key])
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  role         UserRole
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+  @@index([role])
+}
+
+model UserPermission {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  /// true = explicit grant; false = explicit deny (overrides role defaults)
+  granted      Boolean    @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, permissionId])
+  @@index([userId])
 }
 
 model Session {
@@ -1435,6 +1516,13 @@ enum EventCategory {
   OTHER
 }
 
+enum LayoutPublishStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
 enum EventStatus {
   DRAFT
   SCHEDULED
@@ -1534,6 +1622,15 @@ enum SalesChannel {
   TAQUILLA
   API
   ADMIN
+  PROMOTER
+  COURTESY
+  CORPORATE
+  MOBILE
+  PHONE
+  INVITATION
+  AFFILIATE
+  VIP
+  RESALE
 }
 
 enum HoldStatus {
@@ -1578,7 +1675,14 @@ enum UserRole {
   ADMIN
   SUPER_ADMIN
   TAQUILLA
+  TAQUILLA_SUPERVISOR
+  TAQUILLA_ADMIN
   SCANNER
+  FINANCE
+  MARKETING
+  SUPPORT
+  AUDITOR
+  AFFILIATE
 }
 
 enum RefundReason {

@@ -96,11 +96,21 @@ export class AccessService {
     let ticketId: string | undefined;
     if (params.qrPayload) {
       const parsed = this.parseQrPayload(params.qrPayload);
+
+      // La version de la clave se lee de la BASE, no del QR: si viniera en el
+      // payload, quien regalo el boleto solo tendria que mandar la suya para
+      // seguir entrando. Es el dato que invalida su copia.
+      const version = await this.prisma.ticket.findUnique({
+        where: { id: parsed.t },
+        select: { keyEpoch: true },
+      });
+
       const valid = verifyTicketSignature(
         parsed.t,
         parsed.e,
         parsed.s,
         requireTicketQrSecret(),
+        version?.keyEpoch ?? 0,
       );
       if (!valid) {
         // Se registra con el id que venía en el QR: un mismo id apareciendo con
@@ -528,13 +538,33 @@ export class AccessService {
   }
 
   private toSalesChannel(channel?: string): SalesChannel {
-    switch (channel?.toUpperCase()) {
+    const key = channel?.toUpperCase();
+    switch (key) {
       case 'TAQUILLA':
+      case 'POS':
         return SalesChannel.TAQUILLA;
       case 'API':
         return SalesChannel.API;
       case 'ADMIN':
         return SalesChannel.ADMIN;
+      case 'PROMOTER':
+        return SalesChannel.PROMOTER;
+      case 'COURTESY':
+        return SalesChannel.COURTESY;
+      case 'CORPORATE':
+        return SalesChannel.CORPORATE;
+      case 'MOBILE':
+        return SalesChannel.MOBILE;
+      case 'PHONE':
+        return SalesChannel.PHONE;
+      case 'INVITATION':
+        return SalesChannel.INVITATION;
+      case 'AFFILIATE':
+        return SalesChannel.AFFILIATE;
+      case 'VIP':
+        return SalesChannel.VIP;
+      case 'RESALE':
+        return SalesChannel.RESALE;
       default:
         return SalesChannel.WEB;
     }

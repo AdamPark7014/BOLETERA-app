@@ -49,6 +49,28 @@ export class TicketTransferService {
       throw new UnauthorizedException('No eres el dueño de este boleto');
     }
 
+    // UNA sola transferencia pendiente por boleto.
+    //
+    // Sin esto se podia regalar el mismo boleto a dos personas a la vez: ambas
+    // recibian su codigo, ambas lo aceptaban, y la segunda descubria en la
+    // puerta que su entrada era de otro. El indice unico parcial de la
+    // migracion lo garantiza tambien bajo concurrencia; esta comprobacion
+    // existe para dar un mensaje util en vez de un choque de indice.
+    const pendiente = await this.prisma.ticketTransfer.findFirst({
+      where: {
+        ticketId: data.ticketId,
+        status: 'PENDING',
+        expiresAt: { gt: new Date() },
+      },
+      select: { toEmail: true },
+    });
+    if (pendiente) {
+      throw new BadRequestException(
+        `Este boleto ya está ofrecido a ${pendiente.toEmail}. ` +
+          'Cancela esa transferencia antes de enviarlo a otra persona.',
+      );
+    }
+
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const transfer = await this.prisma.ticketTransfer.create({
       data: {
@@ -120,7 +142,17 @@ export class TicketTransferService {
           status: TicketStatus.SOLD,
           buyerEmail: user.email,
           buyerName: `${user.firstName} ${user.lastName}`,
+          // Invalida la clave que el telefono de quien lo regalo ya tiene
+          // descargada. Sin esto el QR sigue siendo valido para el, entran los
+          // dos, y el segundo se queda fuera sin entender por que.
+          keyEpoch: { increment: 1 },
         },
+      }),
+      // Cualquier otra oferta viva de ESTE boleto queda sin efecto: quien lo
+      // recibio ya es el dueño y nadie mas debe poder reclamarlo.
+      this.prisma.ticketTransfer.updateMany({
+        where: { ticketId: transfer.ticketId, status: 'PENDING', id: { not: transfer.id } },
+        data: { status: 'CANCELLED' },
       }),
     ]);
 
