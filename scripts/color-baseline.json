@@ -1,10 +1,10 @@
 {
-  "literales": 517,
+  "literales": 464,
   "porApp": {
-    "admin": 300,
+    "admin": 264,
     "api": 53,
     "taquilla": 39,
-    "web": 118,
+    "web": 101,
     "ui": 7
   }
 }

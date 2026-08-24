@@ -302,7 +302,7 @@ export function GeneratorsModal({
         id: `sec-${ts}`,
         name: sectionParams.sectionName,
         slug: `sec-${ts}`,
-        color: '#e11d48',
+        color: 'var(--bl-accent)',
         seatPitch: sectionParams.seatPitch,
         rowPitch: sectionParams.rowPitch,
         rake: sectionParams.rake,

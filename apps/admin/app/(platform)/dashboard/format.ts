@@ -200,7 +200,7 @@ export function riskTone(level: string): 'success' | 'warning' | 'danger' | 'neu
   }
 }
 
-export { channelLabel, CHANNEL_LABELS } from '../../orders/_lib/format';
+export { channelLabel, CHANNEL_LABELS } from '../orders/_lib/format';
 
 export function orderStatusLabel(status: string): string {
   const map: Record<string, string> = {

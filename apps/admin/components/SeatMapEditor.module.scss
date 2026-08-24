@@ -67,8 +67,8 @@
   align-items: center;
   width: 100%;
   padding: 0.4rem 0.45rem;
-  border: 1px solid #2a2a2a;
-  background: #141414;
+  border: 1px solid var(--bl-gray-800);
+  background: var(--bl-gray-900);
   color: var(--bl-text-inverse);
   cursor: pointer;
   font: inherit;
@@ -262,7 +262,7 @@
   input {
     padding: 0.35rem 0.4rem;
     border: 1px solid #333;
-    background: #141414;
+    background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     font: inherit;
     font-size: 0.8rem;
@@ -312,7 +312,7 @@
     margin: 0;
     font-size: 0.68rem;
     line-height: 1.45;
-    color: #fecaca;
+    color: var(--bl-danger-border);
   }
 }
 
@@ -541,7 +541,7 @@
     flex: 1;
     padding: 0.5rem 0.75rem;
     border: 1px solid #333;
-    background: #141414;
+    background: var(--bl-gray-900);
     color: var(--bl-text-inverse);
     font-size: 0.875rem;
   }
@@ -639,7 +639,7 @@
   gap: 1rem;
   align-items: flex-start;
   padding: 1rem 1.1rem;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--bl-gray-800);
 
   h2 {
     margin: 0;
@@ -667,7 +667,7 @@
   gap: 0.5rem;
   align-items: end;
   padding: 0.75rem 1.1rem;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--bl-gray-800);
 
   label {
     display: flex;
@@ -742,7 +742,7 @@
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 0.85rem 1.1rem;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--bl-gray-800);
 
   button {
     font: inherit;

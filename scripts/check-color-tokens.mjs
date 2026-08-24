@@ -62,7 +62,19 @@ for (const rel of archivos) {
 
   if (dibujaEnCanvas(texto)) continue;
 
-  const n = (texto.match(/#[0-9a-fA-F]{6}\b/g) || []).length;
+  // Un literal en posición de RESERVA — var(--token, #hex) — no cuenta: es el
+  // patrón correcto (token primero, red de seguridad después). Contarlo hacía
+  // subir la línea base justo cuando alguien trabajaba BIEN.
+  let n = 0;
+  for (const m of texto.matchAll(/#[0-9a-fA-F]{6}\b/g)) {
+    const antes = texto.slice(Math.max(0, m.index - 120), m.index);
+    const varAbierto = antes.lastIndexOf('var(');
+    if (varAbierto !== -1) {
+      const trozo = antes.slice(varAbierto);
+      if (!trozo.includes(')') && trozo.includes(',')) continue;
+    }
+    n++;
+  }
   if (n === 0) continue;
   literales += n;
   const app = rel.split('/')[1] ?? 'otros';

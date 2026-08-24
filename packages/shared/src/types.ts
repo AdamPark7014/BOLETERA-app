@@ -181,6 +181,12 @@ export interface SeatMapSection {
   slug: string;
   color: string;
   seats: SeatMapSeat[];
+  /**
+   * Aforo objetivo para secciones de admision general SIN butacas dibujadas.
+   * El generador de zonas GA lo fija y el inventario vende contra el, en vez de
+   * contar asientos que no existen.
+   */
+  capacity?: number;
   /** Optional hand-drawn zone outline (e.g. GA pits); auto-hull is used when absent. */
   shape?: SeatMapShape;
   /** Parametric seating blocks (engine may regenerate seats from these) */
