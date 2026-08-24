@@ -336,12 +336,7 @@ export class ReportingService {
   // ==================== CHANNEL PERFORMANCE ====================
 
   async getChannelPerformance(organizationId: string, eventId?: string) {
-    const channels: SalesChannel[] = [
-      SalesChannel.WEB,
-      SalesChannel.TAQUILLA,
-      SalesChannel.API,
-      SalesChannel.ADMIN,
-    ];
+    const channels = Object.values(SalesChannel);
 
     const performance = await Promise.all(
       channels.map(async (channel) => {

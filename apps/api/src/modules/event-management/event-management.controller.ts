@@ -5,6 +5,7 @@ import {
   type SalePhaseInput,
   type SalePhasePatch,
 } from './event-management.service';
+import { EventPublishValidationService } from './event-publish-validation.service';
 import { SaleWindowService } from './sale-window.service';
 import { SalesChannel } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -20,6 +21,7 @@ export class EventManagementController {
   constructor(
     private eventService: EventManagementService,
     private saleWindow: SaleWindowService,
+    private publishValidation: EventPublishValidationService,
   ) {}
 
   // ==================== EVENT CREATION ====================
@@ -268,6 +270,16 @@ export class EventManagementController {
     @Query() filters: any
   ) {
     return await this.eventService.searchEvents(orgId, filters);
+  }
+
+  @Get(':eventId/publish-validation')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Pre-publish checklist (blockers vs warnings)' })
+  async getPublishValidation(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+  ) {
+    return await this.publishValidation.validateEventForPublish(eventId, orgId);
   }
 
   @Get(':eventId/hub')

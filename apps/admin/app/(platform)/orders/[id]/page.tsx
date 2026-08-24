@@ -36,6 +36,7 @@ import {
   type PaymentLike,
   type TimelineStep,
 } from '../_ui/orderModel';
+import { channelLabel } from '../_lib/format';
 
 type Refund = {
   id: string;
@@ -65,6 +66,7 @@ type OrderDetail = {
   buyerEmail: string | null;
   buyerPhone: string | null;
   paymentMethod: string | null;
+  posOps?: { affiliateRef?: string; isComp?: boolean; compReason?: string } | null;
   createdAt: string;
   completedAt: string | null;
   refundedAt: string | null;
@@ -171,6 +173,8 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
 
   /** Lo que aún se le debe al cliente si la orden quedó en reembolso obligado. */
   const owedToCustomer = Math.max((settlement.settled ?? 0) - refundedTotal, 0);
+  const affiliateRef =
+    typeof order.posOps?.affiliateRef === 'string' ? order.posOps.affiliateRef : null;
 
   function fail(e: unknown, fallback: string) {
     toast.error(e instanceof ApiError ? e.userMessage : e instanceof Error ? e.message : fallback);
@@ -349,7 +353,13 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
             <p>
               {order.event.title}
               <br />
-              <small className={styles.subtle}>Canal {order.channel}</small>
+              <small className={styles.subtle}>Canal {channelLabel(order.channel)}</small>
+              {affiliateRef && (
+                <>
+                  <br />
+                  <small className={styles.subtle}>Ref afiliado: {affiliateRef}</small>
+                </>
+              )}
             </p>
           </div>
           <div>

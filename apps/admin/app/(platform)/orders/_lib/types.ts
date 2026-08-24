@@ -18,9 +18,16 @@ export type OrderStatus =
 export type SalesChannel =
   | 'WEB'
   | 'TAQUILLA'
-  | 'POS'
   | 'API'
   | 'ADMIN'
+  | 'PROMOTER'
+  | 'COURTESY'
+  | 'CORPORATE'
+  | 'MOBILE'
+  | 'PHONE'
+  | 'INVITATION'
+  | 'AFFILIATE'
+  | 'VIP'
   | 'RESALE';
 
 export type OrderTicket = {

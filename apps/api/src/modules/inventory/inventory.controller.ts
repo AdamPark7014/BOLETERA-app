@@ -17,6 +17,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { GuestSessionService } from './guest-session.service';
 import { SalesChannel, TicketStatus } from '@prisma/client';
+import { parseSalesChannel } from '../../common/sales-channel';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { EventOrgAccessGuard } from '../auth/event-org-access.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -26,8 +27,16 @@ import { RolesGuard } from '../auth/roles.guard';
 import { InventoryService } from './inventory.service';
 import { WaitingRoomService } from './waiting-room.service';
 
-/** Roles con derecho a operar sobre la asignación de taquilla. */
-const STAFF_ROLES = ['TAQUILLA', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER'];
+/** Roles con derecho a operar holds de canal staff (taquilla, cortesía, etc.). */
+const STAFF_ROLES = [
+  'TAQUILLA',
+  'TAQUILLA_SUPERVISOR',
+  'TAQUILLA_ADMIN',
+  'PROMOTER',
+  'ADMIN',
+  'SUPER_ADMIN',
+  'VENUE_MANAGER',
+];
 
 /** Los holds públicos se ratonean; el tope global (120/min) es demasiado laxo aquí. */
 const HOLD_THROTTLE = { default: { limit: 30, ttl: 60_000 } };
@@ -172,6 +181,7 @@ export class InventoryController {
     @CurrentUser() user: PublicUser,
     @Headers('x-channel') channelHeader?: string,
     @Headers('x-cashier-id') cashierHeader?: string,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
@@ -184,6 +194,7 @@ export class InventoryController {
       sessionId,
       userId: user?.sub,
       channel: SalesChannel.WEB,
+      idempotencyKey,
     });
   }
 
@@ -204,6 +215,7 @@ export class InventoryController {
     @CurrentUser() user: PublicUser,
     @Headers('x-channel') channelHeader?: string,
     @Headers('x-cashier-id') cashierHeader?: string,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
@@ -217,6 +229,7 @@ export class InventoryController {
       sessionId,
       userId: user?.sub,
       channel: SalesChannel.WEB,
+      idempotencyKey,
     });
   }
 
@@ -254,7 +267,7 @@ export class InventoryController {
   @UseGuards(JwtAuthGuard, RolesGuard, EventOrgAccessGuard)
   @Roles(...STAFF_ROLES)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Hold en canal TAQUILLA (requiere rol de taquilla/administración)' })
+  @ApiOperation({ summary: 'Hold en canal staff (taquilla, cortesía, promotor, etc.)' })
   createStaffHold(
     @Body()
     body: {
@@ -263,9 +276,14 @@ export class InventoryController {
       offerId?: string;
       quantity?: number;
       sessionId?: string;
+      channel?: string;
     },
     @CurrentUser() user: { sub: string; role?: string },
+    @Headers('x-channel') channelHeader?: string,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
+    const channel =
+      parseSalesChannel(body.channel ?? channelHeader) ?? SalesChannel.TAQUILLA;
     return this.inventory.createHold({
       eventId: body.eventId,
       seatIds: body.seatIds,
@@ -273,9 +291,10 @@ export class InventoryController {
       quantity: body.quantity,
       sessionId: body.sessionId ?? `staff-${user.sub}`,
       userId: user.sub,
-      channel: SalesChannel.TAQUILLA,
+      channel,
       cashierId: user.sub,
       skipSessionLimit: true,
+      idempotencyKey,
     });
   }
 
@@ -291,9 +310,13 @@ export class InventoryController {
       quantity: number;
       sessionId?: string;
       contiguous?: boolean;
+      channel?: string;
     },
     @CurrentUser() user: { sub: string; role?: string },
+    @Headers('x-channel') channelHeader?: string,
   ) {
+    const channel =
+      parseSalesChannel(body.channel ?? channelHeader) ?? SalesChannel.TAQUILLA;
     return this.inventory.createBestAvailableHold({
       eventId: body.eventId,
       offerId: body.offerId,
@@ -301,7 +324,7 @@ export class InventoryController {
       contiguous: body.contiguous,
       sessionId: body.sessionId ?? `staff-${user.sub}`,
       userId: user.sub,
-      channel: SalesChannel.TAQUILLA,
+      channel,
       cashierId: user.sub,
       skipSessionLimit: true,
     });

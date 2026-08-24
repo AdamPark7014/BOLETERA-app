@@ -58,6 +58,33 @@ export function getEventHub(token: string, eventId: string) {
   return adminApi<EventHub>(`/events/manage/${eventId}/hub`, token);
 }
 
+export type PublishCheckStatus = 'ok' | 'warning' | 'blocker';
+
+export type PublishCheckItem = {
+  id: string;
+  label: string;
+  status: PublishCheckStatus;
+  message: string;
+  detail?: string;
+};
+
+export type EventPublishValidation = {
+  eventId: string;
+  ready: boolean;
+  progress: {
+    total: number;
+    passed: number;
+    warnings: number;
+    blockers: number;
+  };
+  checks: PublishCheckItem[];
+  validatedAt: string;
+};
+
+export function getEventPublishValidation(token: string, eventId: string) {
+  return adminApi<EventPublishValidation>(`/events/manage/${eventId}/publish-validation`, token);
+}
+
 export function getEventCalendar(token: string, month: number, year: number) {
   return adminApi<{ calendar: Record<string, unknown[]>; totalEvents: number }>(
     `/events/manage/calendar/${month}/${year}`,
@@ -129,15 +156,40 @@ export function createEvent(
   });
 }
 
+export type ChannelEntryConfiguration = {
+  enabled: boolean;
+  allocation: number;
+  responsibleParty?: string;
+  locations?: string[];
+  partners?: string[];
+  hours?: string;
+  discount?: number;
+  activeHours?: string;
+};
+
+export type ChannelConfiguration = Partial<
+  Record<
+    | 'web'
+    | 'taquilla'
+    | 'api'
+    | 'admin'
+    | 'promoter'
+    | 'courtesy'
+    | 'corporate'
+    | 'mobile'
+    | 'phone'
+    | 'invitation'
+    | 'affiliate'
+    | 'vip'
+    | 'resale',
+    ChannelEntryConfiguration
+  >
+>;
+
 export function configureChannels(
   token: string,
   eventId: string,
-  config: {
-    web: { enabled: boolean; allocation: number };
-    taquilla: { enabled: boolean; allocation: number; locations?: string[] };
-    api: { enabled: boolean; allocation: number };
-    phone?: { enabled: boolean; allocation: number };
-  },
+  config: ChannelConfiguration,
 ) {
   return adminApi(`/channels/${eventId}/configure`, token, {
     method: 'POST',
@@ -145,13 +197,39 @@ export function configureChannels(
   });
 }
 
-export type ChannelHealthMap = Record<
-  string,
-  { orders?: number; revenue?: number; status?: string }
->;
+export type ChannelHealthEntry = {
+  orders?: number;
+  revenue?: number;
+  status?: string;
+  errorRate?: number;
+  responseTimeMs?: number;
+  syncLagSec?: number;
+  activeTerminals?: number;
+  activePartners?: number;
+  rateLimitUsage?: number;
+  held?: number;
+  sold?: number;
+};
+
+export type ChannelHealthMap = Record<string, ChannelHealthEntry>;
 
 export function getChannelHealth(token: string, eventId: string) {
   return adminApi<ChannelHealthMap>(`/channels/${eventId}/health`, token);
+}
+
+export type ChannelAnalyticsBucket = Record<
+  string,
+  { orders: number; revenue: number; avgOrderValue: number; completionRate: number }
+>;
+
+export type ChannelAnalyticsMap = {
+  allTime: ChannelAnalyticsBucket;
+  last24h: ChannelAnalyticsBucket;
+  last7days: ChannelAnalyticsBucket;
+};
+
+export function getChannelAnalytics(token: string, eventId: string) {
+  return adminApi<ChannelAnalyticsMap>(`/channels/${eventId}/analytics`, token);
 }
 
 export function listVenues(token: string) {
@@ -188,8 +266,75 @@ export function applyLayoutTemplate(
 export function getVenueLayout(token: string, venueId: string) {
   return adminApi<{
     venue: { id: string; name: string; slug: string };
-    layout: { id: string; mapData: SeatMapData };
+    layout: {
+      id: string;
+      mapData: SeatMapData;
+      version?: number;
+      publishStatus?: import('@boletera/shared').LayoutPublishStatusValue;
+      publishedAt?: string | null;
+      reviewSubmittedAt?: string | null;
+      salesLocked?: boolean;
+      soldTicketCount?: number;
+      linkedEventCount?: number;
+    };
   }>(`/venues/${venueId}/layout`, token);
+}
+
+export type VenueLayoutSnapshotSummary = {
+  id: string;
+  version: number;
+  publishStatus: import('@boletera/shared').LayoutPublishStatusValue;
+  label: string | null;
+  createdBy: string | null;
+  createdAt: string;
+};
+
+export type VenueLayoutWorkflow = {
+  layoutId: string;
+  version: number;
+  publishStatus: import('@boletera/shared').LayoutPublishStatusValue;
+  publishedAt: string | null;
+  reviewSubmittedAt: string | null;
+  salesLocked: boolean;
+  soldTicketCount: number;
+  linkedEventCount: number;
+  snapshots: VenueLayoutSnapshotSummary[];
+};
+
+export function getVenueLayoutWorkflow(token: string, venueId: string) {
+  return adminApi<VenueLayoutWorkflow>(`/venues/${venueId}/layout/workflow`, token);
+}
+
+export function submitVenueLayoutReview(token: string, venueId: string) {
+  return adminApi<VenueLayoutWorkflow>(`/venues/${venueId}/layout/submit-review`, token, {
+    method: 'POST',
+  });
+}
+
+export function revertVenueLayoutDraft(token: string, venueId: string) {
+  return adminApi<VenueLayoutWorkflow>(`/venues/${venueId}/layout/revert-draft`, token, {
+    method: 'POST',
+  });
+}
+
+export function publishVenueLayout(token: string, venueId: string) {
+  return adminApi<VenueLayoutWorkflow>(`/venues/${venueId}/layout/publish-map`, token, {
+    method: 'POST',
+  });
+}
+
+export function archiveVenueLayout(token: string, venueId: string) {
+  return adminApi<VenueLayoutWorkflow>(`/venues/${venueId}/layout/archive`, token, {
+    method: 'POST',
+  });
+}
+
+export function rollbackVenueLayout(token: string, venueId: string, snapshotId: string) {
+  return adminApi<VenueLayoutWorkflow>(
+    `/venues/${venueId}/layout/rollback/${snapshotId}`,
+    token,
+    { method: 'POST' },
+  );
 }
 
 export function saveVenueLayout(token: string, venueId: string, mapData: SeatMapData) {
@@ -552,6 +697,98 @@ export function getSaasCapabilities(token: string, organizationId: string) {
     `/organization/capabilities?organizationId=${organizationId}`,
     token,
   );
+}
+
+export type PlatformSuperOverview = {
+  totals: {
+    organizations: number;
+    users: number;
+    events: number;
+    orders: number;
+    venues: number;
+  };
+  health: {
+    ordersToday: number;
+    failedPayments: number;
+    pendingRefunds: number;
+  };
+  usersByRole: Record<string, number>;
+  organizations: {
+    id: string;
+    name: string;
+    slug: string;
+    verified: boolean;
+    createdAt: string;
+    users: number;
+    events: number;
+    venues: number;
+  }[];
+};
+
+export type PlatformSuperSearchEntityType =
+  | 'user'
+  | 'customer'
+  | 'event'
+  | 'order'
+  | 'ticket'
+  | 'venue'
+  | 'organization'
+  | 'promoter';
+
+export type PlatformSuperSearchResponse = {
+  query: string;
+  limit: number;
+  totalCount: number;
+  groups: {
+    entityType: PlatformSuperSearchEntityType;
+    label: string;
+    total: number;
+    items: {
+      id: string;
+      title: string;
+      subtitle?: string;
+      meta?: Record<string, string>;
+    }[];
+  }[];
+};
+
+export function getPlatformSuperOverview(token: string) {
+  return adminApi<PlatformSuperOverview>('/platform/super/overview', token);
+}
+
+export function searchPlatformSuper(token: string, q: string, limit = 5) {
+  const params = new URLSearchParams({ q, limit: String(limit) });
+  return adminApi<PlatformSuperSearchResponse>(`/platform/super/search?${params}`, token);
+}
+
+export type ReconciliationCheckStatus = 'ok' | 'warn' | 'error';
+
+export type ReconciliationCheck = {
+  id: string;
+  label: string;
+  description: string;
+  status: ReconciliationCheckStatus;
+  count: number;
+  samples: Record<string, string | number | null>[];
+};
+
+export type ReconciliationReport = {
+  generatedAt: string;
+  scope: 'organization' | 'platform';
+  organizationId: string | null;
+  checks: ReconciliationCheck[];
+  summary: { ok: number; warn: number; error: number };
+};
+
+/** Org-scoped health checks (ADMIN / SUPER_ADMIN). */
+export function getAdminReconciliation(token: string) {
+  return adminApi<ReconciliationReport>('/admin/reconciliation', token);
+}
+
+/** Platform-wide health checks (SUPER_ADMIN). Optional org filter. */
+export function getPlatformHealthChecks(token: string, organizationId?: string) {
+  const q = organizationId ? `?organizationId=${encodeURIComponent(organizationId)}` : '';
+  return adminApi<ReconciliationReport>(`/platform/super/health-checks${q}`, token);
 }
 
 export function getOrganization(token: string, orgId: string) {

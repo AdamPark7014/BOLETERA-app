@@ -1,22 +1,39 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TicketStatus = exports.UserRole = exports.SalesChannel = void 0;
+exports.SALES_CHANNEL_VALUES = exports.PAYMENT_METHOD_VALUES = exports.PAYMENT_STATUS_VALUES = exports.ORDER_STATUS_VALUES = exports.TICKET_STATUS_VALUES = exports.USER_ROLE_VALUES = exports.PaymentMethod = exports.PaymentStatus = exports.OrderStatus = exports.TicketStatus = exports.UserRole = exports.SalesChannel = void 0;
 var SalesChannel;
 (function (SalesChannel) {
     SalesChannel["WEB"] = "WEB";
     SalesChannel["TAQUILLA"] = "TAQUILLA";
     SalesChannel["API"] = "API";
     SalesChannel["ADMIN"] = "ADMIN";
+    SalesChannel["PROMOTER"] = "PROMOTER";
+    SalesChannel["COURTESY"] = "COURTESY";
+    SalesChannel["CORPORATE"] = "CORPORATE";
+    SalesChannel["MOBILE"] = "MOBILE";
+    SalesChannel["PHONE"] = "PHONE";
+    SalesChannel["INVITATION"] = "INVITATION";
+    SalesChannel["AFFILIATE"] = "AFFILIATE";
+    SalesChannel["VIP"] = "VIP";
+    SalesChannel["RESALE"] = "RESALE";
 })(SalesChannel || (exports.SalesChannel = SalesChannel = {}));
 var UserRole;
 (function (UserRole) {
     UserRole["CUSTOMER"] = "CUSTOMER";
     UserRole["PROMOTER"] = "PROMOTER";
     UserRole["VENUE_MANAGER"] = "VENUE_MANAGER";
+    UserRole["ARTIST"] = "ARTIST";
     UserRole["ADMIN"] = "ADMIN";
     UserRole["SUPER_ADMIN"] = "SUPER_ADMIN";
     UserRole["TAQUILLA"] = "TAQUILLA";
+    UserRole["TAQUILLA_SUPERVISOR"] = "TAQUILLA_SUPERVISOR";
+    UserRole["TAQUILLA_ADMIN"] = "TAQUILLA_ADMIN";
     UserRole["SCANNER"] = "SCANNER";
+    UserRole["FINANCE"] = "FINANCE";
+    UserRole["MARKETING"] = "MARKETING";
+    UserRole["SUPPORT"] = "SUPPORT";
+    UserRole["AUDITOR"] = "AUDITOR";
+    UserRole["AFFILIATE"] = "AFFILIATE";
 })(UserRole || (exports.UserRole = UserRole = {}));
 var TicketStatus;
 (function (TicketStatus) {
@@ -24,5 +41,44 @@ var TicketStatus;
     TicketStatus["HELD"] = "HELD";
     TicketStatus["SOLD"] = "SOLD";
     TicketStatus["USED"] = "USED";
+    TicketStatus["CANCELLED"] = "CANCELLED";
+    TicketStatus["REFUNDED"] = "REFUNDED";
+    TicketStatus["TRANSFERRED"] = "TRANSFERRED";
 })(TicketStatus || (exports.TicketStatus = TicketStatus = {}));
+var OrderStatus;
+(function (OrderStatus) {
+    OrderStatus["PENDING"] = "PENDING";
+    OrderStatus["AWAITING_PAYMENT"] = "AWAITING_PAYMENT";
+    OrderStatus["COMPLETED"] = "COMPLETED";
+    OrderStatus["CANCELLED"] = "CANCELLED";
+    OrderStatus["REFUNDED"] = "REFUNDED";
+    OrderStatus["PARTIALLY_REFUNDED"] = "PARTIALLY_REFUNDED";
+    OrderStatus["EXPIRED"] = "EXPIRED";
+})(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
+var PaymentStatus;
+(function (PaymentStatus) {
+    PaymentStatus["PENDING"] = "PENDING";
+    PaymentStatus["REQUIRES_ACTION"] = "REQUIRES_ACTION";
+    PaymentStatus["AUTHORIZED"] = "AUTHORIZED";
+    PaymentStatus["CAPTURED"] = "CAPTURED";
+    PaymentStatus["FAILED"] = "FAILED";
+    PaymentStatus["CANCELLED"] = "CANCELLED";
+    PaymentStatus["REFUNDED"] = "REFUNDED";
+    PaymentStatus["PARTIALLY_REFUNDED"] = "PARTIALLY_REFUNDED";
+})(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
+var PaymentMethod;
+(function (PaymentMethod) {
+    PaymentMethod["CARD"] = "CARD";
+    PaymentMethod["CASH"] = "CASH";
+    PaymentMethod["OXXO"] = "OXXO";
+    PaymentMethod["SPEI"] = "SPEI";
+    PaymentMethod["CLIP"] = "CLIP";
+    PaymentMethod["BANK_TRANSFER"] = "BANK_TRANSFER";
+})(PaymentMethod || (exports.PaymentMethod = PaymentMethod = {}));
+exports.SALES_CHANNEL_VALUES = Object.freeze(Object.values(SalesChannel));
+exports.USER_ROLE_VALUES = Object.freeze(Object.values(UserRole));
+exports.TICKET_STATUS_VALUES = Object.freeze(Object.values(TicketStatus));
+exports.ORDER_STATUS_VALUES = Object.freeze(Object.values(OrderStatus));
+exports.PAYMENT_STATUS_VALUES = Object.freeze(Object.values(PaymentStatus));
+exports.PAYMENT_METHOD_VALUES = Object.freeze(Object.values(PaymentMethod));
 //# sourceMappingURL=enums.js.map

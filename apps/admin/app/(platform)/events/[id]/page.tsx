@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -13,6 +13,7 @@ import {
   setEventPricing,
   getVenueLayout,
   type EventHub,
+  type EventPublishValidation,
 } from '@/lib/platform-api';
 import { flatSeats, normalizeSeatMap, resolveOfferForSection } from '@boletera/venue-engine';
 import type { SeatMapData } from '@boletera/shared';
@@ -21,6 +22,7 @@ import { ApiStateBoundary, useSession } from '../_shared/api-state';
 import { LiveInventoryPanel } from '../_shared/LiveInventoryPanel';
 import { InventoryBlocksPanel } from '../_shared/InventoryBlocksPanel';
 import { CompliancePanel } from './CompliancePanel';
+import { EventPublishValidationPanel } from './EventPublishValidationPanel';
 import {
   countOf,
   getAvailability,
@@ -78,9 +80,15 @@ export default function EventHubPage() {
   const [hubError, setHubError] = useState<unknown>(null);
   const [availability, setAvailability] = useState<AvailabilitySnapshot | null>(null);
   const [layoutId, setLayoutId] = useState<string | null>(null);
+  const [publishValidation, setPublishValidation] = useState<EventPublishValidation | null>(null);
+  const [validationRefreshKey, setValidationRefreshKey] = useState(0);
   const toast = useToast();
   const session = useSession();
   const token = session.token;
+
+  const handleValidationChange = useCallback((validation: EventPublishValidation | null) => {
+    setPublishValidation(validation);
+  }, []);
 
   function reload() {
     if (!token || !id) return;
@@ -105,6 +113,7 @@ export default function EventHubPage() {
       .catch(() => setAvailability(null));
 
     getChannelHealth(token, id).then(setHealth).catch(() => {});
+    setValidationRefreshKey((k) => k + 1);
   }
 
   async function saveDynamicPricing() {
@@ -229,6 +238,12 @@ export default function EventHubPage() {
     });
   }, [normalizedVenueMap, hub, seats3dStatus]);
 
+  const publishBlockerHint = useMemo(() => {
+    if (!publishValidation || publishValidation.ready) return undefined;
+    const blockers = publishValidation.checks.filter((c) => c.status === 'blocker');
+    return blockers.map((b) => b.label).join(', ');
+  }, [publishValidation]);
+
   // Sesión ausente, sin organización o 401/403: pantalla explicativa en vez de
   // un «Cargando evento…» eterno o el texto crudo del error de Nest.
   if (session.status !== 'ready' || hubError || !hub) {
@@ -249,6 +264,7 @@ export default function EventHubPage() {
   const { event, inventory } = hub;
   const venueId = (event as { venue?: { id?: string } }).venue?.id ?? '';
   const channelTotal = channels.web + channels.taquilla + channels.api;
+  const canPublish = publishValidation?.ready ?? false;
 
   // `availability` es la fuente autoritativa; `hub.inventory` queda de respaldo
   // para eventos cuyo inventario aún no se publicó.
@@ -272,8 +288,19 @@ export default function EventHubPage() {
           <button
             type="button"
             className={platform.primaryBtn}
-            disabled={publishing}
+            disabled={publishing || !canPublish}
+            title={
+              canPublish
+                ? undefined
+                : publishBlockerHint
+                  ? `Bloqueado: ${publishBlockerHint}`
+                  : 'Completa el checklist de publicación'
+            }
             onClick={async () => {
+              if (!canPublish) {
+                toast.error('Completa los requisitos del checklist antes de publicar.');
+                return;
+              }
               if (!confirm('¿Publicar el inventario de este evento? Esto genera los boletos vendibles a partir del mapa guardado.')) return;
               if (!token || !id) return;
               setPublishing(true);
@@ -300,6 +327,15 @@ export default function EventHubPage() {
           </Link>
         </div>
       </header>
+
+      {token && (
+        <EventPublishValidationPanel
+          token={token}
+          eventId={id}
+          refreshKey={validationRefreshKey}
+          onValidationChange={handleValidationChange}
+        />
+      )}
 
       <div className={platform.cardGrid}>
         <article className={platform.statCard}>

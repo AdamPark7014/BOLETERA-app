@@ -130,6 +130,8 @@ const NAV_GROUPS: readonly NavGroupDef[] = [
     defaultCollapsed: true,
     items: [
       { id: 'platform-caps', href: '/platform', label: 'Capacidades', icon: 'platform' },
+      { id: 'platform-control', href: '/platform/control', label: 'Control global', icon: 'fraud' },
+      { id: 'platform-health', href: '/platform/health', label: 'Salud operativa', icon: 'audit' },
       { id: 'partners', href: '/partners', label: 'Partners', icon: 'partners' },
       { id: 'integrations', href: '/integrations', label: 'Integraciones', icon: 'platform' },
       { id: 'api-management', href: '/api-management', label: 'API', icon: 'external' },

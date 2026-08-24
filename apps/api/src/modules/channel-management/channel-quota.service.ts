@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { SalesChannel } from '@prisma/client';
+import { channelInventoryKey } from '../../common/sales-channel';
 import { PrismaService } from '../prisma/prisma.service';
 
 type ChannelBucket = {
@@ -16,16 +17,7 @@ export class ChannelQuotaService {
   constructor(private prisma: PrismaService) {}
 
   private channelKey(channel: SalesChannel): string {
-    switch (channel) {
-      case SalesChannel.TAQUILLA:
-        return 'taquilla';
-      case SalesChannel.API:
-        return 'api';
-      case SalesChannel.ADMIN:
-        return 'web'; // admin draws from web pool
-      default:
-        return 'web';
-    }
+    return channelInventoryKey(channel);
   }
 
   /** Throws if channel inventory is configured and quota is exhausted. */

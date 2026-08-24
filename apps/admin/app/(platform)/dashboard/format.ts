@@ -200,16 +200,7 @@ export function riskTone(level: string): 'success' | 'warning' | 'danger' | 'neu
   }
 }
 
-export function channelLabel(key: string): string {
-  const map: Record<string, string> = {
-    WEB: 'Web',
-    TAQUILLA: 'Taquilla POS',
-    API: 'API',
-    ADMIN: 'Admin',
-    RESALE: 'Reventa',
-  };
-  return map[key] ?? key;
-}
+export { channelLabel, CHANNEL_LABELS } from '../../orders/_lib/format';
 
 export function orderStatusLabel(status: string): string {
   const map: Record<string, string> = {

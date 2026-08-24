@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { flatSeats, normalizeSeatMap } from '@boletera/venue-engine';
@@ -23,6 +23,8 @@ const Venue3DViewer = dynamic(
 
 export default function Venue3DPage() {
   const { id: venueId } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const layoutVersion = searchParams.get('v') ?? '0';
   const [mapData, setMapData] = useState<SeatMapData | null>(null);
   const [venueName, setVenueName] = useState('');
   const [error, setError] = useState<unknown>(null);
@@ -39,7 +41,7 @@ export default function Venue3DPage() {
         setVenueName(data.venue?.name ?? 'Venue');
       })
       .catch(setError);
-  }, [venueId, token, nonce]);
+  }, [venueId, token, nonce, layoutVersion]);
 
   const normalized = useMemo(() => (mapData ? normalizeSeatMap(mapData) : null), [mapData]);
   const seats = useMemo(() => {
@@ -86,6 +88,9 @@ export default function Venue3DPage() {
         <Link href={`/venues/${venueId}/map`} className={platform.ghostBtn}>
           Editar mapa 2D
         </Link>
+        {layoutVersion !== '0' && (
+          <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Layout v{layoutVersion}</span>
+        )}
       </header>
       {!mapData ? (
         <LoadingView label="Cargando recinto…" />

@@ -1,5 +1,12 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { EventStatus, TicketStatus } from '@prisma/client';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { EventStatus, LayoutPublishStatus, TicketStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import type { SeatMapData, SeatMapSection } from '@boletera/shared';
 import {
@@ -10,6 +17,9 @@ import {
   egressReportFilename,
   summarizeEgressReport,
   exportEgressOverviewCsv,
+  normalizeSeatMap,
+  resolveGeometry,
+  validateGeometry,
   type LayoutTemplateId,
   type EgressReport,
   type EgressReportSummaryRow,
@@ -17,6 +27,7 @@ import {
 import { generateTicketCode } from '@boletera/crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChannelManagementService } from '../channel-management/channel-management.service';
+import { AuditService } from '../../common/audit.service';
 import { buildEgressPdfBuffer, egressPdfFilename } from './egress-pdf';
 
 @Injectable()
@@ -26,6 +37,7 @@ export class VenueLayoutService {
   constructor(
     private prisma: PrismaService,
     private channels: ChannelManagementService,
+    private audit: AuditService,
   ) {}
 
   async getActiveLayout(venueId: string, organizationId: string) {
@@ -65,7 +77,347 @@ export class VenueLayoutService {
     }
 
     const mapData = this.layoutToMapData(layout);
-    return { venue: { id: venue.id, name: venue.name, slug: venue.slug }, layout: { ...layout, mapData } };
+    const sales = await this.getLayoutSalesLock(layout.id);
+    return {
+      venue: { id: venue.id, name: venue.name, slug: venue.slug },
+      layout: {
+        ...layout,
+        mapData,
+        publishStatus: layout.publishStatus,
+        publishedAt: layout.publishedAt,
+        reviewSubmittedAt: layout.reviewSubmittedAt,
+        salesLocked: sales.locked,
+        soldTicketCount: sales.soldCount,
+        linkedEventCount: sales.eventCount,
+      },
+    };
+  }
+
+  /** Sold tickets on events that published this layout block destructive edits. */
+  async getLayoutSalesLock(layoutId: string) {
+    const eventMaps = await this.prisma.eventSeatMap.findMany({
+      where: { layoutId },
+      select: { eventId: true },
+    });
+    const eventIds = eventMaps.map((m) => m.eventId);
+    if (!eventIds.length) {
+      return { locked: false, soldCount: 0, eventCount: 0, eventIds: [] as string[] };
+    }
+    const soldCount = await this.prisma.ticket.count({
+      where: {
+        eventId: { in: eventIds },
+        status: { in: [TicketStatus.SOLD, TicketStatus.USED, TicketStatus.TRANSFERRED] },
+      },
+    });
+    return {
+      locked: soldCount > 0,
+      soldCount,
+      eventCount: eventIds.length,
+      eventIds,
+    };
+  }
+
+  private seatIdsOf(map: SeatMapData): Set<string> {
+    return new Set(map.sections.flatMap((s) => s.seats.map((seat) => seat.id).filter(Boolean)));
+  }
+
+  private sectionIdsOf(map: SeatMapData): Set<string> {
+    return new Set(map.sections.map((s) => s.id).filter(Boolean));
+  }
+
+  /** Detect section/seat removals or wholesale replacements. */
+  private detectDestructiveChanges(before: SeatMapData, after: SeatMapData): string[] {
+    const reasons: string[] = [];
+    const beforeSections = this.sectionIdsOf(before);
+    const afterSections = this.sectionIdsOf(after);
+    for (const id of beforeSections) {
+      if (!afterSections.has(id)) reasons.push('Eliminación de sección');
+    }
+    const beforeSeats = this.seatIdsOf(before);
+    const afterSeats = this.seatIdsOf(after);
+    let removedSeats = 0;
+    for (const id of beforeSeats) {
+      if (!afterSeats.has(id)) removedSeats += 1;
+    }
+    if (removedSeats > 0) reasons.push(`${removedSeats} butaca(s) eliminada(s)`);
+    if (before.sections.length > 0 && after.sections.length === 0) {
+      reasons.push('Mapa vaciado');
+    }
+    return reasons;
+  }
+
+  private assertEditableStatus(status: LayoutPublishStatus, allowArchived = false) {
+    if (status === LayoutPublishStatus.ARCHIVED && !allowArchived) {
+      throw new ConflictException('El layout está archivado. Restaura una versión o crea uno nuevo.');
+    }
+  }
+
+  private async createSnapshot(
+    layoutId: string,
+    mapData: SeatMapData,
+    meta: {
+      version: number;
+      publishStatus: LayoutPublishStatus;
+      metadata?: unknown;
+      label?: string;
+      createdBy?: string;
+    },
+  ) {
+    return this.prisma.venueLayoutSnapshot.create({
+      data: {
+        layoutId,
+        version: meta.version,
+        mapData: mapData as object,
+        metadata: (meta.metadata as object) ?? undefined,
+        publishStatus: meta.publishStatus,
+        label: meta.label ?? null,
+        createdBy: meta.createdBy ?? null,
+      },
+    });
+  }
+
+  async getWorkflow(venueId: string, organizationId: string) {
+    const { layout } = await this.getActiveLayout(venueId, organizationId);
+    const sales = await this.getLayoutSalesLock(layout.id);
+    const snapshots = await this.prisma.venueLayoutSnapshot.findMany({
+      where: { layoutId: layout.id },
+      orderBy: { createdAt: 'desc' },
+      take: 25,
+      select: {
+        id: true,
+        version: true,
+        publishStatus: true,
+        label: true,
+        createdBy: true,
+        createdAt: true,
+      },
+    });
+    return {
+      layoutId: layout.id,
+      version: layout.version,
+      publishStatus: layout.publishStatus,
+      publishedAt: layout.publishedAt,
+      reviewSubmittedAt: layout.reviewSubmittedAt,
+      salesLocked: sales.locked,
+      soldTicketCount: sales.soldCount,
+      linkedEventCount: sales.eventCount,
+      snapshots,
+    };
+  }
+
+  async submitForReview(venueId: string, organizationId: string, userId: string) {
+    const { layout, venue } = await this.getActiveLayout(venueId, organizationId);
+    this.assertEditableStatus(layout.publishStatus);
+    if (layout.publishStatus === LayoutPublishStatus.PUBLISHED) {
+      throw new ConflictException('El layout ya está publicado.');
+    }
+    if (layout.publishStatus === LayoutPublishStatus.IN_REVIEW) {
+      return this.getWorkflow(venueId, organizationId);
+    }
+
+    const mapData = layout.mapData as SeatMapData;
+    const validation = validateGeometry(resolveGeometry(normalizeSeatMap(mapData)));
+    const errors = validation.issues.filter((i) => i.severity === 'error');
+    if (errors.length) {
+      throw new BadRequestException({
+        message: 'Corrige los errores de geometría antes de enviar a revisión.',
+        issues: errors.slice(0, 12),
+      });
+    }
+
+    await this.prisma.venueLayout.update({
+      where: { id: layout.id },
+      data: {
+        publishStatus: LayoutPublishStatus.IN_REVIEW,
+        reviewSubmittedAt: new Date(),
+        reviewSubmittedBy: userId,
+      },
+    });
+
+    await this.audit.log({
+      action: 'LAYOUT_SUBMIT_REVIEW',
+      entityType: 'VenueLayout',
+      entityId: layout.id,
+      organizationId,
+      userId,
+      metadata: { venueId, venueName: venue.name, version: layout.version },
+    });
+
+    return this.getWorkflow(venueId, organizationId);
+  }
+
+  async revertToDraft(venueId: string, organizationId: string, userId: string) {
+    const { layout, venue } = await this.getActiveLayout(venueId, organizationId);
+    if (layout.publishStatus !== LayoutPublishStatus.IN_REVIEW) {
+      throw new ConflictException('Solo layouts en revisión pueden volver a borrador.');
+    }
+    await this.prisma.venueLayout.update({
+      where: { id: layout.id },
+      data: {
+        publishStatus: LayoutPublishStatus.DRAFT,
+        reviewSubmittedAt: null,
+        reviewSubmittedBy: null,
+      },
+    });
+    await this.audit.log({
+      action: 'LAYOUT_REVERT_DRAFT',
+      entityType: 'VenueLayout',
+      entityId: layout.id,
+      organizationId,
+      userId,
+      metadata: { venueId, venueName: venue.name },
+    });
+    return this.getWorkflow(venueId, organizationId);
+  }
+
+  async publishLayout(venueId: string, organizationId: string, userId: string) {
+    const { layout, venue } = await this.getActiveLayout(venueId, organizationId);
+    this.assertEditableStatus(layout.publishStatus);
+    if (layout.publishStatus === LayoutPublishStatus.PUBLISHED) {
+      return this.getWorkflow(venueId, organizationId);
+    }
+
+    const mapData = layout.mapData as SeatMapData;
+    if (!mapData.sections?.length) {
+      throw new BadRequestException('El mapa no tiene secciones.');
+    }
+    const validation = validateGeometry(resolveGeometry(normalizeSeatMap(mapData)));
+    const errors = validation.issues.filter((i) => i.severity === 'error');
+    if (errors.length) {
+      throw new BadRequestException({
+        message: 'No se puede publicar: corrige los errores de geometría.',
+        issues: errors.slice(0, 12),
+      });
+    }
+
+    const now = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      await tx.venueLayout.update({
+        where: { id: layout.id },
+        data: {
+          publishStatus: LayoutPublishStatus.PUBLISHED,
+          publishedAt: now,
+          publishedBy: userId,
+          reviewSubmittedAt: layout.reviewSubmittedAt ?? now,
+          reviewSubmittedBy: layout.reviewSubmittedBy ?? userId,
+        },
+      });
+      await tx.venueLayoutSnapshot.create({
+        data: {
+          layoutId: layout.id,
+          version: layout.version,
+          mapData: mapData as object,
+          metadata: (layout.metadata as object) ?? undefined,
+          publishStatus: LayoutPublishStatus.PUBLISHED,
+          label: `Publicado v${layout.version}`,
+          createdBy: userId,
+        },
+      });
+    });
+
+    await this.audit.log({
+      action: 'LAYOUT_PUBLISH',
+      entityType: 'VenueLayout',
+      entityId: layout.id,
+      organizationId,
+      userId,
+      metadata: {
+        venueId,
+        venueName: venue.name,
+        version: layout.version,
+        validationWarnings: validation.issues.filter((i) => i.severity === 'warning').length,
+      },
+    });
+
+    this.logger.log(`Layout ${layout.id} published for venue ${venueId} v${layout.version}`);
+    return this.getWorkflow(venueId, organizationId);
+  }
+
+  async archiveLayout(venueId: string, organizationId: string, userId: string) {
+    const { layout, venue } = await this.getActiveLayout(venueId, organizationId);
+    if (layout.publishStatus !== LayoutPublishStatus.PUBLISHED) {
+      throw new ConflictException('Solo layouts publicados pueden archivarse.');
+    }
+    const sales = await this.getLayoutSalesLock(layout.id);
+    if (sales.locked) {
+      throw new ConflictException(
+        `No se puede archivar: ${sales.soldCount} boleto(s) vendido(s) en ${sales.eventCount} evento(s).`,
+      );
+    }
+
+    const now = new Date();
+    await this.prisma.venueLayout.update({
+      where: { id: layout.id },
+      data: {
+        publishStatus: LayoutPublishStatus.ARCHIVED,
+        archivedAt: now,
+        archivedBy: userId,
+      },
+    });
+
+    await this.audit.log({
+      action: 'LAYOUT_ARCHIVE',
+      entityType: 'VenueLayout',
+      entityId: layout.id,
+      organizationId,
+      userId,
+      metadata: { venueId, venueName: venue.name, version: layout.version },
+    });
+
+    return this.getWorkflow(venueId, organizationId);
+  }
+
+  async rollbackToSnapshot(
+    venueId: string,
+    organizationId: string,
+    snapshotId: string,
+    userId: string,
+  ) {
+    const { layout, venue } = await this.getActiveLayout(venueId, organizationId);
+    const sales = await this.getLayoutSalesLock(layout.id);
+    if (sales.locked) {
+      throw new ForbiddenException(
+        `Rollback bloqueado: ${sales.soldCount} boleto(s) vendido(s) vinculan este layout.`,
+      );
+    }
+
+    const snapshot = await this.prisma.venueLayoutSnapshot.findFirst({
+      where: { id: snapshotId, layoutId: layout.id },
+    });
+    if (!snapshot) throw new NotFoundException('Snapshot not found');
+
+    const currentMap = layout.mapData as SeatMapData;
+    await this.createSnapshot(layout.id, currentMap, {
+      version: layout.version,
+      publishStatus: layout.publishStatus,
+      metadata: layout.metadata,
+      label: `Antes de rollback a v${snapshot.version}`,
+      createdBy: userId,
+    });
+
+    const targetMap = snapshot.mapData as unknown as SeatMapData;
+    await this.saveMap(venueId, organizationId, targetMap, {
+      userId,
+      skipDestructiveCheck: true,
+      forceDraft: true,
+      allowArchived: true,
+    });
+
+    await this.audit.log({
+      action: 'LAYOUT_ROLLBACK',
+      entityType: 'VenueLayout',
+      entityId: layout.id,
+      organizationId,
+      userId,
+      metadata: {
+        venueId,
+        venueName: venue.name,
+        snapshotId,
+        targetVersion: snapshot.version,
+      },
+    });
+
+    return this.getWorkflow(venueId, organizationId);
   }
 
   private layoutToMapData(layout: {
@@ -213,8 +565,42 @@ export class VenueLayoutService {
     return null;
   }
 
-  async saveMap(venueId: string, organizationId: string, mapData: SeatMapData) {
-    const { layout } = await this.getActiveLayout(venueId, organizationId);
+  async saveMap(
+    venueId: string,
+    organizationId: string,
+    mapData: SeatMapData,
+    opts?: { userId?: string; skipDestructiveCheck?: boolean; forceDraft?: boolean; allowArchived?: boolean },
+  ) {
+    const { layout, venue } = await this.getActiveLayout(venueId, organizationId);
+    this.assertEditableStatus(layout.publishStatus, opts?.allowArchived);
+
+    const currentMap = layout.mapData as SeatMapData;
+    const destructive = this.detectDestructiveChanges(currentMap, mapData);
+    const sales = await this.getLayoutSalesLock(layout.id);
+
+    if (
+      !opts?.skipDestructiveCheck &&
+      destructive.length &&
+      layout.publishStatus === LayoutPublishStatus.PUBLISHED &&
+      sales.locked
+    ) {
+      throw new ForbiddenException({
+        message:
+          'Edición destructiva bloqueada: hay ventas vinculadas a este mapa publicado.',
+        reasons: destructive,
+        soldTicketCount: sales.soldCount,
+      });
+    }
+
+    if (
+      !opts?.skipDestructiveCheck &&
+      destructive.length &&
+      layout.publishStatus === LayoutPublishStatus.PUBLISHED &&
+      !sales.locked
+    ) {
+      // Republicar requiere volver a borrador tras cambios estructurales.
+      layout.publishStatus = LayoutPublishStatus.DRAFT;
+    }
 
     await this.prisma.$transaction(async (tx) => {
       // Ensure a single active layout per venue (legacy seeds left orphans).
@@ -406,15 +792,46 @@ export class VenueLayoutService {
       }
       nextMap.version = 3;
 
+      const publishPatch =
+        opts?.forceDraft ||
+        (layout.publishStatus === LayoutPublishStatus.PUBLISHED && destructive.length)
+          ? {
+              publishStatus: LayoutPublishStatus.DRAFT,
+              publishedAt: null,
+              publishedBy: null,
+              reviewSubmittedAt: null,
+              reviewSubmittedBy: null,
+              archivedAt: null,
+              archivedBy: null,
+            }
+          : {};
+
       await tx.venueLayout.update({
         where: { id: layout.id },
         data: {
           mapData: nextMap as object,
           metadata: (mapData.venue as object) ?? undefined,
           version: { increment: 1 },
+          ...publishPatch,
         },
       });
     });
+
+    if (destructive.length && opts?.userId) {
+      await this.audit.log({
+        action: sales.locked ? 'LAYOUT_SAVE_BLOCKED_ATTEMPT' : 'LAYOUT_SAVE_DESTRUCTIVE',
+        entityType: 'VenueLayout',
+        entityId: layout.id,
+        organizationId,
+        userId: opts.userId,
+        metadata: {
+          venueId,
+          venueName: venue.name,
+          reasons: destructive,
+          salesLocked: sales.locked,
+        },
+      });
+    }
 
     this.logger.log(`Map saved for venue ${venueId}`);
     return this.getActiveLayout(venueId, organizationId);
@@ -667,6 +1084,15 @@ export class VenueLayoutService {
     }
 
     const snapshotData = this.layoutToMapData(layout);
+    const validation = validateGeometry(resolveGeometry(normalizeSeatMap(snapshotData)));
+    const errors = validation.issues.filter((i) => i.severity === 'error');
+    if (errors.length) {
+      throw new BadRequestException({
+        message: 'No se puede publicar el evento: el mapa tiene errores de geometría.',
+        issues: errors.slice(0, 12),
+      });
+    }
+
     const totalSeats = snapshotData.sections.reduce((n, s) => n + s.seats.length, 0);
     if (totalSeats === 0) throw new BadRequestException('No hay asientos en el mapa');
 

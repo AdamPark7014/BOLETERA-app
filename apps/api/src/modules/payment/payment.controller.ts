@@ -186,7 +186,7 @@ export class PaymentController {
 
   @Post(':orderId/refunds')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'TAQUILLA_SUPERVISOR', 'FINANCE')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Request refund via Banorte (audited)' })
   async createRefund(
@@ -280,7 +280,7 @@ export class PaymentController {
 
   @Post('refunds/:refundId/complete')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'TAQUILLA_SUPERVISOR', 'FINANCE')
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Mark pending Banorte-portal refund as completed and release inventory',

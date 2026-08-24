@@ -2,10 +2,14 @@ import { Body, Controller, Get, Header, Param, Post, Put, Query, Res, UseGuards 
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import type { SeatMapData, SeatMapSection } from '@boletera/shared';
+import { PermissionKey } from '@boletera/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RequirePermissions } from '../auth/permissions.decorator';
+import { PermissionsGuard } from '../auth/permissions.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { EventPublishValidationService } from '../event-management/event-publish-validation.service';
 import { VenueLayoutService } from './venue-layout.service';
 
 @ApiTags('Venue Layout / Map Editor')
@@ -169,19 +173,87 @@ export class VenueLayoutController {
   ) {
     return this.layoutService.suggestFromPrompt(venueId, orgId, body.prompt || '');
   }
+
+  @Get(':venueId/layout/workflow')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Layout publish status, sales lock, version snapshots' })
+  getWorkflow(@Param('venueId') venueId: string, @CurrentUser('organizationId') orgId: string) {
+    return this.layoutService.getWorkflow(venueId, orgId);
+  }
+
+  @Post(':venueId/layout/submit-review')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Submit layout for review (Draft → Review)' })
+  submitReview(
+    @Param('venueId') venueId: string,
+    @CurrentUser() user: { sub: string; organizationId: string },
+  ) {
+    return this.layoutService.submitForReview(venueId, user.organizationId, user.sub);
+  }
+
+  @Post(':venueId/layout/revert-draft')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Return layout to draft (Review → Draft)' })
+  revertDraft(
+    @Param('venueId') venueId: string,
+    @CurrentUser() user: { sub: string; organizationId: string },
+  ) {
+    return this.layoutService.revertToDraft(venueId, user.organizationId, user.sub);
+  }
+
+  @Post(':venueId/layout/publish-map')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Publish venue layout after geometry validation' })
+  publishMap(
+    @Param('venueId') venueId: string,
+    @CurrentUser() user: { sub: string; organizationId: string },
+  ) {
+    return this.layoutService.publishLayout(venueId, user.organizationId, user.sub);
+  }
+
+  @Post(':venueId/layout/archive')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Archive published layout (Published → Archived)' })
+  archiveLayout(
+    @Param('venueId') venueId: string,
+    @CurrentUser() user: { sub: string; organizationId: string },
+  ) {
+    return this.layoutService.archiveLayout(venueId, user.organizationId, user.sub);
+  }
+
+  @Post(':venueId/layout/rollback/:snapshotId')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Restore layout from version snapshot' })
+  rollbackSnapshot(
+    @Param('venueId') venueId: string,
+    @Param('snapshotId') snapshotId: string,
+    @CurrentUser() user: { sub: string; organizationId: string },
+  ) {
+    return this.layoutService.rollbackToSnapshot(
+      venueId,
+      user.organizationId,
+      snapshotId,
+      user.sub,
+    );
+  }
 }
 
 @ApiTags('Event Publishing')
 @Controller('events')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @ApiBearerAuth()
 export class EventPublishController {
-  constructor(private layoutService: VenueLayoutService) {}
+  constructor(
+    private layoutService: VenueLayoutService,
+    private publishValidation: EventPublishValidationService,
+  ) {}
 
   @Post(':eventId/publish')
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @RequirePermissions(PermissionKey.EVENTS_PUBLISH)
   @ApiOperation({ summary: 'Publish event: map snapshot + offers + tickets + channels' })
-  publish(@Param('eventId') eventId: string, @CurrentUser('organizationId') orgId: string) {
+  async publish(@Param('eventId') eventId: string, @CurrentUser('organizationId') orgId: string) {
+    await this.publishValidation.assertReadyForPublish(eventId, orgId);
     return this.layoutService.publishToEvent(eventId, orgId);
   }
 }

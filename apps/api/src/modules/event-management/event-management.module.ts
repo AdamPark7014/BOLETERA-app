@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
+import { EventPublishValidationModule } from './event-publish-validation.module';
 import { EventManagementService } from './event-management.service';
 import { EventManagementController } from './event-management.controller';
 import { SaleWindowService } from './sale-window.service';
@@ -12,7 +13,7 @@ import {
 
 @Module({
   // `RedisService` llega por `CommonModule`, que es @Global.
-  imports: [PrismaModule],
+  imports: [PrismaModule, EventPublishValidationModule],
   controllers: [
     EventManagementController,
     // El publico va SIN guardas: una transparencia que exige credenciales no lo es.
@@ -29,6 +30,6 @@ import {
   // importar este módulo y preguntar antes de vender. El cupo de fase se aparta
   // por su `assertSaleWindowOpenAndReserve`, así que no hace falta exportar
   // `SalePhaseQuotaService` fuera del módulo.
-  exports: [EventManagementService, SaleWindowService, ProfecoDisclosureService]
+  exports: [EventManagementService, SaleWindowService, ProfecoDisclosureService, EventPublishValidationModule],
 })
 export class EventManagementModule {}

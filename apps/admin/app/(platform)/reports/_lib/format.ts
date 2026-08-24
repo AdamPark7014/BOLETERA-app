@@ -84,17 +84,7 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   });
 }
 
-export function channelLabel(channel: string): string {
-  const map: Record<string, string> = {
-    WEB: 'Web',
-    TAQUILLA: 'Taquilla',
-    POS: 'POS',
-    API: 'API',
-    ADMIN: 'Admin',
-    RESALE: 'Reventa',
-  };
-  return map[channel] ?? channel;
-}
+export { channelLabel, CHANNEL_LABELS } from '../../orders/_lib/format';
 
 export function paceRiskLabel(
   risk: 'on_track' | 'watch' | 'at_risk' | 'critical',

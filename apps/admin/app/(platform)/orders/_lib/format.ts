@@ -20,9 +20,16 @@ export const STATUS_META: Record<OrderStatus, StatusMeta> = {
 export const CHANNEL_LABELS: Record<SalesChannel, string> = {
   WEB: 'Web',
   TAQUILLA: 'Taquilla',
-  POS: 'POS',
   API: 'API',
   ADMIN: 'Admin',
+  PROMOTER: 'Promotor',
+  COURTESY: 'Cortesía',
+  CORPORATE: 'Corporativo',
+  MOBILE: 'App móvil',
+  PHONE: 'Teléfono',
+  INVITATION: 'Invitación',
+  AFFILIATE: 'Afiliado',
+  VIP: 'VIP',
   RESALE: 'Reventa',
 };
 

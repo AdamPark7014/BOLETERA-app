@@ -29,7 +29,7 @@ import type {
 @ApiBearerAuth()
 @Controller('taquilla')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('TAQUILLA', 'VENUE_MANAGER', 'PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'SCANNER')
+@Roles('TAQUILLA', 'TAQUILLA_SUPERVISOR', 'VENUE_MANAGER', 'PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'SCANNER')
 export class TaquillaPosController {
   constructor(private posService: TaquillaPosService) {}
 
@@ -105,6 +105,7 @@ export class TaquillaPosController {
   }
 
   @Post('void')
+  @Roles('TAQUILLA', 'TAQUILLA_SUPERVISOR', 'TAQUILLA_ADMIN', 'VENUE_MANAGER', 'ADMIN', 'SUPER_ADMIN')
   @ApiOperation({ summary: 'Void a taquilla sale (requires manager PIN)' })
   async voidOrder(@Body() data: VoidOrderDto) {
     return await this.posService.voidOrder(data);

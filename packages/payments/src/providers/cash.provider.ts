@@ -12,7 +12,14 @@ const cashIntentIdempotency = new IdempotencyGuard<PaymentIntentResult>();
 
 export class CashProvider implements PaymentProvider {
   readonly id = 'cash' as const;
-  readonly supportedChannels: SalesChannelType[] = ['TAQUILLA', 'ADMIN'];
+  readonly supportedChannels: SalesChannelType[] = [
+    'TAQUILLA',
+    'ADMIN',
+    'PROMOTER',
+    'COURTESY',
+    'INVITATION',
+    'VIP',
+  ];
 
   async createIntent(ctx: PaymentContext): Promise<PaymentIntentResult> {
     const build = async (): Promise<PaymentIntentResult> => {

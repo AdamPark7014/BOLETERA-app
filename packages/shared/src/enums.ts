@@ -3,6 +3,15 @@ export enum SalesChannel {
   TAQUILLA = 'TAQUILLA',
   API = 'API',
   ADMIN = 'ADMIN',
+  PROMOTER = 'PROMOTER',
+  COURTESY = 'COURTESY',
+  CORPORATE = 'CORPORATE',
+  MOBILE = 'MOBILE',
+  PHONE = 'PHONE',
+  INVITATION = 'INVITATION',
+  AFFILIATE = 'AFFILIATE',
+  VIP = 'VIP',
+  RESALE = 'RESALE',
 }
 
 export type SalesChannelValue = `${SalesChannel}`;
@@ -11,10 +20,18 @@ export enum UserRole {
   CUSTOMER = 'CUSTOMER',
   PROMOTER = 'PROMOTER',
   VENUE_MANAGER = 'VENUE_MANAGER',
+  ARTIST = 'ARTIST',
   ADMIN = 'ADMIN',
   SUPER_ADMIN = 'SUPER_ADMIN',
   TAQUILLA = 'TAQUILLA',
+  TAQUILLA_SUPERVISOR = 'TAQUILLA_SUPERVISOR',
+  TAQUILLA_ADMIN = 'TAQUILLA_ADMIN',
   SCANNER = 'SCANNER',
+  FINANCE = 'FINANCE',
+  MARKETING = 'MARKETING',
+  SUPPORT = 'SUPPORT',
+  AUDITOR = 'AUDITOR',
+  AFFILIATE = 'AFFILIATE',
 }
 
 export type UserRoleValue = `${UserRole}`;
@@ -30,6 +47,15 @@ export enum TicketStatus {
 }
 
 export type TicketStatusValue = `${TicketStatus}`;
+
+export enum LayoutPublishStatus {
+  DRAFT = 'DRAFT',
+  IN_REVIEW = 'IN_REVIEW',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export type LayoutPublishStatusValue = `${LayoutPublishStatus}`;
 
 export enum OrderStatus {
   PENDING = 'PENDING',

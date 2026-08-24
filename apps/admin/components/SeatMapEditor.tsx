@@ -71,9 +71,101 @@ import {
   type EditCommand,
   type CadReviewPrimitive,
   type CadEntityRole,
+  type GeometryIssueCode,
 } from '@boletera/venue-engine';
+import { Badge, Card } from '@boletera/ui';
+import { GeneratorsModal, type GeneratorApplyPayload } from './SeatMap/GeneratorsModal';
 import { SeatCanvasLayer } from './SeatMap/SeatCanvasLayer';
 import styles from './SeatMapEditor.module.scss';
+
+/** Estado de validación expuesto al contenedor (p. ej. para bloquear publicación). */
+export type MapValidationState = {
+  ok: boolean;
+  errorCount: number;
+  warningCount: number;
+};
+
+type ValidationRow = {
+  severity: 'error' | 'warning';
+  message: string;
+  hint?: string;
+  seatIds?: string[];
+  sectionIds?: string[];
+  code?: GeometryIssueCode;
+};
+
+const ISSUE_CODE_LABELS: Partial<Record<GeometryIssueCode, string>> = {
+  overlap: 'Solapamiento',
+  outside_shape: 'Fuera de contorno',
+  missing_position: 'Sin posición 3D',
+  duplicate_seat_id: 'Id duplicado',
+  duplicate_seat_label: 'Etiqueta duplicada',
+  missing_row_label: 'Sin fila',
+  empty_section: 'Zona vacía',
+  duplicate_section: 'Zona duplicada',
+  capacity_mismatch: 'Aforo',
+  row_numbering_gap: 'Numeración',
+  accessible_shortfall: 'Accesibilidad',
+  accessible_no_companion: 'Sin acompañante',
+  accessible_orphan_companion: 'Acompañante huérfano',
+  unreachable_section: 'Sin ruta',
+  long_egress: 'Egress largo',
+  egress_bottleneck: 'Cuello de botella',
+  slow_clearance: 'Vaciado lento',
+  no_exits: 'Sin salidas',
+};
+
+function buildActionableIssues(
+  geometryIssues: ReturnType<typeof validateGeometry>['issues'],
+  access: ReturnType<typeof auditAccessibility>,
+): ValidationRow[] {
+  const rows: ValidationRow[] = geometryIssues.map((i) => ({
+    severity: i.severity === 'error' ? 'error' : 'warning',
+    message: i.message,
+    hint: i.hint,
+    seatIds: i.seatIds,
+    sectionIds: i.sectionIds,
+    code: i.code,
+  }));
+
+  if (access.capacity > 0) {
+    if (access.wheelchairSpaces < access.requiredWheelchairSpaces) {
+      rows.push({
+        severity: 'error',
+        code: 'accessible_shortfall',
+        message: `Faltan ${access.requiredWheelchairSpaces - access.wheelchairSpaces} plazas de silla de ruedas (hay ${access.wheelchairSpaces} de ${access.requiredWheelchairSpaces} exigidas para ${access.capacity.toLocaleString('es-MX')} butacas).`,
+        hint: 'Usa «Generar plazas accesibles» en la zona activa, o marca butacas existentes con ♿ Silla.',
+      });
+    }
+    for (const seatId of access.wheelchairWithoutCompanion.slice(0, 10)) {
+      rows.push({
+        severity: 'warning',
+        code: 'accessible_no_companion',
+        message: `La plaza accesible ${seatId} no tiene acompañante ligado.`,
+        hint: 'Marca la butaca contigua como acompañante para que se vendan juntas.',
+        seatIds: [seatId],
+      });
+    }
+    for (const seatId of access.orphanCompanions.slice(0, 10)) {
+      rows.push({
+        severity: 'error',
+        code: 'accessible_orphan_companion',
+        message: `El acompañante ${seatId} apunta a una plaza que ya no existe.`,
+        hint: 'Vuelve a ligarlo a una plaza de silla de ruedas o quítale la marca.',
+        seatIds: [seatId],
+      });
+    }
+    for (const sec of access.sectionsWithoutAccessible.slice(0, 6)) {
+      rows.push({
+        severity: 'warning',
+        message: `La zona ${sec.name} (${sec.seats.toLocaleString('es-MX')} butacas) no tiene ninguna plaza accesible.`,
+        sectionIds: [sec.id],
+      });
+    }
+  }
+
+  return rows.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'error' ? -1 : 1));
+}
 
 /** Selección vacía compartida: evita crear un Set nuevo en cada limpieza. */
 const EMPTY_SELECTION: ReadonlySet<string> = new Set<string>();
@@ -94,6 +186,11 @@ type Props = {
   /** Enables server egress report (GET saved / POST draft) */
   venueId?: string;
   getAuthToken?: () => string | null;
+  /** Se invoca cuando cambia la validación del mapa completo (para bloquear publicación). */
+  onValidationChange?: (state: MapValidationState) => void;
+  publishStatus?: import('@boletera/shared').LayoutPublishStatusValue;
+  destructiveLocked?: boolean;
+  readOnly?: boolean;
 };
 
 const TIERS = ['standard', 'premium', 'economy'] as const;
@@ -286,6 +383,9 @@ export function SeatMapEditor({
   onAiSuggest,
   venueId,
   getAuthToken,
+  onValidationChange,
+  destructiveLocked = false,
+  readOnly = false,
 }: Props) {
   const [map, setMap] = useState<SeatMapData>(() => cloneMap(initial));
   const [selected, setSelected] = useState<ReadonlySet<string>>(EMPTY_SELECTION);
@@ -318,6 +418,9 @@ export function SeatMapEditor({
   const [viewHeat, setViewHeat] = useState(false);
   const [showCirculation, setShowCirculation] = useState(false);
   const [cadReview, setCadReview] = useState<CadReviewState | null>(null);
+  const [generatorsOpen, setGeneratorsOpen] = useState(false);
+  const [generatorPreviewSeats, setGeneratorPreviewSeats] = useState<SeatMapSeat[] | null>(null);
+  const [generatorPreviewGa, setGeneratorPreviewGa] = useState<SeatMapSection | null>(null);
   /**
    * Historial por comandos. Antes eran 40 clones profundos del documento; a
    * 45.000 butacas eso son cientos de megabytes y un bloqueo por acción. Ahora
@@ -558,6 +661,8 @@ export function SeatMapEditor({
   const accessibility = useMemo(() => auditAccessibility(deferredMap), [deferredMap]);
 
   const resolvedScene = useMemo(() => resolveGeometry(deferredMap), [deferredMap]);
+  /** Validación del mapa completo (sin filtro de nivel) — base del bloqueo de publicación. */
+  const fullValidation = useMemo(() => validateGeometry(resolvedScene), [resolvedScene]);
   /** Level-scoped issues for banner / canvas highlights. */
   const validation = useMemo(
     () =>
@@ -724,59 +829,29 @@ export function SeatMapEditor({
    * errores primero. La accesibilidad no salía en el panel de validación, así que
    * un mapa sin plazas de silla de ruedas se publicaba sin que nadie lo viera.
    */
-  const actionableIssues = useMemo(() => {
-    type Row = {
-      severity: 'error' | 'warning';
-      message: string;
-      hint?: string;
-      seatIds?: string[];
-      sectionIds?: string[];
-    };
-    const rows: Row[] = validation.issues.map((i) => ({
-      severity: i.severity === 'error' ? 'error' : 'warning',
-      message: i.message,
-      hint: i.hint,
-      seatIds: i.seatIds,
-      sectionIds: i.sectionIds,
-    }));
+  const publishIssues = useMemo(
+    () => buildActionableIssues(fullValidation.issues, accessibility),
+    [fullValidation.issues, accessibility],
+  );
 
-    if (accessibility.capacity > 0) {
-      if (accessibility.wheelchairSpaces < accessibility.requiredWheelchairSpaces) {
-        rows.push({
-          severity: 'error',
-          message: `Faltan ${accessibility.requiredWheelchairSpaces - accessibility.wheelchairSpaces} plazas de silla de ruedas (hay ${accessibility.wheelchairSpaces} de ${accessibility.requiredWheelchairSpaces} exigidas para ${accessibility.capacity.toLocaleString('es-MX')} butacas).`,
-          hint: 'Usa «Generar plazas accesibles» en la zona activa, o marca butacas existentes con ♿ Silla.',
-        });
-      }
-      for (const seatId of accessibility.wheelchairWithoutCompanion.slice(0, 10)) {
-        rows.push({
-          severity: 'warning',
-          message: `La plaza accesible ${seatId} no tiene acompañante ligado.`,
-          hint: 'Marca la butaca contigua como acompañante para que se vendan juntas.',
-          seatIds: [seatId],
-        });
-      }
-      for (const seatId of accessibility.orphanCompanions.slice(0, 10)) {
-        rows.push({
-          severity: 'error',
-          message: `El acompañante ${seatId} apunta a una plaza que ya no existe.`,
-          hint: 'Vuelve a ligarlo a una plaza de silla de ruedas o quítale la marca.',
-          seatIds: [seatId],
-        });
-      }
-      for (const sec of accessibility.sectionsWithoutAccessible.slice(0, 6)) {
-        rows.push({
-          severity: 'warning',
-          message: `La zona ${sec.name} (${sec.seats.toLocaleString('es-MX')} butacas) no tiene ninguna plaza accesible.`,
-          sectionIds: [sec.id],
-        });
-      }
-    }
+  const displayIssues = useMemo(
+    () =>
+      levelFilter === 'ALL'
+        ? publishIssues
+        : buildActionableIssues(validation.issues, accessibility),
+    [levelFilter, publishIssues, validation.issues, accessibility],
+  );
 
-    return rows.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'error' ? -1 : 1));
-  }, [validation.issues, accessibility]);
+  const errorCount = publishIssues.filter((i) => i.severity === 'error').length;
+  const warningCount = publishIssues.filter((i) => i.severity === 'warning').length;
 
-  const errorCount = actionableIssues.filter((i) => i.severity === 'error').length;
+  useEffect(() => {
+    onValidationChange?.({
+      ok: errorCount === 0,
+      errorCount,
+      warningCount,
+    });
+  }, [errorCount, warningCount, onValidationChange]);
 
   const unreachableSectionIds = useMemo(() => {
     const ids = new Set<string>();
@@ -1595,6 +1670,78 @@ export function SeatMapEditor({
     );
   }
 
+  const handleGeneratorPreviewChange = useCallback(
+    (seats: SeatMapSeat[] | null, gaShape?: SeatMapSection | null) => {
+      setGeneratorPreviewSeats(seats);
+      setGeneratorPreviewGa(gaShape ?? null);
+    },
+    [],
+  );
+
+  function handleGeneratorApply(payload: GeneratorApplyPayload) {
+    setGeneratorPreviewSeats(null);
+    setGeneratorPreviewGa(null);
+
+    if (payload.kind === 'template') {
+      pushHistory(cloneMap(payload.map), payload.label);
+      setActiveSectionId(payload.map.sections[0]?.id ?? null);
+      setSelected(EMPTY_SELECTION);
+      return;
+    }
+
+    if (payload.kind === 'renumber') {
+      const idSet = new Set(payload.updates.map((u) => u.id));
+      const byId = new Map(payload.updates.map((u) => [u.id, u]));
+      const next = {
+        ...map,
+        sections: map.sections.map((sec) => ({
+          ...sec,
+          seats: sec.seats.map((seat) => {
+            if (!idSet.has(seat.id)) return seat;
+            const upd = byId.get(seat.id)!;
+            return { ...seat, label: upd.label, row: upd.row };
+          }),
+        })),
+      };
+      pushHistory(next, payload.label);
+      return;
+    }
+
+    if (payload.kind === 'ga-section' || payload.kind === 'new-section') {
+      const next = { ...map, sections: [...map.sections, payload.section] };
+      pushHistory(next, payload.label);
+      setActiveSectionId(payload.section.id);
+      setSelected(EMPTY_SELECTION);
+      return;
+    }
+
+    if (!activeSection) return;
+    if (activeSection.locked) {
+      warnLocked('La sección activa está bloqueada.');
+      return;
+    }
+
+    const ts = Date.now();
+    const newSeats = payload.seats.map((s, i) => ({ ...s, id: `seat-${ts}-${i}` }));
+    const next = {
+      ...map,
+      sections: map.sections.map((s) => {
+        if (s.id !== activeSection.id) return s;
+        const block = payload.block
+          ? { ...payload.block, id: payload.block.id || `block-${ts}` }
+          : undefined;
+        return {
+          ...s,
+          ...payload.sectionParams,
+          blocks: block ? [...(s.blocks ?? []), block] : s.blocks,
+          seats: [...s.seats, ...newSeats],
+        };
+      }),
+    };
+    pushHistory(next, payload.label);
+    setSelected(EMPTY_SELECTION);
+  }
+
   function fillActiveShape() {
     if (!activeSection?.shape?.points?.length) return;
     if (activeSection.locked) {
@@ -2190,6 +2337,10 @@ export function SeatMapEditor({
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         setSelected(new Set(seatIndex.ids));
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        setGeneratorsOpen((open) => !open);
       }
     }
     window.addEventListener('keydown', onKey);
@@ -3298,52 +3449,127 @@ export function SeatMapEditor({
           </div>
         )}
 
-        {actionableIssues.length > 0 && (
-          <div className={styles.validationBanner} role="status" aria-live="polite">
-            <strong>
-              {errorCount > 0
-                ? `${errorCount} ${errorCount === 1 ? 'error impide' : 'errores impiden'} publicar`
-                : `${actionableIssues.length} avisos`}
-              {' · '}
-              {actionableIssues.length} en total
-              {levelFilter !== 'ALL' ? ' (nivel actual)' : ''}
-            </strong>
-            <ul className={styles.issueList}>
-              {actionableIssues.slice(0, 12).map((issue, i) => {
-                const targetable = Boolean(issue.seatIds?.length || issue.sectionIds?.length);
-                return (
-                  <li key={`${issue.message}-${i}`} data-severity={issue.severity}>
-                    {/* La severidad se lee, no se adivina por el color del borde. */}
-                    <span className={styles.issueTag}>
-                      {issue.severity === 'error' ? 'ERROR' : 'AVISO'}
-                    </span>
-                    {targetable ? (
-                      <button
-                        type="button"
-                        className={styles.issueLink}
-                        onClick={() => focusOnEntities(issue.seatIds, issue.sectionIds)}
-                        title="Llevar la vista a la zona o butaca del problema"
-                      >
-                        {issue.message}
-                      </button>
-                    ) : (
-                      <span className={styles.issueText}>{issue.message}</span>
-                    )}
-                    {issue.hint && <p className={styles.issueHint}>{issue.hint}</p>}
-                  </li>
-                );
-              })}
-            </ul>
-            {actionableIssues.length > 12 && (
-              <p className={styles.issueHint}>
-                …y {actionableIssues.length - 12} más. Resuelve los de arriba y la lista se recalcula.
-              </p>
-            )}
+        <div className={styles.validationPanel} role="region" aria-labelledby="validation-heading">
+          <div className={styles.validationHeader}>
+            <h3 id="validation-heading">Validación</h3>
+            <div className={styles.validationBadges}>
+              {errorCount > 0 && (
+                <Badge tone="danger" size="sm" variant="solid">
+                  {errorCount} {errorCount === 1 ? 'error' : 'errores'}
+                </Badge>
+              )}
+              {warningCount > 0 && (
+                <Badge tone="warning" size="sm" variant="soft">
+                  {warningCount} {warningCount === 1 ? 'aviso' : 'avisos'}
+                </Badge>
+              )}
+              {errorCount === 0 && warningCount === 0 && !analyzing && (
+                <Badge tone="success" size="sm" variant="soft">
+                  Listo para publicar
+                </Badge>
+              )}
+              {analyzing && (
+                <Badge tone="neutral" size="sm" variant="outline">
+                  Recalculando…
+                </Badge>
+              )}
+            </div>
           </div>
-        )}
+
+          {errorCount > 0 && (
+            <Card variant="outline" padding="sm" className={styles.validationAlert}>
+              <p>
+                {errorCount === 1 ? 'Hay 1 error que impide' : `Hay ${errorCount} errores que impiden`}{' '}
+                guardar y publicar. Corrige los marcados como error antes de continuar.
+              </p>
+            </Card>
+          )}
+
+          {fullValidation.summary && fullValidation.summary.length > 0 && (
+            <ul className={styles.validationSummary}>
+              {fullValidation.summary.slice(0, 8).map((row) => (
+                <li key={row.code}>
+                  <Badge
+                    tone={row.severity === 'error' ? 'danger' : 'warning'}
+                    size="sm"
+                    variant="outline"
+                  >
+                    {ISSUE_CODE_LABELS[row.code] ?? row.code}
+                  </Badge>
+                  <span>{row.count.toLocaleString('es-MX')}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {displayIssues.length === 0 && !analyzing ? (
+            <p className={styles.sideHint}>Sin hallazgos. Geometría e inventario en orden.</p>
+          ) : (
+            <>
+              {levelFilter !== 'ALL' && (
+                <p className={styles.sideHint}>
+                  Mostrando hallazgos del nivel actual ·{' '}
+                  {errorCount > 0
+                    ? `${errorCount} error(es) en todo el mapa`
+                    : 'sin errores en todo el mapa'}
+                </p>
+              )}
+              <ul className={styles.issueList} aria-live="polite">
+                {displayIssues.slice(0, 12).map((issue, i) => {
+                  const targetable = Boolean(issue.seatIds?.length || issue.sectionIds?.length);
+                  return (
+                    <li key={`${issue.message}-${i}`} data-severity={issue.severity}>
+                      <Badge
+                        tone={issue.severity === 'error' ? 'danger' : 'warning'}
+                        size="sm"
+                        variant="solid"
+                      >
+                        {issue.severity === 'error' ? 'ERROR' : 'AVISO'}
+                      </Badge>
+                      {targetable ? (
+                        <button
+                          type="button"
+                          className={styles.issueLink}
+                          onClick={() => focusOnEntities(issue.seatIds, issue.sectionIds)}
+                          title="Llevar la vista a la zona o butaca del problema"
+                        >
+                          {issue.message}
+                        </button>
+                      ) : (
+                        <span className={styles.issueText}>{issue.message}</span>
+                      )}
+                      {issue.hint && <p className={styles.issueHint}>{issue.hint}</p>}
+                    </li>
+                  );
+                })}
+              </ul>
+              {displayIssues.length > 12 && (
+                <p className={styles.issueHint}>
+                  …y {displayIssues.length - 12} más. Resuelve los de arriba y la lista se recalcula.
+                </p>
+              )}
+            </>
+          )}
+        </div>
       </aside>
 
       <div className={styles.main}>
+        {(destructiveLocked || readOnly) && (
+          <div
+            style={{
+              padding: '0.5rem 0.75rem',
+              marginBottom: '0.35rem',
+              borderRadius: 8,
+              fontSize: '0.8125rem',
+              background: readOnly ? 'rgba(234,179,8,0.12)' : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${readOnly ? 'rgba(234,179,8,0.35)' : 'rgba(239,68,68,0.25)'}`,
+            }}
+          >
+            {readOnly
+              ? 'Mapa archivado — solo lectura. Usa el historial de versiones para restaurar un borrador.'
+              : 'Mapa publicado con ventas — edición destructiva bloqueada (eliminar butacas/secciones, plantillas). Puedes ajustar posiciones y metadatos.'}
+          </div>
+        )}
         <div className={styles.toolbar}>
           <div className={styles.toolGroup}>
             <button type="button" className={tool === 'select' ? styles.primary : ''} onClick={() => setTool('select')}>
@@ -3365,6 +3591,7 @@ export function SeatMapEditor({
               type="button"
               className={tool === 'ga' ? styles.primary : ''}
               onClick={() => setTool(tool === 'ga' ? 'select' : 'ga')}
+              disabled={destructiveLocked || readOnly}
               title="Dibuja una zona sin asientos (pista/festival)"
             >
               Zona GA
@@ -3450,19 +3677,28 @@ export function SeatMapEditor({
           </div>
 
           <div className={styles.toolGroup}>
-            <button type="button" onClick={() => addRow(12)} disabled={!activeSection}>
+            <button
+              type="button"
+              className={generatorsOpen ? styles.primary : ''}
+              onClick={() => setGeneratorsOpen((o) => !o)}
+              aria-keyshortcuts="Control+Shift+G"
+              title="Generadores paramétricos (sección, filas, plantillas…)"
+            >
+              Generadores <kbd className={styles.kbd}>Ctrl+⇧+G</kbd>
+            </button>
+            <button type="button" onClick={() => addRow(12)} disabled={!activeSection || destructiveLocked || readOnly}>
               + Fila
             </button>
-            <button type="button" onClick={() => addGrid(5, 12)} disabled={!activeSection}>
+            <button type="button" onClick={() => addGrid(5, 12)} disabled={!activeSection || destructiveLocked || readOnly}>
               + Grid 5×12
             </button>
-            <button type="button" onClick={() => addCurvedRow()} disabled={!activeSection} title="Fila en arco (teatro/arena)">
+            <button type="button" onClick={() => addCurvedRow()} disabled={!activeSection || destructiveLocked || readOnly} title="Fila en arco (teatro/arena)">
               Fila curva
             </button>
           </div>
 
           <div className={styles.toolGroup}>
-            <button type="button" onClick={deleteSelected} disabled={!selected.size}>
+            <button type="button" onClick={deleteSelected} disabled={!selected.size || destructiveLocked || readOnly}>
               Eliminar ({selected.size})
             </button>
             {TIERS.map((t) => (
@@ -4365,6 +4601,24 @@ export function SeatMapEditor({
                 );
               })}
 
+              {/* Generator preview ghost overlay */}
+              {(generatorPreviewSeats?.length || generatorPreviewGa?.shape?.points?.length) && (
+                <g className={styles.generatorPreview} pointerEvents="none" opacity={0.72}>
+                  {generatorPreviewGa?.shape?.points?.length ? (
+                    <polygon
+                      points={generatorPreviewGa.shape.points.map(([x, y]) => `${x},${y}`).join(' ')}
+                      fill="rgba(99,102,241,0.22)"
+                      stroke="#818cf8"
+                      strokeWidth={2}
+                      strokeDasharray="6 4"
+                    />
+                  ) : null}
+                  {generatorPreviewSeats?.map((s, i) => (
+                    <circle key={`gen-prev-${i}`} cx={s.x} cy={s.y} r={5} fill="#a78bfa" stroke="#c4b5fd" strokeWidth={1} />
+                  ))}
+                </g>
+              )}
+
               {/* GA zone being drawn */}
               {tool === 'ga' && gaDraft.length > 0 && (
                 <>
@@ -4543,6 +4797,21 @@ export function SeatMapEditor({
           </div>
         </div>
       )}
+
+      <GeneratorsModal
+        open={generatorsOpen}
+        onClose={() => {
+          setGeneratorsOpen(false);
+          setGeneratorPreviewSeats(null);
+          setGeneratorPreviewGa(null);
+        }}
+        map={map}
+        activeSection={activeSection}
+        blockParams={blockParams}
+        selected={selected}
+        onPreviewChange={handleGeneratorPreviewChange}
+        onApply={handleGeneratorApply}
+      />
     </div>
   );
 }

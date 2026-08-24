@@ -16,14 +16,15 @@ $accent: var(--bl-accent);
   justify-content: space-between;
   gap: 1rem;
   align-items: center;
-  padding: 0.85rem 0.9rem;
-  margin: 0.35rem 0 0;
+  padding: 0.9rem 1rem;
+  margin: 0.4rem 0 0;
   border: 1px solid $line;
+  border-radius: var(--bl-radius-md, 8px);
   background: var(--bl-elevated);
   cursor: pointer;
   font: inherit;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 
   strong {
     display: block;
@@ -52,7 +53,8 @@ $accent: var(--bl-accent);
 
 .active {
   border-color: $accent;
-  background: rgba($accent, 0.04);
+  background: rgba($accent, 0.06);
+  box-shadow: 0 0 0 1px rgba($accent, 0.12);
 
   strong {
     color: $accent;

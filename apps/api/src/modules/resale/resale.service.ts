@@ -5,7 +5,7 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import { ResaleStatus, ResaleOfferStatus } from '@prisma/client';
+import { ResaleStatus, ResaleOfferStatus, SalesChannel } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
 
@@ -185,6 +185,7 @@ export class ResaleService {
           buyerEmail: offer.buyerEmail,
           buyerName: 'Resale Buyer',
           status: 'COMPLETED',
+          channel: SalesChannel.RESALE,
           subtotal: offer.offerPrice,
           fees: offer.listing.fee,
           discountAmount: new Decimal(0),

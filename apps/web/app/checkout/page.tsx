@@ -19,6 +19,7 @@ import {
   sameTotal,
   type CartPricing,
 } from '@/lib/pricing';
+import { clearAffiliateRef, getAffiliateRefForEvent } from '@/lib/affiliate-ref';
 import styles from './checkout.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -333,6 +334,8 @@ function CheckoutForm() {
       const cleanPhone = phone.replace(/[\s()-]/g, '');
       if (cleanPhone) body.buyerPhone = cleanPhone;
       if (promoValid && promo.trim()) body.promotionCode = promo.trim();
+      const affiliateRef = getAffiliateRefForEvent(eventId);
+      if (affiliateRef) body.affiliateRef = affiliateRef;
 
       const res = await fetch(`${API}/orders`, {
         method: 'POST',
@@ -359,6 +362,7 @@ function CheckoutForm() {
       // no cabe el token).
       saveOrderAccessToken(order.publicId, order.accessToken);
       clearCheckoutAttempt();
+      clearAffiliateRef();
 
       const action = order.paymentAction;
       if (action?.redirectUrl) {

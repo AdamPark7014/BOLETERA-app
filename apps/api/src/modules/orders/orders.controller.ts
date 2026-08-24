@@ -15,6 +15,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SalesChannel } from '@prisma/client';
 import type { Response } from 'express';
+import { parseSalesChannel } from '../../common/sales-channel';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { CreateOrderDto, type OrderRequester } from './orders.dto';
@@ -39,8 +40,7 @@ export class OrdersController {
     // `x-channel` es telemetría, no autorización: el servicio degrada a WEB si
     // no hay personal autenticado detrás. El cajero sale del token, así que
     // `x-cashier-id` ya no se lee, y `userId` tampoco viene del cuerpo (F1-01).
-    const requestedChannel =
-      channelHeader?.toUpperCase() === 'TAQUILLA' ? SalesChannel.TAQUILLA : SalesChannel.WEB;
+    const requestedChannel = parseSalesChannel(channelHeader) ?? SalesChannel.WEB;
     return this.orders.createOrder({
       ...body,
       userId: req.user?.sub,
@@ -79,6 +79,20 @@ export class OrdersController {
    * Cartera para la app movil. La clave que devuelve ES credencial de entrada:
    * mismo control que los QR, y nunca en logs ni en la URL.
    */
+  /**
+   * Cartera del usuario autenticado: sus boletos con clave de firma, tenga o no
+   * la orden. Es como el destinatario de una transferencia obtiene la suya.
+   *
+   * VA ANTES de ':publicId/wallet' a proposito: Nest resuelve por orden de
+   * declaracion y 'mine' casaria con :publicId.
+   */
+  @Get('mine/wallet')
+  @UseGuards(JwtAuthGuard)
+  myWallet(@Request() req: OptionalAuthRequest) {
+    // JwtAuthGuard garantiza que hay usuario; el tipo compartido es opcional.
+    return this.orders.getWalletForUser(req.user!.sub);
+  }
+
   @Get(':publicId/wallet')
   @UseGuards(OptionalJwtAuthGuard)
   wallet(

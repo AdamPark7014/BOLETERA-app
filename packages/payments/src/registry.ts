@@ -42,6 +42,15 @@ export const CHANNEL_PAYMENT_METHODS: Record<SalesChannelType, readonly string[]
   TAQUILLA: ['CARD', 'CASH'],
   ADMIN: ['CASH'],
   API: ['CARD'],
+  PROMOTER: ['CARD', 'CASH'],
+  COURTESY: ['CASH'],
+  CORPORATE: ['CARD', 'SPEI'],
+  MOBILE: ['CARD', 'SPEI', 'OXXO'],
+  PHONE: ['CARD', 'SPEI'],
+  INVITATION: ['CASH'],
+  AFFILIATE: ['CARD'],
+  VIP: ['CARD', 'CASH'],
+  RESALE: ['CARD', 'SPEI'],
 } as const;
 
 /** `true` si ese canal puede cobrar con ese método. */

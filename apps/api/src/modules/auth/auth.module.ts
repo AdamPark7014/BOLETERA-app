@@ -15,6 +15,8 @@ import { OrgAccessGuard } from './org-access.guard';
 import { EventOrgAccessGuard } from './event-org-access.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
+import { PermissionsGuard } from './permissions.guard';
+import { PermissionsService } from './permissions.service';
 import { StreamAuthGuard } from './stream-auth.guard';
 import { StreamTicketController } from './stream-ticket.controller';
 import { StreamTicketService } from './stream-ticket.service';
@@ -53,6 +55,8 @@ import { requireJwtSecret } from './jwt-secret';
     EventOrgAccessGuard,
     JwtAuthGuard,
     RolesGuard,
+    PermissionsService,
+    PermissionsGuard,
     StreamTicketService,
     StreamAuthGuard,
   ],
@@ -69,6 +73,8 @@ import { requireJwtSecret } from './jwt-secret';
     EventOrgAccessGuard,
     JwtAuthGuard,
     RolesGuard,
+    PermissionsService,
+    PermissionsGuard,
     StreamTicketService,
     StreamAuthGuard,
   ],

@@ -1,16 +1,23 @@
 import { Body, Controller, Get, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PermissionKey } from '@boletera/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RequirePermissions } from '../auth/permissions.decorator';
+import { PermissionsGuard } from '../auth/permissions.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { ReconciliationService } from '../reconciliation/reconciliation.service';
 import { AdminService } from './admin.service';
 
 @ApiTags('Admin')
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @ApiBearerAuth()
 export class AdminController {
-  constructor(private admin: AdminService) {}
+  constructor(
+    private admin: AdminService,
+    private reconciliation: ReconciliationService,
+  ) {}
 
   @Get('dashboard')
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'VENUE_MANAGER')
@@ -40,7 +47,8 @@ export class AdminController {
   }
 
   @Post('orders/:id/refund')
-  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'TAQUILLA_SUPERVISOR', 'FINANCE')
+  @RequirePermissions(PermissionKey.ORDERS_REFUND)
   refundOrder(
     @Request() req: { user: { organizationId?: string; email?: string; sub?: string } },
     @Param('id') id: string,
@@ -62,7 +70,7 @@ export class AdminController {
   }
 
   @Post('orders/:id/cancel')
-  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'TAQUILLA_SUPERVISOR')
   cancelOrder(
     @Request() req: { user: { organizationId?: string } },
     @Param('id') id: string,
@@ -138,5 +146,14 @@ export class AdminController {
   @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
   suggestLayout(@Body() body: { venueId: string; planDescription: string }) {
     return this.admin.suggestLayoutFromPlan(body.venueId, body.planDescription);
+  }
+
+  @Get('reconciliation')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Operational health checks scoped to organization' })
+  reconciliationHealth(@Request() req: { user: { organizationId?: string } }) {
+    return this.reconciliation.runHealthChecks({
+      organizationId: req.user.organizationId,
+    });
   }
 }

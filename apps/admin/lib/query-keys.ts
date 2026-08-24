@@ -95,6 +95,7 @@ export const queryKeys = {
   channels: {
     all: scope('channels'),
     health: (eventId: string) => scope('channels', 'health', eventId),
+    analytics: (eventId: string) => scope('channels', 'analytics', eventId),
   },
   /** Claves de composición CRM (sin GET /crm/*; cache de vistas derivadas). */
   crm: {

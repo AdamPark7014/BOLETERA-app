@@ -8,6 +8,17 @@
  * Si esto pasa, la app abre la puerta. Si falla, ningún asistente entra.
  */
 import { createHmac } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+import { PrismaClient } from '../../packages/database/generated/client/index.js';
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+for (const line of readFileSync(resolve(repoRoot, '.env'), 'utf8').split(/\r?\n/)) {
+  const m = /^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/.exec(line);
+  if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+}
+const prisma = new PrismaClient();
 
 const API = process.env.API_URL ?? 'http://127.0.0.1:4000/api/v1';
 const ORDEN = process.env.ORDEN ?? 'ORD-0001008';
@@ -133,6 +144,15 @@ async function main() {
     /Invalid or expired QR/i.test(String(vf?.message ?? '')),
     String(vf?.message ?? '').slice(0, 60),
   );
+
+  // El escaneo del paso 4 dejo el boleto en USED. Se restaura para que la
+  // prueba sea REPETIBLE: sin esto, la segunda ejecucion no encuentra ningun
+  // boleto utilizable y falla por agotamiento de datos, no por un defecto.
+  await prisma.ticket.update({
+    where: { id: boleto.id },
+    data: { status: 'SOLD', checkedInAt: null },
+  });
+  await prisma.ticketScan.deleteMany({ where: { ticketId: boleto.id } });
 
   resumen();
 }

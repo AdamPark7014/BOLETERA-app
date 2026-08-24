@@ -13,6 +13,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@boletera/shared": "workspace:*",
     "@boletera/ui": "workspace:*",
     "@boletera/venue-3d": "workspace:*",
     "@boletera/venue-engine": "workspace:*",

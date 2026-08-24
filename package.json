@@ -39,7 +39,8 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f postgres",
-    "check-color": "node scripts/check-color-tokens.mjs"
+    "check-color": "node scripts/check-color-tokens.mjs",
+    "homologar-color": "node scripts/homologar-color.mjs"
   },
   "workspaces": [
     "apps/*",

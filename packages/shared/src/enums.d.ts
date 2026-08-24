@@ -2,21 +2,41 @@ export declare enum SalesChannel {
     WEB = "WEB",
     TAQUILLA = "TAQUILLA",
     API = "API",
-    ADMIN = "ADMIN"
+    ADMIN = "ADMIN",
+    PROMOTER = "PROMOTER",
+    COURTESY = "COURTESY",
+    CORPORATE = "CORPORATE",
+    MOBILE = "MOBILE",
+    PHONE = "PHONE",
+    INVITATION = "INVITATION",
+    AFFILIATE = "AFFILIATE",
+    VIP = "VIP",
+    RESALE = "RESALE"
 }
 export declare enum UserRole {
     CUSTOMER = "CUSTOMER",
     PROMOTER = "PROMOTER",
     VENUE_MANAGER = "VENUE_MANAGER",
+    ARTIST = "ARTIST",
     ADMIN = "ADMIN",
     SUPER_ADMIN = "SUPER_ADMIN",
     TAQUILLA = "TAQUILLA",
-    SCANNER = "SCANNER"
+    TAQUILLA_SUPERVISOR = "TAQUILLA_SUPERVISOR",
+    TAQUILLA_ADMIN = "TAQUILLA_ADMIN",
+    SCANNER = "SCANNER",
+    FINANCE = "FINANCE",
+    MARKETING = "MARKETING",
+    SUPPORT = "SUPPORT",
+    AUDITOR = "AUDITOR",
+    AFFILIATE = "AFFILIATE"
 }
 export declare enum TicketStatus {
     AVAILABLE = "AVAILABLE",
     HELD = "HELD",
     SOLD = "SOLD",
-    USED = "USED"
+    USED = "USED",
+    CANCELLED = "CANCELLED",
+    REFUNDED = "REFUNDED",
+    TRANSFERRED = "TRANSFERRED"
 }
 //# sourceMappingURL=enums.d.ts.map

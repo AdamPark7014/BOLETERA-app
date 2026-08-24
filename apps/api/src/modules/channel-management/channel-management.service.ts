@@ -1,13 +1,17 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import type { ChannelConfigDto, ApiPartnerDto, TaquillaLocationDto } from './channel.dto';
+import {
+  CHANNEL_CONFIG_KEYS,
+  type ChannelConfigDto,
+  type ChannelConfigKey,
+  type ApiPartnerDto,
+  type TaquillaLocationDto,
+} from './channel.dto';
+import { enabledChannelAllocationTotal } from './channel-validate';
 
-type ChannelInventoryBucket = { tickets?: number; sold?: number };
-type ChannelInventory = {
-  web?: ChannelInventoryBucket;
-  taquilla?: ChannelInventoryBucket;
-  api?: ChannelInventoryBucket;
-};
+type ChannelInventoryBucket = { tickets?: number; sold?: number; available?: number; allocated?: number };
+type ChannelInventory = Partial<Record<ChannelConfigKey, ChannelInventoryBucket>>;
 
 type ApiPartnerRecord = {
   id: string;
@@ -38,32 +42,30 @@ export class ChannelManagementService {
   // ==================== CHANNEL CONFIGURATION ====================
 
   async configureChannels(eventId: string, config: ChannelConfigDto) {
-    const totalAllocation =
-      (config.web?.allocation || 0) +
-      (config.taquilla?.allocation || 0) +
-      (config.api?.allocation || 0) +
-      (config.phone?.allocation || 0);
-
+    const totalAllocation = enabledChannelAllocationTotal(config);
     if (totalAllocation !== 100) {
       throw new BadRequestException(`Channel allocation must equal 100%, got ${totalAllocation}%`);
     }
 
     const existing = await this.prisma.event.findUnique({ where: { id: eventId } });
     const prev = this.asMetadataObject(existing?.metadata);
+    const prevChannels = this.asMetadataObject(prev.channels);
+
+    const channels: Record<string, unknown> = { ...prevChannels };
+    for (const key of CHANNEL_CONFIG_KEYS) {
+      if (config[key] !== undefined) {
+        channels[key] = config[key];
+      }
+    }
 
     const event = await this.prisma.event.update({
       where: { id: eventId },
       data: {
         metadata: {
           ...prev,
-          channels: {
-            web: config.web,
-            taquilla: config.taquilla,
-            api: config.api,
-            phone: config.phone,
-          },
+          channels,
           channelConfiguredAt: new Date().toISOString(),
-        },
+        } as Prisma.InputJsonValue,
       },
     });
 
@@ -79,44 +81,29 @@ export class ChannelManagementService {
     });
     if (!event) throw new BadRequestException('Event not found');
 
-    const channels = (event.metadata as Record<string, unknown>)?.channels as Record<
-      string,
-      { allocation?: number }
-    > ?? {};
+    const channels = this.asMetadataObject(
+      this.asMetadataObject(event.metadata).channels,
+    ) as Record<string, { allocation?: number; enabled?: boolean }>;
 
-    const allocation = {
-      web: {
-        tickets: Math.floor(totalTickets * ((channels.web?.allocation || 0) / 100)),
-        available: Math.floor(totalTickets * ((channels.web?.allocation || 0) / 100)),
-        allocated: 0,
-        sold: 0
-      },
-      taquilla: {
-        tickets: Math.floor(totalTickets * ((channels.taquilla?.allocation || 0) / 100)),
-        available: Math.floor(totalTickets * ((channels.taquilla?.allocation || 0) / 100)),
-        allocated: 0,
-        sold: 0
-      },
-      api: {
-        tickets: Math.floor(totalTickets * ((channels.api?.allocation || 0) / 100)),
-        available: Math.floor(totalTickets * ((channels.api?.allocation || 0) / 100)),
-        allocated: 0,
-        sold: 0
-      },
-      phone: {
-        tickets: Math.floor(totalTickets * ((channels.phone?.allocation || 0) / 100)),
-        available: Math.floor(totalTickets * ((channels.phone?.allocation || 0) / 100)),
-        allocated: 0,
-        sold: 0
-      }
-    };
+    const allocation: ChannelInventory = {};
+    for (const key of CHANNEL_CONFIG_KEYS) {
+      const pct = channels[key]?.enabled === false ? 0 : (channels[key]?.allocation ?? 0);
+      const tickets = Math.floor(totalTickets * (pct / 100));
+      allocation[key] = { tickets, available: tickets, allocated: 0, sold: 0 };
+    }
 
-    // Handle rounding remainder
-    const allocated = Object.values(allocation).reduce((sum, ch) => sum + ch.tickets, 0);
+    // Handle rounding remainder — assign to web, then taquilla, then first enabled channel.
+    const allocated = Object.values(allocation).reduce((sum, ch) => sum + (ch?.tickets ?? 0), 0);
     const remainder = totalTickets - allocated;
     if (remainder > 0) {
-      allocation.web.tickets += remainder;
-      allocation.web.available += remainder;
+      const sink =
+        (channels.web?.enabled !== false ? allocation.web : undefined) ??
+        (channels.taquilla?.enabled !== false ? allocation.taquilla : undefined) ??
+        Object.values(allocation).find((bucket) => (bucket?.tickets ?? 0) > 0);
+      if (sink) {
+        sink.tickets = (sink.tickets ?? 0) + remainder;
+        sink.available = (sink.available ?? 0) + remainder;
+      }
     }
 
     const prev = (event.metadata as Record<string, unknown>) ?? {};
@@ -153,18 +140,23 @@ export class ChannelManagementService {
       }),
     ]);
 
-    const channelStats: Record<string, { total: number; sold: number; held: number; orders: number; revenue: number }> = {
-      WEB: { total: 0, sold: 0, held: 0, orders: 0, revenue: 0 },
-      TAQUILLA: { total: 0, sold: 0, held: 0, orders: 0, revenue: 0 },
-      API: { total: 0, sold: 0, held: 0, orders: 0, revenue: 0 },
-      ADMIN: { total: 0, sold: 0, held: 0, orders: 0, revenue: 0 },
-    };
+    const channelStats: Record<
+      string,
+      { total: number; sold: number; held: number; orders: number; revenue: number }
+    > = {};
+    for (const key of CHANNEL_CONFIG_KEYS) {
+      channelStats[key.toUpperCase()] = { total: 0, sold: 0, held: 0, orders: 0, revenue: 0 };
+    }
 
     const soldCount = tickets.find((t) => t.status === 'SOLD')?._count ?? 0;
     const availCount = tickets.find((t) => t.status === 'AVAILABLE')?._count ?? 0;
 
     orders.forEach((o) => {
-      const ch = channelStats[o.channel] ?? channelStats.WEB;
+      const channelKey = (o.channel ?? 'WEB').toUpperCase();
+      if (!channelStats[channelKey]) {
+        channelStats[channelKey] = { total: 0, sold: 0, held: 0, orders: 0, revenue: 0 };
+      }
+      const ch = channelStats[channelKey];
       ch.orders = o._count;
       ch.revenue = Number(o._sum.totalAmount ?? 0);
       ch.sold = o._count;
@@ -173,28 +165,34 @@ export class ChannelManagementService {
     channelStats.WEB.total = soldCount + availCount;
     channelStats.WEB.held = holds;
 
-    const health = {
-      web: {
-        status: 'healthy',
-        responseTimeMs: Math.round(Math.random() * 100 + 50),
-        errorRate: 0.001,
-        ...channelStats.WEB,
-      },
-      taquilla: {
-        status: 'healthy',
-        syncLagSec: Math.round(Math.random() * 5 + 1),
-        activeTerminals: await this.prisma.posTerminal.count({ where: { status: 'READY' } }),
-        errorRate: 0.002,
-        ...channelStats.TAQUILLA,
-      },
-      api: {
-        status: 'healthy',
-        activePartners: ((event?.metadata as Record<string, unknown>)?.apiPartners as unknown[])?.length ?? 0,
-        rateLimitUsage: Math.round(Math.random() * 40),
-        errorRate: 0.001,
-        ...channelStats.API,
-      },
-    };
+    const metadata = this.asMetadataObject(event?.metadata);
+    const channelConfig = this.asMetadataObject(metadata.channels);
+    const readyTerminals = await this.prisma.posTerminal.count({ where: { status: 'READY' } });
+    const activePartners = this.readApiPartners(event?.metadata).filter((p) => p.active).length;
+
+    const health: Record<string, Record<string, unknown>> = {};
+    for (const key of CHANNEL_CONFIG_KEYS) {
+      const upper = key.toUpperCase();
+      const stats = channelStats[upper] ?? { total: 0, sold: 0, held: 0, orders: 0, revenue: 0 };
+      const configured = channelConfig[key] as { enabled?: boolean } | undefined;
+      const enabled = configured?.enabled !== false;
+      const hasOrders = stats.orders > 0;
+
+      health[key] = {
+        status: !enabled ? 'disabled' : hasOrders || key === 'web' ? 'healthy' : 'unknown',
+        orders: stats.orders,
+        revenue: stats.revenue,
+        sold: stats.sold,
+        held: key === 'web' ? stats.held : 0,
+        total: stats.total,
+        errorRate: enabled && hasOrders ? 0.001 + Math.random() * 0.004 : 0,
+        responseTimeMs: key === 'web' || key === 'mobile' ? Math.round(Math.random() * 100 + 50) : undefined,
+        syncLagSec: key === 'taquilla' ? Math.round(Math.random() * 5 + 1) : undefined,
+        activeTerminals: key === 'taquilla' ? readyTerminals : undefined,
+        activePartners: key === 'api' ? activePartners : undefined,
+        rateLimitUsage: key === 'api' ? Math.round(Math.random() * 40) : undefined,
+      };
+    }
 
     return health;
   }
@@ -212,18 +210,17 @@ export class ChannelManagementService {
       (inventory.web?.sold || 0) / (inventory.web?.tickets || 1);
 
     // If web sales are slow, reallocate some inventory
-    if (occupancy < 0.3) {
+    if (occupancy < 0.3 && inventory.web && inventory.taquilla) {
       this.logger.log(`Reallocating inventory: web occupancy is ${occupancy * 100}%`);
-      // Move some tickets from web to taquilla
-      inventory.web.tickets -= 50;
-      inventory.taquilla.tickets += 50;
+      inventory.web.tickets = (inventory.web.tickets ?? 0) - 50;
+      inventory.taquilla.tickets = (inventory.taquilla.tickets ?? 0) + 50;
     }
 
     // If web sales are fast, move more to web
-    if (occupancy > 0.8) {
+    if (occupancy > 0.8 && inventory.web && inventory.taquilla) {
       this.logger.log(`High web occupancy: ${occupancy * 100}%`);
-      inventory.taquilla.tickets -= 50;
-      inventory.web.tickets += 50;
+      inventory.taquilla.tickets = (inventory.taquilla.tickets ?? 0) - 50;
+      inventory.web.tickets = (inventory.web.tickets ?? 0) + 50;
     }
 
     await this.prisma.event.update({

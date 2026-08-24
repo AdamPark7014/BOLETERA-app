@@ -24,6 +24,7 @@ export { ReportingModule } from './reporting-service/reporting.module';
 export { CampaignExecutionModule } from './campaign-execution/campaign-execution.module';
 export { VenueLayoutModule } from './venue-layout/venue-layout.module';
 export { OrganizationModule } from './organization/organization.module';
+export { PlatformSuperModule } from './platform-super/platform-super.module';
 export { WaitlistModule } from './waitlist/waitlist.module';
 export { TicketTransferModule } from './ticket-transfer/ticket-transfer.module';
 export { PartnersModule } from './partners/partners.module';

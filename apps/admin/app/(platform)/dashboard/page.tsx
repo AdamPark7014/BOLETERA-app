@@ -7,15 +7,28 @@ import { getPlatformOverview, type PlatformOverview } from '@/lib/platform-api';
 import { useSession } from '@/components/Session/SessionProvider';
 import { RealtimeDashboardPanel } from '@/components/RealtimeDashboardPanel';
 import type { Capability } from '@/lib/permissions';
+import { channelLabel } from '../orders/_lib/format';
 import styles from './dashboard.module.scss';
 
-const channelMeta: Record<string, { color: string; label: string }> = {
-  WEB: { color: 'var(--bl-gray-600)', label: 'Web' },
-  TAQUILLA: { color: 'var(--bl-gray-900)', label: 'Taquilla POS' },
-  API: { color: 'var(--bl-gray-500)', label: 'API' },
-  ADMIN: { color: 'var(--bl-gray-400)', label: 'Admin' },
-  RESALE: { color: 'var(--bl-gray-700)', label: 'Reventa' },
+const CHANNEL_COLORS: Record<string, string> = {
+  WEB: 'var(--bl-gray-600)',
+  MOBILE: 'var(--bl-gray-700)',
+  TAQUILLA: 'var(--bl-gray-900)',
+  API: 'var(--bl-gray-500)',
+  ADMIN: 'var(--bl-gray-400)',
+  PROMOTER: '#525252',
+  COURTESY: '#737373',
+  CORPORATE: '#404040',
+  PHONE: '#a3a3a3',
+  INVITATION: '#d4d4d4',
+  AFFILIATE: '#262626',
+  VIP: '#171717',
+  RESALE: 'var(--bl-gray-700)',
 };
+
+function channelColor(key: string): string {
+  return CHANNEL_COLORS[key] ?? 'var(--bl-gray-500)';
+}
 
 function fmtCurrency(n: number | undefined) {
   if (typeof n !== 'number') return '—';
@@ -131,6 +144,11 @@ export default function DashboardPage() {
 
   const totalChannelRevenue =
     data?.channelBreakdown?.reduce((s, c) => s + c.revenue, 0) ?? 0;
+
+  const channelBreakdown = useMemo(
+    () => [...(data?.channelBreakdown ?? [])].sort((a, b) => b.revenue - a.revenue),
+    [data?.channelBreakdown],
+  );
 
   const visibleActions = useMemo(() => quickActions.filter((q) => can(q.cap)), [can]);
 
@@ -334,33 +352,34 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {data?.channelBreakdown?.length ? (
+          {channelBreakdown.length ? (
             <>
               <div className={styles.channelBar}>
-                {data.channelBreakdown.map((c) => {
+                {channelBreakdown.map((c) => {
                   const pct = totalChannelRevenue
                     ? Math.round((c.revenue / totalChannelRevenue) * 100)
                     : 0;
-                  const meta = channelMeta[c.channel] ?? channelMeta.WEB;
                   return (
                     <span
                       key={c.channel}
-                      style={{ width: `${pct}%`, background: meta.color }}
-                      title={`${meta.label} ${pct}%`}
+                      style={{ width: `${pct}%`, background: channelColor(c.channel) }}
+                      title={`${channelLabel(c.channel)} ${pct}%`}
                     />
                   );
                 })}
               </div>
               <ul className={styles.channelList}>
-                {data.channelBreakdown.map((c) => {
+                {channelBreakdown.map((c) => {
                   const pct = totalChannelRevenue
                     ? Math.round((c.revenue / totalChannelRevenue) * 100)
                     : 0;
-                  const meta = channelMeta[c.channel] ?? channelMeta.WEB;
                   return (
                     <li key={c.channel}>
-                      <span className={styles.channelDot} style={{ background: meta.color }} />
-                      <span className={styles.channelName}>{meta.label}</span>
+                      <span
+                        className={styles.channelDot}
+                        style={{ background: channelColor(c.channel) }}
+                      />
+                      <span className={styles.channelName}>{channelLabel(c.channel)}</span>
                       <span className={styles.channelOrders}>{c.orders} órdenes</span>
                       <strong className={styles.channelRev}>{fmtCurrency(c.revenue)}</strong>
                       <span className={styles.channelPct}>{pct}%</span>
@@ -427,7 +446,7 @@ export default function DashboardPage() {
                   className={styles.actTag}
                   style={{ color: 'var(--bl-gray-700)', background: 'var(--bl-gray-100)', borderColor: 'var(--bl-gray-200)' }}
                 >
-                  {o.channel || 'WEB'}
+                  {channelLabel(o.channel || 'WEB')}
                 </span>
                 <span className={styles.actText}>
                   Orden {o.publicId} · {o.eventTitle || 'Evento'} ·{' '}

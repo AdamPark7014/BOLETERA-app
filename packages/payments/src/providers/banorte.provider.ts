@@ -26,13 +26,24 @@ export const banorteIntentIdempotency = new IdempotencyGuard<PaymentIntentResult
 
 export class BanorteProvider implements PaymentProvider {
   readonly id = 'banorte' as const;
-  readonly supportedChannels: SalesChannelType[] = ['WEB', 'TAQUILLA', 'API'];
+  readonly supportedChannels: SalesChannelType[] = [
+    'WEB',
+    'TAQUILLA',
+    'API',
+    'MOBILE',
+    'CORPORATE',
+    'PHONE',
+    'AFFILIATE',
+    'VIP',
+    'RESALE',
+    'PROMOTER',
+  ];
 
-  /** Web card/SPEI/OXXO se confirman vía Payworks o IPN; taquilla cobra al momento. */
+  /** Web/mobile card/SPEI/OXXO se confirman vía Payworks o IPN; taquilla cobra al momento. */
   requiresAsyncCapture(ctx: PaymentContext): boolean {
     const method = ctx.paymentMethod ?? 'CARD';
     if (method === 'CASH') return false;
-    return ctx.channel === 'WEB';
+    return ctx.channel === 'WEB' || ctx.channel === 'MOBILE';
   }
 
   async createIntent(ctx: PaymentContext): Promise<PaymentIntentResult> {

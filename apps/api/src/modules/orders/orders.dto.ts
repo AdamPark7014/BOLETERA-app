@@ -81,6 +81,12 @@ export class CreateOrderDto {
   @MaxLength(64)
   promotionCode?: string;
 
+  /** Código de afiliado/promotor desde `?ref=` en el enlace de venta. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  affiliateRef?: string;
+
   /** Motivo de la cortesía; solo se usa si el actor está autorizado a emitirla. */
   @IsOptional()
   @IsString()

@@ -10,6 +10,7 @@ import {
 import type { MessageEvent } from '@nestjs/common';
 import { SaleWindowService } from '../event-management/sale-window.service';
 import { HoldStatus, Prisma, SalesChannel, TicketStatus } from '@prisma/client';
+import { isWebLikeChannel } from '../../common/sales-channel';
 import { randomUUID } from 'crypto';
 import { Observable, concatMap, filter, finalize, interval, map, shareReplay } from 'rxjs';
 import { RedisService } from '../../common/redis.service';
@@ -109,6 +110,15 @@ const seatLockKey = (eventId: string, seatId: string) => `hold:${eventId}:${seat
 const holdMetaKey = (holdId: string) => `hold:meta:${holdId}`;
 const sessionBudgetKey = (eventId: string, sessionId: string) =>
   `hold:budget:${eventId}:${sessionId}`;
+const holdIdempotencyKey = (eventId: string, key: string) => `hold:idemp:${eventId}:${key}`;
+
+type HoldCreateResult = { holds: Awaited<ReturnType<PrismaService['seatHold']['create']>>[]; expiresAt: Date };
+
+type StoredHoldIdempotency = {
+  fingerprint: string;
+  holdIds: string[];
+  expiresAt: string;
+};
 
 @Injectable()
 export class InventoryService {
@@ -129,6 +139,9 @@ export class InventoryService {
     { at: number; value: Promise<AvailabilitySnapshot> }
   >();
 
+  /** Dedupe concurrente de reintentos con la misma Idempotency-Key (por proceso). */
+  private readonly holdIdempotencyInflight = new Map<string, Promise<HoldCreateResult>>();
+
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
@@ -138,7 +151,7 @@ export class InventoryService {
   ) {}
 
   private holdTtl(channel: SalesChannel) {
-    return channel === SalesChannel.TAQUILLA ? HOLD_TTL_TAQUILLA_SECONDS : HOLD_TTL_WEB_SECONDS;
+    return isWebLikeChannel(channel) ? HOLD_TTL_WEB_SECONDS : HOLD_TTL_TAQUILLA_SECONDS;
   }
 
   /**
@@ -394,9 +407,44 @@ export class InventoryService {
     sessionId?: string;
     channel?: SalesChannel;
     cashierId?: string;
+    idempotencyKey?: string;
     /** Llamadas internas ya autorizadas (POS, layout) pueden saltar el tope por sesión. */
     skipSessionLimit?: boolean;
-  }) {
+  }): Promise<HoldCreateResult> {
+    const idempotencyKey = dto.idempotencyKey?.trim() || undefined;
+    const idempInflightKey = idempotencyKey ? `${dto.eventId}:${idempotencyKey}` : undefined;
+
+    if (idempInflightKey) {
+      const inflight = this.holdIdempotencyInflight.get(idempInflightKey);
+      if (inflight) return inflight;
+
+      const replay = await this.replayIdempotentHold(dto, idempotencyKey);
+      if (replay) return replay;
+
+      const promise = this.createHoldCore(dto, idempotencyKey).finally(() => {
+        this.holdIdempotencyInflight.delete(idempInflightKey);
+      });
+      this.holdIdempotencyInflight.set(idempInflightKey, promise);
+      return promise;
+    }
+
+    return this.createHoldCore(dto, undefined);
+  }
+
+  private async createHoldCore(
+    dto: {
+      eventId: string;
+      seatIds?: string[];
+      offerId?: string;
+      quantity?: number;
+      userId?: string;
+      sessionId?: string;
+      channel?: SalesChannel;
+      cashierId?: string;
+      skipSessionLimit?: boolean;
+    },
+    idempotencyKey: string | undefined,
+  ): Promise<HoldCreateResult> {
     const channel = dto.channel ?? SalesChannel.WEB;
     // Duplicar un asiento en la petición se auto-bloquearía contra el índice único.
     const seatIds = dto.seatIds?.length ? [...new Set(dto.seatIds)] : undefined;
@@ -405,8 +453,9 @@ export class InventoryService {
     if (!seatIds?.length && !(dto.offerId && dto.quantity)) {
       throw new BadRequestException('seatIds or offerId+quantity required');
     }
-    const maxPerHold =
-      channel === SalesChannel.WEB ? MAX_TICKETS_PER_HOLD_WEB : MAX_TICKETS_PER_HOLD_STAFF;
+    const maxPerHold = isWebLikeChannel(channel)
+      ? MAX_TICKETS_PER_HOLD_WEB
+      : MAX_TICKETS_PER_HOLD_STAFF;
     if (quantity < 1 || quantity > maxPerHold) {
       throw new BadRequestException(`quantity must be between 1 and ${maxPerHold}`);
     }
@@ -438,10 +487,13 @@ export class InventoryService {
 
     try {
       await this.quotas.assertAvailable(dto.eventId, channel, quantity);
-      if (seatIds?.length) {
-        return await this.createReservedSeatHold(dto, seatIds, channel, ttl, expiresAt);
+      const result = seatIds?.length
+        ? await this.createReservedSeatHold(dto, seatIds, channel, ttl, expiresAt)
+        : await this.createGeneralAdmissionHold(dto, dto.offerId!, quantity, channel, ttl, expiresAt);
+      if (idempotencyKey) {
+        await this.persistIdempotentHold(dto, idempotencyKey, result, ttl);
       }
-      return await this.createGeneralAdmissionHold(dto, dto.offerId, quantity, channel, ttl, expiresAt);
+      return result;
     } catch (error) {
       // Cupo apartado que nunca llegó a ser hold: la reconciliación no lo vería
       // en la base, así que aquí sí hay que compensar a mano.
@@ -513,6 +565,7 @@ export class InventoryService {
                     AND "seatId" = ${seatId}
                     AND status = 'AVAILABLE'::"TicketStatus"
                   ORDER BY id
+                    FOR UPDATE SKIP LOCKED
                   LIMIT 1
                )
                  AND status = 'AVAILABLE'::"TicketStatus"
@@ -661,6 +714,7 @@ export class InventoryService {
     cashierId?: string;
     contiguous?: boolean;
     skipSessionLimit?: boolean;
+    idempotencyKey?: string;
   }) {
     const quantity = Math.min(Math.max(dto.quantity || 1, 1), 12);
     const offer = await this.prisma.offer.findFirst({
@@ -697,6 +751,7 @@ export class InventoryService {
         channel: dto.channel,
         cashierId: dto.cashierId,
         skipSessionLimit: dto.skipSessionLimit,
+        idempotencyKey: dto.idempotencyKey,
       });
       return {
         ...result,
@@ -720,6 +775,7 @@ export class InventoryService {
       channel: dto.channel,
       cashierId: dto.cashierId,
       skipSessionLimit: dto.skipSessionLimit,
+      idempotencyKey: dto.idempotencyKey,
     });
     return {
       ...result,
@@ -815,7 +871,7 @@ export class InventoryService {
     }
 
     await this.redis.del(holdMetaKey(holdId));
-    if (hold.sessionId && hold.channel === SalesChannel.WEB) {
+    if (hold.sessionId && isWebLikeChannel(hold.channel)) {
       await this.redis.decrement(sessionBudgetKey(hold.eventId, hold.sessionId), hold.quantity);
     }
 
@@ -929,7 +985,7 @@ export class InventoryService {
     channel: SalesChannel,
     quantity: number,
   ) {
-    if (dto.skipSessionLimit || channel !== SalesChannel.WEB || !dto.sessionId) return;
+    if (dto.skipSessionLimit || !isWebLikeChannel(channel) || !dto.sessionId) return;
     const key = sessionBudgetKey(dto.eventId, dto.sessionId);
     const total = await this.redis.incrementWithTtl(key, quantity, this.holdTtl(channel));
     if (total === null) return; // Redis caído: el límite es anti-abuso, no invariante
@@ -947,7 +1003,75 @@ export class InventoryService {
     channel: SalesChannel,
     quantity: number,
   ) {
-    if (dto.skipSessionLimit || channel !== SalesChannel.WEB || !dto.sessionId) return;
+    if (dto.skipSessionLimit || !isWebLikeChannel(channel) || !dto.sessionId) return;
     await this.redis.decrement(sessionBudgetKey(dto.eventId, dto.sessionId), quantity);
+  }
+
+  /** Huella estable del cuerpo de la reserva para detectar reutilización indebida de la clave. */
+  private holdRequestFingerprint(dto: {
+    seatIds?: string[];
+    offerId?: string;
+    quantity?: number;
+  }) {
+    const seatIds = dto.seatIds?.length ? [...new Set(dto.seatIds)].sort() : [];
+    return JSON.stringify({
+      seatIds,
+      offerId: dto.offerId ?? null,
+      quantity: dto.quantity ?? null,
+    });
+  }
+
+  /** Reintento con la misma Idempotency-Key: devuelve los holds vivos ya creados. */
+  private async replayIdempotentHold(
+    dto: {
+      eventId: string;
+      seatIds?: string[];
+      offerId?: string;
+      quantity?: number;
+    },
+    idempotencyKey: string,
+  ): Promise<HoldCreateResult | null> {
+    const cached = await this.redis.getJson<StoredHoldIdempotency>(
+      holdIdempotencyKey(dto.eventId, idempotencyKey),
+    );
+    if (!cached) return null;
+
+    const fingerprint = this.holdRequestFingerprint(dto);
+    if (cached.fingerprint !== fingerprint) {
+      throw new ConflictException(
+        'Idempotency-Key reused with a different hold request',
+      );
+    }
+
+    const now = new Date();
+    const holds = await this.prisma.seatHold.findMany({
+      where: {
+        id: { in: cached.holdIds },
+        eventId: dto.eventId,
+        status: HoldStatus.ACTIVE,
+        expiresAt: { gt: now },
+      },
+    });
+    if (holds.length !== cached.holdIds.length) return null;
+
+    return { holds, expiresAt: new Date(cached.expiresAt) };
+  }
+
+  private async persistIdempotentHold(
+    dto: { eventId: string; seatIds?: string[]; offerId?: string; quantity?: number },
+    idempotencyKey: string,
+    result: HoldCreateResult,
+    ttlSeconds: number,
+  ) {
+    const payload: StoredHoldIdempotency = {
+      fingerprint: this.holdRequestFingerprint(dto),
+      holdIds: result.holds.map((h) => h.id),
+      expiresAt: result.expiresAt.toISOString(),
+    };
+    await this.redis.setJson(
+      holdIdempotencyKey(dto.eventId, idempotencyKey),
+      payload,
+      ttlSeconds + HOLD_META_TTL_MARGIN_SECONDS,
+    );
   }
 }

@@ -27,6 +27,7 @@ import {
   isSettlementMismatch,
   toNumber,
 } from '../orders/_ui/format';
+import { channelLabel } from '../orders/_lib/format';
 
 type Period = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 
@@ -145,16 +146,35 @@ export default function ReportsPage() {
                     <th scope="col" className={styles.numeric}>
                       Total esperado
                     </th>
+                    <th scope="col" className={styles.numeric}>
+                      Participación
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.channel}>
-                      <th scope="row">{r.channel}</th>
-                      <td className={styles.numeric}>{formatNumber(r._count)}</td>
-                      <td className={styles.numeric}>{formatMoney(r._sum.totalAmount, 'MXN')}</td>
-                    </tr>
-                  ))}
+                  {[...rows]
+                    .sort(
+                      (a, b) =>
+                        Number(b._sum.totalAmount ?? 0) - Number(a._sum.totalAmount ?? 0),
+                    )
+                    .map((r) => {
+                      const total = rows.reduce(
+                        (sum, row) => sum + Number(row._sum.totalAmount ?? 0),
+                        0,
+                      );
+                      const amount = Number(r._sum.totalAmount ?? 0);
+                      const share = total > 0 ? (amount / total) * 100 : 0;
+                      return (
+                        <tr key={r.channel}>
+                          <th scope="row">{channelLabel(r.channel)}</th>
+                          <td className={styles.numeric}>{formatNumber(r._count)}</td>
+                          <td className={styles.numeric}>
+                            {formatMoney(r._sum.totalAmount, 'MXN')}
+                          </td>
+                          <td className={styles.numeric}>{share.toFixed(1)} %</td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             )

@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Nexara",
+    "slug": "nexara-app",
+    "version": "0.1.0",
+    "scheme": "nexara",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.boletera.nexara",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Nexara usa la cámara para escanear boletos QR en acceso."
+      }
+    },
+    "android": {
+      "package": "com.boletera.nexara",
+      "permissions": ["android.permission.CAMERA"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Nexara usa la cámara para escanear boletos QR en acceso."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

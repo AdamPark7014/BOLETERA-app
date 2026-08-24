@@ -1,6 +1,7 @@
 import type { BadgeTone } from '@boletera/ui';
-import type { MetricsGranularity } from '@boletera/shared';
+import type { MetricsGranularity, SalesChannel } from '@boletera/shared';
 import type { ChannelConfiguration } from '@/lib/queries';
+import { CHANNEL_LABELS as SALES_CHANNEL_LABELS } from '../orders/_lib/format';
 
 // ---------------------------------------------------------------- rango
 
@@ -135,9 +136,37 @@ function readStringArray(source: Record<string, unknown>, key: string): string[]
 
 // ------------------------------------------------------------- canales
 
-export type ChannelKey = 'web' | 'taquilla' | 'api' | 'resale' | 'phone';
+export const CHANNEL_ORDER = [
+  'web',
+  'taquilla',
+  'api',
+  'admin',
+  'promoter',
+  'courtesy',
+  'corporate',
+  'mobile',
+  'phone',
+  'invitation',
+  'affiliate',
+  'vip',
+  'resale',
+] as const;
 
-export type ChannelHealthStatus = 'healthy' | 'degraded' | 'down' | 'unknown';
+export type ChannelKey = (typeof CHANNEL_ORDER)[number];
+
+/** Channels that accept a free-text responsible party in the admin UI. */
+export const RESPONSIBLE_PARTY_CHANNELS: readonly ChannelKey[] = [
+  'taquilla',
+  'api',
+  'admin',
+  'promoter',
+  'corporate',
+  'affiliate',
+  'vip',
+  'invitation',
+];
+
+export type ChannelHealthStatus = 'healthy' | 'degraded' | 'down' | 'disabled' | 'unknown';
 
 export type ChannelHealthCard = {
   key: ChannelKey;
@@ -155,36 +184,19 @@ export type ChannelHealthCard = {
   sold: number | null;
 };
 
-const CHANNEL_ORDER: readonly ChannelKey[] = ['web', 'taquilla', 'api', 'resale', 'phone'];
-
-const CHANNEL_LABELS: Record<ChannelKey, string> = {
-  web: 'Web',
-  taquilla: 'POS / Taquilla',
-  api: 'API partners',
-  resale: 'Reventa',
-  phone: 'Teléfono',
-};
-
 export function channelLabel(key: string): string {
-  const normalized = key.toLowerCase() as ChannelKey;
-  if (normalized in CHANNEL_LABELS) return CHANNEL_LABELS[normalized];
-  const map: Record<string, string> = {
-    WEB: 'Web',
-    TAQUILLA: 'POS / Taquilla',
-    API: 'API partners',
-    RESALE: 'Reventa',
-    ADMIN: 'Admin',
-    PHONE: 'Teléfono',
-  };
-  return map[key] ?? key;
+  const upper = key.toUpperCase() as SalesChannel;
+  if (upper in SALES_CHANNEL_LABELS) return SALES_CHANNEL_LABELS[upper];
+  return key;
 }
 
 function toHealthStatus(value: string | null): ChannelHealthStatus {
   const lower = (value ?? '').toLowerCase();
+  if (lower === 'disabled') return 'disabled';
   if (lower === 'healthy' || lower === 'ok' || lower === 'up') return 'healthy';
   if (lower === 'degraded' || lower === 'warn' || lower === 'warning') return 'degraded';
   if (lower === 'down' || lower === 'error' || lower === 'critical') return 'down';
-  return value ? 'unknown' : 'unknown';
+  return 'unknown';
 }
 
 export function healthStatusMeta(status: ChannelHealthStatus): {
@@ -198,6 +210,8 @@ export function healthStatusMeta(status: ChannelHealthStatus): {
       return { label: 'Degradado', tone: 'warning' };
     case 'down':
       return { label: 'Caído', tone: 'danger' };
+    case 'disabled':
+      return { label: 'Desactivado', tone: 'neutral' };
     default:
       return { label: 'Sin datos', tone: 'neutral' };
   }
@@ -207,7 +221,7 @@ function parseHealthCard(key: ChannelKey, raw: unknown): ChannelHealthCard {
   const record = asRecord(raw);
   return {
     key,
-    label: CHANNEL_LABELS[key],
+    label: channelLabel(key),
     status: toHealthStatus(readString(record, 'status')),
     orders: readNumber(record, 'orders') ?? 0,
     revenue: readNumber(record, 'revenue') ?? 0,
@@ -228,25 +242,26 @@ export function parseChannelHealth(value: unknown): ChannelHealthCard[] {
   const cards: ChannelHealthCard[] = [];
 
   for (const key of CHANNEL_ORDER) {
-    if (key === 'resale' && record.resale === undefined && record.RESALE === undefined) {
-      // La reventa puede venir solo del mix de ingresos; se añade placeholder si hay señal.
+    const raw = record[key] ?? record[key.toUpperCase()];
+    if (raw === undefined) {
+      cards.push({
+        key,
+        label: channelLabel(key),
+        status: 'unknown',
+        orders: 0,
+        revenue: 0,
+        errorRate: null,
+        latencyMs: null,
+        syncLagSec: null,
+        activeTerminals: null,
+        activePartners: null,
+        rateLimitUsage: null,
+        held: null,
+        sold: null,
+      });
       continue;
     }
-    const raw = record[key] ?? record[key.toUpperCase()];
-    if (raw === undefined) continue;
     cards.push(parseHealthCard(key, raw));
-  }
-
-  // Incluye claves desconocidas (p. ej. ADMIN) sin romper el layout.
-  for (const [key, raw] of Object.entries(record)) {
-    const normalized = key.toLowerCase() as ChannelKey;
-    if (CHANNEL_ORDER.includes(normalized)) continue;
-    if (typeof raw !== 'object' || raw === null) continue;
-    cards.push({
-      ...parseHealthCard('web', raw),
-      key: normalized in CHANNEL_LABELS ? normalized : 'web',
-      label: channelLabel(key),
-    });
   }
 
   return cards;
@@ -288,69 +303,81 @@ export function summarizeHealth(cards: readonly ChannelHealthCard[]): HealthSumm
 
 // ------------------------------------------------------ configuración
 
-export type AllocationForm = {
-  web: number;
-  taquilla: number;
-  api: number;
-  phone: number;
-  webEnabled: boolean;
-  taquillaEnabled: boolean;
-  apiEnabled: boolean;
-  phoneEnabled: boolean;
-  taquillaLocations: string[];
+export type ChannelFormEntry = {
+  allocation: number;
+  enabled: boolean;
+  responsibleParty: string;
+  locations: string[];
 };
 
-export const DEFAULT_ALLOCATION: AllocationForm = {
-  web: 50,
-  taquilla: 35,
-  api: 15,
-  phone: 0,
-  webEnabled: true,
-  taquillaEnabled: true,
-  apiEnabled: true,
-  phoneEnabled: false,
-  taquillaLocations: [],
+export type AllocationForm = Record<ChannelKey, ChannelFormEntry>;
+
+const DEFAULT_CHANNEL_ENTRY: ChannelFormEntry = {
+  allocation: 0,
+  enabled: false,
+  responsibleParty: '',
+  locations: [],
 };
+
+export const DEFAULT_ALLOCATION: AllocationForm = CHANNEL_ORDER.reduce((acc, key) => {
+  acc[key] = { ...DEFAULT_CHANNEL_ENTRY };
+  return acc;
+}, {} as AllocationForm);
+
+DEFAULT_ALLOCATION.web = { allocation: 50, enabled: true, responsibleParty: '', locations: [] };
+DEFAULT_ALLOCATION.taquilla = { allocation: 35, enabled: true, responsibleParty: '', locations: [] };
+DEFAULT_ALLOCATION.api = { allocation: 15, enabled: true, responsibleParty: '', locations: [] };
+
+function parseChannelEntry(
+  raw: unknown,
+  fallback: ChannelFormEntry,
+): ChannelFormEntry {
+  const record = asRecord(raw);
+  return {
+    allocation: readNumber(record, 'allocation') ?? fallback.allocation,
+    enabled: readBoolean(record, 'enabled') ?? fallback.enabled,
+    responsibleParty: readString(record, 'responsibleParty') ?? fallback.responsibleParty,
+    locations: readStringArray(record, 'locations').length
+      ? readStringArray(record, 'locations')
+      : fallback.locations,
+  };
+}
 
 export function parseAllocationFromMetadata(
   metadata: Record<string, unknown> | undefined,
 ): AllocationForm {
   const channels = asRecord(metadata?.channels);
-  const web = asRecord(channels.web);
-  const taquilla = asRecord(channels.taquilla);
-  const api = asRecord(channels.api);
-  const phone = asRecord(channels.phone);
+  const form = {} as AllocationForm;
 
-  return {
-    web: readNumber(web, 'allocation') ?? DEFAULT_ALLOCATION.web,
-    taquilla: readNumber(taquilla, 'allocation') ?? DEFAULT_ALLOCATION.taquilla,
-    api: readNumber(api, 'allocation') ?? DEFAULT_ALLOCATION.api,
-    phone: readNumber(phone, 'allocation') ?? 0,
-    webEnabled: readBoolean(web, 'enabled') ?? true,
-    taquillaEnabled: readBoolean(taquilla, 'enabled') ?? true,
-    apiEnabled: readBoolean(api, 'enabled') ?? true,
-    phoneEnabled: readBoolean(phone, 'enabled') ?? false,
-    taquillaLocations: readStringArray(taquilla, 'locations'),
-  };
+  for (const key of CHANNEL_ORDER) {
+    const fallback = DEFAULT_ALLOCATION[key];
+    form[key] = parseChannelEntry(channels[key], fallback);
+  }
+
+  return form;
 }
 
 export function allocationTotal(form: AllocationForm): number {
-  return form.web + form.taquilla + form.api + (form.phoneEnabled ? form.phone : 0);
+  return CHANNEL_ORDER.reduce((sum, key) => {
+    const entry = form[key];
+    return entry.enabled ? sum + entry.allocation : sum;
+  }, 0);
 }
 
 export function toChannelConfiguration(form: AllocationForm): ChannelConfiguration {
-  return {
-    web: { enabled: form.webEnabled, allocation: form.web },
-    taquilla: {
-      enabled: form.taquillaEnabled,
-      allocation: form.taquilla,
-      locations: form.taquillaLocations,
-    },
-    api: { enabled: form.apiEnabled, allocation: form.api },
-    phone: form.phoneEnabled
-      ? { enabled: true, allocation: form.phone }
-      : { enabled: false, allocation: 0 },
-  };
+  const config: ChannelConfiguration = {};
+  for (const key of CHANNEL_ORDER) {
+    const entry = form[key];
+    config[key] = {
+      enabled: entry.enabled,
+      allocation: entry.enabled ? entry.allocation : 0,
+      ...(entry.responsibleParty.trim()
+        ? { responsibleParty: entry.responsibleParty.trim() }
+        : {}),
+      ...(key === 'taquilla' && entry.locations.length ? { locations: entry.locations } : {}),
+    };
+  }
+  return config;
 }
 
 export type AllocationIssue =
@@ -359,6 +386,14 @@ export type AllocationIssue =
   | null;
 
 export function validateAllocation(form: AllocationForm): AllocationIssue {
+  const enabledCount = CHANNEL_ORDER.filter((key) => form[key].enabled).length;
+  if (enabledCount === 0) {
+    return {
+      kind: 'disabled',
+      message: 'Debes dejar al menos un canal habilitado.',
+    };
+  }
+
   const total = allocationTotal(form);
   if (total !== 100) {
     return {
@@ -366,13 +401,31 @@ export function validateAllocation(form: AllocationForm): AllocationIssue {
       message: `La suma de canales habilitados debe ser 100 %. Ahora suma ${total} %.`,
     };
   }
-  if (!form.webEnabled && !form.taquillaEnabled && !form.apiEnabled && !form.phoneEnabled) {
-    return {
-      kind: 'disabled',
-      message: 'Debes dejar al menos un canal habilitado.',
-    };
-  }
+
   return null;
+}
+
+export function responsiblePartyLabel(key: ChannelKey): string {
+  switch (key) {
+    case 'taquilla':
+      return 'Ubicaciones / operador';
+    case 'api':
+      return 'Partner API';
+    case 'promoter':
+      return 'Promotor responsable';
+    case 'affiliate':
+      return 'Afiliado';
+    case 'corporate':
+      return 'Cuenta corporativa';
+    case 'admin':
+      return 'Operador admin';
+    case 'vip':
+      return 'Contacto VIP';
+    case 'invitation':
+      return 'Organizador invitaciones';
+    default:
+      return 'Responsable';
+  }
 }
 
 // ------------------------------------------------------ mix ingresos
@@ -519,12 +572,13 @@ export function buildChannelAlerts(
   }
 
   const webMix = mix.find((slice) => slice.id.toUpperCase() === 'WEB');
-  if (webMix && webMix.percent < 20 && allocation.web >= 50) {
+  const webAllocation = allocation.web?.allocation ?? 0;
+  if (webMix && webMix.percent < 20 && webAllocation >= 50) {
     list.push({
       id: 'web-underused',
       severity: 'info',
       title: 'Web tiene mucha asignación y poco ingreso',
-      explanation: `Asignaste ${allocation.web} % a web pero solo genera ${formatPercentPoints(
+      explanation: `Asignaste ${webAllocation} % a web pero solo genera ${formatPercentPoints(
         webMix.percent,
       )} del ingreso del periodo.`,
       suggestion: 'Considera mover cupo a POS o partners si el ritmo web no recupera.',

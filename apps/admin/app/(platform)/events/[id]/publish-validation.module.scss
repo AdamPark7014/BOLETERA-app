@@ -1,0 +1,132 @@
+.panel {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--bl-border, #e5e5e5);
+  border-radius: 12px;
+  background: var(--bl-elevated, #fff);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+
+  h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progressText {
+  font-size: 0.8125rem;
+  color: var(--bl-text-tertiary, #737373);
+  font-variant-numeric: tabular-nums;
+}
+
+.progressBar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bl-surface, #f5f5f5);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--bl-success, #16a34a),
+    color-mix(in srgb, var(--bl-success, #16a34a) 70%, var(--bl-warning, #ca8a04))
+  );
+  transition: width 0.25s ease;
+}
+
+.checklist {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.checkItem {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--bl-border, #e5e5e5);
+  border-radius: 8px;
+  background: var(--bl-surface, #fafafa);
+
+  &[data-status='blocker'] {
+    border-color: var(--bl-danger-border, #fecaca);
+    background: var(--bl-danger-subtle, #fef2f2);
+  }
+
+  &[data-status='warning'] {
+    border-color: var(--bl-warning-border, #fde68a);
+    background: var(--bl-warning-subtle, #fffbeb);
+  }
+}
+
+.checkMain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+
+  strong {
+    font-weight: 600;
+  }
+
+  span:last-child {
+    flex: 1 1 100%;
+    color: var(--bl-text-secondary, #525252);
+  }
+}
+
+.checkDetail {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--bl-text-tertiary, #737373);
+  line-height: 1.4;
+}
+
+.muted {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--bl-text-tertiary, #737373);
+}
+
+.error {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--bl-danger-text, #b91c1c);
+}
+
+.retryBtn {
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--bl-border-strong, #d4d4d4);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--bl-text-primary, #171717);
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

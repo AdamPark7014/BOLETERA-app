@@ -7,6 +7,7 @@ import { EventPosterArt } from '@/components/EventPosterArt';
 import { WaitlistSignup } from '@/components/WaitlistSignup';
 import { ZoneOfferButtons } from '@/components/ZoneOfferButtons';
 import { EventPurchaseClient } from './EventPurchaseClient';
+import { AffiliateRefCapture } from '@/components/AffiliateRefCapture';
 import { api } from '@/lib/api';
 import styles from './event.module.scss';
 
@@ -140,10 +141,10 @@ export default async function EventPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ zone?: string }>;
+  searchParams: Promise<{ zone?: string; ref?: string }>;
 }) {
   const { slug } = await params;
-  const { zone } = await searchParams;
+  const { zone, ref } = await searchParams;
 
   /*
    * El detalle y la cartelera para "también te puede interesar" no dependen uno
@@ -239,6 +240,7 @@ export default async function EventPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <SiteHeader theme="dark" />
+      <AffiliateRefCapture refCode={ref} eventId={event.id} />
       <main id="contenido" tabIndex={-1} className={styles.page}>
         <section className={styles.hero}>
           <div className={styles.heroMedia}>
