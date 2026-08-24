@@ -1,0 +1,22 @@
+// Estados de panel. Estos estilos vivían repetidos en la hoja de cada sección;
+// ahora viajan con el componente, que es donde pertenecen.
+
+.panelSkeleton {
+  display: grid;
+  gap: var(--bl-space-2);
+}
+
+// Visible solo para lectores de pantalla. El recorte a 1px con `clip` es el
+// patrón que sobrevive a todos los motores: `display: none` lo sacaría del
+// árbol de accesibilidad, que es justo lo contrario de lo que se busca.
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
