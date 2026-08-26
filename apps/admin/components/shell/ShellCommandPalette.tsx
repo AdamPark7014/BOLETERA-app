@@ -11,7 +11,11 @@ import { useVenues } from '@/lib/queries';
 import type { OrderRow } from '@/lib/queries/orders';
 import { useSession } from '@/lib/use-session';
 import { ShellIcon } from './icons';
-import { flattenNavItems } from './nav-config';
+import {
+  NAV_GROUPS,
+  filterNavGroupsForRole,
+  flattenNavItems,
+} from './nav-config';
 import { useTheme } from './use-theme';
 
 export type CommandPaletteMode = 'all' | 'shortcuts';
@@ -48,6 +52,16 @@ function ShellCommandPaletteComponent({
 
   const events = eventsQuery.data ?? [];
   const orders = ordersQuery.data ?? [];
+
+  const navGroupByHref = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const group of filterNavGroupsForRole(NAV_GROUPS, role)) {
+      for (const item of group.items) {
+        if (!map.has(item.href)) map.set(item.href, group.label);
+      }
+    }
+    return map;
+  }, [role]);
 
   const actions = useMemo<CommandAction[]>(() => {
     const go = (href: string) => () => {
@@ -96,15 +110,22 @@ function ShellCommandPaletteComponent({
       return shortcutHelp;
     }
 
-    const navActions: CommandAction[] = flattenNavItems(role).map((item) => ({
-      id: `nav-${item.id}`,
-      label: item.label,
-      description: item.href,
-      group: 'Navegación',
-      keywords: item.keywords,
-      icon: <ShellIcon name={item.icon} size={16} />,
-      onSelect: go(item.href),
-    }));
+    const seenHrefs = new Set<string>();
+    const navActions: CommandAction[] = flattenNavItems(role)
+      .filter((item) => {
+        if (seenHrefs.has(item.href)) return false;
+        seenHrefs.add(item.href);
+        return true;
+      })
+      .map((item) => ({
+        id: `nav-${item.id}`,
+        label: item.label,
+        description: navGroupByHref.get(item.href),
+        group: 'Navegación',
+        keywords: item.keywords,
+        icon: <ShellIcon name={item.icon} size={16} />,
+        onSelect: go(item.href),
+      }));
 
     const actionItems: CommandAction[] = [
       {
@@ -220,7 +241,9 @@ function ShellCommandPaletteComponent({
     const eventActions: CommandAction[] = events.slice(0, 40).map((event) => ({
       id: `event-${event.id}`,
       label: event.title,
-      description: event.venue?.name ? `${event.venue.name} · ${event.status}` : event.status,
+      description: event.venue?.name
+        ? `${event.venue.name} · ${event.status}`
+        : event.status,
       group: 'Eventos',
       keywords: [event.slug, event.status],
       icon: <ShellIcon name="events" size={16} />,
@@ -238,17 +261,18 @@ function ShellCommandPaletteComponent({
     }));
 
     return [
-      ...navActions,
       ...actionItems,
-      ...shortcutHelp,
-      ...venueActions,
+      ...navActions,
       ...eventActions,
       ...orderActions,
+      ...venueActions,
+      ...shortcutHelp,
     ];
   }, [
     cycle,
     events,
     mode,
+    navGroupByHref,
     onToggleCompact,
     orders,
     revokeAll,
@@ -270,7 +294,15 @@ function ShellCommandPaletteComponent({
           : 'Buscar módulos, acciones, eventos, órdenes…'
       }
       emptyMessage="Sin coincidencias. Prueba con otro término."
-      groupOrder={['Acciones', 'Navegación', 'Eventos', 'Órdenes', 'Venues', 'Atajos', 'Cuenta']}
+      groupOrder={[
+        'Acciones',
+        'Navegación',
+        'Eventos',
+        'Órdenes',
+        'Venues',
+        'Atajos',
+        'Cuenta',
+      ]}
     />
   );
 }

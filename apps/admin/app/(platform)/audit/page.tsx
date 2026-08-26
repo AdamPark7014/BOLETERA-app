@@ -14,10 +14,27 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Badge,
+  Button,
+  DataTable,
+  EmptyState,
+  FilterBar,
+  KpiCard,
+  PageHeader,
+  Section,
+  SegmentedControl,
+  formatNumber,
+  type DataTableColumn,
+  type FilterDefinition,
+  type FilterSelection,
+} from '@boletera/ui';
 import { ApiError, getStoredToken } from '@/lib/api';
 import { getAuditLog } from '@/lib/platform-api';
 import { useSession } from '@/components/Session/SessionProvider';
-import platform from '../_styles/platform.module.scss';
+import { Notice } from '../orders/_ui/States';
+import { formatDateTime } from '../orders/_ui/format';
+import { actionLabel, actionTone, entityLabel } from './_lib/labels';
 import styles from './audit.module.scss';
 
 type AuditRow = {
@@ -59,6 +76,11 @@ const QUICK_RANGES: { value: QuickRange; label: string }[] = [
   { value: '7d', label: '7 días' },
   { value: '30d', label: '30 días' },
 ];
+
+const LIMIT_OPTIONS = PAGE_SIZES.map((n) => ({
+  value: String(n),
+  label: `Últimas ${n}`,
+}));
 
 function startOfQuickRange(range: QuickRange): Date | null {
   const now = new Date();
@@ -129,6 +151,41 @@ export default function AuditPage() {
     return [...present].sort();
   }, [rows]);
 
+  const actionCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of rows) counts.set(row.action, (counts.get(row.action) ?? 0) + 1);
+    return counts;
+  }, [rows]);
+
+  const actionFilterDefs = useMemo<FilterDefinition[]>(() => {
+    const notableOptions = NOTABLE_ACTIONS.map((item) => ({
+      value: item.value,
+      label: item.label,
+      count: actionCounts.get(item.value) ?? 0,
+    }));
+    const otherOptions = actionOptions
+      .filter((value) => !NOTABLE_BY_VALUE.has(value))
+      .map((value) => ({
+        value,
+        label: actionLabel(value),
+        count: actionCounts.get(value) ?? 0,
+      }));
+    return [
+      {
+        id: 'action',
+        label: 'Acción',
+        multiple: false,
+        options: [...notableOptions, ...otherOptions],
+      },
+    ];
+  }, [actionCounts, actionOptions]);
+
+  const filterSelection = useMemo<FilterSelection>(() => {
+    const selection: Record<string, readonly string[]> = {};
+    if (action) selection.action = [action];
+    return selection;
+  }, [action]);
+
   const filtered = useMemo(() => {
     const quickStart = startOfQuickRange(quick);
     const fromDate = from ? new Date(`${from}T00:00:00`) : quickStart;
@@ -155,6 +212,8 @@ export default function AuditPage() {
     [filtered],
   );
 
+  const distinctActions = useMemo(() => new Set(rows.map((r) => r.action)).size, [rows]);
+
   const anyFilter = Boolean(actor || action || from || to || quick !== 'all');
 
   function clearFilters() {
@@ -165,232 +224,235 @@ export default function AuditPage() {
     setTo('');
   }
 
-  return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Auditoría</h1>
-          <p>Traza inmutable de acciones críticas — compliance y forensics</p>
-        </div>
-        <button
-          type="button"
-          className={platform.ghostBtn}
-          onClick={() => void load()}
-          disabled={loading}
-        >
-          {loading ? 'Actualizando…' : 'Actualizar'}
-        </button>
-      </header>
+  function onFilterChange(next: FilterSelection) {
+    setAction(next.action?.[0] ?? '');
+  }
 
-      {/* Los descuadres y las liquidaciones fallidas no deberían aparecer nunca:
-          si están, es lo primero que hay que mirar al abrir esta pantalla. */}
+  function onQuickRangeChange(value: QuickRange) {
+    setQuick(value);
+    setFrom('');
+    setTo('');
+  }
+
+  const columns = useMemo<readonly DataTableColumn<AuditRow>[]>(
+    () => [
+      {
+        key: 'createdAt',
+        header: 'Fecha',
+        width: 190,
+        sortValue: (row) => row.createdAt,
+        render: (row) => <span className={styles.when}>{formatDateTime(row.createdAt)}</span>,
+      },
+      {
+        key: 'actor',
+        header: 'Actor',
+        width: 220,
+        sortValue: (row) => actorOf(row).label,
+        render: (row) => {
+          const who = actorOf(row);
+          return (
+            <div>
+              <span className={styles.actor}>{who.label}</span>
+              {who.hint ? <span className={styles.actorHint}>{who.hint}</span> : null}
+            </div>
+          );
+        },
+      },
+      {
+        key: 'action',
+        header: 'Acción',
+        width: 260,
+        sortValue: (row) => row.action,
+        render: (row) => {
+          const notable = NOTABLE_BY_VALUE.get(row.action);
+          return (
+            <div>
+              {notable ? (
+                <Badge
+                  tone={notable.severity === 'alert' ? 'danger' : 'info'}
+                  variant="soft"
+                  size="sm"
+                >
+                  {notable.label}
+                </Badge>
+              ) : (
+                <Badge tone={actionTone(row.action)} variant="soft" size="sm">
+                  {actionLabel(row.action)}
+                </Badge>
+              )}
+              <span className={styles.actionCode}>{row.action}</span>
+            </div>
+          );
+        },
+      },
+      {
+        key: 'entity',
+        header: 'Entidad',
+        width: 200,
+        sortValue: (row) => row.entityType,
+        render: (row) => (
+          <div>
+            <span className={styles.entity}>{entityLabel(row.entityType)}</span>
+            {row.entityId ? (
+              <code className={styles.entityId} title={row.entityId}>
+                {row.entityId.slice(0, 12)}…
+              </code>
+            ) : null}
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Compliance"
+        title="Auditoría"
+        description="Traza inmutable de acciones críticas — compliance y forensics"
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            loading={loading}
+            loadingLabel="Actualizando…"
+            onClick={() => void load()}
+          >
+            Actualizar
+          </Button>
+        }
+      />
+
+      <Section columns={4} gap="md">
+        <KpiCard label="Eventos traídos" value={formatNumber(rows.length)} tone="accent" />
+        <KpiCard
+          label="Coinciden filtro"
+          value={formatNumber(filtered.length)}
+          hint={anyFilter ? 'Sobre la ventana cargada' : 'Sin filtros activos'}
+        />
+        <KpiCard
+          label="Requieren revisión"
+          value={formatNumber(alerts)}
+          tone={alerts > 0 ? 'warning' : 'neutral'}
+          invertDelta
+        />
+        <KpiCard label="Acciones distintas" value={formatNumber(distinctActions)} />
+      </Section>
+
       {alerts > 0 && (
-        <p className={styles.alertBar} role="status">
-          <strong>{alerts}</strong> {alerts === 1 ? 'evento' : 'eventos'} de pago o inventario que
-          requieren revisión en el rango seleccionado.
-        </p>
+        <Notice tone="danger" title={`${alerts} evento(s) de pago o inventario requieren revisión`}>
+          <p>
+            Descuadres de liquidación, inventario insuficiente y liquidaciones fallidas son lo primero
+            que hay que mirar al abrir esta pantalla.
+          </p>
+        </Notice>
       )}
 
-      <section className={platform.panel} aria-labelledby="audit-filters">
-        <h2 id="audit-filters" className={platform.panelTitle}>
-          Filtros
-        </h2>
-
-        <div className={styles.filters}>
-          <div className={styles.field}>
-            <label htmlFor="audit-actor">Actor (correo o ID de usuario)</label>
-            <input
-              id="audit-actor"
-              type="search"
-              value={actor}
-              onChange={(e) => setActor(e.target.value)}
-              placeholder="ana@promotora.mx o cme3…"
-              autoComplete="off"
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="audit-action">Acción</label>
-            <select
-              id="audit-action"
-              value={action}
-              onChange={(e) => setAction(e.target.value)}
-            >
-              <option value="">Todas las acciones</option>
-              <optgroup label="Requieren atención">
-                {NOTABLE_ACTIONS.map((a) => (
-                  <option key={a.value} value={a.value}>
-                    {a.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Todas las registradas">
-                {actionOptions
-                  .filter((a) => !NOTABLE_BY_VALUE.has(a))
-                  .map((a) => (
-                    <option key={a} value={a}>
-                      {a}
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="audit-from">Desde</label>
-            <input
-              id="audit-from"
-              type="date"
-              value={from}
-              max={to || undefined}
-              onChange={(e) => {
-                setFrom(e.target.value);
-                setQuick('all');
-              }}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="audit-to">Hasta</label>
-            <input
-              id="audit-to"
-              type="date"
-              value={to}
-              min={from || undefined}
-              onChange={(e) => {
-                setTo(e.target.value);
-                setQuick('all');
-              }}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="audit-limit">Filas a traer</label>
-            <select
-              id="audit-limit"
-              value={limit}
-              onChange={(e) => setLimit(Number(e.target.value))}
-            >
-              {PAGE_SIZES.map((n) => (
-                <option key={n} value={n}>
-                  Últimas {n}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <fieldset className={styles.quickRow}>
-          <legend className={styles.quickLegend}>Rango rápido</legend>
-          {QUICK_RANGES.map((r) => (
-            <label
-              key={r.value}
-              className={`${styles.chip} ${quick === r.value ? styles.chipOn : ''}`}
-            >
-              <input
-                type="radio"
-                name="audit-range"
-                value={r.value}
-                checked={quick === r.value}
-                onChange={() => {
-                  setQuick(r.value);
-                  setFrom('');
-                  setTo('');
-                }}
-              />
-              {r.label}
-            </label>
-          ))}
-          {anyFilter && (
+      <div className={styles.toolbar}>
+        <FilterBar
+          className={styles.filterBar}
+          filters={actionFilterDefs}
+          value={filterSelection}
+          onChange={onFilterChange}
+          search={{
+            value: actor,
+            onChange: setActor,
+            placeholder: 'Actor: correo o ID de usuario…',
+          }}
+        >
+          <SegmentedControl
+            label="Rango rápido"
+            size="sm"
+            options={QUICK_RANGES}
+            value={quick}
+            onValueChange={onQuickRangeChange}
+          />
+          <SegmentedControl
+            label="Filas a traer"
+            size="sm"
+            options={LIMIT_OPTIONS}
+            value={String(limit)}
+            onValueChange={(value) => setLimit(Number(value))}
+          />
+        </FilterBar>
+        <div className={styles.filterMeta}>
+          <span>
+            {loading
+              ? 'Cargando eventos…'
+              : `${filtered.length} de ${rows.length} eventos traídos${
+                  anyFilter ? ' coinciden con los filtros' : ''
+                }.`}
+          </span>
+          {anyFilter ? (
             <button type="button" className={styles.clearBtn} onClick={clearFilters}>
               Limpiar filtros
             </button>
-          )}
-        </fieldset>
+          ) : null}
+        </div>
+      </div>
 
-        <p className={styles.resultCount} role="status">
-          {loading
-            ? 'Cargando eventos…'
-            : `${filtered.length} de ${rows.length} eventos traídos${
-                anyFilter ? ' coinciden con los filtros' : ''
-              }.`}
-        </p>
-      </section>
+      <div className={styles.dateRow}>
+        <div className={styles.field}>
+          <label htmlFor="audit-from">Desde</label>
+          <input
+            id="audit-from"
+            type="date"
+            value={from}
+            max={to || undefined}
+            onChange={(e) => {
+              setFrom(e.target.value);
+              setQuick('all');
+            }}
+          />
+        </div>
+        <div className={styles.field}>
+          <label htmlFor="audit-to">Hasta</label>
+          <input
+            id="audit-to"
+            type="date"
+            value={to}
+            min={from || undefined}
+            onChange={(e) => {
+              setTo(e.target.value);
+              setQuick('all');
+            }}
+          />
+        </div>
+      </div>
 
-      <section className={platform.panel}>
-        {error ? (
-          <div className={styles.errorBox} role="alert">
-            <p>{error}</p>
-            <button type="button" className={platform.ghostBtn} onClick={() => void load()}>
-              Reintentar
-            </button>
-          </div>
-        ) : (
-          <>
-            <table className={platform.table}>
-              <caption className={styles.caption}>
-                Eventos de auditoría de la organización, del más reciente al más antiguo.
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Fecha</th>
-                  <th scope="col">Actor</th>
-                  <th scope="col">Acción</th>
-                  <th scope="col">Entidad</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((r) => {
-                  const who = actorOf(r);
-                  const notable = NOTABLE_BY_VALUE.get(r.action);
-                  return (
-                    <tr key={r.id}>
-                      <td className={styles.when}>
-                        {new Date(r.createdAt).toLocaleString('es-MX')}
-                      </td>
-                      <td>
-                        <span className={styles.actor}>{who.label}</span>
-                        {who.hint && <span className={styles.actorHint}>{who.hint}</span>}
-                      </td>
-                      <td>
-                        {/* El estado no va solo por color: lleva su propia etiqueta. */}
-                        {notable ? (
-                          <span
-                            className={
-                              notable.severity === 'alert' ? styles.tagAlert : styles.tagInfo
-                            }
-                          >
-                            {notable.label}
-                          </span>
-                        ) : (
-                          <span className={styles.actionRaw}>{r.action}</span>
-                        )}
-                        <span className={styles.actionCode}>{r.action}</span>
-                      </td>
-                      <td>
-                        <span className={styles.entity}>{r.entityType}</span>
-                        {r.entityId && (
-                          <code className={styles.entityId} title={r.entityId}>
-                            {r.entityId.slice(0, 12)}…
-                          </code>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            {!loading && filtered.length === 0 && (
-              <p className={styles.empty}>
-                {rows.length === 0
-                  ? 'Sin eventos registrados para esta organización.'
-                  : 'Ningún evento de los traídos coincide con los filtros. Prueba a ampliar el rango o a traer más filas.'}
-              </p>
-            )}
-          </>
-        )}
-      </section>
+      <DataTable
+        label="Eventos de auditoría de la organización, del más reciente al más antiguo"
+        columns={columns}
+        data={filtered}
+        rowKey={(row) => row.id}
+        loading={loading}
+        loadingRows={8}
+        error={error}
+        onRetry={() => void load()}
+        defaultSort={{ key: 'createdAt', direction: 'desc' }}
+        empty={
+          <EmptyState
+            title={
+              rows.length === 0
+                ? 'Sin eventos registrados'
+                : 'Ningún evento coincide con los filtros'
+            }
+            description={
+              rows.length === 0
+                ? 'No hay eventos de auditoría para esta organización.'
+                : 'Prueba a ampliar el rango, traer más filas o quitar algún filtro.'
+            }
+            action={
+              anyFilter ? (
+                <Button type="button" variant="outline" onClick={clearFilters}>
+                  Limpiar filtros
+                </Button>
+              ) : undefined
+            }
+          />
+        }
+      />
     </div>
   );
 }

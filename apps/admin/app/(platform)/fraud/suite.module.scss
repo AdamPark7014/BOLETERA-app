@@ -1,8 +1,75 @@
 .page {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--bl-space-5);
+  min-width: 0;
   color: var(--color-fg, var(--bl-text-primary));
   padding-bottom: 2rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bl-space-3);
+  align-items: flex-end;
+}
+
+.filterMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bl-space-2);
+  align-items: center;
+  color: var(--bl-text-tertiary);
+  font-size: var(--bl-text-xs);
+}
+
+.typeCell {
+  display: grid;
+  gap: var(--bl-space-1);
+}
+
+.typeLabel {
+  font-weight: 650;
+  font-size: var(--bl-text-md);
+}
+
+.when {
+  font-size: var(--bl-text-xs);
+  color: var(--bl-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.scoreCritical {
+  color: var(--bl-danger-text);
+}
+
+.folio {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--bl-text-xs);
+  color: var(--bl-text-secondary);
+}
+
+.reason {
+  display: grid;
+  gap: var(--bl-space-1);
+  font-size: var(--bl-text-sm);
+  line-height: 1.45;
+}
+
+.resolution {
+  font-size: var(--bl-text-xs);
+  color: var(--bl-text-tertiary);
+}
+
+.muted {
+  color: var(--bl-text-tertiary);
+  font-size: var(--bl-text-sm);
 }
 
 .kpiGrid {

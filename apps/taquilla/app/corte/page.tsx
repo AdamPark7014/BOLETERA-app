@@ -1,8 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { EVENT_STOCK_IMAGES } from '@boletera/shared';
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  Input,
+  KpiCard,
+  SegmentedControl,
+} from '@boletera/ui';
 import {
   clearTaquillaSession,
   getTaquillaToken,
@@ -260,26 +270,35 @@ export default function CortePage() {
       )}
 
       {!report ? (
-        <div className={styles.empty}>
-          <p>No hay turno abierto en esta terminal.</p>
-          <Link href="/login">Abrir turno con fondo inicial</Link>
-        </div>
+        <EmptyState
+          illustration="chart"
+          title="No hay turno abierto"
+          description="Abre turno con fondo inicial desde el inicio de sesión."
+          action={
+            <Button variant="primary" size="lg" onClick={() => router.push('/login')}>
+              Abrir turno
+            </Button>
+          }
+        />
       ) : (
         <>
-          <section className={styles.bigTotal}>
-            <p className={styles.bigLabel}>Cobrado en este turno</p>
-            <strong>{money(report.totalRevenue)}</strong>
-            <span className={styles.bigSub}>
-              {report.totalTransactions} transacciones · desde{' '}
-              {new Date(report.startTime).toLocaleTimeString('es-MX', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-          </section>
+          <div className={styles.kpiRow}>
+            <KpiCard
+              label="Cobrado en este turno"
+              value={money(report.totalRevenue)}
+              tone="accent"
+              hint={`${report.totalTransactions} transacciones · desde ${new Date(report.startTime).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`}
+              className={styles.kpiMain}
+            />
+            <div
+              className={styles.kpiAccent}
+              style={{ backgroundImage: `url(${EVENT_STOCK_IMAGES.FESTIVAL})` }}
+              aria-hidden="true"
+            />
+          </div>
 
-          <section className={styles.section}>
-            <h2>Arqueo de efectivo</h2>
+          <Card padding="md" className={styles.section}>
+            <CardHeader title="Arqueo de efectivo" description="Cuenta el cajón y compara con el esperado." />
             <dl className={styles.details}>
               <div>
                 <dt>Fondo inicial</dt>
@@ -309,22 +328,17 @@ export default function CortePage() {
 
             {!closed && (
               <>
-                <div className={styles.toggleRow}>
-                  <button
-                    type="button"
-                    className={useDenominations ? styles.toggleOn : styles.toggle}
-                    onClick={() => setUseDenominations(true)}
-                  >
-                    Contar por denominación
-                  </button>
-                  <button
-                    type="button"
-                    className={!useDenominations ? styles.toggleOn : styles.toggle}
-                    onClick={() => setUseDenominations(false)}
-                  >
-                    Escribir total
-                  </button>
-                </div>
+                <SegmentedControl
+                  label="Método de conteo"
+                  className={styles.segmented}
+                  fullWidth
+                  value={useDenominations ? 'denoms' : 'total'}
+                  onValueChange={(v) => setUseDenominations(v === 'denoms')}
+                  options={[
+                    { value: 'denoms', label: 'Por denominación' },
+                    { value: 'total', label: 'Escribir total' },
+                  ]}
+                />
 
                 {useDenominations ? (
                   <ul className={styles.denoms}>
@@ -349,42 +363,55 @@ export default function CortePage() {
                     ))}
                   </ul>
                 ) : (
-                  <label className={styles.countField}>
-                    <small>Efectivo contado</small>
-                    <input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={manualCounted}
-                      onChange={(e) => setManualCounted(e.target.value)}
-                    />
-                  </label>
+                  <Input
+                    id="manual-counted"
+                    type="number"
+                    label="Efectivo contado (MXN)"
+                    min={0}
+                    step="0.01"
+                    value={manualCounted}
+                    onChange={(e) => setManualCounted(e.target.value)}
+                    inputSize="lg"
+                    className={styles.countField}
+                  />
                 )}
 
                 <div className={styles.arqueoResult}>
-                  <div>
-                    <span>Contado</span>
-                    <strong>{money(counted)}</strong>
-                  </div>
-                  <div className={variance === 0 ? styles.okBox : styles.badBox}>
-                    <span>Diferencia</span>
-                    <strong>
+                  <Card variant="outline" padding="md" className={styles.arqueoBox}>
+                    <span className={styles.arqueoLabel}>Contado</span>
+                    <strong className={styles.arqueoValue}>{money(counted)}</strong>
+                  </Card>
+                  <Card
+                    variant="outline"
+                    padding="md"
+                    className={variance === 0 ? styles.okBox : styles.badBox}
+                  >
+                    <div className={styles.varianceHead}>
+                      <span className={styles.arqueoLabel}>Diferencia</span>
+                      <Badge
+                        tone={variance === 0 ? 'success' : variance > 0 ? 'warning' : 'danger'}
+                        variant="soft"
+                        dot
+                      >
+                        {variance === 0 ? 'Cuadrado' : variance > 0 ? 'Sobrante' : 'Faltante'}
+                      </Badge>
+                    </div>
+                    <strong className={styles.arqueoValue}>
                       {variance > 0 ? '+' : ''}
                       {money(variance)}
                     </strong>
-                    <small>
-                      {variance === 0 ? 'Cuadrado' : variance > 0 ? 'Sobrante' : 'Faltante'}
-                      {needsPin ? ' · requiere PIN de gerente' : ''}
-                    </small>
-                  </div>
+                    {needsPin && (
+                      <small className={styles.pinNote}>Requiere PIN de gerente para cerrar</small>
+                    )}
+                  </Card>
                 </div>
               </>
             )}
-          </section>
+          </Card>
 
           {report.cashDrops && report.cashDrops.length > 0 && (
-            <section className={styles.section}>
-              <h2>Retiros del turno</h2>
+            <Card padding="md" className={styles.section}>
+              <CardHeader title="Retiros del turno" />
               <ul className={styles.drops}>
                 {report.cashDrops.map((d, i) => (
                   <li key={`${d.at ?? i}`}>
@@ -394,12 +421,12 @@ export default function CortePage() {
                   </li>
                 ))}
               </ul>
-            </section>
+            </Card>
           )}
 
           {totalMethods > 0 && (
-            <section className={styles.section}>
-              <h2>Desglose por método</h2>
+            <Card padding="md" className={styles.section}>
+              <CardHeader title="Desglose por método" />
               <ul className={styles.breakdown}>
                 {Object.entries(report.byMethod).map(([m, a]) => {
                   const amount = Number(a);
@@ -413,62 +440,76 @@ export default function CortePage() {
                         </div>
                       </div>
                       <span className={styles.amount}>{money(amount)}</span>
-                      <span className={styles.pct}>{pct}%</span>
+                      <Badge tone="neutral" variant="outline" size="sm">{pct}%</Badge>
                     </li>
                   );
                 })}
               </ul>
-            </section>
+            </Card>
           )}
         </>
       )}
 
       {!closed && report && (
         <div className={styles.actions}>
-          <button type="button" className={styles.secondaryBtn} onClick={() => setPrompt('DROP')}>
+          <Button variant="secondary" size="lg" onClick={() => setPrompt('DROP')}>
             Retiro parcial · F9
-          </button>
-          <button type="button" className={styles.secondaryBtn} onClick={() => setPrompt('HANDOFF')}>
+          </Button>
+          <Button variant="outline" size="lg" onClick={() => setPrompt('HANDOFF')}>
             Entregar turno · F10
-          </button>
-          <button
-            type="button"
-            className={styles.closeBtn}
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
             disabled={loading}
+            loading={loading}
+            loadingLabel="Cerrando…"
             onClick={() => (needsPin ? setPrompt('CLOSE') : void closeShift())}
           >
-            {loading ? 'Cerrando…' : 'Cerrar turno · F12'}
-          </button>
+            Cerrar turno · F12
+          </Button>
         </div>
       )}
 
       {closed && (
-        <p className={styles.done}>
-          {handoffDone ? 'Turno entregado.' : 'Turno cerrado y corte Z archivado.'}{' '}
-          <button type="button" onClick={() => printCorte({ ...(report ?? {}), ...(closedReport ?? {}) })}>
-            Reimprimir corte
-          </button>{' '}
-          <Link href={handoffDone ? '/login' : '/login'}>Abrir nuevo turno</Link>
-        </p>
+        <Card padding="md" className={styles.doneCard}>
+          <Badge tone="success" variant="soft" dot>
+            {handoffDone ? 'Turno entregado' : 'Turno cerrado'}
+          </Badge>
+          <p>
+            {handoffDone ? 'Turno entregado al cajero entrante.' : 'Corte Z archivado en el sistema.'}
+          </p>
+          <div className={styles.doneActions}>
+            <Button
+              variant="outline"
+              onClick={() => printCorte({ ...(report ?? {}), ...(closedReport ?? {}) })}
+            >
+              Reimprimir corte
+            </Button>
+            <Button variant="primary" onClick={() => router.push('/login')}>
+              Abrir nuevo turno
+            </Button>
+          </div>
+        </Card>
       )}
 
       {zReports.length > 0 && (
-        <section className={styles.section}>
-          <h2>Cortes anteriores</h2>
+        <Card padding="md" className={styles.section}>
+          <CardHeader title="Cortes anteriores" description="Últimos reportes Z de esta organización." />
           <ul className={styles.zList}>
             {zReports.map((z) => (
               <li key={z.id}>
                 <strong>
-                  {z.closedAt || z.createdAt
-                    ? new Date(String(z.closedAt ?? z.createdAt)).toLocaleString('es-MX')
-                    : z.id}
+                  {z.closedAt
+                    ? new Date(z.closedAt).toLocaleString('es-MX')
+                    : z.id.slice(0, 8)}
                 </strong>
-                <span>{z.cashierId ?? '—'}</span>
-                <em>{z.totalRevenue != null ? money(Number(z.totalRevenue)) : '—'}</em>
+                <span>{String(z.terminalName ?? z.cashierId ?? '—')}</span>
+                <em>{money(Number(z.totalRevenue ?? 0))}</em>
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       )}
 
       <ManagerPinDialog
@@ -504,33 +545,37 @@ export default function CortePage() {
       {/* Los campos de retiro y traspaso viven FUERA del diálogo: el importe y el
           cajero entrante se teclean antes de pedir el PIN, no después. */}
       {!closed && report && (
-        <section className={styles.section}>
-          <h2>Datos para retiro / traspaso</h2>
+        <Card padding="md" className={styles.section}>
+          <CardHeader
+            title="Datos para retiro / traspaso"
+            description="Completa antes de confirmar con PIN de gerente."
+          />
           <div className={styles.inlineFields}>
-            <label className={styles.countField}>
-              <small>Importe a retirar</small>
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={dropAmount}
-                onChange={(e) => setDropAmount(e.target.value)}
-              />
-            </label>
-            <label className={styles.countField}>
-              <small>Nota del retiro</small>
-              <input value={dropNote} onChange={(e) => setDropNote(e.target.value)} />
-            </label>
-            <label className={styles.countField}>
-              <small>Cajero entrante (id o email)</small>
-              <input
-                value={handoffCashier}
-                onChange={(e) => setHandoffCashier(e.target.value)}
-                placeholder="cajero2@boletera.com"
-              />
-            </label>
+            <Input
+              id="drop-amount"
+              type="number"
+              label="Importe a retirar"
+              min={0}
+              step="0.01"
+              value={dropAmount}
+              onChange={(e) => setDropAmount(e.target.value)}
+              inputSize="lg"
+            />
+            <Input
+              id="drop-note"
+              label="Nota del retiro"
+              value={dropNote}
+              onChange={(e) => setDropNote(e.target.value)}
+            />
+            <Input
+              id="handoff-cashier"
+              label="Cajero entrante (id o email)"
+              value={handoffCashier}
+              onChange={(e) => setHandoffCashier(e.target.value)}
+              placeholder="cajero2@boletera.com"
+            />
           </div>
-        </section>
+        </Card>
       )}
     </PosShell>
   );

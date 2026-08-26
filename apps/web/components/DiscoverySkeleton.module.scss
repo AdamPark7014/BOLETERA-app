@@ -33,80 +33,42 @@
 .wrap {
   display: flex;
   flex-direction: column;
-}
+  position: relative;
 
-/* Misma geometría que .hero del panel real. */
-.hero {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-top: calc(var(--header-height) * -1);
-  min-height: min(78vh, 680px);
-  background: var(--ink-900);
-  display: flex;
-  align-items: flex-end;
-
-  @include bp.below(bp.$bp-md) {
-    min-height: min(70vh, 560px);
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -2rem 0 auto;
+    height: 12rem;
+    background:
+      linear-gradient(180deg, rgba(250, 247, 244, 0.95), transparent),
+      url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1600&q=60')
+        center 30% / cover no-repeat;
+    filter: blur(28px) saturate(1.15);
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
   }
 }
 
-.heroCopy {
-  width: 100%;
-  max-width: var(--layout-max);
-  margin: 0 auto;
-  padding: clamp(6.5rem, 14vh, 8rem) var(--layout-gutter-wide) clamp(2rem, 5vh, 3.25rem);
-  display: flex;
-  flex-direction: column;
-  gap: var(--bl-space-2-5);
-}
-
-.brandMark {
-  @include bone(true);
-  width: 8rem;
-  height: 1.5rem;
-}
-
-.heroTitle,
-.heroTitleShort {
-  @include bone(true);
-  height: clamp(3rem, 8vw, 5rem);
-}
-
-.heroTitle {
-  width: min(100%, 28rem);
-}
-
-.heroTitleShort {
-  width: min(70%, 18rem);
-}
-
-.heroSupport {
-  @include bone(true);
-  width: min(90%, 24rem);
-  height: 1rem;
-}
-
-.cta {
-  @include bone(true);
-  width: 11rem;
-  height: var(--control-height-md);
-  margin-top: var(--space-xs);
-}
-
 .shell {
+  position: relative;
+  z-index: 1;
   max-width: var(--layout-max);
   width: 100%;
   margin: 0 auto;
   padding: 1.25rem var(--layout-gutter) var(--space-xl);
   display: flex;
   flex-direction: column;
-  gap: var(--bl-space-4);
+  gap: var(--space-md);
 }
 
 .search {
   @include bone;
   height: 3.85rem;
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-xs);
 }
 
 .hubs {
@@ -120,6 +82,7 @@
   height: var(--control-height-md);
   width: 8rem;
   flex: 0 0 auto;
+  border-radius: var(--radius-pill);
 }
 
 .cats {
@@ -132,6 +95,7 @@
   @include bone;
   height: var(--control-height-sm);
   width: 6rem;
+  border-radius: var(--radius-pill);
 }
 
 .listHead {
@@ -147,18 +111,20 @@
   @include bone;
   width: 14rem;
   height: 2.35rem;
+  border-radius: var(--radius-md);
 }
 
 .listTools {
   @include bone;
   width: 8rem;
   height: var(--control-height-sm);
+  border-radius: var(--radius-pill);
 }
 
 .grid {
   list-style: none;
-  margin: var(--bl-space-0);
-  padding: var(--bl-space-0);
+  margin: 0;
+  padding: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1.15rem var(--space-md);
@@ -184,6 +150,8 @@
   aspect-ratio: 3 / 4;
   width: 100%;
   margin-bottom: var(--space-sm);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
 }
 
 .cardCat {
@@ -191,12 +159,14 @@
   width: 40%;
   height: 0.7rem;
   margin-bottom: 0.15rem;
+  border-radius: var(--radius-sm);
 }
 
 .cardTitle {
   @include bone;
   width: 85%;
   height: 1.3rem;
+  border-radius: var(--radius-sm);
 }
 
 .cardMeta {
@@ -204,6 +174,7 @@
   width: 70%;
   height: 0.8rem;
   margin-top: 0.2rem;
+  border-radius: var(--radius-sm);
 }
 
 .cardPrice {
@@ -211,4 +182,5 @@
   width: 45%;
   height: 0.9rem;
   margin-top: var(--space-3xs);
+  border-radius: var(--radius-sm);
 }

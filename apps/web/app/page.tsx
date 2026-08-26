@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { HomeHeroRoot } from "@/components/HomeHeroRoot";
 import { EventDiscoveryPanel, type EventHit } from "@/components/EventDiscoveryPanel";
 import { DiscoverySkeleton } from "@/components/DiscoverySkeleton";
 import { HomeModules } from "@/components/HomeModules";
@@ -53,8 +54,12 @@ async function DiscoveryBoard() {
 
   return (
     <>
-      <section className={styles.board} aria-label="Cartelera">
-        <EventDiscoveryPanel initial={events} initialFailed={eventsFailed} />
+      <section id="cartelera" className={styles.board} aria-label="Cartelera">
+        <EventDiscoveryPanel
+          initial={events}
+          initialFailed={eventsFailed}
+          suppressFeaturedHero
+        />
       </section>
 
       <HomeModules
@@ -72,6 +77,7 @@ export default function Home() {
     <>
       <SiteHeader theme="dark" />
       <main id="contenido" tabIndex={-1} className={styles.page}>
+        <HomeHeroRoot />
         <Suspense fallback={<DiscoverySkeleton />}>
           <DiscoveryBoard />
         </Suspense>

@@ -254,3 +254,39 @@
   align-items: center;
   gap: var(--bl-space-1-5);
 }
+
+.inviteRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) minmax(150px, 1fr) minmax(120px, 1fr) auto;
+  gap: var(--bl-space-3);
+  align-items: end;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inviteHint {
+  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
+  color: var(--bl-text-tertiary);
+  font-size: var(--bl-text-xs);
+}
+
+.panelToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bl-space-3);
+  margin-bottom: var(--bl-space-3);
+  flex-wrap: wrap;
+}
+
+.expirySoon {
+  margin-left: var(--bl-space-1);
+  color: var(--bl-warning-text);
+  font-size: var(--bl-text-2xs);
+}
+
+.emptyPad {
+  padding: var(--bl-space-4) var(--bl-space-0);
+}

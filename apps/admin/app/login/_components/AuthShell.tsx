@@ -36,6 +36,16 @@ type AuthShellProps = {
 export function AuthShell({ children, compact = false }: AuthShellProps) {
   const [time, setTime] = useState('');
 
+  /* Login siempre en tema claro: el formulario y el panel de marca tienen paletas fijas. */
+  useEffect(() => {
+    const root = document.documentElement;
+    const previous = root.getAttribute('data-theme');
+    root.setAttribute('data-theme', 'light');
+    return () => {
+      if (previous) root.setAttribute('data-theme', previous);
+    };
+  }, []);
+
   useEffect(() => {
     const tick = () =>
       setTime(

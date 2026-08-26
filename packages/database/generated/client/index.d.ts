@@ -20208,6 +20208,7 @@ export namespace Prisma {
     faviconUrl: number
     customDomain: number
     subdomain: number
+    siteContent: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -20249,6 +20250,7 @@ export namespace Prisma {
     faviconUrl?: true
     customDomain?: true
     subdomain?: true
+    siteContent?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -20335,6 +20337,7 @@ export namespace Prisma {
     faviconUrl: string | null
     customDomain: string | null
     subdomain: string | null
+    siteContent: JsonValue | null
     createdAt: Date
     updatedAt: Date
     _count: TenantThemeCountAggregateOutputType | null
@@ -20365,6 +20368,7 @@ export namespace Prisma {
     faviconUrl?: boolean
     customDomain?: boolean
     subdomain?: boolean
+    siteContent?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
@@ -20379,6 +20383,7 @@ export namespace Prisma {
     faviconUrl?: boolean
     customDomain?: boolean
     subdomain?: boolean
+    siteContent?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
@@ -20393,6 +20398,7 @@ export namespace Prisma {
     faviconUrl?: boolean
     customDomain?: boolean
     subdomain?: boolean
+    siteContent?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
@@ -20407,11 +20413,12 @@ export namespace Prisma {
     faviconUrl?: boolean
     customDomain?: boolean
     subdomain?: boolean
+    siteContent?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type TenantThemeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "primaryColor" | "secondaryColor" | "logoUrl" | "faviconUrl" | "customDomain" | "subdomain" | "createdAt" | "updatedAt", ExtArgs["result"]["tenantTheme"]>
+  export type TenantThemeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "primaryColor" | "secondaryColor" | "logoUrl" | "faviconUrl" | "customDomain" | "subdomain" | "siteContent" | "createdAt" | "updatedAt", ExtArgs["result"]["tenantTheme"]>
   export type TenantThemeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }
@@ -20436,6 +20443,10 @@ export namespace Prisma {
       faviconUrl: string | null
       customDomain: string | null
       subdomain: string | null
+      /**
+       * Hero, tarjetas de marketing y fotos por ciudad — editable desde admin.
+       */
+      siteContent: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["tenantTheme"]>
@@ -20870,6 +20881,7 @@ export namespace Prisma {
     readonly faviconUrl: FieldRef<"TenantTheme", 'String'>
     readonly customDomain: FieldRef<"TenantTheme", 'String'>
     readonly subdomain: FieldRef<"TenantTheme", 'String'>
+    readonly siteContent: FieldRef<"TenantTheme", 'Json'>
     readonly createdAt: FieldRef<"TenantTheme", 'DateTime'>
     readonly updatedAt: FieldRef<"TenantTheme", 'DateTime'>
   }
@@ -72396,6 +72408,7 @@ export namespace Prisma {
     faviconUrl: 'faviconUrl',
     customDomain: 'customDomain',
     subdomain: 'subdomain',
+    siteContent: 'siteContent',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -74938,6 +74951,7 @@ export namespace Prisma {
     faviconUrl?: StringNullableFilter<"TenantTheme"> | string | null
     customDomain?: StringNullableFilter<"TenantTheme"> | string | null
     subdomain?: StringNullableFilter<"TenantTheme"> | string | null
+    siteContent?: JsonNullableFilter<"TenantTheme">
     createdAt?: DateTimeFilter<"TenantTheme"> | Date | string
     updatedAt?: DateTimeFilter<"TenantTheme"> | Date | string
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
@@ -74952,6 +74966,7 @@ export namespace Prisma {
     faviconUrl?: SortOrderInput | SortOrder
     customDomain?: SortOrderInput | SortOrder
     subdomain?: SortOrderInput | SortOrder
+    siteContent?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     organization?: OrganizationOrderByWithRelationInput
@@ -74969,6 +74984,7 @@ export namespace Prisma {
     secondaryColor?: StringFilter<"TenantTheme"> | string
     logoUrl?: StringNullableFilter<"TenantTheme"> | string | null
     faviconUrl?: StringNullableFilter<"TenantTheme"> | string | null
+    siteContent?: JsonNullableFilter<"TenantTheme">
     createdAt?: DateTimeFilter<"TenantTheme"> | Date | string
     updatedAt?: DateTimeFilter<"TenantTheme"> | Date | string
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
@@ -74983,6 +74999,7 @@ export namespace Prisma {
     faviconUrl?: SortOrderInput | SortOrder
     customDomain?: SortOrderInput | SortOrder
     subdomain?: SortOrderInput | SortOrder
+    siteContent?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: TenantThemeCountOrderByAggregateInput
@@ -75002,6 +75019,7 @@ export namespace Prisma {
     faviconUrl?: StringNullableWithAggregatesFilter<"TenantTheme"> | string | null
     customDomain?: StringNullableWithAggregatesFilter<"TenantTheme"> | string | null
     subdomain?: StringNullableWithAggregatesFilter<"TenantTheme"> | string | null
+    siteContent?: JsonNullableWithAggregatesFilter<"TenantTheme">
     createdAt?: DateTimeWithAggregatesFilter<"TenantTheme"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"TenantTheme"> | Date | string
   }
@@ -80409,6 +80427,7 @@ export namespace Prisma {
     faviconUrl?: string | null
     customDomain?: string | null
     subdomain?: string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutTenantThemeInput
@@ -80423,6 +80442,7 @@ export namespace Prisma {
     faviconUrl?: string | null
     customDomain?: string | null
     subdomain?: string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -80435,6 +80455,7 @@ export namespace Prisma {
     faviconUrl?: NullableStringFieldUpdateOperationsInput | string | null
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutTenantThemeNestedInput
@@ -80449,6 +80470,7 @@ export namespace Prisma {
     faviconUrl?: NullableStringFieldUpdateOperationsInput | string | null
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -80462,6 +80484,7 @@ export namespace Prisma {
     faviconUrl?: string | null
     customDomain?: string | null
     subdomain?: string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -80474,6 +80497,7 @@ export namespace Prisma {
     faviconUrl?: NullableStringFieldUpdateOperationsInput | string | null
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -80487,6 +80511,7 @@ export namespace Prisma {
     faviconUrl?: NullableStringFieldUpdateOperationsInput | string | null
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -86426,6 +86451,7 @@ export namespace Prisma {
     faviconUrl?: SortOrder
     customDomain?: SortOrder
     subdomain?: SortOrder
+    siteContent?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -95161,6 +95187,7 @@ export namespace Prisma {
     faviconUrl?: string | null
     customDomain?: string | null
     subdomain?: string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -95173,6 +95200,7 @@ export namespace Prisma {
     faviconUrl?: string | null
     customDomain?: string | null
     subdomain?: string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -95737,6 +95765,7 @@ export namespace Prisma {
     faviconUrl?: NullableStringFieldUpdateOperationsInput | string | null
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -95749,6 +95778,7 @@ export namespace Prisma {
     faviconUrl?: NullableStringFieldUpdateOperationsInput | string | null
     customDomain?: NullableStringFieldUpdateOperationsInput | string | null
     subdomain?: NullableStringFieldUpdateOperationsInput | string | null
+    siteContent?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

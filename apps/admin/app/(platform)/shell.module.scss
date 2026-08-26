@@ -8,17 +8,22 @@
   min-height: 100vh;
   background: var(--bl-surface-sunken, var(--bl-surface));
   color: var(--bl-text-primary);
+  font-family: var(--bl-font-sans, system-ui, sans-serif);
   --shell-logo-ink: var(--bl-text-inverse);
-  --shell-sidebar-bg: var(--bl-gray-950, #0a0a0b);
-  --shell-sidebar-elevated: color-mix(in srgb, var(--shell-sidebar-bg) 88%, white 12%);
+  --shell-sidebar-bg: var(--bl-gray-950, #0b0d11);
+  --shell-sidebar-elevated: color-mix(in srgb, var(--shell-sidebar-bg) 90%, white 10%);
   --shell-sidebar-text: var(--on-dark-1, #fafafa);
-  --shell-sidebar-muted: var(--on-dark-4, #71717a);
-  --shell-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --shell-sidebar-border: rgba(255, 255, 255, 0.08);
+  --shell-sidebar-muted: color-mix(in srgb, var(--on-dark-4, #71717a) 92%, white 8%);
+  --shell-sidebar-hover: rgba(255, 255, 255, 0.055);
+  --shell-sidebar-hover-strong: rgba(255, 255, 255, 0.09);
+  --shell-sidebar-border: rgba(255, 255, 255, 0.07);
+  --shell-sidebar-border-strong: rgba(255, 255, 255, 0.12);
   --shell-accent: var(--bl-accent, #e11d48);
-  --shell-accent-soft: color-mix(in srgb, var(--shell-accent) 16%, transparent);
-  --shell-accent-glow: color-mix(in srgb, var(--shell-accent) 28%, transparent);
+  --shell-accent-soft: color-mix(in srgb, var(--shell-accent) 14%, transparent);
+  --shell-accent-softer: color-mix(in srgb, var(--shell-accent) 8%, transparent);
+  --shell-accent-glow: color-mix(in srgb, var(--shell-accent) 32%, transparent);
   --shell-focus: var(--bl-focus-ring, #3b82f6);
+  --shell-nav-inactive: color-mix(in srgb, var(--on-dark-2, #e4e4e7) 88%, transparent);
 }
 
 [data-theme='dark'] .shell {
@@ -50,17 +55,19 @@
 /* ---------------- Sidebar ---------------- */
 
 .sidebar {
-  width: 272px;
+  width: 264px;
   flex-shrink: 0;
   background:
-    linear-gradient(180deg, var(--shell-sidebar-elevated) 0%, var(--shell-sidebar-bg) 42%),
-    var(--shell-sidebar-bg);
+    radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--shell-accent) 6%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--shell-sidebar-elevated) 0%, var(--shell-sidebar-bg) 38%, var(--shell-sidebar-bg) 100%);
   color: var(--shell-sidebar-text);
-  padding: var(--bl-space-4) var(--bl-space-3);
+  padding: var(--bl-space-3) var(--bl-space-2-5);
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--shell-sidebar-border);
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.03),
+    4px 0 24px -12px rgba(0, 0, 0, 0.35);
   position: sticky;
   top: 0;
   height: 100vh;
@@ -82,8 +89,8 @@
 }
 
 .sidebarCompact {
-  width: 76px;
-  padding-inline: 0.5rem;
+  width: 72px;
+  padding-inline: var(--bl-space-2);
 
   @media (max-width: 900px) {
     width: min(300px, 88vw);
@@ -116,7 +123,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--bl-space-2);
-  padding: var(--bl-space-1) var(--bl-space-1-5) var(--bl-space-3);
+  padding: var(--bl-space-1) var(--bl-space-1) var(--bl-space-2-5);
   flex-shrink: 0;
 }
 
@@ -134,6 +141,15 @@
   text-decoration: none;
   color: inherit;
   border-radius: var(--bl-radius-md);
+  padding: var(--bl-space-1);
+  margin: calc(var(--bl-space-1) * -1);
+  transition:
+    background var(--bl-duration-fast, 120ms) ease,
+    opacity var(--bl-duration-fast, 120ms) ease;
+
+  &:hover {
+    background: var(--shell-sidebar-hover);
+  }
 
   &:focus-visible {
     outline: 2px solid var(--shell-focus);
@@ -142,16 +158,22 @@
 }
 
 .logoMark {
-  width: 2rem;
-  height: 2rem;
+  width: 2.125rem;
+  height: 2.125rem;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--bl-text-inverse);
   flex-shrink: 0;
   border-radius: var(--bl-radius-md);
-  background: linear-gradient(145deg, var(--shell-accent) 0%, color-mix(in srgb, var(--shell-accent) 70%, #000) 100%);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 20px var(--shell-accent-glow);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--shell-accent) 92%, white 8%) 0%,
+    color-mix(in srgb, var(--shell-accent) 72%, #000 28%) 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 6px 16px var(--shell-accent-glow);
 
   svg {
     width: 100%;
@@ -162,16 +184,18 @@
 .logoText {
   margin: var(--bl-space-0);
   font-size: var(--bl-text-sm);
-  font-weight: 650;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
   color: var(--bl-text-inverse);
 }
 
 .logoSub {
-  margin: var(--bl-space-0);
+  margin: var(--bl-space-0-5) var(--bl-space-0) var(--bl-space-0);
   font-size: var(--bl-text-2xs);
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
   color: var(--shell-sidebar-muted);
 }
 
@@ -228,26 +252,29 @@
   display: flex;
   align-items: center;
   gap: var(--bl-space-2);
-  width: calc(100% - 0.5rem);
-  margin: var(--bl-space-0) var(--bl-space-1) var(--bl-space-3);
+  width: calc(100% - var(--bl-space-1));
+  margin: var(--bl-space-0) var(--bl-space-0-5) var(--bl-space-2-5);
   padding: var(--bl-space-2) var(--bl-space-2-5);
-  background: rgba(255, 255, 255, 0.04);
+  background: color-mix(in srgb, var(--shell-sidebar-bg) 40%, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--shell-sidebar-border);
   border-radius: var(--bl-radius-md);
   color: var(--shell-sidebar-muted);
   font-size: var(--bl-text-sm);
+  font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
-
-  span {
-    flex: 1;
-  }
+  transition:
+    border-color var(--bl-duration-fast, 120ms) ease,
+    background var(--bl-duration-fast, 120ms) ease,
+    color var(--bl-duration-fast, 120ms) ease,
+    box-shadow var(--bl-duration-fast, 120ms) ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--bl-text-inverse);
+    border-color: var(--shell-sidebar-border-strong);
+    background: var(--shell-sidebar-hover-strong);
+    color: color-mix(in srgb, var(--bl-text-inverse) 88%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   &:focus-visible {
@@ -263,15 +290,34 @@
   }
 }
 
+.searchTriggerIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--shell-sidebar-muted) 90%, white 10%);
+}
+
+.searchTriggerText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .kbd {
   font-family: var(--bl-font-mono, ui-monospace, monospace);
   font-size: var(--bl-text-2xs);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
   padding: var(--bl-space-0-5) var(--bl-space-1-5);
   border-radius: var(--bl-radius-xs);
-  border: 1px solid currentColor;
-  opacity: 0.55;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  background: color-mix(in srgb, var(--shell-sidebar-bg) 50%, rgba(255, 255, 255, 0.06));
+  color: color-mix(in srgb, currentColor 75%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 /* Nav */
@@ -299,9 +345,9 @@
 }
 
 .navGroup {
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.375rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: var(--bl-space-2);
+  padding-bottom: var(--bl-space-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.035);
 
   &:last-child {
     border-bottom: none;
@@ -309,9 +355,23 @@
     padding-bottom: 0;
   }
 
+  &[data-group='favorites'] {
+    padding-bottom: var(--bl-space-2-5);
+    margin-bottom: var(--bl-space-2-5);
+    border-bottom: 1px solid color-mix(in srgb, var(--bl-warning) 18%, transparent);
+
+    .navLabel {
+      color: color-mix(in srgb, var(--bl-warning) 80%, var(--shell-sidebar-text));
+    }
+  }
+
+  &[data-has-active='true'] .navGroupToggle .navLabel {
+    color: color-mix(in srgb, var(--shell-sidebar-text) 88%, var(--shell-accent));
+  }
+
   &[data-group='intelligence'] .navLabel,
   &[data-group='revenue'] .navLabel {
-    letter-spacing: 0.1em;
+    letter-spacing: 0.11em;
   }
 }
 
@@ -321,15 +381,18 @@
   justify-content: space-between;
   width: 100%;
   margin: var(--bl-space-0);
-  padding: var(--bl-space-1) var(--bl-space-1-5);
+  padding: var(--bl-space-1) var(--bl-space-2);
   background: transparent;
   border: none;
   cursor: pointer;
   color: var(--shell-sidebar-muted);
   border-radius: var(--bl-radius-sm);
+  transition:
+    color var(--bl-duration-fast, 120ms) ease,
+    background var(--bl-duration-fast, 120ms) ease;
 
   &:hover {
-    color: var(--on-dark-2);
+    color: color-mix(in srgb, var(--bl-text-inverse) 82%, transparent);
     background: var(--shell-sidebar-hover);
   }
 
@@ -343,33 +406,66 @@
   }
 }
 
-.navLabel {
-  margin: var(--bl-space-0) var(--bl-space-2-5) var(--bl-space-1-5);
-  font-size: var(--bl-text-2xs);
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.navGroupChevron {
+  display: inline-flex;
   color: var(--shell-sidebar-muted);
+  transition: transform var(--bl-duration-fast) var(--bl-ease-decelerate);
+}
+
+.navGroupToggle[data-collapsed='true'] .navGroupChevron {
+  transform: rotate(-90deg);
+}
+
+.navGroupContent {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--bl-duration-normal) var(--bl-ease-decelerate);
+
+  &[data-collapsed='true'] {
+    grid-template-rows: 0fr;
+  }
+}
+
+.navGroupInner {
+  overflow: hidden;
+  min-height: 0;
+  padding-top: var(--bl-space-0-5);
+}
+
+.navLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bl-space-1-5);
+  margin: var(--bl-space-0) var(--bl-space-2) var(--bl-space-1-5);
+  font-size: var(--bl-text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--shell-sidebar-muted) 95%, transparent);
 }
 
 .navItemRow {
   display: flex;
   align-items: center;
   gap: var(--bl-space-0-5);
-  margin-bottom: 0.125rem;
+  margin-bottom: 2px;
 }
 
 .navItem,
+.navItemActive,
 .active {
   display: flex;
   align-items: center;
   gap: var(--bl-space-2-5);
   flex: 1;
   min-width: 0;
-  padding: var(--bl-space-2) var(--bl-space-2-5);
+  min-height: 2.25rem;
+  padding: var(--bl-space-1-5) var(--bl-space-2-5);
   font-size: var(--bl-text-sm);
   font-weight: 500;
-  color: var(--on-dark-2);
+  line-height: 1.35;
+  letter-spacing: 0.005em;
+  color: var(--shell-nav-inactive);
   text-decoration: none;
   border-radius: var(--bl-radius-md);
   border: 1px solid transparent;
@@ -387,41 +483,61 @@
 
   .sidebarCompact & {
     justify-content: center;
-    padding: var(--bl-space-2-5);
+    min-height: 2.5rem;
+    padding: var(--bl-space-2);
   }
 }
 
 .navItem:hover {
   background: var(--shell-sidebar-hover);
   color: var(--bl-text-inverse);
+
+  .navIcon {
+    color: color-mix(in srgb, var(--bl-text-inverse) 78%, transparent);
+  }
 }
 
+.navItemActive,
 .active {
-  background: var(--shell-accent-soft);
+  background:
+    linear-gradient(
+      90deg,
+      var(--shell-accent-softer) 0%,
+      var(--shell-accent-soft) 48%,
+      color-mix(in srgb, var(--shell-accent-soft) 65%, transparent) 100%
+    );
   color: var(--bl-text-inverse);
-  border-color: color-mix(in srgb, var(--shell-accent) 35%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border-color: color-mix(in srgb, var(--shell-accent) 28%, transparent);
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
 
   &::before {
     content: '';
     position: absolute;
-    left: 0;
+    left: -1px;
     top: 50%;
     transform: translateY(-50%);
     width: 3px;
-    height: 58%;
-    background: var(--shell-accent);
+    height: 62%;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--shell-accent) 80%, white 20%) 0%,
+      var(--shell-accent) 50%,
+      color-mix(in srgb, var(--shell-accent) 85%, #000 15%) 100%
+    );
     border-radius: 0 var(--bl-radius-xs) var(--bl-radius-xs) 0;
-    box-shadow: 0 0 12px var(--shell-accent-glow);
+    box-shadow: 0 0 14px var(--shell-accent-glow);
 
     .sidebarCompact & {
-      left: 2px;
-      height: 40%;
+      left: 1px;
+      height: 44%;
     }
   }
 
   .navIcon {
-    color: color-mix(in srgb, var(--shell-accent) 65%, white);
+    color: color-mix(in srgb, var(--shell-accent) 55%, white 45%);
   }
 }
 
@@ -434,11 +550,14 @@
   height: 26px;
   border: none;
   background: transparent;
-  color: var(--on-dark-5);
+  color: var(--shell-sidebar-muted);
   border-radius: var(--bl-radius-sm);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  transition:
+    opacity var(--bl-duration-fast) var(--bl-ease-decelerate),
+    color var(--bl-duration-fast) var(--bl-ease-decelerate),
+    background var(--bl-duration-fast) var(--bl-ease-decelerate);
 
   .navItemRow:hover &,
   .navItemRow:focus-within &,
@@ -473,15 +592,19 @@
 .navSubActive {
   flex: 1;
   min-width: 0;
-  padding: 0.3125rem 0.5rem;
+  padding: var(--bl-space-1) var(--bl-space-2);
   font-size: var(--bl-text-xs);
-  color: var(--on-dark-3);
+  font-weight: 500;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--on-dark-3, #a1a1aa) 95%, transparent);
   text-decoration: none;
   border-radius: var(--bl-radius-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background var(--bl-duration-fast, 120ms) ease,
+    color var(--bl-duration-fast, 120ms) ease;
 
   &:focus-visible {
     outline: 2px solid var(--shell-focus);
@@ -495,22 +618,27 @@
 }
 
 .navSubActive {
-  background: var(--shell-accent-soft);
+  background: var(--shell-accent-softer);
   color: var(--bl-text-inverse);
+  font-weight: 600;
 }
 
 .navSubTag,
 .navSubTagActive {
   flex-shrink: 0;
-  padding: 0.1875rem 0.375rem;
+  padding: var(--bl-space-0-5) var(--bl-space-1-5);
   font-size: var(--bl-text-2xs);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--on-dark-3);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--on-dark-3, #a1a1aa) 90%, transparent);
   text-decoration: none;
   border: 1px solid var(--shell-sidebar-border);
   border-radius: var(--bl-radius-xs);
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color var(--bl-duration-fast, 120ms) ease,
+    border-color var(--bl-duration-fast, 120ms) ease,
+    background var(--bl-duration-fast, 120ms) ease;
 
   &:focus-visible {
     outline: 2px solid var(--shell-focus);
@@ -520,18 +648,25 @@
 
 .navSubTag:hover {
   color: var(--bl-text-inverse);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--shell-sidebar-border-strong);
+  background: var(--shell-sidebar-hover);
 }
 
 .navSubTagActive {
-  color: var(--bl-accent-hover);
-  border-color: rgba(225, 29, 72, 0.4);
+  color: color-mix(in srgb, var(--shell-accent) 70%, white 30%);
+  border-color: color-mix(in srgb, var(--shell-accent) 42%, transparent);
+  background: var(--shell-accent-softer);
 }
 
 .navIcon {
   display: flex;
-  color: var(--on-dark-3);
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: color-mix(in srgb, var(--on-dark-3, #a1a1aa) 92%, transparent);
   flex-shrink: 0;
+  transition: color var(--bl-duration-fast, 120ms) ease;
 }
 
 .navText {
@@ -557,8 +692,8 @@
 .sidebarFooter {
   margin-top: auto;
   flex-shrink: 0;
-  padding: var(--bl-space-2-5) var(--bl-space-0-5) var(--bl-space-0);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: var(--bl-space-2) var(--bl-space-0-5) var(--bl-space-0);
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
 }
 
 .userTrigger {
@@ -1190,7 +1325,9 @@
   .sidebar,
   .overlay,
   .navItem,
-  .active,
+  .navItemActive,
+  .navGroupContent,
+  .navGroupChevron,
   .searchTrigger,
   .iconBtn {
     transition: none !important;

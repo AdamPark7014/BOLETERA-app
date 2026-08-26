@@ -2,21 +2,133 @@
 
 .footer {
   margin-top: auto;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  color: var(--text-primary);
+  background: var(--color-surface-inverse);
+  color: var(--text-inverse);
 }
 
+/* —— Newsletter band —— */
+.newsletter {
+  border-bottom: 1px solid var(--color-border-inverse);
+  background:
+    radial-gradient(ellipse 80% 120% at 100% 0%, rgba(225, 29, 72, 0.18), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+}
+
+.newsletterInner {
+  max-width: var(--layout-max);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--layout-gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.newsletterCopy {
+  flex: 1 1 16rem;
+  min-width: 0;
+
+  h3 {
+    margin: 0 0 var(--space-3xs);
+    font-family: var(--font-family-heading);
+    font-size: var(--display-sm);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+  }
+
+  p {
+    margin: 0;
+    font-size: var(--text-base);
+    color: var(--text-inverse-muted);
+    line-height: var(--leading-normal);
+    max-width: 36ch;
+  }
+}
+
+.newsletterEyebrow {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.newsletterForm {
+  display: flex;
+  flex: 1 1 20rem;
+  max-width: 28rem;
+  gap: var(--space-xs);
+  align-items: stretch;
+
+  @include bp.below(bp.$bp-xs) {
+    flex-direction: column;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+.newsletterInput {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--control-height-md);
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border-inverse);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-inverse);
+  font: inherit;
+  font-size: var(--text-base);
+  transition:
+    border-color var(--duration-fast),
+    background var(--duration-fast);
+
+  &::placeholder {
+    color: rgba(248, 249, 251, 0.45);
+  }
+
+  &:focus-visible {
+    border-color: rgba(225, 29, 72, 0.6);
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.newsletterBtn {
+  flex-shrink: 0;
+  min-height: var(--control-height-md);
+  padding: 0 var(--space-lg);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--text-on-accent);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  box-shadow: var(--shadow-accent);
+  transition:
+    background var(--duration-fast),
+    transform var(--duration-fast);
+
+  &:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+  }
+}
+
+/* —— 4-column link grid —— */
 .inner {
   max-width: var(--layout-max);
   margin: 0 auto;
-  padding: 2.5rem var(--layout-gutter) var(--space-lg);
+  padding: var(--space-2xl) var(--layout-gutter) var(--space-lg);
   display: grid;
-  grid-template-columns: 1.4fr repeat(4, 1fr);
-  gap: var(--bl-space-7);
+  grid-template-columns: 1.35fr repeat(3, 1fr);
+  gap: var(--space-xl);
 
   @include bp.below(bp.$bp-lg) {
     grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
   }
 
   @include bp.below(bp.$bp-xs) {
@@ -31,16 +143,50 @@
 .brand {
   margin: 0 0 var(--space-3xs);
   font-family: var(--font-family-heading);
-  font-size: var(--bl-text-2xl);
+  font-size: var(--display-sm);
   letter-spacing: var(--tracking-widest);
+  color: var(--text-inverse);
 }
 
 .tagline {
-  margin: var(--bl-space-0);
+  margin: 0 0 var(--space-md);
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--text-inverse-muted);
   line-height: var(--leading-normal);
-  max-width: 16rem;
+  max-width: 18rem;
+}
+
+.social {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+
+  a {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-border-inverse);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-inverse-muted);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    text-decoration: none;
+    transition:
+      color var(--duration-fast),
+      border-color var(--duration-fast),
+      background var(--duration-fast);
+
+    &:hover {
+      color: var(--color-accent);
+      border-color: rgba(225, 29, 72, 0.45);
+      background: rgba(225, 29, 72, 0.12);
+    }
+  }
 }
 
 .col {
@@ -50,40 +196,35 @@
     font-weight: var(--weight-bold);
     letter-spacing: var(--tracking-wider);
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: rgba(248, 249, 251, 0.5);
   }
 
   ul {
     list-style: none;
-    margin: var(--bl-space-0);
-    padding: var(--bl-space-0);
+    margin: 0;
+    padding: 0;
   }
 
   a {
-    /*
-     * Los enlaces del pie medían ~21px de alto con 6px de separación: por
-     * debajo del objetivo táctil de 24px de WCAG 2.2 AA. El padding vertical
-     * los lleva a 30px sin cambiar el ritmo visual de la columna.
-     */
     display: inline-flex;
     align-items: center;
     min-height: var(--target-min);
     padding: var(--space-3xs) 0;
-    color: var(--text-secondary);
+    color: var(--text-inverse-muted);
     text-decoration: none;
     font-size: var(--text-base);
+    transition: color var(--duration-fast);
 
     &:hover {
-      color: var(--color-accent-text);
-      text-decoration: underline;
+      color: var(--color-accent);
     }
   }
 }
 
-/*
- * Las ciudades llegan por streaming desde el servidor. Reservamos el alto de
- * la lista completa (9 filas de 30px) para que el pie no salte cuando entran.
- */
+.colSubhead {
+  margin-top: var(--space-lg) !important;
+}
+
 .cityList {
   min-height: 16.875rem;
 
@@ -97,5 +238,7 @@
   margin: 0 auto;
   padding: 0 var(--layout-gutter) var(--space-xl);
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: rgba(248, 249, 251, 0.45);
+  border-top: 1px solid var(--color-border-inverse);
+  padding-top: var(--space-lg);
 }

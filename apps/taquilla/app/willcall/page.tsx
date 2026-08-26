@@ -2,6 +2,15 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { EVENT_STOCK_IMAGES } from '@boletera/shared';
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  SearchInput,
+} from '@boletera/ui';
 import { getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import type { Hotkey } from '@/lib/hotkeys';
@@ -109,52 +118,81 @@ export default function WillcallPage() {
         </p>
       )}
 
-      <p className={styles.hint}>
-        Pide identificación, verifica nombre/email y marca “ID verificado” antes de entregar.
-      </p>
+      <Card
+        padding="none"
+        className={styles.heroCard}
+        style={{ backgroundImage: `url(${EVENT_STOCK_IMAGES.OPEN_AIR})` }}
+      >
+        <div className={styles.heroOverlay} />
+        <div className={styles.heroContent}>
+          <Badge tone="accent" variant="soft">Identificación obligatoria</Badge>
+          <p>
+            Pide identificación, verifica nombre/email y marca “ID verificado” antes de entregar
+            boletos comprados en línea.
+          </p>
+        </div>
+      </Card>
 
-      <form onSubmit={(e) => void search(e)} className={styles.search}>
-        <input
-          id="willcall-q"
-          autoFocus
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Nombre, email u orden…"
-          aria-label="Buscar will-call"
-        />
-        <kbd>F4</kbd>
-        <button type="submit" disabled={loading}>
-          {loading ? '…' : 'Buscar'}
-        </button>
-      </form>
+      <Card padding="md" className={styles.searchCard}>
+        <form onSubmit={(e) => void search(e)} className={styles.searchForm}>
+          <SearchInput
+            id="willcall-q"
+            autoFocus
+            value={q}
+            onValueChange={setQ}
+            placeholder="Nombre, email u orden…"
+            aria-label="Buscar will-call"
+            inputSize="lg"
+            shortcut="F4"
+          />
+          <Button type="submit" size="lg" loading={loading} loadingLabel="Buscando…">
+            Buscar
+          </Button>
+        </form>
+      </Card>
 
       <ul className={styles.list}>
         {rows.map((r) => (
-          <li key={r.orderId} className={r.pickedUpAt ? styles.picked : undefined}>
-            <div className={styles.body}>
-              <div className={styles.head}>
-                <strong>{r.buyerName || 'Sin nombre'}</strong>
-                <span className={r.pickedUpAt ? styles.badgeDone : styles.badgeWait}>
-                  {r.pickedUpAt ? 'Entregado' : 'Pendiente'}
-                </span>
-              </div>
-              <span className={styles.meta}>
-                {r.publicId} · {r.buyerEmail || 'sin email'}
-              </span>
-              <span className={styles.meta}>{r.eventTitle} · ${r.total.toFixed(2)}</span>
+          <li key={r.orderId}>
+            <Card
+              padding="md"
+              variant="outline"
+              className={r.pickedUpAt ? styles.picked : undefined}
+            >
+              <CardHeader
+                title={r.buyerName || 'Sin nombre'}
+                description={`${r.publicId} · ${r.buyerEmail || 'sin email'}`}
+                actions={
+                  <Badge
+                    tone={r.pickedUpAt ? 'success' : 'warning'}
+                    variant="soft"
+                    dot
+                  >
+                    {r.pickedUpAt ? 'Entregado' : 'Pendiente'}
+                  </Badge>
+                }
+              />
+
+              <p className={styles.eventMeta}>
+                {r.eventTitle} · ${r.total.toFixed(2)}
+              </p>
+
               <ul className={styles.ticketList}>
                 {r.tickets.map((t) => (
                   <li key={t.code}>
                     <code>{t.code}</code>
-                    <em>{t.seatInfo || t.status}</em>
+                    <span>{t.seatInfo || t.status}</span>
+                    <Badge tone="neutral" variant="outline" size="sm">{t.status}</Badge>
                   </li>
                 ))}
               </ul>
+
               {r.pickedUpAt && (
-                <em className={styles.done}>
+                <p className={styles.doneTime}>
                   Entregado {new Date(r.pickedUpAt).toLocaleString('es-MX')}
-                </em>
+                </p>
               )}
+
               {!r.pickedUpAt && (
                 <label className={styles.verify}>
                   <input
@@ -167,30 +205,42 @@ export default function WillcallPage() {
                   ID verificado (nombre coincide)
                 </label>
               )}
-            </div>
-            <div className={styles.actions}>
-              <button type="button" onClick={() => void reprint(r.orderId)}>
-                Reimprimir
-              </button>
-              {!r.pickedUpAt && (
-                <button
-                  type="button"
-                  className={styles.primary}
-                  disabled={!verified[r.orderId]}
-                  onClick={() => void fulfill(r.orderId)}
-                >
-                  Entregar
-                </button>
-              )}
-            </div>
+
+              <div className={styles.actions}>
+                <Button variant="secondary" size="md" onClick={() => void reprint(r.orderId)}>
+                  Reimprimir
+                </Button>
+                {!r.pickedUpAt && (
+                  <Button
+                    variant="primary"
+                    size="md"
+                    disabled={!verified[r.orderId]}
+                    onClick={() => void fulfill(r.orderId)}
+                  >
+                    Entregar
+                  </Button>
+                )}
+              </div>
+            </Card>
           </li>
         ))}
       </ul>
+
       {!loading && searched && rows.length === 0 && (
-        <p className={styles.empty}>Sin resultados para “{q}”</p>
+        <EmptyState
+          illustration="inbox"
+          title="Sin resultados"
+          description={`No hay órdenes will-call para “${q}”.`}
+          size="sm"
+        />
       )}
       {!searched && !loading && (
-        <p className={styles.empty}>Escribe un nombre, email o folio de orden para comenzar.</p>
+        <EmptyState
+          illustration="seats"
+          title="Busca una orden"
+          description="Escribe un nombre, email o folio de orden para comenzar."
+          size="sm"
+        />
       )}
     </PosShell>
   );

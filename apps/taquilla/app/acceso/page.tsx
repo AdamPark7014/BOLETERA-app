@@ -2,6 +2,14 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { EVENT_STOCK_IMAGES } from '@boletera/shared';
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Input,
+} from '@boletera/ui';
 import { ApiError, apiJson, getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import type { Hotkey } from '@/lib/hotkeys';
@@ -45,6 +53,15 @@ const VERDICT_TONE: Record<Verdict, 'ok' | 'warn' | 'bad'> = {
   OFFLINE_UNVERIFIABLE: 'warn',
   INVALID: 'bad',
   UNKNOWN: 'bad',
+};
+
+const VERDICT_BADGE: Record<Verdict, 'success' | 'warning' | 'danger'> = {
+  OK: 'success',
+  OFFLINE_OK: 'success',
+  DUPLICATE: 'warning',
+  OFFLINE_UNVERIFIABLE: 'warning',
+  INVALID: 'danger',
+  UNKNOWN: 'danger',
 };
 
 export default function AccesoPage() {
@@ -368,107 +385,152 @@ export default function AccesoPage() {
         </p>
       )}
 
-      <section className={styles.setup}>
-        <label className={styles.field}>
-          <small>Evento</small>
-          <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
-            {events.length === 0 && <option value="">Sin eventos</option>}
-            {events.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.field}>
-          <small>Puerta / zona (opcional)</small>
-          <input
+      <Card
+        padding="none"
+        className={styles.heroCard}
+        style={{ backgroundImage: `url(${EVENT_STOCK_IMAGES.SPORTS})` }}
+      >
+        <div className={styles.heroOverlay} />
+        <div className={styles.heroContent}>
+          <Badge tone="accent" variant="soft">Puerta y validación</Badge>
+          <p>Escanea QR o código. Descarga el manifiesto antes de abrir sin red.</p>
+        </div>
+      </Card>
+
+      <Card padding="md" className={styles.setupCard}>
+        <div className={styles.setup}>
+          <label className={styles.selectField}>
+            <small>Evento</small>
+            <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
+              {events.length === 0 && <option value="">Sin eventos</option>}
+              {events.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Input
+            id="access-zone"
+            label="Puerta / zona (opcional)"
             value={zoneId}
             onChange={(e) => {
               setZoneId(e.target.value);
               localStorage.setItem(ZONE_KEY, e.target.value);
             }}
             placeholder="id de zona de acceso"
+            inputSize="lg"
           />
-        </label>
-      </section>
-
-      <section className={styles.manifestBar}>
-        <div className={styles.manifestInfo}>
-          {manifest ? (
-            <>
-              <strong>
-                Manifiesto: {manifest.count.toLocaleString('es-MX')} boletos
-                {manifest.complete ? '' : ' (incompleto)'}
-              </strong>
-              <small>
-                Emitido {new Date(manifest.issuedAt).toLocaleString('es-MX')} · descargado{' '}
-                {new Date(manifest.downloadedAt).toLocaleString('es-MX')}
-              </small>
-            </>
-          ) : (
-            <>
-              <strong>Sin manifiesto para este evento</strong>
-              <small>Descárgalo ANTES de abrir puertas: sin él no se puede validar sin red.</small>
-            </>
-          )}
         </div>
-        <button type="button" className={styles.action} onClick={() => void doDownload()} disabled={downloading != null || !eventId}>
-          {downloading != null ? `Descargando… ${downloading.toLocaleString('es-MX')}` : 'Descargar · F5'}
-        </button>
-      </section>
+      </Card>
 
-      <form onSubmit={submit} className={styles.scanForm}>
-        <input
-          ref={inputRef}
-          autoFocus
-          className={styles.scanInput}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="Escanea el QR o teclea el código…"
-          aria-label="Código de boleto"
-        />
-        <button type="submit" className={styles.scanBtn} disabled={busy}>
-          {busy ? '…' : 'Validar'}
-        </button>
-      </form>
+      <Card padding="md" className={styles.manifestCard}>
+        <div className={styles.manifestBar}>
+          <div className={styles.manifestInfo}>
+            {manifest ? (
+              <>
+                <strong>
+                  Manifiesto: {manifest.count.toLocaleString('es-MX')} boletos
+                  {manifest.complete ? '' : ' (incompleto)'}
+                </strong>
+                <small>
+                  Emitido {new Date(manifest.issuedAt).toLocaleString('es-MX')} · descargado{' '}
+                  {new Date(manifest.downloadedAt).toLocaleString('es-MX')}
+                </small>
+                <Badge
+                  tone={manifest.complete ? 'success' : 'warning'}
+                  variant="soft"
+                  size="sm"
+                  dot
+                >
+                  {manifest.complete ? 'Completo' : 'Incompleto'}
+                </Badge>
+              </>
+            ) : (
+              <>
+                <strong>Sin manifiesto para este evento</strong>
+                <small>Descárgalo ANTES de abrir puertas: sin él no se puede validar sin red.</small>
+                <Badge tone="danger" variant="soft" dot>Sin manifiesto</Badge>
+              </>
+            )}
+          </div>
+          <Button
+            variant="secondary"
+            size="lg"
+            disabled={downloading != null || !eventId}
+            loading={downloading != null}
+            loadingLabel={`Descargando… ${downloading?.toLocaleString('es-MX') ?? ''}`}
+            onClick={() => void doDownload()}
+          >
+            Descargar · F5
+          </Button>
+        </div>
+      </Card>
+
+      <Card padding="md" className={styles.scanCard}>
+        <form onSubmit={submit} className={styles.scanForm}>
+          <Input
+            ref={inputRef}
+            autoFocus
+            id="access-scan"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Escanea el QR o teclea el código…"
+            aria-label="Código de boleto"
+            inputSize="lg"
+            className={styles.scanInput}
+          />
+          <Button type="submit" size="lg" loading={busy} loadingLabel="Validando…">
+            Validar
+          </Button>
+        </form>
+      </Card>
 
       {outcome && (
-        <section
+        <Card
+          padding="lg"
+          variant="outline"
           className={
             tone === 'ok' ? styles.verdictOk : tone === 'warn' ? styles.verdictWarn : styles.verdictBad
           }
           role="status"
           aria-live="assertive"
         >
-          <strong>{outcome.title}</strong>
-          <p>{outcome.detail}</p>
-          {outcome.extra && <small>{outcome.extra}</small>}
-        </section>
+          <div className={styles.verdictHead}>
+            <strong className={styles.verdictTitle}>{outcome.title}</strong>
+            <Badge tone={VERDICT_BADGE[outcome.verdict]} variant="solid" size="md">
+              {outcome.verdict.replace('_', ' ')}
+            </Badge>
+          </div>
+          <p className={styles.verdictDetail}>{outcome.detail}</p>
+          {outcome.extra && <small className={styles.verdictExtra}>{outcome.extra}</small>}
+        </Card>
       )}
 
-      <section className={styles.queueBar}>
-        <span>
-          <strong>{pending}</strong> escaneo{pending === 1 ? '' : 's'} en cola
-        </span>
-        <button type="button" className={styles.action} onClick={() => void runSync()}>
-          Sincronizar · F8
-        </button>
-      </section>
+      <Card padding="md" className={styles.queueCard}>
+        <div className={styles.queueBar}>
+          <span className={styles.queueStat}>
+            <strong>{pending}</strong>
+            <span>escaneo{pending === 1 ? '' : 's'} en cola</span>
+          </span>
+          <Button variant="outline" size="md" onClick={() => void runSync()}>
+            Sincronizar · F8
+          </Button>
+        </div>
+      </Card>
 
       {conflicts.length > 0 && (
-        <section className={styles.conflicts}>
-          <header>
-            <h2>{conflicts.length} conflictos de sincronización</h2>
-            <button type="button" onClick={() => void clearConflicts().then(refreshLocal)}>
-              Marcar revisados
-            </button>
-          </header>
-          <p className={styles.conflictLead}>
-            El API aplicó el resto del lote. Estos escaneos NO se aplicaron y operaciones debe
-            revisarlos: no se ocultan.
-          </p>
-          <ul>
+        <Card padding="md" className={styles.conflicts}>
+          <CardHeader
+            title={`${conflicts.length} conflictos de sincronización`}
+            description="El API aplicó el resto del lote. Estos escaneos NO se aplicaron y operaciones debe revisarlos."
+            actions={
+              <Button variant="outline" size="sm" onClick={() => void clearConflicts().then(refreshLocal)}>
+                Marcar revisados
+              </Button>
+            }
+          />
+          <ul className={styles.conflictList}>
             {conflicts.slice(0, 25).map((c) => (
               <li key={c.id}>
                 <code>{c.ticketId}</code>
@@ -481,29 +543,36 @@ export default function AccesoPage() {
                         c.firstScanBy ? ` · operador ${c.firstScanBy}` : ''
                       }`}
                 </span>
-                <em>intento {new Date(c.attemptedAt).toLocaleTimeString('es-MX')}</em>
+                <Badge tone="danger" variant="soft" size="sm">
+                  {new Date(c.attemptedAt).toLocaleTimeString('es-MX')}
+                </Badge>
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       )}
 
       {history.length > 1 && (
-        <section className={styles.history}>
-          <h2>Últimos escaneos</h2>
-          <ul>
+        <Card padding="md" className={styles.history}>
+          <CardHeader title="Últimos escaneos" />
+          <ul className={styles.historyList}>
             {history.slice(1).map((h) => (
               <li key={h.at} className={styles[`tone${VERDICT_TONE[h.verdict]}`]}>
-                <strong>{h.title}</strong>
+                <Badge tone={VERDICT_BADGE[h.verdict]} variant="soft" size="sm">
+                  {h.title}
+                </Badge>
                 <span>{h.detail}</span>
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       )}
 
-      <section className={styles.limits}>
-        <h2>Qué garantiza el modo sin red — y qué no</h2>
+      <Card padding="md" className={styles.limits}>
+        <CardHeader
+          title="Qué garantiza el modo sin red — y qué no"
+          description="Transparencia operativa para personal de puerta."
+        />
         <ul className={styles.limitsOk}>
           <li>Que el id del boleto pertenecía al evento cuando se descargó el manifiesto.</li>
           <li>El estado (vendido / ya usado) en ese mismo instante.</li>
@@ -532,7 +601,7 @@ export default function AccesoPage() {
             no los códigos impresos.
           </li>
         </ul>
-      </section>
+      </Card>
     </PosShell>
   );
 }

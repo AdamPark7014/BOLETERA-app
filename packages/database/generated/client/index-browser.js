@@ -303,6 +303,7 @@ exports.Prisma.TenantThemeScalarFieldEnum = {
   faviconUrl: 'faviconUrl',
   customDomain: 'customDomain',
   subdomain: 'subdomain',
+  siteContent: 'siteContent',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

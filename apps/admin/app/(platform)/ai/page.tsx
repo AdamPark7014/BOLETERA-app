@@ -43,6 +43,7 @@ import {
 } from './_lib/format';
 import { AI_RANGE_OPTIONS, buildAiRange, type AiRangeKey } from './_lib/range';
 import { isAiServiceUnavailable } from './_lib/status';
+import { Notice } from '../orders/_ui/States';
 import styles from './ai.module.scss';
 
 type AiView = 'chat' | 'insights' | 'panels' | 'actions';
@@ -312,8 +313,7 @@ export default function AiPage() {
       </PageHeader>
 
       {aiUnavailable ? (
-        <div className={styles.banner} role="status">
-          <strong>Motor de IA no disponible</strong>
+        <Notice tone="warn" title="Motor de IA no disponible">
           <p>
             Los hooks consultan <code>/ai/summaries/executive</code>,{' '}
             <code>/ai/anomalies</code>, <code>/ai/recommendations</code>,{' '}
@@ -321,10 +321,10 @@ export default function AiPage() {
             <code>/ai/forecast/events/:eventId</code>. Mientras no respondan, la UI
             muestra empty states honestos basados en <code>ai-contracts</code>.
           </p>
-        </div>
+        </Notice>
       ) : null}
 
-      <section className={styles.kpiGrid} aria-label="Indicadores del copiloto">
+      <Section columns={4} gap="md" aria-label="Indicadores del copiloto">
         <KpiCard
           label="Alertas de anomalía"
           value={anomalyCount === undefined ? '—' : formatNumber(anomalyCount)}
@@ -378,7 +378,7 @@ export default function AiPage() {
               : 'Selecciona un evento'
           }
         />
-      </section>
+      </Section>
 
       <Tabs
         label="Vistas del copiloto"

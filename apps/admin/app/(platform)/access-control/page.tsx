@@ -256,6 +256,10 @@ export default function AccessControlPage() {
         eyebrow="Operaciones · Accesos"
         title="Access Control"
         description="Puertas, zonas, políticas efectivas, dispositivos, throughput e incidentes de acceso."
+        breadcrumbs={[
+          { label: 'TicketOS', href: '/dashboard' },
+          { label: 'Access Control' },
+        ]}
         actions={
           <Link href="/scanner" className={styles.scannerLink}>
             <Button type="button" variant="secondary">
@@ -375,13 +379,12 @@ export default function AccessControlPage() {
             )}
           </div>
           <aside className={styles.card}>
-            <div className={styles.cardHead}>
-              <div>
-                <h2>Cobertura operativa</h2>
-                <p>Operadores con rol de acceso.</p>
-              </div>
-            </div>
-            <ul className={styles.sideList}>
+            <Section
+              title="Cobertura operativa"
+              description="Operadores con rol de acceso."
+              headingLevel="h3"
+            >
+              <ul className={styles.sideList}>
               <li className={styles.sideRow}>
                 <span>Scanner</span>
                 <strong>{formatCount(scannerOps)}</strong>
@@ -397,6 +400,7 @@ export default function AccessControlPage() {
                 </strong>
               </li>
             </ul>
+            </Section>
           </aside>
         </div>
       ) : null}
@@ -419,13 +423,12 @@ export default function AccessControlPage() {
             </p>
           </div>
           <aside className={styles.card}>
-            <div className={styles.cardHead}>
-              <div>
-                <h2>Privilegio efectivo</h2>
-                <p>Distribución de roles activos.</p>
-              </div>
-            </div>
-            {slices.length === 0 ? (
+            <Section
+              title="Privilegio efectivo"
+              description="Distribución de roles activos."
+              headingLevel="h3"
+            >
+              {slices.length === 0 ? (
               <EmptyState
                 title="Sin privilegios asignados"
                 description="Invita personal en Staff para materializar políticas."
@@ -440,6 +443,7 @@ export default function AccessControlPage() {
                 height={220}
               />
             )}
+            </Section>
           </aside>
         </div>
       ) : null}
@@ -476,16 +480,16 @@ export default function AccessControlPage() {
 
       {!error && tab === 'throughput' ? (
         <div className={styles.layout}>
-          <div className={styles.card}>
-            <div className={styles.cardHead}>
-              <div>
-                <h2>Throughput de check-ins</h2>
-                <p>Curva de llegadas en el rango {range.label.toLowerCase()}.</p>
-              </div>
+          <Section
+            title="Throughput de check-ins"
+            description={`Curva de llegadas en el rango ${range.label.toLowerCase()}.`}
+            actions={
               <Badge tone="accent" variant="outline" size="sm">
                 {range.granularity === 'hour' ? 'Horaria' : 'Diaria'}
               </Badge>
-            </div>
+            }
+            className={styles.card}
+          >
             {throughputSeries.length === 0 && !loading && !timeseriesQ.isPending ? (
               <EmptyState
                 title="Sin throughput"
@@ -502,15 +506,10 @@ export default function AccessControlPage() {
                 smooth
               />
             )}
-          </div>
+          </Section>
           <aside className={styles.card}>
-            <div className={styles.cardHead}>
-              <div>
-                <h2>Resumen</h2>
-                <p>Volumen del periodo.</p>
-              </div>
-            </div>
-            <ul className={styles.sideList}>
+            <Section title="Resumen" description="Volumen del periodo." headingLevel="h3">
+              <ul className={styles.sideList}>
               <li className={styles.sideRow}>
                 <span>Vendidos</span>
                 <strong>{formatCount(access?.ticketsSold ?? 0)}</strong>
@@ -528,24 +527,25 @@ export default function AccessControlPage() {
                 <strong>{formatCount(doors.length)}</strong>
               </li>
             </ul>
+            </Section>
           </aside>
         </div>
       ) : null}
 
       {!error && tab === 'incidents' ? (
         <div className={styles.layout}>
-          <div className={styles.card}>
-            <div className={styles.cardHead}>
-              <div>
-                <h2>Incidentes de acceso</h2>
-                <p>Alertas del dominio access en el rango seleccionado.</p>
-              </div>
+          <Section
+            title="Incidentes de acceso"
+            description="Alertas del dominio access en el rango seleccionado."
+            actions={
               <Link href="/scanner">
                 <Button type="button" size="sm" variant="secondary">
                   Resolver en scanner
                 </Button>
               </Link>
-            </div>
+            }
+            className={styles.card}
+          >
             {incidents.length === 0 ? (
               <EmptyState
                 title="Sin incidentes de acceso"
@@ -572,15 +572,10 @@ export default function AccessControlPage() {
                 ))}
               </ul>
             )}
-          </div>
+          </Section>
           <aside className={styles.card}>
-            <div className={styles.cardHead}>
-              <div>
-                <h2>Severidad</h2>
-                <p>Conteo de alertas access.</p>
-              </div>
-            </div>
-            <ul className={styles.sideList}>
+            <Section title="Severidad" description="Conteo de alertas access." headingLevel="h3">
+              <ul className={styles.sideList}>
               {(['critical', 'warning', 'info'] as const).map((severity) => (
                 <li key={severity} className={styles.sideRow}>
                   <Badge tone={alertTone(severity)} variant="outline" size="sm">
@@ -592,6 +587,7 @@ export default function AccessControlPage() {
                 </li>
               ))}
             </ul>
+            </Section>
           </aside>
         </div>
       ) : null}

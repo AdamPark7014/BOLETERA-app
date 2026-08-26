@@ -1,5 +1,31 @@
 @use '../styles/breakpoints' as bp;
 
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-header) - 1);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: rgba(10, 10, 10, 0.42);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+  animation: backdropIn 0.25s ease both;
+
+  @include bp.from(bp.$bp-2xl) {
+    display: none;
+  }
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .header {
   position: sticky;
   top: 0;
@@ -64,46 +90,32 @@
 }
 
 .scrolled {
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom-color: rgba(0, 0, 0, 0.07);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.03),
+    0 8px 24px rgba(10, 10, 10, 0.04);
+}
+
+.heroHandoff {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 10px 30px rgba(10, 10, 10, 0.06);
 }
 
 .dark {
-  background: rgba(10, 10, 10, 0.5);
-  border-bottom-color: rgba(255, 255, 255, 0.06);
+  background: #14171d;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
   color: var(--text-inverse);
 
   &.scrolled {
-    background: rgba(10, 10, 10, 0.85);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: #14171d;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
   }
 
   &.overHero {
-    /*
-     * Velo propio en lugar de `transparent`.
-     *
-     * La barra se pinta sobre el hero, pero el hero puede no estar: la home fija
-     * el tema oscuro de antemano y si la cartelera no carga —API caída, o sin
-     * evento destacado— el fondo real es la página blanca. Con transparencia
-     * total el texto claro quedaba en ~1.05:1 de contraste: el logotipo
-     * literalmente desaparecía.
-     *
-     * El degradado conserva la sensación de barra flotante sobre la imagen y a
-     * la vez garantiza un fondo oscuro propio cuando no hay nada detrás.
-     */
-    /*
-     * Las opacidades no son estéticas, son el suelo de contraste: sobre blanco,
-     * 0.72 compone un gris ~79 y 0.62 uno ~103, que dan 8.1:1 y 5.4:1 contra el
-     * texto claro. Con 0.55 el resultado era 4.2:1 — por debajo del mínimo.
-     * Bajar de 0.62 vuelve a romperlo.
-     */
-    background: linear-gradient(
-      to bottom,
-      rgba(10, 10, 10, 0.72),
-      rgba(10, 10, 10, 0.62)
-    );
-    border-bottom-color: transparent;
+    background: #14171d;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
 
@@ -130,12 +142,17 @@
   .iconLink:hover,
   .userLink:hover {
     color: var(--text-inverse);
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .navLink::after,
+  .navActive::after {
+    background: var(--text-inverse);
   }
 
   .navActive {
     color: var(--text-inverse);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .cta {
@@ -282,14 +299,21 @@
   min-height: var(--control-height-sm);
   color: var(--text-primary);
   text-decoration: none;
+  transition: opacity var(--duration-fast) ease;
+
+  &:hover {
+    opacity: 0.92;
+  }
 }
 
 .logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.875rem;
-  height: 1.875rem;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(10, 10, 10, 0.12));
 
   svg {
     width: 100%;
@@ -297,11 +321,34 @@
   }
 }
 
+.brandLockup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  line-height: 1;
+}
+
 .brandText {
   font-family: var(--font-family-heading);
   font-weight: 400;
   font-size: var(--text-xl);
   letter-spacing: var(--tracking-brand);
+}
+
+.brandTag {
+  font-size: 0.625rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+
+  @include bp.below(bp.$bp-xs) {
+    display: none;
+  }
+}
+
+.dark .brandTag {
+  color: rgba(250, 250, 250, 0.62);
 }
 
 /* Navegación */
@@ -318,31 +365,31 @@
    * nada. Ahora el punto de corte del cajón es el mismo que el del botón.
    */
   @include bp.below(bp.$bp-2xl) {
-    position: absolute;
+    position: fixed;
     top: var(--header-height);
     left: 0;
     right: 0;
+    bottom: 0;
     flex-direction: column;
     align-items: stretch;
-    overflow: visible;
-    padding: var(--space-xs) var(--space-md) var(--space-md);
-    background: inherit;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    transform: translateY(-10px);
-    opacity: 0;
+    overflow-y: auto;
+    padding: var(--space-sm) var(--space-md) var(--space-xl);
+    background: var(--color-surface);
+    border-bottom: none;
+    transform: translateX(100%);
+    opacity: 1;
     pointer-events: none;
     visibility: hidden;
     transition:
-      opacity var(--duration-base),
-      transform var(--duration-base),
-      visibility var(--duration-base);
+      transform 0.32s var(--ease-out),
+      visibility 0.32s;
+    box-shadow: -12px 0 40px rgba(10, 10, 10, 0.12);
   }
 }
 
 .navOpen {
   @include bp.below(bp.$bp-2xl) {
-    transform: translateY(0);
-    opacity: 1;
+    transform: translateX(0);
     pointer-events: auto;
     visibility: visible;
   }
@@ -350,6 +397,7 @@
 
 .navLink,
 .navActive {
+  position: relative;
   display: inline-flex;
   align-items: center;
   /* 24x24 CSS px mínimo (WCAG 2.2 AA 2.5.8). */
@@ -359,16 +407,46 @@
   font-weight: var(--weight-semibold);
   color: var(--ink-600);
   text-decoration: none;
-  border-radius: var(--radius-none);
-  border-bottom: 2px solid transparent;
+  border-radius: var(--radius-md);
+  border-bottom: none;
   transition:
     color var(--duration-fast),
-    border-color var(--duration-fast);
+    background var(--duration-fast);
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: var(--space-xs);
+    right: var(--space-xs);
+    bottom: 0.2rem;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  @include bp.below(bp.$bp-2xl) {
+    min-height: var(--control-height-md);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
+
+    &::after {
+      display: none;
+    }
+  }
 }
 
 .navLink:hover {
   color: var(--text-primary);
-  background: transparent;
+  background: rgba(0, 0, 0, 0.04);
+
+  &::after {
+    transform: scaleX(1);
+    opacity: 0.45;
+  }
 }
 
 /*
@@ -377,8 +455,12 @@
  */
 .navActive {
   color: var(--text-primary);
-  background: transparent;
-  border-bottom-color: var(--color-accent);
+  background: var(--color-surface-muted);
+
+  &::after {
+    transform: scaleX(1);
+    opacity: 1;
+  }
 }
 
 /* Acciones */
@@ -400,11 +482,13 @@
   text-decoration: none;
   transition:
     background var(--duration-fast),
-    color var(--duration-fast);
+    color var(--duration-fast),
+    transform var(--duration-fast);
 
   &:hover {
     color: var(--text-primary);
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
   }
 }
 
@@ -477,10 +561,19 @@
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast),
+    transform var(--duration-fast);
 
   &:hover {
     color: var(--text-primary);
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  &[aria-expanded='true'] {
+    color: var(--color-accent);
+    background: rgba(225, 29, 72, 0.08);
   }
 
   @include bp.below(bp.$bp-2xl) {

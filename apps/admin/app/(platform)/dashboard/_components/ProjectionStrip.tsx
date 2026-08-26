@@ -19,7 +19,7 @@ export function ProjectionStrip({ projection }: ProjectionStripProps) {
       : 0;
 
   return (
-    <Card className={styles.projection} padding="sm" variant="outline">
+    <Card className={styles.projection} padding="sm" variant="elevated">
       <div className={styles.projectionInner}>
         <div>
           <span className={styles.projLabel}>Proyección del periodo</span>

@@ -10,6 +10,7 @@ import {
   FilterBar,
   KpiCard,
   PageHeader,
+  Section,
   SegmentedControl,
   Skeleton,
   formatNumber,
@@ -376,7 +377,7 @@ function CalendarContent() {
   };
 
   return (
-    <main className={styles.page}>
+    <div className={styles.page}>
       <PageHeader
         eyebrow="Operaciones"
         title="Calendario operativo"
@@ -384,15 +385,21 @@ function CalendarContent() {
         breadcrumbs={[{ label: 'Panel', href: '/dashboard' }, { label: 'Calendario' }]}
         actions={
           <div className={styles.headerActions}>
-            <Link href="/events" className={styles.secondaryLink}>Eventos</Link>
-            <Link href="/events/series" className={styles.secondaryLink}>Ver series</Link>
-            <Link href="/events/new" className={styles.primaryLink}>Programar evento</Link>
+            <Link href="/events" className={styles.ghostLink}>
+              Eventos
+            </Link>
+            <Link href="/events/series" className={styles.ghostLink}>
+              Ver series
+            </Link>
+            <Link href="/events/new" className={styles.primaryLink}>
+              Programar evento
+            </Link>
           </div>
         }
       />
 
       {!isPending && !isError ? (
-        <section className={styles.kpiStrip} aria-label="Indicadores del rango visible">
+        <Section columns={4} gap="md" aria-label="Indicadores del rango visible">
           <KpiCard
             label="Eventos"
             value={formatNumber(visibleEvents.length)}
@@ -417,7 +424,7 @@ function CalendarContent() {
             tone="success"
             hint="Capacidad declarada"
           />
-        </section>
+        </Section>
       ) : null}
 
       <section className={styles.calendarCard} aria-labelledby="calendar-range-title">
@@ -598,7 +605,7 @@ function CalendarContent() {
           ) : <p className={styles.noEvents}>Sin eventos para este día.</p>}
         </section>
       ) : null}
-    </main>
+    </div>
   );
 }
 

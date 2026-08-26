@@ -5,6 +5,7 @@ import {
   Badge,
   Button,
   EmptyState,
+  formatNumber,
   KpiCard,
   PageHeader,
   Section,
@@ -13,6 +14,7 @@ import {
 } from '@boletera/ui';
 import { QueryError } from '@/components/QueryStates';
 import { useToast } from '@/components/Toast/ToastProvider';
+import { Notice } from '../orders/_ui/States';
 import {
   useBanorteConfig,
   useIntegrationCatalog,
@@ -66,6 +68,16 @@ function IntegrationsCockpit() {
     });
   }, [banorte, catalog, url.filter, webhooks]);
 
+  const anyFilter = url.filter !== 'all';
+  const refreshing =
+    catalogQuery.isFetching || banorteQuery.isFetching || webhooksQuery.isFetching;
+
+  function refreshAll() {
+    void catalogQuery.refetch();
+    void banorteQuery.refetch();
+    void webhooksQuery.refetch();
+  }
+
   async function onValidateBanorte() {
     try {
       const result = await validateBanorte.mutateAsync();
@@ -98,51 +110,69 @@ function IntegrationsCockpit() {
   return (
     <div className={styles.page}>
       <PageHeader
-        eyebrow="Plataforma · Ecosistema"
+        eyebrow="Plataforma"
         title="Integraciones"
         description="Catálogo de Banorte, email SMTP y webhooks IPN. Salud y setup sin exponer secretos."
         actions={
-          <Button
-            type="button"
-            variant="outline"
-            loading={validateBanorte.isPending}
-            loadingLabel="Validando…"
-            onClick={() => void onValidateBanorte()}
-          >
-            Health check Banorte
-          </Button>
+          <div className={styles.headerActions}>
+            <Button
+              type="button"
+              variant="outline"
+              loading={validateBanorte.isPending}
+              loadingLabel="Validando…"
+              onClick={() => void onValidateBanorte()}
+            >
+              Health check Banorte
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              loading={refreshing}
+              loadingLabel="Actualizando…"
+              onClick={refreshAll}
+            >
+              Actualizar
+            </Button>
+          </div>
         }
       />
 
-      <Section columns={4} gap="sm" aria-label="Indicadores de integraciones">
+      <Section columns={4} gap="md" aria-label="Indicadores de integraciones">
         <KpiCard
           label="Conectores"
-          value={String(kpis.catalog)}
+          value={formatNumber(kpis.catalog)}
           loading={catalogQuery.isPending}
           hint="Catálogo documentado"
         />
         <KpiCard
           label="Sanas"
-          value={String(kpis.healthy)}
+          value={formatNumber(kpis.healthy)}
           tone="success"
           loading={banorteQuery.isPending}
           hint="Listas en producción"
         />
         <KpiCard
           label="Requieren setup"
-          value={String(kpis.needsSetup)}
+          value={formatNumber(kpis.needsSetup)}
           tone={kpis.needsSetup > 0 ? 'warning' : 'neutral'}
           loading={banorteQuery.isPending}
           hint="Mal configuradas o degradadas"
         />
         <KpiCard
           label="Demo / sin telemetría"
-          value={String(kpis.demoOrUnknown)}
+          value={formatNumber(kpis.demoOrUnknown)}
           tone="info"
           loading={banorteQuery.isPending}
           hint="Email SMTP sin endpoint de salud"
         />
       </Section>
+
+      <Notice tone="info" title="Telemetría por conector">
+        <p>
+          Banorte y webhooks IPN consultan APIs reales; el correo SMTP aparece como demo porque no
+          hay endpoint de salud expuesto. Usa el health check antes de activar cobros en producción.
+        </p>
+      </Notice>
 
       {banorteQuery.error ? (
         <QueryError
@@ -152,11 +182,15 @@ function IntegrationsCockpit() {
       ) : null}
 
       <div className={styles.layout}>
-        <Section
-          title="Catálogo"
-          description="Conectores con health derivado de APIs reales cuando existen."
-        >
-          <div className={styles.filters}>
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <div>
+              <h2>Catálogo</h2>
+              <p>Conectores con health derivado de APIs reales cuando existen.</p>
+            </div>
+          </div>
+
+          <div className={styles.toolbar}>
             <SegmentedControl
               label="Filtro de salud"
               size="sm"
@@ -172,6 +206,17 @@ function IntegrationsCockpit() {
                 { value: 'needsSetup', label: 'Setup' },
               ]}
             />
+            <div className={styles.filterMeta}>
+              <span>
+                {formatNumber(filtered.length)} de {formatNumber(catalog.length)} conectores
+                {anyFilter ? ' coinciden con el filtro' : ''}.
+              </span>
+              {anyFilter ? (
+                <Button type="button" variant="ghost" size="sm" onClick={() => url.setFilter('all')}>
+                  Limpiar filtros
+                </Button>
+              ) : null}
+            </div>
           </div>
 
           {filtered.length === 0 ? (
@@ -180,7 +225,7 @@ function IntegrationsCockpit() {
               description="Cambia el filtro o abre el catálogo completo."
               illustration="search"
               action={
-                <Button type="button" variant="secondary" size="sm" onClick={() => url.setFilter('all')}>
+                <Button type="button" variant="outline" onClick={() => url.setFilter('all')}>
                   Ver todos
                 </Button>
               }
@@ -198,7 +243,7 @@ function IntegrationsCockpit() {
               ))}
             </div>
           )}
-        </Section>
+        </section>
 
         <aside className={styles.sideCard}>
           <div className={styles.sideHead}>
@@ -230,11 +275,9 @@ function IntegrationsCockpit() {
           </ul>
 
           {webhooks ? (
-            <p className={styles.note} style={{ marginTop: '1rem' }}>
-              {webhooks.note}
-            </p>
+            <p className={styles.note}>{webhooks.note}</p>
           ) : (
-            <p className={styles.note} style={{ marginTop: '1rem' }}>
+            <p className={styles.note}>
               La salud de webhooks se deriva del IPN Banorte en /payments/config.
             </p>
           )}

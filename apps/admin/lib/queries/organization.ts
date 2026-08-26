@@ -64,3 +64,26 @@ export function useInviteTeamMember(organizationId: string) {
       ),
   });
 }
+
+export type UpdateOrganizationInput = Partial<{
+  name: string;
+  description: string;
+  website: string;
+  email: string;
+  phone: string;
+  allowResale: boolean;
+}>;
+
+export function useUpdateOrganization(organizationId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: UpdateOrganizationInput) =>
+      http<Record<string, unknown>>(`/organization/${organizationId}`, {
+        method: 'PATCH',
+        body,
+      }),
+    onSuccess: (data) => {
+      client.setQueryData(queryKeys.organization.detail(organizationId), data);
+    },
+  });
+}

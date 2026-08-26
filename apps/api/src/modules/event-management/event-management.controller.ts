@@ -272,6 +272,17 @@ export class EventManagementController {
     return await this.eventService.searchEvents(orgId, filters);
   }
 
+  @Put(':eventId/media')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Actualizar imágenes del evento (póster y banner)' })
+  async updateEventMedia(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+    @Body() data: { imageUrl?: string; bannerImageUrl?: string },
+  ) {
+    return await this.eventService.updateEventMedia(orgId, eventId, data);
+  }
+
   @Get(':eventId/publish-validation')
   @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
   @ApiOperation({ summary: 'Pre-publish checklist (blockers vs warnings)' })

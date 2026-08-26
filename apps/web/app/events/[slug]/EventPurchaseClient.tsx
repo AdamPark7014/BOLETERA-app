@@ -19,6 +19,7 @@ import {
   resolveOfferForSection,
 } from '@boletera/venue-engine';
 import type { Venue3DViewerProps } from '@boletera/venue-3d';
+import { Button } from '@boletera/ui';
 import { useCartStore, type CartOfferLine } from '@/lib/cart-store';
 import { useWaitingRoom } from '@/components/waiting-room/useWaitingRoom';
 import { WaitingRoomGate } from '@/components/waiting-room/WaitingRoomGate';
@@ -659,14 +660,16 @@ export function EventPurchaseClient({
               : `Total $${bestEstimate.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`}
           </p>
         </div>
-        <button
+        <Button
           type="button"
-          className={styles.cta}
+          size="lg"
           disabled={loading || (buyMode === 'map' ? !canPayMap : !canPayQty)}
+          loading={loading}
+          loadingLabel="Reservando…"
           onClick={() => (buyMode === 'map' ? checkoutMap() : checkoutBestOrGa())}
         >
-          {loading ? 'Reservando…' : 'Continuar al pago'}
-        </button>
+          Continuar al pago
+        </Button>
       </div>
     </div>
   );

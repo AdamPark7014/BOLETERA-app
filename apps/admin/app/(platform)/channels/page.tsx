@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Badge } from '@boletera/ui';
+import { Badge, Button, KpiCard, PageHeader, Section } from '@boletera/ui';
 import {
   listEvents,
   getChannelHealth,
@@ -17,7 +17,6 @@ import {
   NoOrgView,
   useSession,
 } from '../events/_shared/api-state';
-import platform from '../_styles/platform.module.scss';
 import styles from './channels.module.scss';
 import {
   CHANNEL_ORDER,
@@ -166,25 +165,27 @@ export default function ChannelsPage() {
   }
 
   return (
-    <div className={styles.wrap}>
-      <header className={styles.pageHeader}>
-        <div className={styles.headerCopy}>
-          <div className={styles.eyebrowRow}>
-            <p className={styles.eyebrow}>Distribución</p>
-          </div>
-          <h1>Canales de venta</h1>
-          <p className={styles.lead}>
-            Configura los 13 canales del dominio: activación, asignación de inventario (debe sumar
-            100 % entre canales habilitados) y responsables.
-          </p>
-        </div>
-        <div className={styles.headerControls}>
-          <label className={styles.srOnly} htmlFor="channel-event-select">
-            Evento
-          </label>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Distribución · Canales"
+        title="Canales de venta"
+        description="Configura los 13 canales del dominio: activación, asignación de inventario (debe sumar 100 % entre canales habilitados) y responsables."
+        breadcrumbs={[
+          { label: 'TicketOS', href: '/dashboard' },
+          { label: 'Canales' },
+        ]}
+        actions={
+          selected ? (
+            <Link href={`/events/${selected}`} className={styles.hubLink}>
+              Hub del evento
+            </Link>
+          ) : null
+        }
+      >
+        <div className={styles.eventSelect}>
+          <label htmlFor="channel-event-select">Evento</label>
           <select
             id="channel-event-select"
-            className={styles.eventSelect}
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
           >
@@ -195,54 +196,62 @@ export default function ChannelsPage() {
             ))}
           </select>
         </div>
-      </header>
+      </PageHeader>
 
-      <div className={styles.kpiGrid}>
-        <article className={platform.statCard}>
-          <span>Canales saludables</span>
-          <strong>{healthSummary.healthy}</strong>
-          <small>de {healthCards.length} canales</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Órdenes (salud)</span>
-          <strong>{formatCount(healthSummary.totalOrders)}</strong>
-          <small>todas las fuentes</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Ingresos (salud)</span>
-          <strong>{formatMxn(healthSummary.totalRevenue)}</strong>
-          <small>último snapshot</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Asignación</span>
-          <strong className={total === 100 ? styles.totalOk : styles.totalBad}>{total} %</strong>
-          <small>{total === 100 ? 'Lista para guardar' : 'Debe sumar 100 %'}</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Peor error rate</span>
-          <strong>
-            {healthSummary.worstErrorRate != null
+      <Section columns={4} gap="sm" aria-label="Indicadores de canales">
+        <KpiCard
+          label="Canales saludables"
+          value={formatCount(healthSummary.healthy)}
+          hint={`de ${formatCount(healthCards.length)} canales`}
+          tone="success"
+        />
+        <KpiCard
+          label="Órdenes (salud)"
+          value={formatCount(healthSummary.totalOrders)}
+          hint="todas las fuentes"
+          tone="accent"
+        />
+        <KpiCard
+          label="Ingresos (salud)"
+          value={formatMxn(healthSummary.totalRevenue)}
+          hint="último snapshot"
+          tone="info"
+        />
+        <KpiCard
+          label="Asignación"
+          value={`${total} %`}
+          hint={total === 100 ? 'Lista para guardar' : 'Debe sumar 100 %'}
+          tone={total === 100 ? 'success' : 'danger'}
+        />
+        <KpiCard
+          label="Peor error rate"
+          value={
+            healthSummary.worstErrorRate != null
               ? formatPercentPoints(healthSummary.worstErrorRate * 100)
-              : '—'}
-          </strong>
-          <small>telemetría</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Peor latencia</span>
-          <strong>
-            {healthSummary.worstLatencyMs != null ? formatMs(healthSummary.worstLatencyMs) : '—'}
-          </strong>
-          <small>web / móvil</small>
-        </article>
-      </div>
+              : '—'
+          }
+          hint="telemetría"
+          tone={
+            healthSummary.worstErrorRate != null && healthSummary.worstErrorRate >= 0.05
+              ? 'warning'
+              : 'neutral'
+          }
+        />
+        <KpiCard
+          label="Peor latencia"
+          value={
+            healthSummary.worstLatencyMs != null ? formatMs(healthSummary.worstLatencyMs) : '—'
+          }
+          hint="web / móvil"
+          tone="neutral"
+        />
+      </Section>
 
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
-          <div>
-            <h2>Asignación por canal</h2>
-            <p>Solo los canales habilitados cuentan hacia el 100 % de inventario.</p>
-          </div>
-        </div>
+      <Section
+        title="Asignación por canal"
+        description="Solo los canales habilitados cuentan hacia el 100 % de inventario."
+        className={styles.panel}
+      >
 
         <div className={styles.formGrid}>
           {CHANNEL_ORDER.map((key) => {
@@ -324,19 +333,14 @@ export default function ChannelsPage() {
             Total habilitado: {total} % {total !== 100 && '(ajusta hasta 100 %)'}
           </p>
           <div className={styles.formActions}>
-            <button
+            <Button
               type="button"
-              className={platform.primaryBtn}
-              disabled={saving || allocationIssue !== null}
-              onClick={save}
+              loading={saving}
+              disabled={allocationIssue !== null}
+              onClick={() => void save()}
             >
-              {saving ? 'Guardando…' : 'Guardar asignación'}
-            </button>
-            {selected && (
-              <Link href={`/events/${selected}`} className={platform.ghostBtn}>
-                Hub del evento →
-              </Link>
-            )}
+              Guardar asignación
+            </Button>
           </div>
         </div>
 
@@ -350,16 +354,14 @@ export default function ChannelsPage() {
             {msg}
           </div>
         )}
-      </section>
+      </Section>
 
       <div className={styles.twoCol}>
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <div>
-              <h2>Salud en tiempo real</h2>
-              <p>Estado operativo de los 13 canales de venta.</p>
-            </div>
-          </div>
+        <Section
+          title="Salud en tiempo real"
+          description="Estado operativo de los 13 canales de venta."
+          className={styles.panel}
+        >
           <div className={styles.healthGrid}>
             {healthCards.map((card) => {
               const meta = healthStatusMeta(card.status);
@@ -413,15 +415,13 @@ export default function ChannelsPage() {
               );
             })}
           </div>
-        </section>
+        </Section>
 
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <div>
-              <h2>Mix de ingresos (7 días)</h2>
-              <p>Desglose analítico por canal desde la API de reporting.</p>
-            </div>
-          </div>
+        <Section
+          title="Mix de ingresos (7 días)"
+          description="Desglose analítico por canal desde la API de reporting."
+          className={styles.panel}
+        >
           {revenueMix.length === 0 ? (
             <p className={styles.fieldHint}>Sin órdenes completadas en el periodo.</p>
           ) : (
@@ -437,17 +437,15 @@ export default function ChannelsPage() {
               ))}
             </ul>
           )}
-        </section>
+        </Section>
       </div>
 
       {alerts.length > 0 && (
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <div>
-              <h2>Alertas y recomendaciones</h2>
-              <p>Señales automáticas a partir de salud, mix y asignación.</p>
-            </div>
-          </div>
+        <Section
+          title="Alertas y recomendaciones"
+          description="Señales automáticas a partir de salud, mix y asignación."
+          className={styles.panel}
+        >
           <ul className={styles.alertList}>
             {alerts.map((alert) => {
               const meta = severityMeta(alert.severity);
@@ -463,7 +461,7 @@ export default function ChannelsPage() {
               );
             })}
           </ul>
-        </section>
+        </Section>
       )}
     </div>
   );

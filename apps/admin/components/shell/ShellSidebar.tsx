@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { Tooltip } from '@boletera/ui';
 import { useVenues } from '@/lib/queries';
 import { LogoMark, ShellIcon } from './icons';
@@ -32,6 +32,10 @@ type ShellSidebarProps = {
   onOpenShortcuts: () => void;
 };
 
+function navItemClass(active: boolean) {
+  return [styles.navItem, active ? styles.navItemActive : ''].filter(Boolean).join(' ');
+}
+
 function NavLink({
   item,
   pathname,
@@ -50,12 +54,11 @@ function NavLink({
   linkProps: LinkPropsFn;
 }) {
   const active = isNavItemActive(pathname, item);
-  const className = active ? styles.active : styles.navItem;
 
   const link = (
     <Link
       href={item.href}
-      className={className}
+      className={navItemClass(active)}
       aria-current={active ? 'page' : undefined}
       onClick={onNavigate}
       title={compact ? item.label : undefined}
@@ -81,7 +84,11 @@ function NavLink({
         <button
           type="button"
           className={`${styles.favBtn} ${favorite ? styles.favBtnActive : ''}`}
-          aria-label={favorite ? `Quitar ${item.label} de favoritos` : `Añadir ${item.label} a favoritos`}
+          aria-label={
+            favorite
+              ? `Quitar ${item.label} de favoritos`
+              : `Añadir ${item.label} a favoritos`
+          }
           aria-pressed={favorite}
           onClick={() => onToggleFavorite(item.href)}
         >
@@ -90,6 +97,17 @@ function NavLink({
       ) : null}
     </div>
   );
+}
+
+function groupHasActiveRoute(
+  pathname: string,
+  items: readonly NavItemDef[],
+  venues: { id: string }[],
+  showVenues?: boolean,
+): boolean {
+  if (items.some((item) => isNavItemActive(pathname, item))) return true;
+  if (!showVenues) return false;
+  return venues.some((venue) => pathname.startsWith(`/venues/${venue.id}/`));
 }
 
 function ShellSidebarComponent({
@@ -118,6 +136,22 @@ function ShellSidebarComponent({
       .map((href) => itemsByHref.get(href))
       .filter((item): item is NavItemDef => Boolean(item));
   }, [itemsByHref, prefs.favorites]);
+
+  useEffect(() => {
+    if (prefs.compact) return;
+    const { isGroupCollapsed, toggleGroup } = prefs;
+    for (const group of visibleGroups) {
+      const hasActive = groupHasActiveRoute(
+        pathname,
+        group.items,
+        venues,
+        group.showVenues,
+      );
+      if (hasActive && isGroupCollapsed(group.id)) {
+        toggleGroup(group.id);
+      }
+    }
+  }, [pathname, prefs.compact, prefs.isGroupCollapsed, prefs.toggleGroup, venues, visibleGroups]);
 
   const sidebarClass = [
     styles.sidebar,
@@ -151,15 +185,23 @@ function ShellSidebarComponent({
           ) : null}
         </Link>
         <div className={styles.sidebarTopActions}>
-          <Tooltip content={prefs.compact ? 'Expandir barra' : 'Modo compacto'} placement="bottom">
+          <Tooltip
+            content={prefs.compact ? 'Expandir barra' : 'Modo compacto'}
+            placement="bottom"
+          >
             <button
               type="button"
               className={styles.iconBtnGhost}
-              aria-label={prefs.compact ? 'Expandir barra lateral' : 'Compactar barra lateral'}
+              aria-label={
+                prefs.compact ? 'Expandir barra lateral' : 'Compactar barra lateral'
+              }
               aria-pressed={prefs.compact}
               onClick={prefs.toggleCompact}
             >
-              <ShellIcon name={prefs.compact ? 'panelLeft' : 'panelLeftClose'} size={16} />
+              <ShellIcon
+                name={prefs.compact ? 'panelLeft' : 'panelLeftClose'}
+                size={16}
+              />
             </button>
           </Tooltip>
           <button
@@ -190,8 +232,13 @@ function ShellSidebarComponent({
 
       <nav className={styles.nav} aria-label="Módulos">
         {favoriteItems.length > 0 ? (
-          <div className={styles.navGroup}>
-            {!prefs.compact ? <p className={styles.navLabel}>Favoritos</p> : null}
+          <div className={styles.navGroup} data-group="favorites">
+            {!prefs.compact ? (
+              <p className={styles.navLabel}>
+                <ShellIcon name="starFilled" size={12} />
+                Favoritos
+              </p>
+            ) : null}
             {favoriteItems.map((item) => (
               <NavLink
                 key={`fav-${item.href}`}
@@ -209,22 +256,42 @@ function ShellSidebarComponent({
 
         {visibleGroups.map((group) => {
           const collapsed = prefs.isGroupCollapsed(group.id);
+          const hasActive = groupHasActiveRoute(
+            pathname,
+            group.items,
+            venues,
+            group.showVenues,
+          );
+          const showItems = prefs.compact || !collapsed;
+
           return (
-            <div key={group.id} className={styles.navGroup}>
+            <div
+              key={group.id}
+              className={styles.navGroup}
+              data-group={group.id}
+              data-has-active={hasActive ? 'true' : undefined}
+            >
               {!prefs.compact ? (
                 <button
                   type="button"
                   className={styles.navGroupToggle}
                   aria-expanded={!collapsed}
+                  data-collapsed={collapsed ? 'true' : 'false'}
                   onClick={() => prefs.toggleGroup(group.id)}
                 >
                   <span className={styles.navLabel}>{group.label}</span>
-                  <ShellIcon name={collapsed ? 'chevronRight' : 'chevronDown'} size={14} />
+                  <span className={styles.navGroupChevron} aria-hidden="true">
+                    <ShellIcon name="chevronDown" size={14} />
+                  </span>
                 </button>
               ) : null}
 
-              {!collapsed || prefs.compact ? (
-                <>
+              <div
+                className={styles.navGroupContent}
+                data-collapsed={!prefs.compact && collapsed ? 'true' : 'false'}
+                aria-hidden={!showItems}
+              >
+                <div className={styles.navGroupInner}>
                   {group.items.map((item) => (
                     <NavLink
                       key={item.id}
@@ -244,10 +311,14 @@ function ShellSidebarComponent({
                         const active = pathname.startsWith(`${base}/`);
                         if (prefs.compact) {
                           return (
-                            <Tooltip key={venue.id} content={venue.name} placement="right">
+                            <Tooltip
+                              key={venue.id}
+                              content={venue.name}
+                              placement="right"
+                            >
                               <Link
                                 href={`${base}/3d?studio=1`}
-                                className={active ? styles.active : styles.navItem}
+                                className={navItemClass(active)}
                                 onClick={onCloseMobile}
                                 aria-label={`${venue.name} — Estudio 3D`}
                                 {...linkProps(`${base}/3d?studio=1`)}
@@ -263,7 +334,9 @@ function ShellSidebarComponent({
                           <div key={venue.id} className={styles.navSubRow}>
                             <Link
                               href={`${base}/3d?studio=1`}
-                              className={active ? styles.navSubActive : styles.navSubItem}
+                              className={
+                                active ? styles.navSubActive : styles.navSubItem
+                              }
                               onClick={onCloseMobile}
                               title={`Estudio 3D — ${venue.name}`}
                               {...linkProps(`${base}/3d?studio=1`)}
@@ -300,8 +373,8 @@ function ShellSidebarComponent({
                         );
                       })
                     : null}
-                </>
-              ) : null}
+                </div>
+              </div>
             </div>
           );
         })}

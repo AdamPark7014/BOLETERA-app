@@ -2,6 +2,15 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { EVENT_STOCK_IMAGES } from '@boletera/shared';
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  Input,
+} from '@boletera/ui';
 import { getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import { ManagerPinDialog } from '@/components/ManagerPinDialog';
@@ -32,6 +41,13 @@ type ScanResult = {
 };
 
 type Prompt = null | 'VOID' | 'EXCHANGE';
+
+function statusTone(status: string, valid?: boolean): 'success' | 'warning' | 'danger' | 'neutral' {
+  if (valid) return 'success';
+  if (status === 'REFUNDED' || status === 'VOIDED') return 'warning';
+  if (status === 'COMPLETED') return 'success';
+  return 'warning';
+}
 
 export default function BuscarPage() {
   const router = useRouter();
@@ -201,30 +217,59 @@ export default function BuscarPage() {
         </p>
       )}
 
-      <form onSubmit={(e) => void submit(e)} className={styles.search}>
-        <input
-          ref={inputRef}
-          id="lookup-input"
-          autoFocus
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Escanea o teclea el código u orden…"
-          aria-label="Código u orden"
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? '…' : 'Buscar'}
-        </button>
-      </form>
+      <Card
+        padding="none"
+        className={styles.heroCard}
+        style={{ backgroundImage: `url(${EVENT_STOCK_IMAGES.THEATER})` }}
+      >
+        <div className={styles.heroOverlay} />
+        <div className={styles.heroContent}>
+          <Badge tone="accent" variant="soft">Escaneo o folio</Badge>
+          <p>Consulta boletos, reimprime y gestiona posventa con PIN de gerente.</p>
+        </div>
+      </Card>
 
-      {error && <p className={styles.error}>{error}</p>}
+      <Card padding="md" className={styles.searchCard}>
+        <form onSubmit={(e) => void submit(e)} className={styles.searchForm}>
+          <Input
+            ref={inputRef}
+            id="lookup-input"
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Escanea o teclea el código u orden…"
+            aria-label="Código u orden"
+            inputSize="lg"
+            className={styles.lookupField}
+          />
+          <Button type="submit" size="lg" loading={loading} loadingLabel="Buscando…">
+            Buscar
+          </Button>
+        </form>
+        <p className={styles.scanNote}>
+          El lector HID funciona sin foco en el campo. También puedes usar <kbd>F3</kbd> para enfocar.
+        </p>
+      </Card>
+
+      {error && (
+        <Card variant="outline" padding="md" className={styles.errorCard}>
+          <p className={styles.error}>{error}</p>
+        </Card>
+      )}
 
       {result && (
-        <section className={styles.result}>
-          <header>
-            <strong>{result.eventTitle ?? 'Orden'}</strong>
-            <span className={result.valid ? styles.ok : styles.bad}>{result.status}</span>
-          </header>
-          <dl>
+        <Card padding="md" className={styles.resultCard}>
+          <CardHeader
+            title={result.eventTitle ?? 'Orden'}
+            description={result.publicId ? `Folio ${result.publicId}` : undefined}
+            actions={
+              <Badge tone={statusTone(result.status, result.valid)} variant="soft" dot>
+                {result.status}
+              </Badge>
+            }
+          />
+
+          <dl className={styles.details}>
             {result.seatInfo && (
               <div>
                 <dt>Lugar</dt>
@@ -234,7 +279,7 @@ export default function BuscarPage() {
             {result.publicId && (
               <div>
                 <dt>Orden</dt>
-                <dd>{result.publicId}</dd>
+                <dd className={styles.mono}>{result.publicId}</dd>
               </div>
             )}
             {result.total != null && (
@@ -246,25 +291,50 @@ export default function BuscarPage() {
             {result.paymentMethod && (
               <div>
                 <dt>Pago</dt>
-                <dd>{result.paymentMethod}</dd>
+                <dd>
+                  <Badge tone="neutral" variant="outline" size="sm">
+                    {result.paymentMethod}
+                  </Badge>
+                </dd>
               </div>
             )}
           </dl>
 
+          {result.tickets && result.tickets.length > 0 && (
+            <div className={styles.ticketBlock}>
+              <h3 className={styles.ticketHeading}>Boletos en la orden</h3>
+              <ul className={styles.ticketList}>
+                {result.tickets.map((t) => (
+                  <li key={t.code}>
+                    <code>{t.code}</code>
+                    <span>{t.seatInfo || t.status}</span>
+                    <Badge
+                      tone={t.status === 'VALID' || t.status === 'ACTIVE' ? 'success' : 'warning'}
+                      variant="soft"
+                      size="sm"
+                    >
+                      {t.status}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className={styles.actions}>
             {result.orderId && (
-              <button type="button" onClick={() => void reprint()}>
+              <Button variant="secondary" size="lg" onClick={() => void reprint()}>
                 Reimprimir · F7
-              </button>
+              </Button>
             )}
             {canOperate && (
               <>
-                <button type="button" className={styles.danger} onClick={() => setPrompt('VOID')}>
+                <Button variant="danger" size="lg" onClick={() => setPrompt('VOID')}>
                   Anular · F9
-                </button>
-                <button type="button" onClick={() => setPrompt('EXCHANGE')}>
+                </Button>
+                <Button variant="outline" size="lg" onClick={() => setPrompt('EXCHANGE')}>
                   Cambio de boletos
-                </button>
+                </Button>
               </>
             )}
           </div>
@@ -273,7 +343,17 @@ export default function BuscarPage() {
             Anulación y cambio requieren PIN de gerente. El cajero no puede modificar precios ni
             emitir devoluciones por su cuenta.
           </p>
-        </section>
+        </Card>
+      )}
+
+      {!result && !loading && !error && (
+        <EmptyState
+          illustration="search"
+          title="Busca un boleto o orden"
+          description="Escanea el código impreso o teclea el folio de la orden."
+          hints={['F7 reimprime cuando hay resultado', 'F9 anula con PIN de gerente']}
+          size="sm"
+        />
       )}
 
       <ManagerPinDialog

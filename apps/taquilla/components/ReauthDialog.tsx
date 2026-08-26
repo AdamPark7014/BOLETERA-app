@@ -1,7 +1,9 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
+  clearTaquillaSession,
   onReauthRequired,
   reauthenticateSameCashier,
   type ReauthRequest,
@@ -17,6 +19,7 @@ import styles from './Dialog.module.scss';
  * venta a medias con fila esperando es inaceptable.
  */
 export function ReauthDialog() {
+  const router = useRouter();
   const [request, setRequest] = useState<ReauthRequest | null>(null);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -39,15 +42,26 @@ export function ReauthDialog() {
   if (!request) return null;
 
   function finish(ok: boolean) {
-    request?.resolve(ok);
+    const resolve = request?.resolve;
     setRequest(null);
     setPassword('');
     setBusy(false);
+    resolve?.(ok);
+  }
+
+  function abortSession() {
+    finish(false);
+    clearTaquillaSession();
+    router.replace('/login?reason=session-expired');
   }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!request || busy) return;
+    if (!password.trim()) {
+      setError('Escribe tu contraseña');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -68,7 +82,7 @@ export function ReauthDialog() {
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.preventDefault();
-          finish(false);
+          abortSession();
         }
       }}
     >
@@ -79,7 +93,7 @@ export function ReauthDialog() {
         </h2>
         <p className={styles.lead}>
           La sesión del API caduca cada 2 horas. <strong>La venta en curso y el turno siguen
-          abiertos</strong>: escribe tu contraseña y la operación continúa donde estaba.
+          abiertos</strong>: escribe tu contraseña ({request.email}) y la operación continúa.
         </p>
 
         <label className={styles.field}>
@@ -102,16 +116,15 @@ export function ReauthDialog() {
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.actions}>
-          <button type="button" onClick={() => finish(false)} disabled={busy}>
-            Cancelar
+          <button type="button" onClick={abortSession} disabled={busy}>
+            Salir e ir al login
           </button>
-          <button type="submit" className={styles.primary} disabled={busy || !password}>
+          <button type="submit" className={styles.primary} disabled={busy || !password.trim()}>
             {busy ? 'Reanudando…' : 'Continuar'}
           </button>
         </div>
         <p className={styles.hint}>
-          <kbd>Enter</kbd> continuar · <kbd>Esc</kbd> cancelar (la operación fallará, pero el
-          borrador de la venta se conserva)
+          <kbd>Enter</kbd> continuar · <kbd>Esc</kbd> salir al login (demo: <kbd>Admin123!</kbd>)
         </p>
       </form>
     </div>

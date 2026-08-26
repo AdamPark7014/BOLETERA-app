@@ -17,12 +17,14 @@ import {
   formatNumber,
   KpiCard,
   PageHeader,
+  Section,
   SegmentedControl,
   type DataTableColumn,
   type FilterDefinition,
 } from '@boletera/ui';
 import { QueryError } from '@/components/QueryStates';
 import { useCrmWorkspace } from '@/lib/queries/crm';
+import { Notice } from '../orders/_ui/States';
 import { useSession } from '@/lib/use-session';
 import { CrmSkeleton } from './_components/CrmSkeleton';
 import { CustomerDrawerBody } from './_components/CustomerDrawer';
@@ -289,27 +291,23 @@ function CrmCockpit() {
 
   if (!canRead) {
     return (
-      <main className={styles.page}>
+      <div className={styles.page}>
         <EmptyState
           title="Sin permiso para CRM"
           description="Necesitas order:read para consultar clientes derivados de pedidos."
           illustration="inbox"
           tone="neutral"
         />
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className={styles.page}>
+    <div className={styles.page}>
       <PageHeader
         eyebrow="Relación con clientes"
         title="CRM enterprise"
-        description="Cartera, segmentos RFM/LTV, frecuentes, churn y recomendaciones a partir de pedidos reales y señales auxiliares. Sin inventar métricas."
-        breadcrumbs={[
-          { label: 'Panel', href: '/dashboard' },
-          { label: 'CRM' },
-        ]}
+        description="Cartera, segmentos RFM/LTV, frecuentes, churn y recomendaciones a partir de pedidos reales y señales auxiliares."
         actions={
           <div className={styles.actions}>
             <SegmentedControl<CrmRangeKey>
@@ -321,10 +319,10 @@ function CrmCockpit() {
             />
             <Button
               type="button"
-              variant="secondary"
-              size="sm"
-              disabled={workspace.orders.isFetching}
-              onClick={() => workspace.refetchAll()}
+              variant="outline"
+              loading={workspace.orders.isFetching}
+              loadingLabel="Actualizando…"
+              onClick={() => void workspace.refetchAll()}
             >
               Actualizar
             </Button>
@@ -332,7 +330,7 @@ function CrmCockpit() {
         }
       />
 
-      <div className={styles.kpiGrid} role="region" aria-label="Indicadores CRM">
+      <Section columns={3} gap="md" className={styles.kpiGrid} aria-label="Indicadores CRM">
         <KpiCard
           label="Clientes"
           value={loading ? '—' : formatNumber(kpis.customers)}
@@ -386,7 +384,14 @@ function CrmCockpit() {
           loading={metricsLoading}
           tone="info"
         />
-      </div>
+      </Section>
+
+      <Notice tone="info" title="De dónde salen estos clientes">
+        <p>
+          La cartera se construye a partir de pedidos completados en el rango seleccionado. Segmentos,
+          churn y recomendaciones mezclan señales auxiliares (waitlist, API keys, IA) cuando existen.
+        </p>
+      </Notice>
 
       {workspace.orders.error ? (
         <QueryError
@@ -443,34 +448,36 @@ function CrmCockpit() {
                 )}
               </Card>
 
-              <div className={styles.toolbar}>
-                <FilterBar
-                  filters={filterDefs}
-                  value={url.filterSelection}
-                  onChange={url.setFilterSelection}
-                  search={{
-                    value: url.q,
-                    onChange: url.setSearch,
-                    placeholder: 'Buscar cliente, correo, RFM o evento…',
-                  }}
-                />
-                <div className={styles.filterMeta} role="status">
-                  <span>
-                    {formatNumber(filtered.length)} de{' '}
-                    {formatNumber(customers.length)} clientes
-                  </span>
-                  {hasActiveFilters ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={url.clearFilters}
-                    >
-                      Limpiar
-                    </Button>
-                  ) : null}
+              <div className={styles.panel}>
+                <div className={styles.toolbar}>
+                  <FilterBar
+                    className={styles.filterBar}
+                    filters={filterDefs}
+                    value={url.filterSelection}
+                    onChange={url.setFilterSelection}
+                    search={{
+                      value: url.q,
+                      onChange: url.setSearch,
+                      placeholder: 'Buscar cliente, correo, RFM o evento…',
+                    }}
+                  />
+                  <div className={styles.filterMeta} role="status">
+                    <span>
+                      {formatNumber(filtered.length)} de {formatNumber(customers.length)} clientes
+                      {hasActiveFilters ? ' coinciden con los filtros' : ''}.
+                    </span>
+                    {hasActiveFilters ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={url.clearFilters}
+                      >
+                        Limpiar filtros
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
 
               {filtered.length === 0 ? (
                 customers.length === 0 ? (
@@ -497,11 +504,7 @@ function CrmCockpit() {
                     title="Sin coincidencias"
                     description="Ajusta la búsqueda o los filtros de segmento y canal."
                     action={
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={url.clearFilters}
-                      >
+                      <Button type="button" variant="outline" onClick={url.clearFilters}>
                         Limpiar filtros
                       </Button>
                     }
@@ -509,7 +512,7 @@ function CrmCockpit() {
                 )
               ) : (
                 <DataTable
-                  label="Clientes CRM"
+                  label="Clientes CRM ordenados por LTV descendente"
                   columns={columns}
                   data={filtered}
                   rowKey={(row) => row.id}
@@ -523,6 +526,7 @@ function CrmCockpit() {
                   }
                 />
               )}
+              </div>
             </div>
 
             <div className={styles.sideCol}>
@@ -593,11 +597,7 @@ function CrmCockpit() {
         description={selected?.email}
         size="md"
         footer={
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => url.setSelectedId(null)}
-          >
+          <Button type="button" variant="outline" onClick={() => url.setSelectedId(null)}>
             Cerrar
           </Button>
         }
@@ -609,7 +609,7 @@ function CrmCockpit() {
           />
         ) : null}
       </Drawer>
-    </main>
+    </div>
   );
 }
 
@@ -617,9 +617,9 @@ export default function CrmPage() {
   return (
     <Suspense
       fallback={
-        <main className={styles.page}>
+        <div className={styles.page}>
           <CrmSkeleton />
-        </main>
+        </div>
       }
     >
       <CrmCockpit />

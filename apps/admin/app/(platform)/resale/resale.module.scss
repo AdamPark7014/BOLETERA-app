@@ -1,0 +1,66 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-5);
+  min-width: 0;
+}
+
+.kpiStrip {
+  margin-top: calc(var(--bl-space-2) * -1);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-3);
+  padding: var(--bl-space-4);
+  background: var(--bl-elevated);
+  border: 1px solid var(--bl-border);
+  border-radius: var(--bl-radius-lg);
+}
+
+.panelHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bl-space-3);
+  align-items: center;
+  justify-content: space-between;
+
+  p {
+    margin: var(--bl-space-0);
+    font-size: var(--bl-text-sm);
+    color: var(--bl-text-secondary);
+  }
+}
+
+.ticketCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.code {
+  display: inline-block;
+  padding: var(--bl-space-0-5) var(--bl-space-1-5);
+  font-family: ui-monospace, monospace;
+  font-size: var(--bl-text-xs);
+  color: var(--bl-text-primary);
+  background: var(--bl-surface-sunken);
+  border-radius: var(--bl-radius-sm);
+}
+
+.subtle {
+  font-size: var(--bl-text-xs);
+  color: var(--bl-text-secondary);
+}
+
+.markupCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+}

@@ -2,9 +2,13 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { EVENT_STOCK_IMAGES } from '@boletera/shared';
+import { Badge, Button, Input } from '@boletera/ui';
 import { loginRequest, saveTaquillaSession } from '@/lib/auth';
 import { openShift } from '@/lib/pos';
 import styles from './login.module.scss';
+
+const HERO_IMAGE = EVENT_STOCK_IMAGES.FESTIVAL;
 
 function IconTerminal() {
   return (
@@ -33,6 +37,15 @@ function IconLock() {
   );
 }
 
+function IconCash() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
 export default function TaquillaLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -44,6 +57,12 @@ export default function TaquillaLoginPage() {
   const [online, setOnline] = useState(true);
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSessionExpired(params.get('reason') === 'session-expired');
+  }, []);
 
   useEffect(() => {
     setOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -104,25 +123,25 @@ export default function TaquillaLoginPage() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.bg} aria-hidden="true" />
-      <div className={styles.scan} aria-hidden="true" />
+      <div className={styles.backdrop} style={{ backgroundImage: `url(${HERO_IMAGE})` }} aria-hidden="true" />
 
       <header className={styles.topbar}>
         <div className={styles.topLeft}>
           <span className={styles.brand}>
-            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <rect width="32" height="32" rx="9" fill="var(--bl-gray-100)" />
-              <path d="M9 11h14M9 16h14M9 21h9" stroke="var(--bl-gray-900)" strokeWidth="2.4" strokeLinecap="round" />
-              <circle cx="22" cy="21" r="2.5" fill="var(--bl-gray-900)" />
-            </svg>
+            <span className={styles.brandMark} aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="9" fill="var(--bl-accent)" />
+                <path d="M9 11h14M9 16h14M9 21h9" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
+                <circle cx="22" cy="21" r="2.5" fill="#fff" />
+              </svg>
+            </span>
             BOLETERA · TAQUILLA
           </span>
         </div>
         <div className={styles.topRight}>
-          <span className={online ? styles.statusOn : styles.statusOff}>
-            <span className={styles.dotSm} />
+          <Badge tone={online ? 'success' : 'warning'} variant="soft" dot>
             {online ? 'En línea' : 'Sin conexión · ventas en cola'}
-          </span>
+          </Badge>
           <span className={styles.clock}>
             <strong>{time}</strong>
             <small>{date}</small>
@@ -131,107 +150,118 @@ export default function TaquillaLoginPage() {
       </header>
 
       <div className={styles.shell}>
-        <section className={styles.showcase}>
-          <div className={styles.showcaseInner}>
-            <p className={styles.kicker}>Box office POS</p>
+        <aside className={styles.hero} style={{ backgroundImage: `url(${HERO_IMAGE})` }}>
+          <div className={styles.heroOverlay} />
+          <div className={styles.heroContent}>
+            <p className={styles.heroKicker}>Box office POS</p>
             <h1>
               Abre turno
               <br />
               y cobra en mostrador.
             </h1>
-            <p className={styles.lead}>
+            <p className={styles.heroLead}>
               Fondo de caja, venta por zona, efectivo con cambio, reimpresión y corte.
             </p>
+            <ul className={styles.heroFeatures}>
+              <li>
+                <span className={styles.featDot} />
+                Venta rápida por zona y asiento
+              </li>
+              <li>
+                <span className={styles.featDot} />
+                Efectivo, tarjeta y cambio automático
+              </li>
+              <li>
+                <span className={styles.featDot} />
+                Corte de caja y auditoría por terminal
+              </li>
+            </ul>
           </div>
-        </section>
+        </aside>
 
-        <section className={styles.formPanel}>
+        <section className={styles.formPanel} data-theme="light">
           <div className={styles.card}>
             <header className={styles.cardHeader}>
-              <span className={styles.cardBadge}>Apertura de turno</span>
+              <Badge tone="accent" variant="soft">
+                Apertura de turno
+              </Badge>
               <h2>Identifícate, cajero</h2>
               <p>Terminal, credencial y fondo inicial de caja.</p>
             </header>
 
             <form onSubmit={submit} className={styles.form}>
-              <div className={styles.field}>
-                <label htmlFor="terminal">Terminal</label>
-                <div className={styles.inputWrap}>
-                  <span className={styles.inputIcon}>
-                    <IconTerminal />
-                  </span>
-                  <input
-                    id="terminal"
-                    className={styles.mono}
-                    value={terminalId}
-                    onChange={(e) => setTerminalId(e.target.value.toUpperCase())}
-                    placeholder="TAQ-01"
-                    required
-                  />
-                </div>
-              </div>
+              <Input
+                id="terminal"
+                label="Terminal"
+                value={terminalId}
+                onChange={(e) => setTerminalId(e.target.value.toUpperCase())}
+                placeholder="TAQ-01"
+                required
+                inputSize="lg"
+                leading={<IconTerminal />}
+                className={styles.monoField}
+              />
 
-              <div className={styles.field}>
-                <label htmlFor="cajero-email">Email del cajero</label>
-                <div className={styles.inputWrap}>
-                  <span className={styles.inputIcon}>
-                    <IconUser />
-                  </span>
-                  <input
-                    id="cajero-email"
-                    type="email"
-                    autoComplete="username"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="cajero@boletera.com"
-                    required
-                  />
-                </div>
-              </div>
+              <Input
+                id="cajero-email"
+                type="email"
+                label="Email del cajero"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="cajero@boletera.com"
+                required
+                inputSize="lg"
+                leading={<IconUser />}
+              />
 
-              <div className={styles.field}>
-                <label htmlFor="cajero-password">Contraseña</label>
-                <div className={styles.inputWrap}>
-                  <span className={styles.inputIcon}>
-                    <IconLock />
-                  </span>
-                  <input
-                    id="cajero-password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-              </div>
+              <Input
+                id="cajero-password"
+                type="password"
+                label="Contraseña"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                inputSize="lg"
+                leading={<IconLock />}
+              />
 
-              <div className={styles.field}>
-                <label htmlFor="opening-cash">Fondo de caja (MXN)</label>
-                <div className={styles.inputWrap}>
-                  <span className={styles.inputIcon}>$</span>
-                  <input
-                    id="opening-cash"
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={openingCash}
-                    onChange={(e) => setOpeningCash(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+              <Input
+                id="opening-cash"
+                type="number"
+                label="Fondo de caja (MXN)"
+                min={0}
+                step="0.01"
+                value={openingCash}
+                onChange={(e) => setOpeningCash(e.target.value)}
+                required
+                inputSize="lg"
+                leading={<IconCash />}
+              />
 
-              {error && (
+              {sessionExpired ? (
+                <div className={styles.error} role="status">
+                  <span>Tu sesión expiró. Vuelve a entrar con tu contraseña (demo: Admin123!).</span>
+                </div>
+              ) : null}
+
+              {error ? (
                 <div className={styles.error} role="alert">
                   <span>{error}</span>
                 </div>
-              )}
+              ) : null}
 
-              <button type="submit" className={styles.submit} disabled={loading}>
-                {loading ? 'Abriendo turno…' : 'Abrir turno'}
-              </button>
+              <Button
+                type="submit"
+                size="lg"
+                fullWidth
+                loading={loading}
+                loadingLabel="Abriendo turno…"
+              >
+                Abrir turno
+              </Button>
             </form>
 
             <p className={styles.cardFooter}>

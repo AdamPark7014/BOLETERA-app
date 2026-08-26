@@ -88,4 +88,14 @@ export class DiscoveryController {
   getEvent(@Param('slug') slug: string) {
     return this.discovery.getBySlug(slug);
   }
+
+  @Get('site-content')
+  async siteContent(@Headers('host') host: string) {
+    const org = await this.tenant.resolveByHost(host || 'localhost');
+    if (!org) {
+      const { defaultSiteContent } = await import('@boletera/shared');
+      return defaultSiteContent();
+    }
+    return this.discovery.getSiteContent(org.id);
+  }
 }

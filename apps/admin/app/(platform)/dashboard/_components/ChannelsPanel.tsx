@@ -91,7 +91,10 @@ export function ChannelsPanel({ breakdown, loading, error, onRetry }: ChannelsPa
                 </span>
                 <strong className={styles.channelRev}>{formatMxn(channel.revenue)}</strong>
                 <span className={styles.channelPct}>{channel.percent}%</span>
-                <div className={styles.channelTrack} aria-hidden="true">
+                <div
+                  className={`${styles.channelTrack} ${SEGMENTS[index % SEGMENTS.length]}`}
+                  aria-hidden="true"
+                >
                   <span style={{ width: `${Math.min(100, channel.percent)}%` }} />
                 </div>
               </li>

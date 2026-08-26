@@ -1,8 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { stockImageForCategory } from '@boletera/shared';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  SearchInput,
+  SkeletonCard,
+} from '@boletera/ui';
 import { apiJson, getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import { digitPressed, type Hotkey } from '@/lib/hotkeys';
@@ -22,6 +30,7 @@ type EventRow = {
   title: string;
   slug: string;
   startsAt: string;
+  category?: string;
   venue: { name: string };
   offers?: Offer[];
 };
@@ -97,85 +106,134 @@ export default function EventosTaquillaPage() {
       hotkeys={hotkeys}
       escapeGoesBack={false}
     >
-      <div className={styles.search}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-          <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-        <input
+      <Card padding="sm" className={styles.searchCard}>
+        <SearchInput
           id="event-search"
           autoFocus
-          type="search"
-          placeholder="Buscar por nombre o venue…"
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onValueChange={setQ}
+          placeholder="Buscar por nombre o venue…"
+          inputSize="lg"
+          shortcut="F2"
         />
-        <kbd>F2</kbd>
-      </div>
+        <p className={styles.searchHint}>
+          <Badge tone="neutral" variant="outline" size="sm">1–9</Badge>
+          <span>Venta rápida al evento en la lista</span>
+        </p>
+      </Card>
 
       {loading ? (
-        <div className={styles.skeleton}>
-          <span /> <span /> <span /> <span />
+        <div className={styles.skeletonStack}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
       ) : filtered.length === 0 ? (
-        <div className={styles.empty}>
-          <p>{events.length === 0 ? 'No hay eventos activos.' : 'Sin coincidencias.'}</p>
-        </div>
+        <EmptyState
+          illustration="search"
+          title={events.length === 0 ? 'No hay eventos activos' : 'Sin coincidencias'}
+          description={
+            events.length === 0
+              ? 'Cuando haya eventos publicados para taquilla aparecerán aquí.'
+              : 'Prueba otro nombre o venue en la búsqueda.'
+          }
+          size="md"
+        />
       ) : (
         <ul className={styles.list}>
           {filtered.map((e, i) => {
             const date = new Date(e.startsAt);
             const offers = (e.offers || []).filter((o) => o.isAvailable !== false);
             const open = expanded === e.id;
-            return (
-              <li key={e.id} className={styles.eventBlock}>
-                <button
-                  type="button"
-                  className={styles.card}
-                  onClick={() => setExpanded(open ? null : e.id)}
-                >
-                  <span className={styles.idx}>{String(i + 1).padStart(2, '0')}</span>
-                  <div className={styles.cardDate}>
-                    <strong>{date.toLocaleDateString('es-MX', { day: '2-digit' })}</strong>
-                    <span>{date.toLocaleDateString('es-MX', { month: 'short' }).toUpperCase()}</span>
-                  </div>
-                  <div className={styles.cardInfo}>
-                    <strong>{e.title}</strong>
-                    <span>
-                      {e.venue?.name} ·{' '}
-                      {date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
-                      {offers.length > 0 && ` · ${offers.length} zona${offers.length === 1 ? '' : 's'}`}
-                    </span>
-                  </div>
-                  <span className={styles.cta}>{open ? 'Cerrar' : 'Zonas'}</span>
-                </button>
+            const thumb = stockImageForCategory(e.category, e.title);
 
-                {open && (
-                  <ul className={styles.offerList}>
-                    {offers.length === 0 ? (
-                      <li className={styles.offerEmpty}>Sin ofertas disponibles</li>
-                    ) : (
-                      offers.map((o) => {
-                        const stock = o.remainingQuantity;
-                        return (
-                          <li key={o.id}>
-                            <Link href={ventaUrl(e.id, o)} className={styles.offerRow}>
-                              <div>
-                                <strong>{o.name || o.zone || 'General'}</strong>
-                                <span>
-                                  {o.zone && o.name ? o.zone : 'GA'}
-                                  {stock != null ? ` · ${stock} disp.` : ''}
-                                </span>
-                              </div>
-                              <em>{money(Number(o.basePrice))}</em>
-                              <span className={styles.offerSell}>Vender</span>
-                            </Link>
-                          </li>
-                        );
-                      })
-                    )}
-                  </ul>
-                )}
+            return (
+              <li key={e.id}>
+                <Card padding="none" className={styles.eventCard}>
+                  <button
+                    type="button"
+                    className={styles.eventToggle}
+                    onClick={() => setExpanded(open ? null : e.id)}
+                    aria-expanded={open}
+                  >
+                    <span className={styles.idx}>{String(i + 1).padStart(2, '0')}</span>
+                    <div
+                      className={styles.thumb}
+                      style={{ backgroundImage: `url(${thumb})` }}
+                      aria-hidden="true"
+                    />
+                    <div className={styles.cardDate}>
+                      <strong>{date.toLocaleDateString('es-MX', { day: '2-digit' })}</strong>
+                      <span>{date.toLocaleDateString('es-MX', { month: 'short' }).toUpperCase()}</span>
+                    </div>
+                    <div className={styles.cardInfo}>
+                      <strong>{e.title}</strong>
+                      <span>
+                        {e.venue?.name} ·{' '}
+                        {date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className={styles.cardMeta}>
+                      {offers.length > 0 ? (
+                        <Badge tone="accent" variant="soft" size="sm">
+                          {offers.length} zona{offers.length === 1 ? '' : 's'}
+                        </Badge>
+                      ) : (
+                        <Badge tone="warning" variant="soft" size="sm">Sin ofertas</Badge>
+                      )}
+                      <span className={open ? styles.ctaSecondary : styles.cta}>
+                        {open ? 'Cerrar' : 'Zonas'}
+                      </span>
+                    </div>
+                  </button>
+
+                  {open && (
+                    <div className={styles.offerPanel}>
+                      {offers.length === 0 ? (
+                        <p className={styles.offerEmpty}>Sin ofertas disponibles</p>
+                      ) : (
+                        <ul className={styles.offerList}>
+                          {offers.map((o) => {
+                            const stock = o.remainingQuantity;
+                            const lowStock = stock != null && stock <= 10;
+                            return (
+                              <li key={o.id}>
+                                <Card variant="outline" padding="sm" className={styles.offerRow}>
+                                  <div className={styles.offerMain}>
+                                    <strong>{o.name || o.zone || 'General'}</strong>
+                                    <span>
+                                      {o.zone && o.name ? o.zone : 'GA'}
+                                      {stock != null ? ` · ${stock} disp.` : ''}
+                                    </span>
+                                  </div>
+                                  <div className={styles.offerAside}>
+                                    {stock != null && (
+                                      <Badge
+                                        tone={lowStock ? 'warning' : 'success'}
+                                        variant="soft"
+                                        size="sm"
+                                      >
+                                        {lowStock ? 'Poco stock' : 'Disponible'}
+                                      </Badge>
+                                    )}
+                                    <strong className={styles.offerPrice}>{money(Number(o.basePrice))}</strong>
+                                    <Button
+                                      variant="primary"
+                                      size="sm"
+                                      onClick={() => router.push(ventaUrl(e.id, o))}
+                                    >
+                                      Vender
+                                    </Button>
+                                  </div>
+                                </Card>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </Card>
               </li>
             );
           })}

@@ -47,6 +47,7 @@ import type {
   AutomationView,
   AutomationsPersistedState,
 } from './_lib/types';
+import { Notice } from '../orders/_ui/States';
 import styles from './automations.module.scss';
 
 type Opportunity = {
@@ -337,16 +338,15 @@ export default function AutomationsPage() {
         </div>
       </PageHeader>
 
-      <div className={styles.banner} role="status">
-        <strong>Modo híbrido</strong>
+      <Notice tone="info" title="Modo híbrido">
         <p>
           Enable/disable y simulaciones viven en este navegador. Los KPIs de señales
           salen de <code>/metrics/*</code> e integraciones reales — sin inventar runs
           remotos.
         </p>
-      </div>
+      </Notice>
 
-      <section className={styles.kpiGrid} aria-label="Indicadores de automatizaciones">
+      <Section columns={4} gap="md" aria-label="Indicadores de automatizaciones">
         <KpiCard
           label="Reglas activas"
           value={hydrated ? formatNumber(enabledCount) : '—'}
@@ -374,7 +374,7 @@ export default function AutomationsPage() {
           tone={openFraudFlags > 0 ? 'danger' : 'success'}
           hint="Flags abiertos · 30d"
         />
-      </section>
+      </Section>
 
       <Section
         title="Oportunidades accionables"

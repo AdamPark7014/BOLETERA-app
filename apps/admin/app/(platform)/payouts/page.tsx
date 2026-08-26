@@ -15,10 +15,18 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
+import {
+  Button,
+  Card,
+  CardHeader,
+  KpiCard,
+  PageHeader,
+  Section,
+} from '@boletera/ui';
 import { adminApi, ApiError, getStoredToken } from '@/lib/api';
 import { useToast } from '@/components/Toast/ToastProvider';
 import platform from '../_styles/platform.module.scss';
-import styles from '../orders/orders.module.scss';
+import styles from './payouts.module.scss';
 import { EmptyBlock, Notice, ResourceView } from '../orders/_ui/States';
 import { useResource } from '../orders/_ui/useResource';
 import {
@@ -98,13 +106,12 @@ export default function PayoutsPage() {
   );
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Liquidaciones</h1>
-          <p>Ventas por canal y transferencias a promotor</p>
-        </div>
-      </header>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Finanzas"
+        title="Liquidaciones"
+        description="Ventas por canal y transferencias SPEI al promotor"
+      />
 
       <ResourceView resource={resource} context="las liquidaciones" loadingRows={5}>
         {(data) => <PayoutsView data={data} reload={resource.reload} />}
@@ -226,6 +233,30 @@ function PayoutsView({ data, reload }: { data: PayoutPayload; reload: () => void
 
   return (
     <>
+      <Section columns={4} gap="md" className={styles.kpiStrip}>
+        <KpiCard label="Liquidaciones" value={formatNumber(data.payouts.length)} tone="accent" />
+        <KpiCard
+          label="Por procesar"
+          value={formatNumber(data.payouts.filter((p) => p.status === 'PENDING' || p.status === 'PROCESSING').length)}
+          tone="warning"
+        />
+        <KpiCard
+          label="Descuadres"
+          value={formatNumber(broken.length)}
+          tone={broken.length > 0 ? 'danger' : 'success'}
+          invertDelta
+        />
+        <KpiCard
+          label="Canales activos"
+          value={formatNumber(data.byChannel.length)}
+          hint={
+            channelTotals.length > 0
+              ? channelTotals.map(([cur, t]) => `${formatMoney(t.gross, cur)} bruto`).join(' · ')
+              : undefined
+          }
+        />
+      </Section>
+
       {broken.length > 0 && (
         <Notice tone="danger" title={`${broken.length} liquidación(es) no cuadran`}>
           <p>
@@ -235,14 +266,19 @@ function PayoutsView({ data, reload }: { data: PayoutPayload; reload: () => void
         </Notice>
       )}
 
-      <section className={platform.panel}>
-        <h2>Ventas por canal</h2>
-        <p className={styles.scopeNote}>
-          Importes calculados sobre el <strong>total esperado de cada orden</strong>, no sobre lo
-          liquidado por la pasarela. Desde que ambos pueden diferir, usa esta tabla para repartir
-          por canal y el estado de cuenta bancario para cuadrar el dinero real. El API todavía no
-          expone la suma de lo liquidado por periodo.
-        </p>
+      <Card padding="md">
+        <CardHeader
+          title="Ventas por canal"
+          as="h2"
+          description={
+            <>
+              Importes calculados sobre el <strong>total esperado de cada orden</strong>, no sobre lo
+              liquidado por la pasarela. Desde que ambos pueden diferir, usa esta tabla para repartir
+              por canal y el estado de cuenta bancario para cuadrar el dinero real. El API todavía no
+              expone la suma de lo liquidado por periodo.
+            </>
+          }
+        />
         {data.byChannel.length === 0 ? (
           <EmptyBlock
             title="Sin ventas registradas"
@@ -299,11 +335,25 @@ function PayoutsView({ data, reload }: { data: PayoutPayload; reload: () => void
             </tbody>
           </table>
         )}
-      </section>
+      </Card>
 
-      <section className={platform.panel}>
-        <div className={styles.toolbar}>
-          <h2 style={{ margin: 0, flex: 1 }}>Liquidaciones a promotor</h2>
+      <Card padding="md">
+        <CardHeader
+          as="h2"
+          title="Liquidaciones a promotor"
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={exportCsv}
+              disabled={visible.length === 0}
+            >
+              Exportar CSV
+            </Button>
+          }
+        />
+        <div className={styles.panelHead}>
           <div className={styles.filters} role="group" aria-label="Filtrar por estado">
             <button
               type="button"
@@ -325,14 +375,6 @@ function PayoutsView({ data, reload }: { data: PayoutPayload; reload: () => void
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            className={platform.ghostBtn}
-            onClick={exportCsv}
-            disabled={visible.length === 0}
-          >
-            Exportar CSV
-          </button>
         </div>
 
         {visible.length === 0 ? (
@@ -401,29 +443,36 @@ function PayoutsView({ data, reload }: { data: PayoutPayload; reload: () => void
                     </td>
                     <td>{p.referenceId || <span className={styles.subtle}>Sin referencia</span>}</td>
                     <td>
-                      {p.status === 'PENDING' && (
-                        <button
-                          type="button"
-                          className={platform.ghostBtn}
-                          disabled={busy !== null}
-                          onClick={() => void act(p.id, 'process')}
-                        >
-                          {busy === p.id ? 'Guardando…' : 'Iniciar SPEI'}
-                        </button>
-                      )}
-                      {(p.status === 'PENDING' || p.status === 'PROCESSING') && (
-                        <button
-                          type="button"
-                          className={platform.primaryBtn}
-                          disabled={busy !== null}
-                          onClick={() => void act(p.id, 'complete')}
-                        >
-                          {busy === p.id ? 'Guardando…' : 'Marcar pagada'}
-                        </button>
-                      )}
-                      {p.status !== 'PENDING' && p.status !== 'PROCESSING' && (
-                        <span className={styles.subtle}>—</span>
-                      )}
+                      <div className={styles.rowActions}>
+                        {p.status === 'PENDING' && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={busy !== null}
+                            loading={busy === p.id}
+                            loadingLabel="Guardando…"
+                            onClick={() => void act(p.id, 'process')}
+                          >
+                            Iniciar SPEI
+                          </Button>
+                        )}
+                        {(p.status === 'PENDING' || p.status === 'PROCESSING') && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={busy !== null}
+                            loading={busy === p.id}
+                            loadingLabel="Guardando…"
+                            onClick={() => void act(p.id, 'complete')}
+                          >
+                            Marcar pagada
+                          </Button>
+                        )}
+                        {p.status !== 'PENDING' && p.status !== 'PROCESSING' && (
+                          <span className={styles.subtle}>—</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -431,7 +480,7 @@ function PayoutsView({ data, reload }: { data: PayoutPayload; reload: () => void
             </tbody>
           </table>
         )}
-      </section>
+      </Card>
     </>
   );
 }

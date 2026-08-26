@@ -4,6 +4,11 @@
   gap: var(--bl-space-5);
   min-width: 0;
   color: var(--bl-text-primary);
+  padding-bottom: 2rem;
+}
+
+.kpiStrip {
+  margin-top: calc(var(--bl-space-2) * -1);
 }
 
 .layout {

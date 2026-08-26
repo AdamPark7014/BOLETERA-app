@@ -12,10 +12,18 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
+import {
+  Button,
+  KpiCard,
+  PageHeader,
+  Section,
+  SegmentedControl,
+} from '@boletera/ui';
 import { adminApi, adminDownload, ApiError, getStoredToken } from '@/lib/api';
 import { useToast } from '@/components/Toast/ToastProvider';
 import platform from '../_styles/platform.module.scss';
 import styles from '../orders/orders.module.scss';
+import reportStyles from './reports.module.scss';
 import { EmptyBlock, Notice, ResourceView } from '../orders/_ui/States';
 import { useAdminSession, useResource } from '../orders/_ui/useResource';
 import {
@@ -36,6 +44,11 @@ const PERIOD_LABEL: Record<Period, string> = {
   WEEKLY: 'Últimos 7 días',
   MONTHLY: 'Últimos 30 días',
 };
+
+const PERIOD_OPTIONS = (Object.keys(PERIOD_LABEL) as Period[]).map((value) => ({
+  value,
+  label: PERIOD_LABEL[value],
+}));
 
 /** Campos reales de `GET /reports/settlement/:organizationId/:period`. */
 type Settlement = {
@@ -103,25 +116,26 @@ export default function ReportsPage() {
   }
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Reportes</h1>
-          <p>Ventas por canal, liquidación y cortes de taquilla</p>
-        </div>
-        {session.phase === 'ready' && (
-          <button
-            type="button"
-            className={platform.primaryBtn}
-            disabled={exporting}
-            onClick={() => void exportSales(session.orgId)}
-          >
-            {exporting ? 'Preparando…' : 'Exportar ventas (CSV)'}
-          </button>
-        )}
-      </header>
+    <div className={reportStyles.page}>
+      <PageHeader
+        eyebrow="Finanzas"
+        title="Reportes"
+        description="Ventas por canal, liquidación y cortes de taquilla"
+        actions={
+          session.phase === 'ready' ? (
+            <Button
+              type="button"
+              loading={exporting}
+              loadingLabel="Preparando…"
+              onClick={() => void exportSales(session.orgId)}
+            >
+              Exportar ventas (CSV)
+            </Button>
+          ) : undefined
+        }
+      />
 
-      <section className={platform.panel}>
+      <section className={reportStyles.panel}>
         <h2>Ventas por canal</h2>
         <p className={styles.scopeNote}>
           Ventana por omisión del API: <strong>últimos 30 días</strong>. Importes sobre el total
@@ -182,22 +196,16 @@ export default function ReportsPage() {
         </ResourceView>
       </section>
 
-      <section className={platform.panel}>
-        <div className={styles.toolbar}>
-          <h2 style={{ margin: 0, flex: 1 }}>Liquidación</h2>
-          <div className={styles.filters} role="group" aria-label="Periodo de la liquidación">
-            {(Object.keys(PERIOD_LABEL) as Period[]).map((p) => (
-              <button
-                key={p}
-                type="button"
-                aria-pressed={period === p}
-                className={period === p ? styles.filterActive : styles.filter}
-                onClick={() => setPeriod(p)}
-              >
-                {PERIOD_LABEL[p]}
-              </button>
-            ))}
-          </div>
+      <section className={reportStyles.panel}>
+        <div className={reportStyles.panelHead}>
+          <h2>Liquidación</h2>
+          <SegmentedControl
+            label="Periodo"
+            size="sm"
+            options={PERIOD_OPTIONS}
+            value={period}
+            onValueChange={(value) => setPeriod(value as Period)}
+          />
         </div>
 
         <ResourceView resource={settlement} context="la liquidación" loadingRows={3}>
@@ -205,7 +213,7 @@ export default function ReportsPage() {
         </ResourceView>
       </section>
 
-      <section className={platform.panel}>
+      <section className={reportStyles.panel}>
         <h2>Cortes de taquilla (Z)</h2>
         <ZReportsBlock />
       </section>
@@ -262,31 +270,27 @@ function SettlementView({ data, period }: { data: Settlement; period: Period }) 
         </Notice>
       )}
 
-      <div className={platform.cardGrid}>
-        <article className={platform.statCard}>
-          <span>Bruto esperado</span>
-          <strong>{formatMoney(gross, currency)}</strong>
-          <small>Suma de los totales de orden</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Liquidado por pasarelas</span>
-          <strong>{methods.length ? formatMoney(settled, currency) : 'Sin desglose'}</strong>
-          <small>{mismatch ? 'No coincide con lo esperado' : 'Coincide con lo esperado'}</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Comisión</span>
-          <strong>{formatMoney(summary.commission, currency)}</strong>
-        </article>
-        <article className={platform.statCard}>
-          <span>Neto al promotor</span>
-          <strong>{formatMoney(summary.netRevenue, currency)}</strong>
-        </article>
-        <article className={platform.statCard}>
-          <span>Órdenes</span>
-          <strong>{formatNumber(summary.totalOrders)}</strong>
-          <small>Ticket promedio {formatMoney(summary.avgOrderValue, currency)}</small>
-        </article>
-      </div>
+      <Section columns={4} gap="md" className={reportStyles.kpiStrip}>
+        <KpiCard
+          label="Bruto esperado"
+          value={formatMoney(gross, currency)}
+          hint="Suma de totales de orden"
+          tone="accent"
+        />
+        <KpiCard
+          label="Liquidado"
+          value={methods.length ? formatMoney(settled, currency) : 'Sin desglose'}
+          tone={mismatch ? 'warning' : 'success'}
+          hint={mismatch ? 'No coincide con lo esperado' : 'Coincide con lo esperado'}
+        />
+        <KpiCard label="Comisión" value={formatMoney(summary.commission, currency)} />
+        <KpiCard
+          label="Neto al promotor"
+          value={formatMoney(summary.netRevenue, currency)}
+          tone="success"
+          hint={`${formatNumber(summary.totalOrders ?? 0)} órdenes · ticket ${formatMoney(summary.avgOrderValue, currency)}`}
+        />
+      </Section>
 
       {methods.length > 0 && (
         <table className={platform.table} style={{ marginTop: '1rem' }}>

@@ -10,6 +10,8 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { CURATED_MARKETING_CARDS } from '@boletera/shared';
+import { Badge, Button, Card, EmptyState, SearchInput } from '@boletera/ui';
 import { EventPosterArt } from './EventPosterArt';
 import styles from './EventDiscoveryPanel.module.scss';
 
@@ -57,8 +59,20 @@ const CATEGORY_LABEL: Record<string, string> = {
   OTHER: 'Evento',
 };
 
+const CATEGORY_CHIPS = [
+  { key: 'ALL', label: 'Todos', emoji: '✨' },
+  { key: 'MUSIC', label: 'Conciertos', emoji: '🎵' },
+  { key: 'SPORTS', label: 'Deportes', emoji: '⚽' },
+  { key: 'THEATER', label: 'Artes', emoji: '🎭' },
+  { key: 'COMEDY', label: 'Comedia', emoji: '😂' },
+  { key: 'FESTIVAL', label: 'Festivales', emoji: '🎪' },
+] as const;
+
+const LOW_STOCK_THRESHOLD = 30;
+
 type SortKey = 'date' | 'price';
 type WhenKey = 'ALL' | 'WEEK' | 'WEEKEND' | 'MONTH';
+type InventoryState = 'available' | 'low' | 'sold-out';
 
 function fmtDate(iso: string) {
   const d = new Date(iso);
@@ -77,15 +91,24 @@ function fmtPrice(n: number | string) {
   return `Desde $${v.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`;
 }
 
+function inventoryState(offerCount?: number): InventoryState {
+  if (offerCount === 0) return 'sold-out';
+  if (offerCount != null && offerCount > 0 && offerCount <= LOW_STOCK_THRESHOLD) return 'low';
+  return 'available';
+}
+
 export function EventDiscoveryPanel({
   initial,
   compact,
   initialFailed,
+  suppressFeaturedHero,
 }: {
   initial: EventHit[];
   compact?: boolean;
   /** El servidor no pudo traer la cartelera: "vacío" y "falló" no son lo mismo. */
   initialFailed?: boolean;
+  /** En la home el hero de marketing ya ocupa el h1; no duplicar evento destacado. */
+  suppressFeaturedHero?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -202,15 +225,18 @@ export function EventDiscoveryPanel({
   }, [events, sort]);
 
   const isFiltering = Boolean(query.trim()) || city !== 'ALL' || category !== 'ALL' || when !== 'ALL';
-  const featured = !compact && !isFiltering ? filtered[0] : null;
+  const featured =
+    !compact && !isFiltering && !suppressFeaturedHero ? filtered[0] : null;
   const list = featured ? filtered.slice(1) : filtered;
+  const showCuratedEmpty =
+    !isFiltering && !compact && filtered.length === 0 && !loading && !fetchFailed;
 
   /*
-   * Un único h1 por página. Cuando hay evento destacado, él es el título de la
-   * página; si se está filtrando (o el panel va incrustado), el h1 pasa al
-   * encabezado de la lista para no dejar la página sin nivel 1.
+   * Un único h1 por página. En la home, HomeHero lleva el h1; aquí siempre h2.
+   * En otras rutas, el evento destacado o el encabezado de lista asumen el h1.
    */
-  const ListHeading: ElementType = compact || featured ? 'h2' : 'h1';
+  const ListHeading: ElementType =
+    compact || featured || suppressFeaturedHero ? 'h2' : 'h1';
 
   function pushParams(next: { q?: string; city?: string; category?: string; when?: string }) {
     const params = new URLSearchParams(searchParams.toString());
@@ -304,7 +330,7 @@ export function EventDiscoveryPanel({
         )}
 
         <form
-          className={styles.searchBar}
+          className={styles.searchForm}
           role="search"
           onSubmit={(e) => {
             e.preventDefault();
@@ -312,100 +338,86 @@ export function EventDiscoveryPanel({
             pushParams({ q: query, city, category, when });
           }}
         >
-          <div className={styles.searchField} ref={searchWrapRef}>
-            <div className={styles.fieldGrow}>
-              <label htmlFor="discovery-search" className="sr-only">
-                Buscar eventos, recintos o ciudades
-              </label>
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
-                <path
-                  d="m20 20-3.5-3.5"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
+          <Card variant="elevated" padding="sm" className={styles.searchBar}>
+            <div className={styles.searchRow}>
+              <div className={styles.searchField} ref={searchWrapRef}>
+                <SearchInput
+                  id="discovery-search"
+                  className={styles.searchInput}
+                  value={query}
+                  onValueChange={setQuery}
+                  inputSize="lg"
+                  fullWidth
+                  placeholder="Ej. Rock, Monterrey, Auditorio Nacional"
+                  label="Buscar eventos, recintos o ciudades"
+                  autoComplete="off"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={suggestOpen}
+                  aria-controls="discovery-suggest"
+                  aria-activedescendant={
+                    activeSuggest >= 0 ? `discovery-suggest-${activeSuggest}` : undefined
+                  }
+                  onFocus={() => suggestions.length > 0 && setSuggestOpen(true)}
+                  onKeyDown={onSearchKeyDown}
                 />
-              </svg>
-              <input
-                id="discovery-search"
-                type="search"
-                placeholder="Ej. Rock, Monterrey, Auditorio Nacional"
-                value={query}
-                autoComplete="off"
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded={suggestOpen}
-                aria-controls="discovery-suggest"
-                aria-activedescendant={
-                  activeSuggest >= 0 ? `discovery-suggest-${activeSuggest}` : undefined
-                }
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => suggestions.length > 0 && setSuggestOpen(true)}
-                onKeyDown={onSearchKeyDown}
-              />
-            </div>
-            {suggestOpen && suggestions.length > 0 && (
-              <ul
-                id="discovery-suggest"
-                className={styles.suggest}
-                role="listbox"
-                aria-label="Sugerencias de búsqueda"
-              >
-                {suggestions.map((s, i) => {
-                  const d = fmtDate(s.startsAt);
-                  return (
-                    <li
-                      key={s.id}
-                      id={`discovery-suggest-${i}`}
-                      role="option"
-                      aria-selected={i === activeSuggest}
-                    >
-                      <button
-                        type="button"
-                        className={
-                          i === activeSuggest ? styles.suggestActive : styles.suggestItem
-                        }
-                        onMouseEnter={() => setActiveSuggest(i)}
-                        onClick={() => pickSuggest(s)}
-                      >
-                        <strong>{s.title}</strong>
-                        <span>
-                          {d.full} · {d.time}
-                          {s.subtitle ? ` · ${s.subtitle}` : ''}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+                {suggestOpen && suggestions.length > 0 && (
+                  <ul
+                    id="discovery-suggest"
+                    className={styles.suggest}
+                    role="listbox"
+                    aria-label="Sugerencias de búsqueda"
+                  >
+                    {suggestions.map((s, i) => {
+                      const d = fmtDate(s.startsAt);
+                      return (
+                        <li
+                          key={s.id}
+                          id={`discovery-suggest-${i}`}
+                          role="option"
+                          aria-selected={i === activeSuggest}
+                        >
+                          <button
+                            type="button"
+                            className={
+                              i === activeSuggest ? styles.suggestActive : styles.suggestItem
+                            }
+                            onMouseEnter={() => setActiveSuggest(i)}
+                            onClick={() => pickSuggest(s)}
+                          >
+                            <strong>{s.title}</strong>
+                            <span>
+                              {d.full} · {d.time}
+                              {s.subtitle ? ` · ${s.subtitle}` : ''}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
 
-          <label htmlFor="discovery-when" className="sr-only">
-            Filtrar por fecha
-          </label>
-          <select
-            id="discovery-when"
-            className={styles.select}
-            value={when}
-            onChange={(e) => {
-              const v = e.target.value as WhenKey;
-              setWhen(v);
-              pushParams({ q: query, city, category, when: v });
-            }}
-          >
-            <option value="ALL">Cualquier fecha</option>
-            <option value="WEEK">Esta semana</option>
-            <option value="WEEKEND">Fin de semana</option>
-            <option value="MONTH">Próximos 30 días</option>
-          </select>
+              <label htmlFor="discovery-when" className="sr-only">
+                Filtrar por fecha
+              </label>
+              <select
+                id="discovery-when"
+                className={styles.whenSelect}
+                value={when}
+                onChange={(e) => {
+                  const v = e.target.value as WhenKey;
+                  setWhen(v);
+                  pushParams({ q: query, city, category, when: v });
+                }}
+              >
+                <option value="ALL">Cualquier fecha</option>
+                <option value="WEEK">Esta semana</option>
+                <option value="WEEKEND">Fin de semana</option>
+                <option value="MONTH">Próximos 30 días</option>
+              </select>
+            </div>
+          </Card>
         </form>
 
         {cityStats.length > 0 && (
@@ -420,7 +432,9 @@ export function EventDiscoveryPanel({
               }}
             >
               Todo México
-              <em>{initial.length}</em>
+              <Badge tone={city === 'ALL' ? 'accent' : 'neutral'} variant="solid" size="sm">
+                {initial.length}
+              </Badge>
             </button>
             {cityStats.map((c) => (
               <button
@@ -434,21 +448,20 @@ export function EventDiscoveryPanel({
                 }}
               >
                 {c.name}
-                <em>{c.count}</em>
+                <Badge
+                  tone={city === c.name ? 'accent' : 'neutral'}
+                  variant="solid"
+                  size="sm"
+                >
+                  {c.count}
+                </Badge>
               </button>
             ))}
           </div>
         )}
 
         <div className={styles.catHubs} role="group" aria-label="Filtrar por categoría">
-          {[
-            { key: 'ALL', label: 'Todos' },
-            { key: 'MUSIC', label: 'Conciertos' },
-            { key: 'SPORTS', label: 'Deportes' },
-            { key: 'THEATER', label: 'Artes' },
-            { key: 'COMEDY', label: 'Comedia' },
-            { key: 'FESTIVAL', label: 'Festivales' },
-          ].map((c) => {
+          {CATEGORY_CHIPS.map((c) => {
             const active = c.key === 'ALL' ? category === 'ALL' : category === c.key;
             return (
               <button
@@ -461,6 +474,7 @@ export function EventDiscoveryPanel({
                   pushParams({ q: query, city, category: c.key, when });
                 }}
               >
+                <span className={styles.catEmoji} aria-hidden="true">{c.emoji}</span>
                 {c.label}
               </button>
             );
@@ -469,10 +483,11 @@ export function EventDiscoveryPanel({
 
         <section className={styles.listSection} aria-label="Eventos">
           <div className={styles.listHead}>
-            <div>
+            <div className={styles.listTitleWrap}>
               <ListHeading className={styles.listTitle}>
                 {isFiltering ? 'Resultados' : 'Próximos eventos'}
               </ListHeading>
+              <span className={styles.listTitleAccent} aria-hidden="true" />
               {/* aria-live: al cambiar filtros el lector anuncia cuántos quedan. */}
               <p className={styles.listCount} role="status" aria-live="polite">
                 {countLabel}
@@ -480,9 +495,9 @@ export function EventDiscoveryPanel({
             </div>
             <div className={styles.listTools}>
               {isFiltering && (
-                <button type="button" className={styles.clear} onClick={clearFilters}>
+                <Button type="button" variant="outline" size="sm" onClick={clearFilters}>
                   Limpiar filtros
-                </button>
+                </Button>
               )}
               <label htmlFor="discovery-sort" className="sr-only">
                 Ordenar resultados
@@ -500,40 +515,60 @@ export function EventDiscoveryPanel({
           </div>
 
           {fetchFailed && (
-            <div className={styles.notice} role="alert">
-              <p className={styles.noticeTitle}>No pudimos cargar la cartelera</p>
-              <p>
-                Revisa tu conexión e inténtalo otra vez. Si el problema sigue, vuelve en
-                unos minutos.
-              </p>
-              <button
-                type="button"
-                className={styles.clear}
-                onClick={() => setReloadKey((k) => k + 1)}
-              >
-                Reintentar
-              </button>
-            </div>
+            <EmptyState
+              illustration="error"
+              tone="danger"
+              title="No pudimos cargar la cartelera"
+              description="Revisa tu conexión e inténtalo otra vez. Si el problema sigue, vuelve en unos minutos."
+              action={
+                <Button type="button" variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+                  Reintentar
+                </Button>
+              }
+              className={styles.notice}
+            />
           )}
 
           {!isFiltering && !compact ? (
             <ul className={styles.posterGrid} aria-busy={loading}>
               {list.map((e, idx) => {
                 const d = fmtDate(e.startsAt);
+                const stock = inventoryState(e.offerCount);
+                const categoryLabel = CATEGORY_LABEL[e.category || ''] ?? 'Evento';
                 return (
                   <li
                     key={e.id}
                     style={{ animationDelay: `${Math.min(idx, 8) * 40}ms` }}
                     className={styles.posterItem}
                   >
-                    <Link href={`/events/${e.slug}`} className={styles.posterCard}>
-                      <div className={styles.posterArt}>
-                        <EventPosterArt event={e} size="lg" showDate />
+                    <Link
+                      href={`/events/${e.slug}`}
+                      className={stock === 'sold-out' ? styles.posterCardSoldOut : styles.posterCard}
+                    >
+                      <div className={styles.posterChrome}>
+                        <div className={styles.posterBadges}>
+                          <Badge tone="accent" variant="solid" size="sm">
+                            {categoryLabel}
+                          </Badge>
+                          {stock === 'low' ? (
+                            <Badge tone="warning" variant="solid" size="sm">
+                              Últimos boletos
+                            </Badge>
+                          ) : null}
+                          {stock === 'sold-out' ? (
+                            <Badge tone="neutral" variant="solid" size="sm">
+                              Agotado
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <div className={styles.posterArt}>
+                          <EventPosterArt event={e} size="lg" showDate />
+                        </div>
+                        {stock === 'sold-out' ? (
+                          <div className={styles.posterSoldOverlay} aria-hidden="true" />
+                        ) : null}
                       </div>
                       <div className={styles.posterBody}>
-                        <p className={styles.rowCat}>
-                          {CATEGORY_LABEL[e.category || ''] ?? 'Evento'}
-                        </p>
                         <h3>{e.title}</h3>
                         <p>
                           {d.weekday} {d.day} {d.month} · {d.time}
@@ -550,6 +585,7 @@ export function EventDiscoveryPanel({
             <ul className={styles.list} aria-busy={loading}>
               {list.map((e) => {
                 const d = fmtDate(e.startsAt);
+                const stock = inventoryState(e.offerCount);
                 return (
                   <li key={e.id}>
                     <Link href={`/events/${e.slug}`} className={styles.row}>
@@ -560,9 +596,21 @@ export function EventDiscoveryPanel({
                         <span className={styles.rowMonth}>{d.month}</span>
                       </time>
                       <div className={styles.rowMain}>
-                        <p className={styles.rowCat}>
-                          {CATEGORY_LABEL[e.category || ''] ?? 'Evento'}
-                        </p>
+                        <div className={styles.rowBadges}>
+                          <Badge tone="accent" variant="soft" size="sm">
+                            {CATEGORY_LABEL[e.category || ''] ?? 'Evento'}
+                          </Badge>
+                          {stock === 'low' ? (
+                            <Badge tone="warning" variant="solid" size="sm">
+                              Últimos boletos
+                            </Badge>
+                          ) : null}
+                          {stock === 'sold-out' ? (
+                            <Badge tone="neutral" variant="solid" size="sm">
+                              Agotado
+                            </Badge>
+                          ) : null}
+                        </div>
                         <h3>{e.title}</h3>
                         <p>
                           {e.venue?.name}
@@ -582,29 +630,49 @@ export function EventDiscoveryPanel({
             </ul>
           )}
 
-          {filtered.length === 0 && !loading && !fetchFailed && (
-            <div className={styles.empty}>
-              {isFiltering ? (
-                <>
-                  <p className={styles.emptyTitle}>Ningún evento coincide</p>
-                  <p>
-                    Prueba con otra ciudad, otra fecha o quita algún filtro para ver toda
-                    la cartelera.
-                  </p>
-                  <button type="button" className={styles.clear} onClick={clearFilters}>
-                    Ver toda la cartelera
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className={styles.emptyTitle}>Todavía no hay eventos publicados</p>
-                  <p>
-                    En cuanto los promotores publiquen su cartelera la verás aquí. Vuelve
-                    pronto.
-                  </p>
-                </>
-              )}
+          {showCuratedEmpty && (
+            <div className={styles.curated}>
+              <EmptyState
+                illustration="seats"
+                size="lg"
+                title="Todavía no hay eventos publicados"
+                description="Mientras tanto, explora por categoría:"
+                className={styles.curatedEmpty}
+              />
+              <ul className={styles.curatedGrid} aria-label="Destacados">
+                {CURATED_MARKETING_CARDS.map((card) => (
+                  <li key={card.title}>
+                    <Link href={card.href} className={styles.curatedCard}>
+                      <div className={styles.curatedArt}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={card.image} alt="" loading="lazy" decoding="async" />
+                        <div className={styles.curatedShade} aria-hidden="true" />
+                      </div>
+                      <div className={styles.curatedBody}>
+                        <Badge tone="accent" variant="solid" size="sm">Destacado</Badge>
+                        <h3>{card.title}</h3>
+                        <p>{card.subtitle}</p>
+                        <span className={styles.curatedCta}>Explorar →</span>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
+          )}
+
+          {filtered.length === 0 && !loading && !fetchFailed && isFiltering && (
+            <EmptyState
+              illustration="search"
+              title="Ningún evento coincide"
+              description="Prueba con otra ciudad, otra fecha o quita algún filtro para ver toda la cartelera."
+              action={
+                <Button type="button" variant="primary" size="sm" onClick={clearFilters}>
+                  Ver toda la cartelera
+                </Button>
+              }
+              className={styles.empty}
+            />
           )}
         </section>
       </div>

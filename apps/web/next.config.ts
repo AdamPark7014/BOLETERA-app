@@ -5,6 +5,16 @@ const nextConfig: NextConfig = {
   sassOptions: {
     includePaths: ['../../packages/ui/src/styles'],
   },
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

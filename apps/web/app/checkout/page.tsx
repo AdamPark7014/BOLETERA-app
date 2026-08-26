@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Badge, Button, Card, Input } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
+import { EventPosterArt } from '@/components/EventPosterArt';
 import { HoldCountdown } from '@/components/HoldCountdown';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import { authHeaders, getStoredUser } from '@/lib/auth';
@@ -417,8 +419,14 @@ function CheckoutForm() {
           </span>
           <span className={styles.stepTodo}>3 Boletos</span>
         </div>
+        <div className={styles.stepTrack} aria-hidden="true">
+          <span className={styles.stepProgress} />
+        </div>
 
         <header className={styles.hero}>
+          <Badge tone="accent" variant="soft" size="md">
+            Paso 2 de 3 · Pago seguro
+          </Badge>
           <h1>Checkout</h1>
           <p>
             {gatewayInfo?.demo
@@ -456,156 +464,139 @@ function CheckoutForm() {
         )}
 
         <div className={styles.layout}>
-          <section className={styles.formCol} aria-label="Datos de pago">
+          <Card className={styles.formCol} variant="elevated" padding="md" aria-label="Datos de pago">
             <div className={styles.trust}>
-              <span>Boletos oficiales</span>
-              <span>{gatewayInfo?.demo ? 'Demo' : 'Banorte'}</span>
-              <span>QR de acceso</span>
+              <Badge tone="success" variant="soft" size="sm">
+                Boletos oficiales
+              </Badge>
+              <Badge tone={gatewayInfo?.demo ? 'warning' : 'info'} variant="soft" size="sm">
+                {gatewayInfo?.demo ? 'Demo' : 'Banorte'}
+              </Badge>
+              <Badge tone="neutral" variant="soft" size="sm">
+                QR de acceso
+              </Badge>
             </div>
 
             {gatewayInfo && (
-              <p
+              <div
                 className={`${styles.banorteNote} ${gatewayInfo.demo ? styles.banorteDemo : ''}`}
                 role={gatewayInfo.demo ? 'status' : undefined}
               >
-                {gatewayInfo.buyerNote ?? gatewayInfo.settlement}
-                {gatewayInfo.accountClabeMasked
-                  ? ` · CLABE ${gatewayInfo.accountClabeMasked}`
-                  : ''}
-              </p>
+                <strong>
+                  {gatewayInfo.demo ? 'Modo demostración' : 'Pago procesado por Banorte'}
+                </strong>
+                <p>
+                  {gatewayInfo.buyerNote ?? gatewayInfo.settlement}
+                  {gatewayInfo.accountClabeMasked
+                    ? ` · CLABE ${gatewayInfo.accountClabeMasked}`
+                    : ''}
+                </p>
+                {!gatewayInfo.demo && (
+                  <p className={styles.banorteTrust}>
+                    El cobro va directo a la cuenta del organizador. BOLETERA no retiene tu dinero.
+                  </p>
+                )}
+              </div>
             )}
 
             <div className={styles.fieldGrid}>
-              <div className={styles.field}>
-                <label htmlFor="buyer-name">Nombre completo</label>
-                <input
-                  id="buyer-name"
-                  ref={nameRef}
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    if (showErrors) setFieldErrors(validate(e.target.value, email, phone));
-                  }}
-                  autoComplete="name"
-                  inputMode="text"
-                  enterKeyHint="next"
-                  required
-                  aria-required="true"
-                  aria-invalid={showErrors && Boolean(fieldErrors.name)}
-                  aria-describedby={
-                    showErrors && fieldErrors.name ? 'buyer-name-error' : 'buyer-name-hint'
-                  }
-                />
-                {showErrors && fieldErrors.name ? (
-                  <span id="buyer-name-error" className={styles.fieldError} role="alert">
-                    {fieldErrors.name}
-                  </span>
-                ) : (
-                  <span id="buyer-name-hint" className={styles.fieldHint}>
-                    Como aparece en tu identificación, por si la piden en el acceso.
-                  </span>
-                )}
-              </div>
+              <Input
+                ref={nameRef}
+                label="Nombre completo"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (showErrors) setFieldErrors(validate(e.target.value, email, phone));
+                }}
+                autoComplete="name"
+                inputMode="text"
+                enterKeyHint="next"
+                required
+                requiredMark
+                error={showErrors ? fieldErrors.name : undefined}
+                hint={
+                  showErrors && fieldErrors.name
+                    ? undefined
+                    : 'Como aparece en tu identificación, por si la piden en el acceso.'
+                }
+              />
 
-              <div className={styles.field}>
-                <label htmlFor="buyer-email">Correo electrónico</label>
-                <input
-                  id="buyer-email"
-                  ref={emailRef}
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (showErrors) setFieldErrors(validate(name, e.target.value, phone));
-                  }}
-                  autoComplete="email"
-                  inputMode="email"
-                  enterKeyHint="next"
-                  required
-                  aria-required="true"
-                  aria-invalid={showErrors && Boolean(fieldErrors.email)}
-                  aria-describedby={
-                    showErrors && fieldErrors.email ? 'buyer-email-error' : 'buyer-email-hint'
-                  }
-                />
-                {showErrors && fieldErrors.email ? (
-                  <span id="buyer-email-error" className={styles.fieldError} role="alert">
-                    {fieldErrors.email}
-                  </span>
-                ) : (
-                  <span id="buyer-email-hint" className={styles.fieldHint}>
-                    Ahí enviamos tus boletos y el enlace para consultarlos desde cualquier
-                    dispositivo.
-                  </span>
-                )}
-              </div>
+              <Input
+                ref={emailRef}
+                label="Correo electrónico"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (showErrors) setFieldErrors(validate(name, e.target.value, phone));
+                }}
+                autoComplete="email"
+                inputMode="email"
+                enterKeyHint="next"
+                required
+                requiredMark
+                error={showErrors ? fieldErrors.email : undefined}
+                hint={
+                  showErrors && fieldErrors.email
+                    ? undefined
+                    : 'Ahí enviamos tus boletos y el enlace para consultarlos desde cualquier dispositivo.'
+                }
+              />
 
-              <div className={styles.field}>
-                <label htmlFor="buyer-phone">
-                  Teléfono <span className={styles.optional}>(opcional)</span>
-                </label>
-                <input
-                  id="buyer-phone"
-                  ref={phoneRef}
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => {
-                    setPhone(e.target.value);
-                    if (showErrors) setFieldErrors(validate(name, email, e.target.value));
-                  }}
-                  autoComplete="tel"
-                  inputMode="tel"
-                  enterKeyHint="done"
-                  aria-invalid={showErrors && Boolean(fieldErrors.phone)}
-                  aria-describedby={
-                    showErrors && fieldErrors.phone ? 'buyer-phone-error' : 'buyer-phone-hint'
-                  }
-                />
-                {showErrors && fieldErrors.phone ? (
-                  <span id="buyer-phone-error" className={styles.fieldError} role="alert">
-                    {fieldErrors.phone}
-                  </span>
-                ) : (
-                  <span id="buyer-phone-hint" className={styles.fieldHint}>
-                    Solo para avisarte si hay un cambio en el evento.
-                  </span>
-                )}
-              </div>
+              <Input
+                ref={phoneRef}
+                label="Teléfono (opcional)"
+                type="tel"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (showErrors) setFieldErrors(validate(name, email, e.target.value));
+                }}
+                autoComplete="tel"
+                inputMode="tel"
+                enterKeyHint="done"
+                error={showErrors ? fieldErrors.phone : undefined}
+                hint={
+                  showErrors && fieldErrors.phone
+                    ? undefined
+                    : 'Solo para avisarte si hay un cambio en el evento.'
+                }
+                className={styles.phoneField}
+              />
             </div>
 
-            <div className={styles.field}>
-              <label htmlFor="promo-code">Código promocional</label>
-              <div className={styles.promoRow}>
-                <input
-                  id="promo-code"
-                  value={promo}
-                  onChange={(e) => {
-                    setPromo(e.target.value);
-                    setPromoValid(false);
-                    setPromoMsg(null);
-                  }}
-                  placeholder="Opcional"
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  aria-describedby="promo-code-status"
-                />
-                <button
+            <Input
+              label="Código promocional"
+              value={promo}
+              onChange={(e) => {
+                setPromo(e.target.value);
+                setPromoValid(false);
+                setPromoMsg(null);
+              }}
+              placeholder="Opcional"
+              autoComplete="off"
+              autoCapitalize="characters"
+              hint={promoMsg ?? (promoValid ? 'Código aplicado.' : 'Si tienes un código, aplícalo antes de pagar.')}
+              error={promoMsg && !promoValid ? promoMsg : undefined}
+              trailing={
+                <Button
                   type="button"
-                  className={styles.promoBtn}
+                  variant="outline"
+                  size="sm"
                   onClick={() => void validatePromo()}
                   disabled={!promo.trim() || promoChecking}
+                  loading={promoChecking}
+                  loadingLabel="…"
                 >
-                  {promoChecking ? 'Validando…' : 'Validar'}
-                </button>
-              </div>
-              <span
-                id="promo-code-status"
-                className={promoValid ? styles.promoOk : promoMsg ? styles.promoErr : styles.fieldHint}
-                role="status"
-              >
-                {promoMsg ?? 'Si tienes un código, aplícalo antes de pagar.'}
-              </span>
-            </div>
+                  Validar
+                </Button>
+              }
+            />
+            {promoValid && promoMsg ? (
+              <p className={styles.promoOk} role="status">
+                {promoMsg}
+              </p>
+            ) : null}
 
             <fieldset className={styles.methods}>
               <legend>Método de pago</legend>
@@ -665,42 +656,64 @@ function CheckoutForm() {
               </div>
             )}
 
-            <button
+            <Button
               type="button"
-              className={styles.pay}
+              size="lg"
+              fullWidth
               disabled={!canPay}
-              aria-busy={loading}
+              loading={loading}
+              loadingLabel="Procesando…"
               onClick={() => void pay()}
             >
-              {loading ? 'Procesando…' : payLabel}
-            </button>
+              {payLabel}
+            </Button>
 
             <p className={styles.fine}>
               Al continuar aceptas los <Link href="/terminos">términos</Link> y el{' '}
               <Link href="/privacidad">aviso de privacidad</Link>.
             </p>
-          </section>
+          </Card>
 
           <aside className={styles.summaryCol} aria-label="Resumen del pedido">
             {cartItem ? (
-              <div className={styles.lineItems}>
-                <p className={styles.summaryKicker}>Tu pedido</p>
-                <h2>{cartItem.eventTitle}</h2>
-                {(cartItem.venueName || cartItem.startsAt) && (
-                  <p className={styles.lineMeta}>
-                    {cartItem.venueName}
-                    {cartItem.venueCity ? ` · ${cartItem.venueCity}` : ''}
-                    {cartItem.startsAt
-                      ? ` · ${new Date(cartItem.startsAt).toLocaleString('es-MX', {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}`
-                      : ''}
-                  </p>
-                )}
+              <Card className={styles.lineItems} variant="elevated" padding="md">
+                <div className={styles.orderHeader}>
+                  {cartItem.slug && (
+                    <div className={styles.orderPoster} aria-hidden="true">
+                      <EventPosterArt
+                        event={{
+                          id: cartItem.eventId,
+                          slug: cartItem.slug,
+                          title: cartItem.eventTitle,
+                          startsAt: cartItem.startsAt,
+                        }}
+                        size="sm"
+                        showDate
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <Badge tone="neutral" variant="soft" size="sm">
+                      Tu pedido
+                    </Badge>
+                    <h2>{cartItem.eventTitle}</h2>
+                    {(cartItem.venueName || cartItem.startsAt) && (
+                      <p className={styles.lineMeta}>
+                        {cartItem.venueName}
+                        {cartItem.venueCity ? ` · ${cartItem.venueCity}` : ''}
+                        {cartItem.startsAt
+                          ? ` · ${new Date(cartItem.startsAt).toLocaleString('es-MX', {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}`
+                          : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
                 {orderLines.length > 0 && (
                   <ul className={styles.zoneList}>
                     {orderLines.map((line) => (
@@ -716,19 +729,25 @@ function CheckoutForm() {
                     ? seatLabels
                     : Array.from({ length: holdIds.length }, (_, i) => `Boleto ${i + 1}`)
                   ).map((label, i) => (
-                    <li key={`${label}-${i}`}>{label}</li>
+                    <li key={`${label}-${i}`}>
+                      <Badge tone="neutral" variant="outline" size="sm">
+                        {label}
+                      </Badge>
+                    </li>
                   ))}
                 </ul>
-              </div>
+              </Card>
             ) : (
-              <div className={styles.lineItems}>
-                <p className={styles.summaryKicker}>Tu pedido</p>
+              <Card className={styles.lineItems} variant="elevated" padding="md">
+                <Badge tone="neutral" variant="soft" size="sm">
+                  Tu pedido
+                </Badge>
                 <h2>{holdIds.length} boleto(s)</h2>
                 <p className={styles.lineMeta}>Reserva desde hold activo</p>
-              </div>
+              </Card>
             )}
 
-            <div className={styles.summary} aria-busy={pricingLoading}>
+            <Card className={styles.summary} variant="elevated" padding="md" aria-busy={pricingLoading}>
               {pricing ? (
                 <>
                   <div>
@@ -758,11 +777,11 @@ function CheckoutForm() {
                   </p>
                 </>
               ) : (
-                <p className={styles.totalNote}>
+                <p className={styles.totalNoteMuted}>
                   {pricingLoading ? 'Calculando el total con cargos e IVA…' : 'Total no disponible.'}
                 </p>
               )}
-            </div>
+            </Card>
 
             <Link href="/cart" className={styles.backCart}>
               ← Volver al carrito

@@ -6,6 +6,17 @@
   color: var(--bl-text-primary);
 }
 
+.kpiStrip {
+  margin-top: calc(var(--bl-space-2) * -1);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bl-space-3);
+  align-items: flex-end;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(17rem, 0.85fr);
@@ -110,7 +121,7 @@
   height: 6px;
   margin-top: 0.3rem;
   border-radius: var(--bl-radius-full);
-  background: #ececef;
+  background: var(--bl-surface-sunken);
   overflow: hidden;
 
   span {
@@ -266,22 +277,3 @@
   border: 0;
 }
 
-.unavailableBanner {
-  display: flex;
-  flex-direction: column;
-  gap: var(--bl-space-2);
-  padding: var(--bl-space-4) var(--bl-space-4);
-  border-radius: var(--bl-radius-lg);
-  border: 1px solid var(--bl-border);
-  background: var(--bl-surface);
-
-  strong {
-    font-size: var(--bl-text-lg);
-  }
-
-  p {
-    margin: var(--bl-space-0);
-    color: var(--bl-text-secondary);
-    font-size: var(--bl-text-sm);
-  }
-}

@@ -15,6 +15,20 @@
  */
 
 import { FormEvent, useCallback, useMemo, useState } from 'react';
+import {
+  Badge,
+  Button,
+  DataTable,
+  EmptyState,
+  FilterBar,
+  Input,
+  KpiCard,
+  PageHeader,
+  Section,
+  formatNumber,
+  type DataTableColumn,
+  type FilterDefinition,
+} from '@boletera/ui';
 import { ApiError } from '@/lib/api';
 import {
   getFiscalProfile,
@@ -27,8 +41,17 @@ import {
 } from '@/lib/platform-api';
 import { Notice, ResourceView } from '../../orders/_ui/States';
 import { useResource } from '../../orders/_ui/useResource';
-import { formatDateTime, formatMoney } from '../../orders/_ui/format';
-import platform from '../../_styles/platform.module.scss';
+import { formatMoney } from '../../orders/_ui/format';
+import { formatDateTime } from './_lib/format';
+import {
+  FILTER_OPTIONS,
+  STATUS_MEANING,
+  invoiceMatchesQuery,
+  invoiceStatusMeta,
+  matchesInvoiceFilter,
+  summarizeInvoices,
+} from './_lib/invoices';
+import { useCfdiUrlState } from './_lib/use-cfdi-url-state';
 import styles from './cfdi.module.scss';
 
 /* ── Catálogos del SAT ───────────────────────────────────────────────────────
@@ -60,36 +83,6 @@ const RFC_PATTERN = /^([A-ZÑ&]{3,4})\d{6}[A-Z\d]{3}$/;
 /** RFC genérico para el público que no pide factura a su nombre. */
 const RFC_PUBLICO = 'XAXX010101000';
 
-const STATUS_LABEL: Record<CfdiStatus, string> = {
-  STAMPED: 'Timbrada',
-  DRAFT: 'Pendiente',
-  CANCELLED: 'Cancelada',
-  ERROR: 'Con error',
-};
-
-const STATUS_CLASS: Record<CfdiStatus, string> = {
-  STAMPED: styles.stamped,
-  DRAFT: styles.draft,
-  CANCELLED: styles.cancelled,
-  ERROR: styles.errored,
-};
-
-/** Qué significa el estado en términos de operación, no de base de datos. */
-const STATUS_MEANING: Record<CfdiStatus, string> = {
-  STAMPED: 'El PAC devolvió UUID: la factura ya es válida ante el SAT.',
-  DRAFT: 'Se generó el comprobante pero aún no tiene timbre. Vuelve a timbrarla.',
-  CANCELLED: 'Se canceló ante el SAT. Si el cliente sigue necesitando factura, timbra una nueva.',
-  ERROR: 'El PAC rechazó el timbrado. Revisa el motivo y corrige antes de reintentar.',
-};
-
-function StatusBadge({ status }: { status: CfdiStatus }) {
-  return (
-    <span className={`${styles.badge} ${STATUS_CLASS[status] ?? styles.cancelled}`}>
-      {STATUS_LABEL[status] ?? status}
-    </span>
-  );
-}
-
 /**
  * Traduce el fallo del timbrado a una instrucción. El API responde con textos en
  * inglés pensados para el log (`Configure fiscal profile before stamping CFDI`,
@@ -115,7 +108,6 @@ type BillingData = { profile: FiscalProfile | null; invoices: CfdiInvoice[] };
 
 export default function CfdiBillingPage() {
   const loader = useCallback(async ({ token, orgId }: { token: string; orgId: string }) => {
-    // En paralelo: un perfil ausente (null) no debe impedir listar lo ya timbrado.
     const [profile, invoices] = await Promise.all([
       getFiscalProfile(token, orgId),
       listCfdiInvoices(token, orgId),
@@ -126,13 +118,23 @@ export default function CfdiBillingPage() {
   const resource = useResource<BillingData>(loader, { requiresOrg: true });
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Facturación CFDI 4.0</h1>
-          <p>Perfil fiscal del emisor, timbrado por orden y estado de cada comprobante</p>
-        </div>
-      </header>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Finanzas"
+        title="Facturación CFDI 4.0"
+        description="Perfil fiscal del emisor, timbrado por orden y estado de cada comprobante"
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            loading={resource.refreshing}
+            loadingLabel="Actualizando…"
+            onClick={() => resource.reload()}
+          >
+            Actualizar
+          </Button>
+        }
+      />
 
       <ResourceView resource={resource} context="las facturas" loadingRows={5}>
         {(data) => <CfdiContent data={data} onChanged={resource.reload} />}
@@ -165,7 +167,7 @@ function CfdiContent({ data, onChanged }: { data: BillingData; onChanged: () => 
 
       <FiscalProfileForm profile={profile} onSaved={onChanged} />
       <StampForm profileReady={Boolean(profile?.active)} onStamped={onChanged} />
-      <InvoiceTable invoices={invoices} />
+      <InvoiceSection invoices={invoices} />
     </>
   );
 }
@@ -209,8 +211,6 @@ function FiscalProfileForm({
         regimenFiscal: regimen,
         codigoPostal: cp,
         serie: serie || 'A',
-        // El modo PAC no se cambia desde aquí: requiere credenciales del PAC,
-        // que se cargan por configuración y no deben viajar en un formulario.
         pacMode: profile?.pacMode ?? 'sandbox',
       });
       setSaved(true);
@@ -223,52 +223,49 @@ function FiscalProfileForm({
   }
 
   return (
-    <section className={platform.panel} aria-labelledby="cfdi-emisor">
-      <h2 id="cfdi-emisor">Perfil fiscal del emisor</h2>
-
+    <Section
+      title="Perfil fiscal del emisor"
+      description="RFC, razón social y domicilio fiscal que el PAC valida al timbrar."
+    >
       <form onSubmit={submit} noValidate>
-        <div className={styles.grid}>
-          <label className={styles.field} htmlFor="fp-rfc">
-            RFC del emisor
-            <input
-              id="fp-rfc"
-              value={rfc}
-              onChange={(e) => setRfc(e.target.value.toUpperCase())}
-              autoComplete="off"
-              spellCheck={false}
-              maxLength={13}
-              required
-              aria-invalid={rfcInvalid}
-              aria-describedby={rfcInvalid ? 'fp-rfc-error' : 'fp-rfc-hint'}
-            />
-            {rfcInvalid ? (
-              <span className={styles.fieldError} id="fp-rfc-error">
-                Formato inválido. Son 12 caracteres para persona moral y 13 para persona física.
-              </span>
-            ) : (
-              <span className={styles.hint} id="fp-rfc-hint">
-                12 o 13 caracteres, como aparece en tu constancia de situación fiscal.
-              </span>
-            )}
-          </label>
+        <div className={styles.formGrid}>
+          <Input
+            label="RFC del emisor"
+            value={rfc}
+            onChange={(e) => setRfc(e.target.value.toUpperCase())}
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={13}
+            requiredMark
+            required
+            error={
+              rfcInvalid
+                ? 'Formato inválido. Son 12 caracteres para persona moral y 13 para persona física.'
+                : undefined
+            }
+            hint={
+              rfcInvalid
+                ? undefined
+                : '12 o 13 caracteres, como aparece en tu constancia de situación fiscal.'
+            }
+          />
 
-          <label className={styles.field} htmlFor="fp-legal">
-            Razón social
-            <input
-              id="fp-legal"
-              value={legalName}
-              onChange={(e) => setLegalName(e.target.value)}
-              required
-              aria-describedby="fp-legal-hint"
-            />
-            <span className={styles.hint} id="fp-legal-hint">
-              Sin régimen societario si tu constancia no lo incluye (CFDI 4.0 lo valida).
-            </span>
-          </label>
+          <Input
+            label="Razón social"
+            value={legalName}
+            onChange={(e) => setLegalName(e.target.value)}
+            requiredMark
+            required
+            hint="Sin régimen societario si tu constancia no lo incluye (CFDI 4.0 lo valida)."
+          />
 
-          <label className={styles.field} htmlFor="fp-regimen">
-            Régimen fiscal
-            <select id="fp-regimen" value={regimen} onChange={(e) => setRegimen(e.target.value)}>
+          <label className={styles.selectField}>
+            <span>Régimen fiscal</span>
+            <select
+              className={styles.select}
+              value={regimen}
+              onChange={(e) => setRegimen(e.target.value)}
+            >
               {Object.entries(REGIMEN_FISCAL).map(([code, label]) => (
                 <option key={code} value={code}>
                   {code} · {label}
@@ -277,56 +274,47 @@ function FiscalProfileForm({
             </select>
           </label>
 
-          <label className={styles.field} htmlFor="fp-cp">
-            Código postal del domicilio fiscal
-            <input
-              id="fp-cp"
-              value={cp}
-              onChange={(e) => setCp(e.target.value.replace(/\D/g, '').slice(0, 5))}
-              inputMode="numeric"
-              maxLength={5}
-              required
-              aria-describedby="fp-cp-hint"
-            />
-            <span className={styles.hint} id="fp-cp-hint">
-              Es el lugar de expedición del comprobante.
-            </span>
-          </label>
+          <Input
+            label="Código postal del domicilio fiscal"
+            value={cp}
+            onChange={(e) => setCp(e.target.value.replace(/\D/g, '').slice(0, 5))}
+            inputMode="numeric"
+            maxLength={5}
+            requiredMark
+            required
+            hint="Es el lugar de expedición del comprobante."
+          />
 
-          <label className={styles.field} htmlFor="fp-serie">
-            Serie
-            <input
-              id="fp-serie"
-              value={serie}
-              onChange={(e) => setSerie(e.target.value.toUpperCase().slice(0, 10))}
-              aria-describedby="fp-serie-hint"
-            />
-            <span className={styles.hint} id="fp-serie-hint">
-              {profile
+          <Input
+            label="Serie"
+            value={serie}
+            onChange={(e) => setSerie(e.target.value.toUpperCase().slice(0, 10))}
+            hint={
+              profile
                 ? `Siguiente folio: ${profile.nextFolio}. Lo asigna el servidor al timbrar.`
-                : 'El folio lo asigna el servidor de forma consecutiva.'}
-            </span>
-          </label>
+                : 'El folio lo asigna el servidor de forma consecutiva.'
+            }
+          />
         </div>
 
-        {error && (
-          <p className={styles.fieldError} role="alert">
+        {error ? (
+          <p className={styles.formError} role="alert">
             {error}
           </p>
-        )}
-        {saved && !error && (
-          <p className={styles.sandboxNote} role="status">
+        ) : null}
+        {saved && !error ? (
+          <p className={styles.formSuccess} role="status">
             Perfil fiscal guardado.
           </p>
-        )}
+        ) : null}
 
         <div className={styles.formActions}>
-          <button type="submit" className={platform.primaryBtn} disabled={saving || rfcInvalid}>
-            {saving ? 'Guardando…' : 'Guardar perfil'}
-          </button>
+          <Button type="submit" loading={saving} loadingLabel="Guardando…" disabled={rfcInvalid}>
+            Guardar perfil
+          </Button>
         </div>
       </form>
-    </section>
+    </Section>
   );
 }
 
@@ -348,6 +336,7 @@ function StampForm({
   const [ok, setOk] = useState<string | null>(null);
 
   const rfcInvalid = receptorRfc.length > 0 && !RFC_PATTERN.test(receptorRfc.toUpperCase());
+  const publico = receptorRfc.toUpperCase() === RFC_PUBLICO;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -382,82 +371,71 @@ function StampForm({
     }
   }
 
-  const publico = receptorRfc.toUpperCase() === RFC_PUBLICO;
-
   return (
-    <section className={platform.panel} aria-labelledby="cfdi-timbrar">
-      <h2 id="cfdi-timbrar">Timbrar una orden</h2>
-
-      {!profileReady && (
+    <Section
+      title="Timbrar una orden"
+      description="Solo órdenes completadas. El RFC y uso de CFDI deben coincidir con la constancia del cliente."
+    >
+      {!profileReady ? (
         <Notice tone="warn" title="Timbrado deshabilitado">
           <p>Guarda primero el perfil fiscal del emisor: sin él el PAC rechaza la petición.</p>
         </Notice>
-      )}
+      ) : null}
 
       <form onSubmit={submit} noValidate>
-        <div className={styles.grid}>
-          <label className={styles.field} htmlFor="st-order">
-            Orden a facturar
-            <input
-              id="st-order"
-              value={orderId}
-              onChange={(e) => setOrderId(e.target.value.trim())}
-              autoComplete="off"
-              spellCheck={false}
-              required
-              aria-describedby="st-order-hint"
-            />
-            <span className={styles.hint} id="st-order-hint">
-              Identificador interno de la orden. Solo se pueden timbrar órdenes completadas.
-            </span>
-          </label>
+        <div className={styles.formGrid}>
+          <Input
+            label="Orden a facturar"
+            value={orderId}
+            onChange={(e) => setOrderId(e.target.value.trim())}
+            autoComplete="off"
+            spellCheck={false}
+            requiredMark
+            required
+            hint="Identificador interno de la orden. Solo se pueden timbrar órdenes completadas."
+          />
 
-          <label className={styles.field} htmlFor="st-rfc">
-            RFC del receptor
-            <input
-              id="st-rfc"
-              value={receptorRfc}
-              onChange={(e) => setReceptorRfc(e.target.value.toUpperCase())}
-              autoComplete="off"
-              spellCheck={false}
-              maxLength={13}
-              required
-              aria-invalid={rfcInvalid}
-              aria-describedby={rfcInvalid ? 'st-rfc-error' : 'st-rfc-hint'}
-            />
-            {rfcInvalid ? (
-              <span className={styles.fieldError} id="st-rfc-error">
-                Formato inválido. Revisa la constancia del cliente antes de timbrar.
-              </span>
-            ) : (
-              <span className={styles.hint} id="st-rfc-hint">
-                {publico
+          <Input
+            label="RFC del receptor"
+            value={receptorRfc}
+            onChange={(e) => setReceptorRfc(e.target.value.toUpperCase())}
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={13}
+            requiredMark
+            required
+            error={
+              rfcInvalid
+                ? 'Formato inválido. Revisa la constancia del cliente antes de timbrar.'
+                : undefined
+            }
+            hint={
+              rfcInvalid
+                ? undefined
+                : publico
                   ? `${RFC_PUBLICO} es el RFC genérico de público en general.`
-                  : 'Debe coincidir exactamente con la constancia del cliente; el SAT no lo corrige.'}
-              </span>
-            )}
-          </label>
+                  : 'Debe coincidir exactamente con la constancia del cliente; el SAT no lo corrige.'
+            }
+          />
 
-          <label className={styles.field} htmlFor="st-nombre">
-            Nombre o razón social del receptor
-            <input
-              id="st-nombre"
-              value={receptorNombre}
-              onChange={(e) => setReceptorNombre(e.target.value)}
-              required
-            />
-          </label>
+          <Input
+            label="Nombre o razón social del receptor"
+            value={receptorNombre}
+            onChange={(e) => setReceptorNombre(e.target.value)}
+            requiredMark
+            required
+          />
 
-          <label className={styles.field} htmlFor="st-uso">
-            Uso de CFDI
-            <select id="st-uso" value={uso} onChange={(e) => setUso(e.target.value)}>
+          <label className={styles.selectField}>
+            <span>Uso de CFDI</span>
+            <select className={styles.select} value={uso} onChange={(e) => setUso(e.target.value)}>
               {Object.entries(USO_CFDI).map(([code, label]) => (
                 <option key={code} value={code}>
                   {code} · {label}
                 </option>
               ))}
             </select>
-            <span className={styles.hint}>
+            <span className={styles.subtle}>
               {publico
                 ? 'Con el RFC genérico el SAT solo acepta S01 (sin efectos fiscales).'
                 : 'Lo elige el cliente según cómo vaya a deducir el gasto.'}
@@ -465,64 +443,206 @@ function StampForm({
           </label>
         </div>
 
-        {error && (
-          <p className={styles.fieldError} role="alert">
+        {error ? (
+          <p className={styles.formError} role="alert">
             {error}
           </p>
-        )}
-        {ok && !error && (
-          <p className={styles.sandboxNote} role="status">
+        ) : null}
+        {ok && !error ? (
+          <p className={styles.formSuccess} role="status">
             {ok}
           </p>
-        )}
+        ) : null}
 
         <div className={styles.formActions}>
-          <button
+          <Button
             type="submit"
-            className={platform.primaryBtn}
-            disabled={busy || rfcInvalid || !profileReady}
+            loading={busy}
+            loadingLabel="Timbrando…"
+            disabled={rfcInvalid || !profileReady}
           >
-            {busy ? 'Timbrando…' : 'Timbrar CFDI'}
-          </button>
+            Timbrar CFDI
+          </Button>
         </div>
       </form>
-    </section>
+    </Section>
   );
 }
 
 /* ── Listado ─────────────────────────────────────────────────────────────── */
 
-function InvoiceTable({ invoices }: { invoices: CfdiInvoice[] }) {
-  const counts = useMemo(() => {
-    const acc: Record<string, number> = { STAMPED: 0, DRAFT: 0, CANCELLED: 0, ERROR: 0 };
-    for (const inv of invoices) acc[inv.status] = (acc[inv.status] ?? 0) + 1;
-    return acc;
+function InvoiceSection({ invoices }: { invoices: CfdiInvoice[] }) {
+  const url = useCfdiUrlState();
+  const totals = useMemo(() => summarizeInvoices(invoices), [invoices]);
+
+  const filterDefs = useMemo<FilterDefinition[]>(() => {
+    const counts = {
+      OK: invoices.filter((inv) => matchesInvoiceFilter(inv, 'OK')).length,
+      PENDING: invoices.filter((inv) => matchesInvoiceFilter(inv, 'PENDING')).length,
+      ERROR: invoices.filter((inv) => matchesInvoiceFilter(inv, 'ERROR')).length,
+    };
+    return [
+      {
+        id: 'status',
+        label: 'Estado',
+        multiple: false,
+        options: FILTER_OPTIONS.filter((o) => o.value !== 'ALL').map((o) => ({
+          value: o.value,
+          label: o.label,
+          count: counts[o.value as keyof typeof counts] ?? 0,
+        })),
+      },
+    ];
   }, [invoices]);
 
-  const failed = counts.ERROR ?? 0;
+  const filtered = useMemo(() => {
+    const needle = url.q.trim().toLowerCase();
+    return invoices.filter((inv) => {
+      if (!matchesInvoiceFilter(inv, url.filter)) return false;
+      return invoiceMatchesQuery(inv, needle);
+    });
+  }, [invoices, url.filter, url.q]);
+
+  const anyFilter = url.filter !== 'ALL' || Boolean(url.q.trim());
+
+  const columns = useMemo<readonly DataTableColumn<CfdiInvoice>[]>(
+    () => [
+      {
+        key: 'status',
+        header: 'Estado',
+        width: 220,
+        sortValue: (row) => row.status,
+        render: (row) => {
+          const meta = invoiceStatusMeta(row);
+          return (
+            <div className={styles.statusCell}>
+              <Badge tone={meta.tone} variant="soft" size="sm">
+                {meta.label}
+              </Badge>
+              <span className={styles.statusHint}>{STATUS_MEANING[row.status as CfdiStatus]}</span>
+            </div>
+          );
+        },
+      },
+      {
+        key: 'folio',
+        header: 'Folio',
+        width: 140,
+        sortValue: (row) => `${row.serie}-${String(row.folio).padStart(6, '0')}`,
+        render: (row) => (
+          <div className={styles.folioCell}>
+            <strong>
+              {row.serie}-{row.folio}
+            </strong>
+            <span className={styles.subtle}>
+              {row.tipo === 'E' ? 'Egreso (nota de crédito)' : 'Ingreso'}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: 'receptor',
+        header: 'Receptor',
+        width: 200,
+        sortValue: (row) => row.receptorRfc,
+        render: (row) => (
+          <div className={styles.receptorCell}>
+            <span className={styles.rfc}>{row.receptorRfc}</span>
+            <span className={styles.subtle}>{row.receptorNombre}</span>
+          </div>
+        ),
+      },
+      {
+        key: 'uso',
+        header: 'Uso CFDI',
+        width: 180,
+        sortValue: (row) => row.receptorUsoCfdi,
+        render: (row) => (
+          <div className={styles.receptorCell}>
+            <span className={styles.rfc}>{row.receptorUsoCfdi}</span>
+            <span className={styles.subtle}>
+              {USO_CFDI[row.receptorUsoCfdi] ?? 'clave fuera del catálogo cargado'}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: 'total',
+        header: 'Total',
+        width: 160,
+        align: 'right',
+        sortValue: (row) => Number(row.total),
+        render: (row) => (
+          <div className={styles.money}>
+            <div>{formatMoney(row.total, row.currency)}</div>
+            <span className={styles.subtle}>
+              Subtotal {formatMoney(row.subtotal, row.currency)} · IVA{' '}
+              {formatMoney(row.iva, row.currency)}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: 'uuid',
+        header: 'UUID / timbrado',
+        width: 260,
+        sortValue: (row) => row.stampedAt ?? row.createdAt,
+        render: (row) =>
+          row.uuid ? (
+            <div className={styles.receptorCell}>
+              <span className={styles.uuid}>{row.uuid}</span>
+              <span className={styles.when}>
+                {row.stampedAt
+                  ? `Timbrada el ${formatDateTime(row.stampedAt)}`
+                  : `Creada el ${formatDateTime(row.createdAt)}`}
+              </span>
+            </div>
+          ) : (
+            <div className={styles.receptorCell}>
+              <span className={styles.subtle}>Sin UUID: no llegó a timbrarse.</span>
+              <span className={styles.when}>Creada el {formatDateTime(row.createdAt)}</span>
+            </div>
+          ),
+      },
+    ],
+    [],
+  );
+
+  function clearFilters() {
+    url.setSearch('');
+    url.setFilterSelection({});
+  }
 
   return (
-    <section className={platform.panel} aria-labelledby="cfdi-lista">
-      <h2 id="cfdi-lista">Comprobantes emitidos</h2>
-
-      {invoices.length === 0 ? (
-        <p className={styles.sandboxNote}>
-          Todavía no se ha timbrado ningún CFDI en esta organización. En cuanto factures una orden
-          aparecerá aquí con su UUID y su estado.
-        </p>
-      ) : (
+    <Section
+      title="Comprobantes emitidos"
+      description="Últimos comprobantes de la organización, del más reciente al más antiguo."
+    >
+      {invoices.length > 0 ? (
         <>
-          <div className={styles.totalsRow}>
-            {(['STAMPED', 'DRAFT', 'CANCELLED', 'ERROR'] as CfdiStatus[]).map((s) => (
-              <div key={s} className={platform.kpi}>
-                <span>{STATUS_LABEL[s]}</span>
-                <strong>{counts[s] ?? 0}</strong>
-              </div>
-            ))}
-          </div>
+          <Section columns={4} gap="md" className={styles.kpiStrip}>
+            <KpiCard
+              label="Timbradas"
+              value={formatNumber(totals.stampedCount)}
+              tone="success"
+            />
+            <KpiCard
+              label="Pendientes"
+              value={formatNumber(totals.draftCount)}
+              tone={totals.draftCount > 0 ? 'warning' : 'neutral'}
+              invertDelta
+            />
+            <KpiCard label="Canceladas" value={formatNumber(totals.cancelledCount)} />
+            <KpiCard
+              label="Con error"
+              value={formatNumber(totals.errorCount)}
+              tone={totals.errorCount > 0 ? 'danger' : 'neutral'}
+              invertDelta
+            />
+          </Section>
 
-          {failed > 0 && (
-            <Notice tone="danger" title={`${failed} comprobante(s) con error de timbrado`}>
+          {totals.errorCount > 0 ? (
+            <Notice tone="danger" title={`${totals.errorCount} comprobante(s) con error de timbrado`}>
               <p>
                 El PAC rechazó el timbre. El motivo va debajo de cada fila; los rechazos más comunes
                 son RFC del receptor que no existe en el padrón, uso de CFDI incompatible con el
@@ -530,98 +650,76 @@ function InvoiceTable({ invoices }: { invoices: CfdiInvoice[] }) {
                 constancia del emisor. Corrige el dato y vuelve a timbrar la misma orden.
               </p>
             </Notice>
-          )}
+          ) : null}
 
-          <div className={styles.tableWrap}>
-            <table className={platform.table}>
-              <caption className={styles.sandboxNote} style={{ textAlign: 'left' }}>
-                Últimos {invoices.length} comprobantes, del más reciente al más antiguo.
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Estado</th>
-                  <th scope="col">Folio</th>
-                  <th scope="col">Receptor</th>
-                  <th scope="col">Uso CFDI</th>
-                  <th scope="col">Total</th>
-                  <th scope="col">UUID / timbrado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map((inv) => (
-                  <tr key={inv.id}>
-                    <td>
-                      <StatusBadge status={inv.status} />
-                      <span className={styles.secondary}>{STATUS_MEANING[inv.status]}</span>
-                      {inv.status === 'ERROR' && (
-                        <div className={styles.errorDetail}>
-                          <strong>Motivo del PAC: </strong>
-                          <code>{inv.errorMessage ?? 'el PAC no devolvió detalle'}</code>
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <strong>
-                        {inv.serie}-{inv.folio}
-                      </strong>
-                      <span className={styles.secondary}>
-                        {inv.tipo === 'E' ? 'Egreso (nota de crédito)' : 'Ingreso'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={styles.rfc}>{inv.receptorRfc}</span>
-                      <span className={styles.secondary}>{inv.receptorNombre}</span>
-                    </td>
-                    <td>
-                      <span className={styles.rfc}>{inv.receptorUsoCfdi}</span>
-                      <span className={styles.secondary}>
-                        {USO_CFDI[inv.receptorUsoCfdi] ?? 'clave fuera del catálogo cargado'}
-                      </span>
-                    </td>
-                    <td className={styles.money}>
-                      {formatMoney(inv.total, inv.currency)}
-                      <span className={styles.secondary}>
-                        Subtotal {formatMoney(inv.subtotal, inv.currency)} · IVA{' '}
-                        {formatMoney(inv.iva, inv.currency)}
-                      </span>
-                    </td>
-                    <td>
-                      {inv.uuid ? (
-                        <>
-                          <span className={styles.uuid}>{inv.uuid}</span>
-                          <span className={styles.secondary}>
-                            {inv.stampedAt
-                              ? `Timbrada el ${formatDateTime(inv.stampedAt)}`
-                              : `Creada el ${formatDateTime(inv.createdAt)}`}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className={styles.secondary}>Sin UUID: no llegó a timbrarse.</span>
-                          <span className={styles.secondary}>
-                            Creada el {formatDateTime(inv.createdAt)}
-                          </span>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={styles.toolbar}>
+            <FilterBar
+              className={styles.filterBar}
+              filters={filterDefs}
+              value={url.filterSelection}
+              onChange={url.setFilterSelection}
+              search={{
+                value: url.q,
+                onChange: url.setSearch,
+                placeholder: 'UUID, RFC, folio u orden…',
+              }}
+            />
+            <div className={styles.filterMeta}>
+              <span>
+                {filtered.length} de {invoices.length} comprobantes
+                {anyFilter ? ' coinciden con los filtros' : ''}.
+              </span>
+              {anyFilter ? (
+                <button type="button" className={styles.clearBtn} onClick={clearFilters}>
+                  Limpiar filtros
+                </button>
+              ) : null}
+            </div>
           </div>
 
-          {/*
-           * El API no expone cancelación de CFDI ni descarga de XML/PDF: los
-           * campos `xmlUrl`/`pdfUrl` existen en el modelo pero el sandbox nunca
-           * los llena y no hay endpoint de cancelación. Se dice en pantalla en
-           * lugar de pintar botones que no harían nada.
-           */}
-          <p className={styles.sandboxNote}>
+          <DataTable
+            label="Comprobantes CFDI de la organización"
+            columns={columns}
+            data={filtered}
+            rowKey={(row) => row.id}
+            defaultSort={{ key: 'uuid', direction: 'desc' }}
+            rowHeight={48}
+            renderExpanded={(row) =>
+              row.status === 'ERROR' ? (
+                <div className={styles.errorDetail}>
+                  <strong>Motivo del PAC: </strong>
+                  <code>{row.errorMessage ?? 'el PAC no devolvió detalle'}</code>
+                </div>
+              ) : (
+                <span className={styles.subtle}>Sin detalle adicional para este comprobante.</span>
+              )
+            }
+            empty={
+              <EmptyState
+                title="Ningún comprobante coincide con los filtros"
+                description="Prueba otra búsqueda o quita algún filtro de estado."
+                action={
+                  anyFilter ? (
+                    <Button type="button" variant="outline" onClick={clearFilters}>
+                      Limpiar filtros
+                    </Button>
+                  ) : undefined
+                }
+              />
+            }
+          />
+
+          <p className={styles.footnote}>
             La cancelación ante el SAT y la descarga del XML/PDF todavía no están expuestas por el
             API; hoy se hacen desde el portal del PAC.
           </p>
         </>
+      ) : (
+        <EmptyState
+          title="Sin comprobantes timbrados"
+          description="En cuanto factures una orden aparecerá aquí con su UUID y su estado."
+        />
       )}
-    </section>
+    </Section>
   );
 }

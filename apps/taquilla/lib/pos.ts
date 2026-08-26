@@ -439,9 +439,23 @@ export function addCashDrop(amount: number, note?: string) {
 }
 
 export function listZReports(organizationId: string) {
-  return apiJson<ZReport[]>(
+  return apiJson<unknown[]>(
     `/taquilla/z-reports?organizationId=${encodeURIComponent(organizationId)}`,
-  );
+  ).then((list) => (Array.isArray(list) ? list.map(normalizeZReport) : []));
+}
+
+function normalizeZReport(raw: unknown): ZReport {
+  const row = (raw ?? {}) as Record<string, unknown>;
+  const report = (row.report ?? {}) as Record<string, unknown>;
+  return {
+    id: String(row.sessionId ?? row.id ?? ''),
+    closedAt: row.endedAt ? String(row.endedAt) : undefined,
+    createdAt: row.endedAt ? String(row.endedAt) : undefined,
+    cashierId: row.cashierId ? String(row.cashierId) : undefined,
+    totalRevenue: Number(report.totalRevenue ?? 0),
+    variance: Number(report.variance ?? 0),
+    terminalName: row.terminalName ? String(row.terminalName) : undefined,
+  };
 }
 
 /**

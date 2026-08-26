@@ -1,10 +1,8 @@
 import styles from './DiscoverySkeleton.module.scss';
 
 /**
- * Esqueleto de la cartelera. Reproduce la geometría real del panel (hero a
- * sangre, barra de búsqueda pegajosa, píldoras de ciudad, rejilla 4/3/2 con
- * pósters 3:4) para que al llegar los datos no se mueva nada: cualquier
- * diferencia de altura entre esqueleto y contenido se paga como CLS.
+ * Esqueleto de la cartelera (sin hero: HomeHero ya está visible arriba).
+ * Reproduce la geometría del panel de descubrimiento para evitar CLS.
  */
 export function DiscoverySkeleton() {
   return (
@@ -12,15 +10,6 @@ export function DiscoverySkeleton() {
       <p className="sr-only" role="status">
         Cargando la cartelera…
       </p>
-      <div className={styles.hero} aria-hidden="true">
-        <div className={styles.heroCopy}>
-          <span className={styles.brandMark} />
-          <span className={styles.heroTitle} />
-          <span className={styles.heroTitleShort} />
-          <span className={styles.heroSupport} />
-          <span className={styles.cta} />
-        </div>
-      </div>
       <div className={styles.shell} aria-hidden="true">
         <div className={styles.search} />
         <div className={styles.hubs}>

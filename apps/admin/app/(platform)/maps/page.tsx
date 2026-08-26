@@ -1,10 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  Badge,
+  Button,
+  DataTable,
+  EmptyState,
+  Input,
+  KpiCard,
+  PageHeader,
+  Section,
+  formatNumber,
+  type DataTableColumn,
+} from '@boletera/ui';
 import { applyLayoutTemplate, createVenue, listVenues } from '@/lib/platform-api';
-import platform from '../_styles/platform.module.scss';
+import styles from './maps.module.scss';
 
 type VenueRow = {
   id: string;
@@ -23,6 +35,21 @@ const TEMPLATES = [
   { id: 'stadium' as const, label: 'Estadio', hint: 'Capacidad alta por zonas' },
   { id: 'festival' as const, label: 'Festival', hint: 'GA + zonas perimetrales' },
 ];
+
+const FEATURES = [
+  {
+    title: 'Estudio 3D',
+    description: 'Diseña asientos, zonas y circulación con vista inmersiva.',
+  },
+  {
+    title: 'Planta 2D automática',
+    description: 'La vista de planta se deriva del layout 3D y queda sincronizada.',
+  },
+  {
+    title: 'Listo para eventos',
+    description: 'El mapa del venue alimenta aforo, precios y venta en línea.',
+  },
+] as const;
 
 export default function MapsCreatorPage() {
   const router = useRouter();
@@ -75,125 +102,197 @@ export default function MapsCreatorPage() {
     }
   }
 
-  return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Creador de mapas</h1>
-          <p>
-            Diseña en 3D desde cero. La planta 2D se deriva automáticamente y queda sincronizada con
-            los eventos del venue.
-          </p>
-        </div>
-      </header>
+  const stats = useMemo(() => {
+    const totalCapacity = venues.reduce((sum, venue) => sum + (venue.totalCapacity ?? 0), 0);
+    const totalEvents = venues.reduce((sum, venue) => sum + (venue._count?.events ?? 0), 0);
+    const withLayout = venues.filter((venue) => (venue.layouts?.length ?? 0) > 0).length;
+    return { total: venues.length, totalCapacity, totalEvents, withLayout };
+  }, [venues]);
 
-      <section className={platform.panel} style={{ marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>Nuevo mapa</h2>
-        <form
-          onSubmit={handleCreate}
-          style={{ display: 'grid', gap: '0.75rem', maxWidth: 720 }}
-        >
-          <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 12, color: 'var(--bl-gray-500)' }}>Nombre del venue</span>
-            <input
-              required
+  const columns = useMemo<readonly DataTableColumn<VenueRow>[]>(
+    () => [
+      {
+        key: 'name',
+        header: 'Venue',
+        width: 260,
+        sortValue: (row) => row.name,
+        render: (row) => (
+          <div className={styles.venueCell}>
+            <strong>{row.name}</strong>
+            <span className={styles.subtle}>
+              {row.city ?? '—'} · {row.slug}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: 'capacity',
+        header: 'Capacidad',
+        width: 120,
+        align: 'right',
+        sortValue: (row) => row.totalCapacity ?? 0,
+        render: (row) => (
+          <span className={styles.numeric}>{formatNumber(row.totalCapacity ?? 0)}</span>
+        ),
+      },
+      {
+        key: 'events',
+        header: 'Eventos',
+        width: 110,
+        align: 'right',
+        sortValue: (row) => row._count?.events ?? 0,
+        render: (row) => {
+          const count = row._count?.events ?? 0;
+          return (
+            <Badge tone={count > 0 ? 'info' : 'neutral'} variant="soft" size="sm">
+              {formatNumber(count)}
+            </Badge>
+          );
+        },
+      },
+      {
+        key: 'actions',
+        header: 'Acciones',
+        width: 220,
+        resizable: false,
+        render: (row) => (
+          <div className={styles.actions}>
+            <Link href={`/venues/${row.id}/3d?studio=1`} className={styles.primaryLink}>
+              Estudio 3D
+            </Link>
+            <Link href={`/venues/${row.id}/map`} className={styles.secondaryLink}>
+              Vista planta
+            </Link>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Venues"
+        title="Creador de mapas"
+        description="Diseña en 3D desde cero. La planta 2D se deriva automáticamente y queda sincronizada con los eventos del venue."
+      />
+
+      <Section columns={4} gap="md" className={styles.kpiStrip}>
+        <KpiCard label="Mapas" value={formatNumber(stats.total)} tone="accent" />
+        <KpiCard label="Capacidad total" value={formatNumber(stats.totalCapacity)} />
+        <KpiCard
+          label="Eventos vinculados"
+          value={formatNumber(stats.totalEvents)}
+          tone={stats.totalEvents > 0 ? 'info' : 'neutral'}
+        />
+        <KpiCard
+          label="Con layout activo"
+          value={formatNumber(stats.withLayout)}
+          hint="Venues con al menos un layout guardado"
+        />
+      </Section>
+
+      <div className={styles.layout}>
+        <section className={styles.createPanel} aria-labelledby="maps-create-title">
+          <div>
+            <h2 id="maps-create-title">Nuevo mapa</h2>
+            <p className={styles.subtle}>
+              Crea un venue y abre el estudio 3D con la plantilla que prefieras.
+            </p>
+          </div>
+
+          <form className={styles.createForm} onSubmit={handleCreate}>
+            <Input
+              label="Nombre del venue"
+              requiredMark
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej. Arena Norte, Teatro Principal…"
-              style={{ padding: '0.6rem 0.75rem', borderRadius: 8, border: '1px solid #d4d4d4' }}
+              autoComplete="off"
             />
-          </label>
-          <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 12, color: 'var(--bl-gray-500)' }}>Ciudad</span>
-            <input
+            <Input
+              label="Ciudad"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              style={{ padding: '0.6rem 0.75rem', borderRadius: 8, border: '1px solid #d4d4d4' }}
+              autoComplete="address-level2"
             />
-          </label>
-          <div>
-            <span style={{ fontSize: 12, color: 'var(--bl-gray-500)' }}>Base inicial</span>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-                gap: 8,
-                marginTop: 6,
-              }}
-            >
-              {TEMPLATES.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTemplate(t.id)}
-                  style={{
-                    textAlign: 'left',
-                    padding: '0.65rem 0.75rem',
-                    borderRadius: 8,
-                    border: template === t.id ? '2px solid #e11d48' : '1px solid #e5e5e5',
-                    background: template === t.id ? '#fff1f2' : '#fff',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <strong style={{ display: 'block', fontSize: 13 }}>{t.label}</strong>
-                  <span style={{ fontSize: 11, color: 'var(--bl-gray-500)' }}>{t.hint}</span>
-                </button>
-              ))}
+            <div className={styles.templateField}>
+              <span className={styles.templateLabel}>Base inicial</span>
+              <div className={styles.templateGrid} role="radiogroup" aria-label="Base inicial">
+                {TEMPLATES.map((item) => {
+                  const selected = template === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      className={selected ? `${styles.templateCard} ${styles.templateCardSelected}` : styles.templateCard}
+                      onClick={() => setTemplate(item.id)}
+                    >
+                      <strong>{item.label}</strong>
+                      <span>{item.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          {error && <p style={{ color: 'var(--bl-danger-text)', margin: 0 }}>{error}</p>}
-          <button type="submit" className={platform.primaryBtn} disabled={creating || !name.trim()}>
-            {creating ? 'Creando…' : 'Crear y abrir estudio 3D'}
-          </button>
-        </form>
-      </section>
 
-      <section className={platform.panel}>
-        <h2 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>Mapas existentes</h2>
-        <table className={platform.table}>
-          <thead>
-            <tr>
-              <th>Venue</th>
-              <th>Capacidad</th>
-              <th>Eventos</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={4}>Cargando…</td>
-              </tr>
-            )}
-            {!loading && venues.length === 0 && (
-              <tr>
-                <td colSpan={4}>Aún no hay mapas. Crea el primero arriba.</td>
-              </tr>
-            )}
-            {venues.map((v) => (
-              <tr key={v.id}>
-                <td>
-                  <strong>{v.name}</strong>
-                  <br />
-                  <small style={{ color: 'var(--bl-gray-500)' }}>
-                    {v.city ?? '—'} · {v.slug}
-                  </small>
-                </td>
-                <td>{(v.totalCapacity ?? 0).toLocaleString()}</td>
-                <td>{v._count?.events ?? 0}</td>
-                <td style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <Link href={`/venues/${v.id}/3d?studio=1`} className={platform.primaryBtn}>
-                    Estudio 3D
-                  </Link>
-                  <Link href={`/venues/${v.id}/map`} className={platform.ghostBtn}>
-                    Vista planta
-                  </Link>
-                </td>
-              </tr>
+            {error ? <p className={styles.errorBanner}>{error}</p> : null}
+
+            <div className={styles.formActions}>
+              <Button type="submit" loading={creating} loadingLabel="Creando…" disabled={!name.trim()}>
+                Crear y abrir estudio 3D
+              </Button>
+            </div>
+          </form>
+        </section>
+
+        <aside aria-label="Flujo del creador de mapas">
+          <ul className={styles.featureList}>
+            {FEATURES.map((feature, index) => (
+              <li key={feature.title}>
+                <span className={styles.featureIcon} aria-hidden="true">
+                  {index + 1}
+                </span>
+                <div className={styles.featureCopy}>
+                  <strong>{feature.title}</strong>
+                  <span>{feature.description}</span>
+                </div>
+              </li>
             ))}
-          </tbody>
-        </table>
-      </section>
+          </ul>
+        </aside>
+      </div>
+
+      <Section
+        title="Mapas existentes"
+        description={
+          loading
+            ? 'Cargando venues…'
+            : venues.length
+              ? `${formatNumber(venues.length)} venue(s) con mapa disponible`
+              : 'Aún no hay mapas creados'
+        }
+        className={styles.listPanel}
+      >
+        <DataTable
+          label="Mapas existentes por venue"
+          columns={columns}
+          data={venues}
+          rowKey={(row) => row.id}
+          loading={loading}
+          loadingRows={6}
+          defaultSort={{ key: 'name', direction: 'asc' }}
+          empty={
+            <EmptyState
+              title="Aún no hay mapas"
+              description="Crea el primero con el formulario de arriba. El estudio 3D se abrirá automáticamente al guardar."
+            />
+          }
+        />
+      </Section>
     </div>
   );
 }

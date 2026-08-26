@@ -35,6 +35,15 @@ import {
   type OfflinePosPayload,
   type PosReceipt,
 } from '@/lib/pos';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  KpiCard,
+  SkeletonCard,
+} from '@boletera/ui';
 import styles from './venta.module.scss';
 
 type Offer = {
@@ -60,7 +69,23 @@ type EventRow = {
  */
 type Stage = 'EVENT' | 'ZONE' | 'TICKETS' | 'TENDER' | 'DONE';
 
+type SaleStep = 'evento' | 'boletos' | 'pago' | 'ticket';
+
 type PendingAuth = null | 'COMP' | 'DISCOUNT';
+
+const SALE_STEPS: Array<{ id: SaleStep; label: string }> = [
+  { id: 'evento', label: 'Evento' },
+  { id: 'boletos', label: 'Boletos' },
+  { id: 'pago', label: 'Pago' },
+  { id: 'ticket', label: 'Ticket' },
+];
+
+function stageToSaleStep(stage: Stage): SaleStep {
+  if (stage === 'EVENT' || stage === 'ZONE') return 'evento';
+  if (stage === 'TICKETS') return 'boletos';
+  if (stage === 'TENDER') return 'pago';
+  return 'ticket';
+}
 
 const QTY_TYPING_WINDOW_MS = 900;
 
@@ -72,6 +97,7 @@ function VentaFlow() {
   const compMode = params.get('comp') === '1';
 
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [eventId, setEventId] = useState(urlEventId);
   const [offerId, setOfferId] = useState(urlOfferId);
@@ -127,6 +153,7 @@ function VentaFlow() {
 
   // --- catálogo -----------------------------------------------------------
   useEffect(() => {
+    setEventsLoading(true);
     apiJson<EventRow[]>('/discovery/events')
       .then((data) => {
         const now = Date.now();
@@ -138,7 +165,8 @@ function VentaFlow() {
         const soon = sorted.filter((e) => +new Date(e.startsAt) >= now - 12 * 3600 * 1000);
         setEvents(soon.length ? soon : sorted);
       })
-      .catch(() => setEvents([]));
+      .catch(() => setEvents([]))
+      .finally(() => setEventsLoading(false));
   }, []);
 
   const event = useMemo(() => events.find((e) => e.id === eventId) ?? null, [events, eventId]);
@@ -745,13 +773,8 @@ function VentaFlow() {
     DONE: 'Venta completada',
   };
 
-  const steps: Array<{ id: Stage; label: string }> = [
-    { id: 'EVENT', label: 'Evento' },
-    ...(offers.length > 1 ? [{ id: 'ZONE' as Stage, label: 'Zona' }] : []),
-    { id: 'TICKETS', label: 'Cantidad' },
-    { id: 'TENDER', label: 'Cobro' },
-  ];
-  const stepIndex = steps.findIndex((s) => s.id === stage);
+  const saleStep = stageToSaleStep(stage);
+  const saleStepIndex = SALE_STEPS.findIndex((s) => s.id === saleStep);
 
   async function reserveSelection() {
     if (!offer || !selectedSeats.length) return;
@@ -814,42 +837,77 @@ function VentaFlow() {
       )}
 
       {stage !== 'DONE' && (
-        <ol className={styles.steps} aria-label="Progreso de la venta">
-          {steps.map((s, i) => (
-            <li
-              key={s.id}
-              className={i === stepIndex ? styles.stepOn : i < stepIndex ? styles.stepDone : styles.step}
-            >
-              <span>{i + 1}</span>
-              {s.label}
-            </li>
-          ))}
-        </ol>
+        <nav className={styles.stepper} aria-label="Progreso de la venta">
+          <ol className={styles.steps}>
+            {SALE_STEPS.map((s, i) => {
+              const done = i < saleStepIndex;
+              const active = i === saleStepIndex;
+              return (
+                <li
+                  key={s.id}
+                  className={
+                    active ? styles.stepOn : done ? styles.stepDone : styles.step
+                  }
+                  aria-current={active ? 'step' : undefined}
+                >
+                  <span className={styles.stepMarker} aria-hidden="true">
+                    {done ? '✓' : i + 1}
+                  </span>
+                  <span className={styles.stepLabel}>{s.label}</span>
+                  {i < SALE_STEPS.length - 1 ? (
+                    <span className={styles.stepConnector} aria-hidden="true" />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
       )}
 
       {holdExpiresAt && ttlLeft > 0 && (
-        <p className={styles.holdBanner}>
-          Lugares apartados · {Math.floor(ttlLeft / 60)}:{String(ttlLeft % 60).padStart(2, '0')}
-          <button type="button" onClick={() => void releaseHolds()}>
+        <div className={styles.holdBanner} role="status">
+          <Badge tone="warning" variant="soft" dot>
+            Apartado · {Math.floor(ttlLeft / 60)}:{String(ttlLeft % 60).padStart(2, '0')}
+          </Badge>
+          <Button type="button" variant="outline" size="sm" onClick={() => void releaseHolds()}>
             Liberar
-          </button>
-        </p>
+          </Button>
+        </div>
       )}
 
       {/* ---------------------------------------------------------------- */}
       {stage === 'EVENT' && (
         <section className={styles.panel}>
-          <input
+          <Input
             ref={filterRef}
-            className={styles.filter}
             type="search"
+            label="Buscar evento"
             placeholder="Escribe para filtrar…"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            aria-label="Filtrar eventos"
+            inputSize="lg"
+            className={styles.filterInput}
           />
-          {filteredEvents.length === 0 ? (
-            <p className={styles.empty}>Sin eventos en venta.</p>
+          {eventsLoading ? (
+            <ul className={styles.pickList} aria-busy="true" aria-label="Cargando eventos">
+              {Array.from({ length: 4 }, (_, i) => (
+                <li key={i}>
+                  <SkeletonCard lines={2} className={styles.skeletonRow} />
+                </li>
+              ))}
+            </ul>
+          ) : filteredEvents.length === 0 ? (
+            <EmptyState
+              illustration={filter.trim() ? 'search' : 'seats'}
+              title={filter.trim() ? 'Sin coincidencias' : 'Sin eventos en venta'}
+              description={
+                filter.trim()
+                  ? 'Prueba otro título, recinto o fecha.'
+                  : 'No hay funciones programadas en este momento.'
+              }
+              size="md"
+              className={styles.emptyState}
+            />
           ) : (
             <ul className={styles.pickList}>
               {filteredEvents.map((row, i) => {
@@ -870,7 +928,9 @@ function VentaFlow() {
                           })}
                         </small>
                       </span>
-                      <em>{price > 0 ? `desde ${money(price)}` : '—'}</em>
+                      <Badge tone="accent" variant="soft" className={styles.priceBadge}>
+                        {price > 0 ? `desde ${money(price)}` : '—'}
+                      </Badge>
                     </button>
                   </li>
                 );
@@ -883,22 +943,42 @@ function VentaFlow() {
       {/* ---------------------------------------------------------------- */}
       {stage === 'ZONE' && (
         <section className={styles.panel}>
-          <ul className={styles.pickList}>
-            {offers.map((o, i) => (
-              <li key={o.id}>
-                <button type="button" className={styles.pickBtn} onClick={() => selectOffer(o.id)}>
-                  <kbd>{i + 1}</kbd>
-                  <span className={styles.pickMain}>
-                    <strong>{o.name || o.zone || 'General'}</strong>
-                    <small>
-                      {o.remainingQuantity != null ? `${o.remainingQuantity} disponibles` : 'Zona'}
-                    </small>
-                  </span>
-                  <em>{money(Number(o.basePrice))}</em>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {offers.length === 0 ? (
+            <EmptyState
+              illustration="seats"
+              title="Sin zonas disponibles"
+              description="Este evento no tiene ofertas activas en este momento."
+              size="md"
+              className={styles.emptyState}
+            />
+          ) : (
+            <ul className={styles.offerGrid}>
+              {offers.map((o, i) => {
+                const lowStock = o.remainingQuantity != null && o.remainingQuantity < 25;
+                return (
+                  <li key={o.id}>
+                    <button type="button" className={styles.offerCard} onClick={() => selectOffer(o.id)}>
+                      <span className={styles.offerHotkey}>
+                        <kbd>{i + 1}</kbd>
+                      </span>
+                      {o.remainingQuantity != null ? (
+                        <Badge
+                          tone={lowStock ? 'warning' : 'success'}
+                          variant="soft"
+                          className={styles.qtyBadge}
+                        >
+                          {o.remainingQuantity} disp.
+                        </Badge>
+                      ) : null}
+                      <strong className={styles.offerName}>{o.name || o.zone || 'General'}</strong>
+                      <span className={styles.offerPrice}>{money(Number(o.basePrice))}</span>
+                      <span className={styles.offerHint}>por boleto</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
       )}
 
@@ -906,20 +986,43 @@ function VentaFlow() {
       {stage === 'TICKETS' && (
         <section className={seatMode ? styles.seatLayout : styles.panel}>
           <div className={styles.qtyPane}>
-            <p className={styles.zoneLine}>
-              {offer ? `${offer.name || offer.zone || 'General'} · ${money(unitPrice)} c/u` : 'Sin zona'}
-            </p>
+            <Card variant="outline" padding="md" className={styles.zoneCard}>
+              <p className={styles.zoneLine}>
+                {offer ? (
+                  <>
+                    <Badge tone="accent" variant="soft">{offer.name || offer.zone || 'General'}</Badge>
+                    <span>{money(unitPrice)} c/u</span>
+                  </>
+                ) : (
+                  'Sin zona'
+                )}
+              </p>
+            </Card>
 
             {!seatMode ? (
               <>
                 <div className={styles.qtyBig}>
-                  <button type="button" aria-label="Menos" onClick={() => setQty((q) => Math.max(1, q - 1))}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    className={styles.qtyBtn}
+                    aria-label="Menos"
+                    onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  >
                     −
-                  </button>
-                  <strong>{qty}</strong>
-                  <button type="button" aria-label="Más" onClick={() => setQty((q) => Math.min(999, q + 1))}>
+                  </Button>
+                  <strong className={styles.qtyValue}>{qty}</strong>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    className={styles.qtyBtn}
+                    aria-label="Más"
+                    onClick={() => setQty((q) => Math.min(999, q + 1))}
+                  >
                     +
-                  </button>
+                  </Button>
                 </div>
                 <ul className={styles.qtyPresets}>
                   {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -936,29 +1039,38 @@ function VentaFlow() {
                 </ul>
               </>
             ) : (
-              <p className={styles.zoneLine}>
-                {selectedSeats.length} lugares seleccionados en el mapa
-              </p>
+              <Card variant="outline" padding="md" className={styles.seatSummary}>
+                <Badge tone="info" variant="soft" dot>
+                  {selectedSeats.length} lugares en el mapa
+                </Badge>
+              </Card>
             )}
 
-            <div className={styles.totalPreview}>
-              <span>Total</span>
-              <strong>{money(estimate)}</strong>
-            </div>
+            <KpiCard
+              label="Total estimado"
+              value={<span className={styles.kpiValue}>{money(estimate)}</span>}
+              unit="MXN"
+              tone="accent"
+              hint={`${ticketCount} boleto${ticketCount === 1 ? '' : 's'}`}
+              className={styles.totalKpi}
+            />
 
-            <button
+            <Button
               type="button"
-              className={styles.primaryBtn}
+              size="lg"
+              fullWidth
               disabled={ticketCount < 1}
               onClick={() => setStage('TENDER')}
             >
               Continuar a cobro · Enter
-            </button>
+            </Button>
 
             {hasMap && (
-              <button
+              <Button
                 type="button"
-                className={styles.ghostBtn}
+                variant="outline"
+                size="lg"
+                fullWidth
                 onClick={() => {
                   setPickSeats((v) => !v);
                   setSelectedSeats([]);
@@ -966,39 +1078,41 @@ function VentaFlow() {
                 }}
               >
                 {pickSeats ? 'Usar mejor disponible · M' : 'Elegir lugares en el mapa · M'}
-              </button>
+              </Button>
             )}
             {hasMap && !pickSeats && (
-              <button type="button" className={styles.ghostBtn} onClick={() => void holdBestAvailable()}>
+              <Button type="button" variant="ghost" size="md" fullWidth onClick={() => void holdBestAvailable()}>
                 Apartar {qty} juntos ahora
-              </button>
+              </Button>
             )}
             {seatMode && selectedSeats.length > 0 && (
-              <button type="button" className={styles.ghostBtn} onClick={() => void reserveSelection()}>
+              <Button type="button" variant="ghost" size="md" fullWidth onClick={() => void reserveSelection()}>
                 Apartar selección ({selectedSeats.length})
-              </button>
+              </Button>
             )}
           </div>
 
           {seatMode && (
             <div className={styles.mapPane}>
-              <PosSeatMap
-                eventId={eventId}
-                mapData={mapData}
-                selected={selectedSeats}
-                onToggle={(id) => {
-                  setSelectedSeats((prev) =>
-                    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-                  );
-                  void releaseHolds();
-                }}
-                offers={offers.map((o) => ({
-                  id: o.id,
-                  zone: o.zone || '',
-                  name: o.name,
-                  basePrice: o.basePrice,
-                }))}
-              />
+              <Card variant="outline" padding="none" className={styles.mapCard}>
+                <PosSeatMap
+                  eventId={eventId}
+                  mapData={mapData}
+                  selected={selectedSeats}
+                  onToggle={(id) => {
+                    setSelectedSeats((prev) =>
+                      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+                    );
+                    void releaseHolds();
+                  }}
+                  offers={offers.map((o) => ({
+                    id: o.id,
+                    zone: o.zone || '',
+                    name: o.name,
+                    basePrice: o.basePrice,
+                  }))}
+                />
+              </Card>
             </div>
           )}
         </section>
@@ -1008,14 +1122,14 @@ function VentaFlow() {
       {stage === 'TENDER' && (
         <section className={styles.tenderGrid}>
           <div className={styles.tenderMain}>
-            <div className={styles.amountDue}>
-              <span>Total a cobrar</span>
-              <strong>{money(estimate)}</strong>
-              <small>
-                {ticketCount} boleto{ticketCount === 1 ? '' : 's'} ·{' '}
-                {offer?.name || offer?.zone || 'General'}
-              </small>
-            </div>
+            <KpiCard
+              label="Total a cobrar"
+              value={<span className={styles.kpiValue}>{money(estimate)}</span>}
+              unit="MXN"
+              tone="accent"
+              hint={`${ticketCount} boleto${ticketCount === 1 ? '' : 's'} · ${offer?.name || offer?.zone || 'General'}`}
+              className={styles.amountKpi}
+            />
 
             <div className={styles.methods}>
               {(
@@ -1041,18 +1155,18 @@ function VentaFlow() {
             </div>
 
             {method === 'CASH' && (
-              <>
+              <Card variant="outline" padding="lg" className={styles.cashPanel}>
                 <div className={styles.cashRow}>
-                  <label className={styles.cashField}>
-                    <small>Recibido</small>
-                    <input
-                      inputMode="decimal"
-                      value={cashReceived}
-                      placeholder={String(estimate.toFixed(2))}
-                      onChange={(e) => setCashReceived(e.target.value.replace(/[^\d.]/g, ''))}
-                      aria-label="Efectivo recibido"
-                    />
-                  </label>
+                  <Input
+                    inputMode="decimal"
+                    label="Recibido"
+                    value={cashReceived}
+                    placeholder={String(estimate.toFixed(2))}
+                    onChange={(e) => setCashReceived(e.target.value.replace(/[^\d.]/g, ''))}
+                    inputSize="lg"
+                    className={styles.cashInput}
+                    leading={<span className={styles.currencyMark}>$</span>}
+                  />
                   <div className={cash.sufficient ? styles.changeBox : styles.changeBoxBad}>
                     <span>{cash.sufficient ? 'Cambio' : 'Falta'}</span>
                     <strong>{money(cash.sufficient ? cash.change : cash.missing)}</strong>
@@ -1065,6 +1179,7 @@ function VentaFlow() {
                   </p>
                 )}
 
+                <p className={styles.quickCashLabel}>Montos rápidos</p>
                 <ul className={styles.quickCash}>
                   {quickCash.map((amount, i) => (
                     <li key={amount}>
@@ -1073,18 +1188,20 @@ function VentaFlow() {
                         className={Number(cashReceived) === amount ? styles.billOn : styles.bill}
                         onClick={() => setCashReceived(String(amount))}
                       >
-                        <span>{amount === estimate ? 'Exacto' : billLabel(amount)}</span>
+                        <span className={styles.billAmount}>
+                          {amount === estimate ? 'Exacto' : billLabel(amount)}
+                        </span>
                         <kbd>F{i + 1}</kbd>
                       </button>
                     </li>
                   ))}
                 </ul>
-              </>
+              </Card>
             )}
 
             {method === 'COMP' && (
-              <div className={styles.compBox}>
-                <label className={styles.cashField}>
+              <Card variant="outline" padding="lg" className={styles.compBox}>
+                <label className={styles.compSelect}>
                   <small>Motivo de la cortesía</small>
                   <select value={compReason} onChange={(e) => setCompReason(e.target.value)}>
                     <option value="house">Casa</option>
@@ -1093,62 +1210,73 @@ function VentaFlow() {
                     <option value="staff">Personal</option>
                   </select>
                 </label>
-                <p className={managerPin ? styles.authOk : styles.authPending}>
-                  {managerPin ? 'Autorizada por gerencia ✓' : 'Requiere PIN de gerente'}
-                </p>
-              </div>
+                <Badge tone={managerPin ? 'success' : 'warning'} variant="soft" dot>
+                  {managerPin ? 'Autorizada por gerencia' : 'Requiere PIN de gerente'}
+                </Badge>
+              </Card>
             )}
 
             {discountUnlocked && (
-              <label className={styles.cashField}>
-                <small>Código de descuento (autorizado)</small>
-                <input value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} />
-              </label>
+              <Input
+                label="Código de descuento (autorizado)"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                inputSize="lg"
+              />
             )}
 
-            <button
+            <Button
               type="button"
+              size="lg"
+              fullWidth
               className={styles.chargeBtn}
               disabled={loading || (method === 'CASH' && !cash.sufficient)}
+              loading={loading}
+              loadingLabel="Procesando…"
               onClick={() => void sell()}
             >
-              {loading ? 'Procesando…' : `Cobrar ${money(estimate)} · Enter`}
-            </button>
+              Cobrar {money(estimate)} · Enter
+            </Button>
           </div>
 
           <aside className={styles.tenderSide}>
-            <button type="button" className={styles.ghostBtn} onClick={() => setBuyerOpen((v) => !v)}>
-              {buyerOpen ? 'Ocultar datos del comprador' : 'Datos del comprador (opcional)'}
-            </button>
-            {buyerOpen && (
-              <>
-                <label className={styles.cashField}>
-                  <small>Nombre</small>
-                  <input value={buyerName} onChange={(e) => setBuyerName(e.target.value)} />
-                </label>
-                <label className={styles.cashField}>
-                  <small>Email</small>
-                  <input
+            <Card variant="ghost" padding="md" className={styles.sideCard}>
+              <Button type="button" variant="ghost" size="md" fullWidth onClick={() => setBuyerOpen((v) => !v)}>
+                {buyerOpen ? 'Ocultar datos del comprador' : 'Datos del comprador (opcional)'}
+              </Button>
+              {buyerOpen && (
+                <div className={styles.buyerFields}>
+                  <Input
+                    label="Nombre"
+                    value={buyerName}
+                    onChange={(e) => setBuyerName(e.target.value)}
+                    inputSize="md"
+                  />
+                  <Input
                     type="email"
+                    label="Email"
                     value={buyerEmail}
                     onChange={(e) => setBuyerEmail(e.target.value)}
+                    inputSize="md"
                   />
-                </label>
-              </>
-            )}
-            {!discountUnlocked && (
-              <button
-                type="button"
-                className={styles.ghostBtn}
-                onClick={() => setPendingAuth('DISCOUNT')}
-              >
-                Aplicar descuento · D (PIN)
-              </button>
-            )}
-            <p className={styles.sideNote}>
-              El precio lo fija el catálogo del evento. La ventanilla no puede editarlo: los
-              descuentos y las cortesías pasan por PIN de gerente y quedan auditados.
-            </p>
+                </div>
+              )}
+              {!discountUnlocked && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  fullWidth
+                  onClick={() => setPendingAuth('DISCOUNT')}
+                >
+                  Aplicar descuento · D (PIN)
+                </Button>
+              )}
+              <p className={styles.sideNote}>
+                El precio lo fija el catálogo del evento. La ventanilla no puede editarlo: los
+                descuentos y las cortesías pasan por PIN de gerente y quedan auditados.
+              </p>
+            </Card>
           </aside>
         </section>
       )}
@@ -1156,55 +1284,105 @@ function VentaFlow() {
       {/* ---------------------------------------------------------------- */}
       {stage === 'DONE' && (
         <section className={styles.donePane}>
-          {method === 'CASH' && chargedTotal != null ? (
-            <div className={styles.changeHero}>
-              <span>Cambio a devolver</span>
-              <strong>{money(computeCash(chargedTotal, cashReceived).change)}</strong>
-              <small>{changeBreakdownLabel(computeCash(chargedTotal, cashReceived).change) || 'Sin cambio'}</small>
+          <nav className={styles.stepper} aria-label="Venta completada">
+            <ol className={styles.steps}>
+              {SALE_STEPS.map((s, i) => (
+                <li
+                  key={s.id}
+                  className={i === SALE_STEPS.length - 1 ? styles.stepOn : styles.stepDone}
+                  aria-current={i === SALE_STEPS.length - 1 ? 'step' : undefined}
+                >
+                  <span className={styles.stepMarker} aria-hidden="true">
+                    ✓
+                  </span>
+                  <span className={styles.stepLabel}>{s.label}</span>
+                  {i < SALE_STEPS.length - 1 ? (
+                    <span className={styles.stepConnector} aria-hidden="true" />
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          </nav>
+
+          <Card variant="outline" padding="lg" className={styles.successCard}>
+            <div className={styles.successIcon} aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" />
+                <path
+                  d="M14 25l7 7 13-14"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
-          ) : (
-            <div className={styles.changeHero}>
-              <span>Cobrado</span>
-              <strong>{money(chargedTotal ?? estimate)}</strong>
-              <small>{method === 'COMP' ? 'Cortesía autorizada' : 'Pago con tarjeta'}</small>
-            </div>
-          )}
+
+            {method === 'CASH' && chargedTotal != null ? (
+              <div className={styles.changeHero}>
+                <Badge tone="success" variant="soft">
+                  Venta completada
+                </Badge>
+                <span className={styles.changeLabel}>Cambio a devolver</span>
+                <strong className={styles.changeAmount}>
+                  {money(computeCash(chargedTotal, cashReceived).change)}
+                </strong>
+                <small>
+                  {changeBreakdownLabel(computeCash(chargedTotal, cashReceived).change) ||
+                    'Sin cambio'}
+                </small>
+              </div>
+            ) : (
+              <div className={styles.changeHero}>
+                <Badge tone="success" variant="soft">
+                  Venta completada
+                </Badge>
+                <span className={styles.changeLabel}>Cobrado</span>
+                <strong className={styles.changeAmount}>{money(chargedTotal ?? estimate)}</strong>
+                <small>{method === 'COMP' ? 'Cortesía autorizada' : 'Pago con tarjeta'}</small>
+              </div>
+            )}
+          </Card>
 
           <p className={styles.doneMeta}>
             {receipt ? `${receipt.receiptNumber} · ${receipt.quantity} boletos` : 'Recibo enviado a impresión'}
           </p>
 
           <div className={styles.doneActions}>
-            <button type="button" className={styles.primaryBtn} onClick={reset}>
+            <Button type="button" size="lg" fullWidth onClick={reset}>
               Nueva venta · Enter
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className={styles.ghostBtn}
+              variant="outline"
+              size="lg"
+              fullWidth
               onClick={() => receipt && void printReceipt(receipt)}
             >
               Reimprimir · P
-            </button>
+            </Button>
           </div>
         </section>
       )}
 
       {cardWaiting && (
         <div className={styles.cardWait} role="alertdialog" aria-live="assertive">
-          <div className={styles.cardWaitInner}>
+          <Card variant="elevated" padding="lg" className={styles.cardWaitInner}>
             <span className={styles.cardPulse} aria-hidden />
             <strong>Terminal de tarjeta</strong>
             <p>Acerque, inserte o deslice la tarjeta…</p>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="lg"
               onClick={() => {
                 setCardWaiting(false);
                 setLoading(false);
               }}
             >
               Cancelar · Esc
-            </button>
-          </div>
+            </Button>
+          </Card>
         </div>
       )}
 

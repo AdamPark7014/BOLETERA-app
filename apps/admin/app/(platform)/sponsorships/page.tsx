@@ -17,6 +17,7 @@ import {
   type FilterSelection,
 } from '@boletera/ui';
 import { QueryError } from '@/components/QueryStates';
+import { Notice } from '../orders/_ui/States';
 import { useToast } from '@/components/Toast/ToastProvider';
 import {
   useCreateSponsorshipPackage,
@@ -277,9 +278,9 @@ function SponsorshipsCockpit() {
   return (
     <div className={styles.page}>
       <PageHeader
-        eyebrow="Comercial · Patrocinios"
+        eyebrow="Comercial"
         title="Patrocinios"
-        description="Paquetes, assets, pipeline, entregables y ROI cuando el contrato trae datos reales."
+        description="Paquetes, assets, pipeline, entregables y ROI"
         actions={
           <Button
             type="button"
@@ -293,24 +294,28 @@ function SponsorshipsCockpit() {
       />
 
       {packagesUnavailable ? (
-        <div className={styles.unavailableBanner} role="status">
-          <strong>API de patrocinios pendiente</strong>
+        <Notice
+          tone="warn"
+          title="API de patrocinios pendiente"
+          actions={
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                void packagesQuery.refetch();
+                void activationsQuery.refetch();
+              }}
+            >
+              Reintentar
+            </Button>
+          }
+        >
           <p>
             Los paneles esperan /sponsorships/organization/:orgId. No se muestran plantillas ni
             proyecciones inventadas como métricas reales.
           </p>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              void packagesQuery.refetch();
-              void activationsQuery.refetch();
-            }}
-          >
-            Reintentar
-          </Button>
-        </div>
+        </Notice>
       ) : null}
 
       {alerts.length > 0 && !packagesUnavailable ? (
@@ -326,7 +331,7 @@ function SponsorshipsCockpit() {
         </div>
       ) : null}
 
-      <Section columns={4} gap="sm" aria-label="Indicadores de patrocinios">
+      <Section columns={4} gap="md" className={styles.kpiStrip} aria-label="Indicadores de patrocinios">
         <KpiCard
           label="Patrocinadores"
           value={packagesUnavailable ? '—' : formatCount(kpis.sponsors)}
@@ -373,16 +378,18 @@ function SponsorshipsCockpit() {
         />
       </Section>
 
-      <SegmentedControl
-        label="Vista de patrocinios"
-        size="sm"
-        value={url.tab}
-        onValueChange={(value) => url.setTab(value)}
-        options={[
-          { value: 'packages', label: 'Paquetes y assets' },
-          { value: 'pipeline', label: 'Pipeline y ROI' },
-        ]}
-      />
+      <div className={styles.toolbar}>
+        <SegmentedControl
+          label="Vista de patrocinios"
+          size="sm"
+          value={url.tab}
+          onValueChange={(value) => url.setTab(value)}
+          options={[
+            { value: 'packages', label: 'Paquetes y assets' },
+            { value: 'pipeline', label: 'Pipeline y ROI' },
+          ]}
+        />
+      </div>
 
       {url.tab === 'pipeline' ? (
         <div className={styles.pipelineGrid}>
@@ -550,8 +557,10 @@ export default function SponsorshipsPage() {
   return (
     <Suspense
       fallback={
-        <div className={styles.page} role="status" aria-live="polite">
-          Cargando patrocinios…
+        <div className={styles.page} aria-busy="true">
+          <SkeletonCard lines={3} />
+          <SkeletonCard lines={2} />
+          <SkeletonCard lines={6} />
         </div>
       }
     >

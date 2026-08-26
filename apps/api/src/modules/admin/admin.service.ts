@@ -146,12 +146,34 @@ export class AdminService {
   }
 
   async getTheme(orgId: string) {
-    return (
+    const theme =
       (await this.prisma.tenantTheme.findUnique({ where: { organizationId: orgId } })) ?? {
         primaryColor: '#171717',
         subdomain: 'demo',
-      }
-    );
+      };
+    return theme;
+  }
+
+  async getSiteContent(orgId: string) {
+    const theme = await this.prisma.tenantTheme.findUnique({
+      where: { organizationId: orgId },
+      select: { siteContent: true },
+    });
+    const { mergeSiteContent } = await import('@boletera/shared');
+    return mergeSiteContent(theme?.siteContent);
+  }
+
+  async updateSiteContent(orgId: string, siteContent: unknown) {
+    const { parseSiteContent } = await import('@boletera/shared');
+    const parsed = parseSiteContent(siteContent);
+    if (!parsed) {
+      throw new BadRequestException('siteContent inválido: se requiere al menos una diapositiva del hero con url, label y alt');
+    }
+    return await this.prisma.tenantTheme.upsert({
+      where: { organizationId: orgId },
+      create: { organizationId: orgId, siteContent: parsed as object },
+      update: { siteContent: parsed as object },
+    });
   }
 
   async updateTheme(orgId: string, data: { primaryColor?: string; logoUrl?: string; subdomain?: string }) {

@@ -13,7 +13,7 @@ import {
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { generateLayoutTemplate, type LayoutTemplateId } from '@boletera/venue-engine';
-import { EVENT_STOCK_IMAGES, type SeatMapData } from '@boletera/shared';
+import { EVENT_STOCK_IMAGES, type SeatMapData, defaultSiteContent } from '@boletera/shared';
 import { seedPermissions } from './seed-permissions';
 
 const prisma = new PrismaClient();
@@ -1210,8 +1210,21 @@ async function main() {
           primaryColor: '#171717',
           secondaryColor: '#737373',
           subdomain: 'demo',
+          siteContent: defaultSiteContent() as object,
         },
       },
+    },
+  });
+
+  await prisma.tenantTheme.upsert({
+    where: { organizationId: org.id },
+    update: { siteContent: defaultSiteContent() as object },
+    create: {
+      organizationId: org.id,
+      primaryColor: '#171717',
+      secondaryColor: '#737373',
+      subdomain: 'demo',
+      siteContent: defaultSiteContent() as object,
     },
   });
 

@@ -132,6 +132,21 @@ export class AdminController {
     return this.admin.updateTheme(req.user.organizationId!, body);
   }
 
+  @Get('site-content')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'VENUE_MANAGER')
+  getSiteContent(@Request() req: { user: { organizationId?: string } }) {
+    return this.admin.getSiteContent(req.user.organizationId!);
+  }
+
+  @Post('site-content')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  updateSiteContent(
+    @Request() req: { user: { organizationId?: string } },
+    @Body() body: { siteContent: unknown },
+  ) {
+    return this.admin.updateSiteContent(req.user.organizationId!, body.siteContent);
+  }
+
   @Get('reports/sales')
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
   sales(

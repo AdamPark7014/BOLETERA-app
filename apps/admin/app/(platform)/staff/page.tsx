@@ -22,6 +22,7 @@ import {
 } from '@boletera/ui';
 import { QueryError } from '@/components/QueryStates';
 import { useToast } from '@/components/Toast/ToastProvider';
+import { Notice } from '../orders/_ui/States';
 import { useAuditLog } from '@/lib/queries/audit';
 import {
   useInviteTeamMember,
@@ -117,6 +118,16 @@ export default function StaffPage() {
     const role = filters.role?.[0] ?? 'all';
     return filterTeam(team, { query: search, status, role });
   }, [filters.role, filters.status, search, team]);
+
+  const anyFilter =
+    Boolean(search.trim()) ||
+    Boolean(filters.status?.length) ||
+    Boolean(filters.role?.length);
+
+  function clearFilters() {
+    setSearch('');
+    setFilters({});
+  }
 
   const recentLogins = useMemo(() => sortByRecentLogin(team).slice(0, 8), [team]);
 
@@ -260,6 +271,13 @@ export default function StaffPage() {
 
   const error = teamQuery.error ?? orgQuery.error;
   const loading = teamQuery.isPending;
+  const refreshing = teamQuery.isFetching || orgQuery.isFetching || auditQuery.isFetching;
+
+  function refreshAll() {
+    void teamQuery.refetch();
+    void orgQuery.refetch();
+    void auditQuery.refetch();
+  }
 
   if (!organizationId) {
     return (
@@ -275,7 +293,7 @@ export default function StaffPage() {
   return (
     <div className={styles.page}>
       <PageHeader
-        eyebrow="Operaciones · Personal"
+        eyebrow="Operaciones"
         title="Staff"
         description={
           organizationLabel
@@ -283,13 +301,24 @@ export default function StaffPage() {
             : 'Roster, roles, asignaciones, actividad e invitaciones del equipo.'
         }
         actions={
-          <Button type="button" onClick={() => setInviteOpen(true)}>
-            Invitar miembro
-          </Button>
+          <div className={styles.headerActions}>
+            <Button
+              type="button"
+              variant="outline"
+              loading={refreshing}
+              loadingLabel="Actualizando…"
+              onClick={refreshAll}
+            >
+              Actualizar
+            </Button>
+            <Button type="button" onClick={() => setInviteOpen(true)}>
+              Invitar miembro
+            </Button>
+          </div>
         }
       />
 
-      <Section columns={4} gap="sm" aria-label="Indicadores de staff">
+      <Section columns={4} gap="md" aria-label="Indicadores de staff">
         <KpiCard
           label="Miembros"
           value={formatCount(kpis.total)}
@@ -320,23 +349,20 @@ export default function StaffPage() {
         />
       </Section>
 
-      {(kpis.inactive > 0 || kpis.neverLoggedIn > 0) && (
-        <div className={styles.alerts} aria-label="Alertas de personal">
-          {kpis.neverLoggedIn > 0 ? (
-            <div className={`${styles.alert} ${styles.alertInfo}`} role="status">
-              {formatNumber(kpis.neverLoggedIn)} invitación
-              {kpis.neverLoggedIn === 1 ? '' : 'es'} sin primer inicio de sesión.
-            </div>
-          ) : null}
-          {kpis.inactive > 0 ? (
-            <div className={`${styles.alert} ${styles.alertWarning}`} role="status">
-              {formatNumber(kpis.inactive)} miembro
-              {kpis.inactive === 1 ? '' : 's'} inactivo
-              {kpis.inactive === 1 ? '' : 's'}. Revisa asignaciones de acceso.
-            </div>
-          ) : null}
-        </div>
-      )}
+      {kpis.neverLoggedIn > 0 ? (
+        <Notice tone="info" title={`${formatNumber(kpis.neverLoggedIn)} invitación(es) sin primer acceso`}>
+          <p>
+            Hay miembros invitados que aún no han iniciado sesión. Revisa el correo de invitación o
+            reenvía el acceso si hace falta.
+          </p>
+        </Notice>
+      ) : null}
+
+      {kpis.inactive > 0 ? (
+        <Notice tone="warn" title={`${formatNumber(kpis.inactive)} miembro(s) inactivo(s)`}>
+          <p>Revisa asignaciones de acceso antes de delegar operaciones sensibles.</p>
+        </Notice>
+      ) : null}
 
       <Tabs
         label="Secciones de staff"
@@ -368,46 +394,67 @@ export default function StaffPage() {
       {!error && tab === 'roster' ? (
         <div className={styles.layout}>
           <div className={styles.stack}>
-            <FilterBar
-              filters={filterDefs}
-              value={filters}
-              onChange={setFilters}
-              search={{
-                value: search,
-                onChange: setSearch,
-                placeholder: 'Buscar por nombre, email o rol',
-              }}
-            />
-            {filtered.length === 0 && !loading ? (
-              <div className={styles.card}>
+            <div className={styles.panel}>
+              <div className={styles.toolbar}>
+                <FilterBar
+                  className={styles.filterBar}
+                  filters={filterDefs}
+                  value={filters}
+                  onChange={setFilters}
+                  search={{
+                    value: search,
+                    onChange: setSearch,
+                    placeholder: 'Buscar por nombre, email o rol',
+                  }}
+                />
+                <div className={styles.filterMeta}>
+                  <span>
+                    {formatNumber(filtered.length)} de {formatNumber(team.length)} miembros
+                    {anyFilter ? ' coinciden con los filtros' : ''}.
+                  </span>
+                  {anyFilter ? (
+                    <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
+                      Limpiar filtros
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              {filtered.length === 0 && !loading ? (
                 <EmptyState
                   title="Sin miembros en el filtro"
                   description="Ajusta la búsqueda o invita a alguien al equipo."
                   illustration="inbox"
                   action={
-                    <Button type="button" onClick={() => setInviteOpen(true)}>
-                      Invitar miembro
-                    </Button>
+                    anyFilter ? (
+                      <Button type="button" variant="outline" onClick={clearFilters}>
+                        Limpiar filtros
+                      </Button>
+                    ) : (
+                      <Button type="button" onClick={() => setInviteOpen(true)}>
+                        Invitar miembro
+                      </Button>
+                    )
                   }
                 />
-              </div>
-            ) : (
-              <DataTable
-                label="Roster de personal"
-                columns={columns}
-                data={filtered}
-                rowKey={(row) => row.id}
-                loading={loading && team.length === 0}
-                maxHeight={480}
-                empty={
-                  <EmptyState
-                    title="Sin personal"
-                    description="Cuando invites miembros aparecerán en el roster."
-                    illustration="inbox"
-                  />
-                }
-              />
-            )}
+              ) : (
+                <DataTable
+                  label="Roster de personal"
+                  columns={columns}
+                  data={filtered}
+                  rowKey={(row) => row.id}
+                  loading={loading && team.length === 0}
+                  maxHeight={480}
+                  empty={
+                    <EmptyState
+                      title="Sin personal"
+                      description="Cuando invites miembros aparecerán en el roster."
+                      illustration="inbox"
+                    />
+                  }
+                />
+              )}
+            </div>
           </div>
 
           <aside className={styles.stack}>
@@ -509,41 +556,63 @@ export default function StaffPage() {
 
       {!error && tab === 'assignments' ? (
         <div className={styles.stack}>
-          <FilterBar
-            filters={filterDefs}
-            value={filters}
-            onChange={setFilters}
-            search={{
-              value: search,
-              onChange: setSearch,
-              placeholder: 'Filtrar asignaciones',
-            }}
-          />
-          {filtered.length === 0 && !loading ? (
-            <div className={styles.card}>
+          <div className={styles.panel}>
+            <div className={styles.toolbar}>
+              <FilterBar
+                className={styles.filterBar}
+                filters={filterDefs}
+                value={filters}
+                onChange={setFilters}
+                search={{
+                  value: search,
+                  onChange: setSearch,
+                  placeholder: 'Filtrar asignaciones',
+                }}
+              />
+              <div className={styles.filterMeta}>
+                <span>
+                  {formatNumber(filtered.length)} de {formatNumber(team.length)} asignaciones
+                  {anyFilter ? ' coinciden con los filtros' : ''}.
+                </span>
+                {anyFilter ? (
+                  <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
+                    Limpiar filtros
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+
+            {filtered.length === 0 && !loading ? (
               <EmptyState
                 title="Sin asignaciones"
                 description="No hay miembros que coincidan con el filtro."
                 illustration="inbox"
+                action={
+                  anyFilter ? (
+                    <Button type="button" variant="outline" onClick={clearFilters}>
+                      Limpiar filtros
+                    </Button>
+                  ) : undefined
+                }
               />
-            </div>
-          ) : (
-            <DataTable
-              label="Asignaciones de rol"
-              columns={assignmentColumns}
-              data={filtered}
-              rowKey={(row) => row.id}
-              loading={loading && team.length === 0}
-              maxHeight={480}
-              empty={
-                <EmptyState
-                  title="Sin asignaciones"
-                  description="Las asignaciones de rol aparecen cuando hay miembros en el equipo."
-                  illustration="inbox"
-                />
-              }
-            />
-          )}
+            ) : (
+              <DataTable
+                label="Asignaciones de rol"
+                columns={assignmentColumns}
+                data={filtered}
+                rowKey={(row) => row.id}
+                loading={loading && team.length === 0}
+                maxHeight={480}
+                empty={
+                  <EmptyState
+                    title="Sin asignaciones"
+                    description="Las asignaciones de rol aparecen cuando hay miembros en el equipo."
+                    illustration="inbox"
+                  />
+                }
+              />
+            )}
+          </div>
           <p className={styles.muted}>
             Cada fila refleja el rol efectivo del miembro y el paquete de permisos del catálogo
             ({roleSummary('ADMIN').toLowerCase()} para admin, etc.).

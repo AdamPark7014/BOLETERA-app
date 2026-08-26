@@ -336,7 +336,16 @@ function ApiManagementCockpit() {
             Nueva API key
           </Button>
         }
-      />
+      >
+        <div className={styles.metaRow}>
+          <Badge tone="info" variant="outline">
+            {keysQuery.isPending ? '—' : `${formatCount(kpis.active)} activas`}
+          </Badge>
+          <Badge tone="neutral" variant="outline">
+            Prefijo visible · secreto una sola vez
+          </Badge>
+        </div>
+      </PageHeader>
 
       {secret ? (
         <div className={styles.secretBanner} role="status" aria-live="polite">
@@ -370,7 +379,7 @@ function ApiManagementCockpit() {
         </div>
       ) : null}
 
-      <Section columns={4} gap="sm" aria-label="Indicadores de API">
+      <Section columns={4} gap="md" aria-label="Indicadores de API">
         <KpiCard
           label="Llaves activas"
           value={formatCount(kpis.active)}
@@ -534,13 +543,11 @@ function ApiManagementCockpit() {
           </Section>
 
           <div className={styles.stack}>
-            <aside className={styles.card}>
-              <div className={styles.cardHead}>
-                <div>
-                  <h2>Rate limits</h2>
-                  <p>Distribución de cuotas en claves activas</p>
-                </div>
-              </div>
+            <Section
+              className={styles.card}
+              title="Rate limits"
+              description="Distribución de cuotas en claves activas"
+            >
               {buckets.every((bucket) => bucket.count === 0) ? (
                 <p className={styles.muted}>Sin claves activas para agrupar.</p>
               ) : (
@@ -553,15 +560,13 @@ function ApiManagementCockpit() {
                   ))}
                 </ul>
               )}
-            </aside>
+            </Section>
 
-            <aside className={styles.card}>
-              <div className={styles.cardHead}>
-                <div>
-                  <h2>Scopes en uso</h2>
-                  <p>Concesiones entre claves activas</p>
-                </div>
-              </div>
+            <Section
+              className={styles.card}
+              title="Scopes en uso"
+              description="Concesiones entre claves activas"
+            >
               {scopes.length === 0 ? (
                 <EmptyState
                   title="Sin scopes"
@@ -578,7 +583,7 @@ function ApiManagementCockpit() {
                   formatValue={(value) => formatCount(value)}
                 />
               )}
-            </aside>
+            </Section>
           </div>
         </div>
       ) : null}
@@ -626,7 +631,7 @@ function ApiManagementCockpit() {
           description="Sin series de gateway: se deriva de lastUsedAt de cada clave."
         >
           <p className={styles.usageNote}>{usageQuery.data?.note}</p>
-          <Section columns={4} gap="sm" aria-label="Resumen de uso">
+          <Section columns={4} gap="md" aria-label="Resumen de uso">
             <KpiCard
               label="Activas"
               value={formatCount(usageQuery.data?.activeKeys ?? 0)}

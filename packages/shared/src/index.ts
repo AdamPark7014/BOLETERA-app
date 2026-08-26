@@ -7,4 +7,5 @@ export * from './locale';
 export * from './analytics-contracts';
 export * from './ai-contracts';
 export * from './event-stock-images';
+export * from './site-content';
 export * from './permissions';

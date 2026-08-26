@@ -8,6 +8,7 @@ import {
   Button,
   Card,
   EmptyState,
+  FilterBar,
   formatNumber,
   KpiCard,
   PageHeader,
@@ -15,10 +16,13 @@ import {
   Skeleton,
   Tabs,
   formatDateTime,
+  type FilterDefinition,
+  type FilterSelection,
 } from '@boletera/ui';
 import { useToast } from '@/components/Toast/ToastProvider';
-import { listSeries, type SeriesRow } from '@/lib/scheduling-api';
+import { listSeries, type EventSeriesKind, type EventSeriesStatus, type SeriesRow } from '@/lib/scheduling-api';
 import { useSession } from '@/lib/use-session';
+import platform from '../../_styles/platform.module.scss';
 import { CreateResidencyForm } from './_components/CreateResidencyForm';
 import { CreateSeriesForm } from './_components/CreateSeriesForm';
 import {
@@ -34,6 +38,15 @@ import styles from './series.module.scss';
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('es-MX', { dateStyle: 'medium' });
+}
+
+function countBy<T extends string>(rows: SeriesRow[], key: (row: SeriesRow) => T): Map<T, number> {
+  const counts = new Map<T, number>();
+  for (const row of rows) {
+    const value = key(row);
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return counts;
 }
 
 export default function SeriesListPage() {
@@ -80,6 +93,45 @@ export default function SeriesListPage() {
     [rows, filters],
   );
   const kpis = useMemo(() => seriesKpis(rows ?? []), [rows]);
+  const kindCounts = useMemo(() => countBy(rows ?? [], (row) => row.kind), [rows]);
+  const statusCounts = useMemo(() => countBy(rows ?? [], (row) => row.status), [rows]);
+
+  const filterDefs = useMemo<FilterDefinition[]>(
+    () => [
+      {
+        id: 'kind',
+        label: 'Tipo',
+        multiple: false,
+        options: Array.from(kindCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([kind, count]) => ({
+            value: kind,
+            label: KIND_LABELS[kind],
+            count,
+          })),
+      },
+      {
+        id: 'status',
+        label: 'Estado',
+        multiple: false,
+        options: Array.from(statusCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([status, count]) => ({
+            value: status,
+            label: STATUS_LABELS[status],
+            count,
+          })),
+      },
+    ],
+    [kindCounts, statusCounts],
+  );
+
+  const filterSelection = useMemo<FilterSelection>(() => {
+    const next: Record<string, readonly string[]> = {};
+    if (filters.kind !== 'ALL') next.kind = [filters.kind];
+    if (filters.status !== 'ALL') next.status = [filters.status];
+    return next;
+  }, [filters.kind, filters.status]);
 
   if (sessionStatus === 'loading') {
     return (
@@ -95,19 +147,19 @@ export default function SeriesListPage() {
       <PageHeader
         eyebrow="Programación"
         title="Series y residencias"
-        description="Catálogo de programas recurrentes, altas rápidas de serie/residencia y acceso al detalle."
+        description={`${formatNumber(kpis.total)} programas · ${formatNumber(kpis.active)} activas · ${formatNumber(kpis.upcomingDates)} fechas próximas`}
         breadcrumbs={[
           { label: 'Eventos', href: '/events' },
           { label: 'Series' },
         ]}
         actions={
           <div className={styles.actions}>
-            <Button type="button" variant="ghost" onClick={() => router.push('/calendar')}>
+            <Link href="/calendar" className={platform.ghostBtn}>
               Calendario
-            </Button>
-            <Button type="button" variant="outline" onClick={() => router.push('/events/new')}>
+            </Link>
+            <Link href="/events/new" className={platform.ghostBtn}>
               Asistente completo
-            </Button>
+            </Link>
             {canWrite && (
               <Button type="button" onClick={() => setFilters({ tab: 'crear-serie' })}>
                 Nueva serie
@@ -145,12 +197,13 @@ export default function SeriesListPage() {
         />
       </PageHeader>
 
-      <Section columns={4} gap="sm" aria-label="Indicadores de series">
+      <Section columns={4} gap="md" className={styles.kpiStrip} aria-label="Indicadores de series">
         <KpiCard
           label="Programas"
           value={formatNumber(kpis.total)}
           loading={loading}
           hint="Series y temporadas"
+          tone="accent"
         />
         <KpiCard
           label="Activas"
@@ -195,51 +248,39 @@ export default function SeriesListPage() {
       )}
 
       {filters.tab === 'catalogo' && (
-        <>
-          <Card variant="outline" padding="md">
-            <div className={styles.filters}>
-              <label className={styles.field}>
-                Buscar
-                <input
-                  value={filters.q}
-                  placeholder="Nombre, recinto o resumen"
-                  onChange={(e) => setFilters({ q: e.target.value })}
+        <Section
+          title="Catálogo de series"
+          description="Programas recurrentes y residencias con fechas, aforo y próxima función."
+        >
+          {rows && rows.length > 0 && (
+            <>
+              <div className={styles.filters}>
+                <FilterBar
+                  filters={filterDefs}
+                  value={filterSelection}
+                  onChange={(next) =>
+                    setFilters({
+                      kind: (next.kind?.[0] as EventSeriesKind | undefined) ?? 'ALL',
+                      status: (next.status?.[0] as EventSeriesStatus | undefined) ?? 'ALL',
+                    })
+                  }
+                  search={{
+                    value: filters.q,
+                    onChange: (value) => setFilters({ q: value }),
+                    placeholder: 'Nombre, recinto o resumen…',
+                  }}
                 />
-              </label>
-              <label className={styles.field}>
-                Tipo
-                <select
-                  value={filters.kind}
-                  onChange={(e) =>
-                    setFilters({ kind: e.target.value as SeriesFilters['kind'] })
-                  }
-                >
-                  <option value="ALL">Todos</option>
-                  {Object.entries(KIND_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={styles.field}>
-                Estado
-                <select
-                  value={filters.status}
-                  onChange={(e) =>
-                    setFilters({ status: e.target.value as SeriesFilters['status'] })
-                  }
-                >
-                  <option value="ALL">Todos</option>
-                  {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </Card>
+              </div>
+
+              <div className={styles.tableMeta}>
+                <span className={styles.muted}>
+                  {filtered.length === rows.length
+                    ? `${formatNumber(filtered.length)} programas en catálogo`
+                    : `${formatNumber(filtered.length)} de ${formatNumber(rows.length)} programas coinciden con los filtros`}
+                </span>
+              </div>
+            </>
+          )}
 
           {loading ? (
             <Skeleton height={240} />
@@ -278,9 +319,9 @@ export default function SeriesListPage() {
                 ) : undefined
               }
               secondaryAction={
-                <Button type="button" variant="outline" onClick={() => router.push('/events/new')}>
+                <Link href="/events/new" className={platform.ghostBtn}>
                   Asistente completo
-                </Button>
+                </Link>
               }
             />
           ) : filtered.length === 0 ? (
@@ -299,16 +340,19 @@ export default function SeriesListPage() {
               }
             />
           ) : (
-            <Card variant="outline" padding="none">
+            <Card variant="outline" padding="md" className={styles.catalogCard}>
               <div className={styles.tableWrap}>
-                <table className={styles.table}>
+                <table className={platform.table}>
+                  <caption className={styles.srOnly}>Catálogo de series y residencias</caption>
                   <thead>
                     <tr>
                       <th scope="col">Programa</th>
                       <th scope="col">Tipo</th>
                       <th scope="col">Recinto</th>
                       <th scope="col">Recurrencia</th>
-                      <th scope="col">Fechas</th>
+                      <th scope="col" className={styles.numeric}>
+                        Fechas
+                      </th>
                       <th scope="col">Próxima</th>
                       <th scope="col">Estado</th>
                     </tr>
@@ -316,46 +360,39 @@ export default function SeriesListPage() {
                   <tbody>
                     {filtered.map((row) => (
                       <tr key={row.id}>
-                        <td>
-                          <Link
-                            href={`/events/series/${row.id}`}
-                            className={styles.rowLink}
-                          >
-                            <strong>{row.name}</strong>
-                          </Link>
-                          <div className={styles.muted}>
+                        <td className={styles.programCell}>
+                          <Link href={`/events/series/${row.id}`}>{row.name}</Link>
+                          <span className={styles.subtle}>
                             {formatDate(row.firstDate)} → {formatDate(row.lastDate)}
-                          </div>
+                          </span>
                         </td>
                         <td>
-                          <Badge tone={kindTone(row.kind)} dot>
+                          <Badge tone={kindTone(row.kind)} dot size="sm">
                             {KIND_LABELS[row.kind]}
                           </Badge>
                         </td>
                         <td>{row.venue?.name ?? '—'}</td>
                         <td>
-                          <span className={styles.muted}>{row.summary ?? '—'}</span>
+                          <span className={styles.subtle}>{row.summary ?? '—'}</span>
                         </td>
-                        <td>
+                        <td className={styles.numeric}>
                           {formatNumber(row.totals.events)}
                           {row.totals.cancelled > 0 && (
-                            <span className={styles.muted}>
+                            <span className={styles.subtle}>
                               {' '}
                               · {formatNumber(row.totals.cancelled)} cancel.
                             </span>
                           )}
-                          <div className={styles.muted}>
+                          <div className={styles.subtle}>
                             {formatNumber(row.totals.capacity)} lugares
                           </div>
                         </td>
                         <td>{formatDate(row.nextDate)}</td>
                         <td>
-                          <Badge tone={statusTone(row.status)} variant="soft">
+                          <Badge tone={statusTone(row.status)} variant="soft" size="sm">
                             {STATUS_LABELS[row.status]}
                           </Badge>
-                          <div className={styles.muted}>
-                            Alta {formatDateTime(row.createdAt)}
-                          </div>
+                          <div className={styles.subtle}>Alta {formatDateTime(row.createdAt)}</div>
                         </td>
                       </tr>
                     ))}
@@ -364,7 +401,7 @@ export default function SeriesListPage() {
               </div>
             </Card>
           )}
-        </>
+        </Section>
       )}
 
       {!canWrite && filters.tab !== 'catalogo' && (

@@ -7,15 +7,16 @@
  * dedicado reemplaza el escaneo N+1 de órdenes recientes.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Badge, Button, Card, KpiCard, PageHeader, Section } from '@boletera/ui';
 import { adminApi, ApiError, getStoredToken } from '@/lib/api';
 import { useToast } from '@/components/Toast/ToastProvider';
 import platform from '../../_styles/platform.module.scss';
 import styles from '../orders.module.scss';
 import { EmptyBlock, ResourceView } from '../_ui/States';
 import { useResource } from '../_ui/useResource';
-import { formatDateTime, formatMoney, toNumber } from '../_ui/format';
+import { formatDateTime, formatMoney, formatNumber, toNumber } from '../_ui/format';
 import { orderStatusMeta, refundStatusMeta } from '../_ui/orderModel';
 
 type RefundRow = {
@@ -66,16 +67,21 @@ export default function RefundsQueuePage() {
   );
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Reembolsos abiertos</h1>
-          <p>Solicitudes registradas que todavía no han devuelto el dinero</p>
-        </div>
-        <Link href="/orders" className={platform.ghostBtn}>
-          ← Órdenes
-        </Link>
-      </header>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Finanzas"
+        title="Reembolsos abiertos"
+        description="Solicitudes registradas que todavía no han devuelto el dinero al cliente"
+        breadcrumbs={[
+          { label: 'Órdenes', href: '/orders' },
+          { label: 'Reembolsos abiertos' },
+        ]}
+        actions={
+          <Link href="/orders" className={platform.ghostBtn}>
+            ← Órdenes
+          </Link>
+        }
+      />
 
       <ResourceView resource={resource} context="los reembolsos" loadingRows={4}>
         {(queue) => <QueueView queue={queue} reload={resource.reload} />}
@@ -87,6 +93,16 @@ export default function RefundsQueuePage() {
 function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
   const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
+
+  const pendingTotal = useMemo(
+    () => queue.rows.reduce((sum, row) => sum + toNumber(row.amount), 0),
+    [queue.rows],
+  );
+  const currency = queue.rows[0]?.currency ?? 'MXN';
+  const staleCount = useMemo(
+    () => queue.rows.filter((row) => (row.pendingForHours ?? 0) >= 24).length,
+    [queue.rows],
+  );
 
   async function complete(refundId: string) {
     const token = getStoredToken();
@@ -113,17 +129,25 @@ function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
     }
   }
 
-  const pendingTotal = queue.rows.reduce((s, r) => s + toNumber(r.amount), 0);
-  const currency = queue.rows[0]?.currency ?? 'MXN';
-
   return (
     <>
-      <p className={styles.scopeNote}>
-        Mostrando <strong>{queue.total}</strong> reembolso(s) con estado pendiente en tu
-        organización.
-      </p>
+      <Section columns={3} gap="md" className={styles.kpiStrip}>
+        <KpiCard label="En cola" value={formatNumber(queue.total)} tone="accent" />
+        <KpiCard
+          label="Monto pendiente"
+          value={formatMoney(pendingTotal, currency)}
+          tone={pendingTotal > 0 ? 'warning' : 'neutral'}
+        />
+        <KpiCard
+          label="Más de 24 h"
+          value={formatNumber(staleCount)}
+          tone={staleCount > 0 ? 'danger' : 'neutral'}
+          invertDelta
+          hint="Requieren seguimiento prioritario"
+        />
+      </Section>
 
-      <section className={platform.panel}>
+      <Card padding="md">
         {queue.rows.length === 0 ? (
           <EmptyBlock
             title="Ningún reembolso pendiente"
@@ -132,9 +156,8 @@ function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
         ) : (
           <>
             <p className={styles.scopeNote}>
-              <strong>{queue.rows.length}</strong> reembolso(s) sin cerrar por un total de{' '}
-              <strong>{formatMoney(pendingTotal, currency)}</strong>. El dinero no sale hasta
-              ejecutarlos en el portal Banorte y marcarlos aquí.
+              El dinero no sale hasta ejecutarlos en el portal Banorte y marcarlos aquí como
+              completados.
             </p>
             <table className={platform.table}>
               <caption className={styles.srOnly}>
@@ -194,18 +217,23 @@ function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
                         ) : null}
                       </td>
                       <td>
-                        <span className={`${styles.status} ${styles.canceled}`}>{rmeta.label}</span>
+                        <Badge tone="warning" variant="soft" size="sm">
+                          {rmeta.label}
+                        </Badge>
                       </td>
                       <td>
-                        <button
+                        <Button
                           type="button"
-                          className={platform.primaryBtn}
-                          disabled={busy !== null}
+                          variant="primary"
+                          size="sm"
+                          loading={busy === refund.id}
+                          loadingLabel="Cerrando…"
+                          disabled={busy !== null && busy !== refund.id}
                           onClick={() => void complete(refund.id)}
                         >
                           <span className={styles.stepBadge}>Paso 2</span>
-                          {busy === refund.id ? 'Cerrando…' : 'Marcar pagado'}
-                        </button>
+                          Marcar pagado
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -214,7 +242,7 @@ function QueueView({ queue, reload }: { queue: Queue; reload: () => void }) {
             </table>
           </>
         )}
-      </section>
+      </Card>
     </>
   );
 }

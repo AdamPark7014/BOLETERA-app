@@ -6,19 +6,21 @@
   align-items: center;
   gap: var(--bl-space-2);
   flex-wrap: wrap;
-  padding: var(--bl-space-2-5) var(--bl-space-4);
+  padding: var(--bl-space-2-5) var(--bl-space-5);
   margin-top: auto;
-  background: rgba(12, 12, 14, 0.95);
-  border-top: 1px solid var(--border);
-  backdrop-filter: blur(6px);
+  background: rgba(11, 13, 17, 0.94);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.25);
 }
 
 .title {
   font-size: var(--bl-text-2xs);
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--muted-2);
+  color: rgba(255, 255, 255, 0.45);
   margin-right: 4px;
+  font-weight: 600;
 }
 
 .item {
@@ -26,20 +28,20 @@
   align-items: center;
   gap: var(--bl-space-1-5);
   font-size: var(--bl-text-sm);
-  color: var(--muted);
+  color: #d4d8e0;
   padding: var(--bl-space-1-5) var(--bl-space-2-5);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  min-height: 34px;
+  border-radius: var(--bl-radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 36px;
 
   kbd {
     font-family: inherit;
     font-size: var(--bl-text-xs);
     font-weight: 700;
-    color: var(--text);
-    background: var(--bg-deep);
-    border: 1px solid var(--border-strong);
+    color: #f4f5f7;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 5px;
     padding: var(--bl-space-0-5) var(--bl-space-1-5);
     min-width: 26px;
@@ -50,7 +52,21 @@
 .help {
   margin-left: auto;
   font-size: var(--bl-text-xs);
-  color: var(--muted-2);
+  color: rgba(255, 255, 255, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bl-space-1-5);
+
+  kbd {
+    font-family: inherit;
+    font-size: var(--bl-text-2xs);
+    font-weight: 700;
+    color: #f4f5f7;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
 }
 
 .overlay {
@@ -60,26 +76,31 @@
   display: grid;
   place-items: center;
   padding: var(--bl-space-6);
-  background: rgba(6, 6, 8, 0.9);
+  background: rgba(6, 6, 8, 0.92);
+  backdrop-filter: blur(6px);
 }
 
 .sheet {
   width: min(900px, 100%);
   max-height: 82vh;
   overflow: auto;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
+  background: #16181d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--bl-radius-lg);
   padding: var(--bl-space-6);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 
   h2 {
     margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
     font-size: var(--bl-text-3xl);
+    color: #f4f5f7;
   }
 
   p {
     margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
-    color: var(--muted);
+    color: #a3aab8;
     font-size: var(--bl-text-md);
   }
 }
@@ -92,7 +113,7 @@
     font-size: var(--bl-text-xs);
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--muted-2);
+    color: rgba(255, 255, 255, 0.4);
   }
 }
 
@@ -109,11 +130,11 @@
     align-items: center;
     gap: var(--bl-space-2-5);
     font-size: var(--bl-text-md);
-    color: var(--text);
+    color: #e8eaef;
     padding: var(--bl-space-2) var(--bl-space-3);
-    background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--bl-radius-sm);
     min-height: 44px;
   }
 
@@ -121,8 +142,9 @@
     font-family: inherit;
     font-size: var(--bl-text-xs);
     font-weight: 700;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
+    color: #f4f5f7;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 5px;
     padding: 3px 8px;
     min-width: 46px;
@@ -136,9 +158,14 @@
   min-height: 52px;
   font-size: var(--bl-text-lg);
   font-weight: 700;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: var(--accent-fg);
+  border-radius: var(--bl-radius-sm);
+  border: 1px solid var(--bl-accent);
+  background: var(--bl-accent);
+  color: var(--bl-on-accent);
   cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--bl-accent-hover, #be123c);
+  }
 }

@@ -30,11 +30,13 @@ import {
   soldCount,
   type AvailabilitySnapshot,
 } from '../_shared/inventory-api';
-import platform from '../../_styles/platform.module.scss';
 import hubStyles from './event-hub.module.scss';
+import { Notice } from '../../orders/_ui/States';
 import {
   Badge,
   Button,
+  Card,
+  CardHeader,
   KpiCard,
   PageHeader,
   Section,
@@ -42,6 +44,7 @@ import {
   type BadgeTone,
   type TabItem,
 } from '@boletera/ui';
+import { channelLabel, formatMxn, healthTone } from './format';
 
 const Venue3DViewer = dynamic(
   () => import('@boletera/venue-3d').then((m) => m.Venue3DViewer),
@@ -313,7 +316,7 @@ export default function EventHubPage() {
   const occupancy = availability ? occupancyPercent(availability) : inventory.occupancyPercent;
 
   return (
-    <div className={hubStyles.hub}>
+    <div className={hubStyles.page}>
       <PageHeader
         eyebrow={
           <span className={hubStyles.statusRow}>
@@ -332,6 +335,7 @@ export default function EventHubPage() {
         actions={
           <div className={hubStyles.actions}>
             <Button
+              variant="primary"
               disabled={publishing || !canPublish}
               title={
                 canPublish
@@ -370,11 +374,11 @@ export default function EventHubPage() {
               Publicar inventario
             </Button>
             {venueId ? (
-              <Link href={`/venues/${venueId}/map`} className={platform.ghostBtn}>
+              <Link href={`/venues/${venueId}/map`} className={hubStyles.secondaryAction}>
                 Editor de mapa
               </Link>
             ) : null}
-            <Link href="/events" className={platform.ghostBtn}>
+            <Link href="/events" className={hubStyles.secondaryAction}>
               ← Eventos
             </Link>
           </div>
@@ -418,121 +422,134 @@ export default function EventHubPage() {
 
       <div className={hubStyles.tabPanel}>
       {tab === 'overview' && (
-        <section className={platform.panel}>
-          <h2>Ventas por canal</h2>
-          <table className={platform.table}>
-            <thead>
-              <tr>
-                <th>Canal</th>
-                <th>Órdenes</th>
-                <th>Ingresos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {hub.channels.map((c) => (
-                <tr key={c.channel}>
-                  <td>{c.channel}</td>
-                  <td>{c._count}</td>
-                  <td>${Number(c._sum.totalAmount ?? 0).toLocaleString()}</td>
+        <Card variant="outline" padding="md">
+          <CardHeader
+            title="Ventas por canal"
+            description="Órdenes e ingresos agregados por canal de venta"
+          />
+          <div className={hubStyles.tableWrap} role="region" aria-label="Ventas por canal">
+            <table className={hubStyles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Canal</th>
+                  <th scope="col">Órdenes</th>
+                  <th scope="col">Ingresos</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--bl-gray-500)' }}>
+              </thead>
+              <tbody>
+                {hub.channels.map((c) => (
+                  <tr key={c.channel}>
+                    <td>{channelLabel(c.channel)}</td>
+                    <td>{c._count}</td>
+                    <td>{formatMxn(Number(c._sum.totalAmount ?? 0))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className={hubStyles.hint}>
             Asignación: Web {channels.web}% · Taquilla {channels.taquilla}% · API {channels.api}%
           </p>
-        </section>
+        </Card>
       )}
 
       {tab === 'live' && (
-        <section className={platform.panel}>
-          <h2>Onsale en vivo</h2>
+        <Card variant="outline" padding="md">
+          <CardHeader title="Onsale en vivo" description="Inventario y ventas en tiempo real" />
           <LiveInventoryPanel token={token!} eventId={id} eventTitle={event.title} />
-        </section>
+        </Card>
       )}
 
       {tab === 'blocks' && (
-        <section className={platform.panel}>
-          <h2>Bloqueos administrativos</h2>
+        <Card variant="outline" padding="md">
+          <CardHeader
+            title="Bloqueos administrativos"
+            description="Hold de asientos contra el layout del venue"
+          />
           <InventoryBlocksPanel token={token!} eventId={id} layoutId={layoutId} />
-        </section>
+        </Card>
       )}
 
       {tab === 'channels' && (
-        <section className={platform.panel}>
-          <h2>Asignación multi-canal (100%)</h2>
-          <div>
-            <label>
-              Web %
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={channels.web}
-                onChange={(e) => setChannels({ ...channels, web: Number(e.target.value) })}
-              />
-              <span>{channels.web}%</span>
-            </label>
-            <label>
-              Taquilla %
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={channels.taquilla}
-                onChange={(e) => setChannels({ ...channels, taquilla: Number(e.target.value) })}
-              />
-              <span>{channels.taquilla}%</span>
-            </label>
-            <label>
-              API %
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={channels.api}
-                onChange={(e) => setChannels({ ...channels, api: Number(e.target.value) })}
-              />
-              <span>{channels.api}%</span>
-            </label>
-          </div>
-          <p style={{ fontSize: '0.8125rem', color: channelTotal === 100 ? '#404040' : '#b91c1c' }}>
-            Total: {channelTotal}% {channelTotal !== 100 && '— ajusta hasta 100%'}
-          </p>
-          <button
-            type="button"
-            className={platform.primaryBtn}
-            disabled={saving || channelTotal !== 100}
-            onClick={saveChannels}
-          >
-            {saving ? 'Guardando…' : 'Guardar canales'}
-          </button>
-          {health && (
-            <div style={{ marginTop: '1.5rem' }}>
-              <h3 style={{ fontSize: '0.875rem', marginBottom: '0.75rem' }}>Salud en tiempo real</h3>
-              <div className={platform.cardGrid}>
-                {Object.entries(health).map(([key, val]) => (
-                  <article key={key} className={platform.statCard}>
-                    <span>{key}</span>
-                    <strong>{val.status ?? '—'}</strong>
-                    <small>
-                      {val.orders ?? 0} órdenes · ${(val.revenue ?? 0).toLocaleString()}
-                    </small>
-                  </article>
-                ))}
+        <>
+          <Card variant="outline" padding="md">
+            <CardHeader
+              title="Asignación multi-canal"
+              description="La suma de asignaciones debe ser 100 %"
+            />
+            <div className={hubStyles.cardBody}>
+              {(
+                [
+                  ['web', 'Web'],
+                  ['taquilla', 'Taquilla'],
+                  ['api', 'API'],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key} className={hubStyles.rangeField}>
+                  <span>{label}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={channels[key]}
+                    onChange={(e) =>
+                      setChannels({ ...channels, [key]: Number(e.target.value) })
+                    }
+                    aria-valuetext={`${channels[key]} por ciento`}
+                  />
+                  <strong>{channels[key]}%</strong>
+                </label>
+              ))}
+              {channelTotal !== 100 ? (
+                <Notice tone="warn" title={`Total: ${channelTotal} %`}>
+                  Ajusta las asignaciones hasta 100 % antes de guardar.
+                </Notice>
+              ) : (
+                <p className={hubStyles.hint}>Total: {channelTotal} %</p>
+              )}
+              <div className={hubStyles.actionsRow}>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  disabled={saving || channelTotal !== 100}
+                  loading={saving}
+                  loadingLabel="Guardando…"
+                  onClick={saveChannels}
+                >
+                  Guardar canales
+                </Button>
               </div>
             </div>
-          )}
-        </section>
+          </Card>
+
+          {health ? (
+            <Section
+              title="Salud en tiempo real"
+              description="Estado reportado por el servicio de canales"
+              headingLevel="h3"
+              columns={3}
+              gap="sm"
+            >
+              {Object.entries(health).map(([key, val]) => (
+                <KpiCard
+                  key={key}
+                  label={channelLabel(key)}
+                  value={val.status ?? '—'}
+                  hint={`${val.orders ?? 0} órdenes · ${formatMxn(val.revenue ?? 0)}`}
+                  tone={healthTone(val.status)}
+                />
+              ))}
+            </Section>
+          ) : null}
+        </>
       )}
 
       {tab === 'map3d' && (
-        <section className={platform.panel}>
-          <h2>Vista 3D + asientos en vivo</h2>
+        <Card variant="outline" padding="md">
+          <CardHeader title="Vista 3D + asientos en vivo" description="Mapa interactivo del venue" />
           {venueMapData && seatsFor3d.length === 0 ? (
-            <p style={{ fontSize: '0.8125rem', color: 'var(--bl-gray-500)' }}>
-              El venue todavía no tiene asientos en su layout.
-            </p>
+            <p className={hubStyles.hint}>El venue todavía no tiene asientos en su layout.</p>
           ) : (
             <Venue3DViewer
               mode="orbit"
@@ -549,11 +566,11 @@ export default function EventHubPage() {
               mapData={normalizedVenueMap}
             />
           )}
-          <p style={{ marginTop: '0.75rem', fontSize: '0.8125rem', color: 'var(--bl-gray-500)' }}>
+          <p className={hubStyles.hint}>
             Publica inventario antes de vender. Editor:{' '}
             <Link href={`/venues/${venueId}/map`}>mapa del venue</Link>
           </p>
-        </section>
+        </Card>
       )}
 
       {tab === 'compliance' && (
@@ -566,58 +583,80 @@ export default function EventHubPage() {
       )}
 
       {tab === 'pricing' && (
-        <section className={platform.panel}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <input
-              type="checkbox"
-              checked={dynamicPricing}
-              onChange={(e) => setDynamicPricing(e.target.checked)}
+        <>
+          <Card variant="outline" padding="md">
+            <CardHeader
+              title="Pricing dinámico"
+              description="Surge por ocupación cuando está habilitado"
             />
-            Pricing dinámico (surge por ocupación)
-          </label>
-          <button type="button" className={platform.ghostBtn} onClick={saveDynamicPricing}>
-            Guardar reglas dinámicas
-          </button>
-          <h2>Ofertas / zonas</h2>
-          <table className={platform.table}>
-            <thead>
-              <tr>
-                <th>Zona</th>
-                <th>Nombre</th>
-                <th>Precio (MXN)</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {event.offers?.map((o) => (
-                <tr key={o.id}>
-                  <td>{o.zone}</td>
-                  <td>{o.name}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min={1}
-                      step={50}
-                      value={offerEdits[o.id] ?? o.basePrice}
-                      onChange={(e) => setOfferEdits({ ...offerEdits, [o.id]: e.target.value })}
-                      style={{ width: 100 }}
-                    />
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className={platform.ghostBtn}
-                      disabled={pricingSaving === o.id}
-                      onClick={() => saveOfferPrice(o.id)}
-                    >
-                      {pricingSaving === o.id ? '…' : 'Guardar'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+            <div className={hubStyles.cardBody}>
+              <label className={hubStyles.inlineCheck}>
+                <input
+                  type="checkbox"
+                  checked={dynamicPricing}
+                  onChange={(e) => setDynamicPricing(e.target.checked)}
+                />
+                Pricing dinámico (surge por ocupación)
+              </label>
+              <div className={hubStyles.actionsRow}>
+                <Button type="button" variant="secondary" size="sm" onClick={saveDynamicPricing}>
+                  Guardar reglas dinámicas
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          <Card variant="outline" padding="md">
+            <CardHeader title="Ofertas / zonas" description="Precios base en MXN" />
+            <div className={hubStyles.tableWrap} role="region" aria-label="Ofertas del evento">
+              <table className={hubStyles.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">Zona</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Precio (MXN)</th>
+                    <th scope="col">
+                      <span className={hubStyles.srOnly}>Acciones</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {event.offers?.map((o) => (
+                    <tr key={o.id}>
+                      <td>{o.zone}</td>
+                      <td>{o.name}</td>
+                      <td>
+                        <input
+                          className={hubStyles.priceInput}
+                          type="number"
+                          min={1}
+                          step={50}
+                          value={offerEdits[o.id] ?? o.basePrice}
+                          onChange={(e) =>
+                            setOfferEdits({ ...offerEdits, [o.id]: e.target.value })
+                          }
+                          aria-label={`Precio de ${o.name}`}
+                        />
+                      </td>
+                      <td>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={pricingSaving === o.id}
+                          loading={pricingSaving === o.id}
+                          onClick={() => saveOfferPrice(o.id)}
+                        >
+                          Guardar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
       )}
       </div>
     </div>

@@ -22,6 +22,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { KpiCard, Section } from '@boletera/ui';
 import { getEventHub, getRealtimeDashboard, type RealtimeDashboard } from '@/lib/platform-api';
 import {
   LoadingBlock,
@@ -126,30 +127,31 @@ function OrgMetrics({ eventId }: { eventId?: string }) {
     <ResourceView resource={resource} context="las métricas del panel" loadingRows={2}>
       {(data) => (
         <>
-          <div className={platform.cardGrid}>
-            <article className={platform.statCard}>
-              <span>Hoy</span>
-              <strong>{formatMoney(data.metrics.todayRevenue, 'MXN')}</strong>
-              <small>{formatNumber(data.metrics.todayOrders)} órdenes</small>
-            </article>
-            <article className={platform.statCard}>
-              <span>Semana</span>
-              <strong>{formatMoney(data.metrics.weekRevenue, 'MXN')}</strong>
-              <small>{formatNumber(data.metrics.weekOrders)} órdenes</small>
-            </article>
-            <article className={platform.statCard}>
-              <span>Ticket promedio</span>
-              <strong>{formatMoney(data.metrics.avgOrderValue, 'MXN')}</strong>
-            </article>
-            <article className={platform.statCard}>
-              <span>Ocupación</span>
-              <strong>{formatPercent(data.metrics.occupancy, 0)}</strong>
-              <small>
-                {formatNumber(data.metrics.soldTickets)} de {formatNumber(data.metrics.totalTickets)}{' '}
-                boletos
-              </small>
-            </article>
-          </div>
+          <Section columns={4} gap="md" aria-label="Agregados de negocio">
+            <KpiCard
+              label="Hoy"
+              value={formatMoney(data.metrics.todayRevenue, 'MXN')}
+              hint={`${formatNumber(data.metrics.todayOrders)} órdenes`}
+              tone="accent"
+            />
+            <KpiCard
+              label="Semana"
+              value={formatMoney(data.metrics.weekRevenue, 'MXN')}
+              hint={`${formatNumber(data.metrics.weekOrders)} órdenes`}
+              tone="neutral"
+            />
+            <KpiCard
+              label="Ticket promedio"
+              value={formatMoney(data.metrics.avgOrderValue, 'MXN')}
+              tone="neutral"
+            />
+            <KpiCard
+              label="Ocupación"
+              value={formatPercent(data.metrics.occupancy, 0)}
+              hint={`${formatNumber(data.metrics.soldTickets)} de ${formatNumber(data.metrics.totalTickets)} boletos`}
+              tone="info"
+            />
+          </Section>
 
           <p className={styles.scopeNote}>
             Agregados de negocio actualizados cada {DASHBOARD_POLL_MS / 1000} s
@@ -361,35 +363,37 @@ function LiveInventory({ eventId }: { eventId: string }) {
         </Notice>
       ))}
 
-      <div className={platform.cardGrid}>
-        <article className={platform.statCard}>
-          <span>Aforo restante</span>
-          <strong>{formatNumber(totalAvailable)}</strong>
-          <small>de {formatNumber(snap.totalTickets)} boletos</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Vendidos</span>
-          <strong>{formatNumber(totalSold)}</strong>
-          <small>
-            {formatPercent(snap.totalTickets ? (totalSold / snap.totalTickets) * 100 : 0, 1)} del
-            aforo
-          </small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Apartados activos</span>
-          <strong>{formatNumber(snap.activeHolds)}</strong>
-          <small>Carritos con butacas retenidas</small>
-        </article>
-        <article className={platform.statCard}>
-          <span>Ritmo</span>
-          <strong>{rate.toFixed(1)} /min</strong>
-          <small>
-            {connected
+      <Section columns={4} gap="md" aria-label="Inventario en vivo">
+        <KpiCard
+          label="Aforo restante"
+          value={formatNumber(totalAvailable)}
+          hint={`de ${formatNumber(snap.totalTickets)} boletos`}
+          tone="accent"
+        />
+        <KpiCard
+          label="Vendidos"
+          value={formatNumber(totalSold)}
+          hint={`${formatPercent(snap.totalTickets ? (totalSold / snap.totalTickets) * 100 : 0, 1)} del aforo`}
+          tone="success"
+        />
+        <KpiCard
+          label="Apartados activos"
+          value={formatNumber(snap.activeHolds)}
+          hint="Carritos con butacas retenidas"
+          tone={snap.activeHolds > totalAvailable && totalAvailable >= 0 ? 'warning' : 'info'}
+        />
+        <KpiCard
+          label="Ritmo"
+          value={`${rate.toFixed(1)}`}
+          unit="/min"
+          tone={connected ? 'accent' : 'neutral'}
+          hint={
+            connected
               ? 'Medido sobre los últimos 5 min de flujo en vivo'
-              : 'Sin flujo en vivo: el ritmo no se está midiendo'}
-          </small>
-        </article>
-      </div>
+              : 'Sin flujo en vivo: el ritmo no se está midiendo'
+          }
+        />
+      </Section>
 
       <p className={styles.scopeNote}>
         {connected ? (
@@ -403,8 +407,7 @@ function LiveInventory({ eventId }: { eventId: string }) {
         instantánea de {formatRelative(snap.generatedAt)}.
       </p>
 
-      <section className={platform.panel}>
-        <h2>Aforo restante por zona</h2>
+      <Section title="Aforo restante por zona">
         {zones.length === 0 ? (
           <p className={styles.subtle}>Este evento no tiene ofertas con inventario asignado.</p>
         ) : (
@@ -463,7 +466,7 @@ function LiveInventory({ eventId }: { eventId: string }) {
             </tbody>
           </table>
         </details>
-      </section>
+      </Section>
     </>
   );
 }

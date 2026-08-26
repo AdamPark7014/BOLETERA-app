@@ -73,11 +73,14 @@
    * Color semántico
    * --------------------------------------------------------------- */
 
-  /* Superficies */
-  --color-bg: var(--ink-50);
+  /* Superficies — papel cálido (evita el gris plano de plantilla) */
+  --paper-warm-50: #faf9f7;
+  --paper-warm-100: #f4f2ef;
+  --paper-warm-150: #ebe8e4;
+  --color-bg: var(--paper-warm-50);
   --color-surface: var(--paper-0);
-  --color-surface-muted: var(--ink-50);
-  --color-surface-sunken: var(--ink-100);
+  --color-surface-muted: var(--paper-warm-100);
+  --color-surface-sunken: var(--paper-warm-150);
   --color-surface-inverse: var(--ink-950);
   --color-surface-inverse-hover: var(--ink-900);
 
@@ -89,7 +92,7 @@
   --color-border-inverse: rgba(255, 255, 255, 0.14);
 
   /* Brillo de los esqueletos de carga */
-  --color-skeleton-highlight: var(--bl-gray-100);
+  --color-skeleton-highlight: #f8f4ef;
 
   /* Texto */
   --text-primary: var(--ink-950);
@@ -202,13 +205,13 @@
   --header-height: 64px;
 
   /* ---------------------------------------------------------------
-   * Radios (el sistema es mayormente recto; solo login usa esquinas)
+   * Radios — tarjetas 16px, controles pill
    * --------------------------------------------------------------- */
   --radius-none: 0;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 20px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-pill: 999px;
   --radius-circle: 50%;
 
@@ -220,7 +223,11 @@
   --shadow-md: 0 12px 40px rgba(10, 10, 10, 0.04);
   --shadow-lg: 0 16px 40px rgba(10, 10, 10, 0.08);
   --shadow-poster: 0 18px 40px rgba(10, 10, 10, 0.12);
-  --shadow-accent: 0 4px 14px rgba(225, 29, 72, 0.28);
+  --shadow-elevated:
+    0 1px 2px rgba(24, 18, 14, 0.04),
+    0 8px 24px rgba(24, 18, 14, 0.08),
+    0 20px 48px rgba(24, 18, 14, 0.06);
+  --shadow-accent: 0 4px 14px rgba(190, 18, 60, 0.2);
 
   /* ---------------------------------------------------------------
    * Movimiento

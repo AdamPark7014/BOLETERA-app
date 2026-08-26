@@ -13,6 +13,16 @@
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  KpiCard,
+  PageHeader,
+  Section,
+  type BadgeTone,
+} from '@boletera/ui';
 import { adminApi, ApiError, getStoredToken } from '@/lib/api';
 import { useToast } from '@/components/Toast/ToastProvider';
 import platform from '../../_styles/platform.module.scss';
@@ -111,6 +121,21 @@ const REFUND_REASONS: { value: string; label: string }[] = [
 /** Boletos que cuentan como emitidos para la línea de tiempo. */
 const ISSUED_TICKET_STATES = new Set(['VALID', 'ISSUED', 'USED', 'TRANSFERRED', 'SCANNED']);
 
+function statusBadgeTone(tone: OrderStatusTone): BadgeTone {
+  switch (tone) {
+    case 'ok':
+      return 'success';
+    case 'pending':
+      return 'warning';
+    case 'danger':
+      return 'danger';
+    case 'attention':
+      return 'info';
+    default:
+      return 'neutral';
+  }
+}
+
 export default function OrderDetailPage() {
   const params = useParams();
   const id = String(params.id);
@@ -124,16 +149,28 @@ export default function OrderDetailPage() {
   );
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Orden {resource.state.phase === 'ready' ? resource.state.data.publicId : id}</h1>
-          <p>Detalle, conciliación y reembolsos</p>
-        </div>
-        <Link href="/orders" className={platform.ghostBtn}>
-          ← Volver a órdenes
-        </Link>
-      </header>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Soporte"
+        title={
+          resource.state.phase === 'ready'
+            ? `Orden ${resource.state.data.publicId}`
+            : `Orden ${id}`
+        }
+        description="Detalle, conciliación y reembolsos"
+        breadcrumbs={[
+          { label: 'Órdenes', href: '/orders' },
+          {
+            label:
+              resource.state.phase === 'ready' ? resource.state.data.publicId : id,
+          },
+        ]}
+        actions={
+          <Link href="/orders" className={platform.ghostBtn}>
+            ← Volver a órdenes
+          </Link>
+        }
+      />
 
       <ResourceView resource={resource} context="la orden" loadingRows={5}>
         {(order) => <OrderBody order={order} reload={resource.reload} />}
@@ -286,6 +323,35 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
 
   return (
     <>
+      <Section columns={4} gap="md" className={styles.kpiStrip}>
+        <KpiCard
+          label="Total de la orden"
+          value={formatMoney(order.totalAmount, order.currency)}
+          tone="accent"
+        />
+        <KpiCard
+          label="Liquidado"
+          value={
+            settlement.settled === null
+              ? 'Sin pago'
+              : formatMoney(settlement.settled, settlement.currency)
+          }
+          tone={settlement.mismatch ? 'warning' : 'success'}
+          hint={settlement.mismatch ? 'Diferencia con el total esperado' : undefined}
+        />
+        <KpiCard
+          label="Boletos emitidos"
+          value={`${formatNumber(issued)} / ${formatNumber(tickets.length)}`}
+          tone={issued === tickets.length && tickets.length > 0 ? 'success' : 'neutral'}
+        />
+        <KpiCard
+          label="Reembolsado"
+          value={formatMoney(refundedTotal, order.currency)}
+          tone={refundedTotal > 0 ? 'info' : 'neutral'}
+          hint={openRefunds.length > 0 ? `${openRefunds.length} reembolso(s) abierto(s)` : undefined}
+        />
+      </Section>
+
       {order.status === 'PENDING_REFUND' && (
         <Notice tone="danger" title="Reembolso obligado — el dinero es del cliente">
           <p>
@@ -324,12 +390,14 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
         </Notice>
       )}
 
-      <section className={platform.panel}>
+      <Card padding="md">
         <div className={styles.detailGrid}>
           <div>
             <h2>Estado</h2>
             <p>
-              <span className={`${styles.status} ${styles[toneClass[meta.tone]]}`}>{meta.label}</span>
+              <Badge tone={statusBadgeTone(meta.tone)} variant="soft">
+                {meta.label}
+              </Badge>
               <br />
               <small className={styles.subtle}>{meta.hint}</small>
             </p>
@@ -393,11 +461,11 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
             </button>
           )}
         </div>
-      </section>
+      </Card>
 
       <div className={styles.detailCols}>
-        <section className={platform.panel}>
-          <h2>Desglose de dinero</h2>
+        <Card padding="md">
+          <CardHeader title="Desglose de dinero" as="h2" />
           <table className={styles.breakdown}>
             <caption className={styles.srOnly}>
               Comparación entre lo esperado por la orden y lo liquidado por la pasarela
@@ -456,7 +524,7 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
             </tbody>
           </table>
 
-          <h2 className={platform.withBorder}>Pago</h2>
+          <CardHeader title="Pago" as="h2" className={styles.withBorder} />
           {order.payment ? (
             <dl className={styles.metaList}>
               <dt>Pasarela</dt>
@@ -488,25 +556,30 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
               conciliación SPEI antes de reembolsar.
             </p>
           )}
-        </section>
+        </Card>
 
-        <section className={platform.panel}>
-          <h2>Línea de tiempo</h2>
+        <Card padding="md">
+          <CardHeader title="Línea de tiempo" as="h2" />
           <ol className={styles.timeline}>
             {timeline.map((step) => (
               <TimelineRow key={step.key} step={step} />
             ))}
           </ol>
-        </section>
+        </Card>
       </div>
 
-      <section className={platform.panel} id="reembolsos">
-        <h2>Reembolsos</h2>
-        <p className={styles.subtle} style={{ marginTop: '-0.5rem', marginBottom: '1rem' }}>
-          Proceso de dos pasos. <strong>Paso 1</strong>: registrar la solicitud aquí.{' '}
-          <strong>Paso 2</strong>: ejecutarla en el portal Banorte y marcarla como completada — en
-          producción la pasarela no reembolsa por API, así que sin el paso 2 el dinero no sale.
-        </p>
+      <Card padding="md" id="reembolsos">
+        <CardHeader
+          title="Reembolsos"
+          as="h2"
+          description={
+            <>
+              Proceso de dos pasos. <strong>Paso 1</strong>: registrar la solicitud aquí.{' '}
+              <strong>Paso 2</strong>: ejecutarla en el portal Banorte y marcarla como completada — en
+              producción la pasarela no reembolsa por API, así que sin el paso 2 el dinero no sale.
+            </>
+          }
+        />
 
         {canRefund && (
           <div className={styles.refundForm}>
@@ -549,15 +622,17 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
                 onChange={(e) => setRefundNotes(e.target.value)}
               />
             </label>
-            <button
+            <Button
               type="button"
-              className={platform.primaryBtn}
-              disabled={busy !== null}
+              variant="primary"
+              loading={busy === 'refund'}
+              loadingLabel="Registrando…"
+              disabled={busy !== null && busy !== 'refund'}
               onClick={() => void requestRefund()}
             >
               <span className={styles.stepBadge}>Paso 1</span>
-              {busy === 'refund' ? 'Registrando…' : 'Registrar reembolso'}
-            </button>
+              Registrar reembolso
+            </Button>
           </div>
         )}
 
@@ -594,25 +669,28 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
                     {r.notes && <small>Nota: {r.notes}</small>}
                   </div>
                   {isRefundOpen(r.status) && (
-                    <button
+                    <Button
                       type="button"
-                      className={platform.primaryBtn}
-                      disabled={busy !== null}
+                      variant="primary"
+                      size="sm"
+                      loading={busy === r.id}
+                      loadingLabel="Cerrando…"
+                      disabled={busy !== null && busy !== r.id}
                       onClick={() => void completeRefund(r.id)}
                     >
                       <span className={styles.stepBadge}>Paso 2</span>
-                      {busy === r.id ? 'Cerrando…' : 'Marcar pagado en Banorte'}
-                    </button>
+                      Marcar pagado en Banorte
+                    </Button>
                   )}
                 </li>
               );
             })}
           </ul>
         )}
-      </section>
+      </Card>
 
-      <section className={platform.panel}>
-        <h2>Boletos ({formatNumber(tickets.length)})</h2>
+      <Card padding="md">
+        <CardHeader title={`Boletos (${formatNumber(tickets.length)})`} as="h2" />
         {tickets.length === 0 ? (
           <p className={styles.subtle}>
             Esta orden no tiene boletos emitidos.
@@ -646,7 +724,7 @@ function OrderBody({ order, reload }: { order: OrderDetail; reload: () => void }
             </tbody>
           </table>
         )}
-      </section>
+      </Card>
     </>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Button, EmptyState, Skeleton } from '@boletera/ui';
+import { Button, Card, EmptyState, Skeleton } from '@boletera/ui';
 import { errorMessage } from '../format';
 import styles from '../dashboard.module.scss';
 
@@ -28,9 +28,13 @@ export function Panel({
   className,
   children,
 }: PanelProps) {
+  const panelClass = className ? `${styles.panel} ${className}` : styles.panel;
+
   return (
-    <section
-      className={className ? `${styles.panel} ${className}` : styles.panel}
+    <Card
+      className={panelClass}
+      padding="none"
+      variant="elevated"
       aria-labelledby={headingId}
     >
       <header className={styles.panelHead}>
@@ -46,7 +50,7 @@ export function Panel({
       <div className={styles.panelBody}>{children}</div>
 
       {footer ? <footer className={styles.panelFooter}>{footer}</footer> : null}
-    </section>
+    </Card>
   );
 }
 

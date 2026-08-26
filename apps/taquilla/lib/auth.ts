@@ -163,10 +163,16 @@ export async function loginRequest(email: string, password: string) {
   const data = (await res.json().catch(() => ({}))) as {
     accessToken?: string;
     user?: TaquillaUser;
-    message?: string;
+    message?: string | string[];
   };
   if (!res.ok || !data.accessToken || !data.user) {
-    throw new Error(data.message || 'Credenciales inválidas');
+    const raw = data.message;
+    const msg = Array.isArray(raw)
+      ? raw.join(', ')
+      : raw === 'Invalid credentials'
+        ? 'Correo o contraseña incorrectos'
+        : raw;
+    throw new Error(msg || 'Credenciales inválidas');
   }
   return { accessToken: data.accessToken, user: data.user };
 }
@@ -241,7 +247,10 @@ export async function apiFetch(
   if (init.body != null && typeof init.body !== 'string') return res;
 
   const ok = await requestReauth();
-  if (!ok) return res;
+  if (!ok) {
+    clearTaquillaSession();
+    throw new ApiError(401, 'Sesión caducada. Vuelve a iniciar sesión.');
+  }
   return send();
 }
 

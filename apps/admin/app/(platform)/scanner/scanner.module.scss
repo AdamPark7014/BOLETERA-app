@@ -8,9 +8,12 @@ $muted: var(--bl-gray-600); // 7.0:1 sobre blanco — el var(--bl-gray-500) ante
 $border: var(--bl-gray-300);
 
 .page {
-  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-4);
+  max-width: 42rem;
 
-  :global(button) {
+  :global(button:not([class])) {
     min-height: 48px; // puerta: objetivo grande, no los 24px del mínimo WCAG
     padding: var(--bl-space-3) var(--bl-space-6);
     background: $ink;
@@ -33,7 +36,14 @@ $border: var(--bl-gray-300);
   }
 }
 
-.field {
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--bl-space-3);
+  width: 100%;
+}
+
+.codeField {
   margin: var(--bl-space-4) var(--bl-space-0);
 
   label {
@@ -44,7 +54,6 @@ $border: var(--bl-gray-300);
     font-weight: 600;
   }
 
-  input,
   textarea {
     width: 100%;
     padding: var(--bl-space-3);
@@ -126,6 +135,12 @@ $border: var(--bl-gray-300);
   margin-top: 0.75rem;
   border-radius: var(--bl-radius-md);
   background: var(--bl-gray-900);
+}
+
+@media (max-width: 640px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 // --- Veredictos -------------------------------------------------------------

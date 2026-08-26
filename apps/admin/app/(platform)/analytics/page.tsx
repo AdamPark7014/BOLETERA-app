@@ -4,7 +4,7 @@
  * Analítica del promotor.
  *
  * `/analytics/promoters/:organizationId/dashboard` dejó de ser público: exige
- * JWT, rol y pertenencia a la organización, y el `OrgAccessGuard` ya no exime a
+ * JWT, rol y pertenencia a la organización, y el `OrgAccessGuard` ya no eximen a
  * ADMIN ni acepta peticiones sin `organizationId`. Antes esta pantalla resolvía
  * la organización a mano y cualquier fallo terminaba en un "No se pudieron
  * cargar las métricas" que no distinguía sesión vencida de falta de permiso.
@@ -14,9 +14,16 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  Badge,
+  Button,
+  KpiCard,
+  PageHeader,
+  Section,
+  SegmentedControl,
+} from '@boletera/ui';
 import { adminApi } from '@/lib/api';
-import platform from '../_styles/platform.module.scss';
 import styles from './analytics.module.scss';
 import { EmptyBlock, ResourceView } from '../orders/_ui/States';
 import { useResource } from '../orders/_ui/useResource';
@@ -29,6 +36,8 @@ const PERIODS: [Period, string, string][] = [
   ['WEEK', 'Semana', 'esta semana'],
   ['MONTH', 'Mes', 'este mes'],
 ];
+
+const PERIOD_OPTIONS = PERIODS.map(([value, label]) => ({ value, label }));
 
 type PromoterDashboard = {
   organizationId: string;
@@ -66,25 +75,20 @@ export default function AnalyticsPage() {
 
   return (
     <div className={styles.wrap}>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Analítica</h1>
-          <p>Rendimiento de ventas {periodLabel}</p>
-        </div>
-        <div className={styles.periodTabs} role="group" aria-label="Periodo">
-          {PERIODS.map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={period === id}
-              className={period === id ? styles.tabOn : styles.tab}
-              onClick={() => setPeriod(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Ventas"
+        title="Analítica"
+        description={`Rendimiento de ventas ${periodLabel}`}
+        actions={
+          <SegmentedControl
+            label="Periodo"
+            size="sm"
+            options={PERIOD_OPTIONS}
+            value={period}
+            onValueChange={(value) => setPeriod(value as Period)}
+          />
+        }
+      />
 
       <ResourceView resource={resource} context="las métricas" loadingRows={4}>
         {(data) => <Dashboard data={data} />}
@@ -94,6 +98,7 @@ export default function AnalyticsPage() {
 }
 
 function Dashboard({ data }: { data: PromoterDashboard }) {
+  const router = useRouter();
   const metrics = data.metrics ?? {};
   const currency = (metrics.currency || 'MXN').toUpperCase();
   const topEvents = data.topEvents ?? [];
@@ -110,7 +115,12 @@ function Dashboard({ data }: { data: PromoterDashboard }) {
       {data.dateRange && (
         <p className={styles.muted}>
           Periodo {formatDate(data.dateRange.startDate)} – {formatDate(data.dateRange.endDate)}
-          {data.name && <> · {data.name}</>}
+          {data.name && (
+            <>
+              {' '}
+              · <Badge tone="neutral" variant="outline" size="sm">{data.name}</Badge>
+            </>
+          )}
         </p>
       )}
 
@@ -121,37 +131,38 @@ function Dashboard({ data }: { data: PromoterDashboard }) {
         />
       ) : (
         <>
-          <section className={styles.kpis}>
-            <article className={styles.kpiHero}>
-              <span>Ingresos brutos</span>
-              <strong>{formatMoney(metrics.totalRevenue, currency)}</strong>
-            </article>
-            <article>
-              <span>Órdenes</span>
-              <strong>{formatNumber(metrics.totalOrders)}</strong>
-            </article>
-            <article>
-              <span>Boletos vendidos</span>
-              <strong>{formatNumber(metrics.totalTicketsSold)}</strong>
-            </article>
-            <article>
-              <span>Comisión</span>
-              <strong>{formatMoney(metrics.commission, currency)}</strong>
-            </article>
-            <article>
-              <span>Neto al promotor</span>
-              <strong>{formatMoney(metrics.netRevenue, currency)}</strong>
-            </article>
-          </section>
+          <Section columns={4} gap="md" className={styles.kpiStrip} aria-label="Indicadores del periodo">
+            <KpiCard
+              label="Ingresos brutos"
+              value={formatMoney(metrics.totalRevenue, currency)}
+              tone="accent"
+              unit={currency}
+            />
+            <KpiCard label="Órdenes" value={formatNumber(metrics.totalOrders)} />
+            <KpiCard label="Boletos vendidos" value={formatNumber(metrics.totalTicketsSold)} />
+            <KpiCard label="Comisión" value={formatMoney(metrics.commission, currency)} unit={currency} />
+            <KpiCard
+              label="Neto al promotor"
+              value={formatMoney(metrics.netRevenue, currency)}
+              tone="success"
+              unit={currency}
+            />
+          </Section>
 
-          <section className={styles.panel}>
-            <div className={styles.panelHead}>
-              <h2>Eventos con más ingresos</h2>
-              <Link href="/events" className={platform.ghostBtn}>
+          <Section
+            title="Eventos con más ingresos"
+            className={styles.panel}
+            actions={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/events')}
+              >
                 Ver eventos
-              </Link>
-            </div>
-
+              </Button>
+            }
+          >
             {topEvents.length === 0 ? (
               <EmptyBlock
                 title="Sin eventos con ventas en este periodo"
@@ -165,13 +176,14 @@ function Dashboard({ data }: { data: PromoterDashboard }) {
                     <li key={e.eventId}>
                       <div className={styles.barMeta}>
                         <strong>
-                          <span className={styles.rank}>{i + 1}</span>
+                          <Badge tone="accent" variant="solid" size="sm" className={styles.rank}>
+                            {i + 1}
+                          </Badge>
                           {e.eventTitle}
                         </strong>
                         {/* Las cifras van en texto; la barra es solo apoyo visual. */}
                         <span>
-                          {formatNumber(e.orders)} órdenes ·{' '}
-                          {formatMoney(e.revenue, currency)}
+                          {formatNumber(e.orders)} órdenes · {formatMoney(e.revenue, currency)}
                         </span>
                       </div>
                       <div className={styles.barTrack} aria-hidden="true">
@@ -182,7 +194,7 @@ function Dashboard({ data }: { data: PromoterDashboard }) {
                 })}
               </ul>
             )}
-          </section>
+          </Section>
         </>
       )}
     </>

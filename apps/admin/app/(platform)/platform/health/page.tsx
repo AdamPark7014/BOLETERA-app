@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { PageHeader } from '@boletera/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  KpiCard,
+  PageHeader,
+  Section,
+  Tabs,
+  formatNumber,
+  type BadgeTone,
+} from '@boletera/ui';
 import {
   getAdminReconciliation,
   getPlatformHealthChecks,
@@ -10,7 +20,6 @@ import {
   type ReconciliationReport,
 } from '@/lib/platform-api';
 import { useSession } from '@/lib/use-session';
-import platform from '../../_styles/platform.module.scss';
 import styles from './health.module.scss';
 
 type StatusFilter = 'all' | ReconciliationCheck['status'];
@@ -21,11 +30,11 @@ const STATUS_LABEL: Record<ReconciliationCheck['status'], string> = {
   error: 'Error',
 };
 
-function statusBadgeClass(status: ReconciliationCheck['status']) {
-  if (status === 'ok') return styles.badgeOk;
-  if (status === 'warn') return styles.badgeWarn;
-  return styles.badgeError;
-}
+const STATUS_TONE: Record<ReconciliationCheck['status'], BadgeTone> = {
+  ok: 'success',
+  warn: 'warning',
+  error: 'danger',
+};
 
 function formatSample(sample: Record<string, string | number | null>) {
   return Object.entries(sample)
@@ -79,37 +88,49 @@ export default function PlatformHealthPage() {
 
   if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
     return (
-      <div className={platform.panel}>
-        <h2>Acceso restringido</h2>
-        <p>Los diagnósticos operativos requieren rol ADMIN o SUPER_ADMIN.</p>
-        <Link href="/dashboard">Volver al inicio</Link>
+      <div className={styles.page}>
+        <PageHeader
+          eyebrow="Operaciones"
+          title="Salud operativa"
+          description="Diagnóstico de consistencia entre órdenes, pagos, boletos, inventario y reembolsos."
+        />
+        <Section title="Acceso restringido">
+          <p className={styles.muted}>
+            Los diagnósticos operativos requieren rol ADMIN o SUPER_ADMIN.{' '}
+            <Link href="/dashboard">Volver al inicio</Link>
+          </p>
+        </Section>
       </div>
     );
   }
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.page}>
       <PageHeader
+        eyebrow="Operaciones"
         title="Salud operativa"
         description="Diagnóstico de consistencia entre órdenes, pagos, boletos, inventario y reembolsos. Solo lectura — no corrige datos."
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            loading={loading}
+            loadingLabel="Actualizando…"
+            onClick={() => void load()}
+          >
+            Actualizar
+          </Button>
+        }
       />
 
-      <div className={styles.actions}>
-        <button
-          type="button"
-          className={platform.ghostBtn}
-          onClick={() => void load()}
-          disabled={loading}
-        >
-          {loading ? 'Actualizando…' : 'Actualizar'}
-        </button>
+      <div className={styles.toolbar}>
         {canPlatformWide ? (
           <label className={styles.muted}>
             <input
               type="checkbox"
               checked={platformWide}
               onChange={(e) => setPlatformWide(e.target.checked)}
-              style={{ marginRight: '0.4rem' }}
+              className={styles.checkbox}
             />
             Vista plataforma (cross-tenant)
           </label>
@@ -122,46 +143,59 @@ export default function PlatformHealthPage() {
         ) : null}
       </div>
 
-      {error ? <p className={styles.error} role="alert">{error}</p> : null}
-
-      {summary ? (
-        <section className={styles.kpis} aria-label="Resumen">
-          <article>
-            <span>Checks OK</span>
-            <strong>{summary.ok}</strong>
-          </article>
-          <article className={styles.kpiWarn}>
-            <span>Alertas</span>
-            <strong>{summary.warn}</strong>
-          </article>
-          <article className={styles.kpiError}>
-            <span>Errores</span>
-            <strong>{summary.error}</strong>
-          </article>
-          <article>
-            <span>Total checks</span>
-            <strong>{data?.checks.length ?? 0}</strong>
-          </article>
-        </section>
+      {error ? (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
       ) : null}
 
-      <div className={styles.filters} role="tablist" aria-label="Filtrar por estado">
-        {(['all', 'error', 'warn', 'ok'] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={filter === key}
-            className={filter === key ? styles.tabOn : styles.tab}
-            onClick={() => setFilter(key)}
-          >
-            {key === 'all' ? 'Todos' : STATUS_LABEL[key]}
-          </button>
-        ))}
-      </div>
+      {summary ? (
+        <Section columns={4} gap="md" aria-label="Resumen">
+          <KpiCard label="Checks OK" value={formatNumber(summary.ok)} tone="success" />
+          <KpiCard
+            label="Alertas"
+            value={formatNumber(summary.warn)}
+            tone={summary.warn > 0 ? 'warning' : 'neutral'}
+          />
+          <KpiCard
+            label="Errores"
+            value={formatNumber(summary.error)}
+            tone={summary.error > 0 ? 'danger' : 'neutral'}
+          />
+          <KpiCard label="Total checks" value={formatNumber(data?.checks.length ?? 0)} />
+        </Section>
+      ) : null}
 
-      <section className={platform.panel}>
-        <h2 className={platform.panelTitle}>Checks de reconciliación</h2>
+      <Tabs
+        label="Filtrar por estado"
+        variant="pill"
+        value={filter}
+        onValueChange={(id) => setFilter(id as StatusFilter)}
+        items={[
+          {
+            id: 'all',
+            label: 'Todos',
+            badge: data ? String(data.checks.length) : undefined,
+          },
+          {
+            id: 'error',
+            label: STATUS_LABEL.error,
+            badge: summary ? String(summary.error) : undefined,
+          },
+          {
+            id: 'warn',
+            label: STATUS_LABEL.warn,
+            badge: summary ? String(summary.warn) : undefined,
+          },
+          {
+            id: 'ok',
+            label: STATUS_LABEL.ok,
+            badge: summary ? String(summary.ok) : undefined,
+          },
+        ]}
+      />
+
+      <Section title="Checks de reconciliación">
         {loading && !data ? (
           <p className={styles.muted}>Cargando diagnósticos…</p>
         ) : checks.length === 0 ? (
@@ -169,15 +203,19 @@ export default function PlatformHealthPage() {
         ) : (
           <div className={styles.checkList}>
             {checks.map((check) => (
-              <article key={check.id} className={styles.checkCard}>
+              <Card key={check.id} variant="outline" padding="md" className={styles.checkCard}>
                 <div className={styles.checkHead}>
                   <div>
                     <h3>{check.label}</h3>
                     <p>{check.description}</p>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
-                    <span className={statusBadgeClass(check.status)}>{STATUS_LABEL[check.status]}</span>
-                    <span className={styles.count}>{check.count.toLocaleString('es-MX')} incidencias</span>
+                  <div className={styles.checkMeta}>
+                    <Badge tone={STATUS_TONE[check.status]} variant="soft" size="sm">
+                      {STATUS_LABEL[check.status]}
+                    </Badge>
+                    <span className={styles.count}>
+                      {check.count.toLocaleString('es-MX')} incidencias
+                    </span>
                   </div>
                 </div>
                 {check.samples.length > 0 ? (
@@ -189,11 +227,11 @@ export default function PlatformHealthPage() {
                     ))}
                   </ul>
                 ) : null}
-              </article>
+              </Card>
             ))}
           </div>
         )}
-      </section>
+      </Section>
     </div>
   );
 }

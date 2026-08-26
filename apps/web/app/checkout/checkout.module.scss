@@ -16,32 +16,34 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--bl-space-2-5) var(--bl-space-4);
-  margin-bottom: 1.15rem;
+  margin-bottom: 0.65rem;
   font-size: var(--bl-text-xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.stepDone {
-  color: var(--bl-success);
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
+.stepTrack {
+  height: 3px;
+  margin-bottom: 1.15rem;
+  background: var(--bl-border);
+  border-radius: 999px;
+  overflow: hidden;
 }
 
-.stepActive {
-  color: var(--bl-accent-text);
-}
-
-.stepTodo {
-  color: var(--bl-text-disabled);
+.stepProgress {
+  display: block;
+  width: 66%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--bl-accent), var(--bl-accent-hover));
+  border-radius: inherit;
 }
 
 .hero {
   margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-2);
 
   h1 {
     margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
@@ -60,7 +62,7 @@
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 20rem;
+  grid-template-columns: minmax(0, 1fr) 22rem;
   gap: var(--bl-space-5) var(--bl-space-6);
   align-items: start;
   margin-top: 1.25rem;
@@ -71,49 +73,65 @@
 }
 
 .formCol {
-  background: var(--bl-elevated);
-  border: 1px solid var(--bl-border);
-  padding: var(--bl-space-5) var(--bl-space-5) var(--bl-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-3);
 }
 
 .trust {
   display: flex;
   flex-wrap: wrap;
   gap: var(--bl-space-1-5);
-  margin-bottom: 0.9rem;
-
-  span {
-    font-size: var(--bl-text-2xs);
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: var(--bl-space-1) var(--bl-space-2);
-    border: 1px solid var(--bl-border);
-    color: var(--bl-text-secondary);
-  }
 }
 
 .banorteNote {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
-  padding: var(--bl-space-3) var(--bl-space-3);
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-3) var(--bl-space-4);
   background: var(--bl-surface);
   border: 1px solid var(--bl-border);
+  border-radius: var(--bl-radius-md, 8px);
   color: var(--bl-text-secondary);
   font-size: var(--bl-text-md);
   line-height: 1.4;
+
+  strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--bl-text-primary);
+    font-size: var(--bl-text-sm);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  p {
+    margin: var(--bl-space-0);
+  }
+}
+
+.banorteTrust {
+  margin-top: 0.5rem !important;
+  font-size: var(--bl-text-sm) !important;
+  color: var(--bl-text-tertiary) !important;
 }
 
 .banorteDemo {
   background: #fff7ed;
   border-color: #fdba74;
   color: #9a3412;
+
+  strong {
+    color: #9a3412;
+  }
+}
+
+.phoneField {
+  grid-column: 1 / -1;
 }
 
 .fieldGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--bl-space-3);
-  margin-bottom: 1rem;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -413,26 +431,25 @@
   }
 }
 
+.orderHeader {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--bl-space-3);
+  align-items: start;
+}
+
+.orderPoster {
+  overflow: hidden;
+  border-radius: var(--bl-radius-sm, 6px);
+}
+
 .lineItems {
-  padding: var(--bl-space-4) var(--bl-space-4);
-  background: var(--bl-elevated);
-  border: 1px solid var(--bl-border);
-}
-
-.summaryKicker {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-  font-size: var(--bl-text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--bl-text-tertiary);
-}
-
-.lineItems h2 {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-  font-size: var(--bl-text-xl);
-  font-weight: 700;
-  color: var(--bl-text-primary);
+  h2 {
+    margin: var(--bl-space-2) var(--bl-space-0) var(--bl-space-1);
+    font-size: var(--bl-text-xl);
+    font-weight: 700;
+    color: var(--bl-text-primary);
+  }
 }
 
 .lineMeta {
@@ -469,22 +486,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--bl-space-1-5);
-
-  li {
-    font-size: var(--bl-text-xs);
-    font-weight: 600;
-    padding: var(--bl-space-1) var(--bl-space-2);
-    background: var(--bl-surface);
-    border: 1px solid var(--bl-border);
-    color: var(--bl-text-secondary);
-  }
+  border-top: none;
+  padding-top: var(--bl-space-0);
 }
 
 .summary {
-  padding: var(--bl-space-4) var(--bl-space-4);
-  background: var(--bl-gray-900);
-  color: var(--bl-text-inverse);
-  border: 1px solid var(--bl-gray-900);
+  background: var(--bl-gray-900) !important;
+  color: var(--bl-text-inverse) !important;
+  border-color: var(--bl-gray-900) !important;
 
   div {
     display: flex;
@@ -504,12 +513,41 @@
   font-size: 1rem !important;
 }
 
-/* Transparencia PROFECO: el total ya lleva cargos e IVA, y se dice. */
 .totalNote {
   margin: var(--bl-space-2-5) var(--bl-space-0) var(--bl-space-0);
   font-size: var(--bl-text-xs);
   line-height: 1.45;
   color: rgba(250, 250, 250, 0.82);
+}
+
+.totalNoteMuted {
+  margin: var(--bl-space-0);
+  font-size: var(--bl-text-sm);
+  color: rgba(250, 250, 250, 0.82);
+}
+
+.promoOk {
+  margin: calc(-1 * var(--bl-space-2)) var(--bl-space-0) var(--bl-space-0);
+  font-size: var(--bl-text-xs);
+  color: var(--bl-success-text);
+  font-weight: 600;
+}
+
+.stepDone {
+  color: var(--bl-success);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.stepActive {
+  color: var(--bl-accent-text);
+}
+
+.stepTodo {
+  color: var(--bl-text-disabled);
 }
 
 .backCart {

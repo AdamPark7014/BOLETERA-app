@@ -1,4 +1,4 @@
-.wrap {
+.page {
   --ink: var(--bl-text-primary);
   --muted: var(--bl-text-tertiary);
   --border: var(--bl-border);
@@ -15,75 +15,54 @@
   display: flex;
   flex-direction: column;
   gap: var(--bl-space-5);
-  color: var(--ink);
-}
-
-.pageHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--bl-space-5);
-  flex-wrap: wrap;
-}
-
-.headerCopy {
   min-width: 0;
-}
-
-.eyebrowRow {
-  display: flex;
-  align-items: center;
-  gap: var(--bl-space-2-5);
-  flex-wrap: wrap;
-  margin-bottom: 0.375rem;
-}
-
-.eyebrow {
-  margin: var(--bl-space-0);
-  font-size: var(--bl-text-2xs);
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.pageHeader h1 {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-  font-size: clamp(1.5rem, 2vw, 1.875rem);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-}
-
-.lead {
-  margin: var(--bl-space-0);
-  color: var(--muted);
-  font-size: var(--bl-text-md);
-  max-width: 44rem;
-}
-
-.headerControls {
-  display: flex;
-  align-items: center;
-  gap: var(--bl-space-2);
-  flex-wrap: wrap;
+  color: var(--ink);
 }
 
 .eventSelect {
-  min-height: 2.5rem;
-  min-width: min(18rem, 75vw);
-  border-radius: var(--bl-radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  padding: var(--bl-space-2) var(--bl-space-3);
-  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-1-5);
+  min-width: 16rem;
+
+  label {
+    font-size: var(--bl-text-xs);
+    font-weight: 600;
+    color: var(--bl-text-secondary);
+  }
+
+  select {
+    min-height: 2.25rem;
+    min-width: min(18rem, 75vw);
+    border-radius: var(--bl-radius-md);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    padding: var(--bl-space-0) var(--bl-space-3);
+    font: inherit;
+  }
+
+  select:focus-visible {
+    outline: 3px solid var(--bl-info-border);
+    outline-offset: 2px;
+  }
 }
 
-.eventSelect:focus-visible,
-.input:focus-visible {
-  outline: 3px solid var(--bl-info-border);
-  outline-offset: 2px;
+.hubLink {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  padding: var(--bl-space-0) var(--bl-space-3);
+  border: 1px solid var(--bl-border);
+  border-radius: var(--bl-radius-md);
+  color: var(--bl-text-primary);
+  font-size: var(--bl-text-sm);
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--bl-surface);
+  }
 }
 
 .errorBanner {
@@ -118,18 +97,12 @@
   font-size: var(--bl-text-md);
 }
 
-.kpiGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--bl-space-3);
-
-  @media (min-width: 720px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  @media (min-width: 1100px) {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
+.panel {
+  padding: var(--bl-space-4) var(--bl-space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--bl-radius-lg);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 2%);
 }
 
 .healthGrid {
@@ -191,36 +164,6 @@
     margin: var(--bl-space-0);
     font-variant-numeric: tabular-nums;
     font-weight: 600;
-  }
-}
-
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--bl-radius-lg);
-  padding: var(--bl-space-5) var(--bl-space-5) var(--bl-space-5);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 2%);
-  min-width: 0;
-}
-
-.panelHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--bl-space-4);
-  margin-bottom: 1rem;
-
-  h2 {
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-0-5);
-    font-size: var(--bl-text-lg);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-
-  p {
-    margin: var(--bl-space-0);
-    font-size: var(--bl-text-sm);
-    color: var(--muted);
   }
 }
 
@@ -368,6 +311,11 @@
   box-sizing: border-box;
 }
 
+.input:focus-visible {
+  outline: 3px solid var(--bl-info-border);
+  outline-offset: 2px;
+}
+
 .input:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -506,11 +454,8 @@
 }
 
 @media (max-width: 640px) {
-  .headerControls {
-    width: 100%;
-  }
-
   .eventSelect {
+    min-width: 0;
     width: 100%;
   }
 

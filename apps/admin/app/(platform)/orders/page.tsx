@@ -13,9 +13,17 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  Card,
+  KpiCard,
+  PageHeader,
+  SearchInput,
+  Section,
+  formatNumber,
+} from '@boletera/ui';
 import { adminApi, ApiError, getStoredToken } from '@/lib/api';
-import platform from '../_styles/platform.module.scss';
 import styles from './orders.module.scss';
+import platform from '../_styles/platform.module.scss';
 import { EmptyBlock, Notice, ResourceView } from './_ui/States';
 import { useResource } from './_ui/useResource';
 import { formatDateTime, formatMoney, toNumber } from './_ui/format';
@@ -56,16 +64,17 @@ export default function OrdersPage() {
   );
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Órdenes</h1>
-          <p>Consulta, conciliación y reembolsos</p>
-        </div>
-        <Link href="/orders/refunds" className={platform.ghostBtn}>
-          Reembolsos abiertos
-        </Link>
-      </header>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Ventas"
+        title="Órdenes"
+        description="Consulta, conciliación y reembolsos sobre las órdenes más recientes"
+        actions={
+          <Link href="/orders/refunds" className={platform.ghostBtn}>
+            Reembolsos abiertos
+          </Link>
+        }
+      />
 
       <ResourceView resource={resource} context="las órdenes" loadingRows={6}>
         {(orders) => <OrdersTable orders={orders} />}
@@ -155,8 +164,33 @@ function OrdersTable({ orders }: { orders: OrderRow[] }) {
 
   const canLookup = FOLIO_RE.test(q.trim()) && filtered.length === 0;
 
+  const completedCount = useMemo(
+    () => orders.filter((o) => o.status === 'COMPLETED' || o.status === 'PARTIALLY_REFUNDED').length,
+    [orders],
+  );
+
   return (
     <>
+      <Section columns={4} gap="md" className={styles.kpiStrip}>
+        <KpiCard label="Órdenes cargadas" value={formatNumber(orders.length)} tone="accent" />
+        <KpiCard
+          label="Requieren acción"
+          value={formatNumber(attention.length)}
+          tone={attention.length > 0 ? 'warning' : 'neutral'}
+          invertDelta
+        />
+        <KpiCard label="Completadas" value={formatNumber(completedCount)} tone="success" />
+        <KpiCard
+          label="Cobrado (muestra)"
+          value={
+            totals.length > 0
+              ? totals.map(([cur, amount]) => formatMoney(amount, cur)).join(' · ')
+              : '—'
+          }
+          hint="Solo sobre las órdenes listadas"
+        />
+      </Section>
+
       {attention.length > 0 && (
         <Notice
           tone="danger"
@@ -179,26 +213,20 @@ function OrdersTable({ orders }: { orders: OrderRow[] }) {
       )}
 
       <div className={styles.toolbar}>
-        <div className={styles.search}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-            <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-          <input
-            id="orders-search"
-            type="search"
-            aria-label="Buscar por folio, correo, comprador o evento"
-            placeholder="Folio, correo, comprador o evento…"
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setLookup({ busy: false, message: null });
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && canLookup) void lookupFolio();
-            }}
-          />
-        </div>
+        <SearchInput
+          value={q}
+          onValueChange={(value) => {
+            setQ(value);
+            setLookup({ busy: false, message: null });
+          }}
+          placeholder="Folio, correo, comprador o evento…"
+          aria-label="Buscar por folio, correo, comprador o evento"
+          className={styles.searchInput}
+          inputSize="sm"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && canLookup) void lookupFolio();
+          }}
+        />
 
         <div className={styles.filters} role="group" aria-label="Filtrar por canal">
           {channels.map((c) => (
@@ -258,7 +286,7 @@ function OrdersTable({ orders }: { orders: OrderRow[] }) {
         )}
       </p>
 
-      <section className={platform.panel}>
+      <Card padding="md">
         <table className={platform.table}>
           <caption className={styles.srOnly}>
             Órdenes recientes con folio, evento, comprador, canal, pago, total y estado
@@ -356,7 +384,7 @@ function OrdersTable({ orders }: { orders: OrderRow[] }) {
             )}
           </tbody>
         </table>
-      </section>
+      </Card>
     </>
   );
 }

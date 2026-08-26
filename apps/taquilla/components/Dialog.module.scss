@@ -65,6 +65,14 @@
       outline: 2px solid var(--accent);
       outline-offset: 1px;
     }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--text);
+      box-shadow: 0 0 0 1000px var(--bg-deep) inset;
+      transition: background-color 5000s ease-in-out 0s;
+    }
   }
 }
 
@@ -72,6 +80,14 @@
   letter-spacing: 0.5em;
   text-align: center;
   font-size: 30px !important;
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text);
+    box-shadow: 0 0 0 1000px var(--bg-deep) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
 }
 
 .error {
@@ -123,6 +139,12 @@
   background: var(--accent) !important;
   color: var(--accent-fg) !important;
   border-color: var(--accent) !important;
+  box-shadow: none !important;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover) !important;
+    border-color: var(--accent-hover) !important;
+  }
 }
 
 .danger {

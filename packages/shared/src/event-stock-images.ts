@@ -35,6 +35,126 @@ export type EventCategoryKey =
   | 'FESTIVAL'
   | 'EXPERIENCE';
 
+/** Diapositivas del hero de la home (Unsplash, uso decorativo). */
+export type HomeHeroSlide = {
+  url: string;
+  label: string;
+  alt: string;
+};
+
+/** URL optimizada para fondos hero (WebP, ~1280px — balance peso/calidad). */
+export function heroImageSrc(url: string, width = 1280): string {
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.set('auto', 'format');
+    parsed.searchParams.set('fit', 'crop');
+    parsed.searchParams.set('w', String(width));
+    parsed.searchParams.set('q', '75');
+    parsed.searchParams.set('fm', 'webp');
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+export const HOME_HERO_SLIDES: readonly HomeHeroSlide[] = [
+  {
+    url: '/hero/01-festival.jpg',
+    label: 'Festivales',
+    alt: 'Multitud en un festival al aire libre con luces de escenario',
+  },
+  {
+    url: '/hero/02-concert.jpg',
+    label: 'Conciertos',
+    alt: 'Público en un concierto con manos levantadas',
+  },
+  {
+    url: '/hero/03-electro.jpg',
+    label: 'Electrónica',
+    alt: 'DJ en cabina con luces láser en un club',
+  },
+  {
+    url: '/hero/04-experience.jpg',
+    label: 'Experiencias',
+    alt: 'Escenario iluminado en un festival nocturno',
+  },
+  {
+    url: '/hero/05-indie.jpg',
+    label: 'Indie & rock',
+    alt: 'Artista en escenario con guitarra eléctrica',
+  },
+] as const;
+
+/** Diapositivas con `src` listo para <Image> / preload. */
+export const HOME_HERO_SLIDE_SRCS = HOME_HERO_SLIDES.map((slide) => ({
+  ...slide,
+  src: slide.url.startsWith('/') ? slide.url : heroImageSrc(slide.url),
+  srcMobile: slide.url.startsWith('/') ? slide.url : heroImageSrc(slide.url, 900),
+})) as readonly (HomeHeroSlide & { src: string; srcMobile: string })[];
+
+/** Tarjetas de marketing cuando la cartelera está vacía (no son eventos reales). */
+export type CuratedMarketingCard = {
+  title: string;
+  subtitle: string;
+  href: string;
+  image: string;
+};
+
+export const CURATED_MARKETING_CARDS: readonly CuratedMarketingCard[] = [
+  {
+    title: 'Conciertos en vivo',
+    subtitle: 'Rock, pop, indie y más',
+    href: '/categoria/MUSIC',
+    image: EVENT_STOCK_IMAGES.MUSIC,
+  },
+  {
+    title: 'Festivales',
+    subtitle: 'Varios días, varios escenarios',
+    href: '/categoria/FESTIVAL',
+    image: EVENT_STOCK_IMAGES.FESTIVAL,
+  },
+  {
+    title: 'Electrónica & DJs',
+    subtitle: 'Clubes y festivales nocturnos',
+    href: '/categoria/MUSIC',
+    image: EVENT_STOCK_IMAGES.ELECTRO,
+  },
+  {
+    title: 'Deportes',
+    subtitle: 'Liga MX, NBA y eventos en vivo',
+    href: '/categoria/SPORTS',
+    image: EVENT_STOCK_IMAGES.SPORTS,
+  },
+] as const;
+
+/** Fotos de ciudades para tarjetas de la home (fallback por gradiente si no hay match). */
+export const CITY_STOCK_IMAGES: Record<string, string> = {
+  'Ciudad de México':
+    'https://images.unsplash.com/photo-1518654842511-9a1f7e4c8735?auto=format&fit=crop&w=800&q=80',
+  CDMX:
+    'https://images.unsplash.com/photo-1518654842511-9a1f7e4c8735?auto=format&fit=crop&w=800&q=80',
+  Monterrey:
+    'https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=800&q=80',
+  Guadalajara:
+    'https://images.unsplash.com/photo-1595458258940-d09f334b9f58?auto=format&fit=crop&w=800&q=80',
+  Puebla:
+    'https://images.unsplash.com/photo-1585464231875-d8ef2f4d5041?auto=format&fit=crop&w=800&q=80',
+  Cancún:
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+  'Playa del Carmen':
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+  Tijuana:
+    'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
+  Querétaro:
+    'https://images.unsplash.com/photo-1469854523086-cc02afe5c880?auto=format&fit=crop&w=800&q=80',
+  León:
+    'https://images.unsplash.com/photo-1469854523086-cc02afe5c880?auto=format&fit=crop&w=800&q=80',
+};
+
+export function cityStockImage(city: string): string | undefined {
+  return CITY_STOCK_IMAGES[city];
+}
+
 /** Imagen por categoría cuando el evento no tiene `image` en BD. */
 export function stockImageForCategory(category?: string | null, seed?: string): string {
   switch (category) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { Badge, StatusDot } from '@boletera/ui';
 import { TOKEN_WARN_MINUTES, tokenTimeLeftMs } from '@/lib/auth';
 import { getQueueSize } from '@/lib/offline-queue';
 import { listConflicts, pendingScanCount } from '@/lib/scan-queue';
@@ -53,34 +54,42 @@ export function useOpsStatus(): OpsStatus {
 
 export function NetStatus({ status }: { status: OpsStatus }) {
   const pending = status.pendingSales + status.pendingScans;
-  // Se deriva del estado (que se llena tras montar) y no de localStorage en
-  // pleno render: leer almacenamiento al pintar provoca desajuste de hidratación.
   const warnToken = status.tokenMinutesLeft != null && status.tokenMinutesLeft <= TOKEN_WARN_MINUTES;
 
   return (
     <div className={styles.wrap}>
-      <span className={`${styles.chip} ${status.online ? styles.on : styles.off}`}>
-        <span className={`${styles.dot} ${status.online ? '' : styles.pulse}`} />
-        {status.online ? 'En línea' : 'Sin red · cola local'}
+      <span className={styles.statusLine}>
+        <StatusDot
+          tone={status.online ? 'success' : 'warning'}
+          pulse={!status.online}
+          label={status.online ? 'En línea' : 'Sin red · cola local'}
+        />
       </span>
 
       {pending > 0 && (
-        <span className={`${styles.chip} ${styles.pending}`} title="Operaciones sin sincronizar">
+        <Badge
+          tone="neutral"
+          variant="outline"
+          className={styles.chip}
+          title="Operaciones sin sincronizar"
+        >
           {pending} pendiente{pending === 1 ? '' : 's'}
-          {status.pendingScans > 0 ? ` · ${status.pendingScans} escaneo${status.pendingScans === 1 ? '' : 's'}` : ''}
-        </span>
+          {status.pendingScans > 0
+            ? ` · ${status.pendingScans} escaneo${status.pendingScans === 1 ? '' : 's'}`
+            : ''}
+        </Badge>
       )}
 
       {status.conflicts > 0 && (
-        <span className={`${styles.chip} ${styles.conflict}`}>
+        <Badge tone="danger" variant="soft" dot className={styles.chip}>
           {status.conflicts} conflicto{status.conflicts === 1 ? '' : 's'}
-        </span>
+        </Badge>
       )}
 
       {warnToken && status.tokenMinutesLeft != null && (
-        <span className={`${styles.chip} ${styles.expiring}`}>
+        <Badge tone="warning" variant="soft" className={styles.chip}>
           Sesión: {status.tokenMinutesLeft} min
-        </span>
+        </Badge>
       )}
     </div>
   );

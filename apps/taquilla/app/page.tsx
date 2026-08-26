@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@boletera/ui';
 import {
   apiJson,
   clearTaquillaSession,
@@ -37,6 +38,86 @@ type EventRow = {
   venue?: { name: string };
   offers?: { id: string; name?: string; zone?: string; basePrice: string | number }[];
 };
+
+function BrandMark() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <rect width="32" height="32" rx="9" fill="var(--bl-accent)" />
+      <path d="M9 11h14M9 16h14M9 21h9" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="22" cy="21" r="2.5" fill="#fff" />
+    </svg>
+  );
+}
+
+function IconVenta() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M7 10h10M7 14h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconBuscar() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M16 16l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconWillCall() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 3h12v18l-6-4-6 4V3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9 8h6M9 12h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconAcceso() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconReprint() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 9V4h12v5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <rect x="4" y="9" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 14h8M8 17h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCorte() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M7 12h2M15 12h2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconAjustes() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 export default function TaquillaHome() {
   const router = useRouter();
@@ -222,17 +303,12 @@ export default function TaquillaHome() {
       <header className={styles.topbar}>
         <div className={styles.topLeft}>
           <span className={styles.brand}>
-            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <rect width="32" height="32" rx="9" fill="var(--bl-gray-100)" />
-              <path d="M9 11h14M9 16h14M9 21h9" stroke="var(--bl-gray-900)" strokeWidth="2.4" strokeLinecap="round" />
-              <circle cx="22" cy="21" r="2.5" fill="var(--bl-gray-900)" />
-            </svg>
-            TAQUILLA
+            <BrandMark />
+            BOLETERA · TAQUILLA
           </span>
-          <span className={styles.terminal}>
-            <small>Terminal</small>
-            <strong>{terminalLabel}</strong>
-          </span>
+          <Badge tone="accent" variant="soft" className={styles.terminalBadge}>
+            {terminalLabel}
+          </Badge>
         </div>
 
         <div className={styles.topCenter}>
@@ -320,38 +396,45 @@ export default function TaquillaHome() {
           </div>
         </section>
 
-        <section className={styles.quickActions}>
+        <section className={styles.quickActions} aria-label="Módulos de taquilla">
           <Link href="/venta" className={`${styles.actionCard} ${styles.primary}`}>
+            <span className={styles.cardIcon}><IconVenta /></span>
             <strong>Nueva venta</strong>
             <span>Cobrar en mostrador</span>
             <kbd>F1</kbd>
           </Link>
           <Link href="/buscar" className={styles.actionCard}>
+            <span className={styles.cardIcon}><IconBuscar /></span>
             <strong>Buscar</strong>
             <span>Boleto u orden</span>
             <kbd>F3</kbd>
           </Link>
           <Link href="/willcall" className={styles.actionCard}>
+            <span className={styles.cardIcon}><IconWillCall /></span>
             <strong>Will-call</strong>
             <span>Entrega en taquilla</span>
             <kbd>F4</kbd>
           </Link>
           <Link href="/acceso" className={styles.actionCard}>
+            <span className={styles.cardIcon}><IconAcceso /></span>
             <strong>Acceso</strong>
             <span>Puerta y manifiesto</span>
             <kbd>F6</kbd>
           </Link>
           <button type="button" className={styles.actionCard} onClick={reprint}>
+            <span className={styles.cardIcon}><IconReprint /></span>
             <strong>Reimprimir</strong>
             <span>{lastReceipt ? lastReceipt.receiptNumber : 'Sin venta reciente'}</span>
             <kbd>F7</kbd>
           </button>
           <Link href="/corte" className={styles.actionCard}>
+            <span className={styles.cardIcon}><IconCorte /></span>
             <strong>Turno y caja</strong>
             <span>Arqueo, retiro, corte</span>
             <kbd>F12</kbd>
           </Link>
           <Link href="/ajustes" className={styles.actionCard}>
+            <span className={styles.cardIcon}><IconAjustes /></span>
             <strong>Ajustes</strong>
             <span>Impresora y terminal</span>
           </Link>

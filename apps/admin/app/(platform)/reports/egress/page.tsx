@@ -3,12 +3,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
+  Button,
+  KpiCard,
+  PageHeader,
+  Section,
+  SegmentedControl,
+  formatDateTime,
+  formatNumber,
+} from '@boletera/ui';
+import {
   downloadEgressOverviewCsv,
   getEgressOverview,
   type EgressOverviewResponse,
   type EgressOverviewVenue,
 } from '@/lib/platform-api';
 import platform from '../../_styles/platform.module.scss';
+import orderStyles from '../../orders/orders.module.scss';
+import { EmptyBlock, Notice } from '../../orders/_ui/States';
+import reportStyles from '../reports.module.scss';
 import styles from './egress.module.scss';
 
 type StatusFilter = 'all' | EgressOverviewVenue['status'];
@@ -21,12 +33,18 @@ const STATUS_LABEL: Record<EgressOverviewVenue['status'], string> = {
   empty: 'Vacío',
 };
 
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'Todos' },
+  { value: 'critical', label: 'Críticos' },
+  { value: 'warn', label: 'Alertas' },
+  { value: 'ok', label: 'OK' },
+  { value: 'no-network', label: 'Sin red' },
+  { value: 'empty', label: 'Vacíos' },
+] as const;
+
 function fmtNum(n: number | null | undefined, digits = 1) {
   if (n == null || !Number.isFinite(n)) return '—';
-  return n.toLocaleString('es-MX', {
-    maximumFractionDigits: digits,
-    minimumFractionDigits: 0,
-  });
+  return formatNumber(n, digits);
 }
 
 function statusClass(status: EgressOverviewVenue['status']) {
@@ -74,100 +92,126 @@ export default function EgressOverviewPage() {
   }, [data, filter]);
 
   const counts = data?.counts;
+  const totalVenues = data?.venues.length ?? 0;
+  const offlineCount =
+    counts == null ? null : (counts.noNetwork ?? 0) + (counts.empty ?? 0);
 
   return (
-    <div className={styles.wrap}>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Egress por venue</h1>
-          <p>Salud de circulación y vaciado en todos los venues de la organización</p>
+    <div className={reportStyles.page}>
+      <PageHeader
+        eyebrow="Operaciones"
+        title="Egress por venue"
+        description="Salud de circulación y vaciado en todos los venues de la organización"
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              loading={loading}
+              loadingLabel="Actualizando…"
+              onClick={() => void load()}
+            >
+              Actualizar
+            </Button>
+            <Button
+              type="button"
+              loading={exporting}
+              loadingLabel="Exportando…"
+              disabled={!data}
+              onClick={async () => {
+                const token = localStorage.getItem('boletera_token');
+                if (!token) return;
+                try {
+                  setExporting(true);
+                  await downloadEgressOverviewCsv(token);
+                } catch {
+                  setError('No se pudo exportar el CSV');
+                } finally {
+                  setExporting(false);
+                }
+              }}
+            >
+              Exportar CSV
+            </Button>
+          </>
+        }
+      />
+
+      {error ? <Notice tone="danger" title={error} /> : null}
+
+      <Section columns={4} gap="md" className={reportStyles.kpiStrip}>
+        <KpiCard
+          label="OK"
+          value={counts?.ok ?? '—'}
+          tone="success"
+          loading={loading}
+          hint={totalVenues ? `${formatNumber(totalVenues)} venues analizados` : undefined}
+        />
+        <KpiCard
+          label="Alertas"
+          value={counts?.warn ?? '—'}
+          tone="warning"
+          loading={loading}
+        />
+        <KpiCard
+          label="Críticos"
+          value={counts?.critical ?? '—'}
+          tone="danger"
+          loading={loading}
+        />
+        <KpiCard
+          label="Sin red / vacío"
+          value={offlineCount ?? '—'}
+          tone="neutral"
+          loading={loading}
+        />
+      </Section>
+
+      <section className={reportStyles.panel}>
+        <div className={reportStyles.panelHead}>
+          <h2>Detalle por venue</h2>
+          <SegmentedControl
+            label="Estado"
+            size="sm"
+            options={FILTER_OPTIONS.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+            value={filter}
+            onValueChange={(value) => setFilter(value as StatusFilter)}
+          />
         </div>
-        <div className={styles.actions}>
-          <button type="button" className={platform.ghostBtn} onClick={() => void load()} disabled={loading}>
-            Actualizar
-          </button>
-          <button
-            type="button"
-            className={platform.primaryBtn}
-            disabled={exporting || !data}
-            onClick={async () => {
-              const token = localStorage.getItem('boletera_token');
-              if (!token) return;
-              try {
-                setExporting(true);
-                await downloadEgressOverviewCsv(token);
-              } catch {
-                setError('No se pudo exportar el CSV');
-              } finally {
-                setExporting(false);
-              }
-            }}
-          >
-            {exporting ? 'Exportando…' : 'Exportar CSV'}
-          </button>
-        </div>
-      </header>
 
-      {error ? <p className={styles.error}>{error}</p> : null}
-
-      <section className={styles.kpis}>
-        <article>
-          <span>OK</span>
-          <strong>{counts?.ok ?? '—'}</strong>
-        </article>
-        <article className={styles.kpiWarn}>
-          <span>Alertas</span>
-          <strong>{counts?.warn ?? '—'}</strong>
-        </article>
-        <article className={styles.kpiCritical}>
-          <span>Críticos</span>
-          <strong>{counts?.critical ?? '—'}</strong>
-        </article>
-        <article>
-          <span>Sin red / vacío</span>
-          <strong>
-            {counts == null ? '—' : (counts.noNetwork ?? 0) + (counts.empty ?? 0)}
-          </strong>
-        </article>
-      </section>
-
-      <div className={styles.filters}>
-        {(
-          [
-            ['all', 'Todos'],
-            ['critical', 'Críticos'],
-            ['warn', 'Alertas'],
-            ['ok', 'OK'],
-            ['no-network', 'Sin red'],
-            ['empty', 'Vacíos'],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            className={filter === key ? styles.tabOn : styles.tab}
-            onClick={() => setFilter(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <section className={platform.panel}>
         {loading ? (
           <p className={styles.muted}>Analizando layouts…</p>
+        ) : rows.length === 0 ? (
+          <EmptyBlock
+            title="No hay venues en este filtro"
+            hint="Prueba otro estado o exporta el CSV para revisar offline."
+          />
         ) : (
           <table className={platform.table}>
+            <caption className={orderStyles.srOnly}>Salud de egress por venue</caption>
             <thead>
               <tr>
-                <th>Estado</th>
-                <th>Venue</th>
-                <th>Secciones</th>
-                <th>Sin acceso</th>
-                <th>Vaciado (min)</th>
-                <th>Ruta máx.</th>
-                <th>Bottleneck</th>
-                <th></th>
+                <th scope="col">Estado</th>
+                <th scope="col">Venue</th>
+                <th scope="col" className={orderStyles.numeric}>
+                  Secciones
+                </th>
+                <th scope="col" className={orderStyles.numeric}>
+                  Sin acceso
+                </th>
+                <th scope="col" className={orderStyles.numeric}>
+                  Vaciado (min)
+                </th>
+                <th scope="col" className={orderStyles.numeric}>
+                  Ruta máx.
+                </th>
+                <th scope="col">Bottleneck</th>
+                <th scope="col">
+                  <span className={orderStyles.srOnly}>Acciones</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -179,13 +223,11 @@ export default function EgressOverviewPage() {
                     </span>
                     <div className={styles.reason}>{v.statusReason}</div>
                   </td>
-                  <td>
-                    <strong>{v.venueName}</strong>
-                  </td>
-                  <td>{v.sections}</td>
-                  <td>{v.unreachable}</td>
-                  <td>{fmtNum(v.clearanceMinutes)}</td>
-                  <td>{fmtNum(v.maxPathLength, 0)}</td>
+                  <th scope="row">{v.venueName}</th>
+                  <td className={orderStyles.numeric}>{v.sections}</td>
+                  <td className={orderStyles.numeric}>{v.unreachable}</td>
+                  <td className={orderStyles.numeric}>{fmtNum(v.clearanceMinutes)}</td>
+                  <td className={orderStyles.numeric}>{fmtNum(v.maxPathLength, 0)}</td>
                   <td>
                     {v.topBottleneckUtilization != null
                       ? `${Math.round(v.topBottleneckUtilization * 100)}%`
@@ -201,19 +243,13 @@ export default function EgressOverviewPage() {
                   </td>
                 </tr>
               ))}
-              {!rows.length ? (
-                <tr>
-                  <td colSpan={8} className={styles.muted}>
-                    No hay venues en este filtro
-                  </td>
-                </tr>
-              ) : null}
             </tbody>
           </table>
         )}
+
         {data?.generatedAt ? (
-          <p className={styles.footer}>
-            Generado {new Date(data.generatedAt).toLocaleString('es-MX')}
+          <p className={reportStyles.footerNote}>
+            Generado {formatDateTime(data.generatedAt)}
           </p>
         ) : null}
       </section>

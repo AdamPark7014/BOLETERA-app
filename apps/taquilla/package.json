@@ -9,6 +9,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@boletera/shared": "workspace:*",
     "@boletera/ui": "workspace:*",
     "@boletera/venue-engine": "workspace:*",
     "next": "^16.2.0",

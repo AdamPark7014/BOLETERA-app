@@ -113,6 +113,10 @@
   align-items: center;
 }
 
+.kpiStrip {
+  margin-top: calc(var(--bl-space-2) * -1);
+}
+
 .statStrip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -120,29 +124,6 @@
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr 1fr;
-  }
-}
-
-.statItem {
-  padding: var(--bl-space-3) var(--bl-space-3);
-  border-radius: var(--bl-radius-lg);
-  background: var(--bl-surface);
-  border: 1px solid var(--bl-gray-100);
-
-  span {
-    display: block;
-    font-size: var(--bl-text-2xs);
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--bl-text-tertiary);
-    margin-bottom: 0.35rem;
-  }
-
-  strong {
-    font-size: var(--bl-text-xl);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
   }
 }
 

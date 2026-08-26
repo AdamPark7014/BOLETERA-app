@@ -28,6 +28,11 @@
   justify-content: space-between;
 }
 
+.filterBar {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .filterMeta {
   display: flex;
   flex-wrap: wrap;
@@ -441,6 +446,23 @@
   flex-wrap: wrap;
   gap: var(--bl-space-2);
   align-items: center;
+}
+
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bl-space-2);
+}
+
+.publishNotice {
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-2-5) var(--bl-space-3);
+  border-radius: var(--bl-radius-md);
+  background: var(--sunken);
+  color: var(--ink);
+  font-size: var(--bl-text-sm);
+  line-height: 1.4;
 }
 
 .studioFrame {

@@ -17,6 +17,7 @@ import {
   type FilterSelection,
 } from '@boletera/ui';
 import { QueryError } from '@/components/QueryStates';
+import { Notice } from '../orders/_ui/States';
 import { useToast } from '@/components/Toast/ToastProvider';
 import {
   useCreateMembershipPlan,
@@ -282,9 +283,9 @@ function MembershipsCockpit() {
   return (
     <div className={styles.page}>
       <PageHeader
-        eyebrow="Retención y valor recurrente"
+        eyebrow="Retención"
         title="Membresías"
-        description="Tiers, beneficios, adopción, renovación e ingresos recurrentes con datos reales de la API."
+        description="Tiers, beneficios, adopción, renovación e ingresos recurrentes"
         actions={
           <Button
             type="button"
@@ -298,21 +299,25 @@ function MembershipsCockpit() {
       />
 
       {primaryUnavailable ? (
-        <div className={styles.unavailableBanner} role="status">
-          <strong>API de membresías pendiente</strong>
+        <Notice
+          tone="warn"
+          title="API de membresías pendiente"
+          actions={
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => void plansQuery.refetch()}
+            >
+              Reintentar
+            </Button>
+          }
+        >
           <p>
             Los paneles esperan contratos en /memberships/organization/:orgId. No se muestran
             plantillas ni proyecciones inventadas como métricas reales.
           </p>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={() => void plansQuery.refetch()}
-          >
-            Reintentar
-          </Button>
-        </div>
+        </Notice>
       ) : null}
 
       {alerts.length > 0 && !primaryUnavailable ? (
@@ -328,7 +333,7 @@ function MembershipsCockpit() {
         </div>
       ) : null}
 
-      <Section columns={4} gap="sm" aria-label="Indicadores de membresías">
+      <Section columns={4} gap="md" className={styles.kpiStrip} aria-label="Indicadores de membresías">
         <KpiCard
           label="Miembros activos"
           value={primaryUnavailable ? '—' : formatCount(kpis.activeMembers)}
@@ -367,16 +372,18 @@ function MembershipsCockpit() {
         />
       </Section>
 
-      <SegmentedControl
-        label="Vista de membresías"
-        size="sm"
-        value={url.tab}
-        onValueChange={(value) => url.setTab(value)}
-        options={[
-          { value: 'tiers', label: 'Tiers y adopción' },
-          { value: 'renewals', label: 'Renovación y retención' },
-        ]}
-      />
+      <div className={styles.toolbar}>
+        <SegmentedControl
+          label="Vista de membresías"
+          size="sm"
+          value={url.tab}
+          onValueChange={(value) => url.setTab(value)}
+          options={[
+            { value: 'tiers', label: 'Tiers y adopción' },
+            { value: 'renewals', label: 'Renovación y retención' },
+          ]}
+        />
+      </div>
 
       {url.tab === 'renewals' ? (
         <RenewalPanel
@@ -530,8 +537,10 @@ export default function MembershipsPage() {
   return (
     <Suspense
       fallback={
-        <div className={styles.page} role="status" aria-live="polite">
-          Cargando membresías…
+        <div className={styles.page} aria-busy="true">
+          <SkeletonCard lines={3} />
+          <SkeletonCard lines={2} />
+          <SkeletonCard lines={6} />
         </div>
       }
     >

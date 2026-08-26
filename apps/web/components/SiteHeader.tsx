@@ -121,11 +121,24 @@ function SiteHeaderBar({
   }, [pathname]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [open]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -208,10 +221,21 @@ function SiteHeaderBar({
       : '/login';
 
   return (
+    <>
+      {open && (
+        <button
+          type="button"
+          className={styles.backdrop}
+          aria-label="Cerrar menú"
+          onClick={() => setOpen(false)}
+        />
+      )}
     <header
       className={`${styles.header} ${effectiveTheme === 'dark' ? styles.dark : ''} ${
         scrolled ? styles.scrolled : ''
-      } ${theme === 'dark' && !scrolled ? styles.overHero : ''}`}
+      } ${theme === 'dark' && !scrolled ? styles.overHero : ''} ${
+        theme === 'dark' && scrolled ? styles.heroHandoff : ''
+      }`}
     >
       <a href="#contenido" className={styles.skipLink}>
         Saltar al contenido
@@ -243,7 +267,10 @@ function SiteHeaderBar({
               />
             </svg>
           </span>
-          <span className={styles.brandText}>BOLETERA</span>
+          <span className={styles.brandLockup}>
+            <span className={styles.brandText}>BOLETERA</span>
+            <span className={styles.brandTag}>Boletos oficiales</span>
+          </span>
           <span className="sr-only">— ir al inicio</span>
         </Link>
 
@@ -395,5 +422,6 @@ function SiteHeaderBar({
         </div>
       </div>
     </header>
+    </>
   );
 }

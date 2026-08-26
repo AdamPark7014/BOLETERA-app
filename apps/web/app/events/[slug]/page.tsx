@@ -2,6 +2,7 @@ import { cache } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Badge, Card, CardFooter, CardHeader, Section } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventPosterArt } from '@/components/EventPosterArt';
 import { WaitlistSignup } from '@/components/WaitlistSignup';
@@ -185,6 +186,16 @@ export default async function EventPage({
     year: 'numeric',
   });
   const timeLabel = when.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const shortDate = when.toLocaleDateString('es-MX', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+  const venueLabel = [event.venue?.name, event.venue?.city].filter(Boolean).join(' · ');
+  const priceFrom =
+    minPrice > 0
+      ? `$${minPrice.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${event.currency || 'MXN'}`
+      : null;
   const end = event.endsAt ? new Date(event.endsAt) : new Date(when.getTime() + 3 * 60 * 60 * 1000);
   const poster = {
     id: event.id,
@@ -263,28 +274,43 @@ export default async function EventPage({
               <span aria-current="page">{event.title}</span>
             </nav>
             <p className={styles.brandMark}>BOLETERA</p>
-            <p className={styles.eyebrow}>
-              {CATEGORY_LABEL[event.category || ''] ?? 'Evento'}
-              {event.organization?.name ? ` · ${event.organization.name}` : ''}
-            </p>
+            <div className={styles.heroBadges}>
+              <Badge tone="accent" variant="solid" size="md">
+                {CATEGORY_LABEL[event.category || ''] ?? 'Evento'}
+              </Badge>
+              {event.organization?.name && (
+                <Badge tone="neutral" variant="outline" size="md">
+                  {event.organization.name}
+                </Badge>
+              )}
+            </div>
             <h1>{event.title}</h1>
-            <p className={styles.meta}>
-              {dateLabel} · {timeLabel}
-            </p>
-            <p className={styles.venue}>
-              {event.venue?.name}
-              {event.venue?.city ? ` · ${event.venue.city}` : ''}
-            </p>
+            <ul className={styles.infoPills} aria-label="Detalles del evento">
+              <li>
+                <Badge tone="neutral" variant="soft" size="md" dot>
+                  {shortDate} · {timeLabel}
+                </Badge>
+              </li>
+              {venueLabel && (
+                <li>
+                  <Badge tone="neutral" variant="soft" size="md" dot>
+                    {venueLabel}
+                  </Badge>
+                </li>
+              )}
+              {priceFrom && (
+                <li>
+                  <Badge tone="accent" variant="soft" size="md" dot>
+                    Desde {priceFrom}
+                  </Badge>
+                </li>
+              )}
+            </ul>
             <div className={styles.heroCta}>
               <a href="#compra" className={styles.cta}>
                 Comprar boletos
               </a>
-              {minPrice > 0 && (
-                <span className={styles.fromPrice}>
-                  Desde ${minPrice.toLocaleString('es-MX', { maximumFractionDigits: 0 })}{' '}
-                  {event.currency || 'MXN'}
-                </span>
-              )}
+              {priceFrom && <span className={styles.fromPrice}>Precio final con cargos incluidos</span>}
             </div>
           </div>
         </section>
@@ -292,23 +318,33 @@ export default async function EventPage({
         <section className={styles.trustStrip} aria-label="Garantías de compra">
           <ul>
             <li>
-              <strong>Boletos oficiales</strong>
+              <Badge tone="success" variant="soft" size="md">
+                Boletos oficiales
+              </Badge>
               <span>Emitidos por el promotor en BOLETERA</span>
             </li>
             <li>
-              <strong>Pago Banorte</strong>
+              <Badge tone="info" variant="soft" size="md">
+                Pago Banorte
+              </Badge>
               <span>Cobro directo a la cuenta del organizador</span>
             </li>
             <li>
-              <strong>Entrada con QR</strong>
+              <Badge tone="neutral" variant="soft" size="md">
+                Entrada con QR
+              </Badge>
               <span>En tu celular o PDF listo para escanear</span>
             </li>
             <li>
-              <strong>
+              <Badge
+                tone={event.transferAllowed === false || event.nonTransferable ? 'warning' : 'success'}
+                variant="soft"
+                size="md"
+              >
                 {event.transferAllowed === false || event.nonTransferable
                   ? 'No transferible'
                   : 'Transferible'}
-              </strong>
+              </Badge>
               <span>
                 {event.transferAllowed === false || event.nonTransferable
                   ? 'Este evento no permite cesión de boletos'
@@ -322,21 +358,24 @@ export default async function EventPage({
           <div className={styles.layout}>
             <div className={styles.mainCol}>
               {event.offers.length > 0 && (
-                <section className={styles.offers} aria-label="Precios">
-                  <h2>Zonas y precios</h2>
-                  <p className={styles.sectionLead}>
-                    Elige una zona para filtrar el mapa y continuar al pago.
-                  </p>
-                  <ZoneOfferButtons
-                    offers={event.offers}
-                    currency={event.currency || 'MXN'}
-                    activeZone={zone}
+                <Card className={styles.offersCard} padding="none" variant="elevated">
+                  <CardHeader
+                    as="h2"
+                    title="Zonas y precios"
+                    description="Elige una zona para filtrar el mapa y continuar al pago."
                   />
-                </section>
+                  <div className={styles.offersBody}>
+                    <ZoneOfferButtons
+                      offers={event.offers}
+                      currency={event.currency || 'MXN'}
+                      activeZone={zone}
+                    />
+                  </div>
+                </Card>
               )}
 
-              <section className={styles.purchase} aria-label="Comprar">
-                <h2>Selecciona tus asientos</h2>
+              <Card className={styles.purchaseCard} padding="none" variant="elevated">
+                <CardHeader as="h2" title="Selecciona tus asientos" />
                 {event.offers.length > 0 ? (
                   <EventPurchaseClient
                     eventId={event.id}
@@ -353,15 +392,17 @@ export default async function EventPage({
                     focusZone={zone ?? null}
                   />
                 ) : (
-                  <WaitlistSignup eventId={event.id} eventTitle={event.title} />
+                  <div className={styles.waitlistWrap}>
+                    <WaitlistSignup eventId={event.id} eventTitle={event.title} />
+                  </div>
                 )}
-              </section>
+              </Card>
 
               {event.description && (
-                <section className={styles.about} aria-label="Acerca del evento">
-                  <h2>Acerca del evento</h2>
-                  <p>{event.description}</p>
-                </section>
+                <Card className={styles.aboutCard} variant="elevated">
+                  <CardHeader as="h2" title="Acerca del evento" />
+                  <p className={styles.aboutText}>{event.description}</p>
+                </Card>
               )}
 
               <details className={styles.info} open>
@@ -439,7 +480,7 @@ export default async function EventPage({
             </div>
 
             <aside className={styles.rail} aria-label="Resumen de compra">
-              <div className={styles.railCard}>
+              <Card className={styles.railCard} padding="sm" variant="elevated">
                 <div className={styles.railArt}>
                   <EventPosterArt event={poster} size="lg" showDate />
                 </div>
@@ -450,60 +491,73 @@ export default async function EventPage({
                   {timeLabel}
                   {event.venue?.name ? ` · ${event.venue.name}` : ''}
                 </p>
-                {minPrice > 0 && (
-                  <p className={styles.railPrice}>
-                    Desde ${minPrice.toLocaleString('es-MX', { maximumFractionDigits: 0 })}{' '}
-                    {event.currency || 'MXN'}
-                  </p>
-                )}
-                <a href="#compra" className={styles.cta}>
-                  Ir a comprar
-                </a>
-                <ul className={styles.railTrust}>
-                  <li>Boletos oficiales</li>
-                  <li>Pago Banorte</li>
-                  <li>Entrada con QR</li>
-                  <li>
-                    Hold {Math.round((event.holdExpiration ?? 900) / 60)} min al elegir
-                  </li>
-                  {event.organization?.name && (
-                    <li>Organiza {event.organization.name}</li>
-                  )}
-                </ul>
-              </div>
+                {priceFrom && <p className={styles.railPrice}>Desde {priceFrom}</p>}
+                <CardFooter className={styles.railFooter}>
+                  <a href="#compra" className={styles.cta}>
+                    Ir a comprar
+                  </a>
+                  <div className={styles.railTrust}>
+                    <Badge tone="success" variant="soft" size="sm">
+                      Boletos oficiales
+                    </Badge>
+                    <Badge tone="info" variant="soft" size="sm">
+                      Pago Banorte
+                    </Badge>
+                    <Badge tone="neutral" variant="soft" size="sm">
+                      Entrada con QR
+                    </Badge>
+                    <Badge tone="warning" variant="outline" size="sm">
+                      Hold {Math.round((event.holdExpiration ?? 900) / 60)} min
+                    </Badge>
+                  </div>
+                </CardFooter>
+              </Card>
             </aside>
           </div>
 
           {related.length > 0 && (
-            <section className={styles.related} aria-label="Más eventos">
-              <h2>También te puede interesar</h2>
-              <ul>
-                {related.map((e) => (
-                  <li key={e.id}>
-                    <Link href={`/events/${e.slug}`} className={styles.relatedCard}>
-                      <div className={styles.relatedArt}>
-                        <EventPosterArt event={e} size="lg" showDate />
-                      </div>
-                      <div>
-                        <p className={styles.relatedCat}>
-                          {CATEGORY_LABEL[e.category || ''] ?? 'Evento'}
-                        </p>
-                        <strong>{e.title}</strong>
-                        <span>
-                          {e.venue?.city}
-                          {e.venue?.city ? ' · ' : ''}
-                          Desde $
-                          {Number(e.minPrice).toLocaleString('es-MX', {
-                            maximumFractionDigits: 0,
-                          })}
-                        </span>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <Section
+              className={styles.related}
+              title="También te puede interesar"
+              headingLevel="h2"
+              columns={4}
+              gap="md"
+            >
+              {related.map((e) => (
+                <Link key={e.id} href={`/events/${e.slug}`} className={styles.relatedCard}>
+                  <Card interactive padding="none" variant="elevated" className={styles.relatedInner}>
+                    <div className={styles.relatedArt}>
+                      <EventPosterArt event={e} size="lg" showDate />
+                    </div>
+                    <div className={styles.relatedBody}>
+                      <Badge tone="accent" variant="soft" size="sm">
+                        {CATEGORY_LABEL[e.category || ''] ?? 'Evento'}
+                      </Badge>
+                      <strong>{e.title}</strong>
+                      <span>
+                        {e.venue?.city}
+                        {e.venue?.city ? ' · ' : ''}
+                        Desde $
+                        {Number(e.minPrice).toLocaleString('es-MX', {
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </Section>
           )}
+        </div>
+
+        <div className={styles.mobileBuyBar} aria-label="Comprar boletos">
+          <div className={styles.mobileBuyMeta}>
+            <strong>{event.title}</strong>
+            {priceFrom && <span>Desde {priceFrom}</span>}
+          </div>
+          <a href="#compra" className={styles.cta}>
+            Comprar boletos
+          </a>
         </div>
       </main>
     </>

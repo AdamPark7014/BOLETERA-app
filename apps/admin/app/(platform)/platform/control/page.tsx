@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PageHeader, DataTable } from '@boletera/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  DataTable,
+  KpiCard,
+  PageHeader,
+  Section,
+  formatNumber,
+  type BadgeTone,
+} from '@boletera/ui';
 import {
   getPlatformSuperOverview,
   searchPlatformSuper,
@@ -11,7 +21,6 @@ import {
   type PlatformSuperSearchResponse,
 } from '@/lib/platform-api';
 import { useSession } from '@/lib/use-session';
-import platform from '../../_styles/platform.module.scss';
 import styles from './control.module.scss';
 
 const QUICK_LINKS = [
@@ -49,9 +58,11 @@ function entityHref(
   }
 }
 
-function kpiClass(value: number, kind: 'warn' | 'danger'): string {
-  if (value <= 0) return platform.kpi;
-  return `${platform.kpi} ${kind === 'danger' ? styles.kpiDanger : styles.kpiAlert}`;
+function roleTone(role: string): BadgeTone {
+  if (role === 'SUPER_ADMIN') return 'danger';
+  if (role === 'ADMIN') return 'accent';
+  if (role === 'PROMOTER' || role === 'ORGANIZER') return 'info';
+  return 'neutral';
 }
 
 export default function PlatformControlPage() {
@@ -103,33 +114,44 @@ export default function PlatformControlPage() {
 
   if (role !== 'SUPER_ADMIN') {
     return (
-      <div className={platform.panel}>
-        <h2>Acceso restringido</h2>
-        <p>Esta consola solo está disponible para superusuarios de plataforma.</p>
-        <Link href="/dashboard">Volver al inicio</Link>
+      <div className={styles.page}>
+        <PageHeader
+          eyebrow="Super-admin"
+          title="Control de plataforma"
+          description="Centro de operaciones global: salud del sistema, búsqueda cross-tenant y accesos rápidos."
+        />
+        <Section title="Acceso restringido">
+          <p className={styles.searchMeta}>
+            Esta consola solo está disponible para superusuarios de plataforma.{' '}
+            <Link href="/dashboard">Volver al inicio</Link>
+          </p>
+        </Section>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className={styles.page}>
       <PageHeader
+        eyebrow="Super-admin"
         title="Control de plataforma"
         description="Centro de operaciones global: salud del sistema, búsqueda cross-tenant y accesos rápidos."
         actions={
-          <Link href="/platform/health" className={platform.primaryBtn}>
-            Salud operativa
+          <Link href="/platform/health">
+            <Button type="button" variant="primary">
+              Salud operativa
+            </Button>
           </Link>
         }
       />
 
       {error && <p role="alert">{error}</p>}
 
-      <section className={`${platform.panel} ${styles.searchPanel}`}>
-        <h2>Búsqueda global</h2>
-        <p className={styles.searchMeta}>
-          Usuarios, clientes, eventos, órdenes, boletos, venues, organizaciones y promotores.
-        </p>
+      <Section
+        title="Búsqueda global"
+        description="Usuarios, clientes, eventos, órdenes, boletos, venues, organizaciones y promotores."
+        className={styles.searchPanel}
+      >
         <div className={styles.searchRow}>
           <input
             id="platform-search"
@@ -192,70 +214,53 @@ export default function PlatformControlPage() {
             ))}
           </div>
         )}
-      </section>
+      </Section>
 
       {data && (
         <>
-          <div className={platform.kpiRow}>
-            <div className={platform.kpi}>
-              <span>Órdenes hoy</span>
-              <strong>{data.health.ordersToday}</strong>
-            </div>
-            <div className={kpiClass(data.health.failedPayments, 'danger')}>
-              <span>Pagos fallidos</span>
-              <strong>{data.health.failedPayments}</strong>
-            </div>
-            <div className={kpiClass(data.health.pendingRefunds, 'warn')}>
-              <span>Reembolsos pendientes</span>
-              <strong>{data.health.pendingRefunds}</strong>
-            </div>
-            <div className={platform.kpi}>
-              <span>Organizaciones</span>
-              <strong>{data.totals.organizations}</strong>
-            </div>
-            <div className={platform.kpi}>
-              <span>Usuarios</span>
-              <strong>{data.totals.users}</strong>
-            </div>
-            <div className={platform.kpi}>
-              <span>Eventos</span>
-              <strong>{data.totals.events}</strong>
-            </div>
-            <div className={platform.kpi}>
-              <span>Órdenes</span>
-              <strong>{data.totals.orders}</strong>
-            </div>
-            <div className={platform.kpi}>
-              <span>Venues</span>
-              <strong>{data.totals.venues}</strong>
-            </div>
-          </div>
+          <Section columns={4} gap="md" aria-label="Indicadores de plataforma">
+            <KpiCard label="Órdenes hoy" value={formatNumber(data.health.ordersToday)} tone="accent" />
+            <KpiCard
+              label="Pagos fallidos"
+              value={formatNumber(data.health.failedPayments)}
+              tone={data.health.failedPayments > 0 ? 'danger' : 'neutral'}
+            />
+            <KpiCard
+              label="Reembolsos pendientes"
+              value={formatNumber(data.health.pendingRefunds)}
+              tone={data.health.pendingRefunds > 0 ? 'warning' : 'neutral'}
+            />
+            <KpiCard label="Organizaciones" value={formatNumber(data.totals.organizations)} />
+            <KpiCard label="Usuarios" value={formatNumber(data.totals.users)} />
+            <KpiCard label="Eventos" value={formatNumber(data.totals.events)} />
+            <KpiCard label="Órdenes" value={formatNumber(data.totals.orders)} />
+            <KpiCard label="Venues" value={formatNumber(data.totals.venues)} />
+          </Section>
 
-          <section className={platform.panel}>
-            <h2>Accesos rápidos</h2>
+          <Section title="Accesos rápidos">
             <div className={styles.quickLinks}>
               {QUICK_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} className={styles.quickLink}>
-                  <strong>{link.title}</strong>
-                  <span>{link.desc}</span>
+                <Link key={link.href} href={link.href} className={styles.quickLinkWrap}>
+                  <Card variant="outline" padding="md" interactive className={styles.quickLink}>
+                    <strong>{link.title}</strong>
+                    <span>{link.desc}</span>
+                  </Card>
                 </Link>
               ))}
             </div>
-          </section>
+          </Section>
 
-          <section className={platform.panel}>
-            <h2>Usuarios por rol</h2>
-            <div className={platform.chipGrid}>
+          <Section title="Usuarios por rol">
+            <div className={styles.chipRow}>
               {Object.entries(data.usersByRole).map(([r, n]) => (
-                <span key={r} className={platform.chipOn}>
-                  {r}: {n}
-                </span>
+                <Badge key={r} tone={roleTone(r)} variant="soft" size="sm">
+                  {r}: {formatNumber(n)}
+                </Badge>
               ))}
             </div>
-          </section>
+          </Section>
 
-          <section className={platform.panel}>
-            <h2>Organizaciones</h2>
+          <Section title="Organizaciones">
             <DataTable
               columns={[
                 { key: 'name', header: 'Nombre', sortValue: (row) => row.name },
@@ -263,7 +268,11 @@ export default function PlatformControlPage() {
                 {
                   key: 'verified',
                   header: 'Verificada',
-                  render: (row) => (row.verified ? 'Sí' : 'No'),
+                  render: (row) => (
+                    <Badge tone={row.verified ? 'success' : 'neutral'} variant="soft" size="sm" dot>
+                      {row.verified ? 'Sí' : 'No'}
+                    </Badge>
+                  ),
                 },
                 { key: 'users', header: 'Usuarios', align: 'right' },
                 { key: 'events', header: 'Eventos', align: 'right' },
@@ -274,7 +283,7 @@ export default function PlatformControlPage() {
               label="Organizaciones en plataforma"
               empty="Sin organizaciones"
             />
-          </section>
+          </Section>
         </>
       )}
     </div>

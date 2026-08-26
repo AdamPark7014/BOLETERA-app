@@ -357,4 +357,13 @@ export class DiscoveryService {
       events,
     };
   }
+
+  async getSiteContent(orgId: string) {
+    const theme = await this.prisma.tenantTheme.findUnique({
+      where: { organizationId: orgId },
+      select: { siteContent: true },
+    });
+    const { mergeSiteContent } = await import('@boletera/shared');
+    return mergeSiteContent(theme?.siteContent);
+  }
 }

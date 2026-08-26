@@ -1,9 +1,64 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Badge,
+  DataTable,
+  KpiCard,
+  PageHeader,
+  Section,
+  formatNumber,
+  type BadgeTone,
+  type DataTableColumn,
+} from '@boletera/ui';
 import { getSaasCapabilities, type SaasCapabilities } from '@/lib/platform-api';
 import { useOrgId } from '@/lib/use-org';
-import platform from '../_styles/platform.module.scss';
+import styles from './platform.module.scss';
+
+type RoadmapRow = SaasCapabilities['roadmap'][number];
+
+function formatModuleKey(key: string) {
+  return key.replace(/([A-Z])/g, ' $1').trim();
+}
+
+function roadmapStatusTone(status: string): BadgeTone {
+  const s = status.toLowerCase();
+  if (s.includes('done') || s.includes('live') || s.includes('shipped') || s.includes('activ')) {
+    return 'success';
+  }
+  if (s.includes('progress') || s.includes('prog') || s.includes('beta')) return 'info';
+  if (s.includes('plan') || s.includes('pend') || s.includes('backlog')) return 'warning';
+  return 'neutral';
+}
+
+function roadmapPriorityTone(priority: string): BadgeTone {
+  const p = priority.toLowerCase();
+  if (p.includes('high') || p.includes('alta') || p === 'p0' || p === 'p1') return 'danger';
+  if (p.includes('med') || p === 'p2') return 'warning';
+  return 'neutral';
+}
+
+const ROADMAP_COLUMNS: DataTableColumn<RoadmapRow>[] = [
+  { key: 'label', header: 'Feature', sortValue: (row) => row.label },
+  {
+    key: 'status',
+    header: 'Estado',
+    render: (row) => (
+      <Badge tone={roadmapStatusTone(row.status)} variant="soft" size="sm">
+        {row.status}
+      </Badge>
+    ),
+  },
+  {
+    key: 'priority',
+    header: 'Prioridad',
+    render: (row) => (
+      <Badge tone={roadmapPriorityTone(row.priority)} variant="outline" size="sm">
+        {row.priority}
+      </Badge>
+    ),
+  },
+];
 
 export default function PlatformCapabilitiesPage() {
   const orgId = useOrgId();
@@ -17,68 +72,61 @@ export default function PlatformCapabilitiesPage() {
 
   const modules = data ? Object.entries(data.modules) : [];
   const active = modules.filter(([, v]) => v).length;
+  const roadmap = useMemo(() => data?.roadmap ?? [], [data?.roadmap]);
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Plataforma Boletera</h1>
-          <p>
-            Matriz de capacidades vs Palco4 · Pasco · NewTicket — {data?.organization.name ?? '…'}
-          </p>
-        </div>
-        {data && (
-          <div className={platform.kpiRow}>
-            <div className={platform.kpi}>
-              <span>Módulos activos</span>
-              <strong>
-                {active}/{modules.length}
-              </strong>
-            </div>
-            <div className={platform.kpi}>
-              <span>Waitlist pendiente</span>
-              <strong>{data.metrics.waitlistPending}</strong>
-            </div>
-            <div className={platform.kpi}>
-              <span>API keys</span>
-              <strong>{data.metrics.apiKeys}</strong>
-            </div>
-          </div>
-        )}
-      </header>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Plataforma"
+        title="Plataforma Boletera"
+        description={
+          data
+            ? `Matriz de capacidades vs Palco4 · Pasco · NewTicket — ${data.organization.name}`
+            : 'Matriz de capacidades vs Palco4 · Pasco · NewTicket'
+        }
+      />
 
-      <section className={platform.panel}>
-        <h2>Módulos habilitados</h2>
-        <div className={platform.chipGrid}>
+      {data ? (
+        <Section columns={3} gap="md" aria-label="Indicadores de la organización">
+          <KpiCard
+            label="Módulos activos"
+            value={`${formatNumber(active)}/${formatNumber(modules.length)}`}
+            tone="accent"
+          />
+          <KpiCard
+            label="Waitlist pendiente"
+            value={formatNumber(data.metrics.waitlistPending)}
+            tone={data.metrics.waitlistPending > 0 ? 'warning' : 'neutral'}
+          />
+          <KpiCard label="API keys" value={formatNumber(data.metrics.apiKeys)} />
+        </Section>
+      ) : null}
+
+      <Section title="Módulos habilitados">
+        <div className={styles.chipRow}>
           {modules.map(([key, on]) => (
-            <span key={key} className={on ? platform.chipOn : platform.chipOff}>
-              {key.replace(/([A-Z])/g, ' $1').trim()}
-            </span>
+            <Badge
+              key={key}
+              tone={on ? 'success' : 'neutral'}
+              variant={on ? 'soft' : 'outline'}
+              size="sm"
+              dot={on}
+            >
+              {formatModuleKey(key)}
+            </Badge>
           ))}
         </div>
-      </section>
+      </Section>
 
-      <section className={platform.panel} style={{ marginTop: '1.25rem' }}>
-        <h2>Roadmap (supera competencia)</h2>
-        <table className={platform.table}>
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th>Estado</th>
-              <th>Prioridad</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data?.roadmap ?? []).map((r) => (
-              <tr key={r.id}>
-                <td>{r.label}</td>
-                <td>{r.status}</td>
-                <td>{r.priority}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <Section title="Roadmap (supera competencia)">
+        <DataTable
+          columns={ROADMAP_COLUMNS}
+          data={roadmap}
+          rowKey={(row) => row.id}
+          label="Roadmap de capacidades"
+          empty="Sin elementos en el roadmap"
+        />
+      </Section>
     </div>
   );
 }

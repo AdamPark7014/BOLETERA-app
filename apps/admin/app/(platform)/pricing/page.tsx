@@ -519,16 +519,11 @@ function PricingConsole() {
 
           <div className={styles.layout}>
             <div className={styles.stack}>
-              <div className={styles.card}>
-                <div className={styles.cardHead}>
-                  <div>
-                    <h2>Comparativa de precios</h2>
-                    <p className={styles.muted}>
-                      Precio vigente vs. recomendado · hasta 12 ofertas accionables del
-                      filtro actual
-                    </p>
-                  </div>
-                </div>
+              <Section
+                title="Comparativa de precios"
+                description="Precio vigente vs. recomendado · hasta 12 ofertas accionables del filtro actual"
+                className={styles.card}
+              >
                 {bundleQ.isPending ? (
                   <Skeleton height={240} />
                 ) : chartSeries.current.length === 0 ? (
@@ -557,9 +552,9 @@ function PricingConsole() {
                     ]}
                   />
                 )}
-              </div>
+              </Section>
 
-              <div className={styles.card}>
+              <Section className={styles.card}>
                 <div className={styles.toolbar}>
                   <SegmentedControl
                     size="sm"
@@ -663,14 +658,11 @@ function PricingConsole() {
                     }
                   />
                 ) : null}
-              </div>
+              </Section>
             </div>
 
             <aside className={styles.stack} aria-label="Resumen lateral">
-              <div className={styles.card}>
-                <div className={styles.cardHead}>
-                  <h2>Desglose del paquete</h2>
-                </div>
+              <Section title="Desglose del paquete" className={styles.card}>
                 {bundleQ.isPending ? (
                   <Skeleton height={160} />
                 ) : summary.total === 0 ? (
@@ -709,12 +701,9 @@ function PricingConsole() {
                     ) : null}
                   </ul>
                 )}
-              </div>
+              </Section>
 
-              <div className={styles.card}>
-                <div className={styles.cardHead}>
-                  <h2>Contratos de datos</h2>
-                </div>
+              <Section title="Contratos de datos" className={styles.card}>
                 <ul className={styles.recs}>
                   <li className={styles.rec}>
                     <p className={styles.recTitle}>Disponibles</p>
@@ -749,7 +738,7 @@ function PricingConsole() {
                     </p>
                   </li>
                 </ul>
-              </div>
+              </Section>
             </aside>
           </div>
         </>

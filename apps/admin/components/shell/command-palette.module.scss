@@ -1,0 +1,38 @@
+/* Admin shell — command palette layer polish (targets structure, not hashed modules) */
+
+.layer {
+  padding: clamp(3.5rem, 14vh, 9rem) var(--bl-space-4) var(--bl-space-6);
+
+  > div:first-child {
+    background: color-mix(in srgb, var(--bl-overlay, rgba(0, 0, 0, 0.5)) 88%, transparent);
+    backdrop-filter: blur(10px) saturate(1.15);
+  }
+
+  > [role='dialog'] {
+    border-radius: var(--bl-radius-2xl, 1rem);
+    border-color: color-mix(in srgb, var(--bl-border) 90%, var(--bl-accent, #e11d48) 6%);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--bl-border-subtle) 60%, transparent),
+      0 24px 64px -16px rgba(0, 0, 0, 0.22),
+      0 0 0 0.5px color-mix(in srgb, var(--bl-accent, #e11d48) 8%, transparent),
+      0 0 80px -24px color-mix(in srgb, var(--bl-accent, #e11d48) 14%, transparent);
+    overflow: hidden;
+  }
+
+  /* Search row */
+  > [role='dialog'] > div:first-child {
+    padding: var(--bl-space-3-5, 0.875rem) var(--bl-space-4);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bl-elevated) 96%, var(--bl-accent, #e11d48) 4%) 0%,
+      var(--bl-elevated) 100%
+    );
+    border-bottom-color: color-mix(in srgb, var(--bl-border-subtle) 85%, transparent);
+  }
+
+  /* Footer hints */
+  > [role='dialog'] > footer {
+    background: color-mix(in srgb, var(--bl-surface-sunken) 92%, var(--bl-elevated) 8%);
+    letter-spacing: 0.01em;
+  }
+}

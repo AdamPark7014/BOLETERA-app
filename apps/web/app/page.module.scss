@@ -2,18 +2,16 @@
   position: relative;
   min-height: 100vh;
   color: var(--text-primary);
-  background:
-    radial-gradient(120% 80% at 100% -10%, rgba(225, 29, 72, 0.07), transparent 55%),
-    radial-gradient(90% 60% at 0% 40%, rgba(10, 10, 10, 0.04), transparent 50%),
-    linear-gradient(
-      180deg,
-      var(--color-surface-muted) 0%,
-      var(--color-surface-sunken) 45%,
-      var(--color-surface-muted) 100%
-    );
+  /* Aire antes del pie global (layout.tsx) */
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+  background: var(--color-bg);
 }
 
 .board {
-  /* el panel de descubrimiento trae su propio shell y hero a sangre */
   width: 100%;
+  margin-top: 0;
+  position: relative;
+  z-index: 1;
+  scroll-margin-top: calc(var(--header-height) + var(--space-md));
+  margin-bottom: var(--space-lg);
 }

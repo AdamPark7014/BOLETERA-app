@@ -1,32 +1,49 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { flatSeats, normalizeSeatMap } from '@boletera/venue-engine';
+import type { LayoutPublishStatusValue } from '@boletera/shared';
 import type { SeatMapData } from '@boletera/shared';
+import { Badge, Button, PageHeader, type BadgeTone } from '@boletera/ui';
 import { getVenueLayout } from '@/lib/platform-api';
-import {
-  AnonymousView,
-  ApiErrorView,
-  LoadingView,
-  NoOrgView,
-  useSession,
-} from '../../../events/_shared/api-state';
-import platform from '../../../_styles/platform.module.scss';
+import { ApiStateBoundary, useSession } from '../../../events/_shared/api-state';
+import styles from '../../venues.module.scss';
 
 const Venue3DViewer = dynamic(
   () => import('@boletera/venue-3d').then((m) => m.Venue3DViewer),
   { ssr: false },
 );
 
+const STATUS_LABEL: Record<LayoutPublishStatusValue, string> = {
+  DRAFT: 'Borrador',
+  IN_REVIEW: 'En revisión',
+  PUBLISHED: 'Publicado',
+  ARCHIVED: 'Archivado',
+};
+
+function publishStatusTone(status: LayoutPublishStatusValue): BadgeTone {
+  switch (status) {
+    case 'PUBLISHED':
+      return 'success';
+    case 'IN_REVIEW':
+      return 'info';
+    case 'ARCHIVED':
+      return 'warning';
+    default:
+      return 'neutral';
+  }
+}
+
 export default function Venue3DPage() {
   const { id: venueId } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
-  const layoutVersion = searchParams.get('v') ?? '0';
+  const router = useRouter();
+  const layoutVersionParam = searchParams.get('v') ?? '0';
   const [mapData, setMapData] = useState<SeatMapData | null>(null);
   const [venueName, setVenueName] = useState('');
+  const [publishStatus, setPublishStatus] = useState<LayoutPublishStatusValue>('DRAFT');
   const [error, setError] = useState<unknown>(null);
   const [nonce, setNonce] = useState(0);
   const session = useSession();
@@ -39,9 +56,10 @@ export default function Venue3DPage() {
       .then((data) => {
         setMapData(data.layout.mapData);
         setVenueName(data.venue?.name ?? 'Venue');
+        if (data.layout.publishStatus) setPublishStatus(data.layout.publishStatus);
       })
       .catch(setError);
-  }, [venueId, token, nonce, layoutVersion]);
+  }, [venueId, token, nonce, layoutVersionParam]);
 
   const normalized = useMemo(() => (mapData ? normalizeSeatMap(mapData) : null), [mapData]);
   const seats = useMemo(() => {
@@ -66,36 +84,64 @@ export default function Venue3DPage() {
     }));
   }, [normalized]);
 
-  if (session.status === 'anonymous') return <AnonymousView />;
-  if (session.status === 'no-org') return <NoOrgView />;
-  if (error) {
+  if (session.status !== 'ready' || error || !mapData || !token) {
     return (
-      <ApiErrorView
+      <ApiStateBoundary
+        session={session}
         error={error}
+        loading={!mapData}
         context="cargar el mapa del recinto"
         onRetry={() => setNonce((n) => n + 1)}
-      />
+        loadingLabel="Cargando recinto…"
+      >
+        <span />
+      </ApiStateBoundary>
     );
   }
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Preview 3D — {venueName || 'Venue'}</h1>
-          <p>{seats.length} asientos reales del layout guardado</p>
-        </div>
-        <Link href={`/venues/${venueId}/map`} className={platform.ghostBtn}>
-          Editar mapa 2D
-        </Link>
-        {layoutVersion !== '0' && (
-          <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Layout v{layoutVersion}</span>
-        )}
-      </header>
-      {!mapData ? (
-        <LoadingView label="Cargando recinto…" />
-      ) : seats.length === 0 ? (
-        <p>Este venue todavía no tiene asientos en su layout. Ve al editor de mapa y aplica una plantilla.</p>
+    <div className={styles.studioPage}>
+      <PageHeader
+        eyebrow={
+          <span className={styles.statusRow}>
+            <Badge tone={publishStatusTone(publishStatus)} variant="soft">
+              {STATUS_LABEL[publishStatus]}
+            </Badge>
+            {layoutVersionParam !== '0' ? (
+              <Badge tone="neutral" variant="soft">
+                Layout v{layoutVersionParam}
+              </Badge>
+            ) : null}
+            <Badge tone="info" variant="soft">
+              {seats.length} asientos
+            </Badge>
+          </span>
+        }
+        title={`Preview 3D — ${venueName}`}
+        breadcrumbs={[
+          { label: 'Recintos', href: '/venues' },
+          { label: venueName, href: `/venues/${venueId}/map` },
+          { label: 'Vista 3D' },
+        ]}
+        description="Vista interactiva 3D del layout guardado"
+        actions={
+          <div className={styles.studioActions}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push(`/venues/${venueId}/map`)}
+            >
+              Editar mapa 2D
+            </Button>
+          </div>
+        }
+      />
+
+      {seats.length === 0 ? (
+        <p>
+          Este venue todavía no tiene asientos en su layout. Ve al editor de mapa y aplica una
+          plantilla.
+        </p>
       ) : (
         <Venue3DViewer
           mode="orbit"

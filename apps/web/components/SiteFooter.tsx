@@ -13,16 +13,15 @@ const CATEGORIES = [
   { key: 'FAMILY', label: 'Familiares' },
 ];
 
+const SOCIAL_LINKS = [
+  { label: 'Instagram', href: 'https://instagram.com', icon: 'IG' },
+  { label: 'X (Twitter)', href: 'https://x.com', icon: 'X' },
+  { label: 'TikTok', href: 'https://tiktok.com', icon: 'TT' },
+  { label: 'YouTube', href: 'https://youtube.com', icon: 'YT' },
+];
+
 type CityFacet = { name: string; count: number };
 
-/*
- * El pie salía como componente de cliente solo para pedir las ciudades al
- * montar: eso arrastraba JavaScript y una petición extra en CADA página del
- * sitio, y provocaba un salto de layout cuando la lista llegaba. Ahora se
- * resuelve en el servidor, con caché de 10 minutos (las ciudades con cartelera
- * cambian por día, no por segundo) y dentro de <Suspense> para que el pie se
- * pinte de inmediato aunque el API tarde.
- */
 async function FooterCities() {
   let cities: CityFacet[] = [];
   try {
@@ -37,7 +36,6 @@ async function FooterCities() {
     cities = [];
   }
 
-  // Si el API no responde, el enlace "Todas las ciudades" del fallback basta.
   return (
     <>
       {cities.map((c) => (
@@ -53,10 +51,46 @@ export function SiteFooter() {
   return (
     <footer className={styles.footer}>
       <h2 className="sr-only">Pie de página</h2>
+
+      <section className={styles.newsletter} aria-labelledby="footer-newsletter-heading">
+        <div className={styles.newsletterInner}>
+          <div className={styles.newsletterCopy}>
+            <p className={styles.newsletterEyebrow}>Newsletter</p>
+            <h3 id="footer-newsletter-heading">Boletos antes que nadie</h3>
+            <p>Preventas, lanzamientos y eventos cerca de ti — sin spam.</p>
+          </div>
+          <form className={styles.newsletterForm} action="#" method="post">
+            <label htmlFor="footer-email" className="sr-only">
+              Correo electrónico
+            </label>
+            <input
+              id="footer-email"
+              type="email"
+              name="email"
+              placeholder="tu@correo.com"
+              autoComplete="email"
+              className={styles.newsletterInput}
+            />
+            <button type="submit" className={styles.newsletterBtn}>
+              Suscribirme
+            </button>
+          </form>
+        </div>
+      </section>
+
       <div className={styles.inner}>
         <div className={styles.brandCol}>
           <p className={styles.brand}>BOLETERA</p>
           <p className={styles.tagline}>Boletos oficiales · Pagos Banorte · Acceso con QR</p>
+          <ul className={styles.social}>
+            {SOCIAL_LINKS.map((s) => (
+              <li key={s.label}>
+                <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}>
+                  <span aria-hidden="true">{s.icon}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className={styles.col}>
@@ -72,7 +106,6 @@ export function SiteFooter() {
 
         <div className={styles.col}>
           <h3>Ciudades</h3>
-          {/* min-height reserva el alto de la lista para no provocar CLS. */}
           <ul className={styles.cityList}>
             <li>
               <Link href="/ciudades">Todas las ciudades</Link>
@@ -99,10 +132,7 @@ export function SiteFooter() {
               <Link href="/cuenta">Mi cuenta</Link>
             </li>
           </ul>
-        </div>
-
-        <div className={styles.col}>
-          <h3>Legal</h3>
+          <h3 className={styles.colSubhead}>Legal</h3>
           <ul>
             <li>
               <Link href="/terminos">Términos y condiciones</Link>
@@ -119,6 +149,7 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
+
       <p className={styles.copy}>
         © {new Date().getFullYear()} BOLETERA · Liquidación Banorte
       </p>

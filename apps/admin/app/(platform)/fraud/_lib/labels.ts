@@ -32,6 +32,10 @@ export function statusTone(status: string): BadgeTone {
     case 'ACTIVE':
     case 'NOTIFIED':
       return 'success';
+    case 'CONFIRMED':
+      return 'danger';
+    case 'REVIEWING':
+      return 'info';
     case 'FLAGGED':
     case 'INVESTIGATING':
     case 'PENDING':
@@ -44,6 +48,27 @@ export function statusTone(status: string): BadgeTone {
     default:
       return 'neutral';
   }
+}
+
+export function severityLabel(severity: string): string {
+  const map: Record<string, string> = {
+    CRITICAL: 'Crítica',
+    HIGH: 'Alta',
+    MEDIUM: 'Media',
+    LOW: 'Baja',
+  };
+  return map[severity.toUpperCase()] ?? severity;
+}
+
+export function fraudStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    PENDING: 'Sin revisar',
+    REVIEWING: 'En revisión',
+    RESOLVED: 'Resuelta',
+    CONFIRMED: 'Fraude confirmado',
+    FALSE_POSITIVE: 'Falso positivo',
+  };
+  return map[status.toUpperCase()] ?? status;
 }
 
 export function fraudTypeLabel(type: string): string {

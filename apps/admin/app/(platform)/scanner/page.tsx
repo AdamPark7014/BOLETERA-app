@@ -22,6 +22,13 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Button,
+  Input,
+  KpiCard,
+  PageHeader,
+  Section,
+} from '@boletera/ui';
 import { ApiError, adminApi, getStoredToken } from '@/lib/api';
 import { CameraScanner } from './CameraScanner';
 import styles from './scanner.module.scss';
@@ -340,64 +347,94 @@ export default function ScannerPage() {
 
   return (
     <div className={styles.page}>
-      <h1>Control de acceso</h1>
-
-      <p className={styles.hint}>
-        <span className={online ? styles.pillOnline : styles.pillOffline}>
-          {online ? 'En línea' : 'Sin conexión'}
-        </span>
-        {queued > 0 && <span className={styles.pillQueued}>{queued} sin sincronizar</span>}
-      </p>
+      <PageHeader
+        eyebrow="Operaciones"
+        title="Control de acceso"
+        description="Valida boletos en puerta con lector HID, cámara o captura manual."
+        actions={
+          queued > 0 && online ? (
+            <Button type="button" variant="outline" onClick={() => void flushQueue()}>
+              Sincronizar {queued}
+            </Button>
+          ) : undefined
+        }
+      >
+        <div className={styles.kpiGrid}>
+          <KpiCard
+            label="Conexión"
+            value={online ? 'En línea' : 'Sin conexión'}
+            tone={online ? 'success' : 'warning'}
+            hint={online ? 'Validación en tiempo real' : 'Los escaneos se encolan sin validar'}
+          />
+          <KpiCard
+            label="Cola offline"
+            value={queued}
+            tone={queued > 0 ? 'warning' : 'neutral'}
+            hint={queued > 0 ? 'Pendientes de sincronizar' : 'Sin pendientes'}
+          />
+          <KpiCard
+            label="Puerta"
+            value={zoneId.trim() || 'Sin asignar'}
+            tone={zoneId.trim() ? 'info' : 'neutral'}
+            hint="Identificador de la zona de acceso"
+          />
+        </div>
+      </PageHeader>
 
       {!online && (
-        <p className={styles.warnBanner} role="status">
+        <div className={styles.warnBanner} role="status">
           Sin conexión los escaneos <strong>no se validan</strong>: se guardan y se revisan al
           sincronizar. Sólo se detectan repetidos de esta misma puerta.
-        </p>
+        </div>
       )}
 
-      <div className={styles.field}>
-        <label htmlFor="zone">Puerta o zona</label>
-        <input
+      <Section title="Puerta o zona" description="Se registra en cada escaneo y en la sincronización offline.">
+        <Input
           id="zone"
+          label="Identificador de zona"
           value={zoneId}
           onChange={(e) => persistZone(e.target.value)}
           placeholder="Identificador de la zona de acceso"
           autoComplete="off"
+          inputSize="lg"
         />
-      </div>
+      </Section>
 
-      <CameraScanner onScan={runScan} disabled={loading} />
+      <Section title="Escanear" description="Usa la cámara o el lector de códigos de barras.">
+        <CameraScanner onScan={runScan} disabled={loading} />
 
-      <div className={styles.field}>
-        <label htmlFor="code">Código del boleto</label>
-        <textarea
-          id="code"
-          ref={inputRef}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          onKeyDown={(e) => {
-            // El lector HID termina con Enter: validar sin tocar el ratón.
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              void runScan(code);
-            }
-          }}
-          placeholder="BLT-… o el contenido del QR"
-          rows={3}
-        />
-      </div>
+        <div className={styles.codeField}>
+          <label htmlFor="code">Código del boleto</label>
+          <textarea
+            id="code"
+            ref={inputRef}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => {
+              // El lector HID termina con Enter: validar sin tocar el ratón.
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                void runScan(code);
+              }
+            }}
+            placeholder="BLT-… o el contenido del QR"
+            rows={3}
+          />
+        </div>
 
-      <div className={styles.actions}>
-        <button type="button" onClick={() => void runScan(code)} disabled={loading || !code.trim()}>
-          {loading ? 'Validando…' : 'Validar entrada'}
-        </button>
-        {queued > 0 && online && (
-          <button type="button" onClick={() => void flushQueue()} className={styles.secondary}>
-            Sincronizar {queued}
-          </button>
-        )}
-      </div>
+        <div className={styles.actions}>
+          <Button
+            type="button"
+            size="lg"
+            onClick={() => void runScan(code)}
+            disabled={loading || !code.trim()}
+            loading={loading}
+            loadingLabel="Validando…"
+          >
+            Validar entrada
+          </Button>
+        </div>
+      </Section>
 
       {syncReport && (
         <p className={styles.hint} role="status">

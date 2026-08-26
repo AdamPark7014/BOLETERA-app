@@ -371,6 +371,13 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
         keywords: ['branding', 'logo', 'colores'],
       },
       {
+        id: 'site-content',
+        href: '/settings/content',
+        label: 'Contenido web',
+        icon: 'branding',
+        keywords: ['hero', 'imágenes', 'carrusel', 'marketing'],
+      },
+      {
         id: 'payments',
         href: '/settings/payments',
         label: 'Pagos Banorte',

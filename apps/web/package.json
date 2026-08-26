@@ -4,9 +4,9 @@
   "description": "Boletera Platform - Customer-facing Marketplace (Next.js 16)",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --port 3040",
     "build": "next build",
-    "start": "next start --port 3000",
+    "start": "next start --port 3040",
     "check-types": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",

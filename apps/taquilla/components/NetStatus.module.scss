@@ -5,68 +5,17 @@
   flex-wrap: wrap;
 }
 
-.chip {
+.statusLine {
   display: inline-flex;
   align-items: center;
-  gap: var(--bl-space-1-5);
   min-height: 36px;
   padding: var(--bl-space-0) var(--bl-space-3);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--bl-radius-full);
-  font-size: var(--bl-text-sm);
-  font-weight: 600;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  color: var(--muted);
+}
+
+.chip {
   white-space: nowrap;
-}
-
-.on {
-  color: var(--success);
-  border-color: var(--success-border);
-  background: var(--success-bg);
-}
-
-.off {
-  color: var(--warn);
-  border-color: var(--warn-border);
-  background: var(--warn-bg);
-}
-
-.pending {
-  color: var(--text);
-  border-color: var(--border-strong);
-  background: var(--surface-2);
-}
-
-.conflict {
-  color: var(--danger);
-  border-color: var(--danger-border);
-  background: var(--danger-bg);
-}
-
-.expiring {
-  color: var(--warn);
-  border-color: var(--warn-border);
-  background: var(--warn-bg);
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.pulse {
-  animation: blink 1.6s ease-in-out infinite;
-}
-
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
-  }
+  font-weight: 600;
 }

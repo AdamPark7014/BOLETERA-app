@@ -16,14 +16,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Button, Card, CardFooter, CardHeader, PageHeader } from '@boletera/ui';
 import { createEvent, createEventSeries, createResidency, getVenueLayout, listVenues } from '@/lib/platform-api';
 import { countSeats } from '@boletera/venue-engine';
 import { ApiError } from '@/lib/api';
 import { AnonymousView, NoOrgView, useSession } from '../_shared/api-state';
-import platform from '../../_styles/platform.module.scss';
 import styles from './new-event.module.scss';
 
 const STEPS = ['Datos', 'Venue / mapa', 'Ofertas / precios', 'Publicar'] as const;
+
+const STEP_HINTS: Record<(typeof STEPS)[number], string> = {
+  Datos: 'Información básica del evento y ventana de venta.',
+  'Venue / mapa': 'Recinto, mapa de butacas y aforo declarado.',
+  'Ofertas / precios': 'Zona inicial y precio base en MXN.',
+  Publicar: 'Revisa el resumen antes de confirmar la creación.',
+};
 
 const DRAFT_KEY = 'boletera_draft_event';
 /** Un borrador de hace más de una semana es ruido, no trabajo pendiente. */
@@ -481,25 +488,28 @@ export default function NewEventPage() {
   if (session.status === 'anonymous') return <AnonymousView />;
   if (session.status === 'no-org') return <NoOrgView />;
 
+  const stepDescription = `Paso ${step + 1} de ${STEPS.length}: ${STEPS[step]}${
+    draftSavedAt
+      ? ` · borrador guardado ${new Date(draftSavedAt).toLocaleTimeString('es-MX')}`
+      : ''
+  }`;
+
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Nuevo evento</h1>
-          <p>
-            Paso {step + 1} de {STEPS.length}: {STEPS[step]}
-            {draftSavedAt && (
-              <span className={styles.draftStamp}>
-                {' '}
-                · borrador guardado {new Date(draftSavedAt).toLocaleTimeString('es-MX')}
-              </span>
-            )}
-          </p>
-        </div>
-        <Link href="/events" className={platform.ghostBtn}>
-          ← Volver
-        </Link>
-      </header>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Catálogo"
+        title="Nuevo evento"
+        description={stepDescription}
+        breadcrumbs={[
+          { label: 'Eventos', href: '/events' },
+          { label: 'Nuevo evento' },
+        ]}
+        actions={
+          <Button type="button" variant="outline" onClick={() => router.push('/events')}>
+            ← Volver
+          </Button>
+        }
+      />
 
       {draftFound && (
         <div className={styles.draftBanner} role="status">
@@ -509,12 +519,12 @@ export default function NewEventPage() {
             {draftSavedAt ? ` (${new Date(draftSavedAt).toLocaleString('es-MX')})` : ''}.
           </p>
           <div className={styles.draftActions}>
-            <button type="button" className={styles.primaryBtn} onClick={restoreDraft}>
+            <Button type="button" onClick={restoreDraft}>
               Retomar borrador
-            </button>
-            <button type="button" className={styles.ghostBtn} onClick={discardDraft}>
+            </Button>
+            <Button type="button" variant="outline" onClick={discardDraft}>
               Descartar
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -549,11 +559,16 @@ export default function NewEventPage() {
         })}
       </ol>
 
-      <div className={platform.panel}>
-        <div className={platform.formGrid}>
+      <Card variant="outline" padding="lg" className={styles.wizardCard}>
+        <CardHeader
+          title={step === 3 ? 'Antes de crear' : STEPS[step]}
+          description={STEP_HINTS[STEPS[step]]}
+        />
+
+        <div className={styles.formGrid}>
           {step === 0 && (
             <>
-              <label className={platform.full} htmlFor="ev-title">
+              <label className={`${styles.field} ${styles.full}`} htmlFor="ev-title">
                 Título
                 <input
                   id="ev-title"
@@ -562,7 +577,7 @@ export default function NewEventPage() {
                   onChange={(e) => set('title', e.target.value)}
                 />
               </label>
-              <label className={platform.full} htmlFor="ev-description">
+              <label className={`${styles.field} ${styles.full}`} htmlFor="ev-description">
                 Descripción
                 <textarea
                   id="ev-description"
@@ -571,7 +586,7 @@ export default function NewEventPage() {
                   onChange={(e) => set('description', e.target.value)}
                 />
               </label>
-              <label htmlFor="ev-type">
+              <label className={styles.field} htmlFor="ev-type">
                 Tipo
                 <select
                   id="ev-type"
@@ -583,7 +598,7 @@ export default function NewEventPage() {
                   <option value="residency">Residencia (recurrente)</option>
                 </select>
               </label>
-              <label htmlFor="ev-start">
+              <label className={styles.field} htmlFor="ev-start">
                 Inicio del evento
                 <input
                   id="ev-start"
@@ -593,7 +608,7 @@ export default function NewEventPage() {
                   onChange={(e) => set('startDate', e.target.value)}
                 />
               </label>
-              <label htmlFor="ev-end">
+              <label className={styles.field} htmlFor="ev-end">
                 Fin del evento (opcional)
                 <input
                   id="ev-end"
@@ -602,7 +617,7 @@ export default function NewEventPage() {
                   onChange={(e) => set('endDate', e.target.value)}
                 />
               </label>
-              <label htmlFor="ev-sales-start">
+              <label className={styles.field} htmlFor="ev-sales-start">
                 Apertura de venta
                 <input
                   id="ev-sales-start"
@@ -611,7 +626,7 @@ export default function NewEventPage() {
                   onChange={(e) => set('salesStartAt', e.target.value)}
                 />
               </label>
-              <label htmlFor="ev-sales-end">
+              <label className={styles.field} htmlFor="ev-sales-end">
                 Cierre de venta
                 <input
                   id="ev-sales-end"
@@ -621,7 +636,7 @@ export default function NewEventPage() {
                   aria-describedby="ev-sales-end-hint"
                 />
               </label>
-              <p id="ev-sales-end-hint" className={`${platform.full} ${styles.hint}`}>
+              <p id="ev-sales-end-hint" className={`${styles.full} ${styles.hint}`}>
                 La ventana de venta se valida aquí, pero el API de alta todavía no la persiste
                 (`/events/manage` solo acepta inicio y fin del evento). Configúrala en la pestaña de
                 canales del evento hasta que exista el campo.
@@ -641,7 +656,7 @@ export default function NewEventPage() {
               )}
               {form.type === 'residency' && (
                 <>
-                  <label htmlFor="ev-frequency">
+                  <label className={styles.field} htmlFor="ev-frequency">
                     Frecuencia
                     <select
                       id="ev-frequency"
@@ -654,7 +669,7 @@ export default function NewEventPage() {
                       <option value="daily">Diaria</option>
                     </select>
                   </label>
-                  <label htmlFor="ev-residency-count">
+                  <label className={styles.field} htmlFor="ev-residency-count">
                     Nº de funciones
                     <input
                       id="ev-residency-count"
@@ -672,7 +687,7 @@ export default function NewEventPage() {
 
           {step === 1 && (
             <>
-              <label className={platform.full} htmlFor="ev-venue">
+              <label className={`${styles.field} ${styles.full}`} htmlFor="ev-venue">
                 Venue
                 <select
                   id="ev-venue"
@@ -690,7 +705,7 @@ export default function NewEventPage() {
                 </select>
               </label>
 
-              <p id="ev-venue-status" className={`${platform.full} ${styles.mapStatus}`}>
+              <p id="ev-venue-status" className={`${styles.full} ${styles.mapStatus}`}>
                 {!form.venueId && 'Elige un recinto para comprobar su mapa.'}
                 {venueMap?.status === 'loading' && 'Comprobando el mapa del recinto…'}
                 {venueMap?.status === 'ok' && (
@@ -714,7 +729,7 @@ export default function NewEventPage() {
                 )}
               </p>
 
-              <label htmlFor="ev-capacity">
+              <label className={styles.field} htmlFor="ev-capacity">
                 Aforo declarado
                 <input
                   id="ev-capacity"
@@ -726,14 +741,14 @@ export default function NewEventPage() {
               </label>
 
               {venueMap?.status === 'ok' && venueMap.seats !== form.capacity && (
-                <p className={platform.full}>
-                  <button
+                <p className={styles.full}>
+                  <Button
                     type="button"
-                    className={styles.ghostBtn}
+                    variant="ghost"
                     onClick={() => set('capacity', venueMap.seats)}
                   >
                     Ajustar el aforo a las {venueMap.seats.toLocaleString('es-MX')} butacas del mapa
-                  </button>
+                  </Button>
                 </p>
               )}
             </>
@@ -741,7 +756,7 @@ export default function NewEventPage() {
 
           {step === 2 && (
             <>
-              <label htmlFor="ev-zone">
+              <label className={styles.field} htmlFor="ev-zone">
                 Zona / oferta
                 <input
                   id="ev-zone"
@@ -749,7 +764,7 @@ export default function NewEventPage() {
                   onChange={(e) => set('zoneName', e.target.value)}
                 />
               </label>
-              <label htmlFor="ev-price">
+              <label className={styles.field} htmlFor="ev-price">
                 Precio base (MXN)
                 <input
                   id="ev-price"
@@ -761,7 +776,7 @@ export default function NewEventPage() {
                   aria-describedby="ev-price-hint"
                 />
               </label>
-              <p id="ev-price-hint" className={`${platform.full} ${styles.hint}`}>
+              <p id="ev-price-hint" className={`${styles.full} ${styles.hint}`}>
                 Se guarda como precio mínimo del evento; el máximo se calcula al 2,5×. Los precios
                 por zona se afinan después en la pestaña Precios del evento.
               </p>
@@ -769,8 +784,7 @@ export default function NewEventPage() {
           )}
 
           {step === 3 && (
-            <div className={platform.full}>
-              <h2 style={{ marginTop: 0 }}>Antes de crear</h2>
+            <div className={styles.full}>
               <ul className={styles.summary}>
                 <li>
                   <strong>{form.title || '—'}</strong> ({form.type})
@@ -826,33 +840,34 @@ export default function NewEventPage() {
           </section>
         )}
 
-        <div className={styles.navRow}>
+        <CardFooter className={styles.navRow}>
           {step > 0 && (
-            <button type="button" className={styles.ghostBtn} onClick={() => setStep((s) => s - 1)}>
+            <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
               Atrás
-            </button>
+            </Button>
           )}
           {step < STEPS.length - 1 ? (
-            <button type="button" className={styles.primaryBtn} onClick={() => setStep((s) => s + 1)}>
+            <Button type="button" onClick={() => setStep((s) => s + 1)}>
               Siguiente
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
-              className={styles.primaryBtn}
-              disabled={saving || errors.length > 0}
+              loading={saving}
+              loadingLabel="Creando…"
+              disabled={errors.length > 0}
               onClick={submit}
             >
-              {saving ? 'Creando…' : 'Crear evento'}
-            </button>
+              Crear evento
+            </Button>
           )}
           {step === STEPS.length - 1 && errors.length > 0 && (
             <p className={styles.blockedNote} role="status">
               Resuelve los {errors.length} errores de arriba para habilitar la creación.
             </p>
           )}
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

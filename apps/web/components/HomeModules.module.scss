@@ -1,12 +1,39 @@
 @use '../styles/breakpoints' as bp;
 
 .wrap {
-  max-width: var(--layout-max);
-  margin: 0 auto;
-  padding: var(--space-xs) var(--layout-gutter) var(--space-3xl);
   display: flex;
   flex-direction: column;
-  gap: 3.25rem;
+  gap: 0;
+  margin-top: var(--space-xl);
+}
+
+/* —— Bandas editoriales alternadas —— */
+.band {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: 3.25rem 0 3.75rem;
+}
+
+.bandInner {
+  max-width: var(--layout-max);
+  margin: 0 auto;
+  padding: 0 var(--layout-gutter);
+}
+
+.bandLight {
+  background: var(--color-surface);
+}
+
+.bandMuted {
+  background: var(--color-surface-muted);
+}
+
+.bandWarm {
+  background: var(--color-surface);
+}
+
+.bandDark {
+  background: var(--color-surface-muted);
 }
 
 .section {
@@ -20,6 +47,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-md);
+  margin-bottom: var(--bl-space-5);
 
   h2 {
     margin: var(--bl-space-0);
@@ -38,6 +66,7 @@
     color: var(--color-accent-text);
     text-decoration: none;
     font-weight: var(--weight-semibold);
+    white-space: nowrap;
 
     &:hover {
       text-decoration: underline;
@@ -45,13 +74,19 @@
   }
 }
 
+.bandDark .head h2 {
+  color: var(--text-primary);
+}
+
 /* Bloque de vacío/error cuando no llegó ninguna sección. */
 .fallback {
+  max-width: var(--layout-max);
+  margin: 0 auto;
+  padding: var(--space-lg) var(--layout-gutter) var(--space-3xl);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-xs);
-  padding: var(--space-lg) 1.25rem;
   border: 1px dashed var(--color-border-strong);
   background: var(--color-surface);
   color: var(--text-muted);
@@ -75,25 +110,69 @@
   text-decoration: underline;
 }
 
-.trending {
+/* —— Carrusel horizontal con snap y peek —— */
+.carouselViewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--layout-gutter);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: -2px;
+  }
+}
+
+.carouselTrack {
   list-style: none;
   margin: var(--bl-space-0);
   padding: var(--bl-space-0);
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
   gap: var(--space-md);
+  width: max-content;
+  min-width: 100%;
+  padding-inline: var(--layout-gutter);
+  /* Deja asomar la siguiente tarjeta (~72px) */
+  padding-inline-end: calc(var(--layout-gutter) + 4.5rem);
+}
 
-  @include bp.below(bp.$bp-lg) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.carouselItem {
+  flex: 0 0 17.5rem;
+  min-width: 17.5rem;
+  scroll-snap-align: start;
+}
+
+.trendLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .trendCard {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  text-decoration: none;
-  color: inherit;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 36px rgba(10, 10, 10, 0.1);
+}
+
+.trendArt {
+  overflow: hidden;
+}
+
+.trendMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.9rem 1rem 1.1rem;
 
   strong {
     display: block;
@@ -104,74 +183,149 @@
   span,
   em {
     display: block;
-    margin-top: 0.2rem;
     font-size: var(--text-xs);
     color: var(--text-muted);
     font-style: normal;
   }
 
   em {
+    margin-top: 0.15rem;
     color: var(--text-primary);
     font-weight: var(--weight-bold);
   }
-
-  &:hover strong {
-    color: var(--color-accent-text);
-  }
-
-  &:hover .trendArt {
-    transform: translateY(-3px);
-  }
 }
 
-.trendArt {
-  overflow: hidden;
-  transition: transform var(--duration-base) ease;
-  box-shadow: 0 14px 32px rgba(10, 10, 10, 0.1);
+.trendLink:hover strong {
+  color: var(--color-accent-text);
 }
 
-.cities {
+/* —— Experiencias destacadas —— */
+.experiences {
+  list-style: none;
+  margin: var(--bl-space-0);
+  padding: var(--bl-space-0);
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-sm);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
 
-  @include bp.below(bp.$bp-md) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  @include bp.below(bp.$bp-lg) {
+    grid-template-columns: 1fr;
   }
 }
 
-.cityCard {
+.experienceCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.experienceSurface {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 40px rgba(10, 10, 10, 0.12);
+}
+
+.experienceArt {
   position: relative;
+  min-height: 13.5rem;
+  background-size: cover;
+  background-position: center;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 0.2rem;
-  min-height: 8.5rem;
-  padding: var(--bl-space-5) var(--bl-space-4);
   overflow: hidden;
-  color: var(--text-inverse);
-  text-decoration: none;
+
+  @include bp.below(bp.$bp-lg) {
+    min-height: 11rem;
+  }
+}
+
+.experienceOverlay {
+  position: absolute;
+  inset: 0;
   background:
-    linear-gradient(160deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.85)),
-    linear-gradient(135deg, #1c1917, var(--ink-700) 55%, var(--accent-500));
+    linear-gradient(180deg, rgba(10, 10, 10, 0.05) 0%, rgba(10, 10, 10, 0.82) 100%);
+  pointer-events: none;
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -40% -20% auto auto;
-    width: 70%;
-    height: 90%;
-    background: radial-gradient(circle, rgba(225, 29, 72, 0.35), transparent 65%);
-    pointer-events: none;
-  }
+.experienceBadge {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  z-index: 1;
+}
 
-  strong,
-  span {
-    position: relative;
-    z-index: 1;
-  }
+.experienceCopy {
+  position: relative;
+  z-index: 1;
+  padding: var(--bl-space-5) var(--bl-space-4);
+  color: var(--text-inverse);
 
   strong {
+    display: block;
+    font-family: var(--font-family-heading);
+    font-size: var(--bl-text-2xl);
+    letter-spacing: var(--tracking-wide);
+    line-height: 1;
+  }
+
+  span {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: var(--text-sm);
+    color: var(--text-inverse-muted);
+  }
+}
+
+.experienceCard:hover strong {
+  color: var(--color-accent-hover);
+}
+
+/* —— Ciudades con foto a sangre —— */
+.cityItem {
+  flex: 0 0 15.5rem;
+  min-width: 15.5rem;
+  scroll-snap-align: start;
+}
+
+.cityCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.citySurface {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 14px 32px rgba(10, 10, 10, 0.12);
+}
+
+.cityPhoto {
+  position: relative;
+  min-height: 12.5rem;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.cityOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10, 10, 10, 0.08) 0%, rgba(10, 10, 10, 0.88) 100%);
+  pointer-events: none;
+}
+
+.cityCopy {
+  position: relative;
+  z-index: 1;
+  padding: var(--bl-space-5) var(--bl-space-4);
+  color: var(--text-inverse);
+
+  strong {
+    display: block;
     font-family: var(--font-family-heading);
     font-size: var(--bl-text-3xl);
     letter-spacing: var(--tracking-wide);
@@ -179,82 +333,48 @@
   }
 
   span {
+    display: block;
+    margin-top: 0.2rem;
     font-size: var(--text-xs);
     color: var(--text-inverse-muted);
   }
+}
 
-  &:hover {
-    filter: brightness(1.08);
-  }
+.cityCard:hover .cityPhoto {
+  filter: brightness(1.06);
+}
 
-  &:nth-child(2) {
-    background:
-      linear-gradient(160deg, rgba(10, 10, 10, 0.25), rgba(10, 10, 10, 0.88)),
-      linear-gradient(135deg, #0c4a6e, #0284c7 60%, var(--ink-950));
-  }
+/* —— Recintos anchos —— */
+.venueTrack {
+  gap: var(--bl-space-4);
+}
 
-  &:nth-child(3) {
-    background:
-      linear-gradient(160deg, rgba(10, 10, 10, 0.2), rgba(10, 10, 10, 0.88)),
-      linear-gradient(135deg, #431407, #c2410c 55%, var(--ink-950));
-  }
+.venueItem {
+  flex: 0 0 22rem;
+  min-width: 22rem;
+  scroll-snap-align: start;
 
-  &:nth-child(4) {
-    background:
-      linear-gradient(160deg, rgba(10, 10, 10, 0.25), rgba(10, 10, 10, 0.9)),
-      linear-gradient(135deg, var(--bl-success-text), var(--bl-success-text) 50%, var(--ink-950));
+  @include bp.below(bp.$bp-md) {
+    flex-basis: 18.5rem;
+    min-width: 18.5rem;
   }
 }
 
-.venues {
-  list-style: none;
-  margin: var(--bl-space-0);
-  padding: var(--bl-space-0);
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--bl-space-3);
-
-  @include bp.below(bp.$bp-lg) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.venueLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .venueCard {
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  color: inherit;
   overflow: hidden;
-
-  strong {
-    display: block;
-    font-size: var(--text-md);
-    font-weight: var(--weight-bold);
-  }
-
-  span {
-    display: block;
-    margin-top: var(--space-3xs);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-  }
-
-  > div:last-child {
-    padding: 0.85rem 0.1rem 0.2rem;
-  }
-
-  &:hover .venueArt img {
-    transform: scale(1.04);
-  }
-
-  &:hover strong {
-    color: var(--color-accent-text);
-  }
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 36px rgba(10, 10, 10, 0.1);
 }
 
-/* Alto fijo: el hueco existe aunque la foto del recinto tarde o falle. */
 .venueArt {
-  height: 9rem;
+  position: relative;
+  height: 10.5rem;
   overflow: hidden;
   background: linear-gradient(135deg, var(--ink-900), var(--ink-600));
 
@@ -266,4 +386,37 @@
     display: block;
     transition: transform var(--duration-slow) ease;
   }
+}
+
+.venueBadge {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  z-index: 1;
+}
+
+.venueMeta {
+  padding: 0.95rem 1rem 1.15rem;
+
+  strong {
+    display: block;
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-snug);
+  }
+
+  span {
+    display: block;
+    margin-top: var(--space-3xs);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+}
+
+.venueLink:hover .venueArt img {
+  transform: scale(1.04);
+}
+
+.venueLink:hover strong {
+  color: var(--color-accent-text);
 }

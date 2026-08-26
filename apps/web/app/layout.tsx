@@ -25,13 +25,21 @@ export const metadata: Metadata = {
     "Compra boletos oficiales con inventario real, mapa de asientos y pagos Banorte.",
 };
 
+/** Inline boot: lock light theme before paint (storefront is light-only). */
+const themeBootScript = `(function(){try{document.documentElement.setAttribute('data-theme','light');}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      </head>
       <body className={`${headingFont.variable} ${bodyFont.variable}`}>
         <div className="app-shell">
           <div className="app-shell__content">{children}</div>

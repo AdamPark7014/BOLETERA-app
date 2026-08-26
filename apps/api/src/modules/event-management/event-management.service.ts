@@ -130,6 +130,30 @@ export class EventManagementService {
     return event;
   }
 
+  async updateEventMedia(
+    orgId: string,
+    eventId: string,
+    data: { imageUrl?: string; bannerImageUrl?: string },
+  ) {
+    const event = await this.prisma.event.findFirst({
+      where: { id: eventId, organizationId: orgId },
+    });
+    if (!event) throw new NotFoundException('Evento no encontrado');
+
+    const patch: { image?: string; bannerImage?: string } = {};
+    if (data.imageUrl !== undefined) patch.image = data.imageUrl.trim() || null;
+    if (data.bannerImageUrl !== undefined) patch.bannerImage = data.bannerImageUrl.trim() || null;
+    if (!Object.keys(patch).length) {
+      throw new BadRequestException('Indica imageUrl y/o bannerImageUrl');
+    }
+
+    return await this.prisma.event.update({
+      where: { id: eventId },
+      data: patch,
+      include: { venue: true },
+    });
+  }
+
   async createEventSeries(
     orgId: string,
     data: {

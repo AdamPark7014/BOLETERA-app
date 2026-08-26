@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import type { LayoutPublishStatusValue } from '@boletera/shared';
 import type { SeatMapData } from '@boletera/shared';
+import { Badge, Button, PageHeader, type BadgeTone } from '@boletera/ui';
 import { SeatMapEditor, type MapValidationState } from '@/components/SeatMapEditor';
 import { LayoutPublishPanel } from '@/components/LayoutPublishPanel';
 import {
@@ -17,7 +18,27 @@ import {
   type VenueLayoutWorkflow,
 } from '@/lib/platform-api';
 import { ApiStateBoundary, useSession } from '../../../events/_shared/api-state';
-import platform from '../../../_styles/platform.module.scss';
+import styles from '../../venues.module.scss';
+
+const STATUS_LABEL: Record<LayoutPublishStatusValue, string> = {
+  DRAFT: 'Borrador',
+  IN_REVIEW: 'En revisión',
+  PUBLISHED: 'Publicado',
+  ARCHIVED: 'Archivado',
+};
+
+function publishStatusTone(status: LayoutPublishStatusValue): BadgeTone {
+  switch (status) {
+    case 'PUBLISHED':
+      return 'success';
+    case 'IN_REVIEW':
+      return 'info';
+    case 'ARCHIVED':
+      return 'warning';
+    default:
+      return 'neutral';
+  }
+}
 
 export default function VenueMapEditorPage() {
   const { id: venueId } = useParams<{ id: string }>();
@@ -27,6 +48,7 @@ export default function VenueMapEditorPage() {
   const [events, setEvents] = useState<{ id: string; title: string; venueId?: string }[]>([]);
   const [publishEventId, setPublishEventId] = useState('');
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [nonce, setNonce] = useState(0);
   const [workflow, setWorkflow] = useState<VenueLayoutWorkflow | null>(null);
@@ -75,6 +97,11 @@ export default function VenueMapEditorPage() {
 
   const readOnly = publishStatus === 'ARCHIVED';
 
+  const validationHint = useMemo(() => {
+    if (validation.ok) return undefined;
+    return `${validation.errorCount} error(es) en el mapa — corrígelos en el panel Validación`;
+  }, [validation.errorCount, validation.ok]);
+
   if (session.status !== 'ready' || error || !map || !token) {
     return (
       <ApiStateBoundary
@@ -93,61 +120,88 @@ export default function VenueMapEditorPage() {
   const authToken: string = token;
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Diseñador de mapa — {venueName}</h1>
-          <p>Plantillas, zoom/pan, secciones y publicación de inventario</p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          {events.length > 0 && (
-            <>
-              <select
-                value={publishEventId}
-                onChange={(e) => setPublishEventId(e.target.value)}
-                style={{ padding: '0.5rem', borderRadius: 8, border: '1px solid #d4d4d4' }}
-              >
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>
-                    {ev.title}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className={platform.primaryBtn}
-                disabled={!validation.ok}
-                title={
-                  validation.ok
-                    ? undefined
-                    : `${validation.errorCount} error(es) en el mapa — corrígelos en el panel Validación`
-                }
-                onClick={async () => {
-                  if (!token || !publishEventId) return;
-                  if (!validation.ok) {
-                    setPublishMsg(
-                      `No se puede publicar: ${validation.errorCount} error(es) pendientes en el mapa.`,
-                    );
-                    return;
-                  }
-                  setPublishMsg(null);
-                  try {
-                    const r = await publishEvent(token, publishEventId);
-                    setPublishMsg(`✓ ${r.totalSeats} boletos en ${r.sections} zonas`);
-                  } catch (e) {
-                    setPublishMsg(e instanceof Error ? e.message : 'Error');
-                  }
-                }}
-              >
-                Publicar inventario (evento)
-              </button>
-            </>
-          )}
-          <Link href={`/venues/${venueId}/3d?v=${layoutVersion}`} className={platform.ghostBtn}>
-            Vista 3D
-          </Link>
-        </div>
-      </header>
+    <div className={styles.studioPage}>
+      <PageHeader
+        eyebrow={
+          <span className={styles.statusRow}>
+            <Badge tone={publishStatusTone(publishStatus)} variant="soft">
+              {STATUS_LABEL[publishStatus]}
+            </Badge>
+            {!validation.ok ? (
+              <Badge tone="danger" variant="soft">
+                {validation.errorCount} error(es)
+              </Badge>
+            ) : validation.warningCount > 0 ? (
+              <Badge tone="warning" variant="soft">
+                {validation.warningCount} aviso(s)
+              </Badge>
+            ) : null}
+            {destructiveLocked ? (
+              <Badge tone="warning" variant="soft">
+                Ventas activas
+              </Badge>
+            ) : null}
+          </span>
+        }
+        title={`Diseñador de mapa — ${venueName}`}
+        breadcrumbs={[
+          { label: 'Recintos', href: '/venues' },
+          { label: venueName },
+        ]}
+        description="Plantillas, zoom/pan, secciones y publicación de inventario"
+        actions={
+          <div className={styles.studioActions}>
+            {events.length > 0 ? (
+              <div className={styles.actionGroup}>
+                <label className={styles.selectField}>
+                  <span className={styles.srOnly}>Evento para publicar inventario</span>
+                  <select
+                    value={publishEventId}
+                    onChange={(e) => setPublishEventId(e.target.value)}
+                    aria-label="Evento para publicar inventario"
+                  >
+                    {events.map((ev) => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Button
+                  disabled={!validation.ok || !publishEventId}
+                  title={validationHint}
+                  loading={publishing}
+                  loadingLabel="Publicando…"
+                  onClick={async () => {
+                    if (!token || !publishEventId) return;
+                    if (!validation.ok) {
+                      setPublishMsg(
+                        `No se puede publicar: ${validation.errorCount} error(es) pendientes en el mapa.`,
+                      );
+                      return;
+                    }
+                    setPublishMsg(null);
+                    setPublishing(true);
+                    try {
+                      const r = await publishEvent(token, publishEventId);
+                      setPublishMsg(`✓ ${r.totalSeats} boletos en ${r.sections} zonas`);
+                    } catch (e) {
+                      setPublishMsg(e instanceof Error ? e.message : 'Error');
+                    } finally {
+                      setPublishing(false);
+                    }
+                  }}
+                >
+                  Publicar inventario (evento)
+                </Button>
+              </div>
+            ) : null}
+            <Link href={`/venues/${venueId}/3d?v=${layoutVersion}`} className={styles.secondaryLink}>
+              Vista 3D
+            </Link>
+          </div>
+        }
+      />
 
       <LayoutPublishPanel
         venueId={venueId}
@@ -161,7 +215,7 @@ export default function VenueMapEditorPage() {
         onMapReload={() => void reloadLayout()}
       />
 
-      {publishMsg && <p style={{ marginBottom: '1rem', fontSize: '0.875rem' }}>{publishMsg}</p>}
+      {publishMsg ? <p className={styles.publishNotice}>{publishMsg}</p> : null}
 
       <SeatMapEditor
         initial={map}

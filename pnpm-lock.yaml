@@ -253,6 +253,9 @@ importers:
 
   apps/taquilla:
     dependencies:
+      '@boletera/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@boletera/ui':
         specifier: workspace:*
         version: link:../../packages/ui

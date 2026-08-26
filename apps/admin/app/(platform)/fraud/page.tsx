@@ -9,16 +9,35 @@
  * vacía ya no se confunde con un 403.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
+import {
+  Badge,
+  Button,
+  DataTable,
+  EmptyState,
+  KpiCard,
+  PageHeader,
+  Section,
+  SegmentedControl,
+  formatNumber,
+  type DataTableColumn,
+} from '@boletera/ui';
 import { adminApi, ApiError, getStoredToken } from '@/lib/api';
 import { resolveFraudFlag } from '@/lib/platform-api';
 import { useToast } from '@/components/Toast/ToastProvider';
-import platform from '../_styles/platform.module.scss';
-import styles from '../orders/orders.module.scss';
-import { EmptyBlock, Notice, ResourceView } from '../orders/_ui/States';
+import { Notice, ResourceView } from '../orders/_ui/States';
 import { useResource } from '../orders/_ui/useResource';
 import { formatDateTime } from '../orders/_ui/format';
+import {
+  fraudStatusLabel,
+  fraudTypeLabel,
+  severityLabel,
+  severityRank,
+  severityTone,
+  statusTone,
+} from './_lib/labels';
+import styles from './suite.module.scss';
 
 type FraudFlag = {
   id: string;
@@ -35,23 +54,24 @@ type FraudFlag = {
   user?: { email: string } | null;
 };
 
-const SEVERITY: Record<string, { label: string; cls: string }> = {
-  CRITICAL: { label: 'Crítica', cls: 'canceled' },
-  HIGH: { label: 'Alta', cls: 'canceled' },
-  MEDIUM: { label: 'Media', cls: 'pending' },
-  LOW: { label: 'Baja', cls: 'refunded' },
-};
+const SEVERITY_FILTERS = [
+  { value: 'ALL', label: 'Toda severidad' },
+  { value: 'CRITICAL', label: 'Crítica' },
+  { value: 'HIGH', label: 'Alta' },
+  { value: 'MEDIUM', label: 'Media' },
+  { value: 'LOW', label: 'Baja' },
+] as const;
 
-const STATUS: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: 'Sin revisar', cls: 'pending' },
-  REVIEWING: { label: 'En revisión', cls: 'hold' },
-  RESOLVED: { label: 'Resuelta', cls: 'paid' },
-  CONFIRMED: { label: 'Fraude confirmado', cls: 'canceled' },
-  FALSE_POSITIVE: { label: 'Falso positivo', cls: 'refunded' },
-};
+const STATUS_FILTERS = [
+  { value: 'ALL', label: 'Todo estado' },
+  { value: 'PENDING', label: 'Sin revisar' },
+  { value: 'RESOLVED', label: 'Resuelta' },
+] as const;
 
-const SEVERITY_FILTERS = ['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
-const STATUS_FILTERS = ['ALL', 'PENDING', 'RESOLVED'];
+
+function isOpen(flag: FraudFlag): boolean {
+  return flag.status !== 'RESOLVED' && flag.status !== 'FALSE_POSITIVE';
+}
 
 export default function FraudPage() {
   const [severity, setSeverity] = useState('ALL');
@@ -81,7 +101,7 @@ export default function FraudPage() {
     const token = getStoredToken();
     if (!token) return;
     const resolution = window.prompt(
-      `Resolución de la alerta ${flag.type}. Queda registrada en la bitácora:`,
+      `Resolución de la alerta ${fraudTypeLabel(flag.type)}. Queda registrada en la bitácora:`,
       '',
     );
     if (resolution === null) return;
@@ -102,13 +122,23 @@ export default function FraudPage() {
   }
 
   return (
-    <div>
-      <header className={platform.pageHeader}>
-        <div>
-          <h1>Fraude y cumplimiento</h1>
-          <p>Alertas, revisión manual y resolución</p>
-        </div>
-      </header>
+    <div className={styles.page}>
+      <PageHeader
+        eyebrow="Compliance"
+        title="Fraude y cumplimiento"
+        description="Alertas del motor de reglas, revisión manual y resolución con bitácora"
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            loading={resource.refreshing}
+            loadingLabel="Actualizando…"
+            onClick={() => resource.reload()}
+          >
+            Actualizar
+          </Button>
+        }
+      />
 
       <Notice tone="info" title="Alcance de esta lista">
         <p>
@@ -118,127 +148,227 @@ export default function FraudPage() {
       </Notice>
 
       <div className={styles.toolbar}>
-        <div className={styles.filters} role="group" aria-label="Filtrar por severidad">
-          {SEVERITY_FILTERS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              aria-pressed={severity === s}
-              className={severity === s ? styles.filterActive : styles.filter}
-              onClick={() => setSeverity(s)}
-            >
-              {s === 'ALL' ? 'Toda severidad' : (SEVERITY[s]?.label ?? s)}
-            </button>
-          ))}
-        </div>
-        <div className={styles.filters} role="group" aria-label="Filtrar por estado">
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              aria-pressed={status === s}
-              className={status === s ? styles.filterActive : styles.filter}
-              onClick={() => setStatus(s)}
-            >
-              {s === 'ALL' ? 'Todo estado' : (STATUS[s]?.label ?? s)}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          label="Severidad"
+          size="sm"
+          options={SEVERITY_FILTERS}
+          value={severity}
+          onValueChange={setSeverity}
+        />
+        <SegmentedControl
+          label="Estado"
+          size="sm"
+          options={STATUS_FILTERS}
+          value={status}
+          onValueChange={setStatus}
+        />
       </div>
 
-      <section className={platform.panel}>
-        <ResourceView resource={resource} context="las alertas de fraude" loadingRows={5}>
-          {(flags) =>
-            flags.length === 0 ? (
-              <EmptyBlock
-                title={
-                  severity === 'ALL' && status === 'ALL'
-                    ? 'Sin alertas de fraude registradas'
-                    : 'Ninguna alerta con esos filtros'
-                }
-                hint={
-                  severity === 'ALL' && status === 'ALL'
-                    ? 'El motor de reglas no ha marcado ninguna orden.'
-                    : 'Quita algún filtro para ver el resto.'
-                }
-              />
-            ) : (
-              <table className={platform.table}>
-                <caption className={styles.srOnly}>
-                  Alertas de fraude con tipo, severidad, puntaje, estado y motivo
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Tipo</th>
-                    <th scope="col">Severidad</th>
-                    <th scope="col" className={styles.numeric}>
-                      Puntaje
-                    </th>
-                    <th scope="col">Orden</th>
-                    <th scope="col">Motivo</th>
-                    <th scope="col">Estado</th>
-                    <th scope="col">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {flags.map((f) => {
-                    const sev = SEVERITY[f.severity] ?? { label: f.severity, cls: 'refunded' };
-                    const st = STATUS[f.status] ?? { label: f.status, cls: 'refunded' };
-                    const open = f.status !== 'RESOLVED' && f.status !== 'FALSE_POSITIVE';
-                    return (
-                      <tr key={f.id} className={f.severity === 'CRITICAL' ? styles.rowAlert : undefined}>
-                        <th scope="row" className={styles.rowHead}>
-                          {f.type}
-                          {f.createdAt && <small>{formatDateTime(f.createdAt)}</small>}
-                        </th>
-                        <td>
-                          <span className={`${styles.status} ${styles[sev.cls]}`}>{sev.label}</span>
-                        </td>
-                        <td className={styles.numeric}>{f.score}</td>
-                        <td>
-                          {f.orderId ? (
-                            <Link href={`/orders/${f.orderId}`} className={styles.folioLink}>
-                              <code className={styles.code}>{f.order?.publicId ?? 'Ver orden'}</code>
-                            </Link>
-                          ) : (
-                            <span className={styles.subtle}>{f.user?.email ?? '—'}</span>
-                          )}
-                        </td>
-                        <td>
-                          {f.reason}
-                          {f.resolution && (
-                            <>
-                              <br />
-                              <small className={styles.subtle}>Resolución: {f.resolution}</small>
-                            </>
-                          )}
-                        </td>
-                        <td>
-                          <span className={`${styles.status} ${styles[st.cls]}`}>{st.label}</span>
-                        </td>
-                        <td>
-                          {open ? (
-                            <button
-                              type="button"
-                              className={platform.ghostBtn}
-                              disabled={busy !== null}
-                              onClick={() => void resolve(f)}
-                            >
-                              {busy === f.id ? 'Guardando…' : 'Resolver'}
-                            </button>
-                          ) : (
-                            <span className={styles.subtle}>—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )
-          }
-        </ResourceView>
-      </section>
+      <ResourceView resource={resource} context="las alertas de fraude" loadingRows={6}>
+        {(flags) => (
+          <FraudTable
+            flags={flags}
+            severity={severity}
+            status={status}
+            busy={busy}
+            onResolve={resolve}
+          />
+        )}
+      </ResourceView>
     </div>
+  );
+}
+
+function FraudTable({
+  flags,
+  severity,
+  status,
+  busy,
+  onResolve,
+}: {
+  flags: FraudFlag[];
+  severity: string;
+  status: string;
+  busy: string | null;
+  onResolve: (flag: FraudFlag) => void;
+}) {
+  const open = useMemo(() => flags.filter((f) => isOpen(f)), [flags]);
+  const urgent = useMemo(
+    () => flags.filter((f) => f.severity === 'CRITICAL' || f.severity === 'HIGH'),
+    [flags],
+  );
+  const maxScore = useMemo(
+    () => (flags.length > 0 ? Math.max(...flags.map((f) => f.score)) : 0),
+    [flags],
+  );
+
+  const anyFilter = severity !== 'ALL' || status !== 'ALL';
+
+  const columns = useMemo<readonly DataTableColumn<FraudFlag>[]>(
+    () => [
+      {
+        key: 'type',
+        header: 'Tipo',
+        width: 200,
+        sortValue: (row) => row.type,
+        render: (row) => (
+          <div className={styles.typeCell}>
+            <span className={styles.typeLabel}>{fraudTypeLabel(row.type)}</span>
+            {row.createdAt ? (
+              <span className={styles.when}>{formatDateTime(row.createdAt)}</span>
+            ) : null}
+          </div>
+        ),
+      },
+      {
+        key: 'severity',
+        header: 'Severidad',
+        width: 120,
+        sortValue: (row) => severityRank(row.severity),
+        render: (row) => (
+          <Badge tone={severityTone(row.severity)} variant="soft" size="sm">
+            {severityLabel(row.severity)}
+          </Badge>
+        ),
+      },
+      {
+        key: 'score',
+        header: 'Puntaje',
+        width: 90,
+        align: 'right',
+        sortValue: (row) => row.score,
+        render: (row) => (
+          <span
+            className={`${styles.score} ${row.severity === 'CRITICAL' ? styles.scoreCritical : ''}`}
+          >
+            {row.score}
+          </span>
+        ),
+      },
+      {
+        key: 'order',
+        header: 'Orden',
+        width: 160,
+        sortValue: (row) => row.order?.publicId ?? row.user?.email ?? '',
+        render: (row) =>
+          row.orderId ? (
+            <Link href={`/orders/${row.orderId}`}>
+              <code className={styles.folio}>{row.order?.publicId ?? 'Ver orden'}</code>
+            </Link>
+          ) : (
+            <span className={styles.muted}>{row.user?.email ?? '—'}</span>
+          ),
+      },
+      {
+        key: 'reason',
+        header: 'Motivo',
+        width: 280,
+        sortValue: (row) => row.reason,
+        render: (row) => (
+          <div className={styles.reason}>
+            <span>{row.reason}</span>
+            {row.resolution ? (
+              <span className={styles.resolution}>Resolución: {row.resolution}</span>
+            ) : null}
+          </div>
+        ),
+      },
+      {
+        key: 'status',
+        header: 'Estado',
+        width: 140,
+        sortValue: (row) => row.status,
+        render: (row) => (
+          <Badge tone={statusTone(row.status)} variant="soft" size="sm">
+            {fraudStatusLabel(row.status)}
+          </Badge>
+        ),
+      },
+      {
+        key: 'action',
+        header: 'Acción',
+        width: 120,
+        render: (row) =>
+          isOpen(row) ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={busy !== null}
+              loading={busy === row.id}
+              loadingLabel="Guardando…"
+              onClick={() => onResolve(row)}
+            >
+              Resolver
+            </Button>
+          ) : (
+            <span className={styles.muted}>—</span>
+          ),
+      },
+    ],
+    [busy, onResolve],
+  );
+
+  return (
+    <>
+      <Section columns={4} gap="md">
+        <KpiCard label="Alertas cargadas" value={formatNumber(flags.length)} tone="accent" />
+        <KpiCard
+          label="Sin revisar"
+          value={formatNumber(open.length)}
+          tone={open.length > 0 ? 'warning' : 'neutral'}
+          invertDelta
+        />
+        <KpiCard
+          label="Críticas o altas"
+          value={formatNumber(urgent.length)}
+          tone={urgent.length > 0 ? 'danger' : 'neutral'}
+          invertDelta
+        />
+        <KpiCard
+          label="Puntaje máximo"
+          value={flags.length > 0 ? formatNumber(maxScore) : '—'}
+          hint="En la ventana cargada"
+        />
+      </Section>
+
+      {open.length > 0 && (
+        <Notice tone="danger" title={`${open.length} alerta(s) requieren revisión`}>
+          <p>
+            Prioriza severidad crítica o alta y verifica el folio de la orden antes de resolver.
+            Cada cierre queda en la bitácora con la nota que escribas.
+          </p>
+        </Notice>
+      )}
+
+      <div className={styles.filterMeta}>
+        <span>
+          {flags.length} alerta(s) en esta ventana
+          {anyFilter ? ' con los filtros activos' : ''}.
+        </span>
+      </div>
+
+      <DataTable
+        label="Alertas de fraude con tipo, severidad, puntaje, estado y motivo"
+        columns={columns}
+        data={flags}
+        rowKey={(row) => row.id}
+        defaultSort={{ key: 'score', direction: 'desc' }}
+        empty={
+          <EmptyState
+            title={
+              severity === 'ALL' && status === 'ALL'
+                ? 'Sin alertas de fraude registradas'
+                : 'Ninguna alerta con esos filtros'
+            }
+            description={
+              severity === 'ALL' && status === 'ALL'
+                ? 'El motor de reglas no ha marcado ninguna orden.'
+                : 'Quita algún filtro para ver el resto.'
+            }
+          />
+        }
+      />
+    </>
   );
 }
