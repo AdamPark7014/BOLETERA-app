@@ -1,0 +1,49 @@
+---
+description: Protocolo de relevo Claude Code / Cursor. Evita que un agente pise el trabajo del otro.
+alwaysApply: true
+---
+
+# PROTOCOLO DE RELEVO - LEER ANTES DE TOCAR NADA
+
+Este proyecto se trabaja con DOS agentes sobre la MISMA rama de git: Claude Code
+y Cursor. Cuando a Adam se le acaban los creditos de uno, se pasa al otro y
+sigue en el mismo sitio. El desastre recurrente es que el agente que entra
+reescribe archivos completos desde lo que "recuerda", y borra el trabajo sin
+commitear que dejo el otro.
+
+## Regla de oro
+
+El disco y `git log` son la verdad. Tu memoria de la sesion anterior NO lo es.
+Si el archivo no coincide con lo que recuerdas, gana el archivo. Lo lees y
+sigues desde ahi. No lo restauras ni lo "arreglas".
+
+## Arranque obligatorio, antes de leer codigo y antes de escribir
+
+    pwsh -File C:\dev\scripts\relevo\relevo.ps1 estado
+
+Si salen archivos sin commitear, son del turno anterior. NO los toques.
+Primero:
+
+    pwsh -File C:\dev\scripts\relevo\relevo.ps1 salvar
+
+## Reglas
+
+1. Nunca reescribas entero un archivo que no acabas de leer en esta sesion.
+   Ediciones quirurgicas, no reemplazos totales.
+2. Todo turno se cierra con commit. Trabajo sin commitear es trabajo que el
+   siguiente agente va a pisar.
+3. Todo commit lleva el trailer `Agente: cursor` (los dos agentes usan el mismo
+   user.name de git, el autor no distingue nada).
+4. `.ai/RELEVO.md` se actualiza entero en el mismo commit que el trabajo.
+5. Un agente a la vez sobre la misma rama.
+6. Si el disco contradice a `.ai/RELEVO.md`, para y preguntale a Adam.
+7. Nada de `git reset --hard`, `git checkout --`, `git clean` ni `git stash drop`
+   sin que Adam lo pida por su nombre.
+
+## Cierre obligatorio del turno
+
+Actualiza `.ai/RELEVO.md` y despues:
+
+    pwsh -File C:\dev\scripts\relevo\relevo.ps1 cerrar -Agente cursor -Mensaje "resumen corto"
+
+Protocolo completo: C:\dev\scripts\relevo\PROTOCOLO-RELEVO.md
