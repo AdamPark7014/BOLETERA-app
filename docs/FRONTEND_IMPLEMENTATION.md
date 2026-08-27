@@ -555,4 +555,4 @@ const { data } = useMyNewHook();
 
 ---
 
-**Ready to deploy? Check [QUICK_START_GUIDE.md](../QUICK_START_GUIDE.md) for deployment steps.**
+**Arranque y despliegue: ver el [README](../README.md) del repo.**

@@ -441,7 +441,7 @@ SELECT pg_terminate_backend(pid) WHERE query_start < now() - interval '1 minute'
 ## 🚀 NEXT STEPS
 
 1. **Explore the codebase:**
-   - Read [QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md)
+   - Read the repo [README](../README.md)
    - Review [FRONTEND_IMPLEMENTATION.md](./FRONTEND_IMPLEMENTATION.md)
    - Study [API_REFERENCE.md](./API_REFERENCE.md)
 

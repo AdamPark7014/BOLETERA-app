@@ -88,13 +88,11 @@ jobs:
       - name: Compilar paquetes del workspace
         run: pnpm exec turbo run build --filter='./packages/*'
 
-      # Cubre api, web, admin, taquilla y los paquetes que declaran check-types.
+      # Cubre api, web, admin, taquilla, worker y los paquetes que declaran
+      # check-types. El worker ya declara el suyo, así que no hace falta el paso
+      # aparte con `tsc` que había aquí.
       - name: Typecheck (apps y paquetes)
         run: pnpm exec turbo run check-types
-
-      # El worker no declara script check-types; se invoca tsc directamente.
-      - name: Typecheck worker
-        run: pnpm --filter @boletera/worker exec tsc --noEmit
 
       - name: Compilar API
         run: pnpm --filter @boletera/api run build
@@ -103,3 +101,11 @@ jobs:
       # un paquete. Ahora una prueba en rojo detiene el merge.
       - name: Tests
         run: pnpm exec turbo run test -- --passWithNoTests
+
+      # Los 11 escenarios de `e2e/load/` necesitan el API arriba y cientos de
+      # compradores simultáneos: no caben en este pipeline. Lo que sí cabe —y es
+      # lo que de verdad los estaba pudriendo— es comprobar que siguen siendo
+      # código válido, para que nadie descubra que `pnpm load:oversell` no
+      # arranca justo cuando hace falta medir un onsale.
+      - name: Escenarios de carga (sintaxis)
+        run: pnpm load:all --syntax

@@ -42,7 +42,20 @@
     "check-color": "node scripts/check-color-tokens.mjs",
     "homologar-color": "node scripts/homologar-color.mjs",
     "check-dimensions": "node scripts/check-dimension-tokens.mjs",
-    "check-design": "pnpm run check-color && pnpm run check-dimensions"
+    "check-design": "pnpm run check-color && pnpm run check-dimensions",
+    "load:all-in-pricing": "node e2e/load/all-in-pricing.mjs",
+    "load:bot-hoarding": "node e2e/load/bot-hoarding.mjs",
+    "load:concurrent-hold": "node e2e/load/concurrent-hold.mjs",
+    "load:event-cancellation": "node e2e/load/event-cancellation.mjs",
+    "load:mobile-wallet-chain": "node e2e/load/mobile-wallet-chain.mjs",
+    "load:oversell": "node e2e/load/oversell.mjs",
+    "load:profeco-disclosure": "node e2e/load/profeco-disclosure.mjs",
+    "load:sale-phase-allocation": "node e2e/load/sale-phase-allocation.mjs",
+    "load:tenant-isolation": "node e2e/load/tenant-isolation.mjs",
+    "load:ticket-transfer": "node e2e/load/ticket-transfer.mjs",
+    "load:waiting-room": "node e2e/load/waiting-room.mjs",
+    "load:onsale": "k6 run e2e/load/onsale-k6.js",
+    "load:all": "node scripts/run-load-scenarios.mjs"
   },
   "workspaces": [
     "apps/*",

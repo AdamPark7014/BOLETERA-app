@@ -73,6 +73,41 @@ Scopes típicos: `read:events`, `read:inventory`, `write:orders`.
 | `apps/taquilla` | 3002 | POS |
 | `apps/worker` | — | Expira holds + reconcile SPEI |
 
+## Pruebas
+
+```bash
+pnpm test          # unitarios de todo el monorepo
+pnpm check-types   # typecheck de apps y paquetes
+pnpm test:e2e      # Playwright (necesita la plataforma arriba)
+```
+
+### Escenarios de carga
+
+Doce escenarios en `e2e/load/`: sobreventa, acaparamiento por bots, aislamiento
+entre inquilinos, reparto por fases de venta, sala de espera, cancelación de
+evento, transferencia de boleto, cadena de cartera móvil, precios all-in y
+disclosure PROFECO.
+
+Necesitan el API y Postgres arriba, y el throttle alto (varios lanzan cientos de
+compradores simultáneos y si no chocan con el límite por IP antes de competir):
+
+```bash
+docker compose up -d postgres redis
+THROTTLE_LIMIT=100000 THROTTLE_BURST_LIMIT=100000 pnpm dev:api
+
+pnpm load:oversell            # uno suelto
+pnpm load:all                 # todos en secuencia
+pnpm load:all --check         # ¿está la plataforma lista?
+pnpm load:all --syntax        # sólo validar el código (esto sí corre en CI)
+```
+
+`pnpm load:onsale` usa k6 y necesita el binario instalado aparte.
+
+## Documentación
+
+El resto vive en [`docs/`](docs/): referencia de API, arquitectura, setup de
+desarrollo y Docker, webhooks e integraciones, y el runbook de onsale.
+
 ## Licencia
 
 Privado — uso interno Boletera.
