@@ -4,7 +4,12 @@
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "scripts": { "build": "tsc", "check-types": "tsc --noEmit" },
-  "devDependencies": { "typescript": "^5.9.2" }
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types src/index.test.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
 }
-

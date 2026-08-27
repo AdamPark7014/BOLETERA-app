@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "node --test --experimental-strip-types src/config.test.ts src/runner.test.ts src/jobs/expire-holds.test.ts src/jobs/sweep-batch.test.ts src/jobs/reconcile-spei.test.ts src/jobs/pending-payouts.test.ts",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@boletera/database": "workspace:*",
@@ -19,4 +21,3 @@
     "typescript": "^5.9.2"
   }
 }
-
