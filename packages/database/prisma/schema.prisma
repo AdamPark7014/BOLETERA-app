@@ -797,8 +797,12 @@ model Order {
   channel   SalesChannel @default(WEB)
   cashierId String?
 
-  /// POS ops: will-call, comps, clientSaleId, exchange refs
+  /// POS ops: will-call, comps, exchange refs (clientSaleId also mirrored below)
   posOps Json?
+
+  /// Stable POS client sale id (offline/online). NULL for non-POS orders.
+  /// Uniqueness is per org so the same device UUID space cannot collide across tenants.
+  clientSaleId String?
 
   // Expiration
   expiresAt   DateTime
@@ -815,6 +819,7 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([organizationId, clientSaleId])
   @@index([organizationId])
   @@index([eventId])
   @@index([userId])

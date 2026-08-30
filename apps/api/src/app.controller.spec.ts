@@ -33,4 +33,13 @@ describe('AppController', () => {
       expect(result.database).toBe('up');
     });
   });
+
+  describe('prometheus', () => {
+    it('exposes up/db/redis gauges as text', async () => {
+      const body = await appController.prometheus();
+      expect(body).toContain('boletera_up 1');
+      expect(body).toContain('boletera_db_ready 1');
+      expect(body).toContain('boletera_redis_ready 1');
+    });
+  });
 });

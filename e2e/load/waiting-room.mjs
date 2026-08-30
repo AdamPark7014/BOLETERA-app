@@ -12,7 +12,7 @@
  *  5. Quien llega después de abrir queda detrás de toda la pre-fila.
  *  6. Con el pase, la reserva funciona.
  *
- * Uso:  API_URL=http://127.0.0.1:4001/api/v1 node e2e/load/waiting-room.mjs
+ * Uso:  API_URL=http://127.0.0.1:4000/api/v1 node e2e/load/waiting-room.mjs
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

@@ -21,7 +21,10 @@ import {
 } from '../banorte/payworks';
 import { IdempotencyGuard } from '../security/idempotency';
 
-/** Process-local intent cache. Export so apps can inspect or replace with Redis. */
+/**
+ * Intent cache for Banorte createIntent. Uses the module idempotency store
+ * (Redis when apps/api wires it via configurePaymentIdempotencyStore; memory otherwise).
+ */
 export const banorteIntentIdempotency = new IdempotencyGuard<PaymentIntentResult>();
 
 export class BanorteProvider implements PaymentProvider {

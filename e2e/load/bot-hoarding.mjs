@@ -32,7 +32,7 @@
  *
  *   docker exec boletera-redis sh -c 'redis-cli --scan --pattern "{*}:*"  *     | while read k; do redis-cli DEL "$k" > /dev/null; done'
  *
- * Uso:  API_URL=http://127.0.0.1:4001/api/v1 node e2e/load/bot-hoarding.mjs
+ * Uso:  API_URL=http://127.0.0.1:4000/api/v1 node e2e/load/bot-hoarding.mjs
  *
  * Resultado medido (19-ago-2026):
  *   permisivo  → el bot acaparo 17 boletos
@@ -51,7 +51,7 @@ for (const line of readFileSync(resolve(repoRoot, '.env'), 'utf8').split(/\r?\n/
   if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
 }
 
-const API = process.env.API_URL ?? 'http://127.0.0.1:4001/api/v1';
+const API = process.env.API_URL ?? 'http://127.0.0.1:4000/api/v1';
 const prisma = new PrismaClient();
 const stamp = Date.now();
 

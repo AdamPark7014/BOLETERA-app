@@ -28,6 +28,11 @@
  * Variables:
  *   API_URL   (default http://127.0.0.1:4000/api/v1)
  *   BAIL      =true para parar en el primer escenario que falle
+ *
+ * Precondiciones para correr de verdad (no --syntax):
+ *   API arriba + Postgres/Redis, y throttle elevado:
+ *   THROTTLE_LIMIT=100000 THROTTLE_BURST_LIMIT=100000 pnpm dev:api
+ * Sin eso varios escenarios chocan con el límite por IP antes de competir.
  */
 import { spawn } from 'node:child_process';
 import { readdirSync } from 'node:fs';

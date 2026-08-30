@@ -139,16 +139,12 @@ export class OrdersService {
     untrustedRequest?: boolean;
   }) {
     const idempotencyKey = dto.idempotencyKey?.trim() || undefined;
+    const clientSaleId = this.resolveClientSaleId(dto.posOps);
     const buyerName = dto.buyerName?.trim() || 'Cliente';
     if (idempotencyKey) {
       const replay = await this.findByIdempotencyKey(idempotencyKey);
       if (replay) return replay;
     }
-
-    const lineGroups = await this.resolveOrderLines(dto);
-    const holdIds = lineGroups.flatMap((g) => g.holdIds);
-    const holds = lineGroups.flatMap((g) => g.holds);
-    if (!holds.length) throw new BadRequestException('Invalid or expired holds');
 
     const event = await this.prisma.event.findUnique({
       where: { id: dto.eventId },
@@ -159,6 +155,18 @@ export class OrdersService {
       },
     });
     if (!event) throw new NotFoundException('Event not found');
+
+    // POS offline/online: unique (organizationId, clientSaleId) is the durable
+    // dedupe key. Checked before holds so a replay does not burn inventory.
+    if (clientSaleId) {
+      const replay = await this.findByClientSaleId(event.organizationId, clientSaleId);
+      if (replay) return replay;
+    }
+
+    const lineGroups = await this.resolveOrderLines(dto);
+    const holdIds = lineGroups.flatMap((g) => g.holdIds);
+    const holds = lineGroups.flatMap((g) => g.holds);
+    if (!holds.length) throw new BadRequestException('Invalid or expired holds');
 
     const affiliateRef = normalizeAffiliateRef(dto.affiliateRef);
 
@@ -436,6 +444,7 @@ export class OrdersService {
               paymentMethod: payMethodEnum,
               accessTokenHash: this.hashToken(accessToken),
               accessTokenAt: new Date(),
+              ...(clientSaleId ? { clientSaleId } : {}),
               ...(Object.keys(posOps).length
                 ? ({ posOps } as Record<string, unknown>)
                 : {}),
@@ -492,10 +501,14 @@ export class OrdersService {
     try {
       opened = await openOrder();
     } catch (e) {
-      // La clave es `@unique`: la petición que pierde la carrera devuelve la
-      // orden original en lugar de un 500 (F1-07).
-      if (idempotencyKey && this.isIdempotencyConflict(e)) {
-        const replay = await this.findByIdempotencyKey(idempotencyKey);
+      // Claves `@unique` (PaymentIntent.idempotencyKey o Order.clientSaleId):
+      // la petición que pierde la carrera devuelve la orden original (F1-07).
+      if (this.isIdempotencyConflict(e) && (idempotencyKey || clientSaleId)) {
+        const replay =
+          (idempotencyKey ? await this.findByIdempotencyKey(idempotencyKey) : null) ||
+          (clientSaleId
+            ? await this.findByClientSaleId(event.organizationId, clientSaleId)
+            : null);
         if (replay) return replay;
         throw new ConflictException('Ya existe una orden en curso con esa clave de idempotencia');
       }
@@ -818,12 +831,27 @@ export class OrdersService {
     });
   }
 
+  /** POS client sale: unique per org on Order.clientSaleId. */
+  private async findByClientSaleId(organizationId: string, clientSaleId: string) {
+    return this.prisma.order.findUnique({
+      where: {
+        organizationId_clientSaleId: { organizationId, clientSaleId },
+      },
+      include: { items: { include: { tickets: true } }, payment: true },
+    });
+  }
+
+  private resolveClientSaleId(posOps: Record<string, unknown> | undefined): string | undefined {
+    const fromOps =
+      typeof posOps?.clientSaleId === 'string' ? posOps.clientSaleId.trim() : '';
+    return fromOps || undefined;
+  }
+
   private isIdempotencyConflict(e: unknown) {
     if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== 'P2002') return false;
     const target = e.meta?.target;
-    return Array.isArray(target)
-      ? target.includes('idempotencyKey')
-      : String(target ?? '').includes('idempotencyKey');
+    const hay = Array.isArray(target) ? target.join(',') : String(target ?? '');
+    return hay.includes('idempotencyKey') || hay.includes('clientSaleId');
   }
 
   private hashToken(token: string) {

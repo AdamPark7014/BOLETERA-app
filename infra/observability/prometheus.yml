@@ -1,0 +1,22 @@
+# Scrape config for local / compose observability.
+# Default target: API on the Docker host (pnpm/nest or host-published :4000).
+# If the API runs inside the root docker-compose network, switch the target to
+# `api:4000` and attach this stack to that network (see README.md).
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: boletera-api
+    metrics_path: /api/v1/metrics/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:4000']
+        labels:
+          service: boletera-api
+
+  - job_name: redis
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: boletera-redis

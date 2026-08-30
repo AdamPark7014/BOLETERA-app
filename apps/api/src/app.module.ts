@@ -193,7 +193,11 @@ async function createThrottlerOptions(): Promise<ThrottlerModuleOptions> {
     skipIf: (context) => {
       const request = context.switchToHttp().getRequest();
       const path: string = request?.originalUrl ?? request?.url ?? '';
-      return path.startsWith('/api/v1/health') || path.startsWith('/api/v1/ready');
+      return (
+        path.startsWith('/api/v1/health') ||
+        path.startsWith('/api/v1/ready') ||
+        path.startsWith('/api/v1/metrics/prometheus')
+      );
     },
     ...(storage ? { storage } : {}),
   };

@@ -12,7 +12,7 @@
  * La propiedad que se verifica es una sola y es la que importa:
  * EL PRECIO QUE SE ANUNCIA ES EL QUE SE COBRA.
  *
- * Uso:  API_URL=http://127.0.0.1:4001/api/v1 node e2e/load/all-in-pricing.mjs
+ * Uso:  API_URL=http://127.0.0.1:4000/api/v1 node e2e/load/all-in-pricing.mjs
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

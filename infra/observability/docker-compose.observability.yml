@@ -1,0 +1,76 @@
+# Local observability stack (Prometheus + Grafana + Redis exporter).
+# Does not replace production monitoring — it gives a scrape target for SLOs
+# that the runbook can actually point at.
+#
+# From repo root:
+#   docker compose -f infra/observability/docker-compose.observability.yml up -d
+#
+# Ports (loopback only):
+#   Prometheus  http://127.0.0.1:9090
+#   Grafana     http://127.0.0.1:3100  (admin / admin — change via GRAFANA_ADMIN_*)
+#   Redis exp.  http://127.0.0.1:9121/metrics
+
+name: boletera-observability
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: boletera-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - '127.0.0.1:9090:9090'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    depends_on:
+      - redis-exporter
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: boletera-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      # 3100 avoids clashing with Next admin (:3001) and storefront (:3000).
+      - '127.0.0.1:3100:3000'
+    depends_on:
+      - prometheus
+    networks:
+      - observability
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.66.0
+    container_name: boletera-redis-exporter
+    restart: unless-stopped
+    environment:
+      # Default matches root docker-compose Redis published on the host.
+      REDIS_ADDR: ${REDIS_EXPORTER_ADDR:-redis://host.docker.internal:6379}
+    ports:
+      - '127.0.0.1:9121:9121'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - observability
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  observability:
+    driver: bridge

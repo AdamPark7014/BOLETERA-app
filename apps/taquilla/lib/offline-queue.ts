@@ -23,7 +23,20 @@ export async function enqueueSale(
   const id =
     (payload as OfflinePosPayload).clientSaleId ||
     (typeof crypto !== 'undefined' ? crypto.randomUUID() : String(Date.now()));
-  await idbPut<QueuedSale>(STORE_SALES, { id, payload, createdAt: new Date().toISOString() });
+  // Always stamp a stable id so sync can hit Order.(organizationId, clientSaleId).
+  const stamped: OfflinePosPayload | Record<string, unknown> = {
+    ...payload,
+    clientSaleId: id,
+    checkoutData: {
+      ...((payload as OfflinePosPayload).checkoutData || {}),
+      clientSaleId: id,
+    },
+  };
+  await idbPut<QueuedSale>(STORE_SALES, {
+    id,
+    payload: stamped,
+    createdAt: new Date().toISOString(),
+  });
 }
 
 export async function getQueueSize(): Promise<number> {

@@ -35446,6 +35446,7 @@ export namespace Prisma {
     paymentMethod: $Enums.PaymentMethod | null
     channel: $Enums.SalesChannel | null
     cashierId: string | null
+    clientSaleId: string | null
     expiresAt: Date | null
     completedAt: Date | null
     refundedAt: Date | null
@@ -35478,6 +35479,7 @@ export namespace Prisma {
     paymentMethod: $Enums.PaymentMethod | null
     channel: $Enums.SalesChannel | null
     cashierId: string | null
+    clientSaleId: string | null
     expiresAt: Date | null
     completedAt: Date | null
     refundedAt: Date | null
@@ -35511,6 +35513,7 @@ export namespace Prisma {
     channel: number
     cashierId: number
     posOps: number
+    clientSaleId: number
     expiresAt: number
     completedAt: number
     refundedAt: number
@@ -35563,6 +35566,7 @@ export namespace Prisma {
     paymentMethod?: true
     channel?: true
     cashierId?: true
+    clientSaleId?: true
     expiresAt?: true
     completedAt?: true
     refundedAt?: true
@@ -35595,6 +35599,7 @@ export namespace Prisma {
     paymentMethod?: true
     channel?: true
     cashierId?: true
+    clientSaleId?: true
     expiresAt?: true
     completedAt?: true
     refundedAt?: true
@@ -35628,6 +35633,7 @@ export namespace Prisma {
     channel?: true
     cashierId?: true
     posOps?: true
+    clientSaleId?: true
     expiresAt?: true
     completedAt?: true
     refundedAt?: true
@@ -35748,6 +35754,7 @@ export namespace Prisma {
     channel: $Enums.SalesChannel
     cashierId: string | null
     posOps: JsonValue | null
+    clientSaleId: string | null
     expiresAt: Date
     completedAt: Date | null
     refundedAt: Date | null
@@ -35800,6 +35807,7 @@ export namespace Prisma {
     channel?: boolean
     cashierId?: boolean
     posOps?: boolean
+    clientSaleId?: boolean
     expiresAt?: boolean
     completedAt?: boolean
     refundedAt?: boolean
@@ -35843,6 +35851,7 @@ export namespace Prisma {
     channel?: boolean
     cashierId?: boolean
     posOps?: boolean
+    clientSaleId?: boolean
     expiresAt?: boolean
     completedAt?: boolean
     refundedAt?: boolean
@@ -35881,6 +35890,7 @@ export namespace Prisma {
     channel?: boolean
     cashierId?: boolean
     posOps?: boolean
+    clientSaleId?: boolean
     expiresAt?: boolean
     completedAt?: boolean
     refundedAt?: boolean
@@ -35919,6 +35929,7 @@ export namespace Prisma {
     channel?: boolean
     cashierId?: boolean
     posOps?: boolean
+    clientSaleId?: boolean
     expiresAt?: boolean
     completedAt?: boolean
     refundedAt?: boolean
@@ -35926,7 +35937,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"accessTokenHash" | "accessTokenAt" | "id" | "publicId" | "organizationId" | "eventId" | "userId" | "status" | "buyerEmail" | "buyerName" | "buyerPhone" | "billingAddress" | "subtotal" | "fees" | "discountAmount" | "taxAmount" | "totalAmount" | "currency" | "promotionId" | "commissionAmount" | "paymentId" | "paymentMethod" | "channel" | "cashierId" | "posOps" | "expiresAt" | "completedAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"accessTokenHash" | "accessTokenAt" | "id" | "publicId" | "organizationId" | "eventId" | "userId" | "status" | "buyerEmail" | "buyerName" | "buyerPhone" | "billingAddress" | "subtotal" | "fees" | "discountAmount" | "taxAmount" | "totalAmount" | "currency" | "promotionId" | "commissionAmount" | "paymentId" | "paymentMethod" | "channel" | "cashierId" | "posOps" | "clientSaleId" | "expiresAt" | "completedAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     event?: boolean | EventDefaultArgs<ExtArgs>
@@ -35997,9 +36008,14 @@ export namespace Prisma {
       channel: $Enums.SalesChannel
       cashierId: string | null
       /**
-       * POS ops: will-call, comps, clientSaleId, exchange refs
+       * POS ops: will-call, comps, exchange refs (clientSaleId also mirrored below)
        */
       posOps: Prisma.JsonValue | null
+      /**
+       * Stable POS client sale id (offline/online). NULL for non-POS orders.
+       * Uniqueness is per org so the same device UUID space cannot collide across tenants.
+       */
+      clientSaleId: string | null
       expiresAt: Date
       completedAt: Date | null
       refundedAt: Date | null
@@ -36462,6 +36478,7 @@ export namespace Prisma {
     readonly channel: FieldRef<"Order", 'SalesChannel'>
     readonly cashierId: FieldRef<"Order", 'String'>
     readonly posOps: FieldRef<"Order", 'Json'>
+    readonly clientSaleId: FieldRef<"Order", 'String'>
     readonly expiresAt: FieldRef<"Order", 'DateTime'>
     readonly completedAt: FieldRef<"Order", 'DateTime'>
     readonly refundedAt: FieldRef<"Order", 'DateTime'>
@@ -72678,6 +72695,7 @@ export namespace Prisma {
     channel: 'channel',
     cashierId: 'cashierId',
     posOps: 'posOps',
+    clientSaleId: 'clientSaleId',
     expiresAt: 'expiresAt',
     completedAt: 'completedAt',
     refundedAt: 'refundedAt',
@@ -76332,6 +76350,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFilter<"Order"> | $Enums.SalesChannel
     cashierId?: StringNullableFilter<"Order"> | string | null
     posOps?: JsonNullableFilter<"Order">
+    clientSaleId?: StringNullableFilter<"Order"> | string | null
     expiresAt?: DateTimeFilter<"Order"> | Date | string
     completedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
     refundedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
@@ -76374,6 +76393,7 @@ export namespace Prisma {
     channel?: SortOrder
     cashierId?: SortOrderInput | SortOrder
     posOps?: SortOrderInput | SortOrder
+    clientSaleId?: SortOrderInput | SortOrder
     expiresAt?: SortOrder
     completedAt?: SortOrderInput | SortOrder
     refundedAt?: SortOrderInput | SortOrder
@@ -76393,6 +76413,7 @@ export namespace Prisma {
   export type OrderWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     publicId?: string
+    organizationId_clientSaleId?: OrderOrganizationIdClientSaleIdCompoundUniqueInput
     AND?: OrderWhereInput | OrderWhereInput[]
     OR?: OrderWhereInput[]
     NOT?: OrderWhereInput | OrderWhereInput[]
@@ -76419,6 +76440,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFilter<"Order"> | $Enums.SalesChannel
     cashierId?: StringNullableFilter<"Order"> | string | null
     posOps?: JsonNullableFilter<"Order">
+    clientSaleId?: StringNullableFilter<"Order"> | string | null
     expiresAt?: DateTimeFilter<"Order"> | Date | string
     completedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
     refundedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
@@ -76433,7 +76455,7 @@ export namespace Prisma {
     refunds?: RefundListRelationFilter
     fraudFlags?: FraudFlagListRelationFilter
     cfdiInvoices?: CfdiInvoiceListRelationFilter
-  }, "id" | "publicId">
+  }, "id" | "publicId" | "organizationId_clientSaleId">
 
   export type OrderOrderByWithAggregationInput = {
     accessTokenHash?: SortOrderInput | SortOrder
@@ -76461,6 +76483,7 @@ export namespace Prisma {
     channel?: SortOrder
     cashierId?: SortOrderInput | SortOrder
     posOps?: SortOrderInput | SortOrder
+    clientSaleId?: SortOrderInput | SortOrder
     expiresAt?: SortOrder
     completedAt?: SortOrderInput | SortOrder
     refundedAt?: SortOrderInput | SortOrder
@@ -76502,6 +76525,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelWithAggregatesFilter<"Order"> | $Enums.SalesChannel
     cashierId?: StringNullableWithAggregatesFilter<"Order"> | string | null
     posOps?: JsonNullableWithAggregatesFilter<"Order">
+    clientSaleId?: StringNullableWithAggregatesFilter<"Order"> | string | null
     expiresAt?: DateTimeWithAggregatesFilter<"Order"> | Date | string
     completedAt?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
     refundedAt?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
@@ -82035,6 +82059,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -82077,6 +82102,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -82109,6 +82135,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -82151,6 +82178,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -82188,6 +82216,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -82216,6 +82245,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -82249,6 +82279,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -87631,6 +87662,11 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type OrderOrganizationIdClientSaleIdCompoundUniqueInput = {
+    organizationId: string
+    clientSaleId: string
+  }
+
   export type OrderCountOrderByAggregateInput = {
     accessTokenHash?: SortOrder
     accessTokenAt?: SortOrder
@@ -87657,6 +87693,7 @@ export namespace Prisma {
     channel?: SortOrder
     cashierId?: SortOrder
     posOps?: SortOrder
+    clientSaleId?: SortOrder
     expiresAt?: SortOrder
     completedAt?: SortOrder
     refundedAt?: SortOrder
@@ -87698,6 +87735,7 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     channel?: SortOrder
     cashierId?: SortOrder
+    clientSaleId?: SortOrder
     expiresAt?: SortOrder
     completedAt?: SortOrder
     refundedAt?: SortOrder
@@ -87730,6 +87768,7 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     channel?: SortOrder
     cashierId?: SortOrder
+    clientSaleId?: SortOrder
     expiresAt?: SortOrder
     completedAt?: SortOrder
     refundedAt?: SortOrder
@@ -95076,6 +95115,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -95116,6 +95156,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -95703,6 +95744,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFilter<"Order"> | $Enums.SalesChannel
     cashierId?: StringNullableFilter<"Order"> | string | null
     posOps?: JsonNullableFilter<"Order">
+    clientSaleId?: StringNullableFilter<"Order"> | string | null
     expiresAt?: DateTimeFilter<"Order"> | Date | string
     completedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
     refundedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
@@ -99964,6 +100006,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -100004,6 +100047,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -104237,6 +104281,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -104278,6 +104323,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -104446,6 +104492,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -104487,6 +104534,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -104597,6 +104645,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -104637,6 +104686,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -104695,6 +104745,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -104736,6 +104787,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -104783,6 +104835,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -104824,6 +104877,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -104960,6 +105014,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -105000,6 +105055,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -106921,6 +106977,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -106961,6 +107018,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -107144,6 +107202,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -107185,6 +107244,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -107487,6 +107547,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -107528,6 +107589,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -109492,6 +109554,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -109533,6 +109596,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -109691,6 +109755,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -109732,6 +109797,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -111280,6 +111346,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -111818,6 +111885,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -111858,6 +111926,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -111894,6 +111963,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -113298,6 +113368,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -113597,6 +113668,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -113637,6 +113709,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -113673,6 +113746,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115075,6 +115149,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -115103,6 +115178,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115143,6 +115219,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115179,6 +115256,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115211,6 +115289,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -115291,6 +115370,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115331,6 +115411,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115367,6 +115448,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115687,6 +115769,7 @@ export namespace Prisma {
     channel?: $Enums.SalesChannel
     cashierId?: string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: string | null
     expiresAt: Date | string
     completedAt?: Date | string | null
     refundedAt?: Date | string | null
@@ -115715,6 +115798,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115755,6 +115839,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115791,6 +115876,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFieldUpdateOperationsInput | $Enums.SalesChannel
     cashierId?: NullableStringFieldUpdateOperationsInput | string | null
     posOps?: NullableJsonNullValueInput | InputJsonValue
+    clientSaleId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

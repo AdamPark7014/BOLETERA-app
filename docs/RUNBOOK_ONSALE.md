@@ -1,9 +1,29 @@
 # Runbook de onsale
 
-Objetivo: 30.000 usuarios concurrentes en el minuto 1. Este documento se lee a
-las 3 de la mañana. Todo lo que hay aquí es copiar y pegar.
+Checklist operativo para un pico de venta. Se lee a las 3 de la mañana: todo
+lo que hay aquí es copiar y pegar. **No es una garantía de capacidad** — el
+repo aún no tiene un despliegue de producción medido contra un SLO de
+concurrencia.
 
-`$API` = origen público del API (p. ej. `https://api.boletera.com`).
+```bash
+# Origen del API: local por defecto; en un entorno real, el valor de tu .env.
+export API="${API_URL:-http://127.0.0.1:4000}"
+# Si API_URL ya incluye /api/v1, usa solo el origen:
+# export API=http://127.0.0.1:4000
+```
+
+`$API` = origen del API (**sin** path), p. ej. `http://127.0.0.1:4000` en
+local o el host/puerto que publique tu compose / reverse proxy.
+
+Observabilidad local (Prometheus + Grafana): ver
+[`infra/observability/README.md`](../infra/observability/README.md).
+
+```bash
+docker compose -f infra/observability/docker-compose.observability.yml up -d
+curl -fsS "$API/api/v1/metrics/prometheus"
+# Prometheus UI: http://127.0.0.1:9090
+# Grafana:       http://127.0.0.1:3100  (admin/admin por defecto)
+```
 
 ---
 
@@ -91,8 +111,9 @@ psql "$DATABASE_URL" -c 'SELECT count(*) AS abiertas FROM pg_stat_activity;'
 | Rate limiting | logs del API | `Redis no responde al contar peticiones` → el límite está ABIERTO |
 | Holds | `SELECT status, count(*) FROM "SeatHold" GROUP BY status` | `ACTIVE` con `expiresAt` pasado y creciendo → worker caído |
 | Pagos | `SELECT status, count(*) FROM "Order" GROUP BY status` | `PENDING` creciendo sin `PAID` → gateway o IPN caídos |
-| 429 | métricas del balanceador | subida brusca → revisa `TRUST_PROXY` antes de subir límites |
-| 5xx | métricas del balanceador | > 1 % sostenido |
+| 429 | métricas del balanceador (si hay) / logs del API | subida brusca → revisa `TRUST_PROXY` antes de subir límites |
+| 5xx | métricas del balanceador (si hay) / logs del API | cualquier racha sostenida |
+| DB / Redis ready | `curl "$API/api/v1/metrics/prometheus"` o Grafana :3100 | `boletera_db_ready` o `boletera_redis_ready` en 0 |
 
 Consultas rápidas:
 

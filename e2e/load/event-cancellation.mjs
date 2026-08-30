@@ -15,7 +15,7 @@
  *  5. Se cierra la venta: las ofertas dejan de estar disponibles.
  *  6. El inventario vuelve a estar libre.
  *
- * Uso:  API_URL=http://127.0.0.1:4001/api/v1 node e2e/load/event-cancellation.mjs
+ * Uso:  API_URL=http://127.0.0.1:4000/api/v1 node e2e/load/event-cancellation.mjs
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

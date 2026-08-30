@@ -158,6 +158,18 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
+  /** SET key value EX ttl — raw string (payment idempotency blobs, etc.). */
+  async setEx(key: string, value: string, ttlSeconds: number): Promise<boolean> {
+    if (!this.client.isReady) return false;
+    try {
+      const result = await this.client.set(key, value, { EX: ttlSeconds });
+      return result === 'OK';
+    } catch (error) {
+      this.logError(error as Error);
+      return false;
+    }
+  }
+
   /**
    * Borrado sin comprobación de propiedad. NO usar para candados de asiento
    * (usa `releaseLock`); sólo para claves auxiliares que nos pertenecen.

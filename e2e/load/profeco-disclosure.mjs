@@ -19,7 +19,7 @@
  *  7. El hash detecta manipulación posterior del contenido.
  *  8. La disponibilidad por sección es real: coincide con el inventario.
  *
- * Uso:  API_URL=http://127.0.0.1:4001/api/v1 node e2e/load/profeco-disclosure.mjs
+ * Uso:  API_URL=http://127.0.0.1:4000/api/v1 node e2e/load/profeco-disclosure.mjs
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -33,7 +33,7 @@ for (const line of readFileSync(resolve(repoRoot, '.env'), 'utf8').split(/\r?\n/
   if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
 }
 
-const API = process.env.API_URL ?? 'http://127.0.0.1:4001/api/v1';
+const API = process.env.API_URL ?? 'http://127.0.0.1:4000/api/v1';
 const prisma = new PrismaClient();
 const stamp = Date.now();
 const HOUR = 3_600_000;

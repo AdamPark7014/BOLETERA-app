@@ -2,7 +2,7 @@ import { Injectable, Logger, BadRequestException, ForbiddenException } from '@ne
 import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
-import { SalesChannel } from '@prisma/client';
+import { Prisma, SalesChannel } from '@prisma/client';
 import { InventoryService } from '../inventory/inventory.service';
 import { OrdersService } from '../orders/orders.service';
 
@@ -466,6 +466,9 @@ export class TaquillaPosService {
     terminalId: string,
     transactions: Array<{ checkoutData: unknown; sessionId: string; clientSaleId?: string }>,
   ) {
+    const terminal = await this.prisma.posTerminal.findUnique({ where: { id: terminalId } });
+    if (!terminal) throw new BadRequestException('Terminal not found');
+
     let synced = 0;
     const failed: string[] = [];
     for (const txn of transactions) {
@@ -481,25 +484,24 @@ export class TaquillaPosService {
           buyerPhone?: string;
           clientSaleId?: string;
         };
-        const clientSaleId = txn.clientSaleId || data.clientSaleId;
-        if (clientSaleId) {
-          const recent = await this.prisma.order.findMany({
-            where: {
-              channel: SalesChannel.TAQUILLA,
-              createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+        const clientSaleId = (txn.clientSaleId || data.clientSaleId)?.trim() || undefined;
+        if (!clientSaleId) {
+          failed.push('offline sale missing clientSaleId');
+          continue;
+        }
+        // Durable unique (organizationId, clientSaleId) — not a last-N JSON scan.
+        const existing = await this.prisma.order.findUnique({
+          where: {
+            organizationId_clientSaleId: {
+              organizationId: terminal.organizationId,
+              clientSaleId,
             },
-            take: 100,
-            orderBy: { createdAt: 'desc' },
-            select: { id: true, publicId: true, totalAmount: true, status: true, posOps: true },
-          });
-          const dup = recent.find((o) => {
-            const ops = (o.posOps || {}) as { clientSaleId?: string };
-            return ops.clientSaleId === clientSaleId;
-          });
-          if (dup) {
-            synced++;
-            continue;
-          }
+          },
+          select: { id: true },
+        });
+        if (existing) {
+          synced++;
+          continue;
         }
         await this.quickCheckout(terminalId, txn.sessionId, {
           ...data,
@@ -507,8 +509,29 @@ export class TaquillaPosService {
         });
         synced++;
       } catch (e) {
-        failed.push((e as Error).message);
-        this.logger.error(`Offline sync failed: ${(e as Error).message}`);
+        // Race: another sync created the same sale between findUnique and create.
+        const msg = (e as Error).message || '';
+        const clientSaleId =
+          (txn.clientSaleId ||
+            (txn.checkoutData as { clientSaleId?: string } | undefined)?.clientSaleId)?.trim() ||
+          undefined;
+        if (clientSaleId && this.isClientSaleConflict(e)) {
+          const dup = await this.prisma.order.findUnique({
+            where: {
+              organizationId_clientSaleId: {
+                organizationId: terminal.organizationId,
+                clientSaleId,
+              },
+            },
+            select: { id: true },
+          });
+          if (dup) {
+            synced++;
+            continue;
+          }
+        }
+        failed.push(msg);
+        this.logger.error(`Offline sync failed: ${msg}`);
       }
     }
     await this.prisma.posTerminal.update({
@@ -885,6 +908,17 @@ export class TaquillaPosService {
 
   private hashPin(pin: string) {
     return createHash('sha256').update(`boletera-mgr:${pin}`).digest('hex');
+  }
+
+  private isClientSaleConflict(e: unknown) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      const target = e.meta?.target;
+      const hay = Array.isArray(target) ? target.join(',') : String(target ?? '');
+      return hay.includes('clientSaleId') || hay.includes('idempotencyKey');
+    }
+    // OrdersService may surface the race as ConflictException after catching P2002.
+    const msg = e instanceof Error ? e.message : '';
+    return /idempotenc|clientSaleId|ya existe una orden/i.test(msg);
   }
 
   private async assertManagerPin(organizationId: string, pin?: string) {

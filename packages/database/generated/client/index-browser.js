@@ -537,6 +537,7 @@ exports.Prisma.OrderScalarFieldEnum = {
   channel: 'channel',
   cashierId: 'cashierId',
   posOps: 'posOps',
+  clientSaleId: 'clientSaleId',
   expiresAt: 'expiresAt',
   completedAt: 'completedAt',
   refundedAt: 'refundedAt',
