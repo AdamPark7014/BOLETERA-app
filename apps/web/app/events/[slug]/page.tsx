@@ -10,6 +10,11 @@ import { ZoneOfferButtons } from '@/components/ZoneOfferButtons';
 import { EventPurchaseClient } from './EventPurchaseClient';
 import { AffiliateRefCapture } from '@/components/AffiliateRefCapture';
 import { api } from '@/lib/api';
+import {
+  buildEventJsonLd,
+  localPosterFallback,
+} from '@/lib/seo/event-jsonld';
+import { absUrlWithOrigin, getSiteOrigin } from '@/lib/site-url';
 import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from './event.module.scss';
 
@@ -36,7 +41,7 @@ type EventDetail = {
   nonTransferable?: boolean;
   holdExpiration?: number;
   seatMap: { snapshotData: unknown } | null;
-  offers: { id: string; zone: string; name?: string; basePrice: string; remainingQuantity?: number }[];
+  offers: { id: string; zone: string; name?: string; basePrice: string; remainingQuantity?: number; isAvailable?: boolean }[];
   venue?: {
     name: string;
     city: string;
@@ -72,14 +77,6 @@ const CATEGORY_LABEL: Record<string, string> = {
   FESTIVAL: 'Festival',
 };
 
-const SITE = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
-
-function absUrl(path?: string | null) {
-  if (!path) return undefined;
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${SITE}${path.startsWith('/') ? path : `/${path}`}`;
-}
-
 /*
  * `generateMetadata` y el propio componente piden el mismo evento. Como
  * `api()` va con cache: 'no-store', Next no puede deduplicar por sí solo y
@@ -100,7 +97,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   try {
-    const event = await loadEvent(slug);
+    const [event, origin, tenant] = await Promise.all([
+      loadEvent(slug),
+      getSiteOrigin(),
+      fetchTenantCurrent(),
+    ]);
     const when = new Date(event.startsAt);
     const dateLabel = when.toLocaleDateString('es-MX', {
       day: 'numeric',
@@ -112,8 +113,11 @@ export async function generateMetadata({
     const description =
       event.description?.slice(0, 155) ||
       `Compra boletos oficiales para ${event.title}${venue ? ` en ${venue}` : ''} · ${dateLabel}. Pago Banorte.`;
-    const image = absUrl(event.bannerImage || event.image);
-    const url = `${SITE}/events/${slug}`;
+    const fallback = localPosterFallback(event.category, event.slug);
+    const image =
+      absUrlWithOrigin(origin, event.bannerImage || event.image) ||
+      absUrlWithOrigin(origin, fallback);
+    const url = `${origin}/events/${slug}`;
     return {
       title,
       description,
@@ -123,6 +127,7 @@ export async function generateMetadata({
         url,
         type: 'website',
         locale: 'es_MX',
+        siteName: tenant.name,
         images: image ? [{ url: image }] : undefined,
       },
       twitter: {
@@ -154,9 +159,10 @@ export default async function EventPage({
    * del otro: iban en serie y ahora salen a la vez. En 4G esto quita un viaje
    * completo del camino crítico.
    */
-  const [settled, tenant] = await Promise.all([
+  const [settled, tenant, origin] = await Promise.all([
     Promise.allSettled([loadEvent(slug), loadCatalog()]),
     fetchTenantCurrent(),
+    getSiteOrigin(),
   ]);
   const [eventResult, catalogResult] = settled;
 
@@ -200,7 +206,6 @@ export default async function EventPage({
     minPrice > 0
       ? `$${minPrice.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${event.currency || 'MXN'}`
       : null;
-  const end = event.endsAt ? new Date(event.endsAt) : new Date(when.getTime() + 3 * 60 * 60 * 1000);
   const poster = {
     id: event.id,
     slug: event.slug,
@@ -214,39 +219,23 @@ export default async function EventPage({
       event.metadata?.posterAspect ??
       undefined,
   };
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Event',
-    name: event.title,
+  const jsonLd = buildEventJsonLd({
+    origin,
+    slug,
+    title: event.title,
     description: event.description,
-    startDate: event.startsAt,
-    endDate: end.toISOString(),
-    eventStatus: 'https://schema.org/EventScheduled',
-    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    image: absUrl(event.bannerImage || event.image),
-    location: event.venue
-      ? {
-          '@type': 'Place',
-          name: event.venue.name,
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: event.venue.city,
-            streetAddress: event.venue.address || undefined,
-            addressCountry: 'MX',
-          },
-        }
-      : undefined,
-    offers: {
-      '@type': 'AggregateOffer',
-      lowPrice: minPrice,
-      priceCurrency: event.currency || 'MXN',
-      availability: 'https://schema.org/InStock',
-      url: `${SITE}/events/${slug}`,
-    },
-    organizer: event.organization?.name
-      ? { '@type': 'Organization', name: event.organization.name }
-      : undefined,
-  };
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    currency: event.currency,
+    image: event.image,
+    bannerImage: event.bannerImage,
+    category: event.category,
+    venue: event.venue,
+    organization: event.organization,
+    tenantName: brandName,
+    offers: event.offers,
+    imageFallbackPath: localPosterFallback(event.category, event.slug),
+  });
 
   return (
     <>

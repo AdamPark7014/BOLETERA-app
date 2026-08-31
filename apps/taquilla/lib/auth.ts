@@ -18,7 +18,10 @@ export type TaquillaUser = {
   lastName?: string;
   role: string;
   organizationId?: string | null;
+  organizationName?: string | null;
 };
+
+const ORG_NAME_KEY = 'taquilla_org_name';
 
 /** Roles que pueden tocar configuración de organización (PIN de gerente). */
 const MANAGER_ROLES = new Set(['ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER', 'PROMOTER']);
@@ -40,6 +43,11 @@ export function getCashierId(): string | null {
 export function getOrgId(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(ORG_KEY);
+}
+
+export function getOrgName(): string {
+  if (typeof window === 'undefined') return 'TAQUILLA';
+  return localStorage.getItem(ORG_NAME_KEY) || 'TAQUILLA';
 }
 
 export function getTerminalLabel(): string {
@@ -92,6 +100,10 @@ export function saveTaquillaSession(
   if (opts.user.organizationId) {
     localStorage.setItem(ORG_KEY, opts.user.organizationId);
   }
+  const orgName = opts.user.organizationName?.trim();
+  if (orgName) {
+    localStorage.setItem(ORG_NAME_KEY, orgName);
+  }
 }
 
 export function clearTaquillaSession() {
@@ -100,6 +112,7 @@ export function clearTaquillaSession() {
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem(TERMINAL_LABEL_KEY);
   localStorage.removeItem(ORG_KEY);
+  localStorage.removeItem(ORG_NAME_KEY);
   localStorage.removeItem(TOKEN_ISSUED_KEY);
   localStorage.removeItem('boletera_pos_session');
   localStorage.removeItem('boletera_terminal_id');

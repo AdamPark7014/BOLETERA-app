@@ -1,13 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../legal.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Ayuda | Boletera',
-  description:
-    'Cómo comprar boletos, entrar al evento, transferir entradas, pedir factura y solicitar un reembolso.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await fetchTenantCurrent();
+  return {
+    title: `Ayuda | ${tenant.name}`,
+    description:
+      'Cómo comprar boletos, entrar al evento, transferir entradas, pedir factura y solicitar un reembolso.',
+  };
+}
 
 export default function AyudaPage() {
   return (

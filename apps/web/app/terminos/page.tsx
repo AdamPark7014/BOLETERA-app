@@ -2,13 +2,16 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LegalDraftNotice } from '@/components/LegalDraftNotice';
 import { SiteHeader } from '@/components/SiteHeader';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../legal.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Términos y condiciones | Boletera',
-  description:
-    'Términos de uso de Boletera, política de reembolsos y cambios, reventa oficial y transferencia de boletos.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await fetchTenantCurrent();
+  return {
+    title: `Términos y condiciones | ${tenant.name}`,
+    description: `Términos de uso de ${tenant.name}, política de reembolsos y cambios, reventa oficial y transferencia de boletos.`,
+  };
+}
 
 /*
  * BORRADOR. La sección de reembolsos existe porque la Ley Federal de Protección

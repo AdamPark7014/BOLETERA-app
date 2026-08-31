@@ -3,6 +3,8 @@ import { Bebas_Neue, Space_Grotesk } from "next/font/google";
 import { CartBar } from "@/components/CartBar";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TenantBrandProvider } from "@/components/TenantBrand";
+import { buildOrganizationWebsiteJsonLd } from "@/lib/seo/event-jsonld";
+import { getSiteOrigin } from "@/lib/site-url";
 import { fetchTenantCurrent, tenantThemeStyle } from "@/lib/tenant";
 // El sistema de diseno va PRIMERO: define los --bl-* de los que
 // derivan los tokens locales. Sin esta linea cada pantalla caia a
@@ -22,12 +24,22 @@ const bodyFont = Space_Grotesk({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const tenant = await fetchTenantCurrent();
+  const [tenant, origin] = await Promise.all([fetchTenantCurrent(), getSiteOrigin()]);
   const favicon = tenant.theme?.faviconUrl?.trim();
+  const logo = tenant.theme?.logoUrl?.trim();
   return {
+    metadataBase: new URL(origin),
     title: `${tenant.name} | Boletos oficiales`,
     description: `Compra boletos oficiales en ${tenant.name}: inventario real, mapa de asientos y pagos Banorte.`,
-    icons: favicon ? { icon: favicon } : undefined,
+    icons: {
+      icon: favicon || "/favicon.svg",
+      apple: favicon || logo || "/favicon.svg",
+    },
+    openGraph: {
+      siteName: tenant.name,
+      locale: "es_MX",
+      type: "website",
+    },
   };
 }
 
@@ -39,7 +51,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const tenant = await fetchTenantCurrent();
+  const [tenant, origin] = await Promise.all([fetchTenantCurrent(), getSiteOrigin()]);
   const brand = {
     name: tenant.name,
     logoUrl: tenant.theme?.logoUrl ?? null,
@@ -47,6 +59,11 @@ export default async function RootLayout({
     primaryColor: tenant.theme?.primaryColor ?? null,
     secondaryColor: tenant.theme?.secondaryColor ?? null,
   };
+  const siteJsonLd = buildOrganizationWebsiteJsonLd({
+    origin,
+    name: tenant.name,
+    logoUrl: tenant.theme?.logoUrl,
+  });
 
   return (
     <html
@@ -57,6 +74,10 @@ export default async function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
       </head>
       <body className={`${headingFont.variable} ${bodyFont.variable}`}>
         <TenantBrandProvider value={brand}>

@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, Param, Query } from '@nestjs/common';
+import { Controller, Get, Headers, NotFoundException, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DiscoveryService } from './discovery.service';
 import { TenantService } from '../tenant/tenant.service';
@@ -91,7 +91,9 @@ export class DiscoveryController {
   @Get('events/:slug')
   async getEvent(@Headers() headers: Record<string, string>, @Param('slug') slug: string) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
-    return this.discovery.getBySlug(slug, org?.id);
+    // Fail-closed: sin tenant resuelto no se sirve detalle cross-org.
+    if (!org?.id) throw new NotFoundException('Event not found');
+    return this.discovery.getBySlug(slug, org.id);
   }
 
   @Get('site-content')

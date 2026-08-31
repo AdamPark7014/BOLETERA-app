@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventStatus, Prisma } from '@prisma/client';
+import { publicCatalogEventWhere } from '../../common/event-visibility';
 import { PrismaService } from '../prisma/prisma.service';
 
 interface SearchFilters {
@@ -9,6 +10,8 @@ interface SearchFilters {
   cities?: string[];
   venues?: string[];
   limit?: number;
+  /** Required for public routes: same host scope as discovery. */
+  organizationId?: string;
 }
 
 @Injectable()
@@ -17,9 +20,15 @@ export class SearchService {
 
   constructor(private prisma: PrismaService) {}
 
-  async searchEvents(filters: SearchFilters, userId?: string) {
-    const where: Prisma.EventWhereInput = {
-      status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+  private catalogWhere(filters: SearchFilters): Prisma.EventWhereInput {
+    return {
+      AND: [
+        publicCatalogEventWhere(),
+        {
+          status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+        },
+      ],
+      ...(filters.organizationId ? { organizationId: filters.organizationId } : {}),
       ...(filters.dateRange && {
         startsAt: { gte: filters.dateRange.start, lte: filters.dateRange.end },
       }),
@@ -34,6 +43,10 @@ export class SearchService {
         ],
       }),
     };
+  }
+
+  async searchEvents(filters: SearchFilters, userId?: string) {
+    const where = this.catalogWhere(filters);
 
     const events = await this.prisma.event.findMany({
       where,
@@ -79,13 +92,17 @@ export class SearchService {
     return ranked;
   }
 
-  private async rankingFactors(event: {
-    title: string;
-    description: string | null;
-    category: string;
-    venue: { name: string };
-    _count: { orders: number };
-  }, query: string, userId?: string) {
+  private async rankingFactors(
+    event: {
+      title: string;
+      description: string | null;
+      category: string;
+      venue: { name: string };
+      _count: { orders: number };
+    },
+    query: string,
+    userId?: string,
+  ) {
     const q = query.toLowerCase();
     let contentMatching = 40;
     if (!q) contentMatching = 50;
@@ -109,7 +126,7 @@ export class SearchService {
 
   async getSearchFacets(filters: SearchFilters) {
     const events = await this.prisma.event.findMany({
-      where: { status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] } },
+      where: this.catalogWhere(filters),
       include: { venue: true },
       take: 200,
     });
@@ -118,11 +135,13 @@ export class SearchService {
     return { cities, categories, priceRange: { min: 0, max: 5000 } };
   }
 
-  async getAutocomplete(query: string) {
+  async getAutocomplete(query: string, organizationId?: string) {
     if (!query || query.length < 2) return [];
     const events = await this.prisma.event.findMany({
       where: {
+        AND: [publicCatalogEventWhere()],
         status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+        ...(organizationId ? { organizationId } : {}),
         title: { contains: query, mode: 'insensitive' },
       },
       take: 8,
@@ -131,10 +150,15 @@ export class SearchService {
     return events;
   }
 
-  async getTrendingEvents(limit = 10) {
+  async getTrendingEvents(limit = 10, organizationId?: string) {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const events = await this.prisma.event.findMany({
-      where: { status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] }, startsAt: { gte: new Date() } },
+      where: {
+        AND: [publicCatalogEventWhere()],
+        status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+        startsAt: { gte: new Date() },
+        ...(organizationId ? { organizationId } : {}),
+      },
       include: {
         venue: true,
         _count: {
@@ -159,22 +183,28 @@ export class SearchService {
       }));
   }
 
-  async getSmartRecommendations(userId?: string) {
+  async getSmartRecommendations(userId?: string, organizationId?: string) {
     if (userId) {
       const lastOrder = await this.prisma.order.findFirst({
-        where: { userId, status: 'COMPLETED' },
+        where: {
+          userId,
+          status: 'COMPLETED',
+          ...(organizationId ? { organizationId } : {}),
+        },
         orderBy: { createdAt: 'desc' },
         include: { event: true },
       });
       if (lastOrder?.event) {
         return this.searchEvents(
-          { categories: [lastOrder.event.category], limit: 8 },
+          {
+            categories: [lastOrder.event.category],
+            limit: 8,
+            organizationId,
+          },
           userId,
         );
       }
     }
-    return this.getTrendingEvents(8);
+    return this.getTrendingEvents(8, organizationId);
   }
 }
-
-

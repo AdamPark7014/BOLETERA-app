@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@boletera/ui';
-import { getTerminalLabel, getTaquillaUser } from '@/lib/auth';
+import { getOrgName, getTerminalLabel, getTaquillaUser } from '@/lib/auth';
 import { getLastReceipt, printReceipt } from '@/lib/pos';
 import { useHotkeys, type Hotkey } from '@/lib/hotkeys';
 import { HotkeyBar } from './HotkeyBar';
@@ -134,12 +134,14 @@ export function PosShell({
     width === 'wide' ? styles.pageWide : width === 'md' ? styles.pageMd : styles.page;
 
   const [terminalLabel, setTerminalLabel] = useState('TAQ-01');
+  const [orgName, setOrgName] = useState('TAQUILLA');
   const [cashierName, setCashierName] = useState<string | null>(null);
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
 
   useEffect(() => {
     setTerminalLabel(getTerminalLabel());
+    setOrgName(getOrgName());
     const user = getTaquillaUser();
     setCashierName(
       user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email : null,
@@ -208,7 +210,7 @@ export function PosShell({
         <div className={styles.topLeft}>
           <Link href="/" className={styles.brand} aria-label="Inicio taquilla">
             <BrandMark />
-            <span>TAQUILLA</span>
+            <span>{orgName}</span>
           </Link>
           <Badge tone="accent" variant="soft" className={styles.terminalBadge}>
             {terminalLabel}

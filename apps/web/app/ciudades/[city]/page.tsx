@@ -1,8 +1,11 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventPosterArt } from '@/components/EventPosterArt';
 import { api } from '@/lib/api';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
+import { buildHubMetadata } from '@/lib/seo';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../../hub.module.scss';
 
 function fmtDate(iso: string) {
@@ -12,6 +15,21 @@ function fmtDate(iso: string) {
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
+  });
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ city: string }>;
+}): Promise<Metadata> {
+  const { city: raw } = await params;
+  const city = decodeURIComponent(raw);
+  const tenant = await fetchTenantCurrent();
+  return buildHubMetadata({
+    title: `Eventos en ${city}`,
+    description: `Cartelera en ${city} en ${tenant.name}. Compra boletos oficiales.`,
+    path: `/ciudades/${encodeURIComponent(city)}`,
   });
 }
 

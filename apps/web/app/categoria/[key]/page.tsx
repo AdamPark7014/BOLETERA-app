@@ -1,9 +1,12 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventPosterArt } from '@/components/EventPosterArt';
 import { api } from '@/lib/api';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
+import { buildHubMetadata } from '@/lib/seo';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../../hub.module.scss';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -27,6 +30,22 @@ function fmtDate(iso: string) {
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
+  });
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ key: string }>;
+}): Promise<Metadata> {
+  const { key: raw } = await params;
+  const key = raw.toUpperCase();
+  const label = CATEGORY_LABEL[key] ?? key;
+  const tenant = await fetchTenantCurrent();
+  return buildHubMetadata({
+    title: label,
+    description: `${label} en cartelera en ${tenant.name}. Compra boletos oficiales con pago Banorte.`,
+    path: `/categoria/${key}`,
   });
 }
 

@@ -43,6 +43,12 @@ export class AuthService {
       where: { id: user.id },
       data: { lastLogin: new Date() },
     });
+    const org = user.organizationId
+      ? await this.prisma.organization.findUnique({
+          where: { id: user.organizationId },
+          select: { name: true },
+        })
+      : null;
     const payload = {
       sub: user.id,
       email: user.email,
@@ -59,6 +65,7 @@ export class AuthService {
         lastName: user.lastName,
         role: user.role,
         organizationId: user.organizationId,
+        organizationName: org?.name ?? null,
       },
     };
   }

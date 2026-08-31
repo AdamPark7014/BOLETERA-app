@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { resolveCuratedCards } from "@boletera/shared";
 import { SiteHeader } from "@/components/SiteHeader";
 import { HomeHeroRoot } from "@/components/HomeHeroRoot";
@@ -6,8 +7,20 @@ import { EventDiscoveryPanel, type EventHit } from "@/components/EventDiscoveryP
 import { DiscoverySkeleton } from "@/components/DiscoverySkeleton";
 import { HomeModules } from "@/components/HomeModules";
 import { api } from "@/lib/api";
+import { buildHubMetadata } from "@/lib/seo";
 import { fetchSiteContent } from "@/lib/site-content";
+import { fetchTenantCurrent } from "@/lib/tenant";
 import styles from "./page.module.scss";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await fetchTenantCurrent();
+  return buildHubMetadata({
+    title: `Cartelera oficial`,
+    description: `Compra boletos oficiales en ${tenant.name}: conciertos, deportes, teatro y más. Inventario real y pago Banorte.`,
+    path: "/",
+    image: tenant.theme?.logoUrl || "/hero/01-festival.jpg",
+  });
+}
 
 type Facets = {
   cities: { name: string; count: number }[];

@@ -1,15 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from './resale.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
-export const metadata: Metadata = {
-  title: 'Reventa oficial | Boletera',
-  description:
-    'Boletos de reventa verificados, con tope de precio y código QR nuevo para el comprador.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await fetchTenantCurrent();
+  return {
+    title: `Reventa oficial | ${tenant.name}`,
+    description:
+      'Boletos de reventa verificados, con tope de precio y código QR nuevo para el comprador.',
+  };
+}
 
 type Listing = {
   id: string;

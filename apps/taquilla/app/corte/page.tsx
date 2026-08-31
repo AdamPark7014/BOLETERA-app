@@ -15,6 +15,7 @@ import {
 } from '@boletera/ui';
 import {
   clearTaquillaSession,
+  getOrgName,
   getTaquillaToken,
   getTaquillaUser,
   getTerminalLabel,
@@ -224,7 +225,7 @@ export default function CortePage() {
       '',
       ...Object.entries(r.byMethod ?? {}).map(([m, a]) => `${m}: ${money(Number(a))}`),
     ].filter(Boolean);
-    const payload = buildEscPosReceipt(lines, terminal);
+    const payload = buildEscPosReceipt(lines, getOrgName());
     const serialOk = await printViaSerial(payload, false);
     if (!serialOk) printEscPos(payload);
   }

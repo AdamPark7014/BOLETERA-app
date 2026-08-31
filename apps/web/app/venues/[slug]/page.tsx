@@ -1,8 +1,12 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventPosterArt } from '@/components/EventPosterArt';
 import { api } from '@/lib/api';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
+import { buildHubMetadata } from '@/lib/seo';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../../hub.module.scss';
 
 type VenueDetail = {
@@ -34,6 +38,31 @@ function fmtDate(iso: string) {
   });
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const tenant = await fetchTenantCurrent();
+  try {
+    const venue = await api<VenueDetail>(`/discovery/venues/${slug}`);
+    if (!venue?.name) {
+      return { title: `Recinto | ${tenant.name}` };
+    }
+    return buildHubMetadata({
+      title: venue.name,
+      description:
+        venue.description?.slice(0, 155) ||
+        `${venue.name} en ${venue.city}: cartelera y boletos oficiales en ${tenant.name}.`,
+      path: `/venues/${slug}`,
+      image: venue.image,
+    });
+  } catch {
+    return { title: `Recinto | ${tenant.name}` };
+  }
+}
+
 export default async function VenuePage({
   params,
 }: {
@@ -47,33 +76,7 @@ export default async function VenuePage({
     venue = null;
   }
 
-  if (!venue) {
-    return (
-      <>
-        <SiteHeader />
-        <main id="contenido" tabIndex={-1} className={styles.page}>
-          <nav className={styles.crumb} aria-label="Ruta de navegación">
-            <Link href="/">Cartelera</Link>
-            <span aria-hidden="true">/</span>
-            <Link href="/venues">Recintos</Link>
-          </nav>
-          {/* Sin h1 la página quedaba sin nivel 1 en el caso de error. */}
-          <header className={styles.hero}>
-            <h1>Recinto no disponible</h1>
-            <p>No encontramos este recinto o no pudimos consultarlo ahora.</p>
-          </header>
-          <div className={styles.error} role="alert">
-            <strong>Revisa la dirección o vuelve al listado</strong>
-            <p>
-              Puede que el recinto ya no esté publicado. Desde el listado completo
-              encontrarás los que sí tienen cartelera.
-            </p>
-            <Link href="/venues">Ver todos los recintos</Link>
-          </div>
-        </main>
-      </>
-    );
-  }
+  if (!venue) notFound();
 
   const mapsUrl =
     venue.latitude != null && venue.longitude != null

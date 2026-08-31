@@ -3,6 +3,7 @@ import {
   apiJson,
   getCashierId as getAuthCashierId,
   getOrgId,
+  getOrgName,
   getTaquillaUser,
 } from './auth';
 import { availableByOffer, fetchAvailability } from './inventory';
@@ -402,7 +403,7 @@ export async function printReceipt(receipt: PosReceipt) {
     '',
     'Gracias por su compra',
   ];
-  const payload = buildEscPosReceipt(lines);
+  const payload = buildEscPosReceipt(lines, getOrgName());
   const serialOk = await printViaSerial(payload);
   if (!serialOk) printEscPos(payload);
 }

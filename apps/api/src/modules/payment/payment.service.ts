@@ -125,6 +125,8 @@ export class PaymentService {
     buyerName: string;
     paymentMethod?: string;
     publicId?: string;
+    /** Stable key so retries do not create a second Banorte intent. */
+    idempotencyKey?: string;
   }) {
     const order = await this.prisma.order.findUnique({
       where: { id: data.orderId },
@@ -142,6 +144,27 @@ export class PaymentService {
       );
     }
 
+    const idempotencyKey = data.idempotencyKey?.trim() || `order:${data.orderId}`;
+    const existing = await this.prisma.paymentIntent.findUnique({
+      where: { idempotencyKey },
+    });
+    if (existing) {
+      const meta = (existing.metadata ?? {}) as Record<string, unknown>;
+      return {
+        intentId: String(meta.intentId ?? existing.externalId),
+        status: 'pending' as const,
+        redirectUrl: typeof meta.redirectUrl === 'string' ? meta.redirectUrl : undefined,
+        reference: typeof meta.reference === 'string' ? meta.reference : undefined,
+        metadata: meta,
+        amount: Number(existing.amount),
+        currency: existing.currency,
+        expiresAt: existing.expiresAt,
+        gateway: 'BANORTE',
+        settlement: 'Cuenta Banorte del comercio',
+        replayed: true,
+      };
+    }
+
     const method = (data.paymentMethod ?? order.paymentMethod ?? 'CARD').toUpperCase();
     const intent = await this.banorte.createIntent({
       amount,
@@ -151,24 +174,57 @@ export class PaymentService {
       buyerEmail: data.buyerEmail,
       buyerName: data.buyerName,
       paymentMethod: method as 'CARD' | 'SPEI' | 'OXXO',
+      idempotencyKey,
       metadata: { publicId: data.publicId ?? order.publicId },
     });
 
     const expiresAt = paymentDeadline(method);
 
-    await this.prisma.paymentIntent.create({
-      data: {
-        orderId: data.orderId,
-        provider: PaymentGateway.BANORTE,
-        externalId: intent.externalId ?? intent.intentId,
-        amount,
-        currency: order.currency,
-        status: PaymentStatus.PENDING,
-        channel: order.channel,
-        expiresAt,
-        metadata: { intentId: intent.intentId, ...(intent.metadata as object) },
-      },
-    });
+    try {
+      await this.prisma.paymentIntent.create({
+        data: {
+          orderId: data.orderId,
+          provider: PaymentGateway.BANORTE,
+          externalId: intent.externalId ?? intent.intentId,
+          amount,
+          currency: order.currency,
+          status: PaymentStatus.PENDING,
+          channel: order.channel,
+          expiresAt,
+          idempotencyKey,
+          metadata: {
+            intentId: intent.intentId,
+            redirectUrl: intent.redirectUrl,
+            reference: intent.reference,
+            ...(intent.metadata as object),
+          },
+        },
+      });
+    } catch (e) {
+      // Race: another request wrote the same key — replay that row.
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        const raced = await this.prisma.paymentIntent.findUnique({
+          where: { idempotencyKey },
+        });
+        if (raced) {
+          const meta = (raced.metadata ?? {}) as Record<string, unknown>;
+          return {
+            intentId: String(meta.intentId ?? raced.externalId),
+            status: 'pending' as const,
+            redirectUrl: typeof meta.redirectUrl === 'string' ? meta.redirectUrl : undefined,
+            reference: typeof meta.reference === 'string' ? meta.reference : undefined,
+            metadata: meta,
+            amount: Number(raced.amount),
+            currency: raced.currency,
+            expiresAt: raced.expiresAt,
+            gateway: 'BANORTE',
+            settlement: 'Cuenta Banorte del comercio',
+            replayed: true,
+          };
+        }
+      }
+      throw e;
+    }
 
     return {
       intentId: intent.intentId,
@@ -618,12 +674,17 @@ export class PaymentService {
     amount?: number;
     notes?: string;
     requestedBy?: string;
+    /** When set (non-SUPER_ADMIN scope), order must belong to this org. */
+    organizationId?: string | null;
   }) {
     const order = await this.prisma.order.findUnique({
       where: { id: data.orderId },
       include: { payment: true },
     });
     if (!order?.payment) throw new BadRequestException('No payment found');
+    if (data.organizationId && order.organizationId !== data.organizationId) {
+      throw new ForbiddenException('Organization access denied');
+    }
     if (
       order.status !== OrderStatus.COMPLETED &&
       order.status !== OrderStatus.PARTIALLY_REFUNDED
@@ -703,6 +764,7 @@ export class PaymentService {
     refundId: string,
     processedBy: string,
     banorteReference?: string,
+    organizationId?: string | null,
   ) {
     const refund = await this.prisma.refund.findUnique({
       where: { id: refundId },
@@ -713,6 +775,9 @@ export class PaymentService {
       },
     });
     if (!refund) throw new NotFoundException('Refund not found');
+    if (organizationId && refund.order.organizationId !== organizationId) {
+      throw new ForbiddenException('Organization access denied');
+    }
     if (refund.status === 'COMPLETED') {
       return { refund, alreadyCompleted: true };
     }

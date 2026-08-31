@@ -14,6 +14,13 @@
   margin-top: 0.25rem;
 }
 
+.hint {
+  margin-top: 0.5rem;
+  font-size: var(--bl-text-sm);
+  color: var(--bl-gray-600);
+  line-height: 1.45;
+}
+
 .notice {
   margin-top: 0.75rem;
   padding: var(--bl-space-3) var(--bl-space-3);

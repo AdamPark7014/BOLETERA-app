@@ -2,14 +2,20 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
 import { api } from '@/lib/api';
+import { buildHubMetadata } from '@/lib/seo';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../hub.module.scss';
 
 type CityFacet = { name: string; count: number };
 
-export const metadata: Metadata = {
-  title: 'Ciudades | Boletera',
-  description: 'Explora la cartelera de eventos por ciudad en México.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await fetchTenantCurrent();
+  return buildHubMetadata({
+    title: 'Ciudades',
+    description: `Explora la cartelera de eventos por ciudad en ${tenant.name}.`,
+    path: '/ciudades',
+  });
+}
 
 export default async function CiudadesPage() {
   let cities: CityFacet[] = [];

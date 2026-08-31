@@ -157,10 +157,14 @@ export class PaymentController {
       paymentMethod?: string;
       publicId?: string;
     },
+    @Headers('idempotency-key') idempotencyKey?: string,
   ) {
     // El cuerpo no decide cuánto se cobra: se descartan amount/currency.
     const { amount: _ignoredAmount, currency: _ignoredCurrency, ...safe } = dto;
-    return await this.paymentService.createPaymentIntent(safe);
+    return await this.paymentService.createPaymentIntent({
+      ...safe,
+      idempotencyKey: idempotencyKey?.trim() || `order:${dto.orderId}`,
+    });
   }
 
   /**
@@ -185,18 +189,20 @@ export class PaymentController {
   }
 
   @Post(':orderId/refunds')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'TAQUILLA_SUPERVISOR', 'FINANCE')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Request refund via Banorte (audited)' })
   async createRefund(
     @Param('orderId') orderId: string,
     @Body() dto: { reason: string; amount?: number; notes?: string },
+    @Request() req: ScopedRequest,
     @CurrentUser() user: { email?: string; sub?: string; id?: string },
   ) {
     return await this.paymentService.createRefund({
       orderId,
       ...dto,
+      organizationId: requireScope(req),
       requestedBy: user?.email || user?.sub || 'staff',
     });
   }
@@ -279,7 +285,7 @@ export class PaymentController {
   }
 
   @Post('refunds/:refundId/complete')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'TAQUILLA_SUPERVISOR', 'FINANCE')
   @ApiBearerAuth()
   @ApiOperation({
@@ -288,12 +294,14 @@ export class PaymentController {
   async completeManualRefund(
     @Param('refundId') refundId: string,
     @Body() dto: { banorteReference?: string },
+    @Request() req: ScopedRequest,
     @CurrentUser() user: { email?: string; sub?: string },
   ) {
     return await this.paymentService.completeManualRefund(
       refundId,
       user?.email || user?.sub || 'admin',
       dto.banorteReference,
+      requireScope(req),
     );
   }
 

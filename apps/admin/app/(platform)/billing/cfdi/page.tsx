@@ -149,14 +149,16 @@ function CfdiContent({ data, onChanged }: { data: BillingData; onChanged: () => 
   return (
     <>
       {!profile ? (
-        <Notice tone="warn" title="Todavía no hay perfil fiscal">
+        <Notice tone="warn" title="Sandbox / sin validez fiscal">
           <p>
-            Sin RFC, razón social, régimen y código postal del emisor el PAC rechaza cualquier
-            timbrado. Configúralo abajo para habilitar la facturación.
+            Todavía no hay perfil fiscal. Cualquier timbre en este entorno es{' '}
+            <strong>sandbox</strong> y <strong>no es válido ante el SAT</strong>. Configura el
+            emisor abajo solo para probar el flujo; para facturar de verdad necesitas un PAC en
+            modo producción.
           </p>
         </Notice>
       ) : profile.pacMode !== 'production' ? (
-        <Notice tone="info" title="Modo sandbox">
+        <Notice tone="warn" title="Modo sandbox — no válido fiscalmente">
           <p>
             Los timbres que emitas ahora <strong>no tienen validez ante el SAT</strong>: el UUID es
             simulado y sirve solo para probar el flujo. Cambia el perfil a modo producción con un

@@ -2,13 +2,16 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LegalDraftNotice } from '@/components/LegalDraftNotice';
 import { SiteHeader } from '@/components/SiteHeader';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../legal.module.scss';
 
-export const metadata: Metadata = {
-  title: 'Aviso de privacidad | Boletera',
-  description:
-    'Aviso de privacidad de Boletera: responsable, finalidades, derechos ARCO y transferencias.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await fetchTenantCurrent();
+  return {
+    title: `Aviso de privacidad | ${tenant.name}`,
+    description: `Aviso de privacidad de ${tenant.name}: responsable, finalidades, derechos ARCO y transferencias.`,
+  };
+}
 
 /*
  * BORRADOR. El contenido sigue la estructura que la LFPDPPP y su Reglamento

@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
 import { api } from '@/lib/api';
+import { buildHubMetadata } from '@/lib/seo';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../hub.module.scss';
 
 type VenueHit = {
@@ -14,10 +16,14 @@ type VenueHit = {
   eventCount: number;
 };
 
-export const metadata: Metadata = {
-  title: 'Recintos | Boletera',
-  description: 'Inmuebles y recintos con cartelera activa en México.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await fetchTenantCurrent();
+  return buildHubMetadata({
+    title: 'Recintos',
+    description: `Inmuebles y recintos con cartelera activa en ${tenant.name}.`,
+    path: '/venues',
+  });
+}
 
 export default async function VenuesPage() {
   let venues: VenueHit[] = [];
