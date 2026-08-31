@@ -17,12 +17,13 @@ honestos, orgName en taquilla, sobre Wave 4). Nada de lo pendiente cambió.
 Personas de usuario siguiendo el método de los 5 pasos (datos → diferencias →
 hipótesis → acuerdo de stakeholders → número de personas con foco en una):
 
-- **Primaria:** Karla Estrada, promotora independiente (`PROMOTER`, `apps/admin`).
-- **Secundarias:** Diego Rangel, comprador de último minuto (`CUSTOMER`, `apps/web`);
-  Alma Ruiz, taquillera (`TAQUILLA`, `apps/taquilla`); Marco Peña, operaciones de
-  recinto (`VENUE_MANAGER`, acceso + mapas); Fernanda Lara, finanzas (`FINANCE`,
+- **Primaria:** la promotora independiente (`PROMOTER`, `apps/admin`).
+- **Secundarias:** el comprador de último minuto (`CUSTOMER`, `apps/web`); la
+  taquillera (`TAQUILLA`, `apps/taquilla`); el operador del recinto
+  (`VENUE_MANAGER`, acceso + mapas); la contadora del promotor (`FINANCE`,
   reportes/payouts/billing).
 - **Antipersona:** el revendedor.
+- Las personas se identifican por **puesto**, no por nombre propio (decisión de Adam).
 - 5 hipótesis falsables (H1–H5) con su prueba y qué las tira, más plan de
   validación de 3 semanas.
 

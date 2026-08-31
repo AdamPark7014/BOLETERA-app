@@ -1,11 +1,11 @@
 # Personas — Boletera Platform
 
 > Borrador **0.1** · 2026-08-31 · rama `mejora/worker-y-tests`
-> Artifact presentable: publicado desde este mismo documento (ver `.ai/RELEVO.md`).
+> Cada persona se identifica por su **puesto**, no por un nombre propio.
 
 **Aviso de honestidad:** ninguna de estas personas viene de haber entrevistado a un
 usuario. Son inferencias a partir de lo que el sistema ya modela (roles, canales,
-métodos de pago) y del mercado mexicano. Son **hipótesis con nombre**, no hallazgos.
+métodos de pago) y del mercado mexicano. Son **hipótesis con puesto**, no hallazgos.
 Dejan de valer en cuanto haya entrevistas que las contradigan — esa es su función.
 
 ---
@@ -53,11 +53,11 @@ Condiciones físicas · Ante quién responde.
 
 | Persona | Presión | Frecuencia | Efectivo | Dinero en riesgo | Condiciones | Responde ante |
 |---|---|---|---|---|---|---|
-| Karla · promotora | media | media | media | **alta** | baja | artista, socio, banco |
-| Diego · comprador | **alta** | baja | media | baja | **alta** | sus amigos |
-| Alma · taquilla | **alta** | **alta** | **alta** | media | **alta** | jefe de taquilla |
-| Marco · recinto | **alta** | media | baja | media | **alta** | Protección Civil |
-| Fernanda · finanzas | baja | media | media | **alta** | baja | SAT y promotor |
+| La promotora | media | media | media | **alta** | baja | artista, socio, banco |
+| El comprador | **alta** | baja | media | baja | **alta** | sus amigos |
+| La taquillera | **alta** | **alta** | **alta** | media | **alta** | jefe de taquilla |
+| El operador del recinto | **alta** | media | baja | media | **alta** | Protección Civil |
+| La contadora | baja | media | media | **alta** | baja | SAT y promotor |
 
 ---
 
@@ -82,8 +82,8 @@ la contadora de ese promotor · ingeniería (para poner precio a cada compromiso
 1. **Quién es la primaria.** Comercial dirá que el comprador (es el volumen). La
    propuesta es la promotora: ella firma el contrato y, si se va, se lleva a sus
    compradores.
-2. **Cuánto pesa el efectivo.** Si H1 falla, Alma baja de rango y la inversión se va
-   al checkout móvil.
+2. **Cuánto pesa el efectivo.** Si H1 falla, la taquillera baja de rango y la
+   inversión se va al checkout móvil.
 3. **Reventa: ¿combatir o administrar?** Tener módulo de reventa oficial ya es postura.
 
 **Cómo se cierra:** sesión de 90 min con las fichas impresas; cada quien marca su
@@ -96,14 +96,15 @@ fecha y se versiona aquí.
 
 | Quién | Rango | Rol | Dónde vive | Lo que no puede fallar |
 |---|---|---|---|---|
-| Karla Estrada | **Primaria** | `PROMOTER` | `apps/admin` | Saber cuánto lleva vendido y cuándo le pagan |
-| Diego Rangel | Secundaria | `CUSTOMER` | `apps/web` | Comprar en móvil con prisa y creerle al boleto |
-| Alma Ruiz | Secundaria | `TAQUILLA` | `apps/taquilla` | Cobrar rápido y que el corte cuadre |
-| Marco Peña | Secundaria | `VENUE_MANAGER` | acceso + mapas | Que nadie entre dos veces y el aforo sea real |
-| Fernanda Lara | Secundaria | `FINANCE` | reportes/payouts/billing | Cuadrar el evento y timbrar sin rechazos |
+| La promotora | **Primaria** | `PROMOTER` | `apps/admin` | Saber cuánto lleva vendido y cuándo le pagan |
+| El comprador de último minuto | Secundaria | `CUSTOMER` | `apps/web` | Comprar en móvil con prisa y creerle al boleto |
+| La taquillera | Secundaria | `TAQUILLA` | `apps/taquilla` | Cobrar rápido y que el corte cuadre |
+| El operador del recinto | Secundaria | `VENUE_MANAGER` | acceso + mapas | Que nadie entre dos veces y el aforo sea real |
+| La contadora del promotor | Secundaria | `FINANCE` | reportes/payouts/billing | Cuadrar el evento y timbrar sin rechazos |
 | El revendedor | **Antipersona** | — | on-sale + resale | Que no se salga con la suya |
 
-### Karla Estrada — promotora independiente · PRIMARIA
+### La promotora — PRIMARIA
+*Contrata la plataforma y responde por el evento.*
 34 años, Guadalajara, 14 eventos/año en foros de 400–1,200. Ella, un socio y dos
 personas por evento. WhatsApp para todo, Instagram, hoja de cálculo de cortesías.
 Laptop de cinco años.
@@ -123,7 +124,8 @@ Laptop de cinco años.
 - **Métrica:** publicar evento completo en < 12 min sin soporte · % de eventos
   montados sin ayuda.
 
-### Diego Rangel — comprador de último minuto · secundaria
+### El comprador de último minuto — secundaria
+*Decide con sus amigos, en el camión, la noche anterior.*
 23 años, Monterrey, primer empleo. Android de gama media, datos limitados. Compra 2–3
 boletos decididos en un grupo de WhatsApp. Débito u OXXO.
 
@@ -143,9 +145,10 @@ boletos decididos en un grupo de WhatsApp. Débito u OXXO.
 - **Métrica:** conversión móvil del carrito · % de holds expirados · tickets de "pagué
   y no me llegó".
 
-### Alma Ruiz — taquillera de puerta · secundaria
-41 años, contratada por evento, 3–4 noches al mes. Ventanilla, poca luz, ruido, fila de
-60. Terminal + impresora térmica + terminal bancaria aparte. Capacitación: 10 minutos.
+### La taquillera — secundaria
+*Cobra en efectivo, en la ventanilla, contratada por evento.*
+41 años, 3–4 noches al mes. Ventanilla, poca luz, ruido, fila de 60. Terminal +
+impresora térmica + terminal bancaria aparte. Capacitación: 10 minutos.
 
 > "Yo lo que no quiero es quedar a deber en el corte. Si el sistema se cae, cobro en
 > papel y luego vemos."
@@ -160,9 +163,10 @@ boletos decididos en un grupo de WhatsApp. Débito u OXXO.
   impreso que cuadre solo con desglose por método · modo degradado sin internet.
 - **Métrica:** segundos por venta · diferencia de caja en el corte · ventas caídas por red.
 
-### Marco Peña — operaciones del recinto · secundaria
+### El operador del recinto — secundaria
+*Responde por el aforo ante Protección Civil.*
 47 años, foro de 1,400 con tres puertas, seis escaneadores con celulares prestados.
-Responde por aforo y Protección Civil. El Wi-Fi no llega al lobby.
+El Wi-Fi no llega al lobby.
 
 > "A mí no me multan por vender poco. Me multan por meter más gente de la que cabe."
 
@@ -177,9 +181,10 @@ Responde por aforo y Protección Civil. El Wi-Fi no llega al lobby.
   explícito (`DRAFT` / `IN_REVIEW` / `PUBLISHED`) y prohibido vender sobre borrador.
 - **Métrica:** duplicados por evento · segundos de escaneo · aforo del sistema vs conteo físico.
 
-### Fernanda Lara — administración y finanzas del promotor · secundaria
-38 años, lleva la contabilidad de tres promotores, cierra el evento el lunes siguiente.
-Su herramienta real es la hoja de cálculo.
+### La contadora del promotor — secundaria
+*Cuadra el evento el lunes siguiente.*
+38 años, lleva la contabilidad de tres promotores. Su herramienta real es la hoja de
+cálculo.
 
 > "El reporte está bonito, pero no me cuadra con el estado de cuenta. Y al SAT no le
 > enseño una gráfica."
@@ -199,7 +204,7 @@ Su herramienta real es la hoja de cálculo.
 
 ### El revendedor — ANTIPERSONA
 Guiones automatizados, varias cuentas, objetivo: vaciar la zona cara en el minuto uno.
-El daño se lo hace a Diego, a Karla y al artista.
+El daño se lo hace al comprador, a la promotora y al artista.
 
 Está aquí porque **toda decisión que no lo considera termina beneficiándolo**: cada
 facilidad para el comprador honesto (hold generoso, compra sin fricción, boleto
@@ -208,7 +213,7 @@ transferible) es también una facilidad para él.
 - Límite por comprador y evento, con fricción progresiva ante patrón repetido.
 - Reventa oficial con precio tope: si el secundario existe, que ocurra adentro.
 - Boleto que cambia, para que la captura no se pueda revender.
-- **Regla:** ninguna medida contra él puede costarle a Diego más de un paso extra.
+- **Regla:** ninguna medida contra él puede costarle al comprador más de un paso extra.
 
 ### Fuera de alcance a propósito
 Operador internacional multimoneda · artista con panel propio · patrocinador con
