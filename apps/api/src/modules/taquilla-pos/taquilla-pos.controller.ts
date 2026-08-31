@@ -132,7 +132,13 @@ export class TaquillaPosController {
   @Post('session/cash-drop')
   @ApiOperation({ summary: 'Record mid-shift cash drawer drop' })
   async cashDrop(@Body() data: CashDropDto) {
-    return await this.posService.addCashDrop(data.sessionId, data.amount, data.cashierId, data.note);
+    return await this.posService.addCashDrop(
+      data.sessionId,
+      data.amount,
+      data.cashierId,
+      data.note,
+      data.managerPin,
+    );
   }
 
   @Post('session/handoff')

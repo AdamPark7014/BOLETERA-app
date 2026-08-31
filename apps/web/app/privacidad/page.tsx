@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { LegalDraftNotice } from '@/components/LegalDraftNotice';
 import { SiteHeader } from '@/components/SiteHeader';
 import styles from '../legal.module.scss';
 
@@ -30,7 +31,7 @@ export default function PrivacidadPage() {
         <h1>Aviso de privacidad</h1>
         <p className={styles.updated}>Última actualización: agosto de 2026</p>
 
-        <div className={styles.draftNotice} role="note">
+        <LegalDraftNotice className={styles.draftNotice}>
           <strong>Borrador pendiente de revisión legal</strong>
           <p>
             Este texto es una propuesta interna redactada siguiendo la estructura que
@@ -38,7 +39,7 @@ export default function PrivacidadPage() {
             y los datos entre corchetes están sin completar. No debe considerarse el
             aviso de privacidad definitivo de Boletera.
           </p>
-        </div>
+        </LegalDraftNotice>
 
         <nav className={styles.toc} aria-label="Contenido del aviso">
           <h2>En esta página</h2>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button, Input } from '@boletera/ui';
 import { apiFetch, getOrgId, getTaquillaToken, getTaquillaUser, isManager } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import { connectSerialPrinter, getSerialPort, isSerialSupported } from '@/lib/thermal';
@@ -19,6 +20,7 @@ export default function AjustesPage() {
   const [role, setRole] = useState('');
   const [manifests, setManifests] = useState<ManifestMeta[]>([]);
   const [quotas, setQuotas] = useState<Record<string, number>>({});
+  const [savingPin, setSavingPin] = useState(false);
 
   useEffect(() => {
     if (!getTaquillaToken()) {
@@ -46,14 +48,19 @@ export default function AjustesPage() {
   async function savePin() {
     const orgId = getOrgId();
     if (!orgId || !pin) return;
-    const res = await apiFetch('/taquilla/manager-pin', {
-      method: 'POST',
-      body: JSON.stringify({ organizationId: orgId, pin, currentPin: currentPin || undefined }),
-    });
-    setMsg(res.ok ? 'PIN actualizado' : await res.text());
-    if (res.ok) {
-      setPin('');
-      setCurrentPin('');
+    setSavingPin(true);
+    try {
+      const res = await apiFetch('/taquilla/manager-pin', {
+        method: 'POST',
+        body: JSON.stringify({ organizationId: orgId, pin, currentPin: currentPin || undefined }),
+      });
+      setMsg(res.ok ? 'PIN actualizado' : await res.text());
+      if (res.ok) {
+        setPin('');
+        setCurrentPin('');
+      }
+    } finally {
+      setSavingPin(false);
     }
   }
 
@@ -65,9 +72,9 @@ export default function AjustesPage() {
         <h2>Impresora térmica</h2>
         <p>Web Serial {isSerialSupported() ? 'disponible' : 'no disponible en este navegador'}.</p>
         <p>Estado: {serialOk ? 'conectada' : 'sin puerto'}</p>
-        <button type="button" onClick={() => void connectPrinter()}>
+        <Button type="button" variant="secondary" onClick={() => void connectPrinter()}>
           Conectar impresora USB
-        </button>
+        </Button>
       </section>
 
       <section className={styles.section}>
@@ -111,22 +118,38 @@ export default function AjustesPage() {
       {manager ? (
         <section className={styles.section}>
           <h2>PIN de gerente</h2>
-          <p>Requerido para anulaciones, cambios, cortesías, descuentos, retiros y diferencias de caja.</p>
-          <input
-            type="password"
-            placeholder="PIN actual"
-            value={currentPin}
-            onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, ''))}
-          />
-          <input
-            type="password"
-            placeholder="Nuevo PIN"
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-          />
-          <button type="button" onClick={() => void savePin()}>
-            Guardar PIN
-          </button>
+          <p>
+            Requerido para anulaciones, cambios, cortesías, descuentos, retiros y diferencias de
+            caja.
+          </p>
+          <div className={styles.pinFields}>
+            <Input
+              type="password"
+              inputMode="numeric"
+              autoComplete="current-password"
+              placeholder="PIN actual"
+              value={currentPin}
+              onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, ''))}
+            />
+            <Input
+              type="password"
+              inputMode="numeric"
+              autoComplete="new-password"
+              placeholder="Nuevo PIN"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            />
+            <Button
+              type="button"
+              variant="primary"
+              loading={savingPin}
+              loadingLabel="Guardando…"
+              disabled={!pin}
+              onClick={() => void savePin()}
+            >
+              Guardar PIN
+            </Button>
+          </div>
         </section>
       ) : (
         <section className={styles.section}>

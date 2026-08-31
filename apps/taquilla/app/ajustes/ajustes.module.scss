@@ -28,41 +28,13 @@
     color: var(--muted);
     line-height: 1.45;
   }
+}
 
-  input {
-    display: block;
-    width: 100%;
-    margin-bottom: 0.625rem;
-    min-height: 56px;
-    padding: var(--bl-space-0) var(--bl-space-3);
-    font-size: var(--bl-text-lg);
-    color: var(--text);
-    background: var(--bg-deep);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--bl-radius-md);
-
-    &:focus {
-      outline: none;
-      border-color: rgba(255, 255, 255, 0.28);
-    }
-  }
-
-  button {
-    margin-top: 0.25rem;
-    min-height: 56px;
-    padding: var(--bl-space-0) var(--bl-space-5);
-    font-size: var(--bl-text-md);
-    font-weight: 600;
-    color: var(--accent-fg);
-    background: var(--accent);
-    border: none;
-    border-radius: var(--bl-radius-md);
-    cursor: pointer;
-
-    &:hover {
-      opacity: 0.92;
-    }
-  }
+.pinFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-3);
+  max-width: 24rem;
 }
 
 .list {

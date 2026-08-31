@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
 import { OrderQrCards } from '@/components/OrderQrCards';
 import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButton';
 import { fetchOrderResource, orderPath, resolveOrderAccessToken } from '@/lib/order-access';
@@ -204,7 +203,6 @@ export function OrderDetailClient({
             <div className={styles.skelBlock} />
           </div>
         </main>
-        <SiteFooter />
       </div>
     );
   }
@@ -427,7 +425,6 @@ export function OrderDetailClient({
           <li>Pago Banorte</li>
         </ul>
       </main>
-      <SiteFooter />
     </div>
   );
 }

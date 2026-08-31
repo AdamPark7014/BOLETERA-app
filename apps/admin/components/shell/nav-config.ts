@@ -148,13 +148,6 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
         keywords: ['socios', 'club', 'suscripción'],
       },
       {
-        id: 'sponsorships',
-        href: '/sponsorships',
-        label: 'Patrocinios',
-        icon: 'partners',
-        keywords: ['sponsors', 'marcas', 'alianzas'],
-      },
-      {
         id: 'resale',
         href: '/resale',
         label: 'Reventa',
@@ -283,13 +276,6 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
         label: 'Abonos',
         icon: 'season',
         keywords: ['membresía', 'season pass'],
-      },
-      {
-        id: 'automations',
-        href: '/automations',
-        label: 'Automatizaciones',
-        icon: 'platform',
-        keywords: ['workflows', 'reglas', 'triggers'],
       },
       {
         id: 'integrations',

@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge, Button, Card, Input } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
 import { EventPosterArt } from '@/components/EventPosterArt';
 import { HoldCountdown } from '@/components/HoldCountdown';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
@@ -427,7 +426,7 @@ function CheckoutForm() {
           <Badge tone="accent" variant="soft" size="md">
             Paso 2 de 3 · Pago seguro
           </Badge>
-          <h1>Checkout</h1>
+          <h1>Pago</h1>
           <p>
             {gatewayInfo?.demo
               ? `Modo demo · ${holdIds.length} boleto${holdIds.length === 1 ? '' : 's'}`
@@ -789,7 +788,6 @@ function CheckoutForm() {
           </aside>
         </div>
       </main>
-      <SiteFooter />
     </div>
   );
 }

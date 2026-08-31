@@ -64,7 +64,7 @@ export default async function RootLayout({
         <TenantBrandProvider value={brand}>
           <div className="app-shell">
             <div className="app-shell__content">{children}</div>
-            <SiteFooter brandName={brand.name} logoUrl={brand.logoUrl} />
+            <SiteFooter />
           </div>
           <CartBar />
         </TenantBrandProvider>

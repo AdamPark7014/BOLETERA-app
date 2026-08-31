@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
 import styles from './order.module.scss';
 
 /**
@@ -72,7 +71,6 @@ export function OrderAccessGate({
           </div>
         </div>
       </main>
-      <SiteFooter />
     </div>
   );
 }

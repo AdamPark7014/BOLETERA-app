@@ -113,6 +113,7 @@ export type CashDropDto = {
   amount: number;
   note?: string;
   cashierId: string;
+  managerPin: string;
 };
 
 export type ManagerPinDto = {

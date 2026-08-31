@@ -254,24 +254,29 @@ function SiteHeaderBar({
       <div className={styles.inner}>
         <Link href="/" className={styles.brand}>
           <span className={styles.logo}>
-            <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
-              <rect width="32" height="32" rx="9" fill="currentColor" />
-              <path
-                d="M9 11h14M9 16h14M9 21h9"
-                stroke={effectiveTheme === 'dark' ? '#0a0a0a' : '#fafafa'}
-                strokeWidth="2.4"
-                strokeLinecap="round"
-              />
-              <circle
-                cx="22"
-                cy="21"
-                r="2.5"
-                fill={effectiveTheme === 'dark' ? '#0a0a0a' : '#fafafa'}
-              />
-            </svg>
+            {brand.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- tenant CMS URL may be data: or arbitrary host
+              <img src={brand.logoUrl} alt="" width={32} height={32} />
+            ) : (
+              <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
+                <rect width="32" height="32" rx="9" fill="currentColor" />
+                <path
+                  d="M9 11h14M9 16h14M9 21h9"
+                  stroke={effectiveTheme === 'dark' ? '#0a0a0a' : '#fafafa'}
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx="22"
+                  cy="21"
+                  r="2.5"
+                  fill={effectiveTheme === 'dark' ? '#0a0a0a' : '#fafafa'}
+                />
+              </svg>
+            )}
           </span>
           <span className={styles.brandLockup}>
-            <span className={styles.brandText}>BOLETERA</span>
+            <span className={styles.brandText}>{brand.name || 'BOLETERA'}</span>
             <span className={styles.brandTag}>Boletos oficiales</span>
           </span>
           <span className="sr-only">— ir al inicio</span>

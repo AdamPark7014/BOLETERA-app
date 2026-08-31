@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { LegalDraftNotice } from '@/components/LegalDraftNotice';
 import { SiteHeader } from '@/components/SiteHeader';
 import styles from '../legal.module.scss';
 
@@ -23,14 +24,14 @@ export default function TerminosPage() {
         <h1>Términos y condiciones</h1>
         <p className={styles.updated}>Última actualización: agosto de 2026</p>
 
-        <div className={styles.draftNotice} role="note">
+        <LegalDraftNotice className={styles.draftNotice}>
           <strong>Borrador pendiente de revisión legal</strong>
           <p>
             Redactado internamente como base de trabajo. No ha sido revisado por el área
             legal y los datos entre corchetes están sin completar, así que no debe
             considerarse el texto contractual definitivo.
           </p>
-        </div>
+        </LegalDraftNotice>
 
         <nav className={styles.toc} aria-label="Contenido de los términos">
           <h2>En esta página</h2>

@@ -4,7 +4,6 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
 import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButton';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import {
@@ -202,7 +201,6 @@ function PagoContent() {
             </div>
           </div>
         </main>
-        <SiteFooter />
       </div>
     );
   }
@@ -263,7 +261,6 @@ function PagoContent() {
             </Link>
           </div>
         </main>
-        <SiteFooter />
       </div>
     );
   }
@@ -306,7 +303,6 @@ function PagoContent() {
           )}
         </section>
       </main>
-      <SiteFooter />
     </div>
   );
 }

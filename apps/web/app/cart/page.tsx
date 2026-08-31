@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, Button, Card, CardFooter, CardHeader, EmptyState } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
 import { EventPosterArt } from '@/components/EventPosterArt';
 import {
   normalizeCartItem,
@@ -481,7 +480,6 @@ export default function CartPage() {
           </div>
         )}
       </main>
-      <SiteFooter />
     </div>
   );
 }

@@ -89,8 +89,9 @@ export class DiscoveryController {
   }
 
   @Get('events/:slug')
-  getEvent(@Param('slug') slug: string) {
-    return this.discovery.getBySlug(slug);
+  async getEvent(@Headers() headers: Record<string, string>, @Param('slug') slug: string) {
+    const org = await this.tenant.resolveByHost(pickTenantHost(headers));
+    return this.discovery.getBySlug(slug, org?.id);
   }
 
   @Get('site-content')

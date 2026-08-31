@@ -116,7 +116,11 @@ export default function CortePage() {
     }
     setLoading(true);
     try {
-      const summary = await addCashDrop(amount, dropNote.trim() || `Retiro de ${cashierName}`);
+      const summary = await addCashDrop(
+        amount,
+        dropNote.trim() || `Retiro de ${cashierName}`,
+        pin,
+      );
       setReport(summary);
       setDropAmount('');
       setDropNote('');

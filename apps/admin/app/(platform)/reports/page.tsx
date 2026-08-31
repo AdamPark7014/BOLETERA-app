@@ -333,8 +333,64 @@ type ZReport = {
   terminalName?: string;
   cashierId: string;
   endedAt?: string;
-  report?: { totalRevenue?: number; totalOrders?: number; currency?: string };
+  report?: {
+    totalRevenue?: number;
+    totalOrders?: number;
+    totalTransactions?: number;
+    currency?: string;
+    variance?: number;
+    dropsTotal?: number;
+    expectedCash?: number;
+    closingCashCounted?: number;
+    cashSales?: number;
+    cardSales?: number;
+  };
 };
+
+function zReportCsv(rows: ZReport[]) {
+  const header = [
+    'sessionId',
+    'terminal',
+    'cashierId',
+    'endedAt',
+    'totalRevenue',
+    'cashSales',
+    'cardSales',
+    'dropsTotal',
+    'expectedCash',
+    'counted',
+    'variance',
+  ];
+  const lines = rows.map((r) => {
+    const rep = r.report ?? {};
+    return [
+      r.sessionId,
+      r.terminalName ?? '',
+      r.cashierId ?? '',
+      r.endedAt ?? '',
+      rep.totalRevenue ?? '',
+      rep.cashSales ?? '',
+      rep.cardSales ?? '',
+      rep.dropsTotal ?? '',
+      rep.expectedCash ?? '',
+      rep.closingCashCounted ?? '',
+      rep.variance ?? '',
+    ]
+      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+      .join(',');
+  });
+  return [header.join(','), ...lines].join('\n');
+}
+
+function downloadZCsv(rows: ZReport[]) {
+  const blob = new Blob([zReportCsv(rows)], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cortes-caja-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 function ZReportsBlock() {
   const resource = useResource<ZReport[]>(
@@ -358,31 +414,68 @@ function ZReportsBlock() {
             hint="Aparecerán aquí cuando una terminal de taquilla cierre su turno."
           />
         ) : (
-          <table className={platform.table}>
-            <caption className={styles.srOnly}>Cortes de caja archivados por terminal</caption>
-            <thead>
-              <tr>
-                <th scope="col">Terminal</th>
-                <th scope="col">Cajero</th>
-                <th scope="col">Cierre</th>
-                <th scope="col" className={styles.numeric}>
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.sessionId}>
-                  <th scope="row">{r.terminalName || r.sessionId.slice(0, 8)}</th>
-                  <td>{r.cashierId?.slice(0, 10) ?? '—'}</td>
-                  <td>{formatDateTime(r.endedAt)}</td>
-                  <td className={styles.numeric}>
-                    {formatMoney(r.report?.totalRevenue, r.report?.currency ?? 'MXN')}
-                  </td>
+          <>
+            <div className={reportStyles.toolbar}>
+              <Button type="button" variant="secondary" size="sm" onClick={() => downloadZCsv(rows)}>
+                Exportar CSV
+              </Button>
+            </div>
+            <table className={platform.table}>
+              <caption className={styles.srOnly}>Cortes de caja archivados por terminal</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Terminal</th>
+                  <th scope="col">Cajero</th>
+                  <th scope="col">Cierre</th>
+                  <th scope="col" className={styles.numeric}>
+                    Total
+                  </th>
+                  <th scope="col" className={styles.numeric}>
+                    Retiros
+                  </th>
+                  <th scope="col" className={styles.numeric}>
+                    Esperado
+                  </th>
+                  <th scope="col" className={styles.numeric}>
+                    Contado
+                  </th>
+                  <th scope="col" className={styles.numeric}>
+                    Diferencia
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const currency = r.report?.currency ?? 'MXN';
+                  const variance = r.report?.variance;
+                  return (
+                    <tr key={r.sessionId}>
+                      <th scope="row">{r.terminalName || r.sessionId.slice(0, 8)}</th>
+                      <td>{r.cashierId?.slice(0, 10) ?? '—'}</td>
+                      <td>{formatDateTime(r.endedAt)}</td>
+                      <td className={styles.numeric}>
+                        {formatMoney(r.report?.totalRevenue, currency)}
+                      </td>
+                      <td className={styles.numeric}>
+                        {formatMoney(r.report?.dropsTotal ?? 0, currency)}
+                      </td>
+                      <td className={styles.numeric}>
+                        {formatMoney(r.report?.expectedCash, currency)}
+                      </td>
+                      <td className={styles.numeric}>
+                        {formatMoney(r.report?.closingCashCounted, currency)}
+                      </td>
+                      <td className={styles.numeric}>
+                        {variance === undefined || variance === null
+                          ? '—'
+                          : formatMoneyDelta(variance, currency)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
         )
       }
     </ResourceView>

@@ -429,12 +429,19 @@ export function endSession(sessionId: string, closingCashCounted: number, manage
   });
 }
 
-export function addCashDrop(amount: number, note?: string) {
+export function addCashDrop(amount: number, note?: string, managerPin?: string) {
   const sessionId = getSessionId();
   if (!sessionId) return Promise.reject(new Error('Sin turno abierto'));
+  if (!managerPin?.trim()) return Promise.reject(new Error('PIN de gerente requerido'));
   return apiJson<SessionSummary>('/taquilla/session/cash-drop', {
     method: 'POST',
-    body: JSON.stringify({ sessionId, amount, note, cashierId: getCashierId() }),
+    body: JSON.stringify({
+      sessionId,
+      amount,
+      note,
+      cashierId: getCashierId(),
+      managerPin,
+    }),
   });
 }
 

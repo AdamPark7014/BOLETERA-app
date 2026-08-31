@@ -152,7 +152,7 @@ export class DiscoveryService {
     });
   }
 
-  async getBySlug(slug: string) {
+  async getBySlug(slug: string, orgId?: string) {
     const event = await this.prisma.event.findUnique({
       where: { slug },
       include: {
@@ -163,6 +163,9 @@ export class DiscoveryService {
       },
     });
     if (!event) throw new NotFoundException('Event not found');
+    if (orgId && event.organizationId !== orgId) {
+      throw new NotFoundException('Event not found');
+    }
     if (!isPublicCatalogEvent(event.metadata)) {
       throw new NotFoundException('Event not found');
     }

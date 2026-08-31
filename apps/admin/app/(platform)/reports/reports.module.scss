@@ -113,6 +113,12 @@
   align-items: center;
 }
 
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--bl-space-2);
+}
+
 .kpiStrip {
   margin-top: calc(var(--bl-space-2) * -1);
 }

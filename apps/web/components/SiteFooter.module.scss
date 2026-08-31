@@ -123,7 +123,7 @@
   margin: 0 auto;
   padding: var(--space-2xl) var(--layout-gutter) var(--space-lg);
   display: grid;
-  grid-template-columns: 1.35fr repeat(3, 1fr);
+  grid-template-columns: 1.35fr repeat(4, 1fr);
   gap: var(--space-xl);
 
   @include bp.below(bp.$bp-lg) {

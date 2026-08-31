@@ -809,14 +809,24 @@ export class TaquillaPosService {
     };
   }
 
-  async addCashDrop(sessionId: string, amount: number, cashierId: string, note?: string) {
+  async addCashDrop(
+    sessionId: string,
+    amount: number,
+    cashierId: string,
+    note?: string,
+    managerPin?: string,
+  ) {
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new BadRequestException('Invalid drop amount');
     }
-    const session = await this.prisma.posCashierSession.findUnique({ where: { id: sessionId } });
+    const session = await this.prisma.posCashierSession.findUnique({
+      where: { id: sessionId },
+      include: { terminal: true },
+    });
     if (!session || session.status !== 'ACTIVE') {
       throw new BadRequestException('Active session required');
     }
+    await this.assertManagerPin(session.terminal.organizationId, managerPin);
     const meta = (session.metadata as Record<string, unknown>) || {};
     const cashDrops = Array.isArray(meta.cashDrops) ? [...(meta.cashDrops as object[])] : [];
     cashDrops.push({
@@ -926,7 +936,13 @@ export class TaquillaPosService {
     if (!org) throw new BadRequestException('Organization not found');
     const settings = ((org as { settings?: { managerPinHash?: string } }).settings ||
       {}) as { managerPinHash?: string };
-    // Default PIN 2468 until org sets one (demo / first-run)
+    const isProd = process.env.NODE_ENV === 'production';
+    if (isProd && !settings.managerPinHash) {
+      throw new ForbiddenException(
+        'Configura el PIN de gerente en Ajustes antes de autorizar retiros o cierres.',
+      );
+    }
+    // Demo / first-run only outside production
     const expected = settings.managerPinHash || this.hashPin('2468');
     if (!pin || this.hashPin(pin) !== expected) {
       throw new ForbiddenException('PIN de gerente inválido');
