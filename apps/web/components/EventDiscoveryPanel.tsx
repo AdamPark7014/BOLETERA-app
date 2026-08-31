@@ -10,7 +10,7 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { CURATED_MARKETING_CARDS } from '@boletera/shared';
+import { CURATED_MARKETING_CARDS, type CuratedMarketingCard } from '@boletera/shared';
 import { Badge, Button, Card, EmptyState, SearchInput } from '@boletera/ui';
 import { EventPosterArt } from './EventPosterArt';
 import styles from './EventDiscoveryPanel.module.scss';
@@ -102,6 +102,7 @@ export function EventDiscoveryPanel({
   compact,
   initialFailed,
   suppressFeaturedHero,
+  curatedCards,
 }: {
   initial: EventHit[];
   compact?: boolean;
@@ -109,7 +110,11 @@ export function EventDiscoveryPanel({
   initialFailed?: boolean;
   /** En la home el hero de marketing ya ocupa el h1; no duplicar evento destacado. */
   suppressFeaturedHero?: boolean;
+  /** CMS; si vacío o ausente, stock compartido. */
+  curatedCards?: CuratedMarketingCard[];
 }) {
+  const marketingCards =
+    curatedCards && curatedCards.length > 0 ? curatedCards : CURATED_MARKETING_CARDS;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -640,8 +645,8 @@ export function EventDiscoveryPanel({
                 className={styles.curatedEmpty}
               />
               <ul className={styles.curatedGrid} aria-label="Destacados">
-                {CURATED_MARKETING_CARDS.map((card) => (
-                  <li key={card.title}>
+                {marketingCards.map((card) => (
+                  <li key={`${card.href}-${card.title}`}>
                     <Link href={card.href} className={styles.curatedCard}>
                       <div className={styles.curatedArt}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}

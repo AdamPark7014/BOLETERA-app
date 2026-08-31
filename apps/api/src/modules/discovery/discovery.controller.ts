@@ -2,6 +2,7 @@ import { Controller, Get, Headers, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DiscoveryService } from './discovery.service';
 import { TenantService } from '../tenant/tenant.service';
+import { pickTenantHost } from '../tenant/tenant-host';
 
 @ApiTags('Discovery')
 @Controller('discovery')
@@ -13,11 +14,11 @@ export class DiscoveryController {
 
   @Get('suggest')
   async suggest(
-    @Headers('host') host: string,
+    @Headers() headers: Record<string, string>,
     @Query('q') q?: string,
     @Query('limit') limit?: string,
   ) {
-    const org = await this.tenant.resolveByHost(host || 'localhost');
+    const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org || !q?.trim()) return [];
     return this.discovery.suggest({
       orgId: org.id,
@@ -27,19 +28,19 @@ export class DiscoveryController {
   }
 
   @Get('facets')
-  async facets(@Headers('host') host: string) {
-    const org = await this.tenant.resolveByHost(host || 'localhost');
+  async facets(@Headers() headers: Record<string, string>) {
+    const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return { cities: [], categories: [] };
     return this.discovery.facets(org.id);
   }
 
   @Get('venues')
   async venues(
-    @Headers('host') host: string,
+    @Headers() headers: Record<string, string>,
     @Query('limit') limit?: string,
     @Query('city') city?: string,
   ) {
-    const org = await this.tenant.resolveByHost(host || 'localhost');
+    const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return [];
     return this.discovery.listVenues({
       orgId: org.id,
@@ -49,15 +50,18 @@ export class DiscoveryController {
   }
 
   @Get('venues/:slug')
-  async venueBySlug(@Headers('host') host: string, @Param('slug') slug: string) {
-    const org = await this.tenant.resolveByHost(host || 'localhost');
+  async venueBySlug(
+    @Headers() headers: Record<string, string>,
+    @Param('slug') slug: string,
+  ) {
+    const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return null;
     return this.discovery.getVenueBySlug(slug, org.id);
   }
 
   @Get('events')
   async events(
-    @Headers('host') host: string,
+    @Headers() headers: Record<string, string>,
     @Query('q') q?: string,
     @Query('city') city?: string,
     @Query('category') category?: string,
@@ -68,7 +72,7 @@ export class DiscoveryController {
     @Query('limit') limit?: string,
     @Query('cursor') cursor?: string,
   ) {
-    const org = await this.tenant.resolveByHost(host || 'localhost');
+    const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return [];
     return this.discovery.listEvents({
       orgId: org.id,
@@ -90,8 +94,8 @@ export class DiscoveryController {
   }
 
   @Get('site-content')
-  async siteContent(@Headers('host') host: string) {
-    const org = await this.tenant.resolveByHost(host || 'localhost');
+  async siteContent(@Headers() headers: Record<string, string>) {
+    const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) {
       const { defaultSiteContent } = await import('@boletera/shared');
       return defaultSiteContent();

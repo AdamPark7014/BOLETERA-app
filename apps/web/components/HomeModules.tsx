@@ -1,5 +1,11 @@
 import Link from 'next/link';
-import { cityStockImage, EVENT_STOCK_IMAGES } from '@boletera/shared';
+import {
+  EVENT_STOCK_IMAGES,
+  resolveCityImage,
+  resolveCuratedCards,
+  type CuratedMarketingCard,
+  type SiteContent,
+} from '@boletera/shared';
 import { Badge, Card } from '@boletera/ui';
 import { EventPosterArt } from './EventPosterArt';
 import type { EventHit } from './EventDiscoveryPanel';
@@ -15,30 +21,6 @@ type VenueHit = {
   image?: string | null;
   eventCount: number;
 };
-
-const FEATURED_EXPERIENCES = [
-  {
-    key: 'MUSIC',
-    title: 'Conciertos en vivo',
-    subtitle: 'Rock, pop, electrónica e indie',
-    href: '/categoria/MUSIC',
-    image: EVENT_STOCK_IMAGES.MUSIC,
-  },
-  {
-    key: 'FESTIVAL',
-    title: 'Festivales',
-    subtitle: 'Varios días y escenarios',
-    href: '/categoria/FESTIVAL',
-    image: EVENT_STOCK_IMAGES.FESTIVAL,
-  },
-  {
-    key: 'SPORTS',
-    title: 'Deportes',
-    subtitle: 'Liga MX, NBA y más en vivo',
-    href: '/categoria/SPORTS',
-    image: EVENT_STOCK_IMAGES.SPORTS,
-  },
-] as const;
 
 function fmtDate(iso: string) {
   const d = new Date(iso);
@@ -60,13 +42,17 @@ export function HomeModules({
   cities,
   venues,
   failed,
+  siteContent,
 }: {
   trending: EventHit[];
   cities: CityFacet[];
   venues: VenueHit[];
   /** Ninguna de las tres consultas de descubrimiento respondió. */
   failed?: boolean;
+  /** CMS del tenant; si falta o viene vacío, se usa stock compartido. */
+  siteContent?: Pick<SiteContent, 'curatedCards' | 'cityImages'> | null;
 }) {
+  const experiences: CuratedMarketingCard[] = resolveCuratedCards(siteContent);
   const hasAnything = trending.length > 0 || cities.length > 0 || venues.length > 0;
 
   /*
@@ -144,8 +130,8 @@ export function HomeModules({
             <Link href="/">Explorar cartelera</Link>
           </div>
           <ul className={styles.experiences}>
-            {FEATURED_EXPERIENCES.map((item) => (
-              <li key={item.key}>
+            {experiences.map((item) => (
+              <li key={`${item.href}-${item.title}`}>
                 <Link href={item.href} className={styles.experienceCard}>
                   <Card padding="none" interactive className={styles.experienceSurface}>
                     <div
@@ -154,11 +140,7 @@ export function HomeModules({
                     >
                       <div className={styles.experienceOverlay} aria-hidden="true" />
                       <Badge tone="accent" variant="solid" size="sm" className={styles.experienceBadge}>
-                        {item.key === 'MUSIC'
-                          ? 'Música'
-                          : item.key === 'FESTIVAL'
-                            ? 'Festival'
-                            : 'Deportes'}
+                        Destacado
                       </Badge>
                       <div className={styles.experienceCopy}>
                         <strong>{item.title}</strong>
@@ -187,7 +169,11 @@ export function HomeModules({
           <div className={styles.carouselViewport} tabIndex={0} aria-label="Ciudades más buscadas">
             <ul className={styles.carouselTrack}>
               {cities.map((c) => {
-                const photo = cityStockImage(c.name) ?? EVENT_STOCK_IMAGES.OPEN_AIR;
+                const photo = resolveCityImage(
+                  c.name,
+                  siteContent,
+                  EVENT_STOCK_IMAGES.OPEN_AIR,
+                );
                 return (
                   <li key={c.name} className={styles.cityItem}>
                     <Link

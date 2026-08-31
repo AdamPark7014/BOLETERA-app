@@ -41,9 +41,21 @@ type HomeHeroProps = {
   slides: readonly HeroSlide[];
   /** Conteo inicial desde el servidor; si no llega, se intenta en cliente. */
   initialEventCount?: number;
+  /** Copy CMS; si falta, se usa el texto por defecto de marketplace. */
+  headline?: string;
+  subcopy?: string;
 };
 
-export function HomeHero({ slides, initialEventCount }: HomeHeroProps) {
+const DEFAULT_HEADLINE = 'Vive la emoción en vivo';
+const DEFAULT_SUBCOPY =
+  'Boletos oficiales para conciertos, festivales y deportes en todo México. Precio final con cargos incluidos.';
+
+export function HomeHero({
+  slides,
+  initialEventCount,
+  headline,
+  subcopy,
+}: HomeHeroProps) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -235,11 +247,8 @@ export function HomeHero({ slides, initialEventCount }: HomeHeroProps) {
 
       <div className={styles.copy}>
         <p className={styles.brandMark}>BOLETERA</p>
-        <h1>Vive la emoción en vivo</h1>
-        <p className={styles.subcopy}>
-          Boletos oficiales para conciertos, festivales y deportes en todo México.
-          Precio final con cargos incluidos.
-        </p>
+        <h1>{headline?.trim() || DEFAULT_HEADLINE}</h1>
+        <p className={styles.subcopy}>{subcopy?.trim() || DEFAULT_SUBCOPY}</p>
 
         <div className={styles.searchBlock} ref={searchRef}>
           <form className={styles.searchForm} onSubmit={onSubmit} role="search">

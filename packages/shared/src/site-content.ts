@@ -12,7 +12,52 @@ export type SiteContent = {
   heroSlides: SiteHeroSlide[];
   curatedCards: CuratedMarketingCard[];
   cityImages: Record<string, string>;
+  /** Titular del hero; si falta, la web usa el copy por defecto. */
+  heroHeadline?: string;
+  /** Subcopy del hero; si falta, la web usa el copy por defecto. */
+  heroSubcopy?: string;
 };
+
+function isCuratedCard(value: unknown): value is CuratedMarketingCard {
+  if (!value || typeof value !== 'object') return false;
+  const c = value as Record<string, unknown>;
+  return (
+    typeof c.title === 'string' &&
+    c.title.trim().length > 0 &&
+    typeof c.subtitle === 'string' &&
+    typeof c.href === 'string' &&
+    c.href.trim().length > 0 &&
+    typeof c.image === 'string' &&
+    c.image.trim().length > 0
+  );
+}
+
+function parseCuratedCards(raw: unknown): CuratedMarketingCard[] | null {
+  if (!Array.isArray(raw)) return null;
+  return raw.filter(isCuratedCard).map((c) => ({
+    title: c.title.trim(),
+    subtitle: c.subtitle.trim(),
+    href: c.href.trim(),
+    image: c.image.trim(),
+  }));
+}
+
+function parseCityImages(raw: unknown): Record<string, string> | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    const city = key.trim();
+    if (!city || typeof value !== 'string' || !value.trim()) continue;
+    out[city] = value.trim();
+  }
+  return out;
+}
+
+function parseOptionalCopy(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
 
 /** Contenido por defecto (local / Unsplash) cuando la org no ha configurado nada. */
 export function defaultSiteContent(): SiteContent {
@@ -49,20 +94,53 @@ export function parseSiteContent(raw: unknown): SiteContent | null {
         }))
     : [];
 
-  const curatedCards = Array.isArray(o.curatedCards)
-    ? (o.curatedCards as CuratedMarketingCard[])
-    : defaultSiteContent().curatedCards;
+  const curatedParsed = parseCuratedCards(o.curatedCards);
+  const curatedCards =
+    curatedParsed !== null ? curatedParsed : defaultSiteContent().curatedCards;
 
+  const cityParsed = parseCityImages(o.cityImages);
   const cityImages =
-    o.cityImages && typeof o.cityImages === 'object' && !Array.isArray(o.cityImages)
-      ? (o.cityImages as Record<string, string>)
-      : defaultSiteContent().cityImages;
+    cityParsed !== null ? cityParsed : defaultSiteContent().cityImages;
 
   if (!heroSlides.length) return null;
 
-  return { heroSlides, curatedCards, cityImages };
+  const heroHeadline = parseOptionalCopy(o.heroHeadline);
+  const heroSubcopy = parseOptionalCopy(o.heroSubcopy);
+
+  return {
+    heroSlides,
+    curatedCards,
+    cityImages,
+    ...(heroHeadline ? { heroHeadline } : {}),
+    ...(heroSubcopy ? { heroSubcopy } : {}),
+  };
 }
 
 export function mergeSiteContent(raw: unknown): SiteContent {
   return parseSiteContent(raw) ?? defaultSiteContent();
+}
+
+/**
+ * Tarjetas de marketing: CMS si hay al menos una; si no, stock compartido.
+ */
+export function resolveCuratedCards(
+  content: Pick<SiteContent, 'curatedCards'> | null | undefined,
+): CuratedMarketingCard[] {
+  if (content?.curatedCards?.length) return content.curatedCards;
+  return [...CURATED_MARKETING_CARDS];
+}
+
+/**
+ * Foto de ciudad: CMS por nombre exacto, luego stock, luego fallback.
+ */
+export function resolveCityImage(
+  city: string,
+  content: Pick<SiteContent, 'cityImages'> | null | undefined,
+  fallback: string,
+): string {
+  const fromCms = content?.cityImages?.[city]?.trim();
+  if (fromCms) return fromCms;
+  const fromStock = CITY_STOCK_IMAGES[city];
+  if (fromStock) return fromStock;
+  return fallback;
 }

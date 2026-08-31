@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Suspense, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { clearSession, getStoredUser, getToken } from '@/lib/auth';
+import { clientTenantHostHeaders } from '@/lib/api';
+import { useTenantBrand } from '@/components/TenantBrand';
 import styles from './SiteHeader.module.scss';
 
 type SiteHeaderProps = {
@@ -78,6 +80,7 @@ function SiteHeaderBar({
   theme = 'light',
   activeCategory,
 }: SiteHeaderProps & { activeCategory: string | null }) {
+  const brand = useTenantBrand();
   const pathname = usePathname();
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
@@ -162,7 +165,7 @@ function SiteHeaderBar({
       try {
         const res = await fetch(
           `${API}/discovery/suggest?q=${encodeURIComponent(q)}&limit=6`,
-          { cache: 'no-store' },
+          { cache: 'no-store', headers: clientTenantHostHeaders() },
         );
         if (!res.ok) return;
         const data = (await res.json()) as SuggestHit[];

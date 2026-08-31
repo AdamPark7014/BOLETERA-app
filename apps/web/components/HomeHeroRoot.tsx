@@ -18,5 +18,12 @@ export async function HomeHeroRoot({ initialEventCount }: HomeHeroRootProps) {
     preload(slides[1].src, { as: 'image', fetchPriority: 'low' });
   }
 
-  return <HomeHero slides={slides} initialEventCount={initialEventCount} />;
+  return (
+    <HomeHero
+      slides={slides}
+      initialEventCount={initialEventCount}
+      headline={content.heroHeadline}
+      subcopy={content.heroSubcopy}
+    />
+  );
 }

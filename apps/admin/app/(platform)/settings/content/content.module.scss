@@ -78,3 +78,46 @@
   font-size: var(--bl-text-sm);
   color: var(--bl-text-secondary);
 }
+
+.copyFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-3);
+  max-width: 40rem;
+}
+
+.textareaLabel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bl-space-1);
+  font-size: var(--bl-text-sm);
+  font-weight: 600;
+  color: var(--bl-text-secondary);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 4.5rem;
+  padding: var(--bl-space-2) var(--bl-space-3);
+  font: inherit;
+  font-weight: 400;
+  color: var(--bl-text);
+  border: 1px solid var(--bl-border);
+  border-radius: var(--bl-radius-md);
+  background: var(--bl-elevated);
+  resize: vertical;
+
+  &:focus {
+    outline: 2px solid var(--bl-accent, var(--bl-border-focus, #2563eb));
+    outline-offset: 1px;
+  }
+}
+
+.addCity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bl-space-3);
+  align-items: flex-end;
+  margin-top: var(--bl-space-4);
+  max-width: 28rem;
+}
