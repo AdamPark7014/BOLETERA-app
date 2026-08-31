@@ -276,7 +276,7 @@ function SiteHeaderBar({
             )}
           </span>
           <span className={styles.brandLockup}>
-            <span className={styles.brandText}>{brand.name || 'BOLETERA'}</span>
+            <span className={styles.brandText}>{brand.name}</span>
             <span className={styles.brandTag}>Boletos oficiales</span>
           </span>
           <span className="sr-only">— ir al inicio</span>

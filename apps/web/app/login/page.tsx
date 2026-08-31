@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
+import { useTenantBrand } from '@/components/TenantBrand';
 import { saveSession } from '@/lib/auth';
 import styles from './login.module.scss';
 
@@ -66,6 +67,7 @@ function IconUser() {
 
 export default function LoginPage() {
   const router = useRouter();
+  const brand = useTenantBrand();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -121,7 +123,7 @@ export default function LoginPage() {
         <div className={styles.shell}>
           {/* Lado izquierdo: marketing (oculto en móvil, por eso no lleva el h1) */}
           <aside className={styles.left} aria-label="Por qué crear una cuenta">
-            <p className={styles.kicker}>Tu cuenta Boletera</p>
+            <p className={styles.kicker}>Tu cuenta {brand.name}</p>
             <p className={styles.leadHeadline}>
               Compra rápido,
               <br />

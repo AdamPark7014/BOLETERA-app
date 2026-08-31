@@ -10,6 +10,7 @@ import { ZoneOfferButtons } from '@/components/ZoneOfferButtons';
 import { EventPurchaseClient } from './EventPurchaseClient';
 import { AffiliateRefCapture } from '@/components/AffiliateRefCapture';
 import { api } from '@/lib/api';
+import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from './event.module.scss';
 
 type EventDetail = {
@@ -133,7 +134,8 @@ export async function generateMetadata({
       alternates: { canonical: url },
     };
   } catch {
-    return { title: 'Evento | BOLETERA' };
+    const tenant = await fetchTenantCurrent();
+    return { title: `Evento | ${tenant.name}` };
   }
 }
 
@@ -152,14 +154,16 @@ export default async function EventPage({
    * del otro: iban en serie y ahora salen a la vez. En 4G esto quita un viaje
    * completo del camino crítico.
    */
-  const [eventResult, catalogResult] = await Promise.allSettled([
-    loadEvent(slug),
-    loadCatalog(),
+  const [settled, tenant] = await Promise.all([
+    Promise.allSettled([loadEvent(slug), loadCatalog()]),
+    fetchTenantCurrent(),
   ]);
+  const [eventResult, catalogResult] = settled;
 
   // Un evento inexistente es un 404, no una pantalla de error genérica.
   if (eventResult.status === 'rejected') notFound();
   const event = eventResult.value;
+  const brandName = tenant.name;
 
   let related: EventHit[] = [];
   if (catalogResult.status === 'fulfilled') {
@@ -273,7 +277,7 @@ export default async function EventPage({
               )}
               <span aria-current="page">{event.title}</span>
             </nav>
-            <p className={styles.brandMark}>BOLETERA</p>
+            <p className={styles.brandMark}>{brandName}</p>
             <div className={styles.heroBadges}>
               <Badge tone="accent" variant="solid" size="md">
                 {CATEGORY_LABEL[event.category || ''] ?? 'Evento'}
@@ -321,7 +325,7 @@ export default async function EventPage({
               <Badge tone="success" variant="soft" size="md">
                 Boletos oficiales
               </Badge>
-              <span>Emitidos por el promotor en BOLETERA</span>
+              <span>Emitidos por el promotor en {brandName}</span>
             </li>
             <li>
               <Badge tone="info" variant="soft" size="md">

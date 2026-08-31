@@ -1,6 +1,6 @@
 /** ESC/POS + Web Serial thermal printer adapter */
 
-export function buildEscPosReceipt(lines: string[]): string {
+export function buildEscPosReceipt(lines: string[], header = 'TAQUILLA'): string {
   const ESC = '\x1b';
   const GS = '\x1d';
   const init = `${ESC}@`;
@@ -10,7 +10,8 @@ export function buildEscPosReceipt(lines: string[]): string {
   const boldOff = `${ESC}E\x00`;
   const cut = `${GS}V\x00`;
   const body = lines.join('\n');
-  return `${init}${center}${boldOn}BOLETERA TAQUILLA${boldOff}\n${left}${body}\n\n${cut}`;
+  const title = header.trim() || 'TAQUILLA';
+  return `${init}${center}${boldOn}${title}${boldOff}\n${left}${body}\n\n${cut}`;
 }
 
 /** Cash drawer kick (pin 2, 50ms on / 50ms off) */

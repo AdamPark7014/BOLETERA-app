@@ -10,6 +10,7 @@ export type TenantBrand = {
   secondaryColor?: string | null;
 };
 
+/** Same literal as FALLBACK_TENANT.name in lib/tenant.ts */
 const DEFAULT_BRAND: TenantBrand = { name: 'BOLETERA' };
 
 const TenantBrandContext = createContext<TenantBrand>(DEFAULT_BRAND);

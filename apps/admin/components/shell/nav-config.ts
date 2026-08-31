@@ -9,7 +9,7 @@ export type NavItemDef = {
   icon: IconName;
   keywords?: readonly string[];
   /** Matching for nested routes. Defaults to href prefix with special cases. */
-  match?: 'exact' | 'prefix' | 'events' | 'reports';
+  match?: 'exact' | 'prefix' | 'events' | 'reports' | 'orders';
   /** Only visible to SUPER_ADMIN (platform-wide tools). */
   superAdminOnly?: boolean;
 };
@@ -69,6 +69,14 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
         label: 'Órdenes',
         icon: 'orders',
         keywords: ['pedidos', 'compras', 'tickets'],
+        match: 'orders',
+      },
+      {
+        id: 'refunds',
+        href: '/orders/refunds',
+        label: 'Reembolsos',
+        icon: 'payouts',
+        keywords: ['devoluciones', 'refund', 'reembolso'],
       },
       {
         id: 'inventory',
@@ -404,6 +412,11 @@ export function isNavItemActive(pathname: string, item: NavItemDef): boolean {
     if (pathname === '/reports') return true;
     if (!pathname.startsWith('/reports/')) return false;
     return !pathname.startsWith('/reports/egress');
+  }
+  if (match === 'orders') {
+    if (pathname === '/orders') return true;
+    if (!pathname.startsWith('/orders/')) return false;
+    return !pathname.startsWith('/orders/refunds');
   }
   if (pathname === item.href) return true;
   return pathname.startsWith(`${item.href}/`);

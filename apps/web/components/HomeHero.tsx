@@ -12,6 +12,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button, SearchInput } from '@boletera/ui';
+import { useTenantBrand } from '@/components/TenantBrand';
 import styles from './HomeHero.module.scss';
 
 const ROTATE_MS = 7000;
@@ -57,6 +58,7 @@ export function HomeHero({
   subcopy,
 }: HomeHeroProps) {
   const router = useRouter();
+  const brand = useTenantBrand();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [query, setQuery] = useState('');
@@ -198,7 +200,7 @@ export function HomeHero({
   return (
     <section
       className={styles.hero}
-      aria-label="Bienvenida a Boletera"
+      aria-label={`Bienvenida a ${brand.name}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -246,7 +248,7 @@ export function HomeHero({
       <div className={styles.bottomFade} aria-hidden="true" />
 
       <div className={styles.copy}>
-        <p className={styles.brandMark}>BOLETERA</p>
+        <p className={styles.brandMark}>{brand.name}</p>
         <h1>{headline?.trim() || DEFAULT_HEADLINE}</h1>
         <p className={styles.subcopy}>{subcopy?.trim() || DEFAULT_SUBCOPY}</p>
 

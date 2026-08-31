@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { api } from '@/lib/api';
-import { fetchTenantCurrent } from '@/lib/tenant';
+import { FALLBACK_TENANT, fetchTenantCurrent } from '@/lib/tenant';
 import styles from './SiteFooter.module.scss';
 
 const CATEGORIES = [
@@ -37,7 +37,7 @@ async function FooterCities() {
 
 export async function SiteFooter() {
   const tenant = await fetchTenantCurrent();
-  const brand = tenant.name?.trim() || 'BOLETERA';
+  const brand = tenant.name?.trim() || FALLBACK_TENANT.name;
   const isProd = process.env.NODE_ENV === 'production';
 
   return (

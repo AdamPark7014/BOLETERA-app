@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import {
-  EVENT_STOCK_IMAGES,
   resolveCityImage,
   resolveCuratedCards,
   type CuratedMarketingCard,
@@ -172,7 +171,7 @@ export function HomeModules({
                 const photo = resolveCityImage(
                   c.name,
                   siteContent,
-                  EVENT_STOCK_IMAGES.OPEN_AIR,
+                  '/hero/01-festival.jpg',
                 );
                 return (
                   <li key={c.name} className={styles.cityItem}>

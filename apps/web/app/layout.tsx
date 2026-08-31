@@ -57,8 +57,6 @@ export default async function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
-        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body className={`${headingFont.variable} ${bodyFont.variable}`}>
         <TenantBrandProvider value={brand}>

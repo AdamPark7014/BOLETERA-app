@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CURATED_MARKETING_CARDS, type CuratedMarketingCard } from '@boletera/shared';
 import { Badge, Button, Card, EmptyState, SearchInput } from '@boletera/ui';
+import { useTenantBrand } from '@/components/TenantBrand';
 import { EventPosterArt } from './EventPosterArt';
 import styles from './EventDiscoveryPanel.module.scss';
 
@@ -115,6 +116,7 @@ export function EventDiscoveryPanel({
 }) {
   const marketingCards =
     curatedCards && curatedCards.length > 0 ? curatedCards : CURATED_MARKETING_CARDS;
+  const brand = useTenantBrand();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -308,7 +310,7 @@ export function EventDiscoveryPanel({
           </div>
           <div className={styles.heroShade} aria-hidden="true" />
           <div className={styles.heroCopy}>
-            <p className={styles.brandMark}>BOLETERA</p>
+            <p className={styles.brandMark}>{brand.name}</p>
             <h1>{featured.title}</h1>
             <p className={styles.heroSupport}>
               {fmtDate(featured.startsAt).full} · {fmtDate(featured.startsAt).time}

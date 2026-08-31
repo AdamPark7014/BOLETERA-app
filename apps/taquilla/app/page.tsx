@@ -304,7 +304,7 @@ export default function TaquillaHome() {
         <div className={styles.topLeft}>
           <span className={styles.brand}>
             <BrandMark />
-            BOLETERA · TAQUILLA
+            TAQUILLA
           </span>
           <Badge tone="accent" variant="soft" className={styles.terminalBadge}>
             {terminalLabel}

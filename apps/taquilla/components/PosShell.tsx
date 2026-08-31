@@ -208,7 +208,7 @@ export function PosShell({
         <div className={styles.topLeft}>
           <Link href="/" className={styles.brand} aria-label="Inicio taquilla">
             <BrandMark />
-            <span>BOLETERA · TAQUILLA</span>
+            <span>TAQUILLA</span>
           </Link>
           <Badge tone="accent" variant="soft" className={styles.terminalBadge}>
             {terminalLabel}

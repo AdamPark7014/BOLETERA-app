@@ -21,6 +21,7 @@ import {
   type CartPricing,
 } from '@/lib/pricing';
 import { clearAffiliateRef, getAffiliateRefForEvent } from '@/lib/affiliate-ref';
+import { useTenantBrand } from '@/components/TenantBrand';
 import styles from './checkout.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -101,6 +102,7 @@ function validate(name: string, email: string, phone: string): FieldErrors {
 function CheckoutForm() {
   const params = useSearchParams();
   const router = useRouter();
+  const brand = useTenantBrand();
   const eventId = params.get('eventId') ?? '';
   const offerId = params.get('offerId') ?? '';
   const urlHoldIds = useMemo(
@@ -492,7 +494,7 @@ function CheckoutForm() {
                 </p>
                 {!gatewayInfo.demo && (
                   <p className={styles.banorteTrust}>
-                    El cobro va directo a la cuenta del organizador. BOLETERA no retiene tu dinero.
+                    El cobro va directo a la cuenta del organizador. {brand.name} no retiene tu dinero.
                   </p>
                 )}
               </div>

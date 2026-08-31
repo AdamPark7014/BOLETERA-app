@@ -135,7 +135,7 @@ export default function TaquillaLoginPage() {
                 <circle cx="22" cy="21" r="2.5" fill="#fff" />
               </svg>
             </span>
-            BOLETERA · TAQUILLA
+            TAQUILLA
           </span>
         </div>
         <div className={styles.topRight}>

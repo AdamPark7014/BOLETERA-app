@@ -1,5 +1,7 @@
 /**
- * Fotografías de stock (Unsplash) para seeds y fallbacks de póster.
+ * Fotografías de stock (Unsplash) para seeds y demos.
+ * Storefront posters prefer local `/hero/*` via EventPosterArt — do not use
+ * these on first paint when CMS/event images exist.
  * Licencia: uso permitido vía Unsplash; atribución recomendada en producción.
  */
 export const EVENT_STOCK_IMAGES = {

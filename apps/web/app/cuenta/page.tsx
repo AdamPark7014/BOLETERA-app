@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, EmptyState, Input } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
+import { useTenantBrand } from '@/components/TenantBrand';
 import { authHeaders, clearSession, getStoredUser, getToken } from '@/lib/auth';
 import { formatMoney } from '@/lib/pricing';
 import {
@@ -97,6 +98,7 @@ function seatLabel(t: TicketRow) {
 
 export default function CuentaPage() {
   const router = useRouter();
+  const brand = useTenantBrand();
   const [user, setUser] = useState<ReturnType<typeof getStoredUser>>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [transfers, setTransfers] = useState<TransferRow[]>([]);
@@ -364,7 +366,7 @@ export default function CuentaPage() {
         )}
 
         <header className={styles.hero}>
-          <p className={styles.eyebrow}>Cuenta BOLETERA</p>
+          <p className={styles.eyebrow}>Cuenta {brand.name}</p>
           <h1>Mis boletos</h1>
           {user && (
             <p className={styles.user}>

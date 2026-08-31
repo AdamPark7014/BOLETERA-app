@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { cache, type CSSProperties } from 'react';
 import { api } from './api';
 
 export type TenantThemeSnapshot = {
@@ -24,7 +24,8 @@ export const FALLBACK_TENANT: TenantCurrent = {
   theme: null,
 };
 
-export async function fetchTenantCurrent(): Promise<TenantCurrent> {
+/** Dedupes layout + footer (and any other SSR callers) in the same request. */
+export const fetchTenantCurrent = cache(async (): Promise<TenantCurrent> => {
   try {
     const data = await api<TenantCurrent & { error?: string }>('/tenant/current');
     if (data.error || !data.name) return FALLBACK_TENANT;
@@ -37,7 +38,7 @@ export async function fetchTenantCurrent(): Promise<TenantCurrent> {
   } catch {
     return FALLBACK_TENANT;
   }
-}
+});
 
 /** CSS custom properties from TenantTheme (primary → accent, secondary → hover). */
 export function tenantThemeStyle(

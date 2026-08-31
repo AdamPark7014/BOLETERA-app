@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { SiteHeader } from '@/components/SiteHeader';
+import { useTenantBrand } from '@/components/TenantBrand';
 import { OrderQrCards } from '@/components/OrderQrCards';
 import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButton';
 import { fetchOrderResource, orderPath, resolveOrderAccessToken } from '@/lib/order-access';
@@ -84,7 +85,7 @@ function seatLabel(t: OrderTicket) {
   return parts.length ? parts.join(' · ') : null;
 }
 
-function googleCalendarUrl(order: OrderDetail) {
+function googleCalendarUrl(order: OrderDetail, brandName: string) {
   const ev = order.event;
   if (!ev?.startsAt) return null;
   const start = new Date(ev.startsAt);
@@ -98,7 +99,7 @@ function googleCalendarUrl(order: OrderDetail) {
     action: 'TEMPLATE',
     text: ev.title,
     dates: `${fmt(start)}/${fmt(end)}`,
-    details: `Orden ${order.publicId} · Boletos BOLETERA`,
+    details: `Orden ${order.publicId} · Boletos ${brandName}`,
     location: [ev.venue?.name, ev.venue?.address, ev.venue?.city].filter(Boolean).join(', '),
   });
   return `https://calendar.google.com/calendar/render?${params}`;
@@ -124,6 +125,7 @@ export function OrderDetailClient({
   publicId: string;
   urlToken?: string;
 }) {
+  const brand = useTenantBrand();
   const [state, setState] = useState<LoadState>({ phase: 'loading' });
   const [gatewayDemo, setGatewayDemo] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -214,7 +216,7 @@ export function OrderDetailClient({
   const order = state.order;
   const tickets = order.items.flatMap((i) => i.tickets);
   const when = order.event?.startsAt ? new Date(order.event.startsAt) : null;
-  const cal = googleCalendarUrl(order);
+  const cal = googleCalendarUrl(order, brand.name);
   const pendingMeta = order.pendingPayment?.metadata;
   const completed = order.status === 'COMPLETED';
   const isDemoFlow = gatewayDemo || pendingMeta?.demo === true;
@@ -420,7 +422,7 @@ export function OrderDetailClient({
         </div>
 
         <ul className={styles.trust}>
-          <li>Boletos oficiales BOLETERA</li>
+          <li>Boletos oficiales {brand.name}</li>
           <li>Entrada con QR</li>
           <li>Pago Banorte</li>
         </ul>

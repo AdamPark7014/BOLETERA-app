@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react';
-import { stockImageForCategory } from '@boletera/shared';
 import styles from './EventPosterArt.module.scss';
 
 export type PosterEvent = {
@@ -29,6 +28,30 @@ function defaultAspect(category: string | null | undefined): string {
   }
 }
 
+/**
+ * Local hero assets first. Unsplash (`stockImageForCategory` / EVENT_STOCK_IMAGES)
+ * stays in shared for seeds only — not first paint on the storefront.
+ */
+function localPosterForCategory(category?: string | null, seed?: string): string {
+  const s = seed ?? '';
+  switch (category) {
+    case 'FESTIVAL':
+      return '/hero/01-festival.jpg';
+    case 'SPORTS':
+      return '/hero/04-experience.jpg';
+    case 'THEATER':
+    case 'COMEDY':
+      return '/hero/05-indie.jpg';
+    case 'EXPERIENCE':
+      return '/hero/04-experience.jpg';
+    default:
+      if (/electro|edm|dj/i.test(s)) return '/hero/03-electro.jpg';
+      if (/indie|jazz|ballet/i.test(s)) return '/hero/05-indie.jpg';
+      if (/fest|open.?air/i.test(s)) return '/hero/01-festival.jpg';
+      return '/hero/02-concert.jpg';
+  }
+}
+
 /** Ancho/alto intrínsecos para que el navegador reserve el hueco antes del CSS. */
 function intrinsicSize(aspect: string) {
   const [w, h] = aspect.split('/').map((n) => Number(n.trim()));
@@ -54,7 +77,7 @@ export function EventPosterArt({
   const src =
     event.bannerImage ||
     event.image ||
-    stockImageForCategory(event.category, event.slug || event.title);
+    localPosterForCategory(event.category, event.slug || event.title);
   const d = event.startsAt ? new Date(event.startsAt) : null;
   const aspect = event.posterAspect || defaultAspect(event.category);
   const { width, height } = intrinsicSize(aspect);

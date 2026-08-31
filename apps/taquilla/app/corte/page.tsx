@@ -17,6 +17,7 @@ import {
   clearTaquillaSession,
   getTaquillaToken,
   getTaquillaUser,
+  getTerminalLabel,
 } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import { ManagerPinDialog } from '@/components/ManagerPinDialog';
@@ -42,6 +43,7 @@ import {
   type SessionSummary,
   type ZReport,
 } from '@/lib/pos';
+import { buildEscPosReceipt, printEscPos, printViaSerial } from '@/lib/thermal';
 import styles from './corte.module.scss';
 
 /** Por encima de esta diferencia el cierre exige autorización de gerencia. */
@@ -192,14 +194,15 @@ export default function CortePage() {
     }
   }
 
-  function printCorte(data: Record<string, unknown>) {
+  async function printCorte(data: Record<string, unknown>) {
     const r = data as SessionSummary & {
       closingCashCounted?: number;
       variance?: number;
     };
+    const terminal = getTerminalLabel();
     const lines = [
-      'CORTE DE CAJA — BOLETERA',
-      `Terminal: ${typeof window !== 'undefined' ? localStorage.getItem('taquilla_terminal_label') ?? '—' : '—'}`,
+      'CORTE DE CAJA',
+      `Terminal: ${terminal}`,
       `Responsable: ${cashierName} (${getCashierId()})`,
       `Inicio: ${r.startTime ? new Date(r.startTime).toLocaleString('es-MX') : '—'}`,
       `Fin: ${new Date(r.endTime ?? Date.now()).toLocaleString('es-MX')}`,
@@ -221,11 +224,9 @@ export default function CortePage() {
       '',
       ...Object.entries(r.byMethod ?? {}).map(([m, a]) => `${m}: ${money(Number(a))}`),
     ].filter(Boolean);
-    const w = window.open('', '_blank', 'width=340,height=620');
-    if (!w) return;
-    w.document.write(`<pre style="font-family:monospace;font-size:12px">${lines.join('\n')}</pre>`);
-    w.document.close();
-    w.print();
+    const payload = buildEscPosReceipt(lines, terminal);
+    const serialOk = await printViaSerial(payload, false);
+    if (!serialOk) printEscPos(payload);
   }
 
   const hotkeys = useMemo<Hotkey[]>(
