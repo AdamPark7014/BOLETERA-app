@@ -1,55 +1,52 @@
 # RELEVO
 
-- **Último turno:** cursor
+- **Último turno:** claude-code
 - **Fecha:** 2026-08-31
 - **Rama:** mejora/worker-y-tests
 
 ## Lo primero que tiene que saber quien entre
 
-Cerramos **Wave 5** (SEO megapresencia multi-tenant + QR vivo + P0 aislamiento API + stubs honestos + orgName taquilla) sobre Wave 4.
-
-No se tocó `enterprise-upgrade`, Banorte auto-refunds API, JWT httpOnly/CSRF, env backups, worktree `integracion/dinero`, PAC CFDI real ni bank payouts.
+**Este turno no tocó código.** Solo se agregó documentación de producto:
+`docs/PERSONAS.md`. El último estado de código sigue siendo el de Cursor
+(**Wave 5**: SEO megapresencia multi-tenant, QR vivo, P0 aislamiento API, stubs
+honestos, orgName en taquilla, sobre Wave 4). Nada de lo pendiente cambió.
 
 ## Hecho en este turno
 
-### seo-foundation
-- `apps/web/lib/site-url.ts`: origen absoluto desde Host / x-forwarded-host / customDomain, fallback `NEXT_PUBLIC_WEB_URL`.
-- `metadataBase` + favicon/apple-touch default (`/favicon.svg`) en `layout.tsx`.
-- `app/sitemap.ts` (revalidate 1h) y `app/robots.ts` (disallow cart/checkout/cuenta/orders/login).
+### docs/PERSONAS.md (nuevo)
+Personas de usuario siguiendo el método de los 5 pasos (datos → diferencias →
+hipótesis → acuerdo de stakeholders → número de personas con foco en una):
 
-### seo-hubs
-- `generateMetadata` OG/Twitter/canonical en home, categoría, ciudades, venues (+ detail).
-- Venue miss → `notFound()` (ya no soft-200).
-- noindex en layouts de cart / checkout / cuenta / orders.
-- Títulos legales/ayuda/reventa usan `tenant.name` (no “Boletera” hardcodeado en metadata).
+- **Primaria:** Karla Estrada, promotora independiente (`PROMOTER`, `apps/admin`).
+- **Secundarias:** Diego Rangel, comprador de último minuto (`CUSTOMER`, `apps/web`);
+  Alma Ruiz, taquillera (`TAQUILLA`, `apps/taquilla`); Marco Peña, operaciones de
+  recinto (`VENUE_MANAGER`, acceso + mapas); Fernanda Lara, finanzas (`FINANCE`,
+  reportes/payouts/billing).
+- **Antipersona:** el revendedor.
+- 5 hipótesis falsables (H1–H5) con su prueba y qué las tira, más plan de
+  validación de 3 semanas.
 
-### seo-jsonld
-- `lib/seo/event-jsonld.ts`: Event con `offers[]` por tier + availability real, image absoluto con fallback `/hero/*`, BreadcrumbList.
-- Organization + WebSite JSON-LD en layout root.
+Están construidas sobre lo que el repo ya modela (`UserRole`, `SalesChannel`,
+métodos de pago CARD/SPEI/OXXO/CASH, PIN de cash-drop, corte Z, QR vivo, refunds
+con cierre manual, CFDI sandbox). Marcadas explícitamente como **hipótesis**, no
+como investigación de campo: nadie ha entrevistado usuarios todavía.
 
-### qr-live
-- `OrderQrCards` poll cada ~11s; cancel al unmount; copy de renovación (no captura estática).
-
-### api-p0
-- Refunds `mutate` + `complete`: `OrgAccessGuard` + check `order.organizationId`.
-- `POST /payments/intents`: `idempotencyKey` (header o `order:${orderId}`) → Banorte Redis + fila `PaymentIntent`.
-- Discovery `getBySlug`: fail-closed sin tenant; orgId obligatorio.
-- `/search/*`: mismo scope host + `publicCatalogEventWhere` que discovery.
-
-### stubs-taquilla
-- Admin sponsorships / automations: página “no disponible” sin KPIs inventados.
-- CFDI: banner sandbox más visible (también sin perfil).
-- Login API devuelve `organizationName`; taquilla lo guarda y lo usa en PosShell + header térmico.
-
-### Verificación
-- `check-types` web, api, taquilla, admin en verde.
+### Entregables fuera del repo
+- Artifact publicado (versión presentable del mismo documento).
+- PDF A4 de 10 páginas en `C:\Users\adpoz\Documents\Personas-Boletera.pdf`
+  (generado con Chrome headless desde el HTML del artifact; el script queda en el
+  scratchpad de la sesión, no en el repo).
 
 ## Pendiente
-- Probar tenants A vs B con hosts distintos (manual / Docker) + Rich Results Test en un evento real.
+- Probar tenants A vs B con hosts distintos (manual / Docker) + Rich Results Test
+  en un evento real.
 - Load scenarios E2E con API arriba.
 - Ola 6 candidata: resale buyer checkout incompleto; métricas worker DLQ.
-- Refunds Banorte portal-manual / auto API; JWT httpOnly/CSRF; decidir `enterprise-upgrade`.
+- Refunds Banorte portal-manual / auto API; JWT httpOnly/CSRF; decidir
+  `enterprise-upgrade`.
 - PAC CFDI real (producción); bank rail payouts.
+- **Nuevo:** las personas están sin firmar (paso 04 del método). Antes de usarlas
+  para priorizar hay que cerrar la sesión de acuerdo y resolver H1/H3.
 
 ## No tocar
 - `*.env.docker-backup`, worktree `integracion/dinero`, rama `enterprise-upgrade`.
