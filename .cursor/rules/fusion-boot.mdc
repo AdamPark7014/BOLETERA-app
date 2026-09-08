@@ -1,0 +1,28 @@
+---
+description: Arranque FUSION Claude(cabeza)+Cursor(ejecutor)+Arsenal — obligatorio en todo chat
+alwaysApply: true
+---
+
+# FUSION BOOT — obligatorio
+
+En **cada** chat bajo `C:\dev\apps` (y cualquier git de producto), **antes** de leer/editar código:
+
+1. Ejecuta en shell:
+   ```
+   pwsh -File C:\dev\scripts\ai-os\boot-fusion.ps1 -Surface cursor -Mode text -Task "<resumen 1 linea de lo que pidio Adam>"
+   ```
+2. Lee `.ai/LAST-BOOT.md`, `.ai/RELEVO.md` y `.ai/EXEC-PACKET.md`.
+   - `EXEC-PACKET: FILLED` → es la fuente de verdad del turno: síguelo paso a paso y marca cada paso hecho.
+   - `TEMPLATE` o `NONE` → no hay plan. Si la tarea es arquitectura/HARD, escala a Claude o genera un mini-packet primero.
+3. Si hay archivos sucios → `pwsh -File C:\dev\scripts\relevo\relevo.ps1 salvar -Agente cursor`.
+4. **Tu rol = EJECUTOR**: implementa hiper-rápido y profesional. No cambies arquitectura ni contratos; si el packet contradice el disco, para y reporta.
+5. Desglosa workers hiperdetallados — un writer por worktree:
+   - NO_LLM (rg / git / tests / lint / playwright) primero, coste 0
+   - Ollama local (`qwen2.5-coder:7b`, `nomic-embed-text`) para boilerplate / clasificar / embed
+   - MCP / Firecrawl / n8n / Temporal solo si el packet lo pide
+6. Cierra: tests/typecheck → `Estado: CERRADO` en EXEC-PACKET → `.ai/RELEVO.md` → `relevo.ps1 cerrar -Agente cursor -Mensaje "..."`.
+
+Nunca entres a `NO TOCAR LIBREMENTE` / `SOFTWARE PERSONAL` sin orden explícita de Adam.
+Nunca `git reset --hard`, `git checkout --`, `git clean`, `git stash drop`.
+
+Protocolo: `C:\dev\scripts\ai-os\FUSION-PROTOCOL.md` · Flota: `pwsh -File C:\dev\scripts\ai-os\fleet.ps1`
