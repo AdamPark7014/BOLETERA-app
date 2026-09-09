@@ -1,0 +1,35 @@
+---
+description: Cursor NO codifica — Ollama implement primero (ticket obligatorio)
+alwaysApply: true
+---
+
+# LOCAL-CODE-FIRST — Cursor dirige, Ollama escribe
+
+Cursor Ultra **no inventa** el cuerpo del código. El coder es `qwen2.5-coder:7b` vía Ollama.
+Cursor: plan fino, elegir archivos, revisar, tests, merge.
+
+## Flujo obligatorio para cualquier cambio de código
+
+```powershell
+$W = "C:\Users\adpoz\Projects\ai-oss-2026\scripts\ollama-worker.ps1"
+# 1) Ollama escribe el draft (+ ticket 15 min)
+pwsh -File $W -Action implement -File "C:\dev\apps\X\src\file.ts" -Instruction "..."
+# 2a) Aplicar directo:
+pwsh -File $W -Action implement -File "..." -Instruction "..." -Apply
+# 2b) O lee .ai/drafts\... y Write (el hook lo autoriza con el ticket)
+```
+
+MCP: `ollama_implement` (preferido) · `ollama_code` (snippet) · luego Write.
+
+## Qué bloquea el hook
+
+`Write` / `StrReplace` / `Delete` / `EditNotebook` sobre `.ts|.tsx|.js|...` **sin ticket** → DENY.
+Excepciones: `.ai/`, docs `.md`, scripts `ai-os`, `CURSOR_LOCAL_CODE_BYPASS=1`.
+
+## Qué sigue siendo Cursor
+
+- Elegir qué archivo tocar (`find` / digest)
+- Revisar el draft, correr tests
+- Arquitectura / contratos → Claude Max (no Ollama)
+
+Panel: http://127.0.0.1:8788 (acción `implement`)

@@ -2,20 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Iván Solís — User Persona · Boletera</title>
+  <title>Iván Solís — Boletera</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #fafafa;
-      --white: #ffffff;
-      --ink: #18181b;
-      --body: #3f3f46;
-      --soft: #71717a;
-      --line: #e4e4e7;
-      --accent: #e85d04;
-      --accent-soft: #fff4ed;
+      --ink: #1a1a1a;
+      --muted: #6b6b6b;
+      --line: rgba(26, 26, 26, 0.12);
+      --paper: #f7f4ef;
+      --panel: #ffffff;
+      --ember: #c45c26;
+      --ember-deep: #9a4519;
+      --charcoal: #2c2a26;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,9 +23,9 @@
     @page { size: 13in 8.5in; margin: 0; }
 
     html, body {
-      font-family: "DM Sans", system-ui, sans-serif;
-      color: var(--body);
-      background: #d4d4d8;
+      font-family: "Instrument Sans", system-ui, sans-serif;
+      background: #8a8680;
+      color: var(--ink);
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -33,251 +33,283 @@
     .slide {
       width: 13in;
       height: 8.5in;
-      background: var(--bg);
       page-break-after: always;
       overflow: hidden;
       position: relative;
-      display: flex;
-      flex-direction: column;
+      background: var(--paper);
     }
     .slide:last-child { page-break-after: auto; }
 
-    /* subtle corner mark */
-    .slide::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--accent);
-    }
-
-    .slide-foot {
-      position: absolute;
-      bottom: 0.28in;
-      left: 0.55in;
-      right: 0.55in;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 9px;
-      color: var(--soft);
-      letter-spacing: 0.04em;
-    }
-    .slide-foot .brand {
-      font-weight: 600;
-      color: var(--ink);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      font-size: 8.5px;
-    }
-
-    /* ========== SLIDE 1 — PERSONA ========== */
+    /* ========== SLIDE 1 ========== */
     .s1 {
-      padding: 0.42in 0.55in 0.48in 0.62in;
       display: grid;
-      grid-template-columns: 3.35in 1fr;
-      gap: 0.4in;
-      flex: 1;
-      align-items: center;
+      grid-template-columns: 5.4in 1fr;
+      height: 100%;
     }
 
-    .hero {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2in;
+    .photo-panel {
+      position: relative;
+      background: #d8d2c8;
+      overflow: hidden;
     }
 
-    .hero-img {
+    .photo-panel img {
       width: 100%;
-      height: 5.1in;
+      height: 100%;
       object-fit: cover;
-      object-position: center 10%;
-      background: #e4e4e7;
+      object-position: center 18%;
       display: block;
     }
 
-    .hero-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .hero-meta span {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--body);
-      background: var(--white);
-      border: 1px solid var(--line);
-      padding: 5px 11px;
-      border-radius: 100px;
+    .photo-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, rgba(26,26,26,0.55) 0%, transparent 42%),
+        linear-gradient(to right, transparent 70%, rgba(247,244,239,0.15));
     }
 
-    .content {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 0.24in;
-      padding-right: 0.05in;
+    .photo-caption {
+      position: absolute;
+      left: 0.4in;
+      right: 0.4in;
+      bottom: 0.38in;
+      z-index: 2;
+      color: #fff;
     }
 
-    .eyebrow {
+    .photo-caption .label {
       font-size: 11px;
       font-weight: 600;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: var(--accent);
+      opacity: 0.8;
+      margin-bottom: 8px;
     }
 
-    h1 {
-      font-size: 46px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.02;
-      color: var(--ink);
-      margin-top: 6px;
-    }
-
-    .role {
-      font-size: 18px;
-      font-weight: 500;
-      color: var(--soft);
-      margin-top: 8px;
-    }
-
-    .quote {
-      font-family: "Fraunces", Georgia, serif;
-      font-size: 17px;
-      font-weight: 500;
-      font-style: italic;
-      line-height: 1.42;
-      color: var(--ink);
-      padding-left: 0.16in;
-      border-left: 3px solid var(--accent);
-      max-width: 6in;
-    }
-
-    .story {
-      font-size: 14px;
-      line-height: 1.5;
-      color: var(--body);
-      max-width: 6in;
-    }
-
-    .blocks {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.28in;
-    }
-
-    .block h3 {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--soft);
-      margin-bottom: 10px;
-    }
-
-    .block ul {
-      list-style: none;
+    .photo-caption .chips {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 8px;
     }
 
-    .block li {
-      font-size: 13px;
-      line-height: 1.38;
-      color: var(--body);
-      padding-left: 14px;
-      position: relative;
+    .photo-caption .chips span {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 999px;
+      backdrop-filter: blur(4px);
+      background: rgba(255,255,255,0.08);
     }
 
-    .block li::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0.55em;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--accent);
-      opacity: 0.85;
+    .copy-panel {
+      padding: 0.55in 0.58in 0.45in 0.55in;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(ellipse 80% 50% at 100% 0%, rgba(196,92,38,0.08), transparent 55%),
+        var(--paper);
     }
 
-    .moment {
-      max-width: 6in;
-      padding-top: 0.06in;
-      border-top: 1px solid var(--line);
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
     }
 
-    .moment h3 {
-      font-size: 10px;
+    .brand {
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 6px;
+      color: var(--ember);
     }
 
-    .moment p {
-      font-size: 13.5px;
-      line-height: 1.42;
-      color: var(--ink);
+    .slide-num {
+      font-size: 11px;
+      color: var(--muted);
       font-weight: 500;
     }
 
-    /* ========== SLIDE 2 — EMPATHY ========== */
-    .s2 {
-      padding: 0.45in 0.55in 0.55in 0.62in;
-      flex: 1;
+    .intro {
+      margin-top: 0.35in;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ember);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 64px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 0.95;
+      color: var(--ink);
+    }
+
+    .tagline {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    .quote {
+      margin-top: 0.32in;
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 22px;
+      font-style: italic;
+      line-height: 1.4;
+      color: var(--charcoal);
+      max-width: 6.2in;
+    }
+
+    .quote::before {
+      content: "";
+      display: block;
+      width: 36px;
+      height: 3px;
+      background: var(--ember);
+      margin-bottom: 16px;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.32in;
+      margin-top: 0.38in;
+    }
+
+    .col h3 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ember);
+      margin-bottom: 14px;
+    }
+
+    .col ul {
+      list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.28in;
+      gap: 11px;
     }
 
-    .s2-head {
-      display: grid;
-      grid-template-columns: 1.15in 1fr;
-      gap: 0.22in;
-      align-items: center;
-      padding-bottom: 0.2in;
-      border-bottom: 1px solid var(--line);
+    .col li {
+      font-size: 15px;
+      line-height: 1.35;
+      color: var(--charcoal);
+      font-weight: 500;
+      padding-left: 16px;
+      position: relative;
     }
 
-    .s2-head img {
-      width: 1.15in;
-      height: 1.15in;
-      object-fit: cover;
-      object-position: center 10%;
+    .col li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.5em;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
+      background: var(--ember);
+    }
+
+    .scene {
+      margin-top: 0.35in;
+      padding-top: 0.22in;
+      border-top: 1px solid var(--line);
+    }
+
+    .scene strong {
       display: block;
-      background: #e4e4e7;
-    }
-
-    .s2-head h2 {
-      font-size: 32px;
+      font-size: 11px;
       font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ember);
+      margin-bottom: 10px;
+    }
+
+    .scene p {
+      font-size: 15.5px;
+      line-height: 1.45;
+      color: var(--charcoal);
+      font-weight: 500;
+      max-width: 6.4in;
+    }
+
+    /* ========== SLIDE 2 ========== */
+    .s2 {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 0.42in 0.5in 0.38in;
+      background:
+        radial-gradient(ellipse 60% 40% at 0% 0%, rgba(196,92,38,0.07), transparent 50%),
+        var(--paper);
+    }
+
+    .s2-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.28in;
+      flex: 0 0 auto;
+    }
+
+    .s2-identity {
+      display: flex;
+      align-items: center;
+      gap: 0.22in;
+    }
+
+    .s2-identity img {
+      width: 0.95in;
+      height: 0.95in;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 15%;
+      display: block;
+      box-shadow: 0 8px 24px rgba(26,26,26,0.12);
+    }
+
+    .s2-identity .eyebrow {
+      margin-bottom: 4px;
+    }
+
+    .s2-identity h2 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 36px;
+      font-weight: 400;
       letter-spacing: -0.02em;
+      line-height: 1;
       color: var(--ink);
-      line-height: 1.1;
     }
 
-    .s2-head .sub {
-      font-size: 14px;
-      color: var(--soft);
+    .s2-identity .when {
       margin-top: 6px;
-      line-height: 1.4;
-      max-width: 8in;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
     }
 
-    .s2-head .when {
-      margin-top: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent);
+    .s2-brand {
+      text-align: right;
     }
+
+    .s2-brand .brand { display: block; margin-bottom: 6px; }
+    .s2-brand .slide-num { display: block; }
 
     .emap {
       flex: 1;
@@ -285,27 +317,39 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 0.2in;
+      gap: 0.16in;
     }
 
     .cell {
-      background: var(--white);
+      background: var(--panel);
       border: 1px solid var(--line);
-      padding: 0.2in 0.22in;
+      padding: 0.22in 0.24in;
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      position: relative;
+      overflow: hidden;
     }
 
-    .cell h4 {
-      font-size: 11px;
+    .cell::before {
+      content: attr(data-n);
+      position: absolute;
+      top: 0.12in;
+      right: 0.16in;
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 42px;
+      line-height: 1;
+      color: rgba(196, 92, 38, 0.12);
+    }
+
+    .cell h3 {
+      font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--ink);
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--line);
+      color: var(--ember);
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
     }
 
     .cell ul {
@@ -313,206 +357,209 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      position: relative;
+      z-index: 1;
     }
 
     .cell li {
-      font-size: 13.5px;
-      line-height: 1.4;
-      color: var(--body);
+      font-size: 15px;
+      line-height: 1.35;
+      color: var(--charcoal);
+      font-weight: 500;
     }
 
-    .pg {
+    .bottom {
+      flex: 0 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.2in;
-      flex: 0 0 auto;
+      gap: 0.16in;
+      margin-top: 0.16in;
     }
 
-    .pg > div {
-      padding: 0.18in 0.2in;
-      border: 1px solid var(--line);
+    .bottom > div {
+      padding: 0.18in 0.22in;
     }
 
-    .pg .pain { background: var(--accent-soft); border-color: #fed7aa; }
-    .pg .gain { background: var(--white); }
+    .pains {
+      background: #f3e6dc;
+    }
 
-    .pg h4 {
-      font-size: 10px;
+    .gains {
+      background: var(--charcoal);
+      color: #f7f4ef;
+    }
+
+    .bottom h3 {
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       margin-bottom: 10px;
     }
 
-    .pg .pain h4 { color: var(--accent); }
-    .pg .gain h4 { color: var(--ink); }
+    .pains h3 { color: var(--ember-deep); }
+    .gains h3 { color: rgba(247,244,239,0.55); }
 
-    .pg ul {
+    .bottom ul {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
     }
 
-    .pg li {
-      font-size: 13px;
-      line-height: 1.4;
-      color: var(--body);
+    .bottom li {
+      font-size: 14.5px;
+      line-height: 1.35;
+      font-weight: 500;
     }
+
+    .pains li { color: var(--charcoal); }
+    .gains li { color: #f7f4ef; }
   </style>
 </head>
 <body>
 
-  <!-- SLIDE 1: USER PERSONA -->
+  <!-- SLIDE 1 -->
   <section class="slide">
     <div class="s1">
-      <aside class="hero">
-        <img class="hero-img" src="persona-ivan-solis.png" alt="Iván Solís" />
-        <div class="hero-meta">
-          <span>23 · Monterrey</span>
-          <span>Android · limited data</span>
-          <span>Debit / OXXO</span>
-          <span>2–3 tickets</span>
+      <div class="photo-panel">
+        <img src="persona-ivan-solis.png" alt="Iván Solís" />
+        <div class="photo-caption">
+          <div class="label">Last-minute buyer</div>
+          <div class="chips">
+            <span>23 · Monterrey</span>
+            <span>Android · limited data</span>
+            <span>Debit / OXXO</span>
+            <span>2–3 tickets</span>
+          </div>
         </div>
-      </aside>
+      </div>
 
-      <div class="content">
+      <div class="copy-panel">
         <div>
-          <div class="eyebrow">User Persona</div>
-          <h1>Iván Solís</h1>
-          <p class="role">The last-minute buyer</p>
+          <div class="top">
+            <div class="brand">Boletera</div>
+            <div class="slide-num">01 / 02</div>
+          </div>
+
+          <div class="intro">
+            <div class="eyebrow">User Persona</div>
+            <h1>Iván Solís</h1>
+            <p class="tagline">Buys for the group — the night before.</p>
+          </div>
+
+          <p class="quote">
+            “We’re going, right? Just let me check there are still seats together —
+            and that it doesn’t get ridiculous with the service fee.”
+          </p>
+
+          <div class="grid-two">
+            <div class="col">
+              <h3>He needs</h3>
+              <ul>
+                <li>Seats together for everyone</li>
+                <li>The real price before he picks</li>
+                <li>Checkout as fast as WhatsApp</li>
+              </ul>
+            </div>
+            <div class="col">
+              <h3>He abandons when</h3>
+              <ul>
+                <li>Fees appear only at the end</li>
+                <li>The map fights one thumb</li>
+                <li>The timer dies mid-chat</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <p class="quote">
-          “We’re going, right? Just let me check there are still seats together —
-          and that it doesn’t get ridiculous with the service fee.”
-        </p>
-
-        <p class="story">
-          Iván buys for his friends, not for himself. He decides the night before,
-          usually on the bus with one bar of signal. He is always the one holding
-          the card or standing near an OXXO — and he trusts a screenshot to the
-          group chat more than a confirmation email.
-        </p>
-
-        <div class="blocks">
-          <div class="block">
-            <h3>What he needs</h3>
-            <ul>
-              <li>Seats together for the whole group</li>
-              <li>The real price before he picks a seat</li>
-              <li>Checkout as fast as sending a message</li>
-            </ul>
-          </div>
-          <div class="block">
-            <h3>What breaks it</h3>
-            <ul>
-              <li>Service fee that appears only at checkout</li>
-              <li>Seat map that doesn’t work with one thumb</li>
-              <li>Timer running out while the group still decides</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="moment">
-          <h3>Key moment</h3>
+        <div class="scene">
+          <strong>The moment that matters</strong>
           <p>
             Friday, 7:40 pm. One bar of signal on the bus. The show is tomorrow.
-            The group is asking if he bought yet. If the price jumps or the map stalls,
-            he closes the tab and says he couldn’t get the tickets.
+            His friends are already asking. If the price jumps or the map stalls,
+            he closes the tab — and the night is over.
           </p>
         </div>
       </div>
     </div>
-
-    <footer class="slide-foot">
-      <span class="brand">Boletera Research</span>
-      <span>1 · User Persona</span>
-    </footer>
   </section>
 
-  <!-- SLIDE 2: EMPATHY MAP -->
+  <!-- SLIDE 2 -->
   <section class="slide">
     <div class="s2">
-      <header class="s2-head">
-        <img src="persona-ivan-solis.png" alt="Iván Solís" />
-        <div>
-          <div class="eyebrow">Empathy Map</div>
-          <h2>Iván Solís</h2>
-          <p class="sub">
-            The minute he discovers the price isn’t what he thought —
-            on mobile, under pressure, with his group waiting.
-          </p>
-          <p class="when">Friday 7:40 pm · on the bus · one bar of signal · event tomorrow</p>
+      <header class="s2-top">
+        <div class="s2-identity">
+          <img src="persona-ivan-solis.png" alt="Iván Solís" />
+          <div>
+            <div class="eyebrow">Empathy Map</div>
+            <h2>Inside Iván’s head</h2>
+            <p class="when">That minute when the price isn’t what he thought</p>
+          </div>
+        </div>
+        <div class="s2-brand">
+          <span class="brand">Boletera</span>
+          <span class="slide-num">02 / 02</span>
         </div>
       </header>
 
       <div class="emap">
-        <article class="cell">
-          <h4>Thinks &amp; feels</h4>
+        <article class="cell" data-n="01">
+          <h3>Thinks &amp; feels</h3>
           <ul>
             <li>“Are they trying to rip me off?”</li>
-            <li>Scared of missing out and of overpaying at the same time</li>
-            <li>Not sure a digital ticket will count at the door</li>
-            <li>Panicked the seats will disappear while the chat argues</li>
+            <li>Afraid of missing out and of overpaying</li>
+            <li>Worried the seats will vanish while the chat argues</li>
           </ul>
         </article>
 
-        <article class="cell">
-          <h4>Sees</h4>
+        <article class="cell" data-n="02">
+          <h3>Sees</h3>
           <ul>
-            <li>One bar of signal and a map loading slowly</li>
-            <li>A price labeled “Total” that isn’t the final amount</li>
-            <li>WhatsApp messages popping over the checkout screen</li>
-            <li>Ads that looked cheaper than what he’s about to pay</li>
+            <li>One bar of signal · a map loading slowly</li>
+            <li>A “Total” that isn’t the final amount</li>
+            <li>WhatsApp messages over the checkout screen</li>
           </ul>
         </article>
 
-        <article class="cell">
-          <h4>Hears</h4>
+        <article class="cell" data-n="03">
+          <h3>Hears</h3>
           <ul>
             <li>“Did you buy yet?”</li>
-            <li>“They have to be together or don’t bother”</li>
-            <li>“You get them — we’ll pay you back”</li>
-            <li>Someone sharing a reseller link as a cheaper option</li>
+            <li>“Together — or don’t bother”</li>
+            <li>“You get them. We’ll pay you back.”</li>
           </ul>
         </article>
 
-        <article class="cell">
-          <h4>Says &amp; does</h4>
+        <article class="cell" data-n="04">
+          <h3>Says &amp; does</h3>
           <ul>
-            <li>Screenshots the screen and sends it to the group</li>
+            <li>Screenshots the screen for the group</li>
             <li>Asks “yes or no?” before paying</li>
-            <li>Compares the total to other sites</li>
-            <li>Quits immediately if the price jumps — then texts “couldn’t get them”</li>
+            <li>Quits if the price jumps — then texts “couldn’t get them”</li>
           </ul>
         </article>
       </div>
 
-      <div class="pg">
-        <div class="pain">
-          <h4>Pains</h4>
+      <div class="bottom">
+        <div class="pains">
+          <h3>Pains</h3>
           <ul>
             <li>Losing seats together because the timer ran out</li>
-            <li>Hidden fees that blow his monthly budget</li>
-            <li>Bad signal blocking the map or the QR at the gate</li>
+            <li>Hidden fees that blow a tight budget</li>
+            <li>Bad signal blocking the map or the QR at the door</li>
           </ul>
         </div>
-        <div class="gain">
-          <h4>Gains</h4>
+        <div class="gains">
+          <h3>Gains</h3>
           <ul>
             <li>Seeing the real price from the first tap</li>
             <li>Clear confirmation that payment went through</li>
-            <li>Walking in with friends, no drama at the door</li>
+            <li>Walking in with friends — no drama at the door</li>
           </ul>
         </div>
       </div>
     </div>
-
-    <footer class="slide-foot">
-      <span class="brand">Boletera Research</span>
-      <span>2 · Empathy Map</span>
-    </footer>
   </section>
 
 </body>
