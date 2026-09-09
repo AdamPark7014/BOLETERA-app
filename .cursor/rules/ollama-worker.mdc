@@ -1,0 +1,58 @@
+---
+description: Obligatorio usar el worker LOCAL Ollama para trabajo de volumen antes de gastar tokens caros
+alwaysApply: true
+---
+
+# OLLAMA WORKER — usar de verdad (no solo mencionar)
+
+Ollama corre en `http://127.0.0.1:11434` con `qwen2.5-coder:7b` (~75 tok/s) y `nomic-embed-text`.
+**No reemplaza a Cursor Ultra ni a Claude.** Es el worker barato; el cerebro sigue siendo el cloud.
+
+## Por qué antes no se usaba
+
+Pedirle un snippet suelto cuesta más round-trip que escribirlo. Por eso la regla real no es
+"usa Ollama para cosas pequeñas" sino **delegar volumen**: lo que el modelo caro no debería
+ni leer.
+
+## Disparadores duros (si ocurre esto, llamas al worker)
+
+| Situación | Acción obligatoria |
+|-----------|--------------------|
+| Vas a abrir **más de 5 archivos** de un repo que no conoces | `digest` y luego `find` |
+| "¿Dónde está X?" en un repo con digest | `find` antes de abrir nada |
+| **N ≥ 5 items** que clasificar / etiquetar / normalizar / describir | `map` |
+| Mensaje de commit, resumen de diff, boilerplate | `generate` / `code` |
+| Embeddings, similitud, RAG ligero | `embed` |
+
+## Cómo llamarlo
+
+**MCP `ollama-worker`** (un paso, preferido):
+`ollama_digest` · `ollama_find` · `ollama_map` · `ollama_generate` · `ollama_code` · `ollama_embed` · `ollama_ledger`
+
+**Shell** (funciona siempre, aunque el MCP no haya cargado):
+
+```powershell
+$W = "C:\Users\adpoz\Projects\ai-oss-2026\scripts\ollama-worker.ps1"
+pwsh -File $W -Action digest -Repo "<ruta del repo>" -Max 120
+pwsh -File $W -Action find   -Repo "<ruta del repo>" -Query "donde se calcula el precio"
+pwsh -File $W -Action map    -ItemsInline "a,b,c" -Prompt "Clasifica en una palabra: {{item}}"
+pwsh -File $W -Action generate -Prompt "..."
+pwsh -File $W -Action ledger
+```
+
+`digest` escribe `.ai/index/DIGEST.md` (ignorado por git). Ese índice es lo que lees tú:
+cientos de tokens en vez de decenas de archivos. Si dice **cobertura PARCIAL**, no concluyas
+que algo no existe: sube `--max` o verifica con `rg`.
+
+`find` devuelve **confianza**. Si es baja o nula, el índice no cubre eso — verifica con `rg`
+antes de afirmar nada.
+
+## Prohibido
+
+- Decir "usaré Ollama" y luego hacerlo todo con el modelo cloud sin llamar al worker.
+- Apuntar Cursor/Claude a `OPENAI_BASE_URL=http://127.0.0.1:11434` (eso destruye el cerebro caro).
+- Usar Ollama para arquitectura, contratos entre módulos o decisiones. Eso es tier FRONTIER.
+- Tratar la salida del 7B como verdad: tú revisas y mergeas.
+
+El boot imprime `delegaciones 7d`. Si sale 0 y en el turno hubo trabajo de volumen,
+la regla se incumplió.

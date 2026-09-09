@@ -18,7 +18,9 @@ En **cada** chat bajo `C:\dev\apps` (y cualquier git de producto), **antes** de 
 4. **Tu rol = EJECUTOR**: implementa hiper-rápido y profesional. No cambies arquitectura ni contratos; si el packet contradice el disco, para y reporta.
 5. Desglosa workers hiperdetallados — un writer por worktree:
    - NO_LLM (rg / git / tests / lint / playwright) primero, coste 0
-   - Ollama local (`qwen2.5-coder:7b`, `nomic-embed-text`) para boilerplate / clasificar / embed
+   - **LOCAL/Ollama de verdad**: MCP `ollama-worker` (`ollama_generate` / `ollama_code` / `ollama_embed`) o
+     `pwsh -File C:\Users\adpoz\Projects\ai-oss-2026\scripts\ollama-worker.ps1 -Action generate -Prompt "..."`.
+     No digas “usaré Ollama” sin invocarlo. No redirijas Ultra a :11434.
    - MCP / Firecrawl / n8n / Temporal solo si el packet lo pide
 6. Cierra: tests/typecheck → `Estado: CERRADO` en EXEC-PACKET → `.ai/RELEVO.md` → `relevo.ps1 cerrar -Agente cursor -Mensaje "..."`.
 
