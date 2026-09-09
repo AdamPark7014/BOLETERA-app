@@ -1,0 +1,38 @@
+---
+description: LOCAL-FIRST — en C:\dev la primera LLM barata SIEMPRE es Ollama; queda en panel 8788
+alwaysApply: true
+---
+
+# LOCAL-FIRST — obligatorio en TODO chat de C:\dev
+
+Adam paga Ultra/Max. El trabajo barato (reconocer repo, clasificar, buscar en índice, mapear lotes, commit draft) **debe** ir al worker local. Si no aparece en http://127.0.0.1:8788, **no delegaste**.
+
+## Primera secuencia de cada turno (antes de explorar a mano)
+
+```powershell
+pwsh -File C:\dev\scripts\ai-os\optimize.ps1 -Action auto -Task "<pedido de Adam>" -Repo "<repo>"
+```
+
+Eso solo: panel · warm · flota indexando · plan LOCAL · find/classify · huella en 8788.
+
+Si preferís pasos manuales:
+1. `boot-fusion.ps1`
+2. Con digest → `-Action find` · sin digest → `-Action digest`
+3. map / generate según dispare
+
+MCP: `ollama_find` · `ollama_digest` · `ollama_map` · `ollama_generate` · `ollama_ledger`
+
+## Prohibido
+
+- Decir “uso Ollama” y no invocarlo
+- Explorar monorepos abriendo 20 archivos cloud-first
+- `OPENAI_BASE_URL` → `:11434` (rompe Ultra/Max)
+- Editar `NO TOCAR LIBREMENTE` / `SOFTWARE PERSONAL` sin nombre explícito (indexar `.ai/index` sí)
+
+## Cómo comprobar
+
+```powershell
+pwsh -File C:\Users\adpoz\Projects\ai-oss-2026\scripts\ollama-worker.ps1 -Action ledger
+```
+
+Panel: http://127.0.0.1:8788 · Orden: `C:\dev\ORDEN-DE-ARRANQUE.md`

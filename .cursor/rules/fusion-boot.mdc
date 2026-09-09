@@ -5,7 +5,7 @@ alwaysApply: true
 
 # FUSION BOOT — obligatorio
 
-En **cada** chat bajo `C:\dev\apps` (y cualquier git de producto), **antes** de leer/editar código:
+En **cada** chat bajo `C:\dev` (y cualquier git de producto), **antes** de leer/editar código:
 
 1. Ejecuta en shell:
    ```
@@ -16,15 +16,13 @@ En **cada** chat bajo `C:\dev\apps` (y cualquier git de producto), **antes** de 
    - `TEMPLATE` o `NONE` → no hay plan. Si la tarea es arquitectura/HARD, escala a Claude o genera un mini-packet primero.
 3. Si hay archivos sucios → `pwsh -File C:\dev\scripts\relevo\relevo.ps1 salvar -Agente cursor`.
 4. **Tu rol = EJECUTOR**: implementa hiper-rápido y profesional. No cambies arquitectura ni contratos; si el packet contradice el disco, para y reporta.
-5. Desglosa workers hiperdetallados — un writer por worktree:
-   - NO_LLM (rg / git / tests / lint / playwright) primero, coste 0
-   - **LOCAL/Ollama de verdad**: MCP `ollama-worker` (`ollama_generate` / `ollama_code` / `ollama_embed`) o
-     `pwsh -File C:\Users\adpoz\Projects\ai-oss-2026\scripts\ollama-worker.ps1 -Action generate -Prompt "..."`.
-     No digas “usaré Ollama” sin invocarlo. No redirijas Ultra a :11434.
-   - MCP / Firecrawl / n8n / Temporal solo si el packet lo pide
-6. Cierra: tests/typecheck → `Estado: CERRADO` en EXEC-PACKET → `.ai/RELEVO.md` → `relevo.ps1 cerrar -Agente cursor -Mensaje "..."`.
+5. **LOCAL-FIRST** (antes de explorar a mano): MCP `ollama-worker` o
+   `pwsh -File C:\Users\adpoz\Projects\ai-oss-2026\scripts\ollama-worker.ps1 -Action find|digest|map|generate`.
+   Si http://127.0.0.1:8788 no registra el turno, no delegaste. Ver `local-first.mdc` y `C:\dev\ORDEN-DE-ARRANQUE.md`.
+6. Desglosa workers — un writer por worktree. NO_LLM primero; luego LOCAL; luego cloud.
+7. Cierra: tests/typecheck → `Estado: CERRADO` en EXEC-PACKET → `.ai/RELEVO.md` → `relevo.ps1 cerrar -Agente cursor -Mensaje "..."`.
 
-Nunca entres a `NO TOCAR LIBREMENTE` / `SOFTWARE PERSONAL` sin orden explícita de Adam.
+Nunca edites `NO TOCAR LIBREMENTE` / `SOFTWARE PERSONAL` sin orden explícita (indexar `.ai/index` sí).
 Nunca `git reset --hard`, `git checkout --`, `git clean`, `git stash drop`.
 
 Protocolo: `C:\dev\scripts\ai-os\FUSION-PROTOCOL.md` · Flota: `pwsh -File C:\dev\scripts\ai-os\fleet.ps1`
