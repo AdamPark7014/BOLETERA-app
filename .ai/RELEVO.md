@@ -8,29 +8,29 @@
 
 **Este turno tampoco tocó código de la app.** Solo `docs/`: se rehízo la
 presentación de la persona «comprador de último minuto» como entregable de la
-materia Interacción Humano-Computadora. El último estado de código sigue siendo
-el de Cursor (**Wave 5**). Nada de lo pendiente cambió.
+materia Interacción Humano-Computadora (dos láminas, en inglés).
+El último estado de código sigue siendo el de Cursor (**Wave 5**). Nada de lo pendiente cambió.
 
 ## Hecho en este turno
 
 ### La presentación (docs/Persona-Ivan-Solis.pdf)
-Pasó de 2 láminas en inglés a **4 láminas en español, 16:9 (13.333 × 7.5 in)**,
-listas para proyectar:
+**Dos láminas, en inglés, 16:9 (13.333 × 7.5 in)**, listas para proyectar:
 
-1. Portada — curso, entrega, autor, fecha, los 5 pasos del método con su estado
-   y el aviso de honestidad (estas personas no vienen de entrevistas).
-2. La persona — retrato, ficha, cita, quiere / lo quema, los cinco ejes de
-   diferenciación con medidores, y el momento clave.
-3. Mapa de empatía — cuatro cuadrantes alrededor del retrato + dolores/ganancias.
-4. De la evidencia al diseño — curva de ánimo de las 7 fases del journey, el
-   hallazgo verificado, y obliga a construir / ya resuelto / cómo se mide.
+1. **User Persona** — foto a sangre a la izquierda con los chips de identidad;
+   a la derecha nombre, cita, *what he wants* / *what burns him*, el perfil de
+   comportamiento con medidores (los cinco ejes de `PERSONAS.md` §02) y la banda
+   *the moment that matters*.
+2. **Empathy Map** — los cuatro cuadrantes alrededor del retrato central, con la
+   franja *Pains* / *Gains* abajo.
+
+Adam pidió expresamente **solo esas dos**: nada de portada ni de lámina de
+«evidencia al diseño». El aviso de honestidad quedó reducido a una línea en el
+pie de la lámina 2.
 
 Fuente: `docs/assets/persona-ivan-solis.html`. Se renderiza con Chrome headless:
 
 ```
-"C:/Program Files/Google/Chrome/Application/chrome.exe" --headless=new --disable-gpu \
-  --no-pdf-header-footer --run-all-compositor-stages-before-draw --virtual-time-budget=9000 \
-  --print-to-pdf="docs/Persona-Ivan-Solis.pdf" "file:///.../docs/assets/persona-ivan-solis.html"
+chrome.exe --headless=new --disable-gpu --no-pdf-header-footer \n  --run-all-compositor-stages-before-draw --virtual-time-budget=9000 \n  --print-to-pdf="docs/Persona-Ivan-Solis.pdf" \n  "file:///C:/dev/apps/BOLETERA-app/docs/assets/persona-ivan-solis.html"
 ```
 
 ### Hallazgo verificado nuevo — refina O3
@@ -63,7 +63,7 @@ Verificación del PDF: 0 fuentes Type3, 0 respaldos del sistema, todo Type0/CID.
 
 ### Entregable fuera del repo
 `OneDrive/Documentos/Universidad/2026-Semestre-5/01-Interaccion-Humano-Computadora-CN220/Entregas/`
-→ `2026-09-09 Persona y mapa de empatía - Adam Del Pozo Ontiveros.pdf`
+→ `2026-09-09 User Persona and Empathy Map - Adam Del Pozo Ontiveros.pdf`
 
 ## Pendiente
 - Probar tenants A vs B con hosts distintos (manual / Docker) + Rich Results Test
