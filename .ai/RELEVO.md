@@ -1,43 +1,69 @@
 # RELEVO
 
 - **Último turno:** claude-code
-- **Fecha:** 2026-09-02
+- **Fecha:** 2026-09-09
 - **Rama:** mejora/worker-y-tests
 
 ## Lo primero que tiene que saber quien entre
 
-**Este turno tampoco tocó código.** Solo documentación de producto:
-`docs/UX-MAPS.md` (nuevo), que continúa `docs/PERSONAS.md` del turno anterior.
-El último estado de código sigue siendo el de Cursor (**Wave 5**: SEO
-megapresencia multi-tenant, QR vivo, P0 aislamiento API, stubs honestos,
-orgName en taquilla, sobre Wave 4). Nada de lo pendiente cambió.
+**Este turno tampoco tocó código de la app.** Solo `docs/`: se rehízo la
+presentación de la persona «comprador de último minuto» como entregable de la
+materia Interacción Humano-Computadora. El último estado de código sigue siendo
+el de Cursor (**Wave 5**). Nada de lo pendiente cambió.
 
 ## Hecho en este turno
 
-### docs/UX-MAPS.md (nuevo)
-Mapas de experiencia sobre las personas ya escritas. Cinco journey maps con
-curva de ánimo (promotora, comprador, taquillera, operador del recinto,
-contadora), un blueprint de servicio del on-sale móvil con las tres líneas
-(interacción / visibilidad / interacción interna), dos mapas de empatía, el
-cruce mapa × hipótesis H1–H5 y un mapa de oportunidades O1–O8.
+### La presentación (docs/Persona-Ivan-Solis.pdf)
+Pasó de 2 láminas en inglés a **4 láminas en español, 16:9 (13.333 × 7.5 in)**,
+listas para proyectar:
 
-Cada fricción va etiquetada **✔ verificado** (con archivo y línea del repo) o
-**? hipótesis** (con la H que la cubre). No se mezclan: los mapas heredan la
-misma deuda que las personas — nadie ha observado todavía a un usuario real.
+1. Portada — curso, entrega, autor, fecha, los 5 pasos del método con su estado
+   y el aviso de honestidad (estas personas no vienen de entrevistas).
+2. La persona — retrato, ficha, cita, quiere / lo quema, los cinco ejes de
+   diferenciación con medidores, y el momento clave.
+3. Mapa de empatía — cuatro cuadrantes alrededor del retrato + dolores/ganancias.
+4. De la evidencia al diseño — curva de ánimo de las 7 fases del journey, el
+   hallazgo verificado, y obliga a construir / ya resuelto / cómo se mide.
 
-### Hallazgo verificado que sale de los mapas (O3)
-`apps/web/lib/pricing.ts` dice por escrito que el precio anunciado tiene que ser
-el que se cobra, y `POST /pricing/calculate-cart` ya es público. Pero ese helper
-se usa en `cart`, `checkout`, `cuenta` y `orders/[publicId]` — **no en la página
-del evento**: en `apps/web/app/events/[slug]/EventPurchaseClient.tsx:658` la
-etiqueta dice «Total $…» sobre una suma de `basePrice`, sin cargo por servicio
-ni IVA. Es exactamente la sorpresa que `H2` acusa de provocar el abandono.
-**Está diagnosticado, no arreglado.** Nadie ha tocado ese archivo.
+Fuente: `docs/assets/persona-ivan-solis.html`. Se renderiza con Chrome headless:
 
-### Entregables fuera del repo
-- Artifact publicado con la versión presentable (curvas de ánimo y blueprint
-  dibujados): https://claude.ai/code/artifact/b89f1693-0100-4ac1-9652-8e1111d14e54
-- El HTML fuente queda en el scratchpad de la sesión, no en el repo.
+```
+"C:/Program Files/Google/Chrome/Application/chrome.exe" --headless=new --disable-gpu \
+  --no-pdf-header-footer --run-all-compositor-stages-before-draw --virtual-time-budget=9000 \
+  --print-to-pdf="docs/Persona-Ivan-Solis.pdf" "file:///.../docs/assets/persona-ivan-solis.html"
+```
+
+### Hallazgo verificado nuevo — refina O3
+El turno anterior dejó diagnosticado que `EventPurchaseClient.tsx:658` rotula
+«Total $…» sobre una suma de `basePrice`. **Este turno encontró algo más
+concreto:** ese mismo componente ya recibe `minPriceAllIn` —documentado en el
+propio archivo como «Precio final al comprador (cargos e IVA incluidos)»— y lo
+usa en la línea 659 para la etiqueta «Desde $…». O sea: el número honesto ya
+está en la pantalla; en cuanto el usuario elige asiento, la interfaz cambia al
+incompleto. El arreglo de O3 en esa pantalla no necesita datos nuevos.
+
+**Sigue sin arreglarse. Nadie tocó ese archivo.** Falta reflejarlo en
+`docs/UX-MAPS.md` §03 y §10, que todavía lo cuenta con el encuadre anterior.
+
+### Fuentes locales (docs/assets/fonts/)
+El PDF ya no depende de la red ni de fuentes del sistema. Dos trampas resueltas
+que conviene no repetir:
+
+- Instrument Sans en Google Fonts es **variable**, y Chrome no sabe incrustar
+  una variable en el PDF: la convierte en fuentes **Type3** (contornos
+  dibujados, texto no seleccionable, archivo mucho más grande). Se generaron
+  instancias estáticas 400/500/600/700 con `fontTools.varLib.instancer`.
+- En los subconjuntos de Google, el archivo **`latin` es el grande** (~206
+  glifos: ASCII, acentos, « », guiones) y `latinext` el chico (~123). Tenerlos
+  al revés en `unicode-range` hace que **todo** el texto normal caiga a Georgia
+  y Segoe UI sin que el render falle de forma visible. Los archivos ahora están
+  nombrados por lo que de verdad cubren.
+
+Verificación del PDF: 0 fuentes Type3, 0 respaldos del sistema, todo Type0/CID.
+
+### Entregable fuera del repo
+`OneDrive/Documentos/Universidad/2026-Semestre-5/01-Interaccion-Humano-Computadora-CN220/Entregas/`
+→ `2026-09-09 Persona y mapa de empatía - Adam Del Pozo Ontiveros.pdf`
 
 ## Pendiente
 - Probar tenants A vs B con hosts distintos (manual / Docker) + Rich Results Test
@@ -48,14 +74,15 @@ ni IVA. Es exactamente la sorpresa que `H2` acusa de provocar el abandono.
   `enterprise-upgrade`.
 - PAC CFDI real (producción); bank rail payouts.
 - Las personas siguen **sin firmar** (paso 04 del método). Antes de usarlas para
-  priorizar hay que cerrar la sesión de acuerdo y resolver H1/H3. Los mapas se
-  llevan impresos a esa sesión.
-- **Nuevo:** O3 (total real desde la página del evento) y O4 (contador de cola
-  offline en taquilla) son los dos candidatos de código con evidencia verificada.
-  Ninguno está comprometido: entran a la sesión de acuerdo, no al sprint.
-- **Nuevo:** el embudo móvil evento→carrito→pago no existe como evento
-  instrumentado. Sin eso, H2 no se resuelve.
+  priorizar hay que cerrar la sesión de acuerdo y resolver H1/H3.
+- O3 (total real desde la página del evento) y O4 (contador de cola offline en
+  taquilla) son los dos candidatos de código con evidencia verificada. Ninguno
+  está comprometido: entran a la sesión de acuerdo, no al sprint.
+- El embudo móvil evento→carrito→pago no existe como evento instrumentado. Sin
+  eso, H2 no se resuelve.
+- **Nuevo:** actualizar `docs/UX-MAPS.md` con el hallazgo de `minPriceAllIn`.
 
 ## No tocar
 - `*.env.docker-backup`, worktree `integracion/dinero`, rama `enterprise-upgrade`.
-- Banorte auto-refund API, JWT httpOnly/CSRF end-to-end, PAC CFDI real, bank payouts.
+- `docs/assets/fonts/` — los `.woff2` son binarios generados; regenerarlos solo
+  con las instrucciones del encabezado de `local.css`.

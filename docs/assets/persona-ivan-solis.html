@@ -1,566 +1,657 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>Iván Solís — Boletera</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --ink: #1a1a1a;
-      --muted: #6b6b6b;
-      --line: rgba(26, 26, 26, 0.12);
-      --paper: #f7f4ef;
-      --panel: #ffffff;
-      --ember: #c45c26;
-      --ember-deep: #9a4519;
-      --charcoal: #2c2a26;
-    }
+<meta charset="utf-8" />
+<title>Persona y mapa de empatía — El comprador de último minuto · Boletera</title>
+<link rel="stylesheet" href="fonts/local.css" />
+<style>
+:root{
+  --paper:#F7F4EF;
+  --panel:#FFFFFF;
+  --ink:#1A1A1A;
+  --charcoal:#2C2A26;
+  --muted:#6F6A63;
+  --faint:#9C968D;
+  --line:rgba(44,42,38,.14);
+  --line-soft:rgba(44,42,38,.08);
+  --ember:#C45C26;
+  --ember-deep:#96421A;
+  --tint:#F0E2D6;
+  --tint-soft:#F7EEE7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+@page{size:13.333in 7.5in;margin:0}
+html,body{
+  font-family:"Instrument Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  background:#8B877F;color:var(--ink);
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"kern" 1,"liga" 1;
+}
+.slide{
+  width:1280px;height:720px;position:relative;overflow:hidden;
+  background:var(--paper);page-break-after:always;
+}
+.slide:last-child{page-break-after:auto}
+code,.code{font-family:Consolas,"SF Mono",Menlo,monospace}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ---------- átomos ---------- */
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.19em;
+  text-transform:uppercase;color:var(--ember)}
+.mark{font-size:10.5px;font-weight:700;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ember)}
+.folio{font-size:10.5px;font-weight:600;letter-spacing:.1em;color:var(--faint)}
 
-    @page { size: 13in 8.5in; margin: 0; }
+.head{display:flex;align-items:flex-end;justify-content:space-between;
+  padding-bottom:13px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.head h2{font-family:"Instrument Serif",Georgia,serif;font-size:35px;
+  font-weight:400;letter-spacing:-.015em;line-height:1;color:var(--ink);margin-top:8px}
+.head .sub{font-size:13.5px;color:var(--muted);font-weight:500;margin-top:8px}
+.head-right{text-align:right;line-height:1.9;white-space:nowrap;padding-left:24px}
 
-    html, body {
-      font-family: "Instrument Sans", system-ui, sans-serif;
-      background: #8a8680;
-      color: var(--ink);
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+.foot{display:flex;justify-content:space-between;align-items:center;flex:0 0 auto;
+  border-top:1px solid var(--line-soft);padding-top:8px;margin-top:12px;
+  font-size:10px;letter-spacing:.05em;color:var(--faint);font-weight:500}
 
-    .slide {
-      width: 13in;
-      height: 8.5in;
-      page-break-after: always;
-      overflow: hidden;
-      position: relative;
-      background: var(--paper);
-    }
-    .slide:last-child { page-break-after: auto; }
+/* =========================================================
+   01 · PORTADA
+   ========================================================= */
+.cover{display:grid;grid-template-columns:1fr 318px;height:100%}
+.cover-main{padding:44px 52px 40px 58px;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse 70% 55% at 8% 4%,rgba(196,92,38,.075),transparent 58%),var(--paper)}
+.course{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:11px;border-bottom:1.5px solid var(--charcoal)}
+.course .name{font-size:12.5px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--charcoal)}
+.course .term{font-size:11px;font-weight:500;letter-spacing:.1em;color:var(--muted)}
 
-    /* ========== SLIDE 1 ========== */
-    .s1 {
-      display: grid;
-      grid-template-columns: 5.4in 1fr;
-      height: 100%;
-    }
+.cover-title{margin-top:52px;flex:1}
+.cover-title h1{font-family:"Instrument Serif",Georgia,serif;font-size:79px;font-weight:400;
+  line-height:.92;letter-spacing:-.025em;color:var(--ink);margin-top:16px}
+.cover-title .deck{font-size:20px;font-weight:500;color:var(--charcoal);margin-top:20px;line-height:1.4}
+.cover-title .deck em{font-style:normal;color:var(--ember-deep);font-weight:600}
+.cover-title .abstract{font-size:14.5px;line-height:1.6;color:var(--muted);
+  max-width:600px;margin-top:18px}
 
-    .photo-panel {
-      position: relative;
-      background: #d8d2c8;
-      overflow: hidden;
-    }
+.method{margin-top:26px}
+.method .lbl{font-size:9.5px;font-weight:700;letter-spacing:.17em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:9px}
+.steps{display:flex;gap:7px}
+.step{flex:1;border-top:2px solid var(--ember);padding-top:7px}
+.step.pend{border-top-color:var(--line)}
+.step .n{font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--ember)}
+.step.pend .n{color:var(--faint)}
+.step .t{font-size:11px;font-weight:600;color:var(--charcoal);margin-top:2px;line-height:1.25}
+.step .s{font-size:9.5px;color:var(--faint);margin-top:2px;font-weight:500}
 
-    .photo-panel img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 18%;
-      display: block;
-    }
+.cover-foot{display:grid;grid-template-columns:1fr 236px;gap:34px;align-items:end;margin-top:28px}
+.note{border-left:2px solid var(--ember);padding:1px 0 1px 13px}
+.note b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ember);margin-bottom:5px}
+.note p{font-size:11.5px;line-height:1.5;color:var(--muted);max-width:500px}
+.credits{display:flex;flex-direction:column;gap:11px}
+.credits .k{font-size:9px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+.credits .v{font-size:12.5px;font-weight:600;color:var(--charcoal);line-height:1.35}
 
-    .photo-panel::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(to top, rgba(26,26,26,0.55) 0%, transparent 42%),
-        linear-gradient(to right, transparent 70%, rgba(247,244,239,0.15));
-    }
+.cover-band{position:relative;overflow:hidden;background:#CFC8BE}
+.cover-band img{width:100%;height:100%;object-fit:cover;object-position:52% 16%;
+  display:block;filter:saturate(.72) contrast(1.04)}
+.cover-band::after{content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(to bottom,rgba(247,244,239,.55) 0%,transparent 22%,transparent 46%,rgba(26,20,16,.72) 100%),
+    linear-gradient(to right,rgba(150,66,26,.16),rgba(150,66,26,0) 60%)}
+.band-cap{position:absolute;left:22px;right:22px;bottom:22px;z-index:2;color:#fff}
+.band-cap .who{font-family:"Instrument Serif",Georgia,serif;font-size:29px;line-height:1}
+.band-cap .role{font-size:11px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:rgba(255,255,255,.72);margin-top:8px}
+.band-top{position:absolute;top:20px;left:22px;right:22px;z-index:2;
+  display:flex;justify-content:space-between;align-items:baseline}
+.band-top .mark{color:var(--ember-deep)}
+.band-top .folio{color:rgba(44,42,38,.55)}
 
-    .photo-caption {
-      position: absolute;
-      left: 0.4in;
-      right: 0.4in;
-      bottom: 0.38in;
-      z-index: 2;
-      color: #fff;
-    }
+/* =========================================================
+   02 · PERSONA
+   ========================================================= */
+.s2{height:100%;padding:34px 46px 26px;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse 55% 45% at 100% 0%,rgba(196,92,38,.06),transparent 55%),var(--paper)}
+.s2-body{flex:1;min-height:0;display:grid;grid-template-columns:224px 1fr;
+  gap:34px;padding-top:20px}
 
-    .photo-caption .label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      opacity: 0.8;
-      margin-bottom: 8px;
-    }
+.aside{display:flex;flex-direction:column;min-height:0}
+.portrait{width:224px;flex:1;min-height:0;overflow:hidden;background:#CFC8BE;position:relative}
+.portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 10%;
+  display:block;filter:saturate(.78) contrast(1.04)}
+.facts{flex:0 0 auto;margin-top:13px}
+.fact{display:flex;justify-content:space-between;gap:10px;
+  padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:11px}
+.fact:last-child{border-bottom:0;padding-bottom:0}
+.fact .k{color:var(--faint);font-weight:500}
+.fact .v{color:var(--charcoal);font-weight:600;text-align:right}
 
-    .photo-caption .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+.s2-copy{display:flex;flex-direction:column;min-height:0}
+.quote{font-family:"Instrument Serif",Georgia,serif;font-size:26px;font-style:italic;
+  line-height:1.34;color:var(--charcoal);flex:0 0 auto}
+.quote::before{content:"";display:block;width:40px;height:3px;background:var(--ember);margin-bottom:14px}
+.quote .src{display:block;font-family:"Instrument Sans",sans-serif;font-style:normal;
+  font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--faint);margin-top:12px}
 
-    .photo-caption .chips span {
-      font-size: 12px;
-      font-weight: 500;
-      padding: 6px 12px;
-      border: 1px solid rgba(255,255,255,0.35);
-      border-radius: 999px;
-      backdrop-filter: blur(4px);
-      background: rgba(255,255,255,0.08);
-    }
+.two{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:24px;flex:0 0 auto}
+.two h3{font-size:10.5px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ember);margin-bottom:12px}
+.two ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.two li{font-size:13.5px;line-height:1.4;color:var(--charcoal);font-weight:500;
+  padding-left:15px;position:relative}
+.two li::before{content:"";position:absolute;left:0;top:.52em;width:5px;height:5px;
+  border-radius:50%;background:var(--ember)}
+.two .burn li::before{background:transparent;border:1.5px solid var(--ember);
+  width:6px;height:6px;top:.46em}
 
-    .copy-panel {
-      padding: 0.55in 0.58in 0.45in 0.55in;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background:
-        radial-gradient(ellipse 80% 50% at 100% 0%, rgba(196,92,38,0.08), transparent 55%),
-        var(--paper);
-    }
+.axes{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);flex:0 0 auto}
+.axes .lbl{font-size:9.5px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:11px}
+.axes .lbl span{color:var(--muted);letter-spacing:.08em}
+.axrow{display:grid;grid-template-columns:repeat(5,1fr);gap:18px}
+.ax .an{font-size:10.5px;color:var(--muted);font-weight:500;line-height:1.25}
+.ax .meter{display:flex;gap:3px;margin-top:7px}
+.ax .meter i{flex:1;height:6px;background:var(--line);display:block}
+.ax .meter i.on{background:var(--ember)}
+.ax .av{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--charcoal);margin-top:6px}
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
+.scene{flex:0 0 auto;background:var(--charcoal);color:#F3EFE9;padding:16px 22px;margin-top:18px}
+.scene b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.17em;
+  text-transform:uppercase;color:rgba(243,239,233,.55);margin-bottom:7px}
+.scene p{font-size:13.5px;line-height:1.5;font-weight:500;max-width:1040px}
 
-    .brand {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--ember);
-    }
+/* =========================================================
+   03 · MAPA DE EMPATÍA
+   ========================================================= */
+.s3{height:100%;padding:34px 46px 26px;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse 50% 42% at 0% 0%,rgba(196,92,38,.06),transparent 55%),var(--paper)}
+.emap{position:relative;flex:1;min-height:0;display:grid;
+  grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:11px;margin-top:20px}
+.cell{background:var(--panel);border:1px solid var(--line);padding:18px 21px;
+  position:relative;overflow:hidden;display:flex;flex-direction:column}
+.cell::after{content:attr(data-n);position:absolute;top:5px;right:15px;
+  font-family:"Instrument Serif",Georgia,serif;font-size:44px;line-height:1;
+  color:rgba(196,92,38,.11)}
+.cell.bl::after{top:auto;bottom:6px}
+.cell h3{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--ember);margin-bottom:13px;position:relative;z-index:1;flex:0 0 auto}
+.cell ul{list-style:none;display:flex;flex-direction:column;gap:10px;
+  position:relative;z-index:1;margin:auto 0}
+.cell li{font-size:13.5px;line-height:1.4;color:var(--charcoal);font-weight:500;
+  padding-left:14px;position:relative}
+.cell li::before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;
+  border-radius:50%;background:rgba(196,92,38,.55)}
+.cell.tl,.cell.bl{padding-right:80px}
+.cell.tr,.cell.br{padding-left:80px}
 
-    .slide-num {
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 500;
-    }
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;
+  width:116px;height:116px;border-radius:50%;overflow:hidden;
+  border:6px solid var(--paper);box-shadow:0 4px 18px rgba(26,20,16,.16)}
+.hub img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;
+  display:block;filter:saturate(.78) contrast(1.04)}
 
-    .intro {
-      margin-top: 0.35in;
-    }
+.pg{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:11px}
+.pg > div{padding:17px 21px}
+.pains{background:var(--tint)}
+.gains{background:var(--charcoal)}
+.pg h3{font-size:10px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;margin-bottom:11px}
+.pains h3{color:var(--ember-deep)}
+.gains h3{color:rgba(243,239,233,.55)}
+.pg ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+.pg li{font-size:13px;line-height:1.4;font-weight:500}
+.pains li{color:var(--charcoal)}
+.gains li{color:#F3EFE9}
 
-    .eyebrow {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--ember);
-      margin-bottom: 14px;
-    }
+/* =========================================================
+   04 · DE LA EVIDENCIA AL DISEÑO
+   ========================================================= */
+.s4{height:100%;padding:34px 46px 26px;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse 55% 45% at 100% 100%,rgba(196,92,38,.06),transparent 55%),var(--paper)}
+.s4-mid{flex:1;min-height:0;display:grid;grid-template-columns:1fr 452px;
+  gap:24px;margin-top:18px}
 
-    h1 {
-      font-family: "Instrument Serif", Georgia, serif;
-      font-size: 64px;
-      font-weight: 400;
-      letter-spacing: -0.02em;
-      line-height: 0.95;
-      color: var(--ink);
-    }
+.chartbox{background:var(--panel);border:1px solid var(--line);
+  padding:14px 16px 10px;display:flex;flex-direction:column;min-height:0}
+.chartbox .cap{display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:4px;flex:0 0 auto}
+.chartbox .cap b{font-size:10.5px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ember)}
+.chartbox .cap span{font-size:10.5px;color:var(--faint);font-weight:500}
+.chartbox svg{flex:1;min-height:0;width:100%}
+.phase{font-size:11px;fill:#6F6A63;font-weight:600}
+.phase-n{font-size:9px;fill:#9C968D;font-weight:700;letter-spacing:.08em}
+.axl{font-size:9.5px;fill:#9C968D;font-weight:700}
 
-    .tagline {
-      font-size: 20px;
-      font-weight: 500;
-      color: var(--muted);
-      margin-top: 12px;
-    }
+.finding{background:var(--tint-soft);border:1px solid rgba(196,92,38,.26);
+  padding:16px 19px;display:flex;flex-direction:column;min-height:0}
+.tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;flex:0 0 auto}
+.tag{font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  padding:4px 8px;border:1px solid rgba(150,66,26,.35);color:var(--ember-deep)}
+.tag.solid{background:var(--ember-deep);color:#F7F1EC;border-color:var(--ember-deep)}
+.finding h3{font-family:"Instrument Serif",Georgia,serif;font-size:25px;font-weight:400;
+  line-height:1.15;color:var(--ink);margin-bottom:12px;flex:0 0 auto}
+.finding p{font-size:12.5px;line-height:1.5;color:var(--charcoal);margin-bottom:10px}
+.finding code{font-size:11px;background:rgba(150,66,26,.1);padding:1px 4px;color:var(--ember-deep)}
+.finding .legal{margin-top:auto;padding-top:11px;margin-bottom:0;
+  border-top:1px solid rgba(150,66,26,.22);font-size:11px;line-height:1.45;color:var(--muted)}
+.finding .legal code{font-size:10px}
 
-    .quote {
-      margin-top: 0.32in;
-      font-family: "Instrument Serif", Georgia, serif;
-      font-size: 22px;
-      font-style: italic;
-      line-height: 1.4;
-      color: var(--charcoal);
-      max-width: 6.2in;
-    }
-
-    .quote::before {
-      content: "";
-      display: block;
-      width: 36px;
-      height: 3px;
-      background: var(--ember);
-      margin-bottom: 16px;
-    }
-
-    .grid-two {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.32in;
-      margin-top: 0.38in;
-    }
-
-    .col h3 {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--ember);
-      margin-bottom: 14px;
-    }
-
-    .col ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 11px;
-    }
-
-    .col li {
-      font-size: 15px;
-      line-height: 1.35;
-      color: var(--charcoal);
-      font-weight: 500;
-      padding-left: 16px;
-      position: relative;
-    }
-
-    .col li::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0.5em;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--ember);
-    }
-
-    .scene {
-      margin-top: 0.35in;
-      padding-top: 0.22in;
-      border-top: 1px solid var(--line);
-    }
-
-    .scene strong {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--ember);
-      margin-bottom: 10px;
-    }
-
-    .scene p {
-      font-size: 15.5px;
-      line-height: 1.45;
-      color: var(--charcoal);
-      font-weight: 500;
-      max-width: 6.4in;
-    }
-
-    /* ========== SLIDE 2 ========== */
-    .s2 {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      padding: 0.42in 0.5in 0.38in;
-      background:
-        radial-gradient(ellipse 60% 40% at 0% 0%, rgba(196,92,38,0.07), transparent 50%),
-        var(--paper);
-    }
-
-    .s2-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.28in;
-      flex: 0 0 auto;
-    }
-
-    .s2-identity {
-      display: flex;
-      align-items: center;
-      gap: 0.22in;
-    }
-
-    .s2-identity img {
-      width: 0.95in;
-      height: 0.95in;
-      border-radius: 50%;
-      object-fit: cover;
-      object-position: center 15%;
-      display: block;
-      box-shadow: 0 8px 24px rgba(26,26,26,0.12);
-    }
-
-    .s2-identity .eyebrow {
-      margin-bottom: 4px;
-    }
-
-    .s2-identity h2 {
-      font-family: "Instrument Serif", Georgia, serif;
-      font-size: 36px;
-      font-weight: 400;
-      letter-spacing: -0.02em;
-      line-height: 1;
-      color: var(--ink);
-    }
-
-    .s2-identity .when {
-      margin-top: 6px;
-      font-size: 14px;
-      color: var(--muted);
-      font-weight: 500;
-    }
-
-    .s2-brand {
-      text-align: right;
-    }
-
-    .s2-brand .brand { display: block; margin-bottom: 6px; }
-    .s2-brand .slide-num { display: block; }
-
-    .emap {
-      flex: 1;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 0.16in;
-    }
-
-    .cell {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      padding: 0.22in 0.24in;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cell::before {
-      content: attr(data-n);
-      position: absolute;
-      top: 0.12in;
-      right: 0.16in;
-      font-family: "Instrument Serif", Georgia, serif;
-      font-size: 42px;
-      line-height: 1;
-      color: rgba(196, 92, 38, 0.12);
-    }
-
-    .cell h3 {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--ember);
-      margin-bottom: 14px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .cell ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .cell li {
-      font-size: 15px;
-      line-height: 1.35;
-      color: var(--charcoal);
-      font-weight: 500;
-    }
-
-    .bottom {
-      flex: 0 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.16in;
-      margin-top: 0.16in;
-    }
-
-    .bottom > div {
-      padding: 0.18in 0.22in;
-    }
-
-    .pains {
-      background: #f3e6dc;
-    }
-
-    .gains {
-      background: var(--charcoal);
-      color: #f7f4ef;
-    }
-
-    .bottom h3 {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .pains h3 { color: var(--ember-deep); }
-    .gains h3 { color: rgba(247,244,239,0.55); }
-
-    .bottom ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .bottom li {
-      font-size: 14.5px;
-      line-height: 1.35;
-      font-weight: 500;
-    }
-
-    .pains li { color: var(--charcoal); }
-    .gains li { color: #f7f4ef; }
-  </style>
+.s4-bot{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:26px;
+  margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}
+.s4-bot h3{font-size:10.5px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ember);margin-bottom:11px}
+.s4-bot ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.s4-bot li{font-size:12.5px;line-height:1.38;color:var(--charcoal);font-weight:500;
+  padding-left:15px;position:relative}
+.s4-bot li::before{content:"";position:absolute;left:0;top:.4em;width:7px;height:7px;
+  background:var(--ember)}
+.s4-bot li.hyp::before{background:transparent;border:1.5px solid var(--ember)}
+.s4-bot li small{display:block;font-size:10px;color:var(--faint);font-weight:500;margin-top:2px;
+  font-family:Consolas,"SF Mono",monospace;letter-spacing:-.01em}
+.s4-bot .done h3{color:var(--muted)}
+.s4-bot .done li{color:var(--muted)}
+.s4-bot .done li::before{background:var(--faint)}
+.legend{display:flex;gap:18px;font-size:9.5px;color:var(--faint);font-weight:600;
+  letter-spacing:.05em;align-items:center;margin-top:14px}
+.legend i{display:inline-block;width:7px;height:7px;background:var(--ember);margin-right:6px}
+.legend i.h{background:transparent;border:1.5px solid var(--ember)}
+</style>
 </head>
 <body>
 
-  <!-- SLIDE 1 -->
-  <section class="slide">
-    <div class="s1">
-      <div class="photo-panel">
-        <img src="persona-ivan-solis.png" alt="Iván Solís" />
-        <div class="photo-caption">
-          <div class="label">Last-minute buyer</div>
-          <div class="chips">
-            <span>23 · Monterrey</span>
-            <span>Android · limited data</span>
-            <span>Debit / OXXO</span>
-            <span>2–3 tickets</span>
-          </div>
+<!-- ══════════════════════ 01 · PORTADA ══════════════════════ -->
+<section class="slide">
+  <div class="cover">
+    <div class="cover-main">
+
+      <div class="course">
+        <span class="name">Interacción Humano-Computadora</span>
+        <span class="term">Semestre 5 · 2026</span>
+      </div>
+
+      <div class="cover-title">
+        <div class="eyebrow">Entrega · Investigación de usuario</div>
+        <h1>Persona y<br />mapa de empatía</h1>
+        <p class="deck">
+          <em>El comprador de último minuto</em> — Boletera, plataforma de boletaje
+          para eventos en México.
+        </p>
+        <p class="abstract">
+          Una de las seis personas del proyecto. No es la primaria —esa es la promotora
+          que contrata la plataforma—, pero es donde está el volumen y donde una sola
+          pantalla decide si hay venta o no. Este documento la define, entra a su cabeza
+          en el minuto de más tensión y sale con una lista de qué construir.
+        </p>
+      </div>
+
+      <div class="method">
+        <div class="lbl">Método — los cinco pasos y dónde vamos</div>
+        <div class="steps">
+          <div class="step"><div class="n">01</div><div class="t">Recolectar datos</div><div class="s">Hecho · datos internos</div></div>
+          <div class="step"><div class="n">02</div><div class="t">Ejes y diferencias</div><div class="s">Hecho · seis ejes</div></div>
+          <div class="step"><div class="n">03</div><div class="t">Hipótesis falsables</div><div class="s">Hecho · cinco</div></div>
+          <div class="step pend"><div class="n">04</div><div class="t">Acuerdo de stakeholders</div><div class="s">Pendiente</div></div>
+          <div class="step"><div class="n">05</div><div class="t">Cuántas personas</div><div class="s">1 primaria + 4 + 1 anti</div></div>
         </div>
       </div>
 
-      <div class="copy-panel">
-        <div>
-          <div class="top">
-            <div class="brand">Boletera</div>
-            <div class="slide-num">01 / 02</div>
-          </div>
-
-          <div class="intro">
-            <div class="eyebrow">User Persona</div>
-            <h1>Iván Solís</h1>
-            <p class="tagline">Buys for the group — the night before.</p>
-          </div>
-
-          <p class="quote">
-            “We’re going, right? Just let me check there are still seats together —
-            and that it doesn’t get ridiculous with the service fee.”
-          </p>
-
-          <div class="grid-two">
-            <div class="col">
-              <h3>He needs</h3>
-              <ul>
-                <li>Seats together for everyone</li>
-                <li>The real price before he picks</li>
-                <li>Checkout as fast as WhatsApp</li>
-              </ul>
-            </div>
-            <div class="col">
-              <h3>He abandons when</h3>
-              <ul>
-                <li>Fees appear only at the end</li>
-                <li>The map fights one thumb</li>
-                <li>The timer dies mid-chat</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div class="scene">
-          <strong>The moment that matters</strong>
+      <div class="cover-foot">
+        <div class="note">
+          <b>Aviso de método</b>
           <p>
-            Friday, 7:40 pm. One bar of signal on the bus. The show is tomorrow.
-            His friends are already asking. If the price jumps or the map stalls,
-            he closes the tab — and the night is over.
+            Ninguna de estas personas proviene de entrevistas. Son hipótesis construidas
+            sobre datos internos verificables del sistema —roles, canales, métodos de pago—
+            y sobre el mercado mexicano. Dejan de valer en cuanto haya entrevistas que las
+            contradigan: esa es exactamente su función.
           </p>
         </div>
+        <div class="credits">
+          <div><div class="k">Autor</div><div class="v">Adam Del Pozo Ontiveros</div></div>
+          <div><div class="k">Fecha</div><div class="v">9 de septiembre de 2026</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="cover-band">
+      <img src="ivan-retrato.png" alt="Retrato de Iván Solís" />
+      <div class="band-top">
+        <span class="mark">Boletera</span>
+        <span class="folio">01 / 04</span>
+      </div>
+      <div class="band-cap">
+        <div class="who">Iván Solís</div>
+        <div class="role">Persona secundaria · Customer</div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- SLIDE 2 -->
-  <section class="slide">
-    <div class="s2">
-      <header class="s2-top">
-        <div class="s2-identity">
-          <img src="persona-ivan-solis.png" alt="Iván Solís" />
+<!-- ══════════════════════ 02 · LA PERSONA ══════════════════════ -->
+<section class="slide">
+  <div class="s2">
+
+    <header class="head">
+      <div>
+        <div class="eyebrow">Persona secundaria · rol <span class="code" style="text-transform:none;letter-spacing:0">CUSTOMER</span> · vive en <span class="code" style="text-transform:none;letter-spacing:0">apps/web</span></div>
+        <h2>Iván Solís, el comprador de último minuto</h2>
+        <p class="sub">23 años · Monterrey · primer empleo. Decide con sus amigos, en el camión, la noche anterior.</p>
+      </div>
+      <div class="head-right">
+        <span class="mark">Boletera</span><br />
+        <span class="folio">02 / 04</span>
+      </div>
+    </header>
+
+    <div class="s2-body">
+
+      <aside class="aside">
+        <div class="portrait">
+          <img src="ivan-retrato.png" alt="Iván Solís" />
+        </div>
+        <div class="facts">
+          <div class="fact"><span class="k">Dispositivo</span><span class="v">Android gama media</span></div>
+          <div class="fact"><span class="k">Conexión</span><span class="v">Datos limitados</span></div>
+          <div class="fact"><span class="k">Compra típica</span><span class="v">2–3 boletos</span></div>
+          <div class="fact"><span class="k">Decide en</span><span class="v">Grupo de WhatsApp</span></div>
+          <div class="fact"><span class="k">Paga con</span><span class="v">Débito u OXXO</span></div>
+        </div>
+      </aside>
+
+      <div class="s2-copy">
+        <blockquote class="quote">
+          «Ya vamos, ¿no? Nada más déjame ver si todavía hay juntos y que no salga
+          carísimo con lo del servicio.»
+          <span class="src">Lo que diría en el grupo, a las 7:40 pm</span>
+        </blockquote>
+
+        <div class="two">
           <div>
-            <div class="eyebrow">Empathy Map</div>
-            <h2>Inside Iván’s head</h2>
-            <p class="when">That minute when the price isn’t what he thought</p>
+            <h3>Qué quiere</h3>
+            <ul>
+              <li>Entrar con sus amigos, juntos, sin gastar de más</li>
+              <li>Saber el precio final <em>antes</em> de elegir lugar</li>
+              <li>Una prueba de que el boleto es real</li>
+            </ul>
+          </div>
+          <div class="burn">
+            <h3>Qué lo quema</h3>
+            <ul>
+              <li>El cargo por servicio hasta el final</li>
+              <li>Un mapa de asientos que no se usa con un pulgar</li>
+              <li>El cronómetro del <em>hold</em> mientras el grupo decide</li>
+              <li>Pagar en OXXO y no saber si se acreditó</li>
+            </ul>
           </div>
         </div>
-        <div class="s2-brand">
-          <span class="brand">Boletera</span>
-          <span class="slide-num">02 / 02</span>
+
+        <div class="axes">
+          <div class="lbl">Ejes de diferenciación <span>— responde ante: sus amigos</span></div>
+          <div class="axrow">
+            <div class="ax"><div class="an">Presión de tiempo</div><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i></div><div class="av">Alta</div></div>
+            <div class="ax"><div class="an">Frecuencia de uso</div><div class="meter"><i class="on"></i><i></i><i></i></div><div class="av">Baja</div></div>
+            <div class="ax"><div class="an">Manejo de efectivo</div><div class="meter"><i class="on"></i><i class="on"></i><i></i></div><div class="av">Media</div></div>
+            <div class="ax"><div class="an">Dinero en riesgo</div><div class="meter"><i class="on"></i><i></i><i></i></div><div class="av">Baja</div></div>
+            <div class="ax"><div class="an">Condiciones físicas</div><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i></div><div class="av">Alta</div></div>
+          </div>
         </div>
-      </header>
-
-      <div class="emap">
-        <article class="cell" data-n="01">
-          <h3>Thinks &amp; feels</h3>
-          <ul>
-            <li>“Are they trying to rip me off?”</li>
-            <li>Afraid of missing out and of overpaying</li>
-            <li>Worried the seats will vanish while the chat argues</li>
-          </ul>
-        </article>
-
-        <article class="cell" data-n="02">
-          <h3>Sees</h3>
-          <ul>
-            <li>One bar of signal · a map loading slowly</li>
-            <li>A “Total” that isn’t the final amount</li>
-            <li>WhatsApp messages over the checkout screen</li>
-          </ul>
-        </article>
-
-        <article class="cell" data-n="03">
-          <h3>Hears</h3>
-          <ul>
-            <li>“Did you buy yet?”</li>
-            <li>“Together — or don’t bother”</li>
-            <li>“You get them. We’ll pay you back.”</li>
-          </ul>
-        </article>
-
-        <article class="cell" data-n="04">
-          <h3>Says &amp; does</h3>
-          <ul>
-            <li>Screenshots the screen for the group</li>
-            <li>Asks “yes or no?” before paying</li>
-            <li>Quits if the price jumps — then texts “couldn’t get them”</li>
-          </ul>
-        </article>
       </div>
 
-      <div class="bottom">
-        <div class="pains">
-          <h3>Pains</h3>
-          <ul>
-            <li>Losing seats together because the timer ran out</li>
-            <li>Hidden fees that blow a tight budget</li>
-            <li>Bad signal blocking the map or the QR at the door</li>
-          </ul>
+    </div>
+
+    <div class="scene">
+      <b>Momento clave</b>
+      <p>
+        Viernes, 7:40 pm. En el camión, con una barra de señal. El evento es mañana y el
+        grupo ya está preguntando. Si el flujo se rompe una sola vez, escribe «ya no
+        alcancé» — y la noche se acabó para cinco personas, no para una.
+      </p>
+    </div>
+
+    <div class="foot">
+      <span>Fuente · docs/PERSONAS.md §05 — Boletera</span>
+      <span>Persona 2 de 6 · la primaria es la promotora</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 03 · MAPA DE EMPATÍA ══════════════════════ -->
+<section class="slide">
+  <div class="s3">
+
+    <header class="head">
+      <div>
+        <div class="eyebrow">Mapa de empatía · un minuto, una persona</div>
+        <h2>El minuto en que el precio no es el que pensaba</h2>
+        <p class="sub">Viernes, 7:40 pm · en el camión · una barra de señal · el evento es mañana</p>
+      </div>
+      <div class="head-right">
+        <span class="mark">Boletera</span><br />
+        <span class="folio">03 / 04</span>
+      </div>
+    </header>
+
+    <div class="emap">
+      <article class="cell tl" data-n="01">
+        <h3>Piensa y siente</h3>
+        <ul>
+          <li>«¿Me están viendo la cara?»</li>
+          <li>Miedo a quedarse fuera y a pagar de más, a la vez</li>
+          <li>Que los lugares juntos se acaben mientras el grupo discute</li>
+        </ul>
+      </article>
+
+      <article class="cell tr" data-n="02">
+        <h3>Ve</h3>
+        <ul>
+          <li>Una barra de señal y el mapa a medio cargar</li>
+          <li>Un «Total» que no es el total</li>
+          <li>Notificaciones de WhatsApp encima del checkout</li>
+        </ul>
+      </article>
+
+      <article class="cell bl" data-n="03">
+        <h3>Oye</h3>
+        <ul>
+          <li>«¿Ya compraste?»</li>
+          <li>«Juntos, o mejor ni vamos»</li>
+          <li>«Tú sácalos y luego te pagamos»</li>
+        </ul>
+      </article>
+
+      <article class="cell br" data-n="04">
+        <h3>Dice y hace</h3>
+        <ul>
+          <li>Captura la pantalla y la manda al grupo</li>
+          <li>Pregunta «¿sí o no?» antes de pagar</li>
+          <li>Compara con la reventa; si el precio brinca, cierra y escribe «ya no alcancé»</li>
+        </ul>
+      </article>
+
+      <div class="hub"><img src="ivan-avatar.png" alt="Iván Solís" /></div>
+    </div>
+
+    <div class="pg">
+      <div class="pains">
+        <h3>Dolores</h3>
+        <ul>
+          <li>Perder los lugares juntos porque se venció el <em>hold</em></li>
+          <li>Un total que no era total y rompe un presupuesto apretado</li>
+          <li>Señal mala que traba el mapa —o el QR en la puerta</li>
+        </ul>
+      </div>
+      <div class="gains">
+        <h3>Ganancias</h3>
+        <ul>
+          <li>Ver el precio real desde el primer toque</li>
+          <li>Confirmación clara de que el pago quedó</li>
+          <li>Entrar con sus amigos, juntos, sin sentirse engañado</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span>Fuente · docs/UX-MAPS.md §08 — Boletera</span>
+      <span>Pone a prueba la hipótesis H2 · abandona por la sorpresa, no por el monto</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 04 · DE LA EVIDENCIA AL DISEÑO ══════════════════════ -->
+<section class="slide">
+  <div class="s4">
+
+    <header class="head">
+      <div>
+        <div class="eyebrow">Del mapa a la decisión de diseño</div>
+        <h2>Un solo hoyo, profundo y temprano</h2>
+        <p class="sub">Curva de ánimo del recorrido completo — nueve minutos, de la liga de WhatsApp a la puerta</p>
+      </div>
+      <div class="head-right">
+        <span class="mark">Boletera</span><br />
+        <span class="folio">04 / 04</span>
+      </div>
+    </header>
+
+    <div class="s4-mid">
+
+      <div class="chartbox">
+        <div class="cap">
+          <b>Ánimo por fase</b>
+          <span>Escala: de confiado a punto de abandonar</span>
         </div>
-        <div class="gains">
-          <h3>Gains</h3>
-          <ul>
-            <li>Seeing the real price from the first tap</li>
-            <li>Clear confirmation that payment went through</li>
-            <li>Walking in with friends — no drama at the door</li>
-          </ul>
+        <svg viewBox="0 0 700 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#C45C26" stop-opacity=".16"/>
+              <stop offset="100%" stop-color="#C45C26" stop-opacity="0"/>
+            </linearGradient>
+            <polygon id="tri-up" points="0,-4.2 4.6,3 -4.6,3"/>
+            <polygon id="tri-dn" points="0,4.2 4.6,-3 -4.6,-3"/>
+          </defs>
+
+          <line x1="42" y1="44"  x2="688" y2="44"  stroke="rgba(44,42,38,.09)" stroke-width="1"/>
+          <line x1="42" y1="96"  x2="688" y2="96"  stroke="rgba(44,42,38,.09)" stroke-width="1"/>
+          <line x1="42" y1="148" x2="688" y2="148" stroke="rgba(44,42,38,.22)" stroke-width="1"/>
+          <line x1="42" y1="200" x2="688" y2="200" stroke="rgba(44,42,38,.09)" stroke-width="1"/>
+          <line x1="42" y1="252" x2="688" y2="252" stroke="rgba(44,42,38,.09)" stroke-width="1"/>
+
+          <!-- escala de ánimo dibujada, no tipográfica: los triángulos no viven
+               en el subconjunto latin de la fuente y caerían a una del sistema -->
+          <g fill="#9C968D">
+            <use href="#tri-up" x="21" y="44"/><use href="#tri-up" x="31" y="44"/>
+            <use href="#tri-up" x="31" y="96"/>
+            <circle cx="31" cy="148" r="2"/>
+            <use href="#tri-dn" x="31" y="200"/>
+            <use href="#tri-dn" x="21" y="252"/><use href="#tri-dn" x="31" y="252"/>
+          </g>
+
+          <rect x="219" y="36" width="71" height="226" fill="rgba(196,92,38,.07)"/>
+
+          <path d="M 48.0 96.0 C 82.4 113.3, 116.9 122.0, 151.3 148.0 C 185.8 174.0, 220.2 252.0, 254.7 252.0 C 289.1 252.0, 323.6 200.0, 358.0 200.0 C 392.4 200.0, 426.9 200.0, 461.3 200.0 C 495.8 200.0, 530.2 44.0, 564.7 44.0 C 599.1 44.0, 633.6 78.7, 668.0 96.0 L 668.0 262 L 48.0 262 Z" fill="url(#fill)"/>
+          <path d="M 48.0 96.0 C 82.4 113.3, 116.9 122.0, 151.3 148.0 C 185.8 174.0, 220.2 252.0, 254.7 252.0 C 289.1 252.0, 323.6 200.0, 358.0 200.0 C 392.4 200.0, 426.9 200.0, 461.3 200.0 C 495.8 200.0, 530.2 44.0, 564.7 44.0 C 599.1 44.0, 633.6 78.7, 668.0 96.0"
+                fill="none" stroke="#C45C26" stroke-width="2.6" stroke-linecap="round"/>
+
+          <g fill="#FFFFFF" stroke="#C45C26" stroke-width="2.2">
+            <circle cx="48.0"  cy="96.0"  r="4.4"/>
+            <circle cx="151.3" cy="148.0" r="4.4"/>
+            <circle cx="358.0" cy="200.0" r="4.4"/>
+            <circle cx="461.3" cy="200.0" r="4.4"/>
+            <circle cx="564.7" cy="44.0"  r="4.4"/>
+            <circle cx="668.0" cy="96.0"  r="4.4"/>
+          </g>
+          <line x1="254.7" y1="38" x2="254.7" y2="244" stroke="#96421A" stroke-width="1" stroke-dasharray="3 3" opacity=".45"/>
+          <circle cx="254.7" cy="252.0" r="6.6" fill="#96421A" stroke="#FFFFFF" stroke-width="2.4"/>
+          <text x="254.7" y="30" text-anchor="middle" font-family="Instrument Serif, Georgia, serif"
+                font-size="16" fill="#96421A">aquí se pierde la venta</text>
+
+          <g text-anchor="middle">
+            <text class="phase-n" x="48.0"  y="280">01</text><text class="phase" x="48.0"  y="295">Llega</text>
+            <text class="phase-n" x="151.3" y="280">02</text><text class="phase" x="151.3" y="295">Elige lugares</text>
+            <text class="phase-n" x="254.7" y="280" fill="#96421A">03</text><text class="phase" x="254.7" y="295" fill="#96421A" font-weight="700">Ve el precio real</text>
+            <text class="phase-n" x="358.0" y="280">04</text><text class="phase" x="358.0" y="295">Paga</text>
+            <text class="phase-n" x="461.3" y="280">05</text><text class="phase" x="461.3" y="295">Espera</text>
+            <text class="phase-n" x="564.7" y="280">06</text><text class="phase" x="564.7" y="295">Recibe el boleto</text>
+            <text class="phase-n" x="668.0" y="280">07</text><text class="phase" x="668.0" y="295">Entra</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="finding">
+        <div class="tagrow">
+          <span class="tag solid">Verificado en el código</span>
+          <span class="tag">Nielsen 1 · visibilidad del estado</span>
+          <span class="tag">Severidad 4</span>
+        </div>
+        <h3>La pantalla dice «Total»<br />y no es el total</h3>
+        <p>
+          En la página del evento, <code>EventPurchaseClient.tsx:658</code> rotula
+          <b>«Total&nbsp;$…»</b> sobre una suma de <code>basePrice</code>: sin cargo por
+          servicio y sin IVA.
+        </p>
+        <p>
+          Y el número honesto ya está ahí: la misma pantalla recibe
+          <code>minPriceAllIn</code> —«cargos e IVA incluidos»— y lo usa en la etiqueta
+          <b>«Desde&nbsp;$…»</b>. En cuanto el usuario elige asiento, la interfaz cambia
+          al número incompleto.
+        </p>
+        <p class="legal">
+          No es un debate de diseño: <code>apps/web/lib/pricing.ts</code> ya documenta que
+          en México el precio anunciado debe ser el que se cobra.
+        </p>
+      </div>
+    </div>
+
+    <div class="s4-bot">
+      <div>
+        <h3>Obliga a construir</h3>
+        <ul>
+          <li>Precio total —servicio e IVA— desde la página del evento y desde el mapa
+            <small>Oportunidad O3 · esfuerzo bajo</small></li>
+          <li class="hyp">Mapa de asientos operable con un solo pulgar
+            <small>Falta el embudo móvil instrumentado</small></li>
+          <li class="hyp">Decirle en su idioma qué pasó con el pago en OXXO o SPEI
+            <small>Es comunicación, no sistema</small></li>
+        </ul>
+      </div>
+
+      <div class="done">
+        <h3>Ya resuelto — no tocar</h3>
+        <ul>
+          <li>Cronómetro honesto: recalcula contra el servidor y permite renovar
+            <small>HoldCountdown.tsx</small></li>
+          <li>Pago diferido con pantalla propia y conciliación automática
+            <small>DeferredPaymentPanel · reconcile-spei.ts</small></li>
+          <li>QR vivo dentro de la orden, no una imagen reenviable
+            <small>OrderQrCards.tsx</small></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Cómo se mide</h3>
+        <ul>
+          <li>Conversión móvil de carrito a pago</li>
+          <li>Porcentaje de <em>holds</em> que expiran</li>
+          <li>Tickets de «pagué y no me llegó»</li>
+        </ul>
+        <div class="legend">
+          <span><i></i>Verificado</span>
+          <span><i class="h"></i>Hipótesis por probar</span>
         </div>
       </div>
     </div>
-  </section>
+
+    <div class="foot">
+      <span>Fuente · docs/UX-MAPS.md §03 y §10 — Boletera</span>
+      <span>Adam Del Pozo Ontiveros · Interacción Humano-Computadora · 9 de septiembre de 2026</span>
+    </div>
+  </div>
+</section>
 
 </body>
 </html>
