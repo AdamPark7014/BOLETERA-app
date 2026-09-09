@@ -1,994 +1,768 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Iván Solís — User Persona &amp; Mapa de Empatía · Boletera</title>
+  <title>Iván Solís — User Persona &amp; Empathy Map · Boletera</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,500;1,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ink: #0f1419;
-      --ink-2: #2a333c;
-      --muted: #66727d;
-      --line: #d8dee6;
-      --line-soft: #e8edf2;
-      --paper: #f4f6f8;
-      --white: #ffffff;
-      --accent: #e2410a;
-      --accent-deep: #b83200;
-      --accent-soft: #fff1eb;
-      --teal: #0b6b63;
-      --teal-soft: #e7f4f2;
-      --blue: #1f4e79;
-      --blue-soft: #ebf2f8;
-      --amber: #9a6700;
-      --amber-soft: #fff6e5;
+      --ink: #111417;
+      --body: #2c343c;
+      --mute: #6a737c;
+      --rule: #c9d0d8;
+      --wash: #f2f4f6;
+      --white: #fff;
+      --accent: #d63a0f;
+      --ok: #0f5c56;
+      --warn: #8a5a00;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     @page {
-      size: 13in 8.5in landscape;
+      size: 13in 8.5in;
       margin: 0;
     }
 
     html, body {
-      background: #c8ced6;
+      background: #9aa3ad;
       color: var(--ink);
-      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 10.5px;
+      line-height: 1.38;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
-      font-size: 11px;
-      line-height: 1.35;
     }
 
     .page {
       width: 13in;
       height: 8.5in;
-      background:
-        linear-gradient(180deg, #f7f8fa 0%, #eef1f4 100%);
-      padding: 0.38in 0.45in 0.32in;
+      background: var(--white);
       page-break-after: always;
       break-after: page;
-      position: relative;
       overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
     }
+    .page:last-child { page-break-after: auto; }
 
-    .page:last-child { page-break-after: auto; break-after: auto; }
-
-    /* —— Chrome bar —— */
-    .topbar {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: end;
-      gap: 0.25in;
-      padding-bottom: 0.12in;
-      border-bottom: 2px solid var(--ink);
-      margin-bottom: 0.2in;
+    /* —— header —— */
+    .mast {
+      background: var(--ink);
+      color: #fff;
+      padding: 0.18in 0.42in;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex: 0 0 auto;
     }
-
-    .brand {
+    .mast .left {
+      display: flex;
+      align-items: baseline;
+      gap: 0.18in;
+    }
+    .mast .mark {
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
     }
-
-    .brand em {
-      font-style: normal;
-      color: var(--accent);
-      margin: 0 2px;
-    }
-
-    .doc-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--ink-2);
-      letter-spacing: 0.02em;
-    }
-
-    .doc-meta {
-      text-align: right;
-      font-size: 10px;
-      color: var(--muted);
+    .mast .mark span { color: #ff6a3d; }
+    .mast .doc {
+      font-size: 12px;
       font-weight: 500;
-      line-height: 1.4;
+      opacity: 0.85;
+    }
+    .mast .meta {
+      text-align: right;
+      font-size: 9.5px;
+      line-height: 1.35;
+      opacity: 0.7;
+      font-family: "IBM Plex Mono", monospace;
     }
 
-    .badge {
-      display: inline-block;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 3px;
-      background: var(--ink);
-      color: white;
-      vertical-align: middle;
-      margin-left: 8px;
+    .body {
+      flex: 1;
+      min-height: 0;
+      padding: 0.28in 0.42in 0.22in;
+      display: flex;
+      flex-direction: column;
+      gap: 0.16in;
     }
 
-    .badge.sec { background: var(--blue); }
-    .badge.hyp { background: var(--amber); color: white; }
+    .foot {
+      flex: 0 0 auto;
+      padding: 0.08in 0.42in 0.14in;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      justify-content: space-between;
+      font-size: 8.5px;
+      color: var(--mute);
+      font-family: "IBM Plex Mono", monospace;
+    }
 
     h1 {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
       letter-spacing: -0.03em;
       line-height: 1;
     }
-
     h2 {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
+      color: var(--mute);
+      margin-bottom: 6px;
     }
+    h2.ink { color: var(--ink); }
+    h2.acc { color: var(--accent); }
+    h2.ok { color: var(--ok); }
 
-    h2.accent { color: var(--accent-deep); }
-    h2.teal { color: var(--teal); }
-    h2.blue { color: var(--blue); }
+    p { color: var(--body); }
+    strong { color: var(--ink); font-weight: 600; }
 
-    /* ========== PAGE 1: PERSONA ========== */
-    .p1 {
+    /* ========== PAGE 1 ========== */
+    .p1-top {
       display: grid;
-      grid-template-columns: 3.55in 1fr;
-      grid-template-rows: auto 1fr;
-      gap: 0.18in 0.22in;
-      height: calc(8.5in - 0.38in - 0.32in - 0.55in);
+      grid-template-columns: 2.85in 1fr;
+      gap: 0.28in;
+      flex: 0 0 auto;
     }
 
-    .hero {
-      grid-row: 1 / 3;
-      background: var(--white);
-      border: 1px solid var(--line);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .hero-photo {
-      height: 3.35in;
-      background: #dfe5eb;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-photo img {
-      width: 100%;
-      height: 100%;
+    .photo {
+      width: 2.85in;
+      height: 2.85in;
       object-fit: cover;
-      object-position: center 12%;
+      object-position: center 15%;
+      display: block;
+      background: #dde2e7;
     }
 
-    .hero-photo .shade {
-      position: absolute;
-      inset: auto 0 0 0;
-      height: 45%;
-      background: linear-gradient(to top, rgba(15,20,25,0.72), transparent);
-    }
+    .id-block { display: flex; flex-direction: column; gap: 0.12in; min-width: 0; }
 
-    .hero-photo .role-tag {
-      position: absolute;
-      left: 0.14in;
-      bottom: 0.14in;
-      z-index: 1;
-      color: white;
+    .role-line {
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
+      color: var(--accent);
     }
 
-    .hero-body {
-      padding: 0.16in 0.16in 0.14in;
-      display: flex;
-      flex-direction: column;
-      gap: 0.12in;
-      flex: 1;
-    }
-
-    .hero-body .sub {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 500;
+    .tagline {
+      font-size: 13px;
+      color: var(--body);
       margin-top: 4px;
     }
 
-    .facts {
+    .stats {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px 10px;
-      padding-top: 0.1in;
-      border-top: 1px solid var(--line-soft);
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      margin-top: 0.06in;
     }
-
-    .fact label {
+    .stat {
+      padding: 0.09in 0.1in;
+      border-right: 1px solid var(--rule);
+    }
+    .stat:last-child { border-right: 0; }
+    .stat label {
       display: block;
-      font-size: 8.5px;
+      font-size: 8px;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 1px;
+      color: var(--mute);
+      margin-bottom: 2px;
     }
-
-    .fact span {
-      font-size: 11.5px;
+    .stat b {
+      font-size: 12px;
       font-weight: 600;
       color: var(--ink);
     }
 
-    .quote-box {
-      margin-top: auto;
-      background: var(--paper);
+    .quote {
+      background: var(--wash);
+      padding: 0.11in 0.14in;
       border-left: 3px solid var(--accent);
-      padding: 0.1in 0.12in;
-    }
-
-    .quote-box p {
-      font-family: "IBM Plex Serif", Georgia, serif;
-      font-style: italic;
       font-size: 12.5px;
       line-height: 1.4;
-      color: var(--ink-2);
+      color: var(--ink);
+      font-style: italic;
     }
 
-    .right-stack {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 0.16in;
-      min-height: 0;
-    }
-
-    .intro-row {
-      background: var(--white);
-      border: 1px solid var(--line);
-      padding: 0.14in 0.16in;
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 0.2in;
-    }
-
-    .intro-row p {
-      font-size: 12px;
+    .bio {
+      font-size: 11.5px;
       line-height: 1.45;
-      color: var(--ink-2);
+      color: var(--body);
     }
 
-    .intro-row .pillars {
+    .p1-mid {
       display: grid;
-      gap: 6px;
-    }
-
-    .pillar {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      font-size: 10.5px;
-      line-height: 1.3;
-    }
-
-    .pillar b {
-      flex: 0 0 0.85in;
-      font-size: 9px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--accent-deep);
-      padding-top: 1px;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0.12in;
+      grid-template-columns: 1.15fr 1fr 1fr;
+      gap: 0.16in;
+      flex: 1;
       min-height: 0;
     }
 
-    .panel {
-      background: var(--white);
-      border: 1px solid var(--line);
+    .col {
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0.12in;
+    }
+
+    .block {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .block p,
+    .block li {
+      font-size: 11px;
+      line-height: 1.38;
+      color: var(--body);
+    }
+
+    ul.clean {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    ul.clean li {
+      padding-left: 0.12in;
+      position: relative;
+    }
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.42em;
+      width: 5px;
+      height: 1.5px;
+      background: var(--ink);
+    }
+    ul.clean.pain li::before { background: var(--accent); }
+    ul.clean.gain li::before { background: var(--ok); }
+
+    .axes table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+    }
+    .axes th, .axes td {
+      text-align: left;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: middle;
+    }
+    .axes th {
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mute);
+      font-weight: 700;
+    }
+    .axes td:last-child {
+      text-align: right;
+      font-weight: 700;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .bar {
+      height: 5px;
+      background: #e6eaee;
+      width: 100%;
+      max-width: 1.3in;
+    }
+    .bar i {
+      display: block;
+      height: 100%;
+      background: var(--ink);
+    }
+
+    .p1-bot {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr 1fr;
+      gap: 0.16in;
+      flex: 0 0 auto;
+      border-top: 1px solid var(--rule);
+      padding-top: 0.14in;
+    }
+
+    .callout {
+      background: var(--ink);
+      color: #fff;
+      padding: 0.12in 0.14in;
+    }
+    .callout h2 { color: rgba(255,255,255,0.55); }
+    .callout p { color: rgba(255,255,255,0.92); font-size: 11px; line-height: 1.4; }
+    .callout .path {
+      margin-top: 6px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 9px;
+      color: #ffb199;
+      line-height: 1.35;
+    }
+
+    .mood {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .mood span {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 6px;
+      background: var(--wash);
+      border: 1px solid var(--rule);
+    }
+    .mood span.low {
+      background: #fde8e1;
+      border-color: #f0b6a3;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ========== PAGE 2 ========== */
+    .scenario {
+      display: grid;
+      grid-template-columns: auto 1fr 1.6in;
+      gap: 0.18in;
+      align-items: center;
+      background: var(--wash);
+      padding: 0.12in 0.14in;
+      border: 1px solid var(--rule);
+      flex: 0 0 auto;
+    }
+    .scenario img {
+      width: 0.72in;
+      height: 0.72in;
+      object-fit: cover;
+      object-position: center 15%;
+      border-radius: 50%;
+    }
+    .scenario .who {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .scenario h1 {
+      font-size: 20px;
+      margin: 2px 0 4px;
+    }
+    .scenario .when {
+      font-size: 11.5px;
+      color: var(--body);
+      line-height: 1.35;
+    }
+    .scenario .hyp {
+      border-left: 1px solid var(--rule);
+      padding-left: 0.14in;
+    }
+    .scenario .hyp .k {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 4px;
+    }
+    .scenario .hyp .v {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+
+    .emap {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 0.12in;
+    }
+
+    .eq {
+      border: 1px solid var(--rule);
       padding: 0.12in 0.13in;
       display: flex;
       flex-direction: column;
       min-height: 0;
-    }
-
-    .panel.tint-teal { background: var(--teal-soft); border-color: #c5e0dc; }
-    .panel.tint-accent { background: var(--accent-soft); border-color: #f5d0c2; }
-    .panel.tint-blue { background: var(--blue-soft); border-color: #c9d9ea; }
-    .panel.tint-amber { background: var(--amber-soft); border-color: #ead9a8; }
-
-    .panel ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .panel li {
-      font-size: 11px;
-      line-height: 1.32;
-      padding-left: 10px;
-      position: relative;
-      color: var(--ink-2);
-    }
-
-    .panel li::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0.45em;
-      width: 4px;
-      height: 4px;
-      background: var(--ink);
-      opacity: 0.35;
-    }
-
-    .panel.tint-teal li::before { background: var(--teal); opacity: 0.7; }
-    .panel.tint-accent li::before { background: var(--accent); opacity: 0.7; }
-    .panel.tint-blue li::before { background: var(--blue); opacity: 0.7; }
-
-    .axes {
-      display: grid;
-      gap: 7px;
-      margin-top: 2px;
-    }
-
-    .axis {
-      display: grid;
-      grid-template-columns: 0.95in 1fr auto;
-      gap: 6px;
-      align-items: center;
-      font-size: 10px;
-    }
-
-    .axis label { color: var(--muted); font-weight: 600; }
-    .axis .bar {
-      height: 6px;
-      background: var(--line-soft);
-      border-radius: 2px;
       overflow: hidden;
-    }
-    .axis .bar i {
-      display: block;
-      height: 100%;
-      background: var(--ink);
-      border-radius: 2px;
-    }
-    .axis .val {
-      font-weight: 700;
-      font-size: 9px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--ink);
-      width: 0.55in;
-      text-align: right;
-    }
-
-    .bottom-band {
-      grid-column: 2;
-      display: grid;
-      grid-template-columns: 1.15fr 1fr 0.95fr;
-      gap: 0.12in;
-    }
-
-    .moment-text {
-      font-size: 11.5px;
-      line-height: 1.4;
-      color: var(--ink-2);
-    }
-
-    .moment-text strong {
-      display: block;
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent-deep);
-      margin-bottom: 6px;
-    }
-
-    .metric {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .metric .m {
-      font-size: 11px;
-      line-height: 1.3;
-      padding-bottom: 5px;
-      border-bottom: 1px solid rgba(0,0,0,0.08);
-    }
-
-    .metric .m:last-child { border-bottom: 0; padding-bottom: 0; }
-
-    .metric .m b {
-      display: block;
-      font-size: 9px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: 2px;
-    }
-
-    .page-foot {
-      position: absolute;
-      left: 0.45in;
-      right: 0.45in;
-      bottom: 0.16in;
-      display: flex;
-      justify-content: space-between;
-      font-size: 9px;
-      color: var(--muted);
-      border-top: 1px solid var(--line);
-      padding-top: 6px;
-    }
-
-    /* ========== PAGE 2: EMPATHY ========== */
-    .p2 {
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 0.14in;
-      height: calc(8.5in - 0.38in - 0.32in - 0.55in);
-    }
-
-    .context-strip {
-      display: grid;
-      grid-template-columns: 1.4fr 1fr 1fr;
-      gap: 0.12in;
-    }
-
-    .strip-card {
       background: var(--white);
-      border: 1px solid var(--line);
-      padding: 0.1in 0.12in;
     }
-
-    .strip-card .k {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .strip-card .v {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--ink);
-      line-height: 1.3;
-    }
-
-    .empathy-stage {
-      display: grid;
-      grid-template-columns: 1fr 1.7in 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 0.12in;
-      min-height: 0;
-    }
-
-    .eq {
-      background: var(--white);
-      border: 1px solid var(--line);
-      padding: 0.13in 0.14in;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-height: 0;
-    }
-
     .eq header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--line-soft);
+      align-items: baseline;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 5px;
+      margin-bottom: 8px;
+      flex: 0 0 auto;
     }
-
     .eq header h3 {
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
-
-    .eq .tag {
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 2px 6px;
-      border-radius: 2px;
-      background: var(--paper);
-      color: var(--muted);
-    }
-
-    .eq.see header h3 { color: var(--blue); }
-    .eq.hear header h3 { color: var(--amber); }
-    .eq.think header h3 { color: var(--accent-deep); }
-    .eq.say header h3 { color: var(--teal); }
-
-    .eq ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .eq li {
-      font-size: 11.5px;
-      line-height: 1.35;
-      color: var(--ink-2);
-      padding-left: 12px;
-      position: relative;
-    }
-
-    .eq li::before {
-      content: "▸";
-      position: absolute;
-      left: 0;
-      top: 0;
-      color: var(--line);
-      font-size: 10px;
-    }
-
-    .eq .note {
-      margin-top: auto;
-      font-size: 10px;
-      color: var(--muted);
-      font-style: italic;
-      border-top: 1px dashed var(--line);
-      padding-top: 6px;
-    }
-
-    .center-core {
-      grid-row: 1 / 3;
-      grid-column: 2;
-      background: var(--ink);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 0.16in 0.1in;
-      gap: 0.12in;
-    }
-
-    .center-core .orb {
-      width: 1.05in;
-      height: 1.05in;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid rgba(255,255,255,0.35);
-    }
-
-    .center-core .orb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 15%;
-    }
-
-    .center-core .who {
+    .eq.see h3 { color: #1d4f7a; }
+    .eq.hear h3 { color: var(--warn); }
+    .eq.think h3 { color: var(--accent); }
+    .eq.say h3 { color: var(--ok); }
+    .eq header .sub {
       font-size: 9px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      opacity: 0.55;
-      font-weight: 700;
+      color: var(--mute);
+      font-weight: 500;
     }
-
-    .center-core .nm {
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.15;
+    .eq .copy {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--body);
     }
+    .eq .copy p + p { margin-top: 0.08in; }
 
-    .center-core .when {
-      font-size: 10px;
-      line-height: 1.35;
-      opacity: 0.75;
-      max-width: 1.4in;
-    }
-
-    .pg-row {
+    .bottom3 {
+      flex: 0 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr 1.15fr;
       gap: 0.12in;
     }
-
-    .pg {
-      border: 1px solid var(--line);
-      padding: 0.12in 0.14in;
-      background: var(--white);
+    .bpanel {
+      border: 1px solid var(--rule);
+      padding: 0.11in 0.12in;
+      overflow: hidden;
     }
+    .bpanel.pain { background: #fff5f1; border-color: #ebc4b6; }
+    .bpanel.gain { background: #eef7f5; border-color: #b9d5d0; }
+    .bpanel.build { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .bpanel.build h2 { color: rgba(255,255,255,0.5); }
+    .bpanel.build li { color: rgba(255,255,255,0.9); }
+    .bpanel.build li::before { background: #ff6a3d; }
 
-    .pg.pain {
-      background: linear-gradient(180deg, #fff7f3, #ffe9e0);
-      border-color: #f0c4b2;
-    }
+    .bpanel ul.clean { gap: 4px; }
+    .bpanel li { font-size: 10.5px; line-height: 1.32; }
 
-    .pg.gain {
-      background: linear-gradient(180deg, #f0f8f6, #dff3ef);
-      border-color: #b7d9d3;
-    }
-
-    .pg.action {
-      background: var(--white);
-      border-color: var(--ink);
-      border-width: 1.5px;
-    }
-
-    .pg h3 {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .pg.pain h3 { color: var(--accent-deep); }
-    .pg.gain h3 { color: var(--teal); }
-    .pg.action h3 { color: var(--ink); }
-
-    .pg ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .pg li {
-      font-size: 11px;
-      line-height: 1.32;
-      color: var(--ink-2);
-      padding-left: 10px;
-      position: relative;
-    }
-
-    .pg li::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0.45em;
-      width: 4px;
-      height: 4px;
-      background: currentColor;
-      opacity: 0.35;
-    }
-
-    .pg.action ol {
-      margin: 0;
-      padding-left: 1.1em;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .pg.action li {
-      padding-left: 0;
-      font-size: 11px;
-    }
-
-    .pg.action li::before { display: none; }
-
-    .pg .code {
-      display: inline-block;
+    .code {
+      font-family: "IBM Plex Mono", monospace;
       font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      background: var(--ink);
-      color: white;
-      padding: 1px 5px;
-      border-radius: 2px;
-      margin-right: 4px;
+      font-weight: 500;
+      background: rgba(255,255,255,0.12);
+      padding: 1px 4px;
+      margin-right: 3px;
     }
   </style>
 </head>
 <body>
 
-  <!-- ===================== PAGE 1 ===================== -->
+  <!-- ===================== PAGE 1: PERSONA ===================== -->
   <section class="page">
-    <header class="topbar">
-      <div class="brand">Boletera<em>·</em>Research</div>
-      <div class="doc-title">
-        User Persona
-        <span class="badge sec">Secundaria</span>
-        <span class="badge hyp">Hipótesis H2</span>
+    <header class="mast">
+      <div class="left">
+        <div class="mark">Boletera <span>·</span> Research</div>
+        <div class="doc">User Persona · Secondary · Customer</div>
       </div>
-      <div class="doc-meta">
-        Ficha 02 de 05 · CUSTOMER · apps/web<br />
-        Borrador 0.1 · 9 Sep 2026
+      <div class="meta">
+        Ficha 02 / 05 · apps/web<br />
+        Draft 0.1 · 9 Sep 2026
       </div>
     </header>
 
-    <div class="p1">
-      <aside class="hero">
-        <div class="hero-photo">
-          <img src="persona-ivan-solis.png" alt="Iván Solís" />
-          <div class="shade"></div>
-          <div class="role-tag">Comprador de último minuto</div>
-        </div>
-        <div class="hero-body">
+    <div class="body">
+      <div class="p1-top">
+        <img class="photo" src="persona-ivan-solis.png" alt="Iván Solís" />
+        <div class="id-block">
           <div>
+            <div class="role-line">Last-minute buyer</div>
             <h1>Iván Solís</h1>
-            <p class="sub">Decide con sus amigos, en el camión, la noche anterior.</p>
+            <p class="tagline">Buys with his friends, on the bus, the night before — not weeks ahead.</p>
           </div>
-          <div class="facts">
-            <div class="fact"><label>Edad</label><span>23 años</span></div>
-            <div class="fact"><label>Ciudad</label><span>Monterrey, NL</span></div>
-            <div class="fact"><label>Ocupación</label><span>Primer empleo</span></div>
-            <div class="fact"><label>Dispositivo</label><span>Android gama media</span></div>
-            <div class="fact"><label>Conectividad</label><span>Datos limitados</span></div>
-            <div class="fact"><label>Pago</label><span>Débito / OXXO</span></div>
-            <div class="fact"><label>Ticket típico</label><span>2–3 boletos</span></div>
-            <div class="fact"><label>Canal</label><span>WhatsApp → web</span></div>
+
+          <div class="stats">
+            <div class="stat"><label>Age / City</label><b>23 · Monterrey</b></div>
+            <div class="stat"><label>Device</label><b>Android, metered data</b></div>
+            <div class="stat"><label>Basket</label><b>2–3 seats together</b></div>
+            <div class="stat"><label>Pay</label><b>Debit or OXXO</b></div>
           </div>
-          <div class="quote-box">
-            <p>«Ya vamos, ¿no? Nada más déjame ver si todavía hay juntos y que no salga carísimo con lo del servicio.»</p>
+
+          <p class="bio">
+            First job, first independent nights out. The decision to go does not start on the ticketing site —
+            it starts in a WhatsApp group. Someone pastes a link; Iván is the one holding a debit card
+            or standing near an OXXO. His entire purchase window is about <strong>nine minutes</strong>,
+            often with one signal bar. He trusts a screenshot he can send to the chat more than a
+            confirmation email he will not open until later.
+          </p>
+
+          <div class="quote">
+            “We’re going, right? Just let me check there are still seats together — and that it doesn’t get ridiculous with the service fee.”
           </div>
         </div>
-      </aside>
+      </div>
 
-      <div class="right-stack">
-        <div class="intro-row">
-          <div>
-            <h2>Resumen</h2>
+      <div class="p1-mid">
+        <div class="col">
+          <div class="block">
+            <h2 class="ok">Jobs to be done</h2>
+            <ul class="clean gain">
+              <li>Get his whole group through the door in contiguous seats</li>
+              <li>Know the all-in price before committing to a seat map</li>
+              <li>Finish checkout under social pressure without looking lost</li>
+              <li>Show proof the ticket is real (live QR, not a forwarded JPEG)</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h2>What “done” looks like</h2>
             <p>
-              Iván no planea con semanas de anticipación. Compra cuando el grupo ya decidió ir.
-              Su sesión completa dura ~9 minutos, casi siempre en móvil, con señal inestable.
-              Confía más en la captura que manda al chat que en el correo de confirmación.
-              Si el flujo se rompe una vez, abandona y escribe «ya no alcancé».
+              Friends reply with fire emojis to his QR screenshot. Nobody argues about who sits where.
+              At the gate the scanner beeps once. He never has to explain a failed OXXO payment in the chat.
             </p>
           </div>
-          <div class="pillars">
-            <h2>Lo que no puede fallar</h2>
-            <div class="pillar"><b>Confianza</b><span>Creerle al boleto (QR vivo, no captura)</span></div>
-            <div class="pillar"><b>Claridad</b><span>Precio final antes de elegir asiento</span></div>
-            <div class="pillar"><b>Velocidad</b><span>Completar compra bajo presión social</span></div>
-            <div class="pillar"><b>Juntos</b><span>2–3 lugares contiguos en un solo hold</span></div>
+        </div>
+
+        <div class="col">
+          <div class="block">
+            <h2 class="acc">Friction that ends the session</h2>
+            <ul class="clean pain">
+              <li>A label that says “Total” on <em>basePrice only</em> — fee appears one screen later</li>
+              <li>Seat map that fights one-thumb use on a mid-range phone</li>
+              <li>Hold timer running while the group is still voting</li>
+              <li>OXXO/SPEI paid, status unclear → “did it go through?”</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h2>Key moment</h2>
+            <p>
+              <strong>Friday 7:40 pm.</strong> Bus. One bar. Event is tomorrow.
+              Chat is already asking “did you buy?” If the map stalls or the price jumps,
+              he closes the tab and types <strong>“couldn’t get them.”</strong>
+            </p>
           </div>
         </div>
 
-        <div class="grid-3">
-          <div class="panel tint-teal">
-            <h2 class="teal">Quiere / Metas</h2>
-            <ul>
-              <li>Entrar con sus amigos, sentados juntos</li>
-              <li>No gastar de más ni llevarse sorpresas</li>
-              <li>Ver el precio final antes de elegir lugar</li>
-              <li>Tener una prueba clara de que el boleto es real</li>
-              <li>Resolverlo sin llamar a nadie ni crear cuenta compleja</li>
-            </ul>
+        <div class="col">
+          <div class="block axes">
+            <h2 class="ink">Behavioral axes</h2>
+            <table>
+              <tr><th>Axis</th><th></th><th>Level</th></tr>
+              <tr><td>Time pressure</td><td><div class="bar"><i style="width:92%"></i></div></td><td>High</td></tr>
+              <tr><td>Usage frequency</td><td><div class="bar"><i style="width:25%"></i></div></td><td>Low</td></tr>
+              <tr><td>Cash / OXXO use</td><td><div class="bar"><i style="width:55%"></i></div></td><td>Medium</td></tr>
+              <tr><td>Money at risk</td><td><div class="bar"><i style="width:20%"></i></div></td><td>Low</td></tr>
+              <tr><td>Hostile conditions</td><td><div class="bar"><i style="width:90%"></i></div></td><td>High</td></tr>
+              <tr><td>Accountable to</td><td><div class="bar"><i style="width:75%"></i></div></td><td>Friends</td></tr>
+            </table>
           </div>
-
-          <div class="panel tint-accent">
-            <h2 class="accent">Lo quema / Friction</h2>
-            <ul>
-              <li>Cargo por servicio revelado hasta el carrito</li>
-              <li>Mapa de asientos difícil con un solo pulgar</li>
-              <li>Cronómetro del hold mientras el grupo debate</li>
-              <li>Pagar en OXXO y no saber si se acreditó</li>
-              <li>Etiqueta «Total» que en realidad es solo basePrice</li>
-            </ul>
-          </div>
-
-          <div class="panel">
-            <h2>Ejes de comportamiento</h2>
-            <div class="axes">
-              <div class="axis">
-                <label>Presión</label>
-                <div class="bar"><i style="width:92%"></i></div>
-                <span class="val">Alta</span>
-              </div>
-              <div class="axis">
-                <label>Frecuencia</label>
-                <div class="bar"><i style="width:28%"></i></div>
-                <span class="val">Baja</span>
-              </div>
-              <div class="axis">
-                <label>Efectivo</label>
-                <div class="bar"><i style="width:55%"></i></div>
-                <span class="val">Media</span>
-              </div>
-              <div class="axis">
-                <label>$ en riesgo</label>
-                <div class="bar"><i style="width:22%"></i></div>
-                <span class="val">Baja</span>
-              </div>
-              <div class="axis">
-                <label>Condiciones</label>
-                <div class="bar"><i style="width:90%"></i></div>
-                <span class="val">Altas</span>
-              </div>
-              <div class="axis">
-                <label>Rinde cuentas</label>
-                <div class="bar"><i style="width:70%"></i></div>
-                <span class="val">Amigos</span>
-              </div>
+          <div class="block">
+            <h2>Journey mood (9 min)</h2>
+            <div class="mood">
+              <span>1 Arrive ▲</span>
+              <span>2 Seats ·</span>
+              <span class="low">3 Price ▼▼</span>
+              <span>4 Pay ▼</span>
+              <span>5 Wait ▼</span>
+              <span>6 QR ▲▲</span>
+              <span>7 Gate ▲</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="bottom-band">
-        <div class="panel tint-amber">
-          <p class="moment-text">
-            <strong>Momento clave</strong>
-            Viernes, 7:40 pm. Va en el camión con una barra de señal.
-            El evento es mañana. El grupo de WhatsApp ya está preguntando.
-            Si el mapa no carga o el total “sube”, cierra la pestaña.
+      <div class="p1-bot">
+        <div class="callout">
+          <h2>Verified product evidence (not an interview finding)</h2>
+          <p>
+            Mexico pricing policy in code says the advertised price must be the charged price,
+            and <strong>POST /pricing/calculate-cart</strong> is already public. That helper runs on cart,
+            checkout, and order pages — <strong>not on the event page</strong>, where the UI still labels
+            a sum of basePrice as “Total.”
           </p>
+          <div class="path">
+            pricing.ts · EventPurchaseClient.tsx:658 · Opportunity O3 · Hypothesis H2
+          </div>
         </div>
-        <div class="panel tint-blue">
-          <h2 class="blue">Obliga a construir</h2>
-          <ul>
-            <li>Precio total (servicio + IVA) desde la 1.ª pantalla</li>
-            <li>Hold honesto: tiempo visible, renovar, aviso al soltar</li>
-            <li>Estado OXXO/SPEI en lenguaje claro</li>
-            <li>QR que se renueva solo dentro de la orden</li>
+        <div class="block">
+          <h2 class="ink">Must build for him</h2>
+          <ul class="clean">
+            <li>All-in price (fee + VAT) from first screen</li>
+            <li>Honest hold: server expiry, renew, release notice</li>
+            <li>OXXO/SPEI status in plain language</li>
+            <li>Live QR inside the order, not a static image</li>
           </ul>
         </div>
-        <div class="panel">
-          <h2>Métricas de éxito</h2>
-          <div class="metric">
-            <div class="m"><b>Conversión</b>Carrito → pago en móvil</div>
-            <div class="m"><b>Holds</b>% expirados sin compra</div>
-            <div class="m"><b>Soporte</b>Tickets «pagué y no me llegó»</div>
-          </div>
+        <div class="block">
+          <h2 class="ink">Success metrics</h2>
+          <ul class="clean">
+            <li>Mobile cart → pay conversion</li>
+            <li>% holds expired without purchase</li>
+            <li>Support: “I paid and got nothing”</li>
+            <li>Instrument event → cart → pay (needed to falsify H2)</li>
+          </ul>
         </div>
       </div>
     </div>
 
-    <footer class="page-foot">
-      <span>Fuente: docs/PERSONAS.md · El comprador de último minuto · Inferencia (sin entrevistas aún)</span>
-      <span>Página 1 / 2</span>
+    <footer class="foot">
+      <span>Source: docs/PERSONAS.md · Last-minute buyer · Inference pending stakeholder sign-off (step 04)</span>
+      <span>1 / 2</span>
     </footer>
   </section>
 
-  <!-- ===================== PAGE 2 ===================== -->
+  <!-- ===================== PAGE 2: EMPATHY ===================== -->
   <section class="page">
-    <header class="topbar">
-      <div class="brand">Boletera<em>·</em>Research</div>
-      <div class="doc-title">
-        Mapa de empatía
-        <span class="badge">Iván Solís</span>
+    <header class="mast">
+      <div class="left">
+        <div class="mark">Boletera <span>·</span> Research</div>
+        <div class="doc">Empathy Map · Peak-tension minute</div>
       </div>
-      <div class="doc-meta">
-        Instante de máxima tensión · Journey fase 3<br />
-        Borrador 0.1 · 9 Sep 2026
+      <div class="meta">
+        Persona: Iván Solís · Journey phase 3<br />
+        Draft 0.1 · 9 Sep 2026
       </div>
     </header>
 
-    <div class="p2">
-      <div class="context-strip">
-        <div class="strip-card">
-          <div class="k">Escenario</div>
-          <div class="v">Viernes 7:40 pm · camión · 1 barra de señal · evento mañana · 2–3 boletos</div>
+    <div class="body">
+      <div class="scenario">
+        <img src="persona-ivan-solis.png" alt="" />
+        <div>
+          <div class="who">Subject in context</div>
+          <h1>Iván Solís</h1>
+          <p class="when">
+            Friday 7:40 pm · city bus · one signal bar · show is tomorrow · buying 2–3 tickets
+            for a WhatsApp group that is deciding in real time.
+          </p>
         </div>
-        <div class="strip-card">
-          <div class="k">Pregunta del mapa</div>
-          <div class="v">¿Qué piensa y siente en el minuto de más tensión?</div>
-        </div>
-        <div class="strip-card">
-          <div class="k">Hipótesis que pone a prueba</div>
-          <div class="v">H2 — abandona por la sorpresa del cargo, no por el monto</div>
+        <div class="hyp">
+          <div class="k">Hypothesis under test</div>
+          <div class="v">H2 — He abandons because the fee is a surprise, not because the amount is high.</div>
         </div>
       </div>
 
-      <div class="empathy-stage">
+      <div class="emap">
         <article class="eq see">
           <header>
-            <h3>Ve</h3>
-            <span class="tag">Entorno</span>
+            <h3>Sees</h3>
+            <span class="sub">Environment</span>
           </header>
-          <ul>
-            <li>Una sola barra de señal en el celular</li>
-            <li>El mapa de asientos a medio cargar</li>
-            <li>Un precio que “cambió” al pasar al carrito</li>
-            <li>La etiqueta «Total» sobre un número que aún no incluye servicio</li>
-            <li>Notificaciones del grupo de WhatsApp encima de la compra</li>
-          </ul>
-          <p class="note">Contexto físico hostil: movimiento, ruido, poca atención.</p>
+          <div class="copy">
+            <p>
+              One signal bar. A seat map that paints in late. A number labeled
+              <strong>“Total”</strong> that is still only the seat base — service fee and VAT
+              have not entered the frame yet.
+            </p>
+            <p>
+              WhatsApp banners slide over the purchase UI. The bus jolts; his thumb is the only
+              pointer he has. Attention is fragmented before price ever becomes the issue.
+            </p>
+          </div>
         </article>
 
         <article class="eq hear">
           <header>
-            <h3>Oye</h3>
-            <span class="tag">Social</span>
+            <h3>Hears</h3>
+            <span class="sub">Social pressure</span>
           </header>
-          <ul>
-            <li>«¿Ya compraste?»</li>
-            <li>El grupo decidiendo por él en tiempo real</li>
-            <li>«Que estén juntos, si no mejor no»</li>
-            <li>Comparaciones con reventa / otra boletera</li>
-            <li>Presión implícita: él es quien tiene la tarjeta / el OXXO cerca</li>
-          </ul>
-          <p class="note">No compra solo: compra bajo consenso del chat.</p>
+          <div class="copy">
+            <p>
+              “Did you buy yet?” The group is voting without him: together or not at all.
+              Someone pastes a reseller link. Someone else says another app looked cheaper.
+            </p>
+            <p>
+              He is not shopping alone. He is the designated buyer — card holder or the one
+              near an OXXO — executing a consensus he does not fully control.
+            </p>
+          </div>
         </article>
-
-        <div class="center-core">
-          <div class="orb"><img src="persona-ivan-solis.png" alt="" /></div>
-          <div class="who">Usuario</div>
-          <div class="nm">Iván<br />Solís</div>
-          <div class="when">9 minutos<br />del link a la puerta</div>
-        </div>
 
         <article class="eq think">
           <header>
-            <h3>Piensa y siente</h3>
-            <span class="tag">Interior</span>
+            <h3>Thinks &amp; feels</h3>
+            <span class="sub">Inner state · mood ▼▼</span>
           </header>
-          <ul>
-            <li>«¿Me están viendo la cara?»</li>
-            <li>Miedo a quedarse fuera del evento</li>
-            <li>Miedo a pagar de más — al mismo tiempo</li>
-            <li>Duda de si el boleto digital “cuenta” en la puerta</li>
-            <li>Urgencia: si se le va el hold, pierde los lugares juntos</li>
-          </ul>
-          <p class="note">Ánimo en fase 3 del journey: ▼▼ (punto más bajo).</p>
+          <div class="copy">
+            <p>
+              “Are they playing me?” Fear of missing the night and fear of overpaying arrive
+              together. He doubts a digital ticket will “count” at the door until he can
+              screenshot something that looks official.
+            </p>
+            <p>
+              Urgency is social and technical at once: if the hold dies while the chat argues,
+              the contiguous seats vanish and he fails the group.
+            </p>
+          </div>
         </article>
 
         <article class="eq say">
           <header>
-            <h3>Dice y hace</h3>
-            <span class="tag">Conducta</span>
+            <h3>Says &amp; does</h3>
+            <span class="sub">Observable behavior</span>
           </header>
-          <ul>
-            <li>Captura la pantalla y la manda al grupo</li>
-            <li>Compara el total con reventa u otras ligas</li>
-            <li>Pide confirmación antes de pagar («¿sí o no?»)</li>
-            <li>Si OXXO: busca tienda y guarda la referencia</li>
-            <li>Si falla una vez: abandona y dice «ya no alcancé»</li>
-          </ul>
-          <p class="note">La captura es su moneda de confianza social.</p>
+          <div class="copy">
+            <p>
+              Screenshots the screen and drops it in the chat — that image is his social proof.
+              Compares the total to resale. Asks “yes or no?” before paying. If OXXO: finds a
+              store, saves the reference, then refreshes status obsessively.
+            </p>
+            <p>
+              One hard failure is enough. He abandons and messages the group:
+              <strong>“couldn’t get them.”</strong>
+            </p>
+          </div>
         </article>
       </div>
 
-      <div class="pg-row">
-        <div class="pg pain">
-          <h3>Dolores</h3>
-          <ul>
-            <li>El «total» que no era total (servicio + IVA después)</li>
-            <li>El reloj del hold corriendo mientras el grupo no se decide</li>
-            <li>Mapa inutilizable con un pulgar y poca señal</li>
-            <li>Incertidumbre post-pago OXXO/SPEI («¿ya quedó?»)</li>
-            <li>Sentirse engañado aunque el monto sea razonable</li>
+      <div class="bottom3">
+        <div class="bpanel pain">
+          <h2 class="acc">Pains</h2>
+          <ul class="clean pain">
+            <li>“Total” that was not all-in (fee + VAT later)</li>
+            <li>Hold clock vs. an undecided group chat</li>
+            <li>Seat map unusable on one thumb + weak data</li>
+            <li>Post-OXXO / SPEI ambiguity: “did it clear?”</li>
+            <li>Feeling cheated even when the fee is fair</li>
           </ul>
         </div>
-        <div class="pg gain">
-          <h3>Ganancias</h3>
-          <ul>
-            <li>Entrar con sus amigos, juntos, sin drama</li>
-            <li>No sentirse engañado por el precio</li>
-            <li>Mostrar un QR que “se ve oficial” en el chat</li>
-            <li>Resolver la compra en un solo intento</li>
-            <li>Llegar a la puerta sin miedo a que no pase</li>
+        <div class="bpanel gain">
+          <h2 class="ok">Gains</h2>
+          <ul class="clean gain">
+            <li>Walk in with friends, seats together, no drama</li>
+            <li>No price bait-and-switch feeling</li>
+            <li>A QR that looks official in the chat</li>
+            <li>One-attempt checkout under pressure</li>
+            <li>Gate scan that just works</li>
           </ul>
         </div>
-        <div class="pg action">
-          <h3>Implicaciones de producto</h3>
-          <ol>
-            <li><span class="code">O3</span> Mostrar total real (servicio + IVA) desde evento/mapa</li>
-            <li>Hold con renovación visible y aviso al expirar</li>
-            <li>Copy de OXXO/SPEI en su idioma, no en jerga bancaria</li>
-            <li>QR vivo en la orden (no imagen reenviable)</li>
-            <li>Instrumentar embudo móvil evento → carrito → pago para validar H2</li>
-          </ol>
+        <div class="bpanel build">
+          <h2>Product implications</h2>
+          <ul class="clean">
+            <li><span class="code">O3</span> Show real total on event + map, not only in cart</li>
+            <li>Hold UX: visible renew + expiry warning</li>
+            <li>OXXO/SPEI copy in human language</li>
+            <li>Live QR on the order (not a forwardable image)</li>
+            <li>Instrument mobile funnel event → cart → pay to falsify H2</li>
+          </ul>
         </div>
       </div>
     </div>
 
-    <footer class="page-foot">
-      <span>Fuente: docs/UX-MAPS.md §03 journey + §08 empatía · Oportunidad O3 · Evidence: pricing.ts / EventPurchaseClient</span>
-      <span>Página 2 / 2</span>
+    <footer class="foot">
+      <span>Source: docs/UX-MAPS.md §03 journey + §08 empathy · O3 tied to pricing.ts / EventPurchaseClient</span>
+      <span>2 / 2</span>
     </footer>
   </section>
 
