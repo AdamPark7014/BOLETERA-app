@@ -2,721 +2,517 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>UX Spec — Iván Solís · Boletera</title>
+  <title>Iván Solís — User Persona · Boletera</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ink: #0f172a;
-      --text: #1e293b;
-      --mute: #64748b;
-      --line: #e2e8f0;
-      --wash: #f8fafc;
-      --blue: #2563eb;
-      --blue-soft: #dbeafe;
-      --warn: #92400e;
-      --warn-bg: #fef3c7;
-      --pain: #be123c;
-      --pain-bg: #fff1f2;
-      --gain: #0f766e;
-      --gain-bg: #f0fdfa;
-      --white: #fff;
+      --bg: #fafafa;
+      --white: #ffffff;
+      --ink: #18181b;
+      --body: #3f3f46;
+      --soft: #71717a;
+      --line: #e4e4e7;
+      --accent: #e85d04;
+      --accent-soft: #fff4ed;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     @page { size: 13in 8.5in; margin: 0; }
 
     html, body {
-      font-family: "Manrope", sans-serif;
-      color: var(--text);
-      background: #64748b;
-      font-size: 10.5px;
-      line-height: 1.3;
+      font-family: "DM Sans", system-ui, sans-serif;
+      color: var(--body);
+      background: #d4d4d8;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
 
-    .page {
+    .slide {
       width: 13in;
       height: 8.5in;
-      background: var(--white);
-      overflow: hidden;
+      background: var(--bg);
       page-break-after: always;
+      overflow: hidden;
+      position: relative;
       display: flex;
       flex-direction: column;
     }
-    .page:last-child { page-break-after: auto; }
+    .slide:last-child { page-break-after: auto; }
 
-    /* thin top bar */
-    .bar {
-      flex: 0 0 auto;
-      height: 0.36in;
-      background: var(--ink);
-      color: #fff;
+    /* subtle corner mark */
+    .slide::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .slide-foot {
+      position: absolute;
+      bottom: 0.28in;
+      left: 0.55in;
+      right: 0.55in;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 0.32in;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .bar span { opacity: 0.55; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0; text-transform: none; font-weight: 500; }
-    .bar b { color: #93c5fd; font-weight: 800; }
-
-    .pad {
-      flex: 1;
-      min-height: 0;
-      padding: 0.2in 0.32in 0.14in;
-      display: flex;
-      flex-direction: column;
-      gap: 0.12in;
-    }
-
-    .ft {
-      flex: 0 0 auto;
-      padding: 0.05in 0.32in 0.09in;
-      border-top: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8px;
-      color: var(--mute);
-    }
-
-    h2 {
       font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--mute);
-      margin-bottom: 6px;
-    }
-
-    /* ===== PAGE 1: dense sheet ===== */
-
-    /* identity row: photo + name + stats */
-    .id {
-      display: grid;
-      grid-template-columns: 1.35in 1fr;
-      gap: 0.16in;
-      flex: 0 0 auto;
-      align-items: stretch;
-    }
-    .id img {
-      width: 1.35in;
-      height: 1.55in;
-      object-fit: cover;
-      object-position: center 12%;
-      display: block;
-      background: #cbd5e1;
-    }
-    .id-main {
-      display: flex;
-      flex-direction: column;
-      gap: 0.08in;
-      min-width: 0;
-    }
-    .id-top {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 0.2in;
-    }
-    .id-top h1 {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1;
-      color: var(--ink);
-    }
-    .id-top .role {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--blue);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .one-liner {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text);
-      line-height: 1.35;
-      max-width: 9.5in;
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      border: 1px solid var(--line);
-      background: var(--wash);
-    }
-    .stats div {
-      padding: 0.07in 0.08in;
-      border-right: 1px solid var(--line);
-    }
-    .stats div:last-child { border-right: 0; }
-    .stats label {
-      display: block;
-      font-size: 7.5px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--mute);
-      margin-bottom: 2px;
-    }
-    .stats b {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--ink);
-      line-height: 1.2;
-    }
-
-    /* H2 strip */
-    .h2 {
-      flex: 0 0 auto;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 0.14in;
-      align-items: center;
-      background: var(--warn-bg);
-      border-left: 4px solid #f59e0b;
-      padding: 0.09in 0.14in;
-    }
-    .h2 .badge {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 10px;
-      font-weight: 600;
-      background: var(--ink);
-      color: #fff;
-      padding: 4px 8px;
-      white-space: nowrap;
-    }
-    .h2 p {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--warn);
-      line-height: 1.3;
-    }
-    .h2 .ev {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8.5px;
-      color: var(--mute);
-      text-align: right;
-      line-height: 1.35;
-      max-width: 2.8in;
-    }
-
-    /* JTBD compact row */
-    .jtbd {
-      flex: 0 0 auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.08in;
-    }
-    .jtbd article {
-      background: var(--wash);
-      border-top: 2px solid var(--blue);
-      padding: 0.08in 0.1in;
-    }
-    .jtbd .k {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8.5px;
-      font-weight: 600;
-      color: var(--blue);
-      margin-bottom: 3px;
+      color: var(--soft);
       letter-spacing: 0.04em;
     }
-    .jtbd p {
-      font-size: 11px;
+    .slide-foot .brand {
       font-weight: 600;
       color: var(--ink);
-      line-height: 1.3;
-    }
-
-    /* main: frictions | reqs */
-    .split {
-      flex: 1;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: 1.35fr 1fr;
-      gap: 0.16in;
-    }
-    .split > section {
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    table.t {
-      width: 100%;
-      border-collapse: collapse;
-      flex: 1;
-    }
-    table.t th {
-      text-align: left;
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--mute);
-      padding: 0 0 5px;
-      border-bottom: 1.5px solid var(--ink);
-    }
-    table.t td {
-      vertical-align: top;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--line);
-      font-size: 11px;
-      line-height: 1.3;
-    }
-    table.t tr:last-child td { border-bottom: 0; padding-bottom: 0; }
-    table.t td.n {
-      width: 1.15in;
-      font-weight: 800;
-      color: var(--ink);
-      padding-right: 10px;
-    }
-    table.t .src {
-      display: inline;
-      font-family: "JetBrains Mono", monospace;
       font-size: 8.5px;
-      color: var(--blue);
-      margin-left: 4px;
     }
 
-    .reqs {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
+    /* ========== SLIDE 1 — PERSONA ========== */
+    .s1 {
+      padding: 0.42in 0.55in 0.48in 0.62in;
+      display: grid;
+      grid-template-columns: 3.35in 1fr;
+      gap: 0.4in;
       flex: 1;
-      border-top: 1.5px solid var(--ink);
-    }
-    .reqs li {
-      display: grid;
-      grid-template-columns: 0.28in 1fr;
-      gap: 8px;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--line);
-      align-items: start;
-    }
-    .reqs li:last-child { border-bottom: 0; }
-    .reqs .num {
-      width: 0.24in;
-      height: 0.24in;
-      background: var(--blue);
-      color: #fff;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 10px;
-      font-weight: 600;
-      display: grid;
-      place-items: center;
-    }
-    .reqs strong {
-      display: block;
-      font-size: 11.5px;
-      font-weight: 800;
-      color: var(--ink);
-      margin-bottom: 1px;
-    }
-    .reqs span {
-      font-size: 10.5px;
-      color: var(--text);
-      line-height: 1.3;
-    }
-
-    /* KPI strip */
-    .kpis {
-      flex: 0 0 auto;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      background: var(--ink);
-      color: #fff;
-    }
-    .kpis div {
-      padding: 0.09in 0.12in;
-      border-right: 1px solid #334155;
-    }
-    .kpis div:last-child { border-right: 0; }
-    .kpis .k {
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #93c5fd;
-      margin-bottom: 2px;
-    }
-    .kpis .v {
-      font-size: 11.5px;
-      font-weight: 700;
-      line-height: 1.25;
-    }
-
-    /* ===== PAGE 2: empathy ===== */
-    .e-head {
-      flex: 0 0 auto;
-      display: grid;
-      grid-template-columns: 0.95in 1fr 2.4in;
-      gap: 0.14in;
       align-items: center;
-      padding-bottom: 0.1in;
-      border-bottom: 2px solid var(--ink);
-    }
-    .e-head img {
-      width: 0.95in;
-      height: 0.95in;
-      object-fit: cover;
-      object-position: center 12%;
-      display: block;
-    }
-    .e-head h1 {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      line-height: 1;
-      color: var(--ink);
-    }
-    .e-head .sub {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--blue);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 3px;
-    }
-    .e-head .desc {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text);
-      margin-top: 4px;
-      line-height: 1.3;
-    }
-    .e-head .box {
-      background: var(--wash);
-      padding: 0.08in 0.1in;
-      border-left: 3px solid var(--blue);
-    }
-    .e-head .box .k {
-      font-size: 8px;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--mute);
-      margin-bottom: 3px;
-    }
-    .e-head .box .v {
-      font-size: 11.5px;
-      font-weight: 700;
-      color: var(--ink);
-      line-height: 1.3;
     }
 
-    /* 4 columns across - better for landscape */
-    .quad {
-      flex: 1;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.1in;
-    }
-    .quad article {
-      background: var(--wash);
-      padding: 0.1in 0.11in;
+    .hero {
       display: flex;
       flex-direction: column;
-      min-height: 0;
-      overflow: hidden;
+      gap: 0.2in;
     }
-    .quad header {
+
+    .hero-img {
+      width: 100%;
+      height: 5.1in;
+      object-fit: cover;
+      object-position: center 10%;
+      background: #e4e4e7;
+      display: block;
+    }
+
+    .hero-meta {
       display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 7px;
-      padding-bottom: 5px;
-      border-bottom: 1.5px solid var(--ink);
-      flex: 0 0 auto;
-    }
-    .quad h3 {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--ink);
-    }
-    .quad header i {
-      font-style: normal;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 9px;
-      color: var(--mute);
-    }
-    .quad ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 6px;
     }
-    .quad li {
+    .hero-meta span {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--body);
+      background: var(--white);
+      border: 1px solid var(--line);
+      padding: 5px 11px;
+      border-radius: 100px;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.24in;
+      padding-right: 0.05in;
+    }
+
+    .eyebrow {
       font-size: 11px;
       font-weight: 600;
-      line-height: 1.3;
-      color: var(--text);
-      padding-left: 0.1in;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      font-size: 46px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.02;
+      color: var(--ink);
+      margin-top: 6px;
+    }
+
+    .role {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--soft);
+      margin-top: 8px;
+    }
+
+    .quote {
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 17px;
+      font-weight: 500;
+      font-style: italic;
+      line-height: 1.42;
+      color: var(--ink);
+      padding-left: 0.16in;
+      border-left: 3px solid var(--accent);
+      max-width: 6in;
+    }
+
+    .story {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--body);
+      max-width: 6in;
+    }
+
+    .blocks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.28in;
+    }
+
+    .block h3 {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--soft);
+      margin-bottom: 10px;
+    }
+
+    .block ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .block li {
+      font-size: 13px;
+      line-height: 1.38;
+      color: var(--body);
+      padding-left: 14px;
       position: relative;
     }
-    .quad li::before {
+
+    .block li::before {
       content: "";
       position: absolute;
       left: 0;
-      top: 0.4em;
-      width: 4px;
-      height: 4px;
-      background: var(--blue);
+      top: 0.55em;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.85;
+    }
+
+    .moment {
+      max-width: 6in;
+      padding-top: 0.06in;
+      border-top: 1px solid var(--line);
+    }
+
+    .moment h3 {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .moment p {
+      font-size: 13.5px;
+      line-height: 1.42;
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    /* ========== SLIDE 2 — EMPATHY ========== */
+    .s2 {
+      padding: 0.45in 0.55in 0.55in 0.62in;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.28in;
+    }
+
+    .s2-head {
+      display: grid;
+      grid-template-columns: 1.15in 1fr;
+      gap: 0.22in;
+      align-items: center;
+      padding-bottom: 0.2in;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .s2-head img {
+      width: 1.15in;
+      height: 1.15in;
+      object-fit: cover;
+      object-position: center 10%;
+      border-radius: 50%;
+      display: block;
+      background: #e4e4e7;
+    }
+
+    .s2-head h2 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .s2-head .sub {
+      font-size: 14px;
+      color: var(--soft);
+      margin-top: 6px;
+      line-height: 1.4;
+      max-width: 8in;
+    }
+
+    .s2-head .when {
+      margin-top: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .emap {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 0.2in;
+    }
+
+    .cell {
+      background: var(--white);
+      border: 1px solid var(--line);
+      padding: 0.2in 0.22in;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .cell h4 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cell ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cell li {
+      font-size: 13.5px;
+      line-height: 1.4;
+      color: var(--body);
     }
 
     .pg {
-      flex: 0 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.1in;
+      gap: 0.2in;
+      flex: 0 0 auto;
     }
-    .pg > div { padding: 0.1in 0.12in; }
-    .pg .pains { background: var(--pain-bg); }
-    .pg .gains { background: var(--gain-bg); }
-    .pg h2 { margin-bottom: 5px; }
-    .pg .pains h2 { color: var(--pain); }
-    .pg .gains h2 { color: var(--gain); }
-    .pg ol {
-      margin: 0;
-      padding-left: 1.05em;
-      display: grid;
-      gap: 4px;
+
+    .pg > div {
+      padding: 0.18in 0.2in;
+      border: 1px solid var(--line);
     }
-    .pg li {
-      font-size: 11.5px;
+
+    .pg .pain { background: var(--accent-soft); border-color: #fed7aa; }
+    .pg .gain { background: var(--white); }
+
+    .pg h4 {
+      font-size: 10px;
       font-weight: 700;
-      color: var(--ink);
-      line-height: 1.3;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .pg .pain h4 { color: var(--accent); }
+    .pg .gain h4 { color: var(--ink); }
+
+    .pg ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pg li {
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--body);
     }
   </style>
 </head>
 <body>
 
-  <!-- PAGE 1 -->
-  <section class="page">
-    <div class="bar">
-      <div>Boletera <b>·</b> Research &nbsp;|&nbsp; User Persona &amp; Product Spec</div>
-      <span>Secondary · CUSTOMER · apps/web · Draft 0.3 · 9 Sep 2026</span>
-    </div>
+  <!-- SLIDE 1: USER PERSONA -->
+  <section class="slide">
+    <div class="s1">
+      <aside class="hero">
+        <img class="hero-img" src="persona-ivan-solis.png" alt="Iván Solís" />
+        <div class="hero-meta">
+          <span>23 · Monterrey</span>
+          <span>Android · limited data</span>
+          <span>Debit / OXXO</span>
+          <span>2–3 tickets</span>
+        </div>
+      </aside>
 
-    <div class="pad">
-      <div class="id">
-        <img src="persona-ivan-solis.png" alt="Iván Solís" />
-        <div class="id-main">
-          <div class="id-top">
-            <h1>Iván Solís</h1>
-            <div class="role">Last-minute buyer</div>
+      <div class="content">
+        <div>
+          <div class="eyebrow">User Persona</div>
+          <h1>Iván Solís</h1>
+          <p class="role">The last-minute buyer</p>
+        </div>
+
+        <p class="quote">
+          “We’re going, right? Just let me check there are still seats together —
+          and that it doesn’t get ridiculous with the service fee.”
+        </p>
+
+        <p class="story">
+          Iván buys for his friends, not for himself. He decides the night before,
+          usually on the bus with one bar of signal. He is always the one holding
+          the card or standing near an OXXO — and he trusts a screenshot to the
+          group chat more than a confirmation email.
+        </p>
+
+        <div class="blocks">
+          <div class="block">
+            <h3>What he needs</h3>
+            <ul>
+              <li>Seats together for the whole group</li>
+              <li>The real price before he picks a seat</li>
+              <li>Checkout as fast as sending a message</li>
+            </ul>
           </div>
-          <p class="one-liner">
-            Designated buyer for a WhatsApp group. Locks 2–3 seats together on mobile under weak data,
-            with full price known before the map — or he abandons.
-          </p>
-          <div class="stats">
-            <div><label>Age / City</label><b>23 · Monterrey</b></div>
-            <div><label>Situation</label><b>First job · mid budget</b></div>
-            <div><label>Pay</label><b>Debit / OXXO / SPEI</b></div>
-            <div><label>Device</label><b>Android · 1-bar data</b></div>
-            <div><label>Basket</label><b>2–3 seats together</b></div>
-            <div><label>Channel</label><b>WhatsApp → web</b></div>
-            <div><label>Session</label><b>~9 min under pressure</b></div>
+          <div class="block">
+            <h3>What breaks it</h3>
+            <ul>
+              <li>Service fee that appears only at checkout</li>
+              <li>Seat map that doesn’t work with one thumb</li>
+              <li>Timer running out while the group still decides</li>
+            </ul>
           </div>
         </div>
-      </div>
 
-      <div class="h2">
-        <div class="badge">H2</div>
-        <p>Abandons because the fee is a surprise — not because the amount is high. Show all-in price early.</p>
-        <div class="ev">EventPurchaseClient.tsx:658<br />labels basePrice as “Total” · O3</div>
-      </div>
-
-      <div class="jtbd">
-        <article>
-          <div class="k">JTBD · GROUP</div>
-          <p>Freeze contiguous seats before the chat changes its mind or the hold dies.</p>
-        </article>
-        <article>
-          <div class="k">JTBD · PRICE</div>
-          <p>See base + fees + VAT before opening the seat map.</p>
-        </article>
-        <article>
-          <div class="k">JTBD · PAY</div>
-          <p>Clear live status for debit, OXXO, and SPEI.</p>
-        </article>
-        <article>
-          <div class="k">JTBD · ACCESS</div>
-          <p>Live QR on the order that works at the gate — not a screenshot.</p>
-        </article>
-      </div>
-
-      <div class="split">
-        <section>
-          <h2>Critical frictions → code</h2>
-          <table class="t">
-            <thead><tr><th>Friction</th><th>Root cause &amp; impact</th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="n">Late fee reveal</td>
-                <td>Event UI calls basePrice “Total”; fee + VAT hit in cart → feels like bait-and-switch, instant abandon.<span class="src">EventPurchaseClient.tsx:658 · pricing.ts</span></td>
-              </tr>
-              <tr>
-                <td class="n">Heavy seat map</td>
-                <td>Map fights one-thumb use on weak data; contiguous seats hard to lock before the group moves on.<span class="src">web/components/seatmap</span></td>
-              </tr>
-              <tr>
-                <td class="n">Rigid hold</td>
-                <td>Timer runs while he confirms in WhatsApp; seats drop and he fails the group.<span class="src">HoldCountdown</span></td>
-              </tr>
-              <tr>
-                <td class="n">OXXO / SPEI fog</td>
-                <td>Paid but status unclear → anxiety and “I paid / no ticket” support.<span class="src">DeferredPaymentPanel · reconcile-spei</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-
-        <section>
-          <h2>Product requirements</h2>
-          <ol class="reqs">
-            <li>
-              <span class="num">1</span>
-              <div>
-                <strong>All-in pricing from first screen</strong>
-                <span>Same number on event, map, and cart. Kill the fake “Total”.</span>
-              </div>
-            </li>
-            <li>
-              <span class="num">2</span>
-              <div>
-                <strong>Hold that survives group chat</strong>
-                <span>Visible renew + warning under 60s. Server expiry stays truth.</span>
-              </div>
-            </li>
-            <li>
-              <span class="num">3</span>
-              <div>
-                <strong>Plain-language OXXO / SPEI status</strong>
-                <span>“Waiting for payment” / “Payment verified” — not bank jargon.</span>
-              </div>
-            </li>
-            <li>
-              <span class="num">4</span>
-              <div>
-                <strong>Live QR on the order</strong>
-                <span>Regenerates in-app; static captures must fail at the gate.</span>
-              </div>
-            </li>
-          </ol>
-        </section>
-      </div>
-
-      <div class="kpis">
-        <div><div class="k">KPI · Cart</div><div class="v">Mobile cart → pay on weak networks</div></div>
-        <div><div class="k">KPI · Holds</div><div class="v">Fewer holds expired without purchase</div></div>
-        <div><div class="k">KPI · Support</div><div class="v">Zero “I paid / no ticket” for OXXO·SPEI</div></div>
+        <div class="moment">
+          <h3>Key moment</h3>
+          <p>
+            Friday, 7:40 pm. One bar of signal on the bus. The show is tomorrow.
+            The group is asking if he bought yet. If the price jumps or the map stalls,
+            he closes the tab and says he couldn’t get the tickets.
+          </p>
+        </div>
       </div>
     </div>
 
-    <div class="ft">
-      <span>docs/PERSONAS.md · docs/UX-MAPS.md · pending stakeholder sign-off (step 04)</span>
-      <span>1 / 2</span>
-    </div>
+    <footer class="slide-foot">
+      <span class="brand">Boletera Research</span>
+      <span>1 · User Persona</span>
+    </footer>
   </section>
 
-  <!-- PAGE 2 -->
-  <section class="page">
-    <div class="bar">
-      <div>Boletera <b>·</b> Research &nbsp;|&nbsp; Empathy Map</div>
-      <span>Iván Solís · peak-tension minute · Draft 0.3 · 9 Sep 2026</span>
-    </div>
-
-    <div class="pad">
-      <div class="e-head">
+  <!-- SLIDE 2: EMPATHY MAP -->
+  <section class="slide">
+    <div class="s2">
+      <header class="s2-head">
         <img src="persona-ivan-solis.png" alt="Iván Solís" />
         <div>
-          <div class="sub">Last-minute buyer</div>
-          <h1>Iván Solís</h1>
-          <p class="desc">Fee surprise on the way to cart · journey phase 3 · WhatsApp group deciding in real time</p>
+          <div class="eyebrow">Empathy Map</div>
+          <h2>Iván Solís</h2>
+          <p class="sub">
+            The minute he discovers the price isn’t what he thought —
+            on mobile, under pressure, with his group waiting.
+          </p>
+          <p class="when">Friday 7:40 pm · on the bus · one bar of signal · event tomorrow</p>
         </div>
-        <div class="box">
-          <div class="k">Context</div>
-          <div class="v">Fri 7:40 pm · bus · 1 bar · event tomorrow · 2–3 tickets</div>
-        </div>
-      </div>
+      </header>
 
-      <div class="quad">
-        <article>
-          <header><h3>Thinks &amp; feels</h3><i>01</i></header>
+      <div class="emap">
+        <article class="cell">
+          <h4>Thinks &amp; feels</h4>
           <ul>
-            <li>Seats will vanish if the map is slow.</li>
-            <li>Fees at the end feel like a scam — even when fair.</li>
-            <li>Checkout should feel as fast as WhatsApp.</li>
-            <li>Afraid OXXO/SPEI won’t register in time.</li>
+            <li>“Are they trying to rip me off?”</li>
+            <li>Scared of missing out and of overpaying at the same time</li>
+            <li>Not sure a digital ticket will count at the door</li>
+            <li>Panicked the seats will disappear while the chat argues</li>
           </ul>
         </article>
-        <article>
-          <header><h3>Sees</h3><i>02</i></header>
+
+        <article class="cell">
+          <h4>Sees</h4>
           <ul>
-            <li>Last-minute plans forming in group chat.</li>
-            <li>Seat maps that crawl on phone data.</li>
-            <li>Event prices that jump at checkout.</li>
-            <li>A “Total” that isn’t what he’ll pay.</li>
+            <li>One bar of signal and a map loading slowly</li>
+            <li>A price labeled “Total” that isn’t the final amount</li>
+            <li>WhatsApp messages popping over the checkout screen</li>
+            <li>Ads that looked cheaper than what he’s about to pay</li>
           </ul>
         </article>
-        <article>
-          <header><h3>Hears</h3><i>03</i></header>
+
+        <article class="cell">
+          <h4>Hears</h4>
           <ul>
-            <li>“You buy — we’ll transfer later.”</li>
-            <li>“That site dies on sale day.”</li>
-            <li>“Together or don’t bother.”</li>
-            <li>A reseller link pasted as “cheaper.”</li>
+            <li>“Did you buy yet?”</li>
+            <li>“They have to be together or don’t bother”</li>
+            <li>“You get them — we’ll pay you back”</li>
+            <li>Someone sharing a reseller link as a cheaper option</li>
           </ul>
         </article>
-        <article>
-          <header><h3>Says &amp; does</h3><i>04</i></header>
+
+        <article class="cell">
+          <h4>Says &amp; does</h4>
           <ul>
-            <li>Buys on mobile while commuting.</li>
-            <li>Screenshots → “yes or no?” in chat.</li>
-            <li>Compares new total to resale.</li>
-            <li>Price jumps → abandons → “couldn’t get them.”</li>
+            <li>Screenshots the screen and sends it to the group</li>
+            <li>Asks “yes or no?” before paying</li>
+            <li>Compares the total to other sites</li>
+            <li>Quits immediately if the price jumps — then texts “couldn’t get them”</li>
           </ul>
         </article>
       </div>
 
       <div class="pg">
-        <div class="pains">
-          <h2>Pains</h2>
-          <ol>
-            <li>Hold expires while the group debates → loses contiguous seats.</li>
-            <li>Surprise fees blow a tight monthly budget.</li>
-            <li>Weak signal blocks the map — or the QR at the gate.</li>
-          </ol>
+        <div class="pain">
+          <h4>Pains</h4>
+          <ul>
+            <li>Losing seats together because the timer ran out</li>
+            <li>Hidden fees that blow his monthly budget</li>
+            <li>Bad signal blocking the map or the QR at the gate</li>
+          </ul>
         </div>
-        <div class="gains">
-          <h2>Gains</h2>
-          <ol>
-            <li>Final price from the first tap — no bait-and-switch.</li>
-            <li>Unambiguous payment confirmation (debit / OXXO / SPEI).</li>
-            <li>Live QR on the order, usable when signal is bad.</li>
-          </ol>
+        <div class="gain">
+          <h4>Gains</h4>
+          <ul>
+            <li>Seeing the real price from the first tap</li>
+            <li>Clear confirmation that payment went through</li>
+            <li>Walking in with friends, no drama at the door</li>
+          </ul>
         </div>
       </div>
     </div>
 
-    <div class="ft">
-      <span>docs/UX-MAPS.md §03 + §08 · H2 / O3 · instrument event→cart→pay before treating H2 as proven</span>
-      <span>2 / 2</span>
-    </div>
+    <footer class="slide-foot">
+      <span class="brand">Boletera Research</span>
+      <span>2 · Empathy Map</span>
+    </footer>
   </section>
 
 </body>
