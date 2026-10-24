@@ -57,7 +57,7 @@ export function ManagerPinDialog({
     setError('');
     const ok = await verifyManagerPin(pin);
     if (!ok) {
-      setError('PIN incorrecto o sin autorización.');
+      setError('Ese PIN no autoriza.');
       setPin('');
       setBusy(false);
       inputRef.current?.focus();

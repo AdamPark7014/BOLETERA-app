@@ -4,21 +4,21 @@
   z-index: 200;
   display: grid;
   place-items: center;
-  padding: var(--bl-space-6);
-  background: rgba(6, 6, 8, 0.82);
-  backdrop-filter: blur(3px);
+  padding: 24px;
+  background: rgba(11, 11, 12, 0.72);
 }
 
 .dialog {
-  width: min(520px, 100%);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  padding: var(--bl-space-6);
+  width: min(420px, 100%);
+  background: var(--ink-overlay, #1c1c1f);
+  border: 1px solid var(--line, #2c2c2f);
+  border-radius: 14px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: var(--bl-space-4);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  gap: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  color: var(--text, #f3f0e8);
 }
 
 .eyebrow {
@@ -62,8 +62,9 @@
     border-radius: var(--radius-sm);
 
     &:focus {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
+      outline: 1.5px solid var(--focus, #c6a56d);
+      outline-offset: 2px;
+      border-color: transparent;
     }
 
     &:-webkit-autofill,
@@ -136,14 +137,18 @@
 }
 
 .primary {
-  background: var(--accent) !important;
-  color: var(--accent-fg) !important;
-  border-color: var(--accent) !important;
+  background: #f3f0e8 !important;
+  color: #0b0b0c !important;
+  border-color: transparent !important;
+  font-weight: 560 !important;
   box-shadow: none !important;
 
   &:hover:not(:disabled) {
-    background: var(--accent-hover) !important;
-    border-color: var(--accent-hover) !important;
+    background: #f3f0e8 !important;
+  }
+
+  &:active:not(:disabled) {
+    background: #e4e0d6 !important;
   }
 }
 

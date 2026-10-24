@@ -5,20 +5,17 @@ import { GLOBAL_HOTKEYS, useHotkeys, type Hotkey } from '@/lib/hotkeys';
 import styles from './HotkeyBar.module.scss';
 
 /**
- * Barra de atajos siempre visible.
- *
- * El taquillero nuevo aprende viendo: si el atajo no está pintado, no se usa.
- * `?` abre la hoja completa con TODOS los atajos de la app.
+ * Leyenda fija al pie. `?` abre la hoja de la vista.
  */
 export function HotkeyBar({ hotkeys, enabled = true }: { hotkeys: Hotkey[]; enabled?: boolean }) {
   const [helpOpen, setHelpOpen] = useState(false);
-  const visible = hotkeys.filter((h) => !h.hidden);
+  const visible = hotkeys.filter((h) => !h.hidden).slice(0, 6);
 
   useHotkeys(
     [
       {
         keys: '?',
-        label: 'Atajos',
+        label: 'Leyenda',
         match: (e) => e.key === '?' || (e.key === '/' && e.shiftKey),
         run: () => setHelpOpen((v) => !v),
       },
@@ -26,6 +23,7 @@ export function HotkeyBar({ hotkeys, enabled = true }: { hotkeys: Hotkey[]; enab
         keys: 'Esc',
         label: 'Cerrar',
         whileTyping: true,
+        hidden: true,
         match: (e) => e.key === 'Escape' && helpOpen,
         run: () => setHelpOpen(false),
       },
@@ -46,7 +44,6 @@ export function HotkeyBar({ hotkeys, enabled = true }: { hotkeys: Hotkey[]; enab
   return (
     <>
       <nav className={styles.bar} aria-label="Atajos de teclado">
-        <span className={styles.title}>Atajos</span>
         {visible.map((hk) => (
           <span key={`${hk.keys}-${hk.label}`} className={styles.item}>
             <kbd>{hk.keys}</kbd>
@@ -54,21 +51,21 @@ export function HotkeyBar({ hotkeys, enabled = true }: { hotkeys: Hotkey[]; enab
           </span>
         ))}
         <span className={styles.help}>
-          <kbd>?</kbd> ver todos
+          <kbd>?</kbd>
+          leyenda
         </span>
       </nav>
 
-      {helpOpen && (
+      {helpOpen ? (
         <div
           className={styles.overlay}
           role="dialog"
           aria-modal="true"
-          aria-label="Todos los atajos"
+          aria-label="Leyenda de atajos"
           onClick={() => setHelpOpen(false)}
         >
           <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
-            <h2>Atajos de teclado</h2>
-            <p>Toda la operación de ventanilla se puede hacer sin ratón.</p>
+            <h2>Leyenda</h2>
             {groups.map(([scope, items]) => (
               <section key={scope} className={styles.group}>
                 <h3>{scope}</h3>
@@ -82,12 +79,9 @@ export function HotkeyBar({ hotkeys, enabled = true }: { hotkeys: Hotkey[]; enab
                 </ul>
               </section>
             ))}
-            <button type="button" className={styles.close} onClick={() => setHelpOpen(false)}>
-              Cerrar · Esc
-            </button>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }

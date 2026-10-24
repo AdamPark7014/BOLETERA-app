@@ -1,21 +1,48 @@
 .wrap {
   display: inline-flex;
   align-items: center;
-  gap: var(--bl-space-2);
-  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
 }
 
-.statusLine {
+.chip,
+.chipOff {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: var(--bl-space-0) var(--bl-space-3);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--bl-radius-full);
+  gap: 8px;
+  box-sizing: border-box;
+  height: 24px;
+  padding-inline: 8px;
+  border: 1px solid var(--line, #2c2c2f);
+  border-radius: var(--r-s, 6px);
+  background: var(--ink-raised, #141416);
+  color: var(--text, #f3f0e8);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.chip {
+.dotOn,
+.dotOff {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.dotOn {
+  background: var(--money-in, #8eae96);
+}
+
+.dotOff {
+  background: var(--text-tertiary, #8a857c);
+}
+
+.meta {
+  color: var(--text-secondary, #a39e94);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.02em;
   white-space: nowrap;
-  font-weight: 600;
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Badge, StatusDot } from '@boletera/ui';
 import { TOKEN_WARN_MINUTES, tokenTimeLeftMs } from '@/lib/auth';
 import { getQueueSize } from '@/lib/offline-queue';
 import { listConflicts, pendingScanCount } from '@/lib/scan-queue';
@@ -58,39 +57,21 @@ export function NetStatus({ status }: { status: OpsStatus }) {
 
   return (
     <div className={styles.wrap}>
-      <span className={styles.statusLine}>
-        <StatusDot
-          tone={status.online ? 'success' : 'warning'}
-          pulse={!status.online}
-          label={status.online ? 'En línea' : 'Sin red · cola local'}
-        />
+      <span className={status.online ? styles.chip : styles.chipOff}>
+        <span className={status.online ? styles.dotOn : styles.dotOff} aria-hidden="true" />
+        {status.online ? 'En línea' : 'Sin red'}
       </span>
-
-      {pending > 0 && (
-        <Badge
-          tone="neutral"
-          variant="outline"
-          className={styles.chip}
-          title="Operaciones sin sincronizar"
-        >
-          {pending} pendiente{pending === 1 ? '' : 's'}
-          {status.pendingScans > 0
-            ? ` · ${status.pendingScans} escaneo${status.pendingScans === 1 ? '' : 's'}`
-            : ''}
-        </Badge>
-      )}
-
-      {status.conflicts > 0 && (
-        <Badge tone="danger" variant="soft" dot className={styles.chip}>
-          {status.conflicts} conflicto{status.conflicts === 1 ? '' : 's'}
-        </Badge>
-      )}
-
-      {warnToken && status.tokenMinutesLeft != null && (
-        <Badge tone="warning" variant="soft" className={styles.chip}>
-          Sesión: {status.tokenMinutesLeft} min
-        </Badge>
-      )}
+      {pending > 0 ? (
+        <span className={styles.meta}>
+          {pending} en cola
+        </span>
+      ) : null}
+      {status.conflicts > 0 ? (
+        <span className={styles.meta}>{status.conflicts} conflictos</span>
+      ) : null}
+      {warnToken && status.tokenMinutesLeft != null ? (
+        <span className={styles.meta}>Sesión {status.tokenMinutesLeft} min</span>
+      ) : null}
     </div>
   );
 }
