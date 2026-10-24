@@ -1,59 +1,47 @@
 'use client';
 
-/**
- * Alta de evento con validación al momento.
- *
- * Antes el asistente solo comprobaba que los campos no estuvieran vacíos, así
- * que se podía crear un evento sin precio, con un aforo que no existe en el mapa
- * o con la venta cerrando después de la función. Todo eso se detectaba en
- * producción. Ahora cada regla se evalúa en cada tecla y el botón de crear no se
- * habilita mientras quede un error; los avisos no bloquean pero se ven.
- *
- * El borrador se guarda solo: llenar cuatro pasos y perderlos por un F5 o por un
- * 401 a mitad de camino era la queja número uno.
- */
-
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button, Card, CardFooter, CardHeader, PageHeader } from '@boletera/ui';
-import { createEvent, createEventSeries, createResidency, getVenueLayout, listVenues } from '@/lib/platform-api';
+import { Field, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { countSeats } from '@boletera/venue-engine';
 import { ApiError } from '@/lib/api';
+import { hasCapability } from '@/lib/permissions';
+import {
+  createEvent,
+  createEventSeries,
+  createResidency,
+  getVenueLayout,
+  listVenues,
+} from '@/lib/platform-api';
 import { AnonymousView, NoOrgView, useSession } from '../_shared/api-state';
-import styles from './new-event.module.scss';
-
-const STEPS = ['Datos', 'Venue / mapa', 'Ofertas / precios', 'Publicar'] as const;
-
-const STEP_HINTS: Record<(typeof STEPS)[number], string> = {
-  Datos: 'Información básica del evento y ventana de venta.',
-  'Venue / mapa': 'Recinto, mapa de butacas y aforo declarado.',
-  'Ofertas / precios': 'Zona inicial y precio base en MXN.',
-  Publicar: 'Revisa el resumen antes de confirmar la creación.',
-};
+import { AdminFrame } from '../_ticket/AdminFrame';
+import { Param, Segment, SheetSelect, Stepper } from '../_ticket/controls';
+import styles from '../_ticket/frame.module.scss';
 
 const DRAFT_KEY = 'boletera_draft_event';
-/** Un borrador de hace más de una semana es ruido, no trabajo pendiente. */
 const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-type EventForm = {
+type EventType = 'single' | 'series' | 'residency';
+type Frequency = 'daily' | 'weekly' | 'biweekly' | 'monthly';
+
+type FormState = {
   title: string;
   description: string;
-  type: 'single' | 'series' | 'residency';
+  type: EventType;
   startDate: string;
   endDate: string;
   salesStartAt: string;
   salesEndAt: string;
   venueId: string;
-  capacity: number;
-  basePrice: number;
+  capacity: string;
+  basePrice: string;
   zoneName: string;
-  seriesCount: number;
-  residencyCount: number;
-  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+  seriesCount: string;
+  residencyCount: string;
+  frequency: Frequency;
 };
 
-const EMPTY_FORM: EventForm = {
+const EMPTY: FormState = {
   title: '',
   description: '',
   type: 'single',
@@ -62,293 +50,98 @@ const EMPTY_FORM: EventForm = {
   salesStartAt: '',
   salesEndAt: '',
   venueId: '',
-  capacity: 5000,
-  basePrice: 150,
-  zoneName: 'General',
-  seriesCount: 3,
-  residencyCount: 8,
+  capacity: '',
+  basePrice: '',
+  zoneName: '',
+  seriesCount: '3',
+  residencyCount: '8',
   frequency: 'weekly',
 };
 
-type Issue = {
-  /** `error` impide crear; `warning` solo avisa. */
-  severity: 'error' | 'warning';
-  /** Paso al que lleva el enlace del aviso. */
-  step: number;
-  /** `id` del control al que hay que mover el foco. */
-  field: string;
-  message: string;
-  hint?: string;
-};
-
-type VenueMapInfo = {
-  venueId: string;
-  layoutId: string | null;
-  seats: number;
-  status: 'loading' | 'ok' | 'empty' | 'missing';
-};
+type MapState = { status: 'idle' | 'loading' | 'ok' | 'empty' | 'missing'; seats: number };
 
 function parseLocal(value: string): Date | null {
   if (!value) return null;
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/**
- * Todas las reglas en un solo sitio, evaluadas en cada render.
- *
- * Devolver una lista plana (en vez de marcar cada input) permite pintar el
- * resumen accionable del paso final sin duplicar la lógica.
- */
-function validate(form: EventForm, venueMap: VenueMapInfo | null, venueCapacity?: number): Issue[] {
-  const issues: Issue[] = [];
-  const start = parseLocal(form.startDate);
-  const end = parseLocal(form.endDate);
-  const salesStart = parseLocal(form.salesStartAt);
-  const salesEnd = parseLocal(form.salesEndAt);
+function asText(value: unknown, fallback = ''): string {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return typeof value === 'string' ? value : fallback;
+}
 
-  if (form.title.trim().length < 3) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-title',
-      message: 'El evento necesita un título de al menos 3 caracteres.',
-      hint: 'Es lo que verá el comprador en la web y en el boleto.',
-    });
-  }
-
-  if (!start) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-start',
-      message: 'Falta la fecha y hora de inicio.',
-    });
-  } else if (start.getTime() < Date.now()) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-start',
-      message: 'La fecha de inicio ya pasó.',
-      hint: 'Un evento en el pasado no se puede publicar ni vender; corrige la fecha.',
-    });
-  }
-
-  if (start && end && end.getTime() <= start.getTime()) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-end',
-      message: 'El fin del evento es anterior o igual al inicio.',
-    });
-  }
-
-  if (salesStart && salesEnd && salesEnd.getTime() <= salesStart.getTime()) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-sales-end',
-      message: 'La venta cierra antes de abrir.',
-    });
-  }
-
-  // La regla que más dinero cuesta: vender después de que empezó la función.
-  if (start && salesEnd && salesEnd.getTime() > start.getTime()) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-sales-end',
-      message: 'La venta termina después de que empieza el evento.',
-      hint: 'Cierra la venta como muy tarde a la hora de inicio; si no, se venden boletos para una función que ya arrancó.',
-    });
-  }
-
-  if (start && salesStart && salesStart.getTime() > start.getTime()) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-sales-start',
-      message: 'La venta abre después de que empieza el evento.',
-    });
-  }
-
-  if (form.type === 'series' && (form.seriesCount < 2 || form.seriesCount > 52)) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-series-count',
-      message: 'Una serie necesita entre 2 y 52 fechas.',
-    });
-  }
-
-  if (form.type === 'residency' && (form.residencyCount < 2 || form.residencyCount > 100)) {
-    issues.push({
-      severity: 'error',
-      step: 0,
-      field: 'ev-residency-count',
-      message: 'Una residencia necesita entre 2 y 100 funciones.',
-    });
-  }
-
-  if (!form.venueId) {
-    issues.push({
-      severity: 'error',
-      step: 1,
-      field: 'ev-venue',
-      message: 'Falta el recinto.',
-      hint: 'El inventario se genera a partir del mapa del recinto: sin recinto no hay nada que vender.',
-    });
-  } else if (venueMap?.status === 'missing') {
-    issues.push({
-      severity: 'error',
-      step: 1,
-      field: 'ev-venue',
-      message: 'El recinto elegido no tiene mapa guardado.',
-      hint: 'Abre el diseñador de mapa del recinto y guarda un layout antes de crear el evento.',
-    });
-  } else if (venueMap?.status === 'empty') {
-    issues.push({
-      severity: 'error',
-      step: 1,
-      field: 'ev-venue',
-      message: 'El mapa del recinto no tiene ninguna butaca.',
-      hint: 'Genera las zonas y butacas en el diseñador; publicar sobre un mapa vacío produce cero boletos.',
-    });
-  }
-
-  if (!Number.isFinite(form.capacity) || form.capacity <= 0) {
-    issues.push({
-      severity: 'error',
-      step: 1,
-      field: 'ev-capacity',
-      message: 'El aforo debe ser mayor que cero.',
-    });
-  } else if (venueMap?.status === 'ok' && form.capacity > venueMap.seats) {
-    issues.push({
-      severity: 'error',
-      step: 1,
-      field: 'ev-capacity',
-      message: `El aforo declarado (${form.capacity.toLocaleString('es-MX')}) supera las butacas del mapa (${venueMap.seats.toLocaleString('es-MX')}).`,
-      hint: 'Se venderían más boletos de los que existen. Baja el aforo o añade butacas al mapa.',
-    });
-  } else if (venueMap?.status === 'ok' && form.capacity < venueMap.seats) {
-    issues.push({
-      severity: 'warning',
-      step: 1,
-      field: 'ev-capacity',
-      message: `Quedan ${(venueMap.seats - form.capacity).toLocaleString('es-MX')} butacas del mapa fuera del aforo declarado.`,
-      hint: 'Es válido (aforo reducido), pero confirma que es intencional.',
-    });
-  }
-
-  if (venueCapacity && form.capacity > venueCapacity) {
-    issues.push({
-      severity: 'warning',
-      step: 1,
-      field: 'ev-capacity',
-      message: `El aforo supera la capacidad registrada del recinto (${venueCapacity.toLocaleString('es-MX')}).`,
-    });
-  }
-
-  if (!Number.isFinite(form.basePrice) || form.basePrice <= 0) {
-    issues.push({
-      severity: 'error',
-      step: 2,
-      field: 'ev-price',
-      message: 'Falta el precio base, o es cero.',
-      hint: 'Un evento sin precio no se puede poner a la venta. Si es gratuito, créalo con precio simbólico y ajústalo en la pestaña Precios.',
-    });
-  }
-
-  if (!form.zoneName.trim()) {
-    issues.push({
-      severity: 'error',
-      step: 2,
-      field: 'ev-zone',
-      message: 'La oferta necesita un nombre de zona.',
-    });
-  }
-
-  if (!salesEnd) {
-    issues.push({
-      severity: 'warning',
-      step: 0,
-      field: 'ev-sales-end',
-      message: 'No definiste cierre de venta.',
-      hint: 'Sin cierre, la venta sigue abierta hasta que alguien la pare a mano.',
-    });
-  }
-
-  return issues;
+function readDraft(value: unknown): FormState | null {
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Record<string, unknown>;
+  const type = record.type;
+  const frequency = record.frequency;
+  return {
+    ...EMPTY,
+    title: asText(record.title),
+    description: asText(record.description),
+    type: type === 'series' || type === 'residency' || type === 'single' ? type : 'single',
+    startDate: asText(record.startDate),
+    endDate: asText(record.endDate),
+    salesStartAt: asText(record.salesStartAt),
+    salesEndAt: asText(record.salesEndAt),
+    venueId: asText(record.venueId),
+    capacity: asText(record.capacity),
+    basePrice: asText(record.basePrice),
+    zoneName: asText(record.zoneName),
+    seriesCount: asText(record.seriesCount, '3'),
+    residencyCount: asText(record.residencyCount, '8'),
+    frequency:
+      frequency === 'daily' || frequency === 'weekly' || frequency === 'biweekly' || frequency === 'monthly'
+        ? frequency
+        : 'weekly',
+  };
 }
 
 export default function NewEventPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <CreateBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function CreateBody() {
   const router = useRouter();
   const session = useSession();
-  const [venues, setVenues] = useState<{ id: string; name: string; capacity?: number }[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState(0);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [form, setForm] = useState<EventForm>(EMPTY_FORM);
-  const [venueMap, setVenueMap] = useState<VenueMapInfo | null>(null);
-  const [draftFound, setDraftFound] = useState<EventForm | null>(null);
-  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
-  const draftLoaded = useRef(false);
-
   const token = session.token;
-
-  const set = useCallback(<K extends keyof EventForm>(key: K, value: EventForm[K]) => {
-    setForm((f) => ({ ...f, [key]: value }));
-  }, []);
-
-  /* ── Borrador ───────────────────────────────────────────────────────────── */
+  const canCreate = hasCapability(session.role, 'events.manage');
+  const [venues, setVenues] = useState<{ id: string; name: string; capacity?: number }[]>([]);
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [map, setMap] = useState<MapState>({ status: 'idle', seats: 0 });
+  const [draftFound, setDraftFound] = useState<FormState | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
-      const parsed = JSON.parse(raw) as { savedAt: number; form: EventForm };
-      if (!parsed?.form || Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+      const parsed = JSON.parse(raw) as { savedAt?: number; form?: unknown };
+      if (!parsed?.form || !parsed.savedAt || Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
         localStorage.removeItem(DRAFT_KEY);
         return;
       }
-      setDraftFound({ ...EMPTY_FORM, ...parsed.form });
-      setDraftSavedAt(parsed.savedAt);
+      setDraftFound(readDraft(parsed.form));
     } catch {
       localStorage.removeItem(DRAFT_KEY);
     }
   }, []);
 
   useEffect(() => {
-    // No se guarda el formulario vacío: dejaría un borrador falso en cada visita.
-    if (!draftLoaded.current && form === EMPTY_FORM) return;
-    const dirty = JSON.stringify(form) !== JSON.stringify(EMPTY_FORM);
-    if (!dirty) return;
-    const timer = setTimeout(() => {
-      try {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt: Date.now(), form }));
-        setDraftSavedAt(Date.now());
-      } catch {
-        // Cuota llena: no vale la pena romper el alta por no poder guardar el borrador.
-      }
+    if (JSON.stringify(form) === JSON.stringify(EMPTY)) return;
+    const timer = window.setTimeout(() => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt: Date.now(), form }));
     }, 600);
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [form]);
-
-  function restoreDraft() {
-    if (!draftFound) return;
-    draftLoaded.current = true;
-    setForm(draftFound);
-    setDraftFound(null);
-  }
-
-  function discardDraft() {
-    localStorage.removeItem(DRAFT_KEY);
-    setDraftFound(null);
-    setDraftSavedAt(null);
-  }
-
-  /* ── Datos del recinto ──────────────────────────────────────────────────── */
 
   useEffect(() => {
     if (!token) return;
@@ -359,126 +152,160 @@ export default function NewEventPage() {
 
   useEffect(() => {
     if (!token || !form.venueId) {
-      setVenueMap(null);
+      setMap({ status: 'idle', seats: 0 });
       return;
     }
     let alive = true;
-    setVenueMap({ venueId: form.venueId, layoutId: null, seats: 0, status: 'loading' });
+    setMap({ status: 'loading', seats: 0 });
     getVenueLayout(token, form.venueId)
       .then((data) => {
         if (!alive) return;
         const seats = data.layout?.mapData ? countSeats(data.layout.mapData) : 0;
-        setVenueMap({
-          venueId: form.venueId,
-          layoutId: data.layout?.id ?? null,
-          seats,
-          status: seats > 0 ? 'ok' : 'empty',
-        });
+        setMap({ status: seats > 0 ? 'ok' : 'empty', seats });
       })
-      .catch((err: unknown) => {
+      .catch((cause: unknown) => {
         if (!alive) return;
-        // 404 = el recinto todavía no tiene layout: es un error de datos, no de red.
-        const missing = err instanceof ApiError && err.isNotFound;
-        setVenueMap({
-          venueId: form.venueId,
-          layoutId: null,
-          seats: 0,
-          status: missing ? 'missing' : 'empty',
-        });
+        const missing = cause instanceof ApiError && cause.isNotFound;
+        setMap({ status: missing ? 'missing' : 'empty', seats: 0 });
       });
     return () => {
       alive = false;
     };
   }, [token, form.venueId]);
 
-  const selectedVenue = venues.find((v) => v.id === form.venueId);
-  const issues = useMemo(
-    () => validate(form, venueMap, selectedVenue?.capacity),
-    [form, venueMap, selectedVenue],
-  );
-  const errors = issues.filter((i) => i.severity === 'error');
-  const warnings = issues.filter((i) => i.severity === 'warning');
-  const stepErrors = (s: number) => errors.filter((i) => i.step === s);
+  const price = Number(form.basePrice);
+  const capacity = Number(form.capacity);
+  const start = parseLocal(form.startDate);
+  const end = parseLocal(form.endDate);
+  const salesStart = parseLocal(form.salesStartAt);
+  const salesEnd = parseLocal(form.salesEndAt);
+  const seriesCount = Number(form.seriesCount);
+  const residencyCount = Number(form.residencyCount);
 
-  /** Lleva al paso del problema y pone el foco en el control. */
-  function goToIssue(issue: Issue) {
-    setStep(issue.step);
-    requestAnimationFrame(() => {
-      const el = document.getElementById(issue.field);
-      if (el instanceof HTMLElement) {
-        el.focus();
-        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }
-    });
+  const titleError = form.title.trim().length > 0 && form.title.trim().length < 3
+    ? 'El título necesita al menos 3 caracteres.'
+    : undefined;
+  const startError = form.startDate && start && start.getTime() < Date.now()
+    ? 'La fecha de inicio ya pasó.'
+    : undefined;
+  const endError = start && end && end.getTime() <= start.getTime()
+    ? 'El fin es anterior o igual al inicio.'
+    : undefined;
+  const salesError =
+    salesStart && salesEnd && salesEnd.getTime() <= salesStart.getTime()
+      ? 'La venta cierra antes de abrir.'
+      : start && salesEnd && salesEnd.getTime() > start.getTime()
+        ? 'La venta termina después de que empieza la función.'
+        : start && salesStart && salesStart.getTime() > start.getTime()
+          ? 'La venta abre después de que empieza la función.'
+          : undefined;
+  const venueError =
+    map.status === 'missing'
+      ? 'El recinto no tiene mapa.'
+      : map.status === 'empty'
+        ? 'El mapa del recinto no tiene butacas.'
+        : undefined;
+  const capacityError =
+    form.capacity !== '' && (!Number.isFinite(capacity) || capacity <= 0)
+      ? 'El cupo tiene que ser mayor que cero.'
+      : map.status === 'ok' && Number.isFinite(capacity) && capacity > map.seats
+        ? `El cupo supera las butacas del mapa (${map.seats.toLocaleString('es-MX')}).`
+        : undefined;
+  const priceError =
+    form.basePrice !== '' && (!Number.isFinite(price) || price <= 0)
+      ? 'El precio tiene que ser mayor que $0.00.'
+      : undefined;
+  const zoneError = form.zoneName !== '' && !form.zoneName.trim() ? 'La zona necesita un nombre.' : undefined;
+  const seriesError =
+    form.type === 'series' && (seriesCount < 2 || seriesCount > 52)
+      ? 'Una serie necesita entre 2 y 52 fechas.'
+      : form.type === 'residency' && (residencyCount < 2 || residencyCount > 100)
+        ? 'Una residencia necesita entre 2 y 100 funciones.'
+        : undefined;
+
+  const ready =
+    canCreate &&
+    form.title.trim().length >= 3 &&
+    form.venueId !== '' &&
+    start != null &&
+    start.getTime() >= Date.now() &&
+    form.zoneName.trim().length > 0 &&
+    price > 0 &&
+    capacity > 0 &&
+    map.status === 'ok' &&
+    capacity <= map.seats &&
+    !endError &&
+    !salesError &&
+    !seriesError;
+
+  const venueName = venues.find((venue) => venue.id === form.venueId)?.name ?? '—';
+
+  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
+    setError(null);
   }
 
   async function submit() {
-    if (!token || errors.length > 0) return;
+    if (!token || !ready || saving || !start) return;
     setSaving(true);
-    setMsg(null);
+    setError(null);
     try {
       if (form.type === 'series') {
-        const dates = Array.from({ length: form.seriesCount }, (_, i) => {
-          const d = new Date(form.startDate);
-          d.setDate(d.getDate() + i * 7);
+        const dates = Array.from({ length: seriesCount }, (_, index) => {
+          const date = new Date(form.startDate);
+          date.setDate(date.getDate() + index * 7);
           return {
-            date: d.toISOString(),
-            title: `${form.title} — fecha ${i + 1}`,
-            capacity: form.capacity,
-            basePrice: form.basePrice,
+            date: date.toISOString(),
+            title: `${form.title.trim()} — fecha ${index + 1}`,
+            capacity,
+            basePrice: price,
           };
         });
-        const result = await createEventSeries(token, {
-          seriesName: form.title,
+        await createEventSeries(token, {
+          seriesName: form.title.trim(),
           description: form.description,
           venueId: form.venueId,
           occurrences: dates,
         });
         localStorage.removeItem(DRAFT_KEY);
-        setMsg(`Serie creada: ${result.totalEvents} eventos`);
         router.push('/events');
         return;
       }
-
       if (form.type === 'residency') {
-        const result = await createResidency(token, {
-          name: form.title,
+        await createResidency(token, {
+          name: form.title.trim(),
           venueId: form.venueId,
           startDate: form.startDate,
           frequency: form.frequency,
-          occurrenceCount: form.residencyCount,
-          capacity: form.capacity,
-          basePrice: form.basePrice,
+          occurrenceCount: residencyCount,
+          capacity,
+          basePrice: price,
         });
         localStorage.removeItem(DRAFT_KEY);
-        setMsg(`Residencia creada: ${result.totalEvents} fechas`);
         router.push('/events');
         return;
       }
-
       const event = await createEvent(token, {
-        title: form.title,
+        title: form.title.trim(),
         description: form.description,
-        type: form.type,
+        type: 'single',
         startDate: form.startDate,
+        endDate: form.endDate || undefined,
         venueId: form.venueId,
-        capacity: form.capacity,
-        basePrice: form.basePrice,
-        // La ventana de venta se validaba en el asistente y se descartaba antes
-        // de llegar al API. Ahora se envía y se guarda.
+        capacity,
+        basePrice: price,
         salesStartAt: form.salesStartAt || undefined,
         salesEndAt: form.salesEndAt || undefined,
       });
       localStorage.removeItem(DRAFT_KEY);
-      router.push(`/events/${event.id}`);
-    } catch (err) {
-      // El borrador se conserva a propósito: si el alta falla, el trabajo sigue ahí.
-      setMsg(
-        err instanceof ApiError
-          ? `${err.userMessage} (${err.status})`
-          : err instanceof Error
-            ? err.message
-            : 'Error al crear',
+      router.push(event.id ? `/events/${event.id}?seccion=zonas` : '/events');
+    } catch (cause) {
+      setError(
+        cause instanceof ApiError
+          ? cause.userMessage
+          : cause instanceof Error
+            ? cause.message
+            : 'No se guardó. Revisa la conexión.',
       );
     } finally {
       setSaving(false);
@@ -488,386 +315,233 @@ export default function NewEventPage() {
   if (session.status === 'anonymous') return <AnonymousView />;
   if (session.status === 'no-org') return <NoOrgView />;
 
-  const stepDescription = `Paso ${step + 1} de ${STEPS.length}: ${STEPS[step]}${
-    draftSavedAt
-      ? ` · borrador guardado ${new Date(draftSavedAt).toLocaleTimeString('es-MX')}`
-      : ''
-  }`;
-
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Catálogo"
-        title="Nuevo evento"
-        description={stepDescription}
-        breadcrumbs={[
-          { label: 'Eventos', href: '/events' },
-          { label: 'Nuevo evento' },
-        ]}
-        actions={
-          <Button type="button" variant="outline" onClick={() => router.push('/events')}>
-            ← Volver
-          </Button>
-        }
-      />
-
-      {draftFound && (
-        <div className={styles.draftBanner} role="status">
-          <p>
-            Hay un borrador sin terminar de{' '}
-            <strong>{draftFound.title || 'un evento sin título'}</strong>
-            {draftSavedAt ? ` (${new Date(draftSavedAt).toLocaleString('es-MX')})` : ''}.
-          </p>
-          <div className={styles.draftActions}>
-            <Button type="button" onClick={restoreDraft}>
-              Retomar borrador
-            </Button>
-            <Button type="button" variant="outline" onClick={discardDraft}>
-              Descartar
-            </Button>
-          </div>
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Crear evento</h1>
+        <p className={styles.quiet}>El evento queda en borrador.</p>
+      </header>
+      {draftFound ? (
+        <div className={styles.stack}>
+          <p className={styles.quiet}>Hay un borrador sin terminar.</p>
+          <TicketButton
+            variant="secondary"
+            onClick={() => {
+              setForm(draftFound);
+              setDraftFound(null);
+            }}
+          >
+            Retomar borrador
+          </TicketButton>
+          <TicketButton
+            variant="ghost"
+            onClick={() => {
+              localStorage.removeItem(DRAFT_KEY);
+              setDraftFound(null);
+            }}
+          >
+            Descartar
+          </TicketButton>
         </div>
-      )}
-
-      {msg && (
-        <p role="alert" className={styles.submitError}>
-          {msg}
-        </p>
-      )}
-
-      <ol className={styles.steps}>
-        {STEPS.map((label, i) => {
-          const count = stepErrors(i).length;
-          return (
-            <li key={label}>
-              <button
-                type="button"
-                className={styles.stepChip}
-                data-state={i === step ? 'current' : i < step ? 'done' : 'todo'}
-                aria-current={i === step ? 'step' : undefined}
-                onClick={() => setStep(i)}
-              >
-                {i + 1}. {label}
-                {count > 0 && (
-                  <span className={styles.stepBadge} aria-label={`${count} problemas`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-
-      <Card variant="outline" padding="lg" className={styles.wizardCard}>
-        <CardHeader
-          title={step === 3 ? 'Antes de crear' : STEPS[step]}
-          description={STEP_HINTS[STEPS[step]]}
-        />
-
-        <div className={styles.formGrid}>
-          {step === 0 && (
-            <>
-              <label className={`${styles.field} ${styles.full}`} htmlFor="ev-title">
-                Título
-                <input
-                  id="ev-title"
-                  required
-                  value={form.title}
-                  onChange={(e) => set('title', e.target.value)}
-                />
-              </label>
-              <label className={`${styles.field} ${styles.full}`} htmlFor="ev-description">
-                Descripción
-                <textarea
-                  id="ev-description"
-                  rows={3}
-                  value={form.description}
-                  onChange={(e) => set('description', e.target.value)}
-                />
-              </label>
-              <label className={styles.field} htmlFor="ev-type">
-                Tipo
-                <select
-                  id="ev-type"
-                  value={form.type}
-                  onChange={(e) => set('type', e.target.value as EventForm['type'])}
-                >
-                  <option value="single">Single</option>
-                  <option value="series">Serie (múltiples fechas)</option>
-                  <option value="residency">Residencia (recurrente)</option>
-                </select>
-              </label>
-              <label className={styles.field} htmlFor="ev-start">
-                Inicio del evento
-                <input
-                  id="ev-start"
-                  type="datetime-local"
-                  required
-                  value={form.startDate}
-                  onChange={(e) => set('startDate', e.target.value)}
-                />
-              </label>
-              <label className={styles.field} htmlFor="ev-end">
-                Fin del evento (opcional)
-                <input
-                  id="ev-end"
-                  type="datetime-local"
-                  value={form.endDate}
-                  onChange={(e) => set('endDate', e.target.value)}
-                />
-              </label>
-              <label className={styles.field} htmlFor="ev-sales-start">
-                Apertura de venta
-                <input
-                  id="ev-sales-start"
-                  type="datetime-local"
-                  value={form.salesStartAt}
-                  onChange={(e) => set('salesStartAt', e.target.value)}
-                />
-              </label>
-              <label className={styles.field} htmlFor="ev-sales-end">
-                Cierre de venta
-                <input
-                  id="ev-sales-end"
-                  type="datetime-local"
-                  value={form.salesEndAt}
-                  onChange={(e) => set('salesEndAt', e.target.value)}
-                  aria-describedby="ev-sales-end-hint"
-                />
-              </label>
-              <p id="ev-sales-end-hint" className={`${styles.full} ${styles.hint}`}>
-                La ventana de venta se valida aquí, pero el API de alta todavía no la persiste
-                (`/events/manage` solo acepta inicio y fin del evento). Configúrala en la pestaña de
-                canales del evento hasta que exista el campo.
-              </p>
-              {form.type === 'series' && (
-                <label htmlFor="ev-series-count">
-                  Nº de fechas
-                  <input
-                    id="ev-series-count"
-                    type="number"
-                    min={2}
-                    max={52}
-                    value={form.seriesCount}
-                    onChange={(e) => set('seriesCount', Number(e.target.value))}
-                  />
-                </label>
-              )}
-              {form.type === 'residency' && (
-                <>
-                  <label className={styles.field} htmlFor="ev-frequency">
-                    Frecuencia
-                    <select
-                      id="ev-frequency"
-                      value={form.frequency}
-                      onChange={(e) => set('frequency', e.target.value as EventForm['frequency'])}
-                    >
-                      <option value="weekly">Semanal</option>
-                      <option value="biweekly">Quincenal</option>
-                      <option value="monthly">Mensual</option>
-                      <option value="daily">Diaria</option>
-                    </select>
-                  </label>
-                  <label className={styles.field} htmlFor="ev-residency-count">
-                    Nº de funciones
-                    <input
-                      id="ev-residency-count"
-                      type="number"
-                      min={2}
-                      max={100}
-                      value={form.residencyCount}
-                      onChange={(e) => set('residencyCount', Number(e.target.value))}
-                    />
-                  </label>
-                </>
-              )}
-            </>
-          )}
-
-          {step === 1 && (
-            <>
-              <label className={`${styles.field} ${styles.full}`} htmlFor="ev-venue">
-                Venue
-                <select
-                  id="ev-venue"
-                  required
+      ) : null}
+      {!canCreate ? <p className={styles.quiet}>Tu rol no crea eventos.</p> : null}
+      <div className={styles.stack}>
+        <Param name="Título">
+          <ParameterCard
+            name="Título"
+            value={form.title.trim() || '—'}
+            effect="Nombre en la ficha y en la venta."
+          >
+            {canCreate ? (
+              <Field
+                label="Título"
+                value={form.title}
+                error={titleError}
+                onChange={(event) => set('title', event.target.value)}
+              />
+            ) : null}
+          </ParameterCard>
+        </Param>
+        <Param name="Recinto">
+          <ParameterCard name="Recinto" value={venueName} effect="Sala de la función.">
+            {canCreate ? (
+              <>
+                <SheetSelect
+                  label="Recinto"
                   value={form.venueId}
-                  onChange={(e) => set('venueId', e.target.value)}
-                  aria-describedby="ev-venue-status"
-                >
-                  <option value="">Seleccionar…</option>
-                  {venues.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <p id="ev-venue-status" className={`${styles.full} ${styles.mapStatus}`}>
-                {!form.venueId && 'Elige un recinto para comprobar su mapa.'}
-                {venueMap?.status === 'loading' && 'Comprobando el mapa del recinto…'}
-                {venueMap?.status === 'ok' && (
-                  <>
-                    Mapa guardado con <strong>{venueMap.seats.toLocaleString('es-MX')}</strong>{' '}
-                    butacas.{' '}
-                    <Link href={`/venues/${form.venueId}/map`}>Abrir el diseñador de mapa</Link>
-                  </>
-                )}
-                {venueMap?.status === 'empty' && (
-                  <>
-                    El mapa existe pero no tiene butacas.{' '}
-                    <Link href={`/venues/${form.venueId}/map`}>Generar zonas y butacas</Link>
-                  </>
-                )}
-                {venueMap?.status === 'missing' && (
-                  <>
-                    Este recinto no tiene layout guardado.{' '}
-                    <Link href={`/venues/${form.venueId}/map`}>Crear el mapa</Link>
-                  </>
-                )}
-              </p>
-
-              <label className={styles.field} htmlFor="ev-capacity">
-                Aforo declarado
-                <input
-                  id="ev-capacity"
-                  type="number"
+                  placeholder="Elegir recinto"
+                  options={venues.map((venue) => ({ value: venue.id, label: venue.name }))}
+                  onChange={(venueId) => set('venueId', venueId)}
+                />
+                {venueError ? <p className={styles.danger}>{venueError}</p> : null}
+                {map.status === 'loading' ? <p className={styles.tertiary}>Leyendo el mapa.</p> : null}
+              </>
+            ) : null}
+          </ParameterCard>
+        </Param>
+        <Param name="Inicio">
+          <ParameterCard
+            name="Inicio"
+            value={form.startDate ? form.startDate.replace('T', ' ') : '—'}
+            effect="Hora de la función."
+          >
+            {canCreate ? (
+              <Field
+                label="Inicio"
+                type="datetime-local"
+                value={form.startDate}
+                error={startError}
+                onChange={(event) => set('startDate', event.target.value)}
+              />
+            ) : null}
+          </ParameterCard>
+        </Param>
+        <Param name="Zona">
+          <ParameterCard
+            name="Zona"
+            value={form.zoneName.trim() || '—'}
+            effect="Nombre de la primera zona."
+          >
+            {canCreate ? (
+              <Field
+                label="Zona"
+                value={form.zoneName}
+                error={zoneError}
+                onChange={(event) => set('zoneName', event.target.value)}
+              />
+            ) : null}
+          </ParameterCard>
+        </Param>
+        <Param name="Precio base">
+          <ParameterCard
+            name="Precio base"
+            value={price > 0 ? formatTicketAmount(price) : '—'}
+            valueStyle="tabular"
+            effect="Lo que recibe el promotor por boleto."
+          >
+            {canCreate ? (
+              <Field
+                label="Precio base"
+                kind="money"
+                value={form.basePrice}
+                error={priceError}
+                onChange={(event) => set('basePrice', event.target.value)}
+              />
+            ) : null}
+          </ParameterCard>
+        </Param>
+        <Param name="Cupo de la oferta">
+          <ParameterCard
+            name="Cupo de la oferta"
+            value={capacity > 0 ? capacity.toLocaleString('es-MX') : '—'}
+            valueStyle="tabular"
+            effect="Cupo de la primera zona."
+            closedNote="Apartado 15 min · Reembolsable · Transferible · Cargo 10% · IVA 16%."
+            advanced={
+              canCreate ? (
+                <div className={styles.stack}>
+                  <Field
+                    label="Descripción"
+                    value={form.description}
+                    onChange={(event) => set('description', event.target.value)}
+                  />
+                  <Field
+                    label="Fin"
+                    type="datetime-local"
+                    value={form.endDate}
+                    error={endError}
+                    onChange={(event) => set('endDate', event.target.value)}
+                  />
+                  <Field
+                    label="Inicio de venta"
+                    type="datetime-local"
+                    value={form.salesStartAt}
+                    error={salesError}
+                    onChange={(event) => set('salesStartAt', event.target.value)}
+                  />
+                  <Field
+                    label="Fin de venta"
+                    type="datetime-local"
+                    value={form.salesEndAt}
+                    error={salesError}
+                    onChange={(event) => set('salesEndAt', event.target.value)}
+                  />
+                  <Segment
+                    label="Tipo"
+                    value={form.type}
+                    options={[
+                      { value: 'single', label: 'Único' },
+                      { value: 'series', label: 'Serie' },
+                      { value: 'residency', label: 'Residencia' },
+                    ]}
+                    onChange={(type) => set('type', type)}
+                  />
+                  {form.type === 'series' ? (
+                    <Stepper
+                      label="Fechas"
+                      value={Number.isFinite(seriesCount) ? seriesCount : null}
+                      min={2}
+                      max={52}
+                      onChange={(next) => set('seriesCount', String(next))}
+                    />
+                  ) : null}
+                  {form.type === 'residency' ? (
+                    <>
+                      <Segment
+                        label="Frecuencia"
+                        value={form.frequency}
+                        options={[
+                          { value: 'daily', label: 'Diaria' },
+                          { value: 'weekly', label: 'Semanal' },
+                          { value: 'biweekly', label: 'Quincenal' },
+                          { value: 'monthly', label: 'Mensual' },
+                        ]}
+                        onChange={(frequency) => set('frequency', frequency)}
+                      />
+                      <Stepper
+                        label="Funciones"
+                        value={Number.isFinite(residencyCount) ? residencyCount : null}
+                        min={2}
+                        max={100}
+                        onChange={(next) => set('residencyCount', String(next))}
+                      />
+                    </>
+                  ) : null}
+                  {seriesError ? <p className={styles.danger}>{seriesError}</p> : null}
+                </div>
+              ) : (
+                <p className={styles.quiet}>Tu rol no crea eventos.</p>
+              )
+            }
+          >
+            {canCreate ? (
+              <>
+                <Stepper
+                  label="Cupo"
+                  value={form.capacity === '' ? null : capacity}
                   min={1}
-                  value={form.capacity}
-                  onChange={(e) => set('capacity', Number(e.target.value))}
+                  max={map.status === 'ok' ? map.seats : null}
+                  onChange={(next) => set('capacity', String(next))}
                 />
-              </label>
-
-              {venueMap?.status === 'ok' && venueMap.seats !== form.capacity && (
-                <p className={styles.full}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => set('capacity', venueMap.seats)}
-                  >
-                    Ajustar el aforo a las {venueMap.seats.toLocaleString('es-MX')} butacas del mapa
-                  </Button>
-                </p>
-              )}
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <label className={styles.field} htmlFor="ev-zone">
-                Zona / oferta
-                <input
-                  id="ev-zone"
-                  value={form.zoneName}
-                  onChange={(e) => set('zoneName', e.target.value)}
-                />
-              </label>
-              <label className={styles.field} htmlFor="ev-price">
-                Precio base (MXN)
-                <input
-                  id="ev-price"
-                  type="number"
-                  min={1}
-                  step={0.01}
-                  value={form.basePrice}
-                  onChange={(e) => set('basePrice', Number(e.target.value))}
-                  aria-describedby="ev-price-hint"
-                />
-              </label>
-              <p id="ev-price-hint" className={`${styles.full} ${styles.hint}`}>
-                Se guarda como precio mínimo del evento; el máximo se calcula al 2,5×. Los precios
-                por zona se afinan después en la pestaña Precios del evento.
-              </p>
-            </>
-          )}
-
-          {step === 3 && (
-            <div className={styles.full}>
-              <ul className={styles.summary}>
-                <li>
-                  <strong>{form.title || '—'}</strong> ({form.type})
-                </li>
-                <li>Inicio: {form.startDate || '—'}</li>
-                <li>Venta: {form.salesStartAt || '—'} → {form.salesEndAt || 'sin cierre'}</li>
-                <li>
-                  Recinto: {selectedVenue?.name || '—'} ·{' '}
-                  {venueMap?.status === 'ok'
-                    ? `${venueMap.seats.toLocaleString('es-MX')} butacas en el mapa`
-                    : 'sin mapa utilizable'}
-                </li>
-                <li>Aforo declarado: {form.capacity.toLocaleString('es-MX')}</li>
-                <li>
-                  Oferta {form.zoneName}: ${form.basePrice} MXN
-                </li>
-              </ul>
-              <p className={styles.hint}>
-                El evento se crea en estado BORRADOR. La generación de boletos ocurre al pulsar
-                «Publicar inventario» en su ficha, no aquí.
-              </p>
-            </div>
-          )}
+                {capacityError ? <p className={styles.danger}>{capacityError}</p> : null}
+              </>
+            ) : null}
+          </ParameterCard>
+        </Param>
+      </div>
+      {error ? (
+        <p className={styles.danger} role="alert">
+          {error}
+        </p>
+      ) : null}
+      {canCreate ? (
+        <div className={styles.saveBar}>
+          <p className={styles.tertiary}>Apartado 15 min · Reembolsable · Transferible · Cargo 10% · IVA 16%.</p>
+          <TicketButton disabled={!ready || saving} onClick={() => void submit()}>
+            Crear evento
+          </TicketButton>
         </div>
-
-        {/* Resumen accionable: cada problema lleva a su campo. */}
-        {(errors.length > 0 || warnings.length > 0) && (
-          <section className={styles.issues} aria-labelledby="issues-title">
-            <h2 id="issues-title">
-              {errors.length > 0
-                ? `${errors.length} ${errors.length === 1 ? 'problema impide' : 'problemas impiden'} crear el evento`
-                : `${warnings.length} ${warnings.length === 1 ? 'aviso' : 'avisos'}`}
-            </h2>
-            <ul>
-              {[...errors, ...warnings].map((issue, i) => (
-                <li key={`${issue.field}-${i}`} data-severity={issue.severity}>
-                  <span className={styles.issueTag}>
-                    {issue.severity === 'error' ? 'ERROR' : 'AVISO'}
-                  </span>
-                  <div>
-                    <button
-                      type="button"
-                      className={styles.issueLink}
-                      onClick={() => goToIssue(issue)}
-                    >
-                      {issue.message}
-                    </button>
-                    {issue.hint && <p className={styles.issueHint}>{issue.hint}</p>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <CardFooter className={styles.navRow}>
-          {step > 0 && (
-            <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
-              Atrás
-            </Button>
-          )}
-          {step < STEPS.length - 1 ? (
-            <Button type="button" onClick={() => setStep((s) => s + 1)}>
-              Siguiente
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              loading={saving}
-              loadingLabel="Creando…"
-              disabled={errors.length > 0}
-              onClick={submit}
-            >
-              Crear evento
-            </Button>
-          )}
-          {step === STEPS.length - 1 && errors.length > 0 && (
-            <p className={styles.blockedNote} role="status">
-              Resuelve los {errors.length} errores de arriba para habilitar la creación.
-            </p>
-          )}
-        </CardFooter>
-      </Card>
-    </div>
+      ) : null}
+    </section>
   );
 }

@@ -143,6 +143,7 @@ export function createEvent(
     description: string;
     type: 'single' | 'series' | 'residency';
     startDate: string;
+    endDate?: string;
     venueId: string;
     capacity: number;
     basePrice: number;
@@ -151,9 +152,16 @@ export function createEvent(
     salesEndAt?: string;
   },
 ) {
+  const { startDate, endDate, salesStartAt, salesEndAt, ...rest } = body;
   return adminApi<EventRow>('/events/manage', token, {
     method: 'POST',
-    body: JSON.stringify({ ...body, startDate: new Date(body.startDate) }),
+    body: JSON.stringify({
+      ...rest,
+      startDate: new Date(startDate),
+      ...(endDate ? { endDate: new Date(endDate) } : {}),
+      ...(salesStartAt ? { salesStartAt: new Date(salesStartAt) } : {}),
+      ...(salesEndAt ? { salesEndAt: new Date(salesEndAt) } : {}),
+    }),
   });
 }
 
