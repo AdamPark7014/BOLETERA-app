@@ -168,6 +168,27 @@ export class EventManagementService {
     return event;
   }
 
+  /**
+   * Minutos que anuncia la ficha (`holdExpiration`, en segundos).
+   * No toca la caducidad real del apartado.
+   */
+  async updateAnnouncedHold(orgId: string, eventId: string, minutes: number) {
+    if (!orgId) throw new BadRequestException('organizationId requerido');
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 24 * 60) {
+      throw new BadRequestException('La duración anunciada va de 1 a 1440 min.');
+    }
+    const event = await this.prisma.event.findFirst({
+      where: { id: eventId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!event) throw new NotFoundException('Evento no encontrado');
+    return this.prisma.event.update({
+      where: { id: eventId },
+      data: { holdExpiration: minutes * 60 },
+      select: { id: true, holdExpiration: true },
+    });
+  }
+
   async updateEventMedia(
     orgId: string,
     eventId: string,

@@ -167,6 +167,29 @@ export class TicketTransferService {
     return { ok: true, ticket: transfer.ticket };
   }
 
+  /** Cola de la organización. No incluye el código de aceptación. */
+  async listForOrganization(organizationId: string | null) {
+    const rows = await this.prisma.ticketTransfer.findMany({
+      where: organizationId ? { ticket: { event: { organizationId } } } : {},
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: {
+        id: true,
+        status: true,
+        toEmail: true,
+        expiresAt: true,
+        ticket: {
+          select: {
+            code: true,
+            keyEpoch: true,
+            event: { select: { title: true } },
+          },
+        },
+      },
+    });
+    return { data: rows };
+  }
+
   async listByUser(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');

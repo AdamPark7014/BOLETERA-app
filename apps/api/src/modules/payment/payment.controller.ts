@@ -23,6 +23,7 @@ import { OrgAccessGuard, type OrgScopedRequest } from '../auth/org-access.guard'
 import { requireInternalApiSecret } from '../auth/jwt-secret';
 import { BanorteReconciliationService } from './banorte-reconciliation.service';
 import { EventCancellationService } from './event-cancellation.service';
+import { refundPolicy } from '../notification/refund-policy';
 import { PaymentService } from './payment.service';
 
 /** Petición ya resuelta por `OrgAccessGuard`: `scopedOrganizationId` es el tenant efectivo. */
@@ -213,6 +214,16 @@ export class PaymentController {
    * `OrgAccessGuard` cotejará `?organizationId=` contra el tenant del token:
    * solo SUPER_ADMIN puede pedir otra organización o atravesarlas todas.
    */
+  /** Plazos efectivos del entorno. No escribe y no cambia el cierre en Banorte. */
+  @Get('refund-policy')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Plazos efectivos de reembolso' })
+  readRefundPolicy() {
+    return refundPolicy();
+  }
+
   @Get('refunds')
   @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')

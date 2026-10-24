@@ -21,7 +21,7 @@ const DINERO: IndexItem[] = [
   { id: 'cargos', label: 'Cargos', href: '/dinero/cargos' },
   { id: 'iva', label: 'IVA', href: '/dinero/iva' },
   { id: 'descuentos', label: 'Descuentos', href: '/campaigns' },
-  { id: 'reembolsos', label: 'Reembolsos', href: '/orders/refunds' },
+  { id: 'reembolsos', label: 'Reembolsos', href: '/dinero/reembolsos' },
   { id: 'liquidaciones', label: 'Liquidaciones', href: '/payouts' },
   { id: 'facturacion', label: 'Facturación', href: '/billing/cfdi' },
   { id: 'pagos', label: 'Pagos', href: '/settings/payments' },
@@ -53,6 +53,7 @@ export function indexGroups(eventId: string | null): IndexGroup[] {
         { id: 'agenda', label: 'Agenda', href: `/events/${eventId}?seccion=agenda` },
         { id: 'zonas', label: 'Zonas y precios', href: `/events/${eventId}?seccion=zonas` },
         { id: 'canales', label: 'Canales', href: `/events/${eventId}?seccion=canales` },
+        { id: 'apartados', label: 'Apartados', href: `/events/${eventId}?seccion=apartados` },
       ]
     : [
         { id: 'lista', label: 'Lista', href: '/events' },
@@ -75,5 +76,6 @@ export function activeIndexId(pathname: string, section: string | null): string 
   if (pathname === '/dinero/comisiones') return 'comisiones';
   if (pathname === '/dinero/cargos') return 'cargos';
   if (pathname === '/dinero/iva') return 'iva';
+  if (pathname === '/dinero/reembolsos') return 'reembolsos';
   return null;
 }

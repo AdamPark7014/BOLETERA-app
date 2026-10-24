@@ -105,9 +105,15 @@
 .quiet,
 .tertiary,
 .danger,
-.out {
+.out,
+.mono {
   margin: 0;
   font: var(--body-sm);
+}
+
+.mono {
+  font: var(--mono);
+  color: var(--text);
 }
 
 .quiet {

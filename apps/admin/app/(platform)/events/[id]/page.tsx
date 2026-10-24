@@ -9,6 +9,7 @@ import { AdminFrame, useAdminFrame } from '../_ticket/AdminFrame';
 import { AgendaSection } from '../_ticket/AgendaSection';
 import { ChannelsSection } from '../_ticket/ChannelsSection';
 import { EventSection } from '../_ticket/EventSection';
+import { ApartadosSection } from '../_ticket/ApartadosSection';
 import { ZonesSection } from '../_ticket/ZonesSection';
 import styles from '../_ticket/frame.module.scss';
 
@@ -35,6 +36,7 @@ function EventBody() {
   const token = session.token;
   const canManage = hasCapability(session.role, 'events.manage');
   const canChannels = hasCapability(session.role, 'marketing.manage');
+  const canInventory = hasCapability(session.role, 'inventory.operate');
 
   useEffect(() => {
     if (!token || !id) {
@@ -125,6 +127,11 @@ function EventBody() {
         canWrite={canChannels}
         onSaved={() => setNonce((current) => current + 1)}
       />
+    );
+  }
+  if (frame.section === 'apartados') {
+    return (
+      <ApartadosSection eventId={id} event={hub.event} token={token} canOperate={canInventory} />
     );
   }
   if (frame.section !== 'evento') {

@@ -487,6 +487,37 @@ export class LayoutManagementService {
     };
   }
 
+  /** Apartados vigentes y los plazos efectivos. No cambia la caducidad. */
+  async listHolds(eventId: string, operator: OperatorContext) {
+    await this.assertEventInOrg(eventId, operator);
+    const ttl = this.inventory.effectiveHoldTtl();
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { holdExpiration: true },
+    });
+    const holds = await this.prisma.seatHold.findMany({
+      where: { eventId, status: 'ACTIVE' },
+      orderBy: { expiresAt: 'asc' },
+      select: {
+        id: true,
+        channel: true,
+        quantity: true,
+        expiresAt: true,
+        cashierId: true,
+        sessionId: true,
+        seat: { select: { label: true } },
+      },
+    });
+    return {
+      announcedSeconds: event?.holdExpiration ?? 900,
+      webSeconds: ttl.webSeconds,
+      taquillaSeconds: ttl.taquillaSeconds,
+      operatorMinMinutes: 1,
+      operatorMaxMinutes: MAX_HOLD_MINUTES,
+      holds,
+    };
+  }
+
   /** Bloqueos de un evento. Por defecto solo los vigentes. */
   async listBlocks(eventId: string, operator: OperatorContext, includeReleased = false) {
     await this.assertEventInOrg(eventId, operator);

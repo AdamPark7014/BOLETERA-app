@@ -155,6 +155,17 @@ export class InventoryService {
   }
 
   /**
+   * Plazos que de verdad caducan el apartado.
+   * No lee `Event.holdExpiration`: eso solo se anuncia en la ficha.
+   */
+  effectiveHoldTtl(): { webSeconds: number; taquillaSeconds: number } {
+    return {
+      webSeconds: HOLD_TTL_WEB_SECONDS,
+      taquillaSeconds: HOLD_TTL_TAQUILLA_SECONDS,
+    };
+  }
+
+  /**
    * F1-15: comportamiento explícito cuando Redis no responde.
    * `INVENTORY_REQUIRE_REDIS=true` (implícito en producción) hace fallar la
    * reserva en vez de seguir sin candado. Redis es sólo la PRIMERA línea: la

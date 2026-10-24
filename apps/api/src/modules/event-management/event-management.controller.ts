@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import {
   EventManagementService,
@@ -272,6 +283,17 @@ export class EventManagementController {
     @Query() filters: any
   ) {
     return await this.eventService.searchEvents(orgId, filters);
+  }
+
+  @Patch(':eventId/hold-expiration')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @ApiOperation({ summary: 'Minutos que anuncia la ficha. No cambia la caducidad real.' })
+  async updateAnnouncedHold(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+    @Body() body: { minutes?: number },
+  ) {
+    return await this.eventService.updateAnnouncedHold(orgId, eventId, Number(body?.minutes));
   }
 
   @Put(':eventId/media')

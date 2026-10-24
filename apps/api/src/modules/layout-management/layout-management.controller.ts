@@ -160,6 +160,20 @@ export class LayoutManagementController {
     );
   }
 
+  @Get('events/:eventId/holds')
+  @Roles(...INVENTORY_STAFF_ROLES)
+  @ApiOperation({ summary: 'Apartados vigentes y plazos efectivos. No escribe.' })
+  async listHolds(
+    @Param('eventId') eventId: string,
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+  ) {
+    return await this.layoutService.listHolds(eventId, {
+      userId: user.sub,
+      organizationId: user.organizationId,
+      role: user.role,
+    });
+  }
+
   @Get('events/:eventId/blocks')
   @Roles(...INVENTORY_STAFF_ROLES)
   @ApiOperation({ summary: 'Bloqueos de inventario de un evento' })
