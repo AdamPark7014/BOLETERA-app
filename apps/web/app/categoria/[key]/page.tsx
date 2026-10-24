@@ -1,13 +1,12 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/SiteHeader';
-import { EventPosterArt } from '@/components/EventPosterArt';
+import { CarteleraBoard } from '@/components/purchase/CarteleraBoard';
 import { api } from '@/lib/api';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
 import { buildHubMetadata } from '@/lib/seo';
+import { fetchSiteContent } from '@/lib/site-content';
 import { fetchTenantCurrent } from '@/lib/tenant';
-import styles from '../../hub.module.scss';
 
 const CATEGORY_LABEL: Record<string, string> = {
   MUSIC: 'Conciertos',
@@ -15,23 +14,15 @@ const CATEGORY_LABEL: Record<string, string> = {
   THEATER: 'Artes y teatro',
   COMEDY: 'Comedia',
   FESTIVAL: 'Festivales',
-  FAMILY: 'Familiares',
+  CONFERENCE: 'Conferencia',
+  WORKSHOP: 'Taller',
+  FAMILY: 'Familiar',
   STANDUP: 'Stand-up',
   CINEMA: 'Cine',
-  OTHER: 'Eventos',
+  OTHER: 'Evento',
 };
 
 const ALLOWED = new Set(Object.keys(CATEGORY_LABEL));
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-MX', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 export async function generateMetadata({
   params,
@@ -68,65 +59,19 @@ export default async function CategoriaPage({
     failed = true;
   }
 
-  const label = CATEGORY_LABEL[key] ?? key;
+  const site = await fetchSiteContent();
 
   return (
     <>
       <SiteHeader />
-      <main id="contenido" tabIndex={-1} className={styles.page}>
-        <nav className={styles.crumb} aria-label="Ruta de navegación">
-          <Link href="/">Cartelera</Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page">{label}</span>
-        </nav>
-        <header className={styles.hero}>
-          <h1>{label}</h1>
-          <p>
-            {failed
-              ? 'No pudimos consultar esta categoría.'
-              : `${events.length} evento${events.length === 1 ? '' : 's'} en cartelera`}
-          </p>
-        </header>
-
-        {failed ? (
-          <div className={styles.error} role="alert">
-            <strong>No pudimos cargar los eventos de {label}</strong>
-            <p>Es un problema temporal. Vuelve a intentarlo en unos minutos.</p>
-            <Link href="/">Ver toda la cartelera</Link>
-          </div>
-        ) : events.length === 0 ? (
-          <div className={styles.empty}>
-            <strong>Sin eventos en {label} por ahora</strong>
-            <p>Prueba con otra categoría o revisa la cartelera completa.</p>
-            <Link href="/">Ver toda la cartelera</Link>
-          </div>
-        ) : (
-          <ul className={styles.grid}>
-            {events.map((e) => (
-              <li key={e.id}>
-                <Link href={`/events/${e.slug}`} className={styles.card}>
-                  <EventPosterArt event={e} size="sm" />
-                  <div>
-                    <strong>{e.title}</strong>
-                    <span>
-                      {fmtDate(e.startsAt)}
-                      {e.venue?.city ? ` · ${e.venue.city}` : ''}
-                    </span>
-                  </div>
-                  <em>
-                    {/* Precio FINAL con cargos e IVA: anunciar el base sería
-                        publicitar un 26% menos de lo que se cobra. */}
-                    {Number(e.minPriceAllIn ?? e.minPrice) > 0
-                      ? `$${Number(e.minPriceAllIn ?? e.minPrice).toLocaleString('es-MX', {
-                          maximumFractionDigits: 0,
-                        })}`
-                      : 'Consultar'}
-                  </em>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+      <main id="contenido" tabIndex={-1}>
+        <CarteleraBoard
+          initial={events}
+          initialFailed={failed}
+          headline={site.heroHeadline?.trim() || 'Cartelera'}
+          subcopy={site.heroSubcopy?.trim() || undefined}
+          presetCategory={key}
+        />
       </main>
     </>
   );

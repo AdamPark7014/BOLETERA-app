@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Space_Grotesk } from "next/font/google";
-import { CartBar } from "@/components/CartBar";
 import { SiteFooter } from "@/components/SiteFooter";
+import { BlackTicketRoot } from "@boletera/ui";
 import { TenantBrandProvider } from "@/components/TenantBrand";
 import { buildOrganizationWebsiteJsonLd } from "@/lib/seo/event-jsonld";
 import { getSiteOrigin } from "@/lib/site-url";
@@ -43,9 +43,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-/** Inline boot: lock light theme before paint (storefront is light-only). */
-const themeBootScript = `(function(){try{document.documentElement.setAttribute('data-theme','light');}catch(e){}})();`;
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -73,7 +70,6 @@ export default async function RootLayout({
       style={tenantThemeStyle(tenant.theme)}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
@@ -81,11 +77,10 @@ export default async function RootLayout({
       </head>
       <body className={`${headingFont.variable} ${bodyFont.variable}`}>
         <TenantBrandProvider value={brand}>
-          <div className="app-shell">
+          <BlackTicketRoot density="compra" className="app-shell">
             <div className="app-shell__content">{children}</div>
             <SiteFooter />
-          </div>
-          <CartBar />
+          </BlackTicketRoot>
         </TenantBrandProvider>
       </body>
     </html>

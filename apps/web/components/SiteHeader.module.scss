@@ -583,3 +583,33 @@
     display: inline-flex;
   }
 }
+
+.purchaseBar {
+  padding: 48px 48px 0;
+}
+
+.purchaseInner {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.wordmark {
+  color: var(--text, #f3f0e8);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  font-size: 16px;
+  line-height: 24px;
+  text-decoration: none;
+}
+
+.account {
+  color: var(--text, #f3f0e8);
+  font-size: 16px;
+  line-height: 24px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

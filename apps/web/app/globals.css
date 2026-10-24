@@ -11,9 +11,9 @@ body {
 }
 
 body {
-  color: var(--text-primary);
-  background: var(--color-bg);
-  font-family: var(--font-family-body);
+  color: #f3f0e8;
+  background: #0b0b0c;
+  font-family: "Geist", "Inter", "Helvetica Neue", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
