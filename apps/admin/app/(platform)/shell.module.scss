@@ -1321,6 +1321,21 @@
   border-bottom: 1px solid var(--bl-border, var(--bl-border));
 }
 
+.bare {
+  min-height: 100vh;
+  background: #0b0b0c;
+}
+
+.bareMain {
+  min-height: 100vh;
+  padding: 0;
+  background: #0b0b0c;
+
+  &:focus {
+    outline: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
   .overlay,

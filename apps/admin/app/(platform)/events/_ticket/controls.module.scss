@@ -1,0 +1,141 @@
+.switch,
+.switchOn {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-m);
+  background: var(--ink-sunken);
+  cursor: pointer;
+}
+
+.switchOn {
+  box-shadow: inset 0 0 0 1px var(--gold);
+  background: var(--gold-wash);
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-s);
+  background: var(--text-secondary);
+}
+
+.switchOn .knob {
+  left: 23px;
+  background: var(--text);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper button,
+.segment button,
+.option,
+.trigger {
+  margin: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-m);
+  background: var(--ink-sunken);
+  color: var(--text);
+  font: var(--body-sm);
+  cursor: pointer;
+}
+
+.stepper button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.stepper button:disabled,
+.segment button:disabled {
+  background: var(--control-disabled);
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.stepValue {
+  min-width: 4ch;
+  color: var(--text);
+  font: var(--money);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.bounds {
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+.segment {
+  display: flex;
+  gap: 4px;
+}
+
+.segment button {
+  flex: 1;
+  min-height: 36px;
+  padding: 0 8px;
+  color: var(--text-secondary);
+}
+
+.segmentOn {
+  color: var(--text);
+  background: var(--gold-wash);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+
+.trigger {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 280px;
+  margin-top: 8px;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background: var(--ink-overlay);
+  box-shadow: var(--shadow-sheet);
+}
+
+.option {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px;
+  border-color: transparent;
+  background: transparent;
+  text-align: left;
+}
+
+.option[aria-selected='true'] {
+  background: var(--gold-wash);
+  box-shadow: inset 0 0 0 1px var(--gold);
+}
+
+.switch:focus-visible,
+.switchOn:focus-visible,
+.stepper button:focus-visible,
+.segment button:focus-visible,
+.trigger:focus-visible,
+.option:focus-visible {
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
+}

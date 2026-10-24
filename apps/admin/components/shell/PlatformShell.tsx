@@ -25,6 +25,14 @@ type PlatformShellProps = {
   children: ReactNode;
 };
 
+/** Lista, alta y ficha del evento usan el índice de oficios, sin el árbol viejo. */
+function isTicketSurface(pathname: string): boolean {
+  if (pathname === '/events' || pathname === '/events/new') return true;
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length !== 2 || parts[0] !== 'events') return false;
+  return parts[1] !== 'series';
+}
+
 function SkipLink() {
   return (
     <a href="#contenido-principal" className={styles.skipLink}>
@@ -111,6 +119,17 @@ function PlatformShellInner({ children }: PlatformShellProps) {
 
   if (status !== 'authenticated') {
     return null;
+  }
+
+  if (isTicketSurface(pathname)) {
+    return (
+      <div className={styles.bare}>
+        <SkipLink />
+        <main id="contenido-principal" className={styles.bareMain} tabIndex={-1}>
+          {children}
+        </main>
+      </div>
+    );
   }
 
   return (
