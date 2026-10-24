@@ -11,7 +11,7 @@ export type HoldRow = {
 };
 
 export type HoldPolicy = {
-  announcedSeconds: number;
+  announcedSeconds: number | null;
   webSeconds: number;
   taquillaSeconds: number;
   operatorMinMinutes: number;
@@ -60,8 +60,8 @@ export function categoryLabel(value: string): string {
   return CATEGORY_LABEL[value] ?? value;
 }
 
-export function minutesFromSeconds(seconds: number): number {
-  if (!Number.isFinite(seconds) || seconds <= 0) return 15;
+export function minutesFromSeconds(seconds: number | null): number {
+  if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) return 15;
   return Math.max(1, Math.round(seconds / 60));
 }
 
@@ -79,7 +79,6 @@ export function readHoldPolicy(raw: unknown): HoldPolicy | null {
   const operatorMinMinutes = readNumber(row.operatorMinMinutes);
   const operatorMaxMinutes = readNumber(row.operatorMaxMinutes);
   if (
-    announcedSeconds == null ||
     webSeconds == null ||
     taquillaSeconds == null ||
     operatorMinMinutes == null ||

@@ -150,14 +150,32 @@ export class InventoryService {
     private saleWindow: SaleWindowService,
   ) {}
 
-  private holdTtl(channel: SalesChannel) {
+  /** Plazo del canal cuando `holdExpiration` está vacío. */
+  private channelHoldTtl(channel: SalesChannel) {
     return isWebLikeChannel(channel) ? HOLD_TTL_WEB_SECONDS : HOLD_TTL_TAQUILLA_SECONDS;
   }
 
   /**
-   * Plazos que de verdad caducan el apartado.
-   * No lee `Event.holdExpiration`: eso solo se anuncia en la ficha.
+   * Segundos que escriben `SeatHold.expiresAt`.
+   * Con duración guardada, compra y taquilla usan esos minutos.
+   * Vacío, cero o inválido: 15 min en web y 5 min en taquilla.
    */
+  resolveHoldTtl(holdExpiration: number | null | undefined, channel: SalesChannel): number {
+    if (holdExpiration == null || !Number.isFinite(holdExpiration) || holdExpiration < 1) {
+      return this.channelHoldTtl(channel);
+    }
+    return Math.round(holdExpiration);
+  }
+
+  private async holdTtlForEvent(eventId: string, channel: SalesChannel): Promise<number> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { holdExpiration: true },
+    });
+    return this.resolveHoldTtl(event?.holdExpiration, channel);
+  }
+
+  /** Defaults del canal. La ficha los muestra cuando no hay duración guardada. */
   effectiveHoldTtl(): { webSeconds: number; taquillaSeconds: number } {
     return {
       webSeconds: HOLD_TTL_WEB_SECONDS,
@@ -486,14 +504,15 @@ export class InventoryService {
       quantity,
     });
 
+    const ttl = await this.holdTtlForEvent(dto.eventId, channel);
+
     try {
-      await this.assertSessionBudget(dto, channel, quantity);
+      await this.assertSessionBudget(dto, channel, quantity, ttl);
     } catch (error) {
       await this.saleWindow.releasePhaseQuota(window.quota);
       throw error;
     }
 
-    const ttl = this.holdTtl(channel);
     const expiresAt = new Date(Date.now() + ttl * 1000);
 
     try {
@@ -995,10 +1014,11 @@ export class InventoryService {
     dto: { eventId: string; sessionId?: string; skipSessionLimit?: boolean },
     channel: SalesChannel,
     quantity: number,
+    ttl: number,
   ) {
     if (dto.skipSessionLimit || !isWebLikeChannel(channel) || !dto.sessionId) return;
     const key = sessionBudgetKey(dto.eventId, dto.sessionId);
-    const total = await this.redis.incrementWithTtl(key, quantity, this.holdTtl(channel));
+    const total = await this.redis.incrementWithTtl(key, quantity, ttl);
     if (total === null) return; // Redis caído: el límite es anti-abuso, no invariante
     if (total > MAX_ACTIVE_TICKETS_PER_SESSION) {
       await this.redis.decrement(key, quantity);

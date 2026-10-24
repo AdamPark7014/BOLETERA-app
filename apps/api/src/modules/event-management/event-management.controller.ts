@@ -287,7 +287,7 @@ export class EventManagementController {
 
   @Patch(':eventId/hold-expiration')
   @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
-  @ApiOperation({ summary: 'Minutos que anuncia la ficha. No cambia la caducidad real.' })
+  @ApiOperation({ summary: 'Minutos del apartado. El próximo expiresAt los usa.' })
   async updateAnnouncedHold(
     @CurrentUser('organizationId') orgId: string,
     @Param('eventId') eventId: string,

@@ -270,9 +270,10 @@ export class LayoutManagementService {
       skipSessionLimit: true,
     });
 
-    // `inventory.createHold` fija el TTL por canal y no acepta uno a medida, así
-    // que la duración pedida se aplica aquí, sobre los holds recién creados. El
-    // candado de Redis conserva el TTL corto: si otro comprador lo toma después,
+    // `createHold` escribe expiresAt con los minutos guardados, o con el plazo
+    // del canal si `holdExpiration` está vacío. La duración que manda el
+    // operador se aplica aquí, sobre los holds recién creados. El candado de
+    // Redis conserva el TTL de createHold: si otro comprador lo toma después,
     // el CAS sobre el boleto (que sigue en HELD) lo rechaza igual.
     let expiresAt = hold.expiresAt;
     if (durationMinutes != null) {
@@ -509,7 +510,7 @@ export class LayoutManagementService {
       },
     });
     return {
-      announcedSeconds: event?.holdExpiration ?? 900,
+      announcedSeconds: event?.holdExpiration ?? null,
       webSeconds: ttl.webSeconds,
       taquillaSeconds: ttl.taquillaSeconds,
       operatorMinMinutes: 1,

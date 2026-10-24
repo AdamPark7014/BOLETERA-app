@@ -130,7 +130,13 @@ function DurationEditor({
   onSaved: (announcedSeconds: number) => void;
   children: ReactNode;
 }) {
-  const stored = minutesFromSeconds(policy.announcedSeconds);
+  const storedSeconds = policy.announcedSeconds;
+  const savedLabel =
+    storedSeconds != null && Number.isFinite(storedSeconds) && storedSeconds >= 1
+      ? durationLabel(storedSeconds)
+      : null;
+  const hasSaved = savedLabel != null;
+  const stored = minutesFromSeconds(storedSeconds);
   const [minutes, setMinutes] = useState(stored);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -141,8 +147,9 @@ function DurationEditor({
   }, [policy.announcedSeconds]);
 
   const dirty = minutes !== stored;
-  const effective = `Web ${durationLabel(policy.webSeconds)} · Taquilla ${durationLabel(policy.taquillaSeconds)}`;
+  const channelFallback = `Web ${durationLabel(policy.webSeconds)} · Taquilla ${durationLabel(policy.taquillaSeconds)}`;
   const operator = `${policy.operatorMinMinutes.toLocaleString('es-MX')}–${policy.operatorMaxMinutes.toLocaleString('es-MX')} min`;
+  const value = dirty ? durationLabel(minutes * 60) : (savedLabel ?? channelFallback);
 
   async function save() {
     if (!dirty || saving || !canOperate) return;
@@ -154,8 +161,9 @@ function DurationEditor({
         token,
         { method: 'PATCH', body: JSON.stringify({ minutes }) }
       );
+      const fromLabel = hasSaved ? `${stored.toLocaleString('es-MX')} min` : 'sin duración';
       setNotice(
-        `Duración anunciada: ${stored.toLocaleString('es-MX')} min → ${minutes.toLocaleString('es-MX')} min`
+        `Duración del apartado: ${fromLabel} → ${minutes.toLocaleString('es-MX')} min`
       );
       onSaved(updated.holdExpiration);
     } catch (cause) {
@@ -174,10 +182,18 @@ function DurationEditor({
         <Param name="Duración del apartado">
           <ParameterCard
             name="Duración del apartado"
-            value={effective}
+            value={value}
             valueStyle="tabular"
-            effect="Cambia lo que anuncia la ficha. La caducidad real sigue en el plazo del canal."
-            closedNote={`Anunciado · ${minutes.toLocaleString('es-MX')} min · Operador · ${operator}`}
+            effect={
+              dirty || hasSaved
+                ? 'El apartado caduca en este plazo. El reloj de la compra y el de taquilla leen este número.'
+                : `Sin duración guardada. ${channelFallback}.`
+            }
+            closedNote={
+              dirty || hasSaved
+                ? `Operador · ${operator}`
+                : `Sin duración guardada · Operador · ${operator}`
+            }
           >
             {canOperate ? (
               <Stepper
@@ -199,7 +215,7 @@ function DurationEditor({
             name="Duración del operador"
             value={operator}
             valueStyle="tabular"
-            effect="Solo aplica cuando alguien la manda al apartar en el plano. Si no, queda el plazo del canal."
+            effect={`Solo aplica cuando alguien la manda al apartar en el plano. Si no, el apartado usa la duración guardada. Vacía, ${channelFallback}.`}
           />
         </Param>
         {children}

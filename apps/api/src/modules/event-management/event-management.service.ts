@@ -169,13 +169,13 @@ export class EventManagementService {
   }
 
   /**
-   * Minutos que anuncia la ficha (`holdExpiration`, en segundos).
-   * No toca la caducidad real del apartado.
+   * Minutos del apartado (`holdExpiration`, en segundos).
+   * El próximo `SeatHold.expiresAt` usa este número.
    */
   async updateAnnouncedHold(orgId: string, eventId: string, minutes: number) {
     if (!orgId) throw new BadRequestException('organizationId requerido');
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 24 * 60) {
-      throw new BadRequestException('La duración anunciada va de 1 a 1440 min.');
+      throw new BadRequestException('La duración del apartado va de 1 a 1440 min.');
     }
     const event = await this.prisma.event.findFirst({
       where: { id: eventId, organizationId: orgId },
