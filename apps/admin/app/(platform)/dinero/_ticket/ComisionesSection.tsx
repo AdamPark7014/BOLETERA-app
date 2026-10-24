@@ -49,8 +49,8 @@ export function ComisionesSection({
   const allowDirty = allow !== org.allowResale;
   const dirty = commissionDirty || resaleDirty || allowDirty;
   const feeNote = limits
-    ? `El cobro de un anuncio usa el ${percentLabel(limits.feePercent)} fijo del servicio, no esta columna.`
-    : 'El cobro de un anuncio usa el porcentaje fijo del servicio, no esta columna.';
+    ? `El cobro de un anuncio usa este porcentaje. Vacío, queda en el ${percentLabel(limits.feePercent)} del servicio.`
+    : 'El cobro de un anuncio usa este porcentaje. Vacío, queda en el 8% del servicio.';
   const capValue = limits
     ? `${percentLabel(limits.minPercent)} – ${percentLabel(limits.maxPercent)} del original`
     : '—';

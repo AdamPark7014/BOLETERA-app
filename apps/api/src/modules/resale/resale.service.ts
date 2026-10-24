@@ -19,13 +19,29 @@ export class ResaleService {
 
   constructor(private prisma: PrismaService) {}
 
-  /** Topes y cargo fijo del servicio. No hay columna que los guarde. */
+  /**
+   * Topes del servicio. `feePercent` es el 8% de respaldo:
+   * el anuncio usa `Organization.resaleCommission` cuando tiene valor.
+   */
   limits() {
     return {
       minPercent: this.MIN_RESALE_PRICE_PERCENT,
       maxPercent: this.MAX_RESALE_PRICE_PERCENT,
       feePercent: this.RESALE_FEE_PERCENT,
     };
+  }
+
+  /** Tasa del anuncio. Vacía, inválida o fuera de 0–1: el 8% del servicio. */
+  listingFeeRate(resaleCommission: number | null | undefined): number {
+    if (
+      resaleCommission == null ||
+      !Number.isFinite(resaleCommission) ||
+      resaleCommission < 0 ||
+      resaleCommission > 1
+    ) {
+      return this.RESALE_FEE_PERCENT;
+    }
+    return resaleCommission;
   }
 
   // ==================== CREATE RESALE LISTING ====================
@@ -38,14 +54,18 @@ export class ResaleService {
     sellerId: string;
     sellerName?: string;
   }) {
+    const ticketInclude = {
+      offer: true,
+      event: { include: { organization: { select: { resaleCommission: true } } } },
+    } as const;
     const ticket = data.ticketId
       ? await this.prisma.ticket.findUnique({
           where: { id: data.ticketId },
-          include: { offer: true, event: true },
+          include: ticketInclude,
         })
       : await this.prisma.ticket.findFirst({
           where: { code: data.ticketCode },
-          include: { offer: true, event: true },
+          include: ticketInclude,
         });
 
     if (!ticket) throw new NotFoundException('Ticket not found');
@@ -64,7 +84,7 @@ export class ResaleService {
       status: string;
       orderItemId: string | null;
       offer: { basePrice: unknown };
-      event: { allowResale: boolean };
+      event: { allowResale: boolean; organization: { resaleCommission: number | null } };
     },
     data: { askingPrice: number; currency: string; sellerId: string; sellerName: string },
   ) {
@@ -85,8 +105,8 @@ export class ResaleService {
       );
     }
 
-    // Create listing
-    const fee = new Decimal(data.askingPrice * this.RESALE_FEE_PERCENT);
+    const feeRate = this.listingFeeRate(ticket.event.organization.resaleCommission);
+    const fee = new Decimal(data.askingPrice * feeRate);
     const listing = await this.prisma.resaleListing.create({
       data: {
         ticketId: ticket.id,

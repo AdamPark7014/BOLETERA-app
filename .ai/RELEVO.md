@@ -6,6 +6,7 @@
 
 ## Hecho
 
+- 2026-10-24 cursor: el cargo del anuncio usa resaleCommission; vacío sigue en el 8% del servicio.
 - 2026-10-24 cursor: el apartado caduca con los minutos de holdExpiration; vacío sigue en 15 min web y 5 min taquilla.
 - 2026-10-24 cursor: fichas de Apartados (anuncio editable; caducidad real en lectura), Reembolsos y transferencias (plazos y cola en lectura; cierre manual).
 - 2026-10-24 cursor: fichas de Comisiones (editables), Cargos e IVA (lectura: tasas de entorno).
