@@ -1,11 +1,23 @@
 import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { priceBreakdown, SERVICE_FEE_RATE, TAX_RATE } from '../../common/pricing-rates';
 import { PricingService } from './pricing.service';
 
 @ApiTags('Pricing')
 @Controller('pricing')
 export class PricingController {
   constructor(private pricingService: PricingService) {}
+
+  /** Tasas efectivas del entorno. No escribe y no cambia el cálculo all-in. */
+  @Get('rates')
+  @ApiOperation({ summary: 'Tasas efectivas de cargo e IVA' })
+  rates() {
+    return {
+      serviceFeeRate: SERVICE_FEE_RATE,
+      taxRate: TAX_RATE,
+      example: priceBreakdown(1000),
+    };
+  }
 
   // ==================== CALCULATE PRICE ====================
 

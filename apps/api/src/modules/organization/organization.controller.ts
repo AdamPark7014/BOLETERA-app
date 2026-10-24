@@ -39,6 +39,7 @@ export class OrganizationController {
       phone: string;
       commissionRate: number;
       allowResale: boolean;
+      resaleCommission: number;
     }>,
   ) {
     return this.orgService.updateOrganization(orgId, body);

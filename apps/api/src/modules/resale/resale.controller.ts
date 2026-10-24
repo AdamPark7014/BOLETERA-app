@@ -107,6 +107,12 @@ export class ResaleController {
     return await this.resaleService.getMarketplaceStats(eventId);
   }
 
+  @Get('limits')
+  @ApiOperation({ summary: 'Topes anti-scalping y cargo fijo de reventa' })
+  limits() {
+    return this.resaleService.limits();
+  }
+
   // ==================== ANTI-SCALPING CHECK ====================
 
   @Get('tickets/:ticketId/anti-scalping-check')

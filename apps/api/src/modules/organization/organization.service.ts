@@ -47,9 +47,12 @@ export class OrganizationService {
       commissionRate: number;
       allowResale: boolean;
       feesInclusive: boolean;
+      resaleCommission: number;
     }>,
     actorId?: string,
   ) {
+    this.assertRate('commissionRate', data.commissionRate);
+    this.assertRate('resaleCommission', data.resaleCommission);
     const org = await this.prisma.organization.update({
       where: { id: orgId },
       data,
@@ -63,6 +66,14 @@ export class OrganizationService {
       metadata: data as Record<string, unknown>,
     });
     return org;
+  }
+
+  /** Tasa 0–1. La comisión de reventa se guarda; el cobro del anuncio no la lee. */
+  private assertRate(field: string, value: number | undefined) {
+    if (value === undefined) return;
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 1) {
+      throw new BadRequestException(`${field} tiene que estar entre 0 y 1`);
+    }
   }
 
   async listTeam(orgId: string) {

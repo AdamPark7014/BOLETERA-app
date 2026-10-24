@@ -19,6 +19,15 @@ export class ResaleService {
 
   constructor(private prisma: PrismaService) {}
 
+  /** Topes y cargo fijo del servicio. No hay columna que los guarde. */
+  limits() {
+    return {
+      minPercent: this.MIN_RESALE_PRICE_PERCENT,
+      maxPercent: this.MAX_RESALE_PRICE_PERCENT,
+      feePercent: this.RESALE_FEE_PERCENT,
+    };
+  }
+
   // ==================== CREATE RESALE LISTING ====================
 
   async createListing(data: {

@@ -17,8 +17,9 @@ const SALA: IndexItem[] = [
 ];
 
 const DINERO: IndexItem[] = [
-  { id: 'comisiones', label: 'Comisiones', href: '/resale' },
-  { id: 'cargos', label: 'Cargos', href: '/pricing' },
+  { id: 'comisiones', label: 'Comisiones', href: '/dinero/comisiones' },
+  { id: 'cargos', label: 'Cargos', href: '/dinero/cargos' },
+  { id: 'iva', label: 'IVA', href: '/dinero/iva' },
   { id: 'descuentos', label: 'Descuentos', href: '/campaigns' },
   { id: 'reembolsos', label: 'Reembolsos', href: '/orders/refunds' },
   { id: 'liquidaciones', label: 'Liquidaciones', href: '/payouts' },
@@ -71,5 +72,8 @@ export function activeIndexId(pathname: string, section: string | null): string 
   if (eventId) return section ?? 'evento';
   if (pathname.startsWith('/events/series')) return 'series';
   if (pathname === '/events') return 'lista';
+  if (pathname === '/dinero/comisiones') return 'comisiones';
+  if (pathname === '/dinero/cargos') return 'cargos';
+  if (pathname === '/dinero/iva') return 'iva';
   return null;
 }
