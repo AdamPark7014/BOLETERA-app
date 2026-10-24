@@ -1,16 +1,8 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { EVENT_STOCK_IMAGES } from '@boletera/shared';
-import {
-  Badge,
-  Button,
-  Card,
-  CardHeader,
-  EmptyState,
-  SearchInput,
-} from '@boletera/ui';
+import { Field, NamedStatus, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import type { Hotkey } from '@/lib/hotkeys';
@@ -36,35 +28,58 @@ type Row = {
 
 export default function WillcallPage() {
   const router = useRouter();
+  const searchRef = useRef<HTMLInputElement>(null);
   const [q, setQ] = useState('');
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [verified, setVerified] = useState<Record<string, boolean>>({});
   const [searched, setSearched] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!getTaquillaToken()) router.replace('/login');
   }, [router]);
 
+  const selected = rows.find((r) => r.orderId === selectedId) ?? null;
+
   const hotkeys = useMemo<Hotkey[]>(
     () => [
       {
-        keys: 'F4',
-        label: 'Enfocar búsqueda',
+        keys: '/',
+        label: 'Buscar',
         whileTyping: true,
-        run: () => document.getElementById('willcall-q')?.focus(),
+        match: (e) => e.key === '/' && !e.ctrlKey && !e.metaKey,
+        run: () => searchRef.current?.focus(),
       },
-      { keys: 'Enter', label: 'Buscar', displayOnly: true },
+      {
+        keys: 'F4',
+        label: 'Buscar',
+        whileTyping: true,
+        run: () => searchRef.current?.focus(),
+      },
+      {
+        keys: 'Enter',
+        label: 'Entregar',
+        whileTyping: true,
+        match: (e) => e.key === 'Enter' && document.activeElement === document.getElementById('entregar'),
+        run: () => {
+          if (selected && !selected.pickedUpAt && verified[selected.orderId]) {
+            void fulfill(selected.orderId);
+          }
+        },
+      },
       {
         keys: 'Esc',
-        label: 'Inicio',
+        label: 'Venta',
         whileTyping: true,
         match: (e) => e.key === 'Escape',
-        run: () => router.push('/'),
+        run: () => router.push('/venta'),
       },
     ],
-    [router],
+    // fulfill is stable enough for this screen: it closes over the latest search.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [router, selected, verified],
   );
 
   async function search(e?: FormEvent) {
@@ -73,12 +88,14 @@ export default function WillcallPage() {
     setLoading(true);
     setSearched(true);
     try {
-      const data = await willcallLookup(q.trim());
-      setRows(data as Row[]);
+      const data = (await willcallLookup(q.trim())) as Row[];
+      setRows(data);
       setVerified({});
+      setSelectedId(data[0]?.orderId ?? null);
     } catch (err) {
-      setToast(err instanceof Error ? err.message : 'Error');
+      setToast(err instanceof Error ? err.message : 'No se pudo buscar');
       setRows([]);
+      setSelectedId(null);
     } finally {
       setLoading(false);
     }
@@ -86,13 +103,17 @@ export default function WillcallPage() {
 
   async function fulfill(orderId: string) {
     if (!verified[orderId]) {
-      setToast('Confirma ID del comprador antes de entregar');
+      setToast('Revisa la identificación.');
       return;
     }
     try {
       await willcallFulfill(orderId);
-      setToast('Entregado ✓');
-      await search();
+      setToast(null);
+      setRows((list) =>
+        list.map((r) => (r.orderId === orderId ? { ...r, pickedUpAt: new Date().toISOString() } : r)),
+      );
+      setVerified((v) => ({ ...v, [orderId]: false }));
+      searchRef.current?.focus();
     } catch (err) {
       setToast(err instanceof Error ? err.message : 'No se pudo entregar');
     }
@@ -105,143 +126,116 @@ export default function WillcallPage() {
 
   return (
     <PosShell
-      title="Entregar boletos"
-      eyebrow="Will-call"
-      backHref="/"
-      size="md"
+      title="Entregar"
+      backHref="/venta"
+      size="wide"
       hotkeys={hotkeys}
       escapeGoesBack={false}
     >
-      {toast && (
-        <p className={styles.toast} role="status">
+      {toast ? (
+        <p className={styles.note} role="status">
           {toast}
         </p>
-      )}
+      ) : null}
 
-      <Card
-        padding="none"
-        className={styles.heroCard}
-        style={{ backgroundImage: `url(${EVENT_STOCK_IMAGES.OPEN_AIR})` }}
-      >
-        <div className={styles.heroOverlay} />
-        <div className={styles.heroContent}>
-          <Badge tone="accent" variant="soft">Identificación obligatoria</Badge>
-          <p>
-            Pide identificación, verifica nombre/email y marca “ID verificado” antes de entregar
-            boletos comprados en línea.
-          </p>
+      <div className={styles.counter}>
+        <div>
+          <form onSubmit={(e) => void search(e)}>
+            <Field
+              ref={searchRef}
+              id="willcall-q"
+              kind="search"
+              label="Buscar"
+              hint="Nombre, correo o folio"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              autoFocus
+            />
+          </form>
+
+          {loading ? <p className={styles.note}>Buscando.</p> : null}
+          {!loading && searched && rows.length === 0 ? (
+            <p className={styles.note}>Nada con ese criterio.</p>
+          ) : null}
+
+          <ul className={styles.list}>
+            {rows.map((r) => (
+              <li key={r.orderId}>
+                <button
+                  type="button"
+                  className={r.orderId === selectedId ? styles.rowOn : styles.row}
+                  onClick={() => {
+                    setSelectedId(r.orderId);
+                    setVerified((v) => ({ ...v, [r.orderId]: false }));
+                  }}
+                >
+                  <span className={styles.main}>
+                    <strong>{r.buyerName || 'Sin nombre'}</strong>
+                    <small>
+                      {r.publicId} · {r.eventTitle}
+                    </small>
+                  </span>
+                  {r.pickedUpAt ? (
+                    <span className={styles.done}>Entregado</span>
+                  ) : (
+                    <NamedStatus status="pendiente" />
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
-      </Card>
 
-      <Card padding="md" className={styles.searchCard}>
-        <form onSubmit={(e) => void search(e)} className={styles.searchForm}>
-          <SearchInput
-            id="willcall-q"
-            autoFocus
-            value={q}
-            onValueChange={setQ}
-            placeholder="Nombre, email u orden…"
-            aria-label="Buscar will-call"
-            inputSize="lg"
-            shortcut="F4"
-          />
-          <Button type="submit" size="lg" loading={loading} loadingLabel="Buscando…">
-            Buscar
-          </Button>
-        </form>
-      </Card>
-
-      <ul className={styles.list}>
-        {rows.map((r) => (
-          <li key={r.orderId}>
-            <Card
-              padding="md"
-              variant="outline"
-              className={r.pickedUpAt ? styles.picked : undefined}
-            >
-              <CardHeader
-                title={r.buyerName || 'Sin nombre'}
-                description={`${r.publicId} · ${r.buyerEmail || 'sin email'}`}
-                actions={
-                  <Badge
-                    tone={r.pickedUpAt ? 'success' : 'warning'}
-                    variant="soft"
-                    dot
-                  >
-                    {r.pickedUpAt ? 'Entregado' : 'Pendiente'}
-                  </Badge>
-                }
-              />
-
-              <p className={styles.eventMeta}>
-                {r.eventTitle} · ${r.total.toFixed(2)}
-              </p>
-
-              <ul className={styles.ticketList}>
-                {r.tickets.map((t) => (
+        <aside className={styles.side}>
+          {selected ? (
+            <>
+              <p className={styles.buyer}>{selected.buyerName || 'Sin nombre'}</p>
+              <p className={styles.meta}>{selected.buyerEmail || 'Sin correo'}</p>
+              <ul className={styles.tickets}>
+                {selected.tickets.map((t) => (
                   <li key={t.code}>
-                    <code>{t.code}</code>
-                    <span>{t.seatInfo || t.status}</span>
-                    <Badge tone="neutral" variant="outline" size="sm">{t.status}</Badge>
+                    <span>{t.seatInfo || t.code}</span>
+                    <span>{t.status}</span>
                   </li>
                 ))}
               </ul>
-
-              {r.pickedUpAt && (
-                <p className={styles.doneTime}>
-                  Entregado {new Date(r.pickedUpAt).toLocaleString('es-MX')}
+              <p className={styles.total}>{formatTicketAmount(selected.total)} MXN</p>
+              {!selected.pickedUpAt ? (
+                <button
+                  type="button"
+                  className={verified[selected.orderId] ? styles.checkOn : styles.check}
+                  aria-pressed={Boolean(verified[selected.orderId])}
+                  onClick={() =>
+                    setVerified((v) => ({ ...v, [selected.orderId]: !v[selected.orderId] }))
+                  }
+                >
+                  Identificación revisada
+                </button>
+              ) : (
+                <p className={styles.meta}>
+                  {new Date(selected.pickedUpAt).toLocaleTimeString('es-MX', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </p>
               )}
-
-              {!r.pickedUpAt && (
-                <label className={styles.verify}>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(verified[r.orderId])}
-                    onChange={(e) =>
-                      setVerified((v) => ({ ...v, [r.orderId]: e.target.checked }))
-                    }
-                  />
-                  ID verificado (nombre coincide)
-                </label>
-              )}
-
-              <div className={styles.actions}>
-                <Button variant="secondary" size="md" onClick={() => void reprint(r.orderId)}>
-                  Reimprimir
-                </Button>
-                {!r.pickedUpAt && (
-                  <Button
-                    variant="primary"
-                    size="md"
-                    disabled={!verified[r.orderId]}
-                    onClick={() => void fulfill(r.orderId)}
-                  >
-                    Entregar
-                  </Button>
-                )}
-              </div>
-            </Card>
-          </li>
-        ))}
-      </ul>
-
-      {!loading && searched && rows.length === 0 && (
-        <EmptyState
-          illustration="inbox"
-          title="Sin resultados"
-          description={`No hay órdenes will-call para “${q}”.`}
-          size="sm"
-        />
-      )}
-      {!searched && !loading && (
-        <EmptyState
-          illustration="seats"
-          title="Busca una orden"
-          description="Escribe un nombre, email o folio de orden para comenzar."
-          size="sm"
-        />
-      )}
+              <button type="button" className={styles.secondary} onClick={() => void reprint(selected.orderId)}>
+                Imprimir
+              </button>
+            </>
+          ) : (
+            <p className={styles.note}>Elige una orden.</p>
+          )}
+          <TicketButton
+            id="entregar"
+            fullWidth
+            disabled={!selected || Boolean(selected.pickedUpAt) || !verified[selected?.orderId ?? '']}
+            onClick={() => selected && void fulfill(selected.orderId)}
+          >
+            Entregar
+          </TicketButton>
+        </aside>
+      </div>
     </PosShell>
   );
 }

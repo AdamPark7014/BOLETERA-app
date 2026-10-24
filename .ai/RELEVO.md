@@ -7,6 +7,7 @@
 ## Hecho
 
 Lenguaje visual de Black Ticket en `@boletera/ui`. Compra, taquilla y admin no se redibujaron.
+- Taquilla (`apps/taquilla`): lienzo `BlackTicketRoot` densidad taquilla, Cobrar fijo, folio tras el cobro.
 
 - Tokens y tema oscuro único, opt-in con `data-black-ticket`. Densidades `compra`, `taquilla` y `admin` como datos y atributo: misma paleta.
 - Componentes: `TicketButton` (primario hueso), `Field`, `Money`, `NamedStatus`, `ParameterCard`, `BlackTicketRoot`.

@@ -213,12 +213,12 @@ export function PosSeatMap({
     };
   }, [eventId]);
 
-  function seatFill(seatId: string, sectionColor: string) {
+  function seatFill(seatId: string) {
     const st = statusBySeat[seatId];
-    if (selected.includes(seatId)) return '#e11d48';
-    if (st === 'held') return '#d4a017';
-    if (!isSellable(st)) return '#3f3f46';
-    return sectionColor;
+    if (selected.includes(seatId)) return 'rgba(198, 165, 109, 0.10)';
+    if (st === 'held') return '#17171A';
+    if (!isSellable(st)) return '#3A342C';
+    return '#17171A';
   }
 
   function onKeyDown(e: KeyboardEvent, seatId: string, disabled: boolean) {
@@ -245,16 +245,16 @@ export function PosSeatMap({
       <div className={styles.toolbar}>
         <ul className={styles.legend}>
           <li>
-            <span className={`${styles.dot} ${styles.dotAvailable}`} /> Disp. <em>{counts.available}</em>
+            <span className={`${styles.dot} ${styles.dotAvailable}`} /> Libre <em>{counts.available}</em>
           </li>
           <li>
-            <span className={`${styles.dot} ${styles.dotHeld}`} /> Hold <em>{counts.held}</em>
+            <span className={`${styles.dot} ${styles.dotHeld}`} /> Apartado <em>{counts.held}</em>
           </li>
           <li>
-            <span className={`${styles.dot} ${styles.dotSold}`} /> Vend. <em>{counts.sold}</em>
+            <span className={`${styles.dot} ${styles.dotSold}`} /> Vendido <em>{counts.sold}</em>
           </li>
           <li>
-            <span className={`${styles.dot} ${styles.dotSelected}`} /> Sel. <em>{selected.length}</em>
+            <span className={`${styles.dot} ${styles.dotSelected}`} /> Seleccionado <em>{selected.length}</em>
           </li>
         </ul>
         {levels.length > 0 && (
@@ -607,28 +607,17 @@ export function PosSeatMap({
               if (levelFilter !== 'ALL' && (s.levelId ?? '') !== levelFilter) return null;
               const st = statusBySeat[s.id];
               const blocked = Boolean(s.visibility?.blocked);
-              const restricted = Boolean(s.visibility?.restrictedView);
               const price = typeof s.price === 'number' ? s.price : 0;
               const overBudget = priceCap != null && price > priceCap;
               const disabled = !isSellable(st) || st === 'held' || blocked || overBudget;
               const viewScore = sightlineBySeat?.get(s.id);
-              const fill = selected.includes(s.id)
-                ? '#e11d48'
-                : blocked
-                  ? '#3f3f46'
-                  : st === 'held'
-                    ? '#d4a017'
-                    : !isSellable(st)
-                      ? '#3f3f46'
-                      : overBudget
-                        ? '#2a2a2e'
-                        : heatMode === 'price' && price > 0 && priceRange.max > 0
-                          ? priceHeatColor(price, priceRange.min, priceRange.max)
-                          : heatMode === 'view' && viewScore != null
-                            ? sightlineHeatColor(viewScore)
-                            : s.visibility?.premiumView
-                              ? '#d4a017'
-                              : seatFill(s.id, s.sectionColor);
+              const fill = blocked
+                ? '#141416'
+                : heatMode === 'price' && price > 0 && priceRange.max > 0 && !selected.includes(s.id)
+                  ? priceHeatColor(price, priceRange.min, priceRange.max)
+                  : heatMode === 'view' && viewScore != null && !selected.includes(s.id)
+                    ? sightlineHeatColor(viewScore)
+                    : seatFill(s.id);
               return (
                 <g
                   key={s.id}
@@ -643,10 +632,16 @@ export function PosSeatMap({
                     rx={2}
                     fill={fill}
                     stroke={
-                      selected.includes(s.id) ? '#fff' : restricted ? 'rgba(148,163,184,0.9)' : 'transparent'
+                      selected.includes(s.id)
+                        ? '#C6A56D'
+                        : st === 'held'
+                          ? '#C6A56D'
+                          : !isSellable(st) || blocked
+                            ? 'transparent'
+                            : '#3A3A3E'
                     }
-                    strokeWidth={restricted ? 1.5 : 1.5}
-                    strokeDasharray={restricted ? '2 1.5' : undefined}
+                    strokeWidth={selected.includes(s.id) ? 1.5 : 1}
+                    strokeDasharray={st === 'held' && !selected.includes(s.id) ? '2 1.5' : undefined}
                     className={disabled ? styles.seatDisabled : styles.seat}
                     tabIndex={disabled ? -1 : 0}
                     role="button"

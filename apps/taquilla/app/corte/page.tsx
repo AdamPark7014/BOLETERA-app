@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { EVENT_STOCK_IMAGES } from '@boletera/shared';
 import {
   Badge,
   Button,
@@ -10,8 +9,9 @@ import {
   CardHeader,
   EmptyState,
   Input,
-  KpiCard,
   SegmentedControl,
+  TicketButton,
+  formatTicketAmount,
 } from '@boletera/ui';
 import {
   clearTaquillaSession,
@@ -261,7 +261,7 @@ export default function CortePage() {
 
   return (
     <PosShell
-      title="Turno y caja"
+      title="Corte de caja"
       eyebrow={`Responsable · ${cashierName}`}
       backHref="/"
       size="md"
@@ -288,20 +288,13 @@ export default function CortePage() {
         />
       ) : (
         <>
-          <div className={styles.kpiRow}>
-            <KpiCard
-              label="Cobrado en este turno"
-              value={money(report.totalRevenue)}
-              tone="accent"
-              hint={`${report.totalTransactions} transacciones · desde ${new Date(report.startTime).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`}
-              className={styles.kpiMain}
-            />
-            <div
-              className={styles.kpiAccent}
-              style={{ backgroundImage: `url(${EVENT_STOCK_IMAGES.FESTIVAL})` }}
-              aria-hidden="true"
-            />
-          </div>
+          <p className={styles.shiftLine}>
+            {cashierName} · {getTerminalLabel()} ·{' '}
+            {new Date(report.startTime).toLocaleTimeString('es-MX', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </p>
 
           <Card padding="md" className={styles.section}>
             <CardHeader title="Arqueo de efectivo" description="Cuenta el cajón y compara con el esperado." />
@@ -394,21 +387,18 @@ export default function CortePage() {
                   >
                     <div className={styles.varianceHead}>
                       <span className={styles.arqueoLabel}>Diferencia</span>
-                      <Badge
-                        tone={variance === 0 ? 'success' : variance > 0 ? 'warning' : 'danger'}
-                        variant="soft"
-                        dot
-                      >
-                        {variance === 0 ? 'Cuadrado' : variance > 0 ? 'Sobrante' : 'Faltante'}
-                      </Badge>
+                      <span>
+                        {variance === 0 ? 'Cuadrado' : variance > 0 ? 'A favor' : 'Faltante'}
+                      </span>
                     </div>
-                    <strong className={styles.arqueoValue}>
-                      {variance > 0 ? '+' : ''}
-                      {money(variance)}
+                    <strong
+                      className={
+                        variance === 0 ? styles.arqueoValue : variance > 0 ? styles.moneyIn : styles.moneyOut
+                      }
+                    >
+                      {formatTicketAmount(variance)}
                     </strong>
-                    {needsPin && (
-                      <small className={styles.pinNote}>Requiere PIN de gerente para cerrar</small>
-                    )}
+                    <small className={styles.pinNote}>Umbral · {formatTicketAmount(VARIANCE_PIN_THRESHOLD)}</small>
                   </Card>
                 </div>
               </>
@@ -464,16 +454,13 @@ export default function CortePage() {
           <Button variant="outline" size="lg" onClick={() => setPrompt('HANDOFF')}>
             Entregar turno · F10
           </Button>
-          <Button
-            variant="primary"
-            size="lg"
+          <TicketButton
+            fullWidth
             disabled={loading}
-            loading={loading}
-            loadingLabel="Cerrando…"
             onClick={() => (needsPin ? setPrompt('CLOSE') : void closeShift())}
           >
-            Cerrar turno · F12
-          </Button>
+            {loading ? 'Cerrando corte' : 'Cerrar corte'}
+          </TicketButton>
         </div>
       )}
 
@@ -486,14 +473,14 @@ export default function CortePage() {
             {handoffDone ? 'Turno entregado al cajero entrante.' : 'Corte Z archivado en el sistema.'}
           </p>
           <div className={styles.doneActions}>
-            <Button
-              variant="outline"
+            <TicketButton
+              fullWidth
               onClick={() => printCorte({ ...(report ?? {}), ...(closedReport ?? {}) })}
             >
-              Reimprimir corte
-            </Button>
-            <Button variant="primary" onClick={() => router.push('/login')}>
-              Abrir nuevo turno
+              Imprimir corte
+            </TicketButton>
+            <Button variant="outline" onClick={() => router.push('/login')}>
+              Salir
             </Button>
           </div>
         </Card>

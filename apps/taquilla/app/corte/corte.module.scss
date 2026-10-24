@@ -1,3 +1,19 @@
+.shiftLine {
+  margin: 0 0 12px;
+  font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--text-secondary, #a39e94);
+}
+
+.moneyIn {
+  color: var(--money-in, #8eae96);
+}
+
+.moneyOut {
+  color: var(--money-out, #c9847a);
+}
+
 .toast {
   margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
   padding: var(--bl-space-3) var(--bl-space-4);
