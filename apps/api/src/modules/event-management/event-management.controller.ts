@@ -41,6 +41,8 @@ export class EventManagementController {
       venueId: string;
       capacity: number;
       basePrice: number;
+      /** Zona de precio del alta. Con precio, el servicio persiste la Offer. */
+      zoneName?: string;
       imageUrl?: string;
       timezone?: string;
       /** Ventana de venta: el asistente ya la pedía, ahora sí llega y se guarda. */

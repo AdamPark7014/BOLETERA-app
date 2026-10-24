@@ -68,6 +68,8 @@ export class EventManagementService {
       venueId: string;
       capacity: number;
       basePrice: number;
+      /** Zona de precio. El alta ya la pide; sin ella no hay Offer. */
+      zoneName?: string;
       imageUrl?: string;
       timezone?: string;
       /**
@@ -100,30 +102,66 @@ export class EventManagementService {
       );
     }
 
-    const event = await this.prisma.event.create({
-      data: {
-        title: data.title,
-        description: data.description,
-        slug: this.slugify(data.title),
-        organizationId: orgId,
-        venueId: data.venueId,
-        startsAt,
-        endsAt: data.endDate ? new Date(data.endDate) : undefined,
-        salesStartAt,
-        salesEndAt,
-        timezone: data.timezone ?? 'America/Mexico_City',
-        status: EventStatus.DRAFT,
-        image: data.imageUrl,
-        totalCapacity: data.capacity,
-        minPrice: new Decimal(data.basePrice),
-        maxPrice: new Decimal(data.basePrice * 2.5),
-        metadata: {
-          eventKind: data.type,
-          basePrice: data.basePrice,
-          createdFrom: 'admin_panel',
+    const zone = typeof data.zoneName === 'string' ? data.zoneName.trim() : '';
+    const endsAt = data.endDate ? new Date(data.endDate) : null;
+    if (endsAt && Number.isNaN(endsAt.getTime())) {
+      throw new BadRequestException('endDate inválido');
+    }
+    if (zone) {
+      if (!Number.isFinite(data.basePrice) || data.basePrice <= 0) {
+        throw new BadRequestException('El precio tiene que ser mayor que $0.00.');
+      }
+      if (!Number.isInteger(data.capacity) || data.capacity <= 0) {
+        throw new BadRequestException('El cupo tiene que ser mayor que cero.');
+      }
+    }
+
+    const price = new Decimal(data.basePrice);
+    const event = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.event.create({
+        data: {
+          title: data.title,
+          description: data.description,
+          slug: this.slugify(data.title),
+          organizationId: orgId,
+          venueId: data.venueId,
+          startsAt,
+          endsAt: endsAt ?? undefined,
+          salesStartAt,
+          salesEndAt,
+          timezone: data.timezone ?? 'America/Mexico_City',
+          status: EventStatus.DRAFT,
+          image: data.imageUrl,
+          totalCapacity: data.capacity,
+          currency: 'MXN',
+          minPrice: price,
+          maxPrice: price,
+          metadata: {
+            eventKind: data.type,
+            basePrice: data.basePrice,
+            createdFrom: 'admin_panel',
+          },
         },
-      },
-      include: { venue: true, organization: true },
+        include: { venue: true, organization: true },
+      });
+
+      if (!zone) return created;
+
+      const offer = await tx.offer.create({
+        data: {
+          eventId: created.id,
+          name: zone,
+          zone,
+          basePrice: price,
+          currency: 'MXN',
+          totalQuantity: data.capacity,
+          remainingQuantity: data.capacity,
+          startDate: startsAt,
+          endDate: endsAt ?? startsAt,
+        },
+      });
+
+      return { ...created, offers: [offer] };
     });
 
     this.logger.log(`Event created: ${event.id} (${event.title})`);

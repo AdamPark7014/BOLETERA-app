@@ -147,16 +147,19 @@ export function createEvent(
     venueId: string;
     capacity: number;
     basePrice: number;
+    /** Zona de precio. El alta la pide y el API la persiste como Offer. */
+    zoneName: string;
     /** Ventana de venta. El asistente la pedía y se descartaba antes de llegar aquí. */
     salesStartAt?: string;
     salesEndAt?: string;
   },
 ) {
-  const { startDate, endDate, salesStartAt, salesEndAt, ...rest } = body;
+  const { startDate, endDate, salesStartAt, salesEndAt, zoneName, ...rest } = body;
   return adminApi<EventRow>('/events/manage', token, {
     method: 'POST',
     body: JSON.stringify({
       ...rest,
+      zoneName: zoneName.trim(),
       startDate: new Date(startDate),
       ...(endDate ? { endDate: new Date(endDate) } : {}),
       ...(salesStartAt ? { salesStartAt: new Date(salesStartAt) } : {}),

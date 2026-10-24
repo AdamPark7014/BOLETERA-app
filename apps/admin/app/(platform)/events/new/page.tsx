@@ -294,6 +294,7 @@ function CreateBody() {
         venueId: form.venueId,
         capacity,
         basePrice: price,
+        zoneName: form.zoneName.trim(),
         salesStartAt: form.salesStartAt || undefined,
         salesEndAt: form.salesEndAt || undefined,
       });
