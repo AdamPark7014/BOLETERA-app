@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TicketButton } from '@boletera/ui';
 import { authHeaders, getToken } from '@/lib/auth';
 import { orderApiUrl } from '@/lib/order-access';
 import styles from './order.module.scss';
@@ -31,10 +32,11 @@ export function TicketsPdfLink({
   const [error, setError] = useState('');
 
   if (accessToken) {
+    const href = orderApiUrl(apiBase, publicId, '/tickets.pdf', accessToken);
     return (
-      <a className={styles.pdfLink} href={orderApiUrl(apiBase, publicId, '/tickets.pdf', accessToken)}>
+      <TicketButton type="button" onClick={() => { window.location.href = href; }}>
         Descargar PDF
-      </a>
+      </TicketButton>
     );
   }
 
@@ -77,15 +79,9 @@ export function TicketsPdfLink({
 
   return (
     <span>
-      <button
-        type="button"
-        className={styles.pdfLink}
-        onClick={() => void download()}
-        disabled={busy}
-        aria-busy={busy}
-      >
+      <TicketButton type="button" onClick={() => void download()} disabled={busy} aria-busy={busy}>
         {busy ? 'Generando PDF…' : 'Descargar PDF'}
-      </button>
+      </TicketButton>
       {error && (
         <span className={styles.copyHint} role="alert">
           {error}

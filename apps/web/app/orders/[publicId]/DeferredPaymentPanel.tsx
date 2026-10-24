@@ -102,13 +102,14 @@ export function DeferredPaymentPanel({
         )}
         {isSpei && concept && (
           <CopyField
-            label="Concepto / referencia"
+            label="Referencia"
             value={concept}
-            hint="Cópialo tal cual: sin él no podemos identificar tu pago"
+            primary
+            hint="App del banco, SPEI, este monto."
           />
         )}
         {!isSpei && reference && (
-          <CopyField label="Referencia OXXO" value={reference} hint="Dísela al cajero" />
+          <CopyField label="Referencia" value={reference} primary hint="Dísela en tienda." />
         )}
         {exactAmount && (
           <div className={styles.copyField}>

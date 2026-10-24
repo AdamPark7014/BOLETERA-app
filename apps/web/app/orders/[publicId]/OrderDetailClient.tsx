@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { SiteHeader } from '@/components/SiteHeader';
+import { Money, NamedStatus } from '@boletera/ui';
+import purchase from '@/components/purchase/purchase.module.scss';
 import { useTenantBrand } from '@/components/TenantBrand';
 import { OrderQrCards } from '@/components/OrderQrCards';
 import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButton';
@@ -238,37 +240,17 @@ export function OrderDetailClient({
           </span>
         </div>
 
-        <header className={styles.hero}>
-          {/* Una orden reembolsada no está «en proceso de pago»: decirlo así
-              fue durante mucho tiempo la parte que el comprador no entendía. */}
+        <header className={purchase.stack}>
           {refunded ? (
-            <p className={styles.refundedTag}>
-              {order.status === 'PENDING_REFUND' ? 'Devolución en proceso' : 'Orden reembolsada'}
-            </p>
+            <NamedStatus status="reembolsado" />
           ) : completed ? (
-            <p className={styles.ok}>Compra confirmada</p>
+            <NamedStatus status="cobrado" />
           ) : (
-            <p className={styles.pending}>
-              {showDeferred ? 'Pendiente de pago' : 'Pago en proceso — Banorte'}
-            </p>
+            <NamedStatus status="pendiente" />
           )}
-          <h1>
-            {refunded
-              ? 'Te estamos devolviendo tu dinero'
-              : completed
-                ? 'Tus boletos están listos'
-                : 'Completa tu pago'}
-          </h1>
-          <p className={styles.sub}>
-            Orden <code>{order.publicId}</code>
-            {order.buyerEmail ? ` · ${order.buyerEmail}` : ''}
-          </p>
-          {!token && (
-            <p className={styles.gateNote}>
-              Estás viendo esta orden con tu sesión iniciada. Para abrirla en otro dispositivo, usa
-              el enlace del correo de confirmación.
-            </p>
-          )}
+          <h1 className={purchase.title}>{showDeferred ? 'Referencia' : 'Boleto'}</h1>
+          <p className={purchase.mono}>{order.publicId}</p>
+          {order.buyerEmail ? <p className={purchase.caption}>{order.buyerEmail}</p> : null}
         </header>
 
         {/* Lo excepcional va arriba: la cancelación y el dinero de vuelta. */}
@@ -299,10 +281,12 @@ export function OrderDetailClient({
               )}
             </div>
             <div className={styles.eventSide}>
-              <strong>{formatMoney(order.totalAmount, order.currency)}</strong>
-              <span className={styles.totalNote}>
-                {completed ? 'Total cobrado' : 'Total a pagar'} · cargo por servicio e IVA incluidos
-              </span>
+              <Money
+                label={completed ? 'Cobrado' : refunded ? 'Reembolso' : 'Pendiente'}
+                amount={Number(order.totalAmount) || 0}
+                currency
+                direction={completed ? 'in' : refunded ? 'out' : 'neutral'}
+              />
               {order.event.slug && (
                 <Link href={`/events/${order.event.slug}`} className={styles.textLink}>
                   Ver evento

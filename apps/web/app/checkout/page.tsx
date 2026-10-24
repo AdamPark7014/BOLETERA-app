@@ -3,26 +3,23 @@
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Badge, Button, Card, Input } from '@boletera/ui';
+import { Field, Money, NamedStatus, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
-import { EventPosterArt } from '@/components/EventPosterArt';
-import { HoldCountdown } from '@/components/HoldCountdown';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import { authHeaders, getStoredUser } from '@/lib/auth';
 import { checkoutFingerprint, clearCheckoutAttempt, getCheckoutIdempotencyKey } from '@/lib/checkout-attempt';
 import { useCartStore } from '@/lib/cart-store';
 import { orderPath, saveOrderAccessToken } from '@/lib/order-access';
-import { isDeferredMethod, paymentWindowNotice, type PaymentMethodId } from '@/lib/payment-window';
+import { formatCountdown, isDeferredMethod, secondsUntil, type PaymentMethodId } from '@/lib/payment-window';
+import { releaseHolds } from '@/lib/release-holds';
+import purchase from '@/components/purchase/purchase.module.scss';
 import {
   fetchCartPricing,
-  formatMoney,
   pricingTotal,
   sameTotal,
   type CartPricing,
 } from '@/lib/pricing';
 import { clearAffiliateRef, getAffiliateRefForEvent } from '@/lib/affiliate-ref';
-import { useTenantBrand } from '@/components/TenantBrand';
-import styles from './checkout.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -78,23 +75,21 @@ const METHODS: { id: PaymentMethodId; label: string; detail: string }[] = [
 ];
 
 /** Aviso de expiración con dos minutos de margen; suficiente para reaccionar. */
-const HOLD_WARN_SECONDS = 120;
-
 type FieldErrors = { name?: string; email?: string; phone?: string };
 
 function validate(name: string, email: string, phone: string): FieldErrors {
   const errors: FieldErrors = {};
-  if (!name.trim()) errors.name = 'Escribe el nombre de quien recibe los boletos.';
+  if (!name.trim()) errors.name = 'Escribe el nombre en el boleto.';
   else if (name.trim().length > 120) errors.name = 'El nombre no puede pasar de 120 caracteres.';
 
   const cleanEmail = email.trim();
-  if (!cleanEmail) errors.email = 'Necesitamos tu correo para enviarte los boletos y el acceso a la orden.';
+  if (!cleanEmail) errors.email = 'Escribe el correo.';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail))
-    errors.email = 'Ese correo no parece válido. Revisa que tenga el formato nombre@dominio.com.';
+    errors.email = 'Ese correo no parece válido.';
 
   const cleanPhone = phone.replace(/[\s()-]/g, '');
   if (cleanPhone && !/^\+?\d{10,15}$/.test(cleanPhone))
-    errors.phone = 'Escribe 10 dígitos (o el número con lada internacional).';
+    errors.phone = 'Si trae teléfono, son 10 a 15 dígitos.';
 
   return errors;
 }
@@ -102,7 +97,6 @@ function validate(name: string, email: string, phone: string): FieldErrors {
 function CheckoutForm() {
   const params = useSearchParams();
   const router = useRouter();
-  const brand = useTenantBrand();
   const eventId = params.get('eventId') ?? '';
   const offerId = params.get('offerId') ?? '';
   const urlHoldIds = useMemo(
@@ -141,10 +135,8 @@ function CheckoutForm() {
   const holdIds = orderLines.flatMap((l) => l.holdIds);
   const cartExpires = cartItem?.expiresAt;
   const expiresAt = params.get('expiresAt') || cartExpires || null;
-  const currency = cartItem?.currency || 'MXN';
 
   const [holdExpired, setHoldExpired] = useState(false);
-  const [holdWarning, setHoldWarning] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -163,6 +155,8 @@ function CheckoutForm() {
   const [priceChange, setPriceChange] = useState<{ from: number; to: number } | null>(null);
   const [failure, setFailure] = useState<ApiErrorInfo | null>(null);
   const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
+  const [step, setStep] = useState<'apartado' | 'datos' | 'pago'>('apartado');
+  const [tick, setTick] = useState(0);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -172,6 +166,11 @@ function CheckoutForm() {
   // Prellenado desde la sesión: una sola vez al montar. Leerlo en cada render
   // (como antes) reescribía el campo en cada pulsación y el usuario no podía
   // corregir el nombre heredado de su cuenta.
+  useEffect(() => {
+    const id = setInterval(() => setTick((value) => value + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   useEffect(() => {
     const storedUser = getStoredUser();
     if (!storedUser) return;
@@ -237,7 +236,7 @@ function CheckoutForm() {
         setPromoMsg('Código aplicado. El total de abajo ya lo incluye.');
       } else {
         setPromoValid(false);
-        setPromoMsg('Código inválido o expirado.');
+        setPromoMsg('Ese código no aplica a esta función.');
       }
     } catch {
       setPromoValid(false);
@@ -267,7 +266,6 @@ function CheckoutForm() {
 
   function handleHoldExpired() {
     setHoldExpired(true);
-    setHoldWarning(false);
     // El hold ya no vale en el servidor: dejar la entrada en el carrito solo
     // sirve para que el comprador vuelva a chocar contra el mismo 400.
     if (cartIndex >= 0) removeFromCart(cartIndex);
@@ -396,401 +394,251 @@ function CheckoutForm() {
   const seatLabels =
     cartItem?.lines?.flatMap((l) => l.seatLabels ?? []) ?? cartItem?.seatLabels ?? [];
   const total = quotedTotal ?? pricingTotal(pricing);
-  const totalLabel = pricing ? formatMoney(total, currency) : null;
-  const canPay = !loading && !holdExpired && holdIds.length > 0;
+  const remain = secondsUntil(expiresAt);
+  void tick;
+  const expired = holdExpired || (Boolean(expiresAt) && remain <= 0);
+  const canPay = !loading && !expired && holdIds.length > 0 && step === 'pago';
   const deferred = isDeferredMethod(method);
-  const payLabel = priceChange
-    ? `Confirmar y pagar ${formatMoney(priceChange.to, currency)}`
-    : gatewayInfo?.demo
-      ? `Simular pago${totalLabel ? ` ${totalLabel}` : ''}`
-      : deferred
-        ? `Generar referencia${totalLabel ? ` ${totalLabel}` : ''}`
-        : `Pagar${totalLabel ? ` ${totalLabel}` : ''} con Banorte`;
+  const payAmount = priceChange ? priceChange.to : total;
+  const payLabel = deferred ? 'Generar referencia' : `Pagar ${formatTicketAmount(payAmount)}`;
+  const moneyLines = pricing
+    ? [
+        { label: 'Base', amount: Number(pricing.subtotal) || 0 },
+        { label: 'Cargo', amount: Number(pricing.fees) || 0 },
+        { label: 'IVA', amount: Number(pricing.taxes) || 0 },
+        ...(Number(pricing.discount) > 0
+          ? [{ label: 'Descuento', amount: -Number(pricing.discount) }]
+          : []),
+      ]
+    : undefined;
+  const methodLine =
+    method === 'SPEI'
+      ? 'La referencia aparta los lugares hasta 12 horas. La hora exacta queda en la orden.'
+      : method === 'OXXO'
+        ? 'La referencia aparta los lugares hasta 24 horas. La hora exacta queda en la orden.'
+        : 'El cargo es en el momento. El apartado sigue mientras se paga.';
+
+  function goDatos() {
+    if (expired) return;
+    setStep('datos');
+  }
+
+  function goPago() {
+    const errors = validate(name, email, phone);
+    setFieldErrors(errors);
+    setShowErrors(true);
+    if (Object.keys(errors).length) {
+      focusFirstError(errors);
+      return;
+    }
+    if (expired) return;
+    setStep('pago');
+  }
+
+  function dropHold() {
+    releaseHolds(holdIds);
+    if (cartIndex >= 0) removeFromCart(cartIndex);
+    router.push(cartItem?.slug ? `/events/${cartItem.slug}` : '/');
+  }
+
+  const backHref = cartItem?.slug ? `/events/${cartItem.slug}` : '/';
 
   return (
-    <div className={styles.shell}>
+    <>
       <SiteHeader />
-      <main className={styles.page}>
-        <div className={styles.steps} aria-label="Progreso de compra">
-          <Link href="/cart" className={styles.stepDone}>
-            1 Carrito
-          </Link>
-          <span className={styles.stepActive} aria-current="step">
-            2 Pago
-          </span>
-          <span className={styles.stepTodo}>3 Boletos</span>
-        </div>
-        <div className={styles.stepTrack} aria-hidden="true">
-          <span className={styles.stepProgress} />
+      <main id="contenido" className={purchase.column}>
+        <div className={purchase.stack}>
+          <div className={purchase.chips}>
+            <NamedStatus status="apartado" />
+            <span className={purchase.clock}>{expired ? '0:00' : formatCountdown(remain)}</span>
+          </div>
+          <h1 className={purchase.title}>
+            {step === 'apartado' ? 'Apartado' : step === 'datos' ? 'Datos' : 'Pago'}
+          </h1>
+          {cartItem ? <p className={purchase.lead}>{cartItem.eventTitle}</p> : null}
         </div>
 
-        <header className={styles.hero}>
-          <Badge tone="accent" variant="soft" size="md">
-            Paso 2 de 3 · Pago seguro
-          </Badge>
-          <h1>Pago</h1>
-          <p>
-            {gatewayInfo?.demo
-              ? `Modo demo · ${holdIds.length} boleto${holdIds.length === 1 ? '' : 's'}`
-              : `Pago Banorte · ${holdIds.length} boleto${holdIds.length === 1 ? '' : 's'}`}
-          </p>
-        </header>
+        {expired ? (
+          <div className={purchase.error} role="alert">
+            <span>El apartado venció.</span>
+            <span>Elige de nuevo.</span>
+            {seatLabels.map((label) => (
+              <span key={label} className={purchase.mono}>
+                {label}
+              </span>
+            ))}
+          </div>
+        ) : null}
 
-        <HoldCountdown
-          expiresAt={expiresAt}
-          variant="hold"
-          warnSeconds={HOLD_WARN_SECONDS}
-          onWarn={() => setHoldWarning(true)}
-          onExpire={handleHoldExpired}
-          hint={
-            deferred
-              ? 'Tiempo para confirmar. Al generar la referencia ampliamos el apartado.'
-              : 'Completa el pago antes de que expire'
-          }
-        />
+        {step === 'apartado' ? (
+          <ul className={purchase.seatList}>
+            {(seatLabels.length ? seatLabels : holdIds).map((label, index) => (
+              <li key={`${label}-${index}`}>
+                <span className={purchase.mono}>{label}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
-        {holdWarning && !holdExpired && (
-          <p className={styles.warn} role="status">
-            Tu reserva está por expirar. Termina el pago o tendrás que elegir asientos otra vez.
-          </p>
-        )}
-
-        {holdExpired && (
-          <p className={styles.error} role="alert">
-            Tu reserva expiró y los lugares volvieron a la venta. No se realizó ningún cargo.{' '}
-            <Link href={cartItem?.slug ? `/events/${cartItem.slug}` : '/events'}>
-              Volver a elegir asientos
-            </Link>
-          </p>
-        )}
-
-        <div className={styles.layout}>
-          <Card className={styles.formCol} variant="elevated" padding="md" aria-label="Datos de pago">
-            <div className={styles.trust}>
-              <Badge tone="success" variant="soft" size="sm">
-                Boletos oficiales
-              </Badge>
-              <Badge tone={gatewayInfo?.demo ? 'warning' : 'info'} variant="soft" size="sm">
-                {gatewayInfo?.demo ? 'Demo' : 'Banorte'}
-              </Badge>
-              <Badge tone="neutral" variant="soft" size="sm">
-                QR de acceso
-              </Badge>
-            </div>
-
-            {gatewayInfo && (
-              <div
-                className={`${styles.banorteNote} ${gatewayInfo.demo ? styles.banorteDemo : ''}`}
-                role={gatewayInfo.demo ? 'status' : undefined}
-              >
-                <strong>
-                  {gatewayInfo.demo ? 'Modo demostración' : 'Pago procesado por Banorte'}
-                </strong>
-                <p>
-                  {gatewayInfo.buyerNote ?? gatewayInfo.settlement}
-                  {gatewayInfo.accountClabeMasked
-                    ? ` · CLABE ${gatewayInfo.accountClabeMasked}`
-                    : ''}
-                </p>
-                {!gatewayInfo.demo && (
-                  <p className={styles.banorteTrust}>
-                    El cobro va directo a la cuenta del organizador. {brand.name} no retiene tu dinero.
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div className={styles.fieldGrid}>
-              <Input
-                ref={nameRef}
-                label="Nombre completo"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (showErrors) setFieldErrors(validate(e.target.value, email, phone));
-                }}
-                autoComplete="name"
-                inputMode="text"
-                enterKeyHint="next"
-                required
-                requiredMark
-                error={showErrors ? fieldErrors.name : undefined}
-                hint={
-                  showErrors && fieldErrors.name
-                    ? undefined
-                    : 'Como aparece en tu identificación, por si la piden en el acceso.'
-                }
-              />
-
-              <Input
-                ref={emailRef}
-                label="Correo electrónico"
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (showErrors) setFieldErrors(validate(name, e.target.value, phone));
-                }}
-                autoComplete="email"
-                inputMode="email"
-                enterKeyHint="next"
-                required
-                requiredMark
-                error={showErrors ? fieldErrors.email : undefined}
-                hint={
-                  showErrors && fieldErrors.email
-                    ? undefined
-                    : 'Ahí enviamos tus boletos y el enlace para consultarlos desde cualquier dispositivo.'
-                }
-              />
-
-              <Input
-                ref={phoneRef}
-                label="Teléfono (opcional)"
-                type="tel"
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  if (showErrors) setFieldErrors(validate(name, email, e.target.value));
-                }}
-                autoComplete="tel"
-                inputMode="tel"
-                enterKeyHint="done"
-                error={showErrors ? fieldErrors.phone : undefined}
-                hint={
-                  showErrors && fieldErrors.phone
-                    ? undefined
-                    : 'Solo para avisarte si hay un cambio en el evento.'
-                }
-                className={styles.phoneField}
-              />
-            </div>
-
-            <Input
-              label="Código promocional"
+        {step === 'datos' ? (
+          <div className={purchase.stack}>
+            <Field
+              ref={nameRef}
+              label="Nombre en el boleto"
+              value={name}
+              autoComplete="name"
+              onChange={(event) => {
+                setName(event.target.value);
+                if (showErrors) setFieldErrors(validate(event.target.value, email, phone));
+              }}
+              error={showErrors ? fieldErrors.name : undefined}
+            />
+            <Field
+              ref={emailRef}
+              label="Correo"
+              type="email"
+              value={email}
+              autoComplete="email"
+              placeholder="nombre@dominio.com"
+              onChange={(event) => {
+                setEmail(event.target.value);
+                if (showErrors) setFieldErrors(validate(name, event.target.value, phone));
+              }}
+              error={showErrors ? fieldErrors.email : undefined}
+            />
+            <Field
+              ref={phoneRef}
+              label="Teléfono"
+              type="tel"
+              value={phone}
+              autoComplete="tel"
+              placeholder="10 dígitos"
+              onChange={(event) => {
+                setPhone(event.target.value);
+                if (showErrors) setFieldErrors(validate(name, email, event.target.value));
+              }}
+              error={showErrors ? fieldErrors.phone : undefined}
+            />
+            <p className={purchase.caption}>
+              {promoValid && promo.trim()
+                ? `Código · ${promo.trim().toUpperCase()}`
+                : 'Código · ninguno'}
+            </p>
+            <Field
+              label="Código"
               value={promo}
-              onChange={(e) => {
-                setPromo(e.target.value);
+              disabled={promoChecking}
+              autoComplete="off"
+              onChange={(event) => {
+                setPromo(event.target.value);
                 setPromoValid(false);
                 setPromoMsg(null);
               }}
-              placeholder="Opcional"
-              autoComplete="off"
-              autoCapitalize="characters"
-              hint={promoMsg ?? (promoValid ? 'Código aplicado.' : 'Si tienes un código, aplícalo antes de pagar.')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  void validatePromo();
+                }
+              }}
               error={promoMsg && !promoValid ? promoMsg : undefined}
-              trailing={
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void validatePromo()}
-                  disabled={!promo.trim() || promoChecking}
-                  loading={promoChecking}
-                  loadingLabel="…"
-                >
-                  Validar
-                </Button>
-              }
             />
-            {promoValid && promoMsg ? (
-              <p className={styles.promoOk} role="status">
-                {promoMsg}
-              </p>
+          </div>
+        ) : null}
+
+        {step === 'pago' ? (
+          <div className={purchase.stack}>
+            <div className={purchase.segment} role="radiogroup" aria-label="Método de pago">
+              {METHODS.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={method === item.id}
+                  tabIndex={method === item.id ? 0 : -1}
+                  ref={(element) => {
+                    methodRefs.current[index] = element;
+                  }}
+                  onKeyDown={(event) => onMethodKeyDown(event, index)}
+                  aria-pressed={method === item.id}
+                  onClick={() => setMethod(item.id)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <p className={purchase.lead}>{methodLine}</p>
+            {gatewayInfo?.demo ? (
+              <p className={purchase.caption}>Pasarela en demostración. Este cargo no cobra.</p>
             ) : null}
-
-            <fieldset className={styles.methods}>
-              <legend>Método de pago</legend>
-              <div className={styles.methodGrid} role="radiogroup" aria-label="Método de pago">
-                {METHODS.map((m, index) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={method === m.id}
-                    // Roving tabindex: el grupo entero es una sola parada de
-                    // tabulación y las flechas mueven la selección.
-                    tabIndex={method === m.id ? 0 : -1}
-                    ref={(el) => {
-                      methodRefs.current[index] = el;
-                    }}
-                    onKeyDown={(e) => onMethodKeyDown(e, index)}
-                    className={`${styles.methodCard} ${method === m.id ? styles.methodOn : ''}`}
-                    onClick={() => setMethod(m.id)}
-                  >
-                    <strong>{m.label}</strong>
-                    <span>
-                      {gatewayInfo?.demo && m.id === 'CARD'
-                        ? 'Simulación local · sin cargo real'
-                        : m.detail}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <p className={styles.methodNote} role="status">
-                {paymentWindowNotice(method)}
-              </p>
-            </fieldset>
-
-            {priceChange && (
-              <div className={styles.priceChange} role="alert">
-                <strong>El total cambió antes de cobrar</strong>
-                <p>
-                  Pasó de {formatMoney(priceChange.from, currency)} a{' '}
-                  {formatMoney(priceChange.to, currency)}. Revísalo y confirma si quieres continuar:
-                  no cobramos nada hasta que lo apruebes.
-                </p>
-              </div>
-            )}
-
-            {failure && (
-              <div className={styles.error} role="alert">
-                <p>{failure.message}</p>
-                {failure.needsNewHold && (
-                  <Link href={cartItem?.slug ? `/events/${cartItem.slug}` : '/events'}>
-                    Volver a elegir asientos
-                  </Link>
-                )}
-                {failure.kind === 'credential' && !failure.needsNewHold && (
-                  <Link href="/login">Iniciar sesión</Link>
-                )}
-              </div>
-            )}
-
-            <Button
-              type="button"
-              size="lg"
-              fullWidth
-              disabled={!canPay}
-              loading={loading}
-              loadingLabel="Procesando…"
-              onClick={() => void pay()}
-            >
-              {payLabel}
-            </Button>
-
-            <p className={styles.fine}>
-              Al continuar aceptas los <Link href="/terminos">términos</Link> y el{' '}
-              <Link href="/privacidad">aviso de privacidad</Link>.
+            <p className={purchase.caption}>
+              {promoValid && promo.trim()
+                ? `Código · ${promo.trim().toUpperCase()}`
+                : 'Código · ninguno'}
             </p>
-          </Card>
+            {priceChange ? <p className={purchase.lead}>El total cambió.</p> : null}
+            {failure ? (
+              <div className={purchase.error} role="alert">
+                <span>
+                  {failure.kind === 'network'
+                    ? 'No se guardó. Revisa la conexión.'
+                    : failure.message}
+                </span>
+                {failure.kind === 'network' ? (
+                  <TicketButton type="button" variant="secondary" onClick={() => void pay()}>
+                    Reintentar
+                  </TicketButton>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
-          <aside className={styles.summaryCol} aria-label="Resumen del pedido">
-            {cartItem ? (
-              <Card className={styles.lineItems} variant="elevated" padding="md">
-                <div className={styles.orderHeader}>
-                  {cartItem.slug && (
-                    <div className={styles.orderPoster} aria-hidden="true">
-                      <EventPosterArt
-                        event={{
-                          id: cartItem.eventId,
-                          slug: cartItem.slug,
-                          title: cartItem.eventTitle,
-                          startsAt: cartItem.startsAt,
-                        }}
-                        size="sm"
-                        showDate
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <Badge tone="neutral" variant="soft" size="sm">
-                      Tu pedido
-                    </Badge>
-                    <h2>{cartItem.eventTitle}</h2>
-                    {(cartItem.venueName || cartItem.startsAt) && (
-                      <p className={styles.lineMeta}>
-                        {cartItem.venueName}
-                        {cartItem.venueCity ? ` · ${cartItem.venueCity}` : ''}
-                        {cartItem.startsAt
-                          ? ` · ${new Date(cartItem.startsAt).toLocaleString('es-MX', {
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}`
-                          : ''}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {orderLines.length > 0 && (
-                  <ul className={styles.zoneList}>
-                    {orderLines.map((line) => (
-                      <li key={line.offerId}>
-                        <span>{line.offerName || 'Zona'}</span>
-                        <em>×{line.holdIds.length || line.quantity || 1}</em>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <ul className={styles.seatList}>
-                  {(seatLabels.length
-                    ? seatLabels
-                    : Array.from({ length: holdIds.length }, (_, i) => `Boleto ${i + 1}`)
-                  ).map((label, i) => (
-                    <li key={`${label}-${i}`}>
-                      <Badge tone="neutral" variant="outline" size="sm">
-                        {label}
-                      </Badge>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            ) : (
-              <Card className={styles.lineItems} variant="elevated" padding="md">
-                <Badge tone="neutral" variant="soft" size="sm">
-                  Tu pedido
-                </Badge>
-                <h2>{holdIds.length} boleto(s)</h2>
-                <p className={styles.lineMeta}>Reserva desde hold activo</p>
-              </Card>
-            )}
-
-            <Card className={styles.summary} variant="elevated" padding="md" aria-busy={pricingLoading}>
-              {pricing ? (
-                <>
-                  <div>
-                    <span>Precio de los boletos</span>
-                    <strong>{formatMoney(pricing.subtotal, currency)}</strong>
-                  </div>
-                  <div>
-                    <span>Cargo por servicio</span>
-                    <strong>{formatMoney(pricing.fees, currency)}</strong>
-                  </div>
-                  <div>
-                    <span>IVA</span>
-                    <strong>{formatMoney(pricing.taxes, currency)}</strong>
-                  </div>
-                  {Number(pricing.discount) > 0 && (
-                    <div>
-                      <span>Descuento</span>
-                      <strong>−{formatMoney(pricing.discount, currency)}</strong>
-                    </div>
-                  )}
-                  <div className={styles.total}>
-                    <span>Total a pagar</span>
-                    <strong>{formatMoney(total, currency)}</strong>
-                  </div>
-                  <p className={styles.totalNote}>
-                    Precio final: incluye cargo por servicio e IVA. Es el importe que se cobra.
-                  </p>
-                </>
-              ) : (
-                <p className={styles.totalNoteMuted}>
-                  {pricingLoading ? 'Calculando el total con cargos e IVA…' : 'Total no disponible.'}
-                </p>
-              )}
-            </Card>
-
-            <Link href="/cart" className={styles.backCart}>
-              ← Volver al carrito
+        <div className={purchase.actions}>
+          {step === 'apartado' ? (
+            <TicketButton type="button" variant="secondary" onClick={dropHold}>
+              Soltar apartado
+            </TicketButton>
+          ) : (
+            <TicketButton
+              type="button"
+              variant="secondary"
+              onClick={() => setStep(step === 'pago' ? 'datos' : 'apartado')}
+            >
+              Atrás
+            </TicketButton>
+          )}
+          {step === 'apartado' ? (
+            <Link href={backHref} className={purchase.link}>
+              Volver a la zona
             </Link>
-          </aside>
+          ) : null}
         </div>
       </main>
-    </div>
+
+      <div className={purchase.dock}>
+        <div className={purchase.dockInner}>
+          <p className={purchase.dockSummary}>
+            {holdIds.length} {holdIds.length === 1 ? 'lugar' : 'lugares'}
+          </p>
+          <Money label="Total" amount={total} currency={Boolean(pricing)} lines={moneyLines} />
+          {step === 'apartado' ? (
+            <TicketButton type="button" disabled={expired || holdIds.length === 0} onClick={goDatos}>
+              Escribir datos
+            </TicketButton>
+          ) : null}
+          {step === 'datos' ? (
+            <TicketButton type="button" disabled={expired} onClick={goPago}>
+              Elegir pago
+            </TicketButton>
+          ) : null}
+          {step === 'pago' ? (
+            <TicketButton type="button" disabled={!canPay || !pricing || pricingLoading} onClick={() => void pay()}>
+              {loading ? 'Pagando' : payLabel}
+            </TicketButton>
+          ) : null}
+        </div>
+      </div>
+    </>
   );
 }
 

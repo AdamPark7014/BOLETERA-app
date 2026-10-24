@@ -12,40 +12,16 @@ import {
   useCartStore,
   type CartItem,
 } from '@/lib/cart-store';
-import { authHeaders } from '@/lib/auth';
-import { getGuestSessionId } from '@/lib/guest-session';
 import { formatCountdown } from '@/lib/payment-window';
+import { releaseHolds } from '@/lib/release-holds';
 import { fetchCartPricing, formatMoney, type CartPricing } from '@/lib/pricing';
 import styles from './cart.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
-/**
- * Quitar del carrito tiene que devolver la butaca a la venta.
- *
- * Antes solo se borraba la entrada local y el hold seguía vivo en el servidor
- * hasta expirar: inventario congelado durante quince minutos por cada
- * arrepentimiento, justo en el momento de un onsale en el que más falta hace.
- * El API exige propiedad para liberar, y la propiedad se acredita con el
- * `sessionId` estable del navegador (o con el JWT si hay sesión).
- *
- * Es best-effort a propósito: si la liberación falla, el hold caduca solo y el
- * comprador no se queda con el carrito bloqueado por un error de red.
- */
-function releaseHolds(item: CartItem) {
+function releaseItem(item: CartItem) {
   const holdIds = item.lines?.flatMap((l) => l.holdIds) ?? item.holdIds ?? [];
-  if (!holdIds.length) return;
-  const sessionId = getGuestSessionId();
-  for (const id of holdIds) {
-    void fetch(`${API}/inventory/holds/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      // El `sessionId` va en el cuerpo, no en la URL: es un identificador de
-      // sesión y no debe acabar en los registros de acceso del servidor.
-      body: JSON.stringify({ sessionId }),
-      keepalive: true,
-    }).catch(() => {});
-  }
+  releaseHolds(holdIds);
 }
 
 function fmtDate(iso?: string) {
@@ -349,7 +325,7 @@ export default function CartPage() {
                             variant="ghost"
                             onClick={() => {
                               if (idx < 0) return;
-                              releaseHolds(item);
+                              releaseItem(item);
                               removeAt(idx);
                             }}
                           >
@@ -468,7 +444,7 @@ export default function CartPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      active.forEach(releaseHolds);
+                      active.forEach((item) => releaseItem(item));
                       clear();
                     }}
                   >

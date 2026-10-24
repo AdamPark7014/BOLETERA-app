@@ -6,8 +6,9 @@
 
 ## Hecho
 
-Lenguaje visual de Black Ticket en `@boletera/ui`. Compra, taquilla y admin no se redibujaron.
+Lenguaje visual de Black Ticket en `@boletera/ui`.
 - Taquilla (`apps/taquilla`): lienzo `BlackTicketRoot` densidad taquilla, Cobrar fijo, folio tras el cobro.
+- Compra pública de `apps/web` redibujada con `BlackTicketRoot` densidad compra: cartelera, ficha, zona, apartado, datos, pago, boleto y cuenta. Reenvío y CLABE de reembolso no tienen API de comprador.
 
 - Tokens y tema oscuro único, opt-in con `data-black-ticket`. Densidades `compra`, `taquilla` y `admin` como datos y atributo: misma paleta.
 - Componentes: `TicketButton` (primario hueso), `Field`, `Money`, `NamedStatus`, `ParameterCard`, `BlackTicketRoot`.
@@ -16,4 +17,4 @@ Lenguaje visual de Black Ticket en `@boletera/ui`. Compra, taquilla y admin no s
 
 ## Siguiente
 
-Montar `BlackTicketRoot` en cada app y sustituir pantallas. Todavía no.
+Admin sigue sin el lienzo. Reenvío del comprador y captura de CLABE no existen en el API público.

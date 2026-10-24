@@ -2,11 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  SEAT_STATUS_COLORS,
   flatSeats,
   normalizeSeatMap,
-  priceHeatColor,
-  sightlineHeatColor,
   calculateSightlines,
   projectTo2D,
   resolveGeometry,
@@ -204,7 +201,7 @@ export function SeatMapViewer({
         rotation: p.rotation ?? 0,
         label: p.label,
         row: p.row ?? full?.row,
-        color: p.color || SEAT_STATUS_COLORS.available,
+        color: '#17171A',
         accessible: readAccessible(
           { tier: p.tier, metadata: full?.metadata },
           meta?.accessible ?? false,
@@ -367,20 +364,14 @@ export function SeatMapViewer({
   const fillAt = useCallback(
     (index: number, status: SeatStatus, dimmed: boolean): string => {
       const seat = seats[index];
-      if (status === 'selected') return SEAT_STATUS_COLORS.selected;
-      if (dimmed) return SEAT_STATUS_COLORS.dimmed;
-      if (status === 'unknown') return '#52525b';
-      if (status === 'blocked') return '#3f3f46';
-      if (status === 'sold') return SEAT_STATUS_COLORS.sold;
-      if (status === 'held') return SEAT_STATUS_COLORS.held;
-      if (heatMode === 'price') return priceHeatColor(seat.price, priceRange.min, priceRange.max);
-      if (heatMode === 'view') {
-        const score = sightlineBySeat?.get(seat.id);
-        if (score != null) return sightlineHeatColor(score);
-      }
-      if (seat.accessible) return '#22d3ee';
-      if (seat.premium) return '#d4a017';
-      return seat.color || SEAT_STATUS_COLORS.available;
+      if (status === 'selected') return '#282522';
+      if (dimmed) return '#141416';
+      if (status === 'unknown') return '#17171A';
+      if (status === 'blocked') return '#141416';
+      if (status === 'sold') return '#3A342C';
+      if (status === 'held') return '#17171A';
+      if (seat.accessible && (status === 'available' || status === 'held')) return '#17171A';
+      return '#17171A';
     },
     [seats, heatMode, priceRange.min, priceRange.max, sightlineBySeat],
   );
@@ -428,10 +419,7 @@ export function SeatMapViewer({
     return sectionShapes.map((shape) => {
       const stat = derived.bySection.get(shape.id) ?? { free: 0, total: shape.seatCount };
       const occupancy = stat.total ? 1 - stat.free / stat.total : 1;
-      const base =
-        heatMode === 'price'
-          ? priceHeatColor(priceOf(shape.id), priceRange.min, priceRange.max)
-          : shape.color;
+      const base = '#17171A';
       const dimmed =
         (levelFilter !== 'ALL' && (shape.levelId ?? '') !== levelFilter) ||
         (sectionFilter !== 'ALL' && sectionFilter !== shape.id);
@@ -1058,14 +1046,7 @@ export function SeatMapViewer({
                 className={sectionFilter === sec.id ? styles.secActive : styles.sec}
                 onClick={() => selectSection(sec.id)}
               >
-                <i
-                  style={{
-                    background:
-                      heatMode === 'price'
-                        ? priceHeatColor(price, priceRange.min, priceRange.max)
-                        : sec.color,
-                  }}
-                />
+                <i style={{ background: '#3A3A3E' }} />
                 {sec.name}
                 {stat && <em>{stat.free} libres</em>}
                 {price > 0 && (
@@ -1376,18 +1357,18 @@ function LegendMark({ kind }: { kind: 'available' | 'held' | 'sold' | 'selected'
   if (kind === 'accessible') {
     return (
       <svg {...common} className={styles.legendMark}>
-        <circle cx={7} cy={7} r={5} fill="#22d3ee" stroke="#fff" strokeWidth={1.2} />
+        <circle cx={7} cy={7} r={5} fill="#17171A" stroke="#8EAFD0" strokeWidth={1.5} />
       </svg>
     );
   }
   const fill =
     kind === 'available'
-      ? SEAT_STATUS_COLORS.available
+      ? '#17171A'
       : kind === 'held'
-        ? SEAT_STATUS_COLORS.held
+        ? '#17171A'
         : kind === 'sold'
-          ? SEAT_STATUS_COLORS.sold
-          : SEAT_STATUS_COLORS.selected;
+          ? '#3A342C'
+          : '#282522';
   return (
     <svg {...common} className={styles.legendMark}>
       <rect x={1.5} y={2.5} width={11} height={9} rx={1.5} fill={fill} />

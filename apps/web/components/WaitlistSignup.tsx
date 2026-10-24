@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useId, useState } from 'react';
+import { FormEvent, useState } from 'react';
+import { Field, TicketButton } from '@boletera/ui';
 import styles from './WaitlistSignup.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -14,7 +15,6 @@ export function WaitlistSignup({
   eventTitle: string;
   offerId?: string;
 }) {
-  const emailId = useId();
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
@@ -41,45 +41,29 @@ export function WaitlistSignup({
 
   if (done) {
     return (
-      <div className={styles.done} role="status">
-        <strong>Listo, ya estás en la lista</strong>
-        <p>Te avisaremos por correo cuando haya boletos para {eventTitle}.</p>
-      </div>
+      <p className={styles.done} role="status">
+        Aviso pedido.
+      </p>
     );
   }
 
   return (
-    <div className={styles.card}>
-      <h3>Agotado — lista de espera</h3>
-      <p className={styles.lead}>
-        Déjanos tu correo y serás de los primeros en enterarte cuando liberemos cupo.
-      </p>
-      <form onSubmit={onSubmit} className={styles.form}>
-        <div className={styles.field}>
-          {/* Etiqueta real: el placeholder desaparece al escribir. */}
-          <label htmlFor={emailId}>Tu correo electrónico</label>
-          <input
-            id={emailId}
-            type="email"
-            name="email"
-            autoComplete="email"
-            required
-            placeholder="nombre@correo.com"
-            value={email}
-            aria-describedby={error ? `${emailId}-error` : undefined}
-            aria-invalid={error ? true : undefined}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Enviando…' : 'Avísenme'}
-        </button>
-      </form>
-      {error && (
-        <p id={`${emailId}-error`} className={styles.error} role="alert">
-          {error}
-        </p>
-      )}
-    </div>
+    <form onSubmit={onSubmit} className={styles.form}>
+      <Field
+        label="Correo"
+        type="email"
+        name="email"
+        autoComplete="email"
+        required
+        placeholder="nombre@dominio.com"
+        value={email}
+        error={error || undefined}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <TicketButton type="submit" disabled={loading || !email.trim()}>
+        {loading ? 'Avisarme' : 'Avisarme'}
+      </TicketButton>
+      <p className={styles.lead}>{eventTitle}</p>
+    </form>
   );
 }

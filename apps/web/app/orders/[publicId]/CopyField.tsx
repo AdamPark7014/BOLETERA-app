@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { TicketButton } from '@boletera/ui';
 import styles from './order.module.scss';
 
 /**
@@ -16,12 +17,15 @@ export function CopyField({
   value,
   display,
   hint,
+  primary = false,
 }: {
   label: string;
   value: string;
   /** Versión legible (agrupada). Se copia siempre `value`. */
   display?: string;
   hint?: string;
+  /** Una sola copia es el botón hueso. La otra queda en filete. */
+  primary?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -50,14 +54,14 @@ export function CopyField({
       <span className={styles.copyLabel}>{label}</span>
       <div className={styles.copyRow}>
         <code className={styles.copyValue}>{display ?? value}</code>
-        <button
+        <TicketButton
           type="button"
-          className={styles.copyBtn}
+          variant={primary ? 'primary' : 'secondary'}
           onClick={() => void copy()}
-          aria-label={`Copiar ${label}`}
+          aria-label={primary ? 'Copiar referencia' : `Copiar ${label}`}
         >
-          {copied ? 'Copiado' : 'Copiar'}
-        </button>
+          {copied ? 'Copiado' : primary ? 'Copiar referencia' : 'Copiar'}
+        </TicketButton>
       </div>
       {hint && <span className={styles.copyHint}>{hint}</span>}
       <span role="status" aria-live="polite" className={styles.srOnly}>

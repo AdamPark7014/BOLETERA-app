@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, EmptyState, Input } from '@boletera/ui';
+import { Field, NamedStatus, TicketButton } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { useTenantBrand } from '@/components/TenantBrand';
 import { authHeaders, clearSession, getStoredUser, getToken } from '@/lib/auth';
@@ -72,18 +72,23 @@ type TransferRow = {
 
 /** Etiquetas de estado en español: la API devuelve constantes en inglés. */
 const ORDER_STATUS_LABEL: Record<string, string> = {
-  COMPLETED: 'Pagada',
-  PENDING: 'Pendiente de pago',
-  PROCESSING: 'Procesando',
+  COMPLETED: 'Cobrado',
+  PENDING: 'Pendiente',
+  PROCESSING: 'Pendiente',
   CANCELLED: 'Cancelada',
-  REFUNDED: 'Reembolsada',
-  PARTIALLY_REFUNDED: 'Reembolsada en parte',
-  // El comprador no sabe qué es «PENDING_REFUND»; lo que sí sabe es que le
-  // cobraron y no tiene boletos. Se le dice eso.
-  PENDING_REFUND: 'Te cobramos sin poder emitir: devolución en proceso',
-  EXPIRED: 'Expirada',
-  FAILED: 'Pago rechazado',
+  REFUNDED: 'Reembolsado',
+  PARTIALLY_REFUNDED: 'Reembolsado',
+  PENDING_REFUND: 'Pendiente',
+  EXPIRED: 'Vencida',
+  FAILED: 'Falló',
 };
+
+function statusName(status: string): 'pendiente' | 'cobrado' | 'reembolsado' | null {
+  if (status === 'COMPLETED') return 'cobrado';
+  if (status === 'REFUNDED' || status === 'PARTIALLY_REFUNDED') return 'reembolsado';
+  if (status === 'PENDING' || status === 'PROCESSING' || status === 'PENDING_REFUND') return 'pendiente';
+  return null;
+}
 
 type LoadState = 'loading' | 'ready' | 'expired' | 'error';
 
@@ -307,6 +312,7 @@ export default function CuentaPage() {
 
   async function sendTransfer(e: FormEvent) {
     e.preventDefault();
+    if (!transferForm.ticketId) return;
     const res = await fetch(`${API}/tickets/transfer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -367,7 +373,7 @@ export default function CuentaPage() {
 
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Cuenta {brand.name}</p>
-          <h1>Mis boletos</h1>
+          <h1>Cuenta</h1>
           {user && (
             <p className={styles.user}>
               {user.firstName} {user.lastName} · {user.email}
@@ -377,15 +383,9 @@ export default function CuentaPage() {
             <Link href="/" className={styles.browse}>
               Explorar eventos
             </Link>
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={logout}
-              className={styles.logout}
-            >
+            <button type="button" className={styles.browse} onClick={logout}>
               Cerrar sesión
-            </Button>
+            </button>
           </div>
         </header>
 
@@ -480,19 +480,14 @@ export default function CuentaPage() {
               )}
 
               {state === 'ready' && upcoming.length === 0 && (
-                <EmptyState
-                  title="Sin boletos próximos"
-                  description="Cuando compres, tus entradas aparecerán aquí listas para el evento."
-                  action={
-                    <Link href="/" className={styles.browse}>
-                      Ver cartelera
-                    </Link>
-                  }
-                />
+                <div className={styles.walletBody}>
+                  <p>No hay boletos próximos.</p>
+                  <Link href="/">Ver cartelera</Link>
+                </div>
               )}
 
               <ul className={styles.walletList}>
-                {upcoming.map((o) => {
+                {upcoming.map((o, index) => {
                   const when = new Date(o.event.startsAt);
                   const tickets = o.items?.flatMap((i) => i.tickets ?? []) ?? [];
                   const count =
@@ -552,18 +547,17 @@ export default function CuentaPage() {
                         comprador a la puerta con un código muerto.
                       */}
                       <div className={styles.walletActions}>
-                        {cancelled ? (
-                          <Link href={`/orders/${o.publicId}`} className={styles.qrCta}>
-                            Ver reembolso
-                          </Link>
+                        {statusName(o.status) ? <NamedStatus status={statusName(o.status)!} /> : (
+                          <span>{ORDER_STATUS_LABEL[o.status] ?? o.status}</span>
+                        )}
+                        {index === 0 ? (
+                          <TicketButton type="button" onClick={() => router.push(`/orders/${o.publicId}`)}>
+                            {cancelled ? 'Ver reembolso' : 'Ver boleto'}
+                          </TicketButton>
                         ) : (
-                          <>
-                            <Link href={`/orders/${o.publicId}`} className={styles.qrCta}>
-                              Ver QR
-                            </Link>
-                            <a href={`${API}/orders/${o.publicId}/tickets.pdf`}>Descargar PDF</a>
-                            <Link href={`/events/${o.event.slug}`}>Ver evento</Link>
-                          </>
+                          <Link href={`/orders/${o.publicId}`}>
+                            {cancelled ? 'Ver reembolso' : 'Ver boleto'}
+                          </Link>
                         )}
                       </div>
                     </li>
@@ -587,15 +581,15 @@ export default function CuentaPage() {
                 <section className={styles.section}>
                   <h2>Aceptar boleto</h2>
                   <form onSubmit={acceptTransfer} className={styles.formRow}>
-                    <Input
-                      label="Código de transferencia"
+                    <Field
+                      label="Código"
                       value={transferCode}
                       onChange={(e) => setTransferCode(e.target.value)}
                       required
                     />
-                    <Button type="submit" size="md">
-                      Aceptar transferencia
-                    </Button>
+                    <TicketButton type="submit" variant="secondary">
+                      Aceptar boleto
+                    </TicketButton>
                   </form>
                 </section>
               )}
@@ -608,26 +602,20 @@ export default function CuentaPage() {
                   </p>
                 ) : (
                   <form onSubmit={sendTransfer} className={styles.formStack}>
-                    <label htmlFor="transfer-ticket" className={styles.fieldLabel}>
-                      Boleto que quieres ceder
-                    </label>
-                    <select
-                      id="transfer-ticket"
-                      value={transferForm.ticketId}
-                      onChange={(e) =>
-                        setTransferForm({ ...transferForm, ticketId: e.target.value })
-                      }
-                      required
-                    >
-                      <option value="">Selecciona un boleto</option>
+                    <div className={styles.formStack} role="group" aria-label="Boleto">
                       {myTickets.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.code} — {t.eventTitle}
-                        </option>
+                        <button
+                          key={t.id}
+                          type="button"
+                          aria-pressed={transferForm.ticketId === t.id}
+                          onClick={() => setTransferForm({ ...transferForm, ticketId: t.id })}
+                        >
+                          {t.code} · {t.eventTitle}
+                        </button>
                       ))}
-                    </select>
-                    <Input
-                      label="Correo del destinatario"
+                    </div>
+                    <Field
+                      label="Correo de destino"
                       type="email"
                       value={transferForm.toEmail}
                       onChange={(e) =>
@@ -635,16 +623,17 @@ export default function CuentaPage() {
                       }
                       required
                     />
-                    <Input
-                      label="Mensaje (opcional)"
+                    <Field
+                      label="Mensaje"
                       value={transferForm.message}
                       onChange={(e) =>
                         setTransferForm({ ...transferForm, message: e.target.value })
                       }
                     />
-                    <Button type="submit" size="md">
+                    <p>Al aceptar, el QR de este teléfono deja de servir.</p>
+                    <TicketButton type="submit" variant="secondary">
                       Enviar transferencia
-                    </Button>
+                    </TicketButton>
                   </form>
                 )}
               </section>
@@ -677,23 +666,24 @@ export default function CuentaPage() {
                           </option>
                         ))}
                       </select>
-                      <Input
-                        label="RFC del receptor"
+                      <p>Uso CFDI G03. Tipo I. Timbrado de prueba.</p>
+                      <Field
+                        label="RFC"
                         value={cfdiForm.rfc}
                         onChange={(e) => setCfdiForm({ ...cfdiForm, rfc: e.target.value })}
                         required
                         minLength={12}
                         maxLength={13}
                       />
-                      <Input
-                        label="Razón social o nombre"
+                      <Field
+                        label="Nombre o razón social"
                         value={cfdiForm.nombre}
                         onChange={(e) => setCfdiForm({ ...cfdiForm, nombre: e.target.value })}
                         required
                       />
-                      <Button type="submit" size="md" disabled={cfdiBusy}>
-                        {cfdiBusy ? 'Timbrando…' : 'Solicitar CFDI'}
-                      </Button>
+                      <TicketButton type="submit" variant="secondary" disabled={cfdiBusy}>
+                        {cfdiBusy ? 'Pedir factura' : 'Pedir factura'}
+                      </TicketButton>
                     </form>
                   </>
                 )}
