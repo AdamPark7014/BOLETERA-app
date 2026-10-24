@@ -254,6 +254,109 @@ export type EasingToken = keyof typeof easing;
 // Agregado
 // -----------------------------------------------------------------------------
 
+/**
+ * Lenguaje visual de Black Ticket.
+ * Un tema oscuro. Las tres densidades no cambian estos hex.
+ * Espejo de las variables `$bt-*` de `_variables.scss`.
+ */
+export const blackTicket = {
+  color: {
+    ink: '#0B0B0C',
+    inkSunken: '#080809',
+    inkRaised: '#141416',
+    inkOverlay: '#1C1C1F',
+    line: '#2C2C2F',
+    lineStrong: '#3A3A3E',
+    text: '#F3F0E8',
+    textSecondary: '#A39E94',
+    textTertiary: '#8A857C',
+    textDisabled: '#5C5954',
+    gold: '#C6A56D',
+    goldDeep: '#8E7344',
+    goldWash: 'rgba(198, 165, 109, 0.10)',
+    moneyIn: '#8EAE96',
+    moneyOut: '#C9847A',
+    danger: '#C9847A',
+    dangerWash: 'rgba(201, 132, 122, 0.10)',
+    focus: '#C6A56D',
+    seatFree: '#17171A',
+    seatSold: '#3A342C',
+    seatSoldLine: '#6A6258',
+    seatHatch: '#5C403C',
+    seatAccess: '#8EAFD0',
+    bonePressed: '#E4E0D6',
+    controlDisabled: '#2A2A2C',
+  },
+  fontFamily: {
+    ui: '"Geist", "Inter", "Helvetica Neue", system-ui, sans-serif',
+    mono: '"Geist Mono", "ui-monospace", monospace',
+  },
+  fontWeight: {
+    regular: 420,
+    medium: 560,
+    semibold: 640,
+  },
+  type: {
+    display: { size: 40, line: 48, weight: 560 },
+    title: { size: 28, line: 34, weight: 560 },
+    bodyLg: { size: 18, line: 26, weight: 420 },
+    body: { size: 16, line: 24, weight: 420 },
+    bodySm: { size: 14, line: 20, weight: 420 },
+    caption: { size: 12, line: 16, weight: 420, tracking: '0.02em' },
+    moneyLg: { size: 32, line: 36, weight: 560 },
+    money: { size: 16, line: 20, weight: 560 },
+    mono: { size: 13, line: 16, weight: 420 },
+    wordmarkTracking: '-0.02em',
+  },
+  space: [4, 8, 12, 16, 24, 32, 48, 64, 96],
+  radius: { r0: 0, s: 6, m: 8, l: 10, xl: 14 },
+  motion: {
+    state: 120,
+    show: 180,
+    sheet: 220,
+    ease: 'cubic-bezier(0.2, 0, 0, 1)',
+  },
+  elevation: {
+    sheet: '0 12px 32px rgba(0, 0, 0, 0.45)',
+  },
+  glass: {
+    background: 'rgba(28, 28, 31, 0.92)',
+    blur: 12,
+  },
+} as const;
+
+export type BlackTicket = typeof blackTicket;
+
+/**
+ * Tres ritmos del mismo tema. No son paletas.
+ * `space` es el ritmo visible de cada densidad, en px.
+ */
+export const densities = {
+  compra: {
+    body: { size: 16, line: 24 },
+    control: 48,
+    space: [24, 32, 48],
+    column: 720,
+    margin: [24, 48],
+  },
+  taquilla: {
+    body: { size: 18, line: 26 },
+    control: 56,
+    space: [8, 12, 16],
+    column: 1280,
+    seatTarget: 28,
+  },
+  admin: {
+    body: { size: 14, line: 20 },
+    control: 36,
+    space: [24, 12, 8],
+    column: 1200,
+    index: 240,
+  },
+} as const;
+
+export type Density = keyof typeof densities;
+
 /** Todos los tokens en un solo objeto, util para temas de charts o pruebas. */
 export const tokens = {
   palette,
@@ -268,6 +371,8 @@ export const tokens = {
   duration,
   easing,
   spaceUnit: SPACE_UNIT,
+  blackTicket,
+  densities,
 } as const;
 
 export type Tokens = typeof tokens;

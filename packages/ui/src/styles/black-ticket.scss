@@ -1,0 +1,131 @@
+// Lienzo opt-in del lenguaje visual. No redefine `:root`: compra, taquilla y
+// admin siguen con su tema hasta que un árbol lleve `data-black-ticket`.
+// Las tres densidades solo cambian ritmo, tipo y alto de control.
+
+@use './variables' as *;
+
+[data-black-ticket] {
+  color-scheme: dark;
+  background: $bt-ink;
+  color: $bt-text;
+  font-family: $bt-font-ui;
+  font-weight: $bt-weight-regular;
+  font-size: $bt-body-size;
+  line-height: $bt-body-line;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+
+  --ink: #{$bt-ink};
+  --ink-sunken: #{$bt-ink-sunken};
+  --ink-raised: #{$bt-ink-raised};
+  --ink-overlay: #{$bt-ink-overlay};
+  --line: #{$bt-line};
+  --line-strong: #{$bt-line-strong};
+  --text: #{$bt-text};
+  --text-secondary: #{$bt-text-secondary};
+  --text-tertiary: #{$bt-text-tertiary};
+  --text-disabled: #{$bt-text-disabled};
+  --gold: #{$bt-gold};
+  --gold-deep: #{$bt-gold-deep};
+  --gold-wash: #{$bt-gold-wash};
+  --money-in: #{$bt-money-in};
+  --money-out: #{$bt-money-out};
+  --danger: #{$bt-danger};
+  --danger-wash: #{$bt-danger-wash};
+  --focus: #{$bt-focus};
+  --seat-free: #{$bt-seat-free};
+  --seat-sold: #{$bt-seat-sold};
+  --seat-sold-line: #{$bt-seat-sold-line};
+  --seat-hatch: #{$bt-seat-hatch};
+  --seat-access: #{$bt-seat-access};
+  --bone-pressed: #{$bt-bone-pressed};
+  --control-disabled: #{$bt-control-disabled};
+
+  --font-ui: #{$bt-font-ui};
+  --font-mono: #{$bt-font-mono};
+  --weight-regular: #{$bt-weight-regular};
+  --weight-medium: #{$bt-weight-medium};
+  --weight-semibold: #{$bt-weight-semibold};
+
+  --display: #{$bt-weight-medium} #{$bt-display-size}/#{$bt-display-line} var(--font-ui);
+  --title: #{$bt-weight-medium} #{$bt-title-size}/#{$bt-title-line} var(--font-ui);
+  --body-lg: #{$bt-weight-regular} #{$bt-body-lg-size}/#{$bt-body-lg-line} var(--font-ui);
+  --body: #{$bt-weight-regular} #{$bt-body-size}/#{$bt-body-line} var(--font-ui);
+  --body-sm: #{$bt-weight-regular} #{$bt-body-sm-size}/#{$bt-body-sm-line} var(--font-ui);
+  --caption: #{$bt-weight-regular} #{$bt-caption-size}/#{$bt-caption-line} var(--font-ui);
+  --caption-tracking: #{$bt-caption-tracking};
+  --money-lg: #{$bt-weight-medium} #{$bt-money-lg-size}/#{$bt-money-lg-line} var(--font-ui);
+  --money: #{$bt-weight-medium} #{$bt-money-size}/#{$bt-money-line} var(--font-ui);
+  --mono: #{$bt-weight-regular} #{$bt-mono-size}/#{$bt-mono-line} var(--font-mono);
+  --wordmark-tracking: #{$bt-wordmark-tracking};
+
+  --r-0: #{$bt-radius-0};
+  --r-s: #{$bt-radius-s};
+  --r-m: #{$bt-radius-m};
+  --r-l: #{$bt-radius-l};
+  --r-xl: #{$bt-radius-xl};
+
+  --move-state: #{$bt-move-state};
+  --move-show: #{$bt-move-show};
+  --move-sheet: #{$bt-move-sheet};
+  --move-ease: #{$bt-ease};
+
+  --shadow-sheet: #{$bt-shadow-sheet};
+  --glass: #{$bt-glass};
+  --glass-blur: #{$bt-glass-blur};
+}
+
+[data-black-ticket][data-density='compra'] {
+  font-size: $bt-body-size;
+  line-height: $bt-body-line;
+}
+
+[data-black-ticket][data-density='taquilla'] {
+  font-size: $bt-body-lg-size;
+  line-height: $bt-body-lg-line;
+}
+
+[data-black-ticket][data-density='admin'] {
+  font-size: $bt-body-sm-size;
+  line-height: $bt-body-sm-line;
+}
+
+[data-density='compra'] {
+  --bt-control: #{$bt-control-compra};
+  --bt-body-size: #{$bt-body-size};
+  --bt-body-line: #{$bt-body-line};
+  --bt-rhythm-a: #{$space-6};
+  --bt-rhythm-b: #{$space-8};
+  --bt-rhythm-c: #{$space-12};
+  --bt-column: #{$bt-column-compra};
+}
+
+[data-density='taquilla'] {
+  --bt-control: #{$bt-control-taquilla};
+  --bt-body-size: #{$bt-body-lg-size};
+  --bt-body-line: #{$bt-body-lg-line};
+  --bt-rhythm-a: #{$space-2};
+  --bt-rhythm-b: #{$space-3};
+  --bt-rhythm-c: #{$space-4};
+  --bt-column: #{$bt-column-taquilla};
+  --bt-seat-target: #{$bt-seat-target};
+}
+
+[data-density='admin'] {
+  --bt-control: #{$bt-control-admin};
+  --bt-body-size: #{$bt-body-sm-size};
+  --bt-body-line: #{$bt-body-sm-line};
+  --bt-rhythm-a: #{$space-6};
+  --bt-rhythm-b: #{$space-3};
+  --bt-rhythm-c: #{$space-2};
+  --bt-column: #{$bt-column-admin};
+  --bt-index: #{$bt-index-admin};
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-black-ticket] {
+    --move-state: 0ms;
+    --move-show: 0ms;
+    --move-sheet: 0ms;
+  }
+}

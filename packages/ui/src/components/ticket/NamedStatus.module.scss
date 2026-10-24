@@ -1,0 +1,60 @@
+@use '../../styles/tokens' as *;
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  box-sizing: border-box;
+  height: $bt-status-height;
+  padding-inline: $space-2;
+  border: 1px solid $bt-line;
+  border-radius: $bt-radius-s;
+  background: $bt-ink-raised;
+  color: $bt-text;
+  font-family: $bt-font-ui;
+  font-size: $bt-caption-size;
+  line-height: $bt-caption-line;
+  font-weight: $bt-weight-regular;
+  letter-spacing: $bt-caption-tracking;
+  white-space: nowrap;
+}
+
+.dot {
+  width: $bt-dot;
+  height: $bt-dot;
+  flex: none;
+  border-radius: 50%;
+}
+
+.gold {
+  background: $bt-gold;
+}
+
+.sage {
+  background: $bt-money-in;
+}
+
+.clay {
+  background: $bt-money-out;
+}
+
+.steel {
+  background: $bt-seat-access;
+}
+
+.sold {
+  background: $bt-seat-sold;
+  box-shadow: inset 0 0 0 1px $bt-seat-sold-line;
+}
+
+.hatch {
+  background-color: $bt-ink-raised;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    $bt-seat-hatch 0,
+    $bt-seat-hatch 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  box-shadow: inset 0 0 0 1px $bt-seat-hatch;
+}

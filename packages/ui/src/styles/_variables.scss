@@ -455,3 +455,92 @@ $danger: $danger-700;
     background-color: $c-text-tertiary;
   }
 }
+
+// -----------------------------------------------------------------------------
+// Black Ticket — un tema oscuro, tres densidades.
+// Hex y medidas: lenguaje visual. Cadenas, no colores Sass, para no reescribir
+// el hex. Los componentes nuevos leen estas variables; el lienzo opt-in está
+// en `black-ticket.scss` y no pisa el tema claro/oscuro ya publicado.
+// -----------------------------------------------------------------------------
+
+$bt-ink: string.unquote('#0B0B0C');
+$bt-ink-sunken: string.unquote('#080809');
+$bt-ink-raised: string.unquote('#141416');
+$bt-ink-overlay: string.unquote('#1C1C1F');
+$bt-line: string.unquote('#2C2C2F');
+$bt-line-strong: string.unquote('#3A3A3E');
+$bt-text: string.unquote('#F3F0E8');
+$bt-text-secondary: string.unquote('#A39E94');
+$bt-text-tertiary: string.unquote('#8A857C');
+$bt-text-disabled: string.unquote('#5C5954');
+$bt-gold: string.unquote('#C6A56D');
+$bt-gold-deep: string.unquote('#8E7344');
+$bt-gold-wash: string.unquote('rgba(198, 165, 109, 0.10)');
+$bt-money-in: string.unquote('#8EAE96');
+$bt-money-out: string.unquote('#C9847A');
+$bt-danger: $bt-money-out;
+$bt-danger-wash: string.unquote('rgba(201, 132, 122, 0.10)');
+$bt-focus: $bt-gold;
+$bt-seat-free: string.unquote('#17171A');
+$bt-seat-sold: string.unquote('#3A342C');
+$bt-seat-sold-line: string.unquote('#6A6258');
+$bt-seat-hatch: string.unquote('#5C403C');
+$bt-seat-access: string.unquote('#8EAFD0');
+$bt-bone-pressed: string.unquote('#E4E0D6');
+$bt-control-disabled: string.unquote('#2A2A2C');
+
+$bt-font-ui: string.unquote('"Geist", "Inter", "Helvetica Neue", system-ui, sans-serif');
+$bt-font-mono: string.unquote('"Geist Mono", "ui-monospace", monospace');
+
+$bt-weight-regular: 420;
+$bt-weight-medium: 560;
+$bt-weight-semibold: 640;
+
+$bt-display-size: 40px;
+$bt-display-line: 48px;
+$bt-title-size: 28px;
+$bt-title-line: 34px;
+$bt-body-lg-size: 18px;
+$bt-body-lg-line: 26px;
+$bt-body-size: 16px;
+$bt-body-line: 24px;
+$bt-body-sm-size: 14px;
+$bt-body-sm-line: 20px;
+$bt-caption-size: 12px;
+$bt-caption-line: 16px;
+$bt-caption-tracking: 0.02em;
+$bt-money-lg-size: 32px;
+$bt-money-lg-line: 36px;
+$bt-money-size: 16px;
+$bt-money-line: 20px;
+$bt-mono-size: 13px;
+$bt-mono-line: 16px;
+$bt-wordmark-tracking: -0.02em;
+
+$bt-radius-0: 0;
+$bt-radius-s: 6px;
+$bt-radius-m: 8px;
+$bt-radius-l: 10px;
+$bt-radius-xl: 14px;
+
+$bt-control-compra: 48px;
+$bt-control-taquilla: 56px;
+$bt-control-admin: 36px;
+$bt-seat-target: 28px;
+$bt-status-height: 24px;
+$bt-dot: 6px;
+$bt-column-compra: 720px;
+$bt-column-taquilla: 1280px;
+$bt-column-admin: 1200px;
+$bt-index-admin: 240px;
+
+$bt-move-state: 120ms;
+$bt-move-show: 180ms;
+$bt-move-sheet: 220ms;
+$bt-ease: cubic-bezier(0.2, 0, 0, 1);
+
+$bt-shadow-sheet: string.unquote('0 12px 32px rgba(0, 0, 0, 0.45)');
+$bt-glass: string.unquote('rgba(28, 28, 31, 0.92)');
+$bt-glass-blur: 12px;
+$bt-focus-width: 1.5px;
+$bt-focus-offset: 2px;

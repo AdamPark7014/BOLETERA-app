@@ -1,0 +1,130 @@
+@use '../../styles/tokens' as *;
+
+.block {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: $space-2;
+  min-width: 0;
+  font-family: $bt-font-ui;
+  color: $bt-text;
+  background: transparent;
+}
+
+.in,
+.out {
+  border-left-style: solid;
+  border-left-width: 2px;
+  padding-left: $space-3;
+}
+
+.in {
+  border-left-color: $bt-money-in;
+
+  .figure {
+    color: $bt-money-in;
+  }
+}
+
+.out {
+  border-left-color: $bt-money-out;
+
+  .figure {
+    color: $bt-money-out;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.label,
+.currency {
+  margin: $space-0;
+  font-size: $bt-caption-size;
+  line-height: $bt-caption-line;
+  font-weight: $bt-weight-regular;
+  letter-spacing: $bt-caption-tracking;
+  color: $bt-text-secondary;
+}
+
+.figure {
+  margin: $space-0;
+  font-size: $bt-money-lg-size;
+  line-height: $bt-money-lg-line;
+  font-weight: $bt-weight-medium;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: $bt-text;
+}
+
+.toggle {
+  align-self: flex-start;
+  margin: $space-0;
+  padding: $space-0;
+  border: 0;
+  background: transparent;
+  color: $bt-text-secondary;
+  font-family: inherit;
+  font-size: $bt-caption-size;
+  line-height: $bt-caption-line;
+  font-weight: $bt-weight-regular;
+  letter-spacing: $bt-caption-tracking;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: $bt-focus-width solid $bt-focus;
+    outline-offset: $bt-focus-offset;
+  }
+}
+
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--move-show, #{$bt-move-show}) $bt-ease;
+}
+
+.open {
+  grid-template-rows: 1fr;
+}
+
+.panelInner {
+  overflow: hidden;
+  min-height: $space-0;
+}
+
+.lines {
+  list-style: none;
+  margin: $space-0;
+  padding: $space-0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-4;
+  font-size: $bt-body-sm-size;
+  line-height: $bt-body-sm-line;
+  font-weight: $bt-weight-regular;
+  color: $bt-text-secondary;
+}
+
+.amount {
+  font-size: $bt-money-size;
+  line-height: $bt-money-line;
+  font-weight: $bt-weight-medium;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: $bt-text;
+}

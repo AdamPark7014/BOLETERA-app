@@ -1,0 +1,127 @@
+@use '../../styles/tokens' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  min-width: 0;
+  font-family: $bt-font-ui;
+  color: $bt-text;
+}
+
+.label {
+  font-size: $bt-caption-size;
+  line-height: $bt-caption-line;
+  font-weight: $bt-weight-regular;
+  letter-spacing: $bt-caption-tracking;
+  color: $bt-text;
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  box-sizing: border-box;
+  padding-inline: $space-3;
+  background: $bt-ink-sunken;
+  border: 1px solid $bt-line-strong;
+  border-radius: $bt-radius-m;
+  transition:
+    border-color var(--move-state, #{$bt-move-state}) $bt-ease,
+    outline-color var(--move-state, #{$bt-move-state}) $bt-ease;
+
+  &:focus-within {
+    border-color: transparent;
+    outline: $bt-focus-width solid $bt-focus;
+    outline-offset: $bt-focus-offset;
+  }
+}
+
+.compra {
+  height: $bt-control-compra;
+  font-size: $bt-body-size;
+  line-height: $bt-body-line;
+}
+
+.taquilla {
+  height: $bt-control-taquilla;
+  font-size: $bt-body-lg-size;
+  line-height: $bt-body-lg-line;
+}
+
+.admin {
+  height: $bt-control-admin;
+  font-size: $bt-body-sm-size;
+  line-height: $bt-body-sm-line;
+}
+
+.money .input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: $bt-weight-medium;
+}
+
+.invalid {
+  border-color: $bt-danger;
+
+  &:focus-within {
+    border-color: $bt-danger;
+    outline: $bt-focus-width solid $bt-focus;
+    outline-offset: $bt-focus-offset;
+  }
+}
+
+.disabled {
+  background: $bt-control-disabled;
+  border-color: transparent;
+  color: $bt-text-disabled;
+
+  &:focus-within {
+    outline: none;
+  }
+}
+
+.prefix,
+.trailing {
+  flex: none;
+  color: $bt-text-secondary;
+  font-variant-numeric: tabular-nums;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  margin: $space-0;
+  padding: $space-0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+
+  &::placeholder {
+    color: $bt-text-tertiary;
+  }
+
+  &:disabled {
+    color: $bt-text-disabled;
+    cursor: not-allowed;
+  }
+}
+
+.hint,
+.error {
+  margin: $space-0;
+  font-size: $bt-caption-size;
+  line-height: $bt-caption-line;
+  font-weight: $bt-weight-regular;
+}
+
+.hint {
+  letter-spacing: $bt-caption-tracking;
+  color: $bt-text-tertiary;
+}
+
+.error {
+  color: $bt-danger;
+}

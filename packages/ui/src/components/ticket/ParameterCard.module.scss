@@ -1,0 +1,121 @@
+@use '../../styles/tokens' as *;
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  box-sizing: border-box;
+  padding: $space-2;
+  background: $bt-ink-raised;
+  border: 1px solid $bt-line;
+  border-radius: $bt-radius-m;
+  font-family: $bt-font-ui;
+  color: $bt-text;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.name,
+.value,
+.effect,
+.closedNote {
+  margin: $space-0;
+}
+
+.name {
+  font-size: $bt-body-sm-size;
+  line-height: $bt-body-sm-line;
+  font-weight: $bt-weight-medium;
+  color: $bt-text;
+}
+
+.value {
+  font-size: $bt-body-sm-size;
+  line-height: $bt-body-sm-line;
+  font-weight: $bt-weight-medium;
+  text-align: right;
+  color: $bt-text;
+}
+
+.tabular {
+  font-size: $bt-money-size;
+  line-height: $bt-money-line;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: $bt-font-mono;
+  font-size: $bt-mono-size;
+  line-height: $bt-mono-line;
+  font-weight: $bt-weight-regular;
+}
+
+.effect {
+  font-size: $bt-body-sm-size;
+  line-height: $bt-body-sm-line;
+  font-weight: $bt-weight-regular;
+  color: $bt-text-secondary;
+}
+
+.closedNote {
+  font-size: $bt-caption-size;
+  line-height: $bt-caption-line;
+  font-weight: $bt-weight-regular;
+  color: $bt-text-tertiary;
+}
+
+.advancedButton {
+  align-self: flex-start;
+  margin: $space-0;
+  padding: $space-0;
+  border: 0;
+  background: transparent;
+  color: $bt-text;
+  font-family: inherit;
+  font-size: $bt-body-sm-size;
+  line-height: $bt-body-sm-line;
+  font-weight: $bt-weight-regular;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: $bt-focus-width solid $bt-focus;
+    outline-offset: $bt-focus-offset;
+  }
+}
+
+.marker {
+  display: inline-block;
+  margin-right: $space-1;
+  transition: transform var(--move-show, #{$bt-move-show}) $bt-ease;
+}
+
+.isOpen .marker {
+  transform: rotate(90deg);
+}
+
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--move-show, #{$bt-move-show}) $bt-ease;
+}
+
+.open {
+  grid-template-rows: 1fr;
+}
+
+.panelInner {
+  overflow: hidden;
+  min-height: $space-0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}

@@ -1,0 +1,123 @@
+@use '../../styles/tokens' as *;
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  box-sizing: border-box;
+  margin: $space-0;
+  border-style: solid;
+  border-width: 1px;
+  border-color: transparent;
+  border-radius: $bt-radius-l;
+  padding-inline: $space-4;
+  font-family: $bt-font-ui;
+  font-weight: $bt-weight-medium;
+  letter-spacing: $space-0;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  color: $bt-text;
+  transition:
+    background-color var(--move-state, #{$bt-move-state}) $bt-ease,
+    border-color var(--move-state, #{$bt-move-state}) $bt-ease,
+    color var(--move-state, #{$bt-move-state}) $bt-ease;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: $bt-focus-width solid $bt-focus;
+    outline-offset: $bt-focus-offset;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background: $bt-control-disabled;
+    color: $bt-text-disabled;
+    border-color: transparent;
+  }
+}
+
+.compra {
+  height: $bt-control-compra;
+  font-size: $bt-body-size;
+  line-height: $bt-body-line;
+}
+
+.taquilla {
+  height: $bt-control-taquilla;
+  font-size: $bt-body-lg-size;
+  line-height: $bt-body-lg-line;
+}
+
+.admin {
+  height: $bt-control-admin;
+  padding-inline: $space-3;
+  font-size: $bt-body-sm-size;
+  line-height: $bt-body-sm-line;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.primary {
+  background: $bt-text;
+  color: $bt-ink;
+
+  &:hover:not(:disabled) {
+    background: $bt-text;
+  }
+
+  &:active:not(:disabled) {
+    background: $bt-bone-pressed;
+  }
+}
+
+.secondary {
+  background: transparent;
+  color: $bt-text;
+  border-color: $bt-line-strong;
+
+  &:hover:not(:disabled) {
+    background: $bt-ink-overlay;
+  }
+
+  &:active:not(:disabled) {
+    background: $bt-ink-raised;
+  }
+}
+
+.danger {
+  background: transparent;
+  color: $bt-danger;
+  border-color: $bt-danger;
+
+  &:hover:not(:disabled) {
+    background: $bt-ink-overlay;
+  }
+
+  &:active:not(:disabled) {
+    background: $bt-ink-raised;
+  }
+}
+
+.ghost {
+  background: transparent;
+  color: $bt-text;
+  border-color: transparent;
+
+  &:hover:not(:disabled) {
+    background: $bt-ink-overlay;
+    border-color: $bt-line-strong;
+  }
+
+  &:active:not(:disabled) {
+    background: $bt-ink-raised;
+  }
+}

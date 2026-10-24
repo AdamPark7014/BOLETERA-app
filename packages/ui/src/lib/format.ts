@@ -36,6 +36,20 @@ export function formatCurrency(value: number, fractionDigits = 2): string {
   }).format(value);
 }
 
+/**
+ * Importe del lenguaje visual: `$1,250.00`.
+ * El menos es U+2212, pegado al peso: `−$120.00`. No añade «MXN».
+ */
+export function formatTicketAmount(value: number): string {
+  if (!Number.isFinite(value)) return '';
+  const body = numberFormatter({
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(value));
+  const signed = value < 0 ? `\u2212$${body}` : `$${body}`;
+  return signed;
+}
+
 /** Formatea una proporcion (0.153 -> "15.3 %"). */
 export function formatPercent(ratio: number, fractionDigits = 1): string {
   return numberFormatter({
