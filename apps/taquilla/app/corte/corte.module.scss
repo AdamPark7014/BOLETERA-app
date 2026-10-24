@@ -149,41 +149,33 @@
   gap: var(--bl-space-3);
 }
 
-.arqueoResult {
+.reconcile {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--bl-space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line, var(--border));
 
-  @media (max-width: 560px) {
+  @media (max-width: 720px) {
     grid-template-columns: 1fr;
   }
 }
 
-.arqueoBox {
+.pendingCell,
+.varianceCell {
   display: flex;
   flex-direction: column;
-  gap: var(--bl-space-1);
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 56px;
 }
 
-.arqueoLabel {
-  font-size: var(--bl-text-xs);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted-2);
-}
-
-.arqueoValue {
-  font-size: var(--bl-text-4xl);
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-}
-
-.varianceHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--bl-space-2);
+.pendingLabel {
+  margin: 0;
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+  color: var(--text-secondary);
 }
 
 .pinNote {
@@ -191,16 +183,6 @@
   margin-top: var(--bl-space-1);
   font-size: var(--bl-text-xs);
   color: var(--muted);
-}
-
-.okBox {
-  border-color: var(--success-border) !important;
-  background: var(--success-bg) !important;
-}
-
-.badBox {
-  border-color: var(--warn-border) !important;
-  background: var(--warn-bg) !important;
 }
 
 .drops,
@@ -224,7 +206,7 @@
     font-size: var(--bl-text-md);
   }
 
-  span {
+  li > span {
     color: var(--muted);
   }
 
@@ -232,6 +214,17 @@
     font-style: normal;
     font-size: var(--bl-text-xs);
     color: var(--muted-2);
+  }
+
+  em.zDiff {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    font-style: normal;
+    font: var(--money);
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
   }
 }
 

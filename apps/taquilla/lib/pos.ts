@@ -461,7 +461,12 @@ function normalizeZReport(raw: unknown): ZReport {
     createdAt: row.endedAt ? String(row.endedAt) : undefined,
     cashierId: row.cashierId ? String(row.cashierId) : undefined,
     totalRevenue: Number(report.totalRevenue ?? 0),
-    variance: Number(report.variance ?? 0),
+    variance:
+      report.variance == null || report.variance === ''
+        ? undefined
+        : Number.isFinite(Number(report.variance))
+          ? Number(report.variance)
+          : undefined,
     terminalName: row.terminalName ? String(row.terminalName) : undefined,
   };
 }

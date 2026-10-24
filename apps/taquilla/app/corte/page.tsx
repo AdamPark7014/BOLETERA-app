@@ -9,6 +9,8 @@ import {
   CardHeader,
   EmptyState,
   Input,
+  Money,
+  NamedStatus,
   SegmentedControl,
   TicketButton,
   formatTicketAmount,
@@ -52,11 +54,18 @@ const VARIANCE_PIN_THRESHOLD = 50;
 
 type Prompt = null | 'DROP' | 'CLOSE' | 'HANDOFF';
 
+function readMoney(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? round2(n) : null;
+}
+
 export default function CortePage() {
   const router = useRouter();
   const [report, setReport] = useState<SessionSummary | null>(null);
   const [counts, setCounts] = useState<DenominationCount>({});
   const [manualCounted, setManualCounted] = useState('');
+  const [countTouched, setCountTouched] = useState(false);
   const [useDenominations, setUseDenominations] = useState(true);
   const [dropAmount, setDropAmount] = useState('');
   const [dropNote, setDropNote] = useState('');
@@ -106,8 +115,16 @@ export default function CortePage() {
 
   const expected = round2(report?.expectedCash ?? 0);
   const counted = useDenominations ? countedTotal(counts) : round2(Number(manualCounted) || 0);
-  const variance = round2(counted - expected);
-  const needsPin = Math.abs(variance) > VARIANCE_PIN_THRESHOLD;
+  const countEntered = useDenominations ? countTouched : manualCounted.trim() !== '';
+  const savedExpected = readMoney(closedReport?.expectedCash);
+  const savedCounted = readMoney(closedReport?.closingCashCounted);
+  const savedVariance = readMoney(closedReport?.variance);
+  const shownExpected = closed && savedExpected != null ? savedExpected : expected;
+  const shownCounted = closed && savedCounted != null ? savedCounted : counted;
+  const shownVariance =
+    closed && savedVariance != null ? savedVariance : round2(shownCounted - shownExpected);
+  const hasCount = closed || countEntered;
+  const needsPin = hasCount && !closed && Math.abs(shownVariance) > VARIANCE_PIN_THRESHOLD;
 
   // -------------------------------------------------------------------------
 
@@ -215,7 +232,7 @@ export default function CortePage() {
       `Retiros: ${money(Number(r.dropsTotal ?? 0))}`,
       `Esperado en caja: ${money(Number(r.expectedCash ?? expected))}`,
       `Contado: ${money(Number(r.closingCashCounted ?? counted))}`,
-      `Diferencia: ${money(Number(r.variance ?? variance))}`,
+      `Diferencia: ${money(Number(r.variance ?? shownVariance))}`,
       '',
       ...(useDenominations
         ? MXN_DENOMINATIONS.filter((d) => Number(counts[String(d)]) > 0).map(
@@ -233,13 +250,28 @@ export default function CortePage() {
   const hotkeys = useMemo<Hotkey[]>(
     () => [
       { keys: 'F9', label: 'Retiro (PIN)', whileTyping: true, run: () => setPrompt('DROP') },
-      { keys: 'F10', label: 'Traspaso (PIN)', whileTyping: true, run: () => setPrompt('HANDOFF') },
+      {
+        keys: 'F10',
+        label: 'Traspaso (PIN)',
+        whileTyping: true,
+        run: () => {
+          if (!countEntered) {
+            showToast('Cuenta el efectivo antes de entregar el turno');
+            return;
+          }
+          setPrompt('HANDOFF');
+        },
+      },
       {
         keys: 'F12',
         label: 'Cerrar turno',
         whileTyping: true,
         run: () => {
           if (closed) return;
+          if (!countEntered) {
+            showToast('Cuenta el efectivo antes de cerrar el corte');
+            return;
+          }
           if (needsPin) setPrompt('CLOSE');
           else void closeShift();
         },
@@ -252,7 +284,7 @@ export default function CortePage() {
         run: () => router.push('/'),
       },
     ],
-    [closed, needsPin, closeShift, router],
+    [closed, countEntered, needsPin, closeShift, router, showToast],
   );
 
   const totalMethods = report
@@ -349,12 +381,13 @@ export default function CortePage() {
                           min={0}
                           inputMode="numeric"
                           value={counts[String(d)] ?? ''}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            setCountTouched(true);
                             setCounts((c) => ({
                               ...c,
                               [String(d)]: Math.max(0, Number(e.target.value) || 0),
-                            }))
-                          }
+                            }));
+                          }}
                           aria-label={`Piezas de ${billLabel(d)}`}
                         />
                         <em>{money(d * (Number(counts[String(d)]) || 0))}</em>
@@ -374,35 +407,37 @@ export default function CortePage() {
                     className={styles.countField}
                   />
                 )}
-
-                <div className={styles.arqueoResult}>
-                  <Card variant="outline" padding="md" className={styles.arqueoBox}>
-                    <span className={styles.arqueoLabel}>Contado</span>
-                    <strong className={styles.arqueoValue}>{money(counted)}</strong>
-                  </Card>
-                  <Card
-                    variant="outline"
-                    padding="md"
-                    className={variance === 0 ? styles.okBox : styles.badBox}
-                  >
-                    <div className={styles.varianceHead}>
-                      <span className={styles.arqueoLabel}>Diferencia</span>
-                      <span>
-                        {variance === 0 ? 'Cuadrado' : variance > 0 ? 'A favor' : 'Faltante'}
-                      </span>
-                    </div>
-                    <strong
-                      className={
-                        variance === 0 ? styles.arqueoValue : variance > 0 ? styles.moneyIn : styles.moneyOut
-                      }
-                    >
-                      {formatTicketAmount(variance)}
-                    </strong>
-                    <small className={styles.pinNote}>Umbral · {formatTicketAmount(VARIANCE_PIN_THRESHOLD)}</small>
-                  </Card>
-                </div>
               </>
             )}
+
+            <div className={styles.reconcile} role="group" aria-label="Esperado, contado y diferencia">
+              <Money label="Esperado" amount={shownExpected} />
+              {hasCount ? (
+                <Money label="Contado" amount={shownCounted} />
+              ) : (
+                <div className={styles.pendingCell}>
+                  <p className={styles.pendingLabel}>Contado</p>
+                  <NamedStatus status="pendiente" />
+                </div>
+              )}
+              {hasCount ? (
+                <div className={styles.varianceCell}>
+                  <Money
+                    label="Diferencia"
+                    amount={shownVariance}
+                    currency
+                    direction={shownVariance === 0 ? 'neutral' : shownVariance > 0 ? 'in' : 'out'}
+                  />
+                  <NamedStatus status={shownVariance === 0 ? 'cuadrado' : 'descuadrado'} />
+                </div>
+              ) : (
+                <div className={styles.pendingCell}>
+                  <p className={styles.pendingLabel}>Diferencia</p>
+                  <NamedStatus status="pendiente" />
+                </div>
+              )}
+            </div>
+            <p className={styles.pinNote}>Umbral · {formatTicketAmount(VARIANCE_PIN_THRESHOLD)}</p>
           </Card>
 
           {report.cashDrops && report.cashDrops.length > 0 && (
@@ -451,12 +486,17 @@ export default function CortePage() {
           <Button variant="secondary" size="lg" onClick={() => setPrompt('DROP')}>
             Retiro parcial · F9
           </Button>
-          <Button variant="outline" size="lg" onClick={() => setPrompt('HANDOFF')}>
+          <Button
+            variant="outline"
+            size="lg"
+            disabled={!countEntered}
+            onClick={() => setPrompt('HANDOFF')}
+          >
             Entregar turno · F10
           </Button>
           <TicketButton
             fullWidth
-            disabled={loading}
+            disabled={loading || !countEntered}
             onClick={() => (needsPin ? setPrompt('CLOSE') : void closeShift())}
           >
             {loading ? 'Cerrando corte' : 'Cerrar corte'}
@@ -490,17 +530,34 @@ export default function CortePage() {
         <Card padding="md" className={styles.section}>
           <CardHeader title="Cortes anteriores" description="Últimos reportes Z de esta organización." />
           <ul className={styles.zList}>
-            {zReports.map((z) => (
-              <li key={z.id}>
-                <strong>
-                  {z.closedAt
-                    ? new Date(z.closedAt).toLocaleString('es-MX')
-                    : z.id.slice(0, 8)}
-                </strong>
-                <span>{String(z.terminalName ?? z.cashierId ?? '—')}</span>
-                <em>{money(Number(z.totalRevenue ?? 0))}</em>
-              </li>
-            ))}
+            {zReports.map((z) => {
+              const when = z.closedAt
+                ? new Date(z.closedAt).toLocaleString('es-MX')
+                : z.id.slice(0, 8);
+              const who = String(z.terminalName ?? z.cashierId ?? '—');
+              const diff = z.variance;
+              if (diff == null || !Number.isFinite(diff)) {
+                return (
+                  <li key={z.id}>
+                    <strong>{when}</strong>
+                    <span>{who}</span>
+                    <em>—</em>
+                  </li>
+                );
+              }
+              return (
+                <li key={z.id}>
+                  <strong>{when}</strong>
+                  <span>{who}</span>
+                  <em className={styles.zDiff}>
+                    <NamedStatus status={diff === 0 ? 'cuadrado' : 'descuadrado'} />
+                    <span className={diff === 0 ? undefined : diff > 0 ? styles.moneyIn : styles.moneyOut}>
+                      {formatTicketAmount(diff)}
+                    </span>
+                  </em>
+                </li>
+              );
+            })}
           </ul>
         </Card>
       )}
@@ -516,8 +573,8 @@ export default function CortePage() {
 
       <ManagerPinDialog
         open={prompt === 'CLOSE'}
-        title={`Cerrar turno con diferencia de ${money(variance)}`}
-        detail={`Esperado ${money(expected)} · contado ${money(counted)}. Una diferencia mayor a ${money(
+        title={`Cerrar turno con diferencia de ${money(shownVariance)}`}
+        detail={`Esperado ${money(shownExpected)} · contado ${money(shownCounted)}. Una diferencia mayor a ${money(
           VARIANCE_PIN_THRESHOLD,
         )} requiere autorización de gerencia.`}
         confirmLabel="Cerrar turno"
