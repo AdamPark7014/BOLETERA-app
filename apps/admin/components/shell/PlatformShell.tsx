@@ -25,12 +25,14 @@ type PlatformShellProps = {
   children: ReactNode;
 };
 
-/** Lista, alta, ficha del evento, dinero, puerta y equipo usan el índice de oficios, sin el árbol viejo. */
+/** Lista, alta, ficha del evento, dinero, puerta, equipo y las secciones de este índice usan el índice de oficios, sin el árbol viejo. */
 function isTicketSurface(pathname: string): boolean {
   if (pathname === '/events' || pathname === '/events/new') return true;
   if (pathname.startsWith('/dinero/')) return true;
   if (pathname === '/access-control' || pathname === '/scanner') return true;
   if (pathname === '/staff') return true;
+  if (pathname === '/payouts' || pathname === '/fraud' || pathname === '/reports') return true;
+  if (pathname === '/billing/cfdi') return true;
   const parts = pathname.split('/').filter(Boolean);
   if (parts.length !== 2 || parts[0] !== 'events') return false;
   return parts[1] !== 'series';

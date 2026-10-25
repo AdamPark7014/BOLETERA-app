@@ -1,483 +1,231 @@
 'use client';
 
-/**
- * Reportes de dinero.
- *
- * El contraste importante de esta pantalla: `summary.grossRevenue` se calcula
- * sumando `Order.totalAmount` (lo que se esperaba cobrar) mientras que
- * `paymentMethods[].amount` sale de `Payment.amount` (lo que la pasarela
- * liquidó de verdad). Antes se pintaban como si fueran la misma cifra. Ahora se
- * comparan y, si no cuadran, se dice — que es justo el caso que el backend
- * registra como `payment.settlement_mismatch`.
- */
+import { Suspense, useEffect, useState } from 'react';
+import { ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { ApiError, adminApi, adminDownload } from '@/lib/api';
+import { hasCapability } from '@/lib/permissions';
+import { getEgressOverview, type EgressOverviewVenue } from '@/lib/platform-api';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Param } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { channelLabel } from '../events/_ticket/holds';
+import { asRecord, formatCount, readNumber, readString } from '../events/_ticket/read';
 
-import { useCallback, useMemo, useState } from 'react';
-import {
-  Button,
-  KpiCard,
-  PageHeader,
-  Section,
-  SegmentedControl,
-} from '@boletera/ui';
-import { adminApi, adminDownload, ApiError, getStoredToken } from '@/lib/api';
-import { useToast } from '@/components/Toast/ToastProvider';
-import platform from '../_styles/platform.module.scss';
-import styles from '../orders/orders.module.scss';
-import reportStyles from './reports.module.scss';
-import { EmptyBlock, Notice, ResourceView } from '../orders/_ui/States';
-import { useAdminSession, useResource } from '../orders/_ui/useResource';
-import {
-  formatDate,
-  formatDateTime,
-  formatMoney,
-  formatMoneyDelta,
-  formatNumber,
-  isSettlementMismatch,
-  toNumber,
-} from '../orders/_ui/format';
-import { channelLabel } from '../orders/_lib/format';
-
-type Period = 'DAILY' | 'WEEKLY' | 'MONTHLY';
-
-const PERIOD_LABEL: Record<Period, string> = {
-  DAILY: 'Hoy',
-  WEEKLY: 'Últimos 7 días',
-  MONTHLY: 'Últimos 30 días',
+type SalesRow = {
+  channel: string;
+  orders: number;
+  total: number;
 };
 
-const PERIOD_OPTIONS = (Object.keys(PERIOD_LABEL) as Period[]).map((value) => ({
-  value,
-  label: PERIOD_LABEL[value],
-}));
+function countOf(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const row = asRecord(value);
+  return readNumber(row._all) ?? 0;
+}
 
-/** Campos reales de `GET /reports/settlement/:organizationId/:period`. */
-type Settlement = {
-  organizationId: string;
-  period: string;
-  dateRange?: { gte: string; lt: string };
-  summary?: {
-    grossRevenue?: number;
-    commission?: number;
-    netRevenue?: number;
-    totalOrders?: number;
-    avgOrderValue?: number;
-    currency?: string;
-  };
-  paymentMethods?: Record<string, { count: number; amount: number }>;
-  generatedAt?: string;
-};
+function readSales(payload: unknown): SalesRow[] {
+  if (!Array.isArray(payload)) return [];
+  return payload.flatMap((item) => {
+    const row = asRecord(item);
+    const sum = asRecord(row._sum);
+    const total = readNumber(sum.totalAmount);
+    const channel = readString(row.channel) ?? '—';
+    if (total == null) return [];
+    return [{ channel, orders: countOf(row._count), total }];
+  });
+}
 
-type SalesRow = { channel: string; _sum: { totalAmount: string | null }; _count: number };
+function egressMeta(venue: EgressOverviewVenue): string {
+  const clearance =
+    venue.clearanceMinutes == null
+      ? null
+      : `${venue.clearanceMinutes.toLocaleString('es-MX', { maximumFractionDigits: 1 })} min`;
+  return [
+    `${formatCount(venue.sections)} secciones`,
+    `${formatCount(venue.seatsWithPath)} con camino`,
+    `${formatCount(venue.seatsWithoutPath)} sin camino`,
+    clearance,
+  ]
+    .filter((part): part is string => part != null)
+    .join(' · ');
+}
+
+function failMessage(cause: unknown): string {
+  if (cause instanceof ApiError) return cause.userMessage;
+  return 'No se guardó. Revisa la conexión.';
+}
 
 export default function ReportsPage() {
-  const [period, setPeriod] = useState<Period>('WEEKLY');
-  const toast = useToast();
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <ReportesBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function ReportesBody() {
+  const session = useSession();
+  const [sales, setSales] = useState<SalesRow[] | null>(null);
+  const [salesNote, setSalesNote] = useState<string | null>(null);
+  const [venues, setVenues] = useState<EgressOverviewVenue[] | null>(null);
+  const [egressNote, setEgressNote] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
-  // La organización sale de la sesión, no del cuerpo del reporte: el export
-  // necesita el id aunque la liquidación venga vacía.
-  const session = useAdminSession();
+  const [nonce, setNonce] = useState(0);
+  const token = session.token;
+  const orgId = session.status === 'ready' ? session.orgId : null;
+  const canSee = hasCapability(session.role, 'reports.view');
+  const canSales = session.role === 'PROMOTER' || session.role === 'ADMIN' || session.role === 'SUPER_ADMIN';
 
-  const sales = useResource<SalesRow[]>(
-    useCallback(
-      ({ token, signal }) => adminApi<SalesRow[]>('/admin/reports/sales', token, { signal }),
-      [],
-    ),
-    { requiresOrg: false },
-  );
+  useEffect(() => {
+    if (!token || !canSee) {
+      if (session.status !== 'loading') setLoading(false);
+      return;
+    }
+    const bearer = token;
+    let alive = true;
+    setError(null);
+    async function load() {
+      let salesRows: SalesRow[] | null = null;
+      let salesMessage: string | null = null;
+      if (canSales) {
+        try {
+          salesRows = readSales(await adminApi<unknown>('/admin/reports/sales', bearer));
+        } catch (cause) {
+          salesMessage = failMessage(cause);
+        }
+      } else {
+        salesMessage = 'El corte de venta lo devuelve el API a promotor y administrador.';
+      }
+      let egressRows: EgressOverviewVenue[] | null = null;
+      let egressMessage: string | null = null;
+      try {
+        egressRows = (await getEgressOverview(bearer)).venues;
+      } catch (cause) {
+        egressMessage = failMessage(cause);
+      }
+      if (!alive) return;
+      if (salesMessage && egressMessage && canSales) {
+        throw new Error(salesMessage);
+      }
+      setSales(salesRows);
+      setSalesNote(salesMessage);
+      setVenues(egressRows);
+      setEgressNote(egressMessage);
+    }
+    void load()
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setError(cause);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [token, canSee, canSales, session.status, nonce]);
 
-  const settlement = useResource<Settlement>(
-    useCallback(
-      ({ token, orgId, signal }) =>
-        adminApi<Settlement>(`/reports/settlement/${orgId}/${period}`, token, { signal }),
-      [period],
-    ),
-    { deps: [period] },
-  );
-
-  /**
-   * Descarga autenticada: el `fetch` suelto anterior escribía el CSV aunque la
-   * respuesta fuera un 403 en JSON, produciendo un archivo con el error dentro.
-   */
-  async function exportSales(orgId: string) {
-    const token = getStoredToken();
-    if (!token) return;
+  async function exportSales() {
+    if (!token || !orgId || exporting) return;
     setExporting(true);
+    setExportError(null);
     try {
-      await adminDownload(
-        `/reports/export/sales/${orgId}`,
-        token,
-        `ventas-${new Date().toISOString().slice(0, 10)}.csv`,
-      );
-    } catch (e) {
-      toast.error(e instanceof ApiError ? e.userMessage : 'No se pudo exportar el CSV');
+      await adminDownload(`/reports/export/sales/${orgId}`, token, 'ventas.csv');
+    } catch (cause) {
+      setExportError(failMessage(cause));
     } finally {
       setExporting(false);
     }
   }
 
-  return (
-    <div className={reportStyles.page}>
-      <PageHeader
-        eyebrow="Finanzas"
-        title="Reportes"
-        description="Ventas por canal, liquidación y cortes de taquilla"
-        actions={
-          session.phase === 'ready' ? (
-            <Button
-              type="button"
-              loading={exporting}
-              loadingLabel="Preparando…"
-              onClick={() => void exportSales(session.orgId)}
-            >
-              Exportar ventas (CSV)
-            </Button>
-          ) : undefined
-        }
-      />
-
-      <section className={reportStyles.panel}>
-        <h2>Ventas por canal</h2>
-        <p className={styles.scopeNote}>
-          Ventana por omisión del API: <strong>últimos 30 días</strong>. Importes sobre el total
-          esperado de cada orden.
-        </p>
-        <ResourceView resource={sales} context="las ventas por canal" loadingRows={3}>
-          {(rows) =>
-            rows.length === 0 ? (
-              <EmptyBlock
-                title="Sin ventas en la ventana consultada"
-                hint="No hubo órdenes en los últimos 30 días para esta organización."
-              />
-            ) : (
-              <table className={platform.table}>
-                <caption className={styles.srOnly}>Ventas agrupadas por canal</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Canal</th>
-                    <th scope="col" className={styles.numeric}>
-                      Órdenes
-                    </th>
-                    <th scope="col" className={styles.numeric}>
-                      Total esperado
-                    </th>
-                    <th scope="col" className={styles.numeric}>
-                      Participación
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...rows]
-                    .sort(
-                      (a, b) =>
-                        Number(b._sum.totalAmount ?? 0) - Number(a._sum.totalAmount ?? 0),
-                    )
-                    .map((r) => {
-                      const total = rows.reduce(
-                        (sum, row) => sum + Number(row._sum.totalAmount ?? 0),
-                        0,
-                      );
-                      const amount = Number(r._sum.totalAmount ?? 0);
-                      const share = total > 0 ? (amount / total) * 100 : 0;
-                      return (
-                        <tr key={r.channel}>
-                          <th scope="row">{channelLabel(r.channel)}</th>
-                          <td className={styles.numeric}>{formatNumber(r._count)}</td>
-                          <td className={styles.numeric}>
-                            {formatMoney(r._sum.totalAmount, 'MXN')}
-                          </td>
-                          <td className={styles.numeric}>{share.toFixed(1)} %</td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            )
-          }
-        </ResourceView>
-      </section>
-
-      <section className={reportStyles.panel}>
-        <div className={reportStyles.panelHead}>
-          <h2>Liquidación</h2>
-          <SegmentedControl
-            label="Periodo"
-            size="sm"
-            options={PERIOD_OPTIONS}
-            value={period}
-            onValueChange={(value) => setPeriod(value as Period)}
-          />
-        </div>
-
-        <ResourceView resource={settlement} context="la liquidación" loadingRows={3}>
-          {(data) => <SettlementView data={data} period={period} />}
-        </ResourceView>
-      </section>
-
-      <section className={reportStyles.panel}>
-        <h2>Cortes de taquilla (Z)</h2>
-        <ZReportsBlock />
-      </section>
-    </div>
-  );
-}
-
-function SettlementView({ data, period }: { data: Settlement; period: Period }) {
-  const summary = data.summary ?? {};
-  const currency = (summary.currency || 'MXN').toUpperCase();
-  const methods = useMemo(() => Object.entries(data.paymentMethods ?? {}), [data.paymentMethods]);
-
-  const gross = toNumber(summary.grossRevenue);
-  /** Suma de lo que las pasarelas reportan como liquidado. */
-  const settled = methods.reduce((s, [, v]) => s + toNumber(v.amount), 0);
-  const mismatch = methods.length > 0 && isSettlementMismatch(gross, settled);
-
-  const hasData = (summary.totalOrders ?? 0) > 0 || gross > 0 || methods.length > 0;
-
-  if (!hasData) {
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (!canSee && session.status !== 'loading') {
     return (
-      <EmptyBlock
-        title={`Sin movimientos en el periodo (${PERIOD_LABEL[period].toLowerCase()})`}
-        hint={
-          data.dateRange
-            ? `Ventana consultada: ${formatDate(data.dateRange.gte)} – ${formatDate(data.dateRange.lt)}.`
-            : 'No hubo órdenes completadas en la ventana solicitada.'
-        }
-      />
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Reportes</h1>
+          <p className={styles.quiet}>Sin secciones.</p>
+        </header>
+      </section>
     );
   }
+  if (error) {
+    return <ApiErrorView error={error} context="abrir reportes" onRetry={() => setNonce((current) => current + 1)} />;
+  }
+  if (loading || !token) return <p className={styles.quiet}>Cargando reportes.</p>;
 
   return (
-    <>
-      <p className={styles.scopeNote}>
-        Periodo{' '}
-        <strong>
-          {data.dateRange
-            ? `${formatDate(data.dateRange.gte)} – ${formatDate(data.dateRange.lt)}`
-            : PERIOD_LABEL[period]}
-        </strong>
-        {data.generatedAt && <> · generado {formatDateTime(data.generatedAt)}</>}.
-      </p>
-
-      {mismatch && (
-        <Notice tone="warn" title="Lo esperado y lo liquidado no cuadran en este periodo">
-          <p>
-            Las órdenes suman {formatMoney(gross, currency)} y las pasarelas reportan{' '}
-            {formatMoney(settled, currency)} (
-            {formatMoneyDelta(settled - gross, currency)}). Concilia antes de generar el payout: la
-            diferencia suele venir de órdenes con <code>payment.settlement_mismatch</code> o de
-            reembolsos sin cerrar.
-          </p>
-        </Notice>
-      )}
-
-      <Section columns={4} gap="md" className={reportStyles.kpiStrip}>
-        <KpiCard
-          label="Bruto esperado"
-          value={formatMoney(gross, currency)}
-          hint="Suma de totales de orden"
-          tone="accent"
-        />
-        <KpiCard
-          label="Liquidado"
-          value={methods.length ? formatMoney(settled, currency) : 'Sin desglose'}
-          tone={mismatch ? 'warning' : 'success'}
-          hint={mismatch ? 'No coincide con lo esperado' : 'Coincide con lo esperado'}
-        />
-        <KpiCard label="Comisión" value={formatMoney(summary.commission, currency)} />
-        <KpiCard
-          label="Neto al promotor"
-          value={formatMoney(summary.netRevenue, currency)}
-          tone="success"
-          hint={`${formatNumber(summary.totalOrders ?? 0)} órdenes · ticket ${formatMoney(summary.avgOrderValue, currency)}`}
-        />
-      </Section>
-
-      {methods.length > 0 && (
-        <table className={platform.table} style={{ marginTop: '1rem' }}>
-          <caption className={styles.srOnly}>Importes liquidados por pasarela</caption>
-          <thead>
-            <tr>
-              <th scope="col">Pasarela</th>
-              <th scope="col" className={styles.numeric}>
-                Transacciones
-              </th>
-              <th scope="col" className={styles.numeric}>
-                Liquidado
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {methods.map(([gw, v]) => (
-              <tr key={gw}>
-                <th scope="row">{gw}</th>
-                <td className={styles.numeric}>{formatNumber(v.count)}</td>
-                <td className={styles.numeric}>{formatMoney(v.amount, currency)}</td>
-              </tr>
-            ))}
-            <tr className={styles.breakdownTotal}>
-              <th scope="row">Total liquidado</th>
-              <td className={styles.numeric}>
-                {formatNumber(methods.reduce((s, [, v]) => s + v.count, 0))}
-              </td>
-              <td className={styles.numeric}>{formatMoney(settled, currency)}</td>
-            </tr>
-          </tbody>
-        </table>
-      )}
-    </>
-  );
-}
-
-type ZReport = {
-  sessionId: string;
-  terminalName?: string;
-  cashierId: string;
-  endedAt?: string;
-  report?: {
-    totalRevenue?: number;
-    totalOrders?: number;
-    totalTransactions?: number;
-    currency?: string;
-    variance?: number;
-    dropsTotal?: number;
-    expectedCash?: number;
-    closingCashCounted?: number;
-    cashSales?: number;
-    cardSales?: number;
-  };
-};
-
-function zReportCsv(rows: ZReport[]) {
-  const header = [
-    'sessionId',
-    'terminal',
-    'cashierId',
-    'endedAt',
-    'totalRevenue',
-    'cashSales',
-    'cardSales',
-    'dropsTotal',
-    'expectedCash',
-    'counted',
-    'variance',
-  ];
-  const lines = rows.map((r) => {
-    const rep = r.report ?? {};
-    return [
-      r.sessionId,
-      r.terminalName ?? '',
-      r.cashierId ?? '',
-      r.endedAt ?? '',
-      rep.totalRevenue ?? '',
-      rep.cashSales ?? '',
-      rep.cardSales ?? '',
-      rep.dropsTotal ?? '',
-      rep.expectedCash ?? '',
-      rep.closingCashCounted ?? '',
-      rep.variance ?? '',
-    ]
-      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-      .join(',');
-  });
-  return [header.join(','), ...lines].join('\n');
-}
-
-function downloadZCsv(rows: ZReport[]) {
-  const blob = new Blob([zReportCsv(rows)], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `cortes-caja-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function ZReportsBlock() {
-  const resource = useResource<ZReport[]>(
-    useCallback(
-      ({ token, orgId, signal }) =>
-        adminApi<ZReport[]>(
-          `/taquilla/z-reports?organizationId=${encodeURIComponent(orgId)}`,
-          token,
-          { signal },
-        ),
-      [],
-    ),
-  );
-
-  return (
-    <ResourceView resource={resource} context="los cortes de taquilla" loadingRows={2}>
-      {(rows) =>
-        rows.length === 0 ? (
-          <EmptyBlock
-            title="Sin cortes archivados"
-            hint="Aparecerán aquí cuando una terminal de taquilla cierre su turno."
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Reportes</h1>
+        <p className={styles.quiet}>Corte de venta de los últimos 30 días, y egress.</p>
+      </header>
+      <div className={styles.stack}>
+        <Param name="Analítica">
+          <ParameterCard
+            name="Analítica"
+            value="Encendida"
+            effect="Lo fija el entorno. El API no la lee ni la escribe. Aquí se lee."
           />
-        ) : (
-          <>
-            <div className={reportStyles.toolbar}>
-              <Button type="button" variant="secondary" size="sm" onClick={() => downloadZCsv(rows)}>
-                Exportar CSV
-              </Button>
+        </Param>
+      </div>
+      <header className={styles.sectionHead}>
+        <p className={styles.rowTitle}>Corte de venta</p>
+        {salesNote ? <p className={styles.tertiary}>{salesNote}</p> : null}
+      </header>
+      {sales && sales.length === 0 ? <p className={styles.quiet}>Nada con ese criterio.</p> : null}
+      {sales && sales.length > 0 ? (
+        <div className={styles.rows}>
+          <div className={styles.row}>
+            <p className={styles.rowMeta}>Canal</p>
+            <p className={styles.rowMeta}>Órdenes</p>
+            <p className={styles.rowMeta}>Total</p>
+          </div>
+          {sales.map((row) => (
+            <div key={row.channel} className={styles.row}>
+              <p className={styles.rowTitle}>{channelLabel(row.channel)}</p>
+              <p className={styles.figure}>{formatCount(row.orders)}</p>
+              <p className={styles.figure}>{formatTicketAmount(row.total)}</p>
             </div>
-            <table className={platform.table}>
-              <caption className={styles.srOnly}>Cortes de caja archivados por terminal</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Terminal</th>
-                  <th scope="col">Cajero</th>
-                  <th scope="col">Cierre</th>
-                  <th scope="col" className={styles.numeric}>
-                    Total
-                  </th>
-                  <th scope="col" className={styles.numeric}>
-                    Retiros
-                  </th>
-                  <th scope="col" className={styles.numeric}>
-                    Esperado
-                  </th>
-                  <th scope="col" className={styles.numeric}>
-                    Contado
-                  </th>
-                  <th scope="col" className={styles.numeric}>
-                    Diferencia
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => {
-                  const currency = r.report?.currency ?? 'MXN';
-                  const variance = r.report?.variance;
-                  return (
-                    <tr key={r.sessionId}>
-                      <th scope="row">{r.terminalName || r.sessionId.slice(0, 8)}</th>
-                      <td>{r.cashierId?.slice(0, 10) ?? '—'}</td>
-                      <td>{formatDateTime(r.endedAt)}</td>
-                      <td className={styles.numeric}>
-                        {formatMoney(r.report?.totalRevenue, currency)}
-                      </td>
-                      <td className={styles.numeric}>
-                        {formatMoney(r.report?.dropsTotal ?? 0, currency)}
-                      </td>
-                      <td className={styles.numeric}>
-                        {formatMoney(r.report?.expectedCash, currency)}
-                      </td>
-                      <td className={styles.numeric}>
-                        {formatMoney(r.report?.closingCashCounted, currency)}
-                      </td>
-                      <td className={styles.numeric}>
-                        {variance === undefined || variance === null
-                          ? '—'
-                          : formatMoneyDelta(variance, currency)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </>
-        )
-      }
-    </ResourceView>
+          ))}
+        </div>
+      ) : null}
+      {orgId ? (
+        <TicketButton variant="secondary" disabled={exporting} onClick={() => void exportSales()}>
+          Exportar ventas
+        </TicketButton>
+      ) : null}
+      {exportError ? (
+        <p className={styles.danger} role="alert">
+          {exportError}
+        </p>
+      ) : null}
+      <header className={styles.sectionHead}>
+        <p className={styles.rowTitle}>Egress</p>
+        {egressNote ? <p className={styles.tertiary}>{egressNote}</p> : null}
+      </header>
+      {venues && venues.length === 0 ? <p className={styles.quiet}>Nada con ese criterio.</p> : null}
+      {venues && venues.length > 0 ? (
+        <div className={styles.rows}>
+          {venues.map((venue) => (
+            <div key={venue.venueId} className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>{venue.venueName}</p>
+                <p className={styles.rowMeta}>{egressMeta(venue)}</p>
+              </div>
+              <span />
+              <p className={styles.figure}>{venue.statusReason}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }

@@ -10,6 +10,7 @@ import { AgendaSection } from '../_ticket/AgendaSection';
 import { ChannelsSection } from '../_ticket/ChannelsSection';
 import { EventSection } from '../_ticket/EventSection';
 import { ApartadosSection } from '../_ticket/ApartadosSection';
+import { PhasesSection } from '../_ticket/PhasesSection';
 import { ZonesSection } from '../_ticket/ZonesSection';
 import styles from '../_ticket/frame.module.scss';
 
@@ -101,6 +102,9 @@ function EventBody() {
         onSaved={() => setNonce((current) => current + 1)}
       />
     );
+  }
+  if (frame.section === 'fases') {
+    return <PhasesSection eventId={id} event={hub.event} token={token} canWrite={canManage} />;
   }
   if (frame.section === 'canales') {
     if (healthState === 'loading') {

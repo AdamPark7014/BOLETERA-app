@@ -52,6 +52,7 @@ export function indexGroups(eventId: string | null): IndexGroup[] {
         { id: 'evento', label: 'Evento', href: `/events/${eventId}?seccion=evento` },
         { id: 'agenda', label: 'Agenda', href: `/events/${eventId}?seccion=agenda` },
         { id: 'zonas', label: 'Zonas y precios', href: `/events/${eventId}?seccion=zonas` },
+        { id: 'fases', label: 'Fases', href: `/events/${eventId}?seccion=fases` },
         { id: 'canales', label: 'Canales', href: `/events/${eventId}?seccion=canales` },
         { id: 'apartados', label: 'Apartados', href: `/events/${eventId}?seccion=apartados` },
       ]
@@ -79,5 +80,9 @@ export function activeIndexId(pathname: string, section: string | null): string 
   if (pathname === '/dinero/reembolsos') return 'reembolsos';
   if (pathname === '/access-control' || pathname === '/scanner') return 'puerta';
   if (pathname === '/staff') return 'equipo';
+  if (pathname === '/payouts') return 'liquidaciones';
+  if (pathname === '/billing/cfdi' || pathname.startsWith('/billing/')) return 'facturacion';
+  if (pathname === '/reports' || pathname.startsWith('/reports/')) return 'reportes';
+  if (pathname === '/fraud') return 'fraude';
   return null;
 }

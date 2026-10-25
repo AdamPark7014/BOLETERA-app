@@ -1,486 +1,326 @@
 'use client';
 
-/**
- * Liquidaciones a promotor.
- *
- * Dos descuadres se señalan en vez de esconderse:
- *
- *  1. `netAmount` contra `grossRevenue - commission`. Si el payout guardado no
- *     cuadra consigo mismo, transferir por SPEI ese importe es un error caro.
- *  2. El bloque "por canal" suma `Order.totalAmount`, es decir lo que la orden
- *     *esperaba* cobrar. Desde que `Payment.amount` guarda lo realmente
- *     liquidado, ese bruto puede no coincidir con el estado de cuenta. El API
- *     no expone hoy la suma de lo liquidado, así que la cifra se etiqueta como
- *     esperada en lugar de presentarla como dinero en banco.
- */
+import { Suspense, useEffect, useState } from 'react';
+import { Field, Money, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { ApiError, adminApi } from '@/lib/api';
+import { hasCapability } from '@/lib/permissions';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Param } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { asRecord, formatWhen, readNumber, readString } from '../events/_ticket/read';
 
-import { useCallback, useMemo, useState } from 'react';
-import {
-  Button,
-  Card,
-  CardHeader,
-  KpiCard,
-  PageHeader,
-  Section,
-} from '@boletera/ui';
-import { adminApi, ApiError, getStoredToken } from '@/lib/api';
-import { useToast } from '@/components/Toast/ToastProvider';
-import platform from '../_styles/platform.module.scss';
-import styles from './payouts.module.scss';
-import { EmptyBlock, Notice, ResourceView } from '../orders/_ui/States';
-import { useResource } from '../orders/_ui/useResource';
-import {
-  formatDate,
-  formatDateTime,
-  formatMoney,
-  formatMoneyDelta,
-  formatNumber,
-  isSettlementMismatch,
-  toNumber,
-} from '../orders/_ui/format';
-
-type ChannelRow = {
-  channel: string;
-  currency: string;
-  _sum: { totalAmount: string | null; commissionAmount: string | null };
-  _count: number;
+const STATUS: Record<string, string> = {
+  PENDING: 'Pendiente',
+  PROCESSING: 'En proceso',
+  COMPLETED: 'Completo',
+  FAILED: 'Fallido',
+  CANCELLED: 'Cancelado',
 };
 
 type Payout = {
   id: string;
-  periodStart: string;
-  periodEnd: string;
-  grossRevenue: string | number;
-  commission: string | number;
-  netAmount: string | number;
+  gross: number;
+  commission: number;
+  net: number;
+  currency: string | null;
+  ambiguous: boolean;
   status: string;
-  method?: string | null;
   referenceId: string | null;
-  processedAt?: string | null;
-  createdAt?: string;
+  periodStart: string | null;
+  periodEnd: string | null;
 };
 
-type PayoutPayload = { byChannel: ChannelRow[]; payouts: Payout[] };
-
-const PAYOUT_STATUS: Record<string, { label: string; cls: string; hint: string }> = {
-  PENDING: {
-    label: 'Por procesar',
-    cls: 'pending',
-    hint: 'Calculada pero sin iniciar la transferencia.',
-  },
-  PROCESSING: {
-    label: 'En transferencia',
-    cls: 'hold',
-    hint: 'SPEI iniciado, falta confirmación.',
-  },
-  COMPLETED: { label: 'Pagada', cls: 'paid', hint: 'Transferencia confirmada.' },
-  FAILED: { label: 'Fallida', cls: 'canceled', hint: 'La transferencia no se completó.' },
-  CANCELLED: { label: 'Cancelada', cls: 'refunded', hint: 'Se anuló la liquidación.' },
-};
-
-function payoutStatus(status: string) {
-  return PAYOUT_STATUS[status] ?? { label: status, cls: 'refunded', hint: 'Estado no reconocido.' };
+function amountLabel(value: number, currency: string | null, ambiguous: boolean): string {
+  if (ambiguous || currency !== 'MXN') {
+    return value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  return formatTicketAmount(value);
 }
 
-/** ¿El neto guardado cuadra con bruto − comisión? */
-function payoutBalance(p: Payout) {
-  const gross = toNumber(p.grossRevenue as string);
-  const commission = toNumber(p.commission as string);
-  const net = toNumber(p.netAmount as string);
-  const expected = gross - commission;
-  return { gross, commission, net, expected, mismatch: isSettlementMismatch(expected, net) };
+function readPayout(raw: unknown): Payout | null {
+  const row = asRecord(raw);
+  const id = readString(row.id);
+  const gross = readNumber(row.grossRevenue);
+  const commission = readNumber(row.commission);
+  const net = readNumber(row.netAmount);
+  if (!id || gross == null || commission == null || net == null) return null;
+  return {
+    id,
+    gross,
+    commission,
+    net,
+    currency: readString(row.currency),
+    ambiguous: row.currencyAmbiguous === true,
+    status: readString(row.status) ?? 'PENDING',
+    referenceId: readString(row.referenceId),
+    periodStart: readString(row.periodStart),
+    periodEnd: readString(row.periodEnd),
+  };
 }
 
-function csvCell(value: unknown): string {
-  const s = String(value ?? '');
-  return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+function readPayouts(payload: unknown): Payout[] {
+  const row = asRecord(payload);
+  const list = Array.isArray(row.payouts) ? row.payouts : [];
+  return list.flatMap((item) => {
+    const payout = readPayout(item);
+    return payout ? [payout] : [];
+  });
+}
+
+function failMessage(cause: unknown): string {
+  if (cause instanceof ApiError) return cause.userMessage;
+  return 'No se guardó. Revisa la conexión.';
 }
 
 export default function PayoutsPage() {
-  const resource = useResource<PayoutPayload>(
-    useCallback(
-      ({ token, signal }) => adminApi<PayoutPayload>('/admin/payouts', token, { signal }),
-      [],
-    ),
-    { requiresOrg: false },
-  );
-
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Finanzas"
-        title="Liquidaciones"
-        description="Ventas por canal y transferencias SPEI al promotor"
-      />
-
-      <ResourceView resource={resource} context="las liquidaciones" loadingRows={5}>
-        {(data) => <PayoutsView data={data} reload={resource.reload} />}
-      </ResourceView>
-    </div>
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <LiquidacionesBody />
+      </AdminFrame>
+    </Suspense>
   );
 }
 
-function PayoutsView({ data, reload }: { data: PayoutPayload; reload: () => void }) {
-  const toast = useToast();
+function LiquidacionesBody() {
+  const session = useSession();
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [refs, setRefs] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [nonce, setNonce] = useState(0);
+  const token = session.token;
+  const canSee = hasCapability(session.role, 'finance.view');
+  const canSettle = session.role === 'ADMIN' || session.role === 'SUPER_ADMIN';
 
-  const balances = useMemo(
-    () => new Map(data.payouts.map((p) => [p.id, payoutBalance(p)] as const)),
-    [data.payouts],
-  );
-  const broken = useMemo(
-    () => data.payouts.filter((p) => balances.get(p.id)?.mismatch),
-    [data.payouts, balances],
-  );
-
-  const visible = useMemo(
-    () => (statusFilter === 'ALL' ? data.payouts : data.payouts.filter((p) => p.status === statusFilter)),
-    [data.payouts, statusFilter],
-  );
-
-  const statuses = useMemo(
-    () => Array.from(new Set(data.payouts.map((p) => p.status))),
-    [data.payouts],
-  );
-
-  /** Totales por moneda: sumar MXN con USD sería inventar un número. */
-  const channelTotals = useMemo(() => {
-    const map = new Map<string, { gross: number; commission: number; orders: number }>();
-    for (const r of data.byChannel) {
-      const cur = (r.currency || 'MXN').toUpperCase();
-      const acc = map.get(cur) ?? { gross: 0, commission: 0, orders: 0 };
-      acc.gross += toNumber(r._sum.totalAmount);
-      acc.commission += toNumber(r._sum.commissionAmount);
-      acc.orders += r._count;
-      map.set(cur, acc);
-    }
-    return Array.from(map.entries());
-  }, [data.byChannel]);
-
-  async function act(id: string, action: 'process' | 'complete') {
-    const token = getStoredToken();
-    if (!token) return;
-    const referenceId = window.prompt(
-      action === 'process'
-        ? 'Referencia SPEI de la transferencia iniciada (opcional)'
-        : 'Referencia SPEI de la transferencia confirmada (obligatoria para conciliar)',
-      '',
-    );
-    if (referenceId === null) return;
-    if (action === 'complete' && !referenceId.trim()) {
-      toast.error('Sin referencia no se puede conciliar el pago. Captúrala para continuar.');
+  useEffect(() => {
+    if (!token || !canSee) {
+      if (session.status !== 'loading') setLoading(false);
       return;
     }
-    setBusy(id);
-    try {
-      await adminApi(`/admin/payouts/${id}/${action}`, token, {
-        method: 'POST',
-        body: JSON.stringify({ referenceId: referenceId.trim() || undefined }),
+    let alive = true;
+    setError(null);
+    adminApi<unknown>('/admin/payouts', token)
+      .then((payload) => {
+        if (!alive) return;
+        const next = readPayouts(payload);
+        setPayouts(next);
+        setRefs(Object.fromEntries(next.map((item) => [item.id, item.referenceId ?? ''])));
+        setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setError(cause);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
       });
-      toast.success(action === 'process' ? 'Liquidación en transferencia' : 'Liquidación marcada como pagada');
-      reload();
-    } catch (e) {
-      toast.error(
-        e instanceof ApiError ? e.userMessage : 'No se pudo actualizar la liquidación',
+    return () => {
+      alive = false;
+    };
+  }, [token, canSee, session.status, nonce]);
+
+  async function act(payout: Payout, action: 'process' | 'complete') {
+    if (!token || busy) return;
+    const reference = (refs[payout.id] ?? '').trim();
+    if (action === 'complete' && !reference) return;
+    setBusy(payout.id);
+    setActionError(null);
+    try {
+      await adminApi(`/admin/payouts/${payout.id}/${action}`, token, {
+        method: 'POST',
+        body: JSON.stringify(reference ? { referenceId: reference } : {}),
+      });
+      setNotice(
+        action === 'complete'
+          ? `Liquidación completa · ${amountLabel(payout.net, payout.currency, payout.ambiguous)} · ${reference}`
+          : 'Liquidación en proceso',
       );
+      setNonce((current) => current + 1);
+    } catch (cause) {
+      setActionError(failMessage(cause));
     } finally {
       setBusy(null);
     }
   }
 
-  /** Exporta lo que se ve, con periodo explícito y la columna de descuadre. */
-  function exportCsv() {
-    const header = [
-      'payoutId',
-      'periodoInicio',
-      'periodoFin',
-      'bruto',
-      'comision',
-      'netoGuardado',
-      'netoCalculado',
-      'diferencia',
-      'estado',
-      'referencia',
-      'procesadoEn',
-    ];
-    const lines = visible.map((p) => {
-      const b = balances.get(p.id)!;
-      return [
-        p.id,
-        new Date(p.periodStart).toISOString().slice(0, 10),
-        new Date(p.periodEnd).toISOString().slice(0, 10),
-        b.gross.toFixed(2),
-        b.commission.toFixed(2),
-        b.net.toFixed(2),
-        b.expected.toFixed(2),
-        (b.net - b.expected).toFixed(2),
-        p.status,
-        p.referenceId ?? '',
-        p.processedAt ?? '',
-      ].map(csvCell).join(',');
-    });
-    const csv = [header.join(','), ...lines].join('\n');
-    // BOM para que Excel en es-MX no rompa los acentos.
-    const blob = new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `liquidaciones-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (!canSee && session.status !== 'loading') {
+    return (
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Liquidaciones</h1>
+          <p className={styles.quiet}>Sin secciones.</p>
+        </header>
+      </section>
+    );
   }
+  if (error) {
+    return (
+      <ApiErrorView error={error} context="abrir liquidaciones" onRetry={() => setNonce((current) => current + 1)} />
+    );
+  }
+  if (loading || !token) return <p className={styles.quiet}>Cargando liquidaciones.</p>;
+
+  const ambiguous = payouts.some((item) => item.ambiguous);
 
   return (
-    <>
-      <Section columns={4} gap="md" className={styles.kpiStrip}>
-        <KpiCard label="Liquidaciones" value={formatNumber(data.payouts.length)} tone="accent" />
-        <KpiCard
-          label="Por procesar"
-          value={formatNumber(data.payouts.filter((p) => p.status === 'PENDING' || p.status === 'PROCESSING').length)}
-          tone="warning"
-        />
-        <KpiCard
-          label="Descuadres"
-          value={formatNumber(broken.length)}
-          tone={broken.length > 0 ? 'danger' : 'success'}
-          invertDelta
-        />
-        <KpiCard
-          label="Canales activos"
-          value={formatNumber(data.byChannel.length)}
-          hint={
-            channelTotals.length > 0
-              ? channelTotals.map(([cur, t]) => `${formatMoney(t.gross, cur)} bruto`).join(' · ')
-              : undefined
-          }
-        />
-      </Section>
-
-      {broken.length > 0 && (
-        <Notice tone="danger" title={`${broken.length} liquidación(es) no cuadran`}>
-          <p>
-            El neto guardado difiere de <em>bruto − comisión</em>. No transfieras hasta revisarlo:
-            se marcan abajo con la diferencia exacta.
-          </p>
-        </Notice>
-      )}
-
-      <Card padding="md">
-        <CardHeader
-          title="Ventas por canal"
-          as="h2"
-          description={
-            <>
-              Importes calculados sobre el <strong>total esperado de cada orden</strong>, no sobre lo
-              liquidado por la pasarela. Desde que ambos pueden diferir, usa esta tabla para repartir
-              por canal y el estado de cuenta bancario para cuadrar el dinero real. El API todavía no
-              expone la suma de lo liquidado por periodo.
-            </>
-          }
-        />
-        {data.byChannel.length === 0 ? (
-          <EmptyBlock
-            title="Sin ventas registradas"
-            hint="Cuando haya órdenes en cualquier canal aparecerán aquí agrupadas por moneda."
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Liquidaciones</h1>
+        <p className={styles.quiet}>No hay calendario. Completar pide la referencia.</p>
+        {ambiguous ? (
+          <p className={styles.tertiary}>Hay varias monedas en las ventas. Los importes no se suman.</p>
+        ) : null}
+      </header>
+      <div className={styles.stack}>
+        <Param name="Aviso de liquidación">
+          <ParameterCard
+            name="Aviso de liquidación"
+            value="Apagado"
+            effect="Lo fija el entorno. Encendido, el worker solo avisa: no hay riel bancario. Aquí se lee."
           />
-        ) : (
-          <table className={platform.table}>
-            <caption className={styles.srOnly}>
-              Ventas agrupadas por canal y moneda, con comisión y neto estimado
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Canal</th>
-                <th scope="col">Moneda</th>
-                <th scope="col" className={styles.numeric}>
-                  Órdenes
-                </th>
-                <th scope="col" className={styles.numeric}>
-                  Bruto esperado
-                </th>
-                <th scope="col" className={styles.numeric}>
-                  Comisión
-                </th>
-                <th scope="col" className={styles.numeric}>
-                  Neto estimado
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.byChannel.map((r) => {
-                const gross = toNumber(r._sum.totalAmount);
-                const commission = toNumber(r._sum.commissionAmount);
-                return (
-                  <tr key={`${r.channel}-${r.currency}`}>
-                    <th scope="row">{r.channel}</th>
-                    <td>{(r.currency || 'MXN').toUpperCase()}</td>
-                    <td className={styles.numeric}>{formatNumber(r._count)}</td>
-                    <td className={styles.numeric}>{formatMoney(gross, r.currency)}</td>
-                    <td className={styles.numeric}>{formatMoney(commission, r.currency)}</td>
-                    <td className={styles.numeric}>{formatMoney(gross - commission, r.currency)}</td>
-                  </tr>
-                );
-              })}
-              {channelTotals.map(([cur, t]) => (
-                <tr key={`total-${cur}`} className={styles.breakdownTotal}>
-                  <th scope="row">Total {cur}</th>
-                  <td>{cur}</td>
-                  <td className={styles.numeric}>{formatNumber(t.orders)}</td>
-                  <td className={styles.numeric}>{formatMoney(t.gross, cur)}</td>
-                  <td className={styles.numeric}>{formatMoney(t.commission, cur)}</td>
-                  <td className={styles.numeric}>{formatMoney(t.gross - t.commission, cur)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Card>
-
-      <Card padding="md">
-        <CardHeader
-          as="h2"
-          title="Liquidaciones a promotor"
-          actions={
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={exportCsv}
-              disabled={visible.length === 0}
-            >
-              Exportar CSV
-            </Button>
-          }
-        />
-        <div className={styles.panelHead}>
-          <div className={styles.filters} role="group" aria-label="Filtrar por estado">
-            <button
-              type="button"
-              aria-pressed={statusFilter === 'ALL'}
-              className={statusFilter === 'ALL' ? styles.filterActive : styles.filter}
-              onClick={() => setStatusFilter('ALL')}
-            >
-              Todas ({data.payouts.length})
-            </button>
-            {statuses.map((s) => (
+        </Param>
+      </div>
+      {payouts.length === 0 ? <p className={styles.quiet}>No hay liquidaciones.</p> : null}
+      <div className={styles.stack}>
+        {payouts.map((payout) => {
+          const open = openId === payout.id;
+          const status = STATUS[payout.status] ?? payout.status;
+          const reference = refs[payout.id] ?? payout.referenceId ?? '';
+          const actionable = canSettle && (payout.status === 'PENDING' || payout.status === 'PROCESSING');
+          const currency = payout.ambiguous ? 'Sin moneda' : (payout.currency ?? '—');
+          return (
+            <div key={payout.id} className={styles.stack}>
               <button
-                key={s}
                 type="button"
-                aria-pressed={statusFilter === s}
-                className={statusFilter === s ? styles.filterActive : styles.filter}
-                onClick={() => setStatusFilter(s)}
+                className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+                aria-expanded={open}
+                onClick={() => setOpenId(open ? null : payout.id)}
               >
-                {payoutStatus(s).label}
+                <span>
+                  {formatWhen(payout.periodStart)} – {formatWhen(payout.periodEnd)}
+                </span>
+                <span className={styles.figure}>{amountLabel(payout.net, payout.currency, payout.ambiguous)}</span>
               </button>
-            ))}
-          </div>
-        </div>
-
-        {visible.length === 0 ? (
-          <EmptyBlock
-            title={
-              data.payouts.length === 0
-                ? 'Todavía no se ha generado ninguna liquidación'
-                : 'Ninguna liquidación con ese estado'
-            }
-            hint={
-              data.payouts.length === 0
-                ? 'Se generan al cerrar el periodo mensual del promotor desde Analytics.'
-                : 'Quita el filtro para ver el resto.'
-            }
-          />
-        ) : (
-          <table className={platform.table}>
-            <caption className={styles.srOnly}>
-              Liquidaciones con periodo, importes, estado y referencia bancaria
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Periodo</th>
-                <th scope="col" className={styles.numeric}>
-                  Bruto
-                </th>
-                <th scope="col" className={styles.numeric}>
-                  Comisión
-                </th>
-                <th scope="col" className={styles.numeric}>
-                  Neto a transferir
-                </th>
-                <th scope="col">Estado</th>
-                <th scope="col">Referencia</th>
-                <th scope="col">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((p) => {
-                const b = balances.get(p.id)!;
-                const meta = payoutStatus(p.status);
-                return (
-                  <tr key={p.id} className={b.mismatch ? styles.rowAlert : undefined}>
-                    <th scope="row" className={styles.rowHead}>
-                      {formatDate(p.periodStart)} – {formatDate(p.periodEnd)}
-                      {p.processedAt && <small>Procesada {formatDateTime(p.processedAt)}</small>}
-                    </th>
-                    <td className={styles.numeric}>{formatMoney(b.gross, 'MXN')}</td>
-                    <td className={styles.numeric}>{formatMoney(b.commission, 'MXN')}</td>
-                    <td className={styles.numeric}>
-                      {formatMoney(b.net, 'MXN')}
-                      {b.mismatch && (
-                        <>
-                          <br />
-                          <small className={styles.lookupError}>
-                            No cuadra: bruto − comisión da {formatMoney(b.expected, 'MXN')} (
-                            {formatMoneyDelta(b.net - b.expected, 'MXN')})
-                          </small>
-                        </>
-                      )}
-                    </td>
-                    <td>
-                      <span className={`${styles.status} ${styles[meta.cls]}`} title={meta.hint}>
-                        {meta.label}
-                      </span>
-                    </td>
-                    <td>{p.referenceId || <span className={styles.subtle}>Sin referencia</span>}</td>
-                    <td>
-                      <div className={styles.rowActions}>
-                        {p.status === 'PENDING' && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={busy !== null}
-                            loading={busy === p.id}
-                            loadingLabel="Guardando…"
-                            onClick={() => void act(p.id, 'process')}
-                          >
-                            Iniciar SPEI
-                          </Button>
-                        )}
-                        {(p.status === 'PENDING' || p.status === 'PROCESSING') && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            disabled={busy !== null}
-                            loading={busy === p.id}
-                            loadingLabel="Guardando…"
-                            onClick={() => void act(p.id, 'complete')}
-                          >
-                            Marcar pagada
-                          </Button>
-                        )}
-                        {p.status !== 'PENDING' && p.status !== 'PROCESSING' && (
-                          <span className={styles.subtle}>—</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </Card>
-    </>
+              {open ? (
+                <>
+                  <Param name="Bruto">
+                    <ParameterCard
+                      name="Bruto"
+                      value={amountLabel(payout.gross, payout.currency, payout.ambiguous)}
+                      valueStyle="tabular"
+                      effect="Venta del periodo."
+                    />
+                  </Param>
+                  <Param name="Comisión del periodo">
+                    <ParameterCard
+                      name="Comisión del periodo"
+                      value={amountLabel(payout.commission, payout.currency, payout.ambiguous)}
+                      valueStyle="tabular"
+                      effect="Lo retenido en esta liquidación."
+                    />
+                  </Param>
+                  <Param name="Neto">
+                    <ParameterCard
+                      name="Neto"
+                      value={amountLabel(payout.net, payout.currency, payout.ambiguous)}
+                      valueStyle="tabular"
+                      effect="Es el monto de la liquidación."
+                    >
+                      {!payout.ambiguous && payout.currency === 'MXN' ? (
+                        <Money
+                          label="Neto"
+                          amount={payout.net}
+                          currency
+                          direction={payout.status === 'COMPLETED' ? 'in' : 'neutral'}
+                        />
+                      ) : null}
+                    </ParameterCard>
+                  </Param>
+                  <Param name="Moneda de la liquidación">
+                    <ParameterCard
+                      name="Moneda de la liquidación"
+                      value={currency}
+                      effect="La devuelve el API. Evita sumar monedas distintas."
+                    />
+                  </Param>
+                  <Param name="Estado de la liquidación">
+                    <ParameterCard
+                      name="Estado de la liquidación"
+                      value={status}
+                      effect="Pendiente, en proceso, completo, fallido o cancelado. El API escribe en proceso y completo."
+                    />
+                  </Param>
+                  <Param name="Referencia">
+                    <ParameterCard
+                      name="Referencia"
+                      value={reference.trim() || payout.referenceId || '—'}
+                      valueStyle="mono"
+                      effect="Obligatoria para completar."
+                    >
+                      {actionable ? (
+                        <Field
+                          label="Referencia"
+                          hint="Obligatoria para completar."
+                          placeholder="SPEI"
+                          value={reference}
+                          onChange={(event) => {
+                            setRefs((current) => ({ ...current, [payout.id]: event.target.value }));
+                            setNotice(null);
+                          }}
+                        />
+                      ) : null}
+                    </ParameterCard>
+                  </Param>
+                  <Param name="Periodo desde">
+                    <ParameterCard
+                      name="Periodo desde"
+                      value={formatWhen(payout.periodStart)}
+                      effect="No es un calendario editable."
+                    />
+                  </Param>
+                  <Param name="Periodo hasta">
+                    <ParameterCard
+                      name="Periodo hasta"
+                      value={formatWhen(payout.periodEnd)}
+                      effect="Cierre del periodo. Se lee."
+                    />
+                  </Param>
+                  {actionable ? (
+                    <div className={styles.stack}>
+                      {payout.status === 'PENDING' ? (
+                        <TicketButton variant="ghost" disabled={busy === payout.id} onClick={() => void act(payout, 'process')}>
+                          Pasar a proceso
+                        </TicketButton>
+                      ) : null}
+                      <TicketButton
+                        variant="secondary"
+                        disabled={busy === payout.id || !reference.trim()}
+                        onClick={() => void act(payout, 'complete')}
+                      >
+                        Completar liquidación
+                      </TicketButton>
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      {actionError ? (
+        <p className={styles.danger} role="alert">
+          {actionError}
+        </p>
+      ) : null}
+      {notice ? <p className={styles.quiet}>{notice}</p> : null}
+    </section>
   );
 }
