@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { TicketStatus } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { deadlinesFromSettings } from '../notification/refund-policy';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../../common/audit.service';
 import { NotificationService } from '../notification/notification.service';
@@ -71,7 +72,12 @@ export class TicketTransferService {
       );
     }
 
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const org = await this.prisma.organization.findUnique({
+      where: { id: ticket.event.organizationId },
+      select: { settings: true },
+    });
+    const days = deadlinesFromSettings(org?.settings).transferDeadlineDays;
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
     const transfer = await this.prisma.ticketTransfer.create({
       data: {
         ticketId: data.ticketId,

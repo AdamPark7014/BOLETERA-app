@@ -29,7 +29,13 @@ import {
   validateBanorteProductionConfig,
 } from '@boletera/payments';
 import { generateTicketCode } from '@boletera/crypto';
+import { AuditService } from '../../common/audit.service';
 import { paymentDeadline } from '../../common/payment-window';
+import {
+  deadlinesFromSettings,
+  mergeDeadlineSettings,
+  type DeadlinePatch,
+} from '../notification/refund-policy';
 import { PrismaService } from '../prisma/prisma.service';
 import { CampaignExecutionService } from '../campaign-execution/campaign-execution.service';
 import { NotificationService } from '../notification/notification.service';
@@ -107,6 +113,7 @@ export class PaymentService {
     private prisma: PrismaService,
     private notifications: NotificationService,
     private campaigns: CampaignExecutionService,
+    private audit: AuditService,
   ) {}
 
   /**
@@ -1572,6 +1579,74 @@ export class PaymentService {
       },
     };
   }
+
+  /** Plazos efectivos de la organización. Sin fila, los defaults de hoy. */
+  async readDeadlinePolicy(organizationId: string | null) {
+    if (!organizationId) return deadlinesFromSettings(null);
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    return deadlinesFromSettings(org.settings);
+  }
+
+  /**
+   * Guarda en `Organization.settings` solo los plazos que llegan.
+   * No toca el cierre en Banorte ni el resto del JSON.
+   */
+  async saveDeadlinePolicy(organizationId: string, body: DeadlinePatch, actorId?: string) {
+    const patch: DeadlinePatch = {};
+    if (body.settlementBusinessDays !== undefined) {
+      patch.settlementBusinessDays = requirePolicyDays(
+        body.settlementBusinessDays,
+        'Días para cerrar',
+      );
+    }
+    if (body.bankBusinessDays !== undefined) {
+      patch.bankBusinessDays = requirePolicyDays(body.bankBusinessDays, 'Días del banco');
+    }
+    if (body.transferDeadlineDays !== undefined) {
+      patch.transferDeadlineDays = requirePolicyDays(
+        body.transferDeadlineDays,
+        'Plazo de transferencia',
+      );
+    }
+    if (
+      patch.settlementBusinessDays === undefined &&
+      patch.bankBusinessDays === undefined &&
+      patch.transferDeadlineDays === undefined
+    ) {
+      throw new BadRequestException('No hay plazos que guardar');
+    }
+
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    const settings = mergeDeadlineSettings(org.settings, patch);
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: { settings: settings as Prisma.InputJsonValue },
+    });
+    await this.audit.log({
+      action: 'DEADLINE_POLICY_UPDATED',
+      entityType: 'Organization',
+      entityId: organizationId,
+      organizationId,
+      userId: actorId,
+      metadata: patch as Record<string, unknown>,
+    });
+    return deadlinesFromSettings(settings);
+  }
+}
+
+function requirePolicyDays(value: unknown, label: string): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 90) {
+    throw new BadRequestException(`${label} tiene que ser un entero de 1 a 90`);
+  }
+  return value;
 }
 
 

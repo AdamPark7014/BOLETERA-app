@@ -13,6 +13,7 @@ import {
   formatPolicyDate,
   formatShortDate,
   orderHasRefund,
+  buyerRefundPolicy,
   refundDeadlines,
   refundFallbackCopy,
   refundMethodLabel,
@@ -60,6 +61,8 @@ type OrderRow = {
    * estado, nunca inventar una cifra.
    */
   refunds?: OrderRefund[] | null;
+  settlementBusinessDays?: number | null;
+  bankBusinessDays?: number | null;
 };
 
 type TransferRow = {
@@ -251,7 +254,12 @@ export default function CuentaPage() {
           // El plazo cuenta desde que se asentó la devolución, no desde hoy:
           // si contara desde el render, la fecha se correría en cada recarga.
           const anchor = summary.requestedAt ?? (o.refundedAt ? new Date(o.refundedAt) : null);
-          const deadlines = anchor ? refundDeadlines(anchor) : null;
+          const deadlines = anchor
+            ? refundDeadlines(
+                anchor,
+                buyerRefundPolicy(o.settlementBusinessDays, o.bankBusinessDays),
+              )
+            : null;
           const copy = refundStatusCopy(summary.status, {
             methodLabel,
             sentBy: deadlines ? formatPolicyDate(deadlines.sentBy) : '—',

@@ -30,6 +30,28 @@ function readDays(raw: string | undefined, fallback: number): number {
   return Math.round(value);
 }
 
+function finiteDays(raw: number | null | undefined, fallback: number): number {
+  if (raw == null || !Number.isFinite(raw) || raw < 1 || raw > 90) return fallback;
+  return Math.round(raw);
+}
+
+/**
+ * Plazo que devolvió el API para esta orden. Si no viene, queda el del entorno:
+ * el mismo par que el correo usa cuando la organización no guardó nada.
+ */
+export function buyerRefundPolicy(
+  settlementBusinessDays?: number | null,
+  bankBusinessDays?: number | null,
+): RefundPolicy {
+  return {
+    settlementBusinessDays: finiteDays(
+      settlementBusinessDays,
+      REFUND_POLICY.settlementBusinessDays,
+    ),
+    bankBusinessDays: finiteDays(bankBusinessDays, REFUND_POLICY.bankBusinessDays),
+  };
+}
+
 export const REFUND_POLICY: RefundPolicy = {
   settlementBusinessDays: readDays(
     process.env.NEXT_PUBLIC_REFUND_SETTLEMENT_BUSINESS_DAYS,

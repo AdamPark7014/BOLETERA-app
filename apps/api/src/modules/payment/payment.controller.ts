@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Param,
   Headers,
@@ -23,7 +24,7 @@ import { OrgAccessGuard, type OrgScopedRequest } from '../auth/org-access.guard'
 import { requireInternalApiSecret } from '../auth/jwt-secret';
 import { BanorteReconciliationService } from './banorte-reconciliation.service';
 import { EventCancellationService } from './event-cancellation.service';
-import { refundPolicy } from '../notification/refund-policy';
+import { type DeadlinePatch } from '../notification/refund-policy';
 import { PaymentService } from './payment.service';
 
 /** Petición ya resuelta por `OrgAccessGuard`: `scopedOrganizationId` es el tenant efectivo. */
@@ -214,14 +215,33 @@ export class PaymentController {
    * `OrgAccessGuard` cotejará `?organizationId=` contra el tenant del token:
    * solo SUPER_ADMIN puede pedir otra organización o atravesarlas todas.
    */
-  /** Plazos efectivos del entorno. No escribe y no cambia el cierre en Banorte. */
+  /** Plazos de la organización. Vacío, los de hoy. No cierra el dinero en Banorte. */
   @Get('refund-policy')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Plazos efectivos de reembolso' })
-  readRefundPolicy() {
-    return refundPolicy();
+  @ApiOperation({ summary: 'Plazos efectivos de reembolso y transferencia' })
+  readRefundPolicy(@Request() req: ScopedRequest) {
+    return this.paymentService.readDeadlinePolicy(requireScope(req));
+  }
+
+  @Patch('refund-policy')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Guardar plazos de reembolso y transferencia' })
+  saveRefundPolicy(
+    @Request() req: ScopedRequest,
+    @Body() body: DeadlinePatch,
+    @CurrentUser() user: { sub?: string; id?: string },
+  ) {
+    const organizationId = requireScope(req);
+    if (!organizationId) throw new BadRequestException('organizationId requerido');
+    return this.paymentService.saveDeadlinePolicy(
+      organizationId,
+      body ?? {},
+      user?.sub || user?.id,
+    );
   }
 
   @Get('refunds')

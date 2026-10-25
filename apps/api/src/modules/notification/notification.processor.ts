@@ -32,6 +32,7 @@ import {
   refundDeadlines,
   refundMethodLabel,
   refundNeedsBankAccount,
+  deadlinesFromSettings,
   refundPolicy,
   refundStatusCopy,
 } from './refund-policy';
@@ -219,6 +220,16 @@ export class NotificationProcessor {
   private orderUrl(publicId: string, accessToken?: string | null): string {
     const base = `${this.webUrl()}/orders/${encodeURIComponent(publicId)}`;
     return accessToken ? `${base}?t=${encodeURIComponent(accessToken)}` : base;
+  }
+
+  /** El correo usa el plazo guardado de la organización. Vacío, el del entorno. */
+  private async refundPolicyFor(organizationId: string | undefined) {
+    if (!organizationId) return refundPolicy(this.config);
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    return deadlinesFromSettings(org?.settings, this.config);
   }
 
   private async loadOrder(orderId: string) {
@@ -461,7 +472,7 @@ export class NotificationProcessor {
       settlement.find((r) => Math.abs(Number(r.amount) - Number(payload.amount)) < 0.01) ??
       settlement[settlement.length - 1];
 
-    const policy = refundPolicy(this.config);
+    const policy = await this.refundPolicyFor(order?.organizationId);
     // El plazo cuenta desde que se asentó la devolución, no desde que sale el
     // correo: un reintento de cola horas después no puede correr la fecha.
     const deadlines = refundDeadlines(policy, match?.requestedAt ?? new Date());

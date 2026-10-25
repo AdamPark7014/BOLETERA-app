@@ -58,7 +58,7 @@ model Organization {
   feesInclusive    Boolean @default(false) // Fees included in ticket price
   allowResale      Boolean @default(true)
   resaleCommission Float   @default(0.08)
-  /// Org settings: managerPinHash, varianceThreshold, etc.
+  /// Org settings: managerPinHash, varianceThreshold, refundSettlementBusinessDays, refundBankBusinessDays, transferDeadlineDays.
   settings         Json?
 
   // Relations

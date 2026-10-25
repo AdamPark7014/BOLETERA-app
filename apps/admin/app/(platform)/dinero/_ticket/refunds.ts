@@ -3,6 +3,10 @@ import { asRecord, readNumber, readString } from '../../events/_ticket/read';
 export type RefundPolicy = {
   settlementBusinessDays: number;
   bankBusinessDays: number;
+  transferDeadlineDays: number;
+  settlementSaved: boolean;
+  bankSaved: boolean;
+  transferSaved: boolean;
 };
 
 export type RefundRow = {
@@ -66,12 +70,27 @@ export function businessDaysLabel(days: number): string {
   return days === 1 ? `${text} día hábil` : `${text} días hábiles`;
 }
 
+export function calendarDaysLabel(days: number): string {
+  const text = days.toLocaleString('es-MX');
+  return days === 1 ? `${text} día` : `${text} días`;
+}
+
 export function readRefundPolicy(raw: unknown): RefundPolicy | null {
   const row = asRecord(raw);
   const settlementBusinessDays = readNumber(row.settlementBusinessDays);
   const bankBusinessDays = readNumber(row.bankBusinessDays);
-  if (settlementBusinessDays == null || bankBusinessDays == null) return null;
-  return { settlementBusinessDays, bankBusinessDays };
+  const transferDeadlineDays = readNumber(row.transferDeadlineDays);
+  if (settlementBusinessDays == null || bankBusinessDays == null || transferDeadlineDays == null) {
+    return null;
+  }
+  return {
+    settlementBusinessDays,
+    bankBusinessDays,
+    transferDeadlineDays,
+    settlementSaved: row.settlementSaved === true,
+    bankSaved: row.bankSaved === true,
+    transferSaved: row.transferSaved === true,
+  };
 }
 
 export function readRefunds(raw: unknown): { rows: RefundRow[]; hasMore: boolean } | null {

@@ -34,6 +34,29 @@ export type RefundPolicy = {
 
 const DEFAULT_SETTLEMENT_BUSINESS_DAYS = 5;
 const DEFAULT_BANK_BUSINESS_DAYS = 10;
+/** Días corridos que usa la transferencia cuando la organización no guardó plazo. */
+export const DEFAULT_TRANSFER_DEADLINE_DAYS = 7;
+
+/** Llaves dentro de `Organization.settings`. Vacío = el default de hoy. */
+export const DEADLINE_SETTING_KEYS = {
+  settlement: 'refundSettlementBusinessDays',
+  bank: 'refundBankBusinessDays',
+  transfer: 'transferDeadlineDays',
+} as const;
+
+export type DeadlinePolicy = RefundPolicy & {
+  /** Días corridos hasta que caduca una transferencia nueva. */
+  transferDeadlineDays: number;
+  settlementSaved: boolean;
+  bankSaved: boolean;
+  transferSaved: boolean;
+};
+
+export type DeadlinePatch = {
+  settlementBusinessDays?: number;
+  bankBusinessDays?: number;
+  transferDeadlineDays?: number;
+};
 
 /** Lector defensivo: un env mal escrito no puede convertirse en «0 días». */
 function readDays(raw: unknown, fallback: number): number {
@@ -51,6 +74,62 @@ export function refundPolicy(config?: { get(key: string): unknown }): RefundPoli
     ),
     bankBusinessDays: readDays(read('REFUND_BANK_BUSINESS_DAYS'), DEFAULT_BANK_BUSINESS_DAYS),
   };
+}
+
+function settingsRecord(settings: unknown): Record<string, unknown> {
+  if (typeof settings === 'object' && settings !== null && !Array.isArray(settings)) {
+    return settings as Record<string, unknown>;
+  }
+  return {};
+}
+
+/** Número guardado. Ausente o fuera de 1–90 no cuenta: sigue el default. */
+function storedDays(raw: unknown): number | null {
+  if (raw == null || raw === '') return null;
+  const value = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(value) || value < 1 || value > 90) return null;
+  return Math.round(value);
+}
+
+/**
+ * Plazos que leen el correo, la web y la transferencia nueva.
+ * Si la llave no está en `Organization.settings`, queda el número de hoy.
+ */
+export function deadlinesFromSettings(
+  settings: unknown,
+  config?: { get(key: string): unknown },
+): DeadlinePolicy {
+  const record = settingsRecord(settings);
+  const env = refundPolicy(config);
+  const settlement = storedDays(record[DEADLINE_SETTING_KEYS.settlement]);
+  const bank = storedDays(record[DEADLINE_SETTING_KEYS.bank]);
+  const transfer = storedDays(record[DEADLINE_SETTING_KEYS.transfer]);
+  return {
+    settlementBusinessDays: settlement ?? env.settlementBusinessDays,
+    bankBusinessDays: bank ?? env.bankBusinessDays,
+    transferDeadlineDays: transfer ?? DEFAULT_TRANSFER_DEADLINE_DAYS,
+    settlementSaved: settlement != null,
+    bankSaved: bank != null,
+    transferSaved: transfer != null,
+  };
+}
+
+/** Conserva el resto del JSON (PIN, umbral, partners) y escribe solo lo que llega. */
+export function mergeDeadlineSettings(
+  settings: unknown,
+  patch: DeadlinePatch,
+): Record<string, unknown> {
+  const next = { ...settingsRecord(settings) };
+  if (patch.settlementBusinessDays != null) {
+    next[DEADLINE_SETTING_KEYS.settlement] = patch.settlementBusinessDays;
+  }
+  if (patch.bankBusinessDays != null) {
+    next[DEADLINE_SETTING_KEYS.bank] = patch.bankBusinessDays;
+  }
+  if (patch.transferDeadlineDays != null) {
+    next[DEADLINE_SETTING_KEYS.transfer] = patch.transferDeadlineDays;
+  }
+  return next;
 }
 
 /**

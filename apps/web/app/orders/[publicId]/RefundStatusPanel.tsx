@@ -7,6 +7,7 @@ import {
   formatPolicyDate,
   formatShortDate,
   orderHasRefund,
+  buyerRefundPolicy,
   refundDeadlines,
   refundFallbackCopy,
   refundMethodLabel,
@@ -36,6 +37,9 @@ export type RefundAwareOrder = {
   completedAt?: string | null;
   refundedAt?: string | null;
   refunds?: OrderRefund[] | null;
+  /** Plazo que el API calculó para esta orden. El correo lee el mismo número. */
+  settlementBusinessDays?: number | null;
+  bankBusinessDays?: number | null;
   event?: { title?: string; status?: string | null; cancelledAt?: string | null } | null;
 };
 
@@ -109,7 +113,10 @@ export function RefundStatusPanel({ order }: { order: RefundAwareOrder }) {
   }
 
   const anchor = summary.requestedAt ?? (order.refundedAt ? new Date(order.refundedAt) : new Date());
-  const deadlines = refundDeadlines(anchor);
+  const deadlines = refundDeadlines(
+    anchor,
+    buyerRefundPolicy(order.settlementBusinessDays, order.bankBusinessDays),
+  );
   const sentBy = formatPolicyDate(deadlines.sentBy);
   const visibleBy = formatPolicyDate(deadlines.visibleBy);
   const copy = refundStatusCopy(summary.status, { methodLabel, sentBy, visibleBy });
@@ -242,7 +249,10 @@ export function OrderTimeline({
       detail: 'Autorizado e importe apartado.',
       date: refundedAt,
     });
-    const deadlines = refundDeadlines(refundedAt);
+    const deadlines = refundDeadlines(
+      refundedAt,
+      buyerRefundPolicy(order.settlementBusinessDays, order.bankBusinessDays),
+    );
     if (summary?.status === 'COMPLETED') {
       steps.push({
         label: 'Reembolso enviado a tu banco',

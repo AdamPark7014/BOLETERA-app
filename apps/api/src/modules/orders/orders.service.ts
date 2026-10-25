@@ -41,7 +41,7 @@ import { requireTicketQrSecret } from '../auth/jwt-secret';
 import { PricingService } from '../pricing/pricing.service';
 import { FraudService } from '../fraud/fraud.service';
 import { NotificationService } from '../notification/notification.service';
-import { buyerVisibleRefundNote } from '../notification/refund-policy';
+import { buyerVisibleRefundNote, deadlinesFromSettings } from '../notification/refund-policy';
 import { CampaignExecutionService } from '../campaign-execution/campaign-execution.service';
 import { ChannelQuotaService } from '../channel-management/channel-quota.service';
 import { TicketPdfService } from '../notification/ticket-pdf.service';
@@ -1031,7 +1031,8 @@ export class OrdersService {
     await this.assertOrderAccess(order, requester);
     // El token nunca vuelve en una lectura: solo se entregó al crear la orden.
     const { accessTokenHash: _hash, accessTokenAt: _issuedAt, ...safe } = order;
-    return safe;
+    const policies = await this.deadlineDaysByOrg([order.organizationId]);
+    return { ...safe, ...this.buyerDeadlineDays(order.organizationId, policies) };
   }
 
   /**
@@ -1149,7 +1150,44 @@ export class OrdersService {
         },
       },
     });
-    return orders.map((order) => ({ ...order, refunds: order.refunds.map(toBuyerRefund) }));
+    const policies = await this.deadlineDaysByOrg(orders.map((order) => order.organizationId));
+    return orders.map((order) => ({
+      ...order,
+      refunds: order.refunds.map(toBuyerRefund),
+      ...this.buyerDeadlineDays(order.organizationId, policies),
+    }));
+  }
+
+  /** Días que el correo ya usa, para que la web prometa la misma fecha. */
+  private async deadlineDaysByOrg(organizationIds: string[]) {
+    const ids = [...new Set(organizationIds)];
+    const map = new Map<string, { settlementBusinessDays: number; bankBusinessDays: number }>();
+    if (ids.length === 0) return map;
+    const rows = await this.prisma.organization.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, settings: true },
+    });
+    for (const row of rows) {
+      const policy = deadlinesFromSettings(row.settings);
+      map.set(row.id, {
+        settlementBusinessDays: policy.settlementBusinessDays,
+        bankBusinessDays: policy.bankBusinessDays,
+      });
+    }
+    return map;
+  }
+
+  private buyerDeadlineDays(
+    organizationId: string,
+    policies: Map<string, { settlementBusinessDays: number; bankBusinessDays: number }>,
+  ) {
+    const found = policies.get(organizationId);
+    if (found) return found;
+    const fallback = deadlinesFromSettings(null);
+    return {
+      settlementBusinessDays: fallback.settlementBusinessDays,
+      bankBusinessDays: fallback.bankBusinessDays,
+    };
   }
 
   /**

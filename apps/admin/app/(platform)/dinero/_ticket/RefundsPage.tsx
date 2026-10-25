@@ -1,16 +1,17 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Money, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../../events/_shared/api-state';
 import { AdminFrame } from '../../events/_ticket/AdminFrame';
-import { Param } from '../../events/_ticket/controls';
+import { Param, Stepper } from '../../events/_ticket/controls';
 import styles from '../../events/_ticket/frame.module.scss';
 import { formatCount } from '../../events/_ticket/read';
 import {
   businessDaysLabel,
+  calendarDaysLabel,
   readRefundPolicy,
   readRefunds,
   readTransfers,
@@ -112,52 +113,197 @@ function RefundsBody() {
   if (!token || loading || !policy) return <p className={styles.quiet}>Cargando reembolsos.</p>;
 
   return (
+    <DeadlineEditor token={token} policy={policy} canSave={canRefund} onSaved={setPolicy}>
+      {refunds.length === 0 ? <p className={styles.quiet}>No hay reembolsos.</p> : null}
+      {hasMore ? <p className={styles.tertiary}>Hay más reembolsos.</p> : null}
+      {refunds.map((refund) => (
+        <RefundCards
+          key={refund.id}
+          refund={refund}
+          token={token}
+          canRefund={canRefund}
+          onCompleted={() => setNonce((current) => current + 1)}
+        />
+      ))}
+      <p className={styles.tertiary}>Transferencias</p>
+      {transferNote ? <p className={styles.tertiary}>{transferNote}</p> : null}
+      {transfers.length === 0 && !transferNote ? (
+        <p className={styles.quiet}>No hay transferencias.</p>
+      ) : null}
+      {transfers.map((transfer) => (
+        <TransferCards key={transfer.id} transfer={transfer} />
+      ))}
+    </DeadlineEditor>
+  );
+}
+
+function DeadlineEditor({
+  token,
+  policy,
+  canSave,
+  onSaved,
+  children,
+}: {
+  token: string;
+  policy: RefundPolicy;
+  canSave: boolean;
+  onSaved: (policy: RefundPolicy) => void;
+  children: ReactNode;
+}) {
+  const [settlement, setSettlement] = useState(policy.settlementBusinessDays);
+  const [bank, setBank] = useState(policy.bankBusinessDays);
+  const [transfer, setTransfer] = useState(policy.transferDeadlineDays);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSettlement(policy.settlementBusinessDays);
+    setBank(policy.bankBusinessDays);
+    setTransfer(policy.transferDeadlineDays);
+  }, [policy]);
+
+  const settlementDirty = settlement !== policy.settlementBusinessDays;
+  const bankDirty = bank !== policy.bankBusinessDays;
+  const transferDirty = transfer !== policy.transferDeadlineDays;
+  const dirty = settlementDirty || bankDirty || transferDirty;
+
+  async function save() {
+    if (!dirty || saving || !canSave) return;
+    setSaving(true);
+    setError(null);
+    const body: {
+      settlementBusinessDays?: number;
+      bankBusinessDays?: number;
+      transferDeadlineDays?: number;
+    } = {};
+    if (settlementDirty) body.settlementBusinessDays = settlement;
+    if (bankDirty) body.bankBusinessDays = bank;
+    if (transferDirty) body.transferDeadlineDays = transfer;
+    try {
+      const updated = await adminApi<unknown>('/payments/refund-policy', token, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      });
+      const parsed = readRefundPolicy(updated);
+      if (!parsed) throw new Error('No se leyeron los plazos guardados.');
+      const lines = [
+        settlementDirty
+          ? `Días para cerrar: ${businessDaysLabel(policy.settlementBusinessDays)} → ${businessDaysLabel(settlement)}`
+          : null,
+        bankDirty
+          ? `Días del banco: ${businessDaysLabel(policy.bankBusinessDays)} → ${businessDaysLabel(bank)}`
+          : null,
+        transferDirty
+          ? `Plazo de transferencia: ${calendarDaysLabel(policy.transferDeadlineDays)} → ${calendarDaysLabel(transfer)}`
+          : null,
+      ].filter((line): line is string => line != null);
+      setNotice(lines.join(' · '));
+      onSaved(parsed);
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.userMessage : 'No se guardó. Revisa la conexión.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function touch(next: () => void) {
+    next();
+    setNotice(null);
+  }
+
+  return (
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Reembolsos</h1>
         <p className={styles.quiet}>
-          Los días no tienen columna: el entorno los fija y aquí se leen. Cerrar el dinero en Banorte lo hace una persona.
+          El correo y la web leen estos plazos. Cerrar el dinero en Banorte lo hace una persona.
         </p>
       </header>
       <div className={styles.stack}>
         <Param name="Días para cerrar">
           <ParameterCard
             name="Días para cerrar"
-            value={businessDaysLabel(policy.settlementBusinessDays)}
+            value={businessDaysLabel(settlementDirty ? settlement : policy.settlementBusinessDays)}
             valueStyle="tabular"
-            effect="No hay columna. El entorno fija el plazo que leen el correo y la web."
-          />
+            effect={
+              settlementDirty || policy.settlementSaved
+                ? 'Plazo para enviar la devolución. El correo y la web leen este número.'
+                : 'Sin plazo guardado. Vacío, el correo y la web siguen con este plazo.'
+            }
+          >
+            {canSave ? (
+              <Stepper
+                label="Días para cerrar"
+                value={settlement}
+                min={1}
+                max={90}
+                onChange={(next) => touch(() => setSettlement(next))}
+              />
+            ) : null}
+          </ParameterCard>
         </Param>
         <Param name="Días del banco">
           <ParameterCard
             name="Días del banco"
-            value={businessDaysLabel(policy.bankBusinessDays)}
+            value={businessDaysLabel(bankDirty ? bank : policy.bankBusinessDays)}
             valueStyle="tabular"
-            effect="No hay columna. Techo del banco emisor, en días hábiles. No se descuentan los festivos."
-          />
+            effect={
+              bankDirty || policy.bankSaved
+                ? 'Techo del banco emisor, en días hábiles. No se descuentan los festivos.'
+                : 'Sin plazo guardado. Vacío, el techo del banco sigue en este plazo. No se descuentan los festivos.'
+            }
+          >
+            {canSave ? (
+              <Stepper
+                label="Días del banco"
+                value={bank}
+                min={1}
+                max={90}
+                onChange={(next) => touch(() => setBank(next))}
+              />
+            ) : null}
+          </ParameterCard>
         </Param>
-        {refunds.length === 0 ? <p className={styles.quiet}>No hay reembolsos.</p> : null}
-        {hasMore ? <p className={styles.tertiary}>Hay más reembolsos.</p> : null}
-        {refunds.map((refund) => (
-          <RefundCards
-            key={refund.id}
-            refund={refund}
-            token={token}
-            canRefund={canRefund}
-            onCompleted={() => setNonce((current) => current + 1)}
-          />
-        ))}
-        <p className={styles.tertiary}>
-          Transferencias. No hay un plazo en el modelo: el estado y la época de la clave se leen.
-        </p>
-        {transferNote ? <p className={styles.tertiary}>{transferNote}</p> : null}
-        {transfers.length === 0 && !transferNote ? (
-          <p className={styles.quiet}>No hay transferencias.</p>
+        <Param name="Plazo de transferencia">
+          <ParameterCard
+            name="Plazo de transferencia"
+            value={calendarDaysLabel(transferDirty ? transfer : policy.transferDeadlineDays)}
+            valueStyle="tabular"
+            effect={
+              transferDirty || policy.transferSaved
+                ? 'La oferta nueva caduca en este plazo, en días corridos. Las que ya salieron conservan su fecha.'
+                : 'Sin plazo guardado. Vacío, la oferta nueva caduca en este plazo, en días corridos.'
+            }
+          >
+            {canSave ? (
+              <Stepper
+                label="Plazo de transferencia"
+                value={transfer}
+                min={1}
+                max={90}
+                onChange={(next) => touch(() => setTransfer(next))}
+              />
+            ) : null}
+          </ParameterCard>
+        </Param>
+        {children}
+        {error ? (
+          <p className={styles.danger} role="alert">
+            {error}
+          </p>
         ) : null}
-        {transfers.map((transfer) => (
-          <TransferCards key={transfer.id} transfer={transfer} />
-        ))}
       </div>
+      {canSave ? (
+        <div className={styles.saveBar}>
+          <p className={styles.quiet} aria-live="polite">
+            {dirty ? 'Sin guardar' : (notice ?? '')}
+          </p>
+          <TicketButton disabled={!dirty || saving} onClick={() => void save()}>
+            Guardar sección
+          </TicketButton>
+        </div>
+      ) : null}
     </section>
   );
 }
