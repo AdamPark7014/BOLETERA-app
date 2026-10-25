@@ -55,6 +55,7 @@ export function indexGroups(eventId: string | null): IndexGroup[] {
         { id: 'fases', label: 'Fases', href: `/events/${eventId}?seccion=fases` },
         { id: 'canales', label: 'Canales', href: `/events/${eventId}?seccion=canales` },
         { id: 'apartados', label: 'Apartados', href: `/events/${eventId}?seccion=apartados` },
+        { id: 'cumplimiento', label: 'Cumplimiento', href: `/events/${eventId}?seccion=cumplimiento` },
       ]
     : [
         { id: 'lista', label: 'Lista', href: '/events' },
@@ -84,5 +85,15 @@ export function activeIndexId(pathname: string, section: string | null): string 
   if (pathname === '/billing/cfdi' || pathname.startsWith('/billing/')) return 'facturacion';
   if (pathname === '/reports' || pathname.startsWith('/reports/')) return 'reportes';
   if (pathname === '/fraud') return 'fraude';
+  if (pathname === '/campaigns') return 'descuentos';
+  if (pathname === '/venues') return 'recinto';
+  if (pathname === '/maps') return 'mapa';
+  if (pathname === '/settings/organization') return 'organizacion';
+  if (pathname === '/settings/branding' || pathname === '/settings/content') return 'marca';
+  if (pathname === '/partners') return 'partners';
+  if (pathname === '/season') return 'abonos';
+  if (pathname === '/waitlist') return 'espera';
+  if (pathname === '/settings/payments') return 'pagos';
+  if (pathname === '/platform') return 'plataforma';
   return null;
 }

@@ -1,298 +1,475 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import {
-  Badge,
-  Button,
-  DataTable,
-  EmptyState,
-  Input,
-  KpiCard,
-  PageHeader,
-  Section,
-  formatNumber,
-  type DataTableColumn,
-} from '@boletera/ui';
-import { applyLayoutTemplate, createVenue, listVenues } from '@/lib/platform-api';
-import styles from './maps.module.scss';
+import { NamedStatus, ParameterCard, TicketButton } from '@boletera/ui';
+import { ApiError, adminApi } from '@/lib/api';
+import { hasCapability } from '@/lib/permissions';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Param, Segment } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { asRecord, formatCount, formatWhen, readNumber, readString } from '../events/_ticket/read';
 
-type VenueRow = {
+const STATUS: Record<string, string> = {
+  DRAFT: 'Borrador',
+  IN_REVIEW: 'En revisión',
+  PUBLISHED: 'Publicado',
+  ARCHIVED: 'Archivo',
+};
+
+const STATUS_ORDER = ['DRAFT', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED'] as const;
+
+type VenueRow = { id: string; name: string; hasLayout: boolean };
+
+type SectionRow = {
   id: string;
   name: string;
   slug: string;
-  city?: string;
-  totalCapacity?: number;
-  _count?: { events: number };
-  layouts?: { id: string; version: number; updatedAt: string }[];
+  color: string;
+  sortOrder: number;
+  seats: number;
+  accessible: number;
+  shaped: boolean;
 };
 
-const TEMPLATES = [
-  { id: 'blank' as const, label: 'En blanco', hint: 'Empieza desde cero en el estudio 3D' },
-  { id: 'arena' as const, label: 'Arena', hint: 'Bowl con secciones alrededor del escenario' },
-  { id: 'theater' as const, label: 'Teatro', hint: 'Platea frontal + balcones' },
-  { id: 'stadium' as const, label: 'Estadio', hint: 'Capacidad alta por zonas' },
-  { id: 'festival' as const, label: 'Festival', hint: 'GA + zonas perimetrales' },
-];
+type SnapshotRow = {
+  id: string;
+  version: number | null;
+  label: string | null;
+  createdAt: string | null;
+};
 
-const FEATURES = [
-  {
-    title: 'Estudio 3D',
-    description: 'Diseña asientos, zonas y circulación con vista inmersiva.',
-  },
-  {
-    title: 'Planta 2D automática',
-    description: 'La vista de planta se deriva del layout 3D y queda sincronizada.',
-  },
-  {
-    title: 'Listo para eventos',
-    description: 'El mapa del venue alimenta aforo, precios y venta en línea.',
-  },
-] as const;
+type LayoutView = {
+  name: string;
+  version: number | null;
+  status: string;
+  publishedBy: string | null;
+  archivedBy: string | null;
+  sections: SectionRow[];
+  snapshots: SnapshotRow[];
+};
 
-export default function MapsCreatorPage() {
-  const router = useRouter();
+function word(value: string): string {
+  return STATUS[value] ?? value;
+}
+
+function transition(from: string, to: string): 'submit-review' | 'revert-draft' | 'publish-map' | 'archive' | null {
+  if (to === 'IN_REVIEW' && from === 'DRAFT') return 'submit-review';
+  if (to === 'DRAFT' && from === 'IN_REVIEW') return 'revert-draft';
+  if (to === 'PUBLISHED' && (from === 'DRAFT' || from === 'IN_REVIEW')) return 'publish-map';
+  if (to === 'ARCHIVED' && from === 'PUBLISHED') return 'archive';
+  return null;
+}
+
+function readVenue(raw: unknown): VenueRow | null {
+  const row = asRecord(raw);
+  const id = readString(row.id);
+  const name = readString(row.name);
+  if (!id || !name) return null;
+  const layouts = Array.isArray(row.layouts) ? row.layouts : [];
+  return { id, name, hasLayout: layouts.length > 0 };
+}
+
+function readSection(raw: unknown): SectionRow | null {
+  const row = asRecord(raw);
+  const id = readString(row.id);
+  const name = readString(row.name);
+  if (!id || !name) return null;
+  const seats = Array.isArray(row.seats) ? row.seats : [];
+  const accessible = seats.filter((seat) => asRecord(seat).accessible === true).length;
+  const meta = asRecord(row.metadata);
+  return {
+    id,
+    name,
+    slug: readString(row.slug) ?? '—',
+    color: readString(row.color) ?? '#737373',
+    sortOrder: readNumber(row.sortOrder) ?? 0,
+    seats: seats.length,
+    accessible,
+    shaped: Object.keys(meta).length > 0,
+  };
+}
+
+function readSnapshot(raw: unknown): SnapshotRow | null {
+  const row = asRecord(raw);
+  const id = readString(row.id);
+  if (!id) return null;
+  return {
+    id,
+    version: readNumber(row.version),
+    label: readString(row.label),
+    createdAt: readString(row.createdAt),
+  };
+}
+
+function readLayout(payload: unknown, workflow: unknown): LayoutView | null {
+  const root = asRecord(payload);
+  const layout = asRecord(root.layout);
+  const id = readString(layout.id);
+  if (!id) return null;
+  const flow = asRecord(workflow);
+  const snapshots = Array.isArray(flow.snapshots) ? flow.snapshots : [];
+  const sections = Array.isArray(layout.sections) ? layout.sections : [];
+  return {
+    name: readString(layout.name) ?? '—',
+    version: readNumber(layout.version),
+    status: readString(layout.publishStatus) ?? 'DRAFT',
+    publishedBy: readString(layout.publishedBy),
+    archivedBy: readString(layout.archivedBy),
+    sections: sections.flatMap((item) => {
+      const section = readSection(item);
+      return section ? [section] : [];
+    }),
+    snapshots: snapshots.flatMap((item) => {
+      const snapshot = readSnapshot(item);
+      return snapshot ? [snapshot] : [];
+    }),
+  };
+}
+
+function failMessage(cause: unknown): string {
+  if (cause instanceof ApiError) return cause.userMessage;
+  return 'No se guardó. Revisa la conexión.';
+}
+
+export default function MapsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <MapaBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function MapaBody() {
+  const session = useSession();
   const [venues, setVenues] = useState<VenueRow[]>([]);
+  const [venueId, setVenueId] = useState<string | null>(null);
+  const [layout, setLayout] = useState<LayoutView | null>(null);
+  const [status, setStatus] = useState('DRAFT');
+  const [openSection, setOpenSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [name, setName] = useState('');
-  const [city, setCity] = useState('Ciudad de México');
-  const [template, setTemplate] = useState<(typeof TEMPLATES)[number]['id']>('blank');
-
-  async function refresh() {
-    const token = localStorage.getItem('boletera_token');
-    if (!token) return;
-    const list = await listVenues(token);
-    setVenues(list);
-  }
+  const [layoutError, setLayoutError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [nonce, setNonce] = useState(0);
+  const token = session.token;
+  const canSee = hasCapability(session.role, 'venues.view');
+  const canEdit = hasCapability(session.role, 'venues.editMap');
 
   useEffect(() => {
-    const token = localStorage.getItem('boletera_token');
-    if (!token) {
-      setLoading(false);
-      setError('Sesión no encontrada. Inicia sesión de nuevo.');
+    if (!token || !canSee) {
+      if (session.status !== 'loading') setLoading(false);
       return;
     }
-    refresh()
-      .catch(() => setError('No se pudieron cargar los mapas.'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    const token = localStorage.getItem('boletera_token');
-    if (!token || !name.trim()) return;
-    setCreating(true);
+    let alive = true;
     setError(null);
-    try {
-      const venue = await createVenue(token, {
-        name: name.trim(),
-        city: city.trim() || undefined,
-        template,
+    adminApi<unknown>('/admin/venues', token)
+      .then((payload) => {
+        if (!alive) return;
+        const list = Array.isArray(payload) ? payload : [];
+        const next = list.flatMap((item) => {
+          const venue = readVenue(item);
+          return venue ? [venue] : [];
+        });
+        setVenues(next);
+        setVenueId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setError(cause);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
       });
-      if (template !== 'blank') {
-        await applyLayoutTemplate(token, venue.id, template);
-      }
-      router.push(`/venues/${venue.id}/3d?studio=1`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo crear el mapa');
-      setCreating(false);
+    return () => {
+      alive = false;
+    };
+  }, [token, canSee, session.status, nonce]);
+
+  useEffect(() => {
+    const venue = venues.find((item) => item.id === venueId);
+    if (!token || !venueId || !canSee || !venue?.hasLayout) {
+      setLayout(null);
+      return;
+    }
+    let alive = true;
+    setLayout(null);
+    setLayoutError(null);
+    adminApi<unknown>(`/venues/${venueId}/layout`, token)
+      .then(async (payload) => {
+        const workflow = await adminApi<unknown>(`/venues/${venueId}/layout/workflow`, token);
+        if (!alive) return;
+        const next = readLayout(payload, workflow);
+        setLayout(next);
+        if (next) setStatus(next.status);
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setLayout(null);
+        setLayoutError(failMessage(cause));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [token, venueId, venues, canSee, nonce]);
+
+  const step = layout ? transition(layout.status, status) : null;
+  const illegal = layout != null && status !== layout.status && step == null;
+
+  async function save() {
+    if (!token || !venueId || !step || saving || !canEdit) return;
+    setSaving(true);
+    setActionError(null);
+    try {
+      await adminApi(`/venues/${venueId}/layout/${step}`, token, { method: 'POST', body: '{}' });
+      setNotice(`Estado del plano: ${word(layout?.status ?? '')} → ${word(status)}`);
+      setNonce((current) => current + 1);
+    } catch (cause) {
+      setActionError(failMessage(cause));
+    } finally {
+      setSaving(false);
     }
   }
 
-  const stats = useMemo(() => {
-    const totalCapacity = venues.reduce((sum, venue) => sum + (venue.totalCapacity ?? 0), 0);
-    const totalEvents = venues.reduce((sum, venue) => sum + (venue._count?.events ?? 0), 0);
-    const withLayout = venues.filter((venue) => (venue.layouts?.length ?? 0) > 0).length;
-    return { total: venues.length, totalCapacity, totalEvents, withLayout };
-  }, [venues]);
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (!canSee && session.status !== 'loading') {
+    return (
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Mapa</h1>
+          <p className={styles.quiet}>Sin secciones.</p>
+        </header>
+      </section>
+    );
+  }
+  if (error) {
+    return <ApiErrorView error={error} context="abrir mapas" onRetry={() => setNonce((current) => current + 1)} />;
+  }
+  if (loading || !token) return <p className={styles.quiet}>Cargando mapas.</p>;
 
-  const columns = useMemo<readonly DataTableColumn<VenueRow>[]>(
-    () => [
-      {
-        key: 'name',
-        header: 'Venue',
-        width: 260,
-        sortValue: (row) => row.name,
-        render: (row) => (
-          <div className={styles.venueCell}>
-            <strong>{row.name}</strong>
-            <span className={styles.subtle}>
-              {row.city ?? '—'} · {row.slug}
-            </span>
-          </div>
-        ),
-      },
-      {
-        key: 'capacity',
-        header: 'Capacidad',
-        width: 120,
-        align: 'right',
-        sortValue: (row) => row.totalCapacity ?? 0,
-        render: (row) => (
-          <span className={styles.numeric}>{formatNumber(row.totalCapacity ?? 0)}</span>
-        ),
-      },
-      {
-        key: 'events',
-        header: 'Eventos',
-        width: 110,
-        align: 'right',
-        sortValue: (row) => row._count?.events ?? 0,
-        render: (row) => {
-          const count = row._count?.events ?? 0;
-          return (
-            <Badge tone={count > 0 ? 'info' : 'neutral'} variant="soft" size="sm">
-              {formatNumber(count)}
-            </Badge>
-          );
-        },
-      },
-      {
-        key: 'actions',
-        header: 'Acciones',
-        width: 220,
-        resizable: false,
-        render: (row) => (
-          <div className={styles.actions}>
-            <Link href={`/venues/${row.id}/3d?studio=1`} className={styles.primaryLink}>
-              Estudio 3D
-            </Link>
-            <Link href={`/venues/${row.id}/map`} className={styles.secondaryLink}>
-              Vista planta
-            </Link>
-          </div>
-        ),
-      },
-    ],
-    [],
-  );
+  const seats = layout?.sections.reduce((sum, section) => sum + section.seats, 0) ?? 0;
+  const who = layout?.publishedBy ?? layout?.archivedBy;
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Venues"
-        title="Creador de mapas"
-        description="Diseña en 3D desde cero. La planta 2D se deriva automáticamente y queda sincronizada con los eventos del venue."
-      />
-
-      <Section columns={4} gap="md" className={styles.kpiStrip}>
-        <KpiCard label="Mapas" value={formatNumber(stats.total)} tone="accent" />
-        <KpiCard label="Capacidad total" value={formatNumber(stats.totalCapacity)} />
-        <KpiCard
-          label="Eventos vinculados"
-          value={formatNumber(stats.totalEvents)}
-          tone={stats.totalEvents > 0 ? 'info' : 'neutral'}
-        />
-        <KpiCard
-          label="Con layout activo"
-          value={formatNumber(stats.withLayout)}
-          hint="Venues con al menos un layout guardado"
-        />
-      </Section>
-
-      <div className={styles.layout}>
-        <section className={styles.createPanel} aria-labelledby="maps-create-title">
-          <div>
-            <h2 id="maps-create-title">Nuevo mapa</h2>
-            <p className={styles.subtle}>
-              Crea un venue y abre el estudio 3D con la plantilla que prefieras.
-            </p>
-          </div>
-
-          <form className={styles.createForm} onSubmit={handleCreate}>
-            <Input
-              label="Nombre del venue"
-              requiredMark
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej. Arena Norte, Teatro Principal…"
-              autoComplete="off"
-            />
-            <Input
-              label="Ciudad"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              autoComplete="address-level2"
-            />
-            <div className={styles.templateField}>
-              <span className={styles.templateLabel}>Base inicial</span>
-              <div className={styles.templateGrid} role="radiogroup" aria-label="Base inicial">
-                {TEMPLATES.map((item) => {
-                  const selected = template === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      className={selected ? `${styles.templateCard} ${styles.templateCardSelected}` : styles.templateCard}
-                      onClick={() => setTemplate(item.id)}
-                    >
-                      <strong>{item.label}</strong>
-                      <span>{item.hint}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {error ? <p className={styles.errorBanner}>{error}</p> : null}
-
-            <div className={styles.formActions}>
-              <Button type="submit" loading={creating} loadingLabel="Creando…" disabled={!name.trim()}>
-                Crear y abrir estudio 3D
-              </Button>
-            </div>
-          </form>
-        </section>
-
-        <aside aria-label="Flujo del creador de mapas">
-          <ul className={styles.featureList}>
-            {FEATURES.map((feature, index) => (
-              <li key={feature.title}>
-                <span className={styles.featureIcon} aria-hidden="true">
-                  {index + 1}
-                </span>
-                <div className={styles.featureCopy}>
-                  <strong>{feature.title}</strong>
-                  <span>{feature.description}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </aside>
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Mapa</h1>
+        <p className={styles.quiet}>
+          El estado se guarda con el paso que el API ya tiene. La geometría se ajusta en el plano.
+        </p>
+      </header>
+      {venues.length === 0 ? <p className={styles.quiet}>No hay recintos.</p> : null}
+      <div className={styles.stack}>
+        {venues.map((venue) => {
+          const open = venue.id === venueId;
+          return (
+            <button
+              key={venue.id}
+              type="button"
+              className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+              aria-expanded={open}
+              onClick={() => {
+                setVenueId(venue.id);
+                setNotice(null);
+              }}
+            >
+              <span>{venue.name}</span>
+              <span className={styles.figure}>{open ? 'Abierto' : 'Abrir'}</span>
+            </button>
+          );
+        })}
       </div>
-
-      <Section
-        title="Mapas existentes"
-        description={
-          loading
-            ? 'Cargando venues…'
-            : venues.length
-              ? `${formatNumber(venues.length)} venue(s) con mapa disponible`
-              : 'Aún no hay mapas creados'
-        }
-        className={styles.listPanel}
-      >
-        <DataTable
-          label="Mapas existentes por venue"
-          columns={columns}
-          data={venues}
-          rowKey={(row) => row.id}
-          loading={loading}
-          loadingRows={6}
-          defaultSort={{ key: 'name', direction: 'asc' }}
-          empty={
-            <EmptyState
-              title="Aún no hay mapas"
-              description="Crea el primero con el formulario de arriba. El estudio 3D se abrirá automáticamente al guardar."
+      {layoutError ? (
+        <p className={styles.danger} role="alert">
+          {layoutError}
+        </p>
+      ) : null}
+      {venueId && venues.find((item) => item.id === venueId)?.hasLayout && !layout && !layoutError ? (
+        <p className={styles.quiet}>Cargando plano.</p>
+      ) : null}
+      {venueId && venues.find((item) => item.id === venueId)?.hasLayout === false ? (
+        <div className={styles.stack}>
+          <p className={styles.quiet}>Este recinto no tiene plano.</p>
+          <Link href={`/venues/${venueId}/map`} className={styles.link}>
+            Abrir el plano
+          </Link>
+        </div>
+      ) : null}
+      {layout ? (
+        <div className={styles.stack}>
+          <Param name="Nombre del plano">
+            <ParameterCard
+              name="Nombre del plano"
+              value={layout.name}
+              effect="Esta ruta no lo renombra."
             />
-          }
-        />
-      </Section>
-    </div>
+          </Param>
+          <Param name="Versión">
+            <ParameterCard
+              name="Versión"
+              value={formatCount(layout.version)}
+              valueStyle="tabular"
+              effect="Sube al publicar."
+            />
+          </Param>
+          <Param name="Geometría">
+            <ParameterCard
+              name="Geometría"
+              value={`${formatCount(layout.sections.length)} secciones · ${formatCount(seats)} butacas`}
+              valueStyle="tabular"
+              effect="Fila, butaca, posición y accesible se ajustan en el plano. La foto de la compra no viene en esta lectura."
+            >
+              {venueId ? (
+                <Link href={`/venues/${venueId}/map`} className={styles.link}>
+                  Abrir el plano
+                </Link>
+              ) : null}
+            </ParameterCard>
+          </Param>
+          <Param name="Leyenda">
+            <ParameterCard
+              name="Leyenda"
+              value="Libre · Apartado · Vendido · Bloqueado · Accesible · Seleccionado"
+              effect="Seleccionado es el anillo de esta sesión. No hay degradado de ocupación."
+            >
+              <NamedStatus status="libre" />
+              <NamedStatus status="apartado" />
+              <NamedStatus status="vendido" />
+              <NamedStatus status="bloqueado" />
+              <NamedStatus status="accesible" />
+            </ParameterCard>
+          </Param>
+          <Param name="Estado del plano">
+            <ParameterCard name="Estado del plano" value={word(status)} effect="Borrador, en revisión, publicado o archivo.">
+              {canEdit ? (
+                <Segment
+                  label="Estado del plano"
+                  value={status}
+                  options={STATUS_ORDER.map((value) => ({ value, label: word(value) }))}
+                  onChange={(next) => {
+                    setStatus(next);
+                    setNotice(null);
+                    setActionError(null);
+                  }}
+                />
+              ) : null}
+            </ParameterCard>
+          </Param>
+          <Param name="Quién publicó o archivó">
+            <ParameterCard
+              name="Quién publicó o archivó"
+              value={who ?? '—'}
+              valueStyle="mono"
+              effect="Identificador que guardó el servicio."
+            />
+          </Param>
+          {layout.sections.map((section) => {
+            const open = openSection === section.id;
+            return (
+              <div key={section.id} className={styles.stack}>
+                <button
+                  type="button"
+                  className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+                  aria-expanded={open}
+                  onClick={() => setOpenSection(open ? null : section.id)}
+                >
+                  <span>{section.name}</span>
+                  <span className={styles.figure}>{formatCount(section.seats)}</span>
+                </button>
+                {open ? (
+                  <div className={styles.stack}>
+                    <Param name="Nombre de la sección">
+                      <ParameterCard name="Nombre de la sección" value={section.name} effect="La zona del plano se nombra." />
+                    </Param>
+                    <Param name="Slug de la sección">
+                      <ParameterCard name="Slug de la sección" value={section.slug} valueStyle="mono" effect="Único en el plano." />
+                    </Param>
+                    <Param name="Color de la sección">
+                      <ParameterCard
+                        name="Color de la sección"
+                        value={section.color}
+                        valueStyle="mono"
+                        effect="La columna existe. El plano no rellena la zona con este color."
+                      />
+                    </Param>
+                    <Param name="Orden de la sección">
+                      <ParameterCard
+                        name="Orden de la sección"
+                        value={formatCount(section.sortOrder)}
+                        valueStyle="tabular"
+                        effect="Orden guardado."
+                      />
+                    </Param>
+                    <Param name="Silueta">
+                      <ParameterCard
+                        name="Silueta"
+                        value={section.shaped ? 'En el plano' : '—'}
+                        effect="El contorno no se teclea aquí."
+                      />
+                    </Param>
+                    <Param name="Accesible">
+                      <ParameterCard
+                        name="Accesible"
+                        value={formatCount(section.accessible)}
+                        valueStyle="tabular"
+                        effect="Butacas con el glifo. El interruptor de cada una está en el plano."
+                      />
+                    </Param>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+          {layout.snapshots.length === 0 ? (
+            <Param name="Etiqueta del snapshot">
+              <ParameterCard name="Etiqueta del snapshot" value="Ninguna" effect="Aún no hay una instantánea." />
+            </Param>
+          ) : (
+            layout.snapshots.map((snapshot) => (
+              <Param key={snapshot.id} name="Etiqueta del snapshot">
+                <ParameterCard
+                  name="Etiqueta del snapshot"
+                  value={snapshot.label ?? 'Sin etiqueta'}
+                  effect={`Versión ${formatCount(snapshot.version)} · ${formatWhen(snapshot.createdAt)}`}
+                />
+              </Param>
+            ))
+          )}
+          <Param name="Foto del evento">
+            <ParameterCard
+              name="Foto del evento"
+              value="—"
+              effect="La sala que ve la compra es otra fila. Esta lectura es el plano vivo."
+            />
+          </Param>
+        </div>
+      ) : null}
+      {illegal ? (
+        <p className={styles.danger} role="alert">
+          Ese cambio de estado no lo hace el API.
+        </p>
+      ) : null}
+      {actionError ? (
+        <p className={styles.danger} role="alert">
+          {actionError}
+        </p>
+      ) : null}
+      {canEdit && layout ? (
+        <div className={styles.saveBar}>
+          <p className={styles.quiet} aria-live="polite">
+            {step ? 'Sin guardar' : (notice ?? '')}
+          </p>
+          <TicketButton disabled={!step || saving} onClick={() => void save()}>
+            Guardar sección
+          </TicketButton>
+        </div>
+      ) : null}
+    </section>
   );
 }

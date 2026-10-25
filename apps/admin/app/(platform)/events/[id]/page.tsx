@@ -10,6 +10,7 @@ import { AgendaSection } from '../_ticket/AgendaSection';
 import { ChannelsSection } from '../_ticket/ChannelsSection';
 import { EventSection } from '../_ticket/EventSection';
 import { ApartadosSection } from '../_ticket/ApartadosSection';
+import { ComplianceSection } from '../_ticket/ComplianceSection';
 import { PhasesSection } from '../_ticket/PhasesSection';
 import { ZonesSection } from '../_ticket/ZonesSection';
 import styles from '../_ticket/frame.module.scss';
@@ -137,6 +138,9 @@ function EventBody() {
     return (
       <ApartadosSection eventId={id} event={hub.event} token={token} canOperate={canInventory} />
     );
+  }
+  if (frame.section === 'cumplimiento') {
+    return <ComplianceSection eventId={id} token={token} canPublish={canManage} />;
   }
   if (frame.section !== 'evento') {
     return <p className={styles.quiet}>Esta sección no está en este turno.</p>;

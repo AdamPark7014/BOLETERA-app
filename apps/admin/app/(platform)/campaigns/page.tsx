@@ -1,722 +1,581 @@
 'use client';
 
-/**
- * Campañas y presales.
- *
- * Antes cada acción (crear, publicar, exportar códigos) era un `await` sin
- * `catch`: si el API respondía 403 la pantalla se quedaba igual y el usuario
- * creía que había funcionado. Ahora cada acción confirma o explica, y la lista
- * distingue vacío de fallo de sin permiso.
- */
+import { Suspense, useEffect, useState } from 'react';
+import { Field, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { ApiError, adminApi } from '@/lib/api';
+import { hasCapability } from '@/lib/permissions';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Param, Segment, Stepper, Switch } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { asRecord, formatCount, formatWhen, readNumber, readString } from '../events/_ticket/read';
 
-import { useCallback, useMemo, useState } from 'react';
-import {
-  Badge,
-  Button,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  KpiCard,
-  PageHeader,
-  Section,
-  formatNumber,
-  type DataTableColumn,
-  type FilterDefinition,
-  type FilterSelection,
-} from '@boletera/ui';
-import { ApiError, getStoredToken } from '@/lib/api';
-import type { Campaign } from '@/lib/queries';
-import {
-  createCampaign,
-  exportPresaleCodes,
-  listCampaigns,
-  listEvents,
-  publishCampaignApi,
-  type EventRow,
-} from '@/lib/platform-api';
-import { useToast } from '@/components/Toast/ToastProvider';
-import { Notice, ResourceView } from '../orders/_ui/States';
-import { useAdminSession, useResource } from '../orders/_ui/useResource';
-import { CampaignComposer, type ComposerPayload } from './CampaignComposer';
-import {
-  buildCalendar,
-  buildRecommendations,
-  campaignStatusMeta,
-  campaignTypeLabel,
-  discountLabel,
-  formatCount,
-  formatDateShort,
-  formatDateTime,
-  formatPercentPoints,
-  severityMeta,
-  summarizeAllocation,
-  summarizeRevenue,
-  toCampaignView,
-  type CampaignView,
-  type RecommendationAction,
-} from './model';
-import styles from './campaigns.module.scss';
+const STATUS: Record<string, string> = {
+  DRAFT: 'Borrador',
+  ACTIVE: 'Activa',
+  PAUSED: 'En pausa',
+  ENDED: 'Terminada',
+};
 
-const STATUS_FILTERS = [
-  { value: 'ALL', label: 'Todas' },
-  { value: 'DRAFT', label: 'Borrador' },
-  { value: 'ACTIVE', label: 'Activa' },
-  { value: 'PAUSED', label: 'Pausada' },
-  { value: 'ENDED', label: 'Finalizada' },
-] as const;
+const CAMPAIGN_TYPE: Record<string, string> = {
+  presale: 'Preventa',
+  early_bird: 'Anticipada',
+};
 
-type StatusFilter = (typeof STATUS_FILTERS)[number]['value'];
+type EventRow = { id: string; title: string };
+
+type Campaign = {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  allocation: number;
+  quantityPerUser: number;
+  discountType: string;
+  discountValue: number;
+  codes: string[];
+  redeemed: number;
+};
+
+type Draft = {
+  name: string;
+  type: 'presale' | 'early_bird';
+  discountType: 'percentage' | 'fixed';
+  discountValue: string;
+  allocation: number;
+  quantityPerUser: number;
+  startsAt: string;
+  endsAt: string;
+};
+
+function word(map: Record<string, string>, value: string): string {
+  return map[value] ?? value;
+}
+
+function discountLabel(type: string, value: number): string {
+  if (type === 'fixed') return formatTicketAmount(value);
+  return `${value.toLocaleString('es-MX', { maximumFractionDigits: 2 })}%`;
+}
+
+function localInput(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function emptyDraft(): Draft {
+  const start = new Date();
+  const end = new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000);
+  return {
+    name: '',
+    type: 'presale',
+    discountType: 'percentage',
+    discountValue: '10',
+    allocation: 10,
+    quantityPerUser: 1,
+    startsAt: localInput(start),
+    endsAt: localInput(end),
+  };
+}
+
+function readEvent(raw: unknown): EventRow | null {
+  const row = asRecord(raw);
+  const id = readString(row.id);
+  const title = readString(row.title);
+  if (!id || !title) return null;
+  return { id, title };
+}
+
+function readCampaign(raw: unknown): Campaign | null {
+  const row = asRecord(raw);
+  const id = readString(row.id);
+  const name = readString(row.name);
+  if (!id || !name) return null;
+  const codes = Array.isArray(row.codes)
+    ? row.codes.flatMap((item) => {
+        const code = readString(item);
+        return code ? [code] : [];
+      })
+    : [];
+  return {
+    id,
+    name,
+    type: readString(row.type) ?? '—',
+    status: readString(row.status) ?? 'DRAFT',
+    startsAt: readString(row.startsAt),
+    endsAt: readString(row.endsAt),
+    allocation: readNumber(row.allocation) ?? 0,
+    quantityPerUser: readNumber(row.quantityPerUser) ?? 1,
+    discountType: readString(row.discountType) ?? 'percentage',
+    discountValue: readNumber(row.discountValue) ?? 0,
+    codes,
+    redeemed: readNumber(row.redeemed) ?? 0,
+  };
+}
+
+function failMessage(cause: unknown): string {
+  if (cause instanceof ApiError) return cause.userMessage;
+  return 'No se guardó. Revisa la conexión.';
+}
 
 export default function CampaignsPage() {
-  const session = useAdminSession();
-  const toast = useToast();
-  const [eventId, setEventId] = useState('');
-  const [busy, setBusy] = useState<string | null>(null);
-  const [composerOpen, setComposerOpen] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  const events = useResource<EventRow[]>(
-    useCallback(async ({ token }) => {
-      const list = await listEvents(token);
-      setEventId((current) => current || list[0]?.id || '');
-      return list;
-    }, []),
-    { requiresOrg: false },
-  );
-
-  const campaigns = useResource<Campaign[]>(
-    useCallback(
-      async ({ token }) => (eventId ? ((await listCampaigns(token, eventId)) as Campaign[]) : []),
-      [eventId],
-    ),
-    { requiresOrg: false, deps: [eventId] },
-  );
-
-  const selectedEvent = useMemo(
-    () => (events.state.phase === 'ready' ? events.state.data.find((e) => e.id === eventId) : null),
-    [events.state, eventId],
-  );
-
-  function fail(e: unknown, fallback: string) {
-    toast.error(e instanceof ApiError ? e.userMessage : fallback);
-  }
-
-  async function handleCreate(payload: ComposerPayload) {
-    const token = getStoredToken();
-    if (!token || session.phase !== 'ready' || !eventId) {
-      toast.error('Necesitas una organización y un evento seleccionado para crear la campaña.');
-      return;
-    }
-    if (new Date(payload.endsAt) <= new Date(payload.startsAt)) {
-      toast.error('La fecha de fin debe ser posterior a la de inicio.');
-      return;
-    }
-    setBusy('create');
-    setCreateError(null);
-    try {
-      await createCampaign(token, session.orgId, eventId, {
-        ...payload,
-        startsAt: new Date(payload.startsAt),
-        endsAt: new Date(payload.endsAt),
-      });
-      toast.success(`Campaña "${payload.name}" creada en borrador`);
-      setComposerOpen(false);
-      campaigns.reload();
-    } catch (e) {
-      const message = e instanceof ApiError ? e.userMessage : 'No se pudo crear la campaña';
-      setCreateError(message);
-      fail(e, message);
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function publish(c: { id: string; name: string }) {
-    const token = getStoredToken();
-    if (!token) return;
-    if (!confirm(`¿Publicar "${c.name}"? Quedará visible para los compradores.`)) return;
-    setBusy(c.id);
-    try {
-      await publishCampaignApi(token, c.id);
-      toast.success('Campaña publicada');
-      campaigns.reload();
-    } catch (e) {
-      fail(e, 'No se pudo publicar la campaña');
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function exportCodes(c: { id: string; name: string }) {
-    const token = getStoredToken();
-    if (!token) return;
-    setBusy(c.id);
-    try {
-      const csv = await exportPresaleCodes(token, c.id);
-      const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `codigos-presale-${c.name.replace(/\W+/g, '-').toLowerCase()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Códigos exportados');
-    } catch (e) {
-      fail(e, 'No se pudieron exportar los códigos');
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  function handleRecommendationAction(action: RecommendationAction) {
-    if (action.kind === 'publish') {
-      const campaign = campaigns.state.phase === 'ready'
-        ? campaigns.state.data.find((item) => item.id === action.campaignId)
-        : null;
-      if (campaign) void publish(campaign);
-      return;
-    }
-    if (action.kind === 'export') {
-      const campaign = campaigns.state.phase === 'ready'
-        ? campaigns.state.data.find((item) => item.id === action.campaignId)
-        : null;
-      if (campaign) void exportCodes(campaign);
-      return;
-    }
-    setComposerOpen(true);
-  }
-
   return (
-    <div className={styles.wrap}>
-      <PageHeader
-        eyebrow="Promoción"
-        title="Campañas y presales"
-        description="Presale, early bird, VIP — cupos, descuentos y códigos por evento"
-        actions={
-          <div className={styles.headerControls}>
-            <ResourceView resource={events} context="los eventos" loadingRows={1}>
-              {(list) =>
-                list.length === 0 ? null : (
-                  <>
-                    <label htmlFor="campaign-event" className={styles.srOnly}>
-                      Evento
-                    </label>
-                    <select
-                      id="campaign-event"
-                      className={styles.eventSelect}
-                      value={eventId}
-                      onChange={(e) => {
-                        setEventId(e.target.value);
-                        setSelectedId(null);
-                      }}
-                    >
-                      {list.map((ev) => (
-                        <option key={ev.id} value={ev.id}>
-                          {ev.title}
-                        </option>
-                      ))}
-                    </select>
-                  </>
-                )
-              }
-            </ResourceView>
-            <Button
-              type="button"
-              disabled={!eventId || busy !== null}
-              onClick={() => {
-                setCreateError(null);
-                setComposerOpen(true);
-              }}
-            >
-              Nueva campaña
-            </Button>
-          </div>
-        }
-      />
-
-      <ResourceView resource={events} context="los eventos" loadingRows={1}>
-        {(list) =>
-          list.length === 0 ? (
-            <EmptyState
-              title="No hay eventos en tu organización"
-              description="Crea un evento antes de configurar campañas."
-            />
-          ) : (
-            <ResourceView resource={campaigns} context="las campañas" loadingRows={3}>
-              {(list) => (
-                <CampaignsDashboard
-                  campaigns={list}
-                  eventTitle={selectedEvent?.title ?? 'el evento'}
-                  busy={busy}
-                  search={search}
-                  statusFilter={statusFilter}
-                  selectedId={selectedId}
-                  onSearchChange={setSearch}
-                  onStatusFilterChange={setStatusFilter}
-                  onSelect={setSelectedId}
-                  onPublish={publish}
-                  onExport={exportCodes}
-                  onRecommendationAction={handleRecommendationAction}
-                />
-              )}
-            </ResourceView>
-          )
-        }
-      </ResourceView>
-
-      <CampaignComposer
-        open={composerOpen}
-        eventTitle={selectedEvent?.title ?? 'el evento'}
-        submitting={busy === 'create'}
-        error={createError}
-        onClose={() => {
-          if (busy === 'create') return;
-          setComposerOpen(false);
-          setCreateError(null);
-        }}
-        onSubmit={(payload) => void handleCreate(payload)}
-      />
-    </div>
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <DescuentosBody />
+      </AdminFrame>
+    </Suspense>
   );
 }
 
-type DashboardProps = {
-  campaigns: Campaign[];
-  eventTitle: string;
-  busy: string | null;
-  search: string;
-  statusFilter: StatusFilter;
-  selectedId: string | null;
-  onSearchChange: (value: string) => void;
-  onStatusFilterChange: (value: StatusFilter) => void;
-  onSelect: (id: string | null) => void;
-  onPublish: (campaign: { id: string; name: string }) => void;
-  onExport: (campaign: { id: string; name: string }) => void;
-  onRecommendationAction: (action: RecommendationAction) => void;
-};
+function DescuentosBody() {
+  const session = useSession();
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [eventId, setEventId] = useState<string | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [paused, setPaused] = useState<Record<string, boolean>>({});
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [nonce, setNonce] = useState(0);
+  const token = session.token;
+  const canWrite = hasCapability(session.role, 'marketing.manage');
 
-function CampaignsDashboard({
-  campaigns,
-  eventTitle,
-  busy,
-  search,
-  statusFilter,
-  selectedId,
-  onSearchChange,
-  onStatusFilterChange,
-  onSelect,
-  onPublish,
-  onExport,
-  onRecommendationAction,
-}: DashboardProps) {
-  const views = useMemo(() => campaigns.map((item) => toCampaignView(item)), [campaigns]);
-  const summary = useMemo(() => summarizeAllocation(views), [views]);
-  const revenue = useMemo(() => summarizeRevenue([]), []);
-  const recommendations = useMemo(
-    () => buildRecommendations(views, [], revenue),
-    [views, revenue],
-  );
-  const calendar = useMemo(() => buildCalendar(views), [views]);
+  useEffect(() => {
+    if (!token || !canWrite) {
+      if (session.status !== 'loading') setLoading(false);
+      return;
+    }
+    let alive = true;
+    setError(null);
+    adminApi<unknown>('/admin/events', token)
+      .then((payload) => {
+        if (!alive) return;
+        const list = Array.isArray(payload) ? payload : [];
+        const next = list.flatMap((item) => {
+          const event = readEvent(item);
+          return event ? [event] : [];
+        });
+        setEvents(next);
+        setEventId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setError(cause);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [token, canWrite, session.status]);
 
-  const statusCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const view of views) counts.set(view.status, (counts.get(view.status) ?? 0) + 1);
-    return counts;
-  }, [views]);
+  useEffect(() => {
+    if (!token || !eventId || !canWrite) return;
+    let alive = true;
+    adminApi<unknown>(`/campaigns/list/${eventId}`, token)
+      .then((payload) => {
+        if (!alive) return;
+        const list = Array.isArray(payload) ? payload : [];
+        const next = list.flatMap((item) => {
+          const campaign = readCampaign(item);
+          return campaign ? [campaign] : [];
+        });
+        setCampaigns(next);
+        setPaused(Object.fromEntries(next.map((item) => [item.id, item.status === 'PAUSED'])));
+        setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setError(cause);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [token, eventId, canWrite, nonce]);
 
-  const filterDefs = useMemo<FilterDefinition[]>(
-    () => [
-      {
-        id: 'status',
-        label: 'Estado',
-        multiple: false,
-        options: STATUS_FILTERS.filter((item) => item.value !== 'ALL').map((item) => ({
-          value: item.value,
-          label: item.label,
-          count: statusCounts.get(item.value) ?? 0,
-        })),
-      },
-    ],
-    [statusCounts],
-  );
+  const pauseChanges = campaigns.filter((item) => (paused[item.id] ?? false) !== (item.status === 'PAUSED'));
+  const creating = draft.name.trim().length > 0;
+  const dirty = pauseChanges.length > 0 || creating;
 
-  const filterSelection = useMemo<FilterSelection>(() => {
-    const selection: Record<string, readonly string[]> = {};
-    if (statusFilter !== 'ALL') selection.status = [statusFilter];
-    return selection;
-  }, [statusFilter]);
-
-  const needle = search.trim().toLowerCase();
-  const filtered = useMemo(() => {
-    return views.filter((view) => {
-      if (statusFilter !== 'ALL' && view.status !== statusFilter) return false;
-      if (!needle) return true;
-      return (
-        view.name.toLowerCase().includes(needle) ||
-        view.type.toLowerCase().includes(needle) ||
-        campaignTypeLabel(view.type).toLowerCase().includes(needle)
-      );
-    });
-  }, [views, statusFilter, needle]);
-
-  const selected = useMemo(
-    () => views.find((view) => view.id === selectedId) ?? filtered[0] ?? null,
-    [views, selectedId, filtered],
-  );
-
-  const columns = useMemo<readonly DataTableColumn<CampaignView>[]>(
-    () => [
-      {
-        key: 'name',
-        header: 'Campaña',
-        sortValue: (row) => row.name,
-        render: (row) => (
-          <div className={styles.rowTitle}>
-            <strong>{row.name}</strong>
-            <span>{campaignTypeLabel(row.type)}</span>
-          </div>
-        ),
-      },
-      {
-        key: 'status',
-        header: 'Estado',
-        width: 130,
-        sortValue: (row) => row.status,
-        render: (row) => {
-          const meta = campaignStatusMeta(row.status);
-          return (
-            <Badge tone={meta.tone} variant="soft" size="sm">
-              {meta.label}
-            </Badge>
-          );
-        },
-      },
-      {
-        key: 'allocation',
-        header: 'Cupo',
-        width: 100,
-        align: 'right',
-        sortValue: (row) => row.allocation,
-        render: (row) => formatCount(row.allocation),
-      },
-      {
-        key: 'redeemed',
-        header: 'Canjeado',
-        width: 140,
-        align: 'right',
-        sortValue: (row) => row.redeemed,
-        render: (row) => (
-          <div className={styles.progressCell}>
-            <span>{formatCount(row.redeemed)}</span>
-            <div className={styles.track} aria-hidden>
-              <div
-                className={styles.fill}
-                style={{ width: `${Math.min(100, row.redemptionRate)}%` }}
-              />
-            </div>
-            <span className={styles.progressMeta}>{formatPercentPoints(row.redemptionRate)}</span>
-          </div>
-        ),
-      },
-      {
-        key: 'discount',
-        header: 'Descuento',
-        width: 110,
-        align: 'right',
-        sortValue: (row) => row.discountValue,
-        render: (row) => discountLabel(row),
-      },
-      {
-        key: 'window',
-        header: 'Ventana',
-        width: 180,
-        sortValue: (row) => row.startsAt ?? '',
-        render: (row) => (
-          <span className={styles.rowTitle}>
-            <strong>{formatDateShort(row.startsAt)}</strong>
-            <span>hasta {formatDateShort(row.endsAt)}</span>
-          </span>
-        ),
-      },
-      {
-        key: 'actions',
-        header: 'Acciones',
-        width: 220,
-        render: (row) => (
-          <div className={styles.actions}>
-            {row.status === 'DRAFT' ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={busy !== null}
-                loading={busy === row.id}
-                loadingLabel="Guardando…"
-                onClick={() => onPublish(row)}
-              >
-                Publicar
-              </Button>
-            ) : null}
-            {row.type === 'presale' ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={busy !== null}
-                loading={busy === row.id}
-                loadingLabel="Exportando…"
-                onClick={() => onExport(row)}
-              >
-                Exportar códigos
-              </Button>
-            ) : null}
-          </div>
-        ),
-      },
-    ],
-    [busy, onExport, onPublish],
-  );
-
-  const anyFilter = statusFilter !== 'ALL' || Boolean(needle);
-
-  function clearFilters() {
-    onSearchChange('');
-    onStatusFilterChange('ALL');
+  async function save() {
+    if (!token || !eventId || !session.orgId || !dirty || saving) return;
+    const value = Number(draft.discountValue);
+    if (creating) {
+      if (!Number.isFinite(value) || value < 0) {
+        setActionError('El valor del descuento no puede ser negativo.');
+        return;
+      }
+      if (!draft.startsAt || !draft.endsAt || new Date(draft.endsAt) <= new Date(draft.startsAt)) {
+        setActionError('El fin tiene que ser posterior al inicio.');
+        return;
+      }
+    }
+    setSaving(true);
+    setActionError(null);
+    const lines: string[] = [];
+    try {
+      for (const item of pauseChanges) {
+        const next = paused[item.id] ?? false;
+        await adminApi(`/campaigns/${item.id}/${next ? 'pause' : 'resume'}`, token, {
+          method: 'POST',
+          body: '{}',
+        });
+        lines.push(`${item.name}: ${next ? 'En pausa' : 'Activa'}`);
+      }
+      if (creating) {
+        await adminApi(`/campaigns/create/${session.orgId}/${eventId}`, token, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: draft.name.trim(),
+            type: draft.type,
+            startsAt: new Date(draft.startsAt).toISOString(),
+            endsAt: new Date(draft.endsAt).toISOString(),
+            allocation: draft.allocation,
+            quantityPerUser: draft.quantityPerUser,
+            discountType: draft.discountType,
+            discountValue: value,
+          }),
+        });
+        lines.push(`Descuento creado · ${draft.name.trim()}`);
+        setDraft(emptyDraft());
+      }
+      setNotice(lines.join(' · '));
+      setNonce((current) => current + 1);
+    } catch (cause) {
+      setActionError(failMessage(cause));
+    } finally {
+      setSaving(false);
+    }
   }
 
-  if (views.length === 0) {
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (!canWrite && session.status !== 'loading') {
     return (
-      <EmptyState
-        title="Sin campañas para este evento"
-        description="Crea una campaña de preventa o descuento; queda en borrador hasta que la publiques."
-        action={
-          <Button type="button" onClick={() => onRecommendationAction({ kind: 'compose', label: '' })}>
-            Crear primera campaña
-          </Button>
-        }
-      />
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Descuentos</h1>
+          <p className={styles.quiet}>Sin secciones.</p>
+        </header>
+      </section>
     );
   }
+  if (error) {
+    return (
+      <ApiErrorView error={error} context="abrir descuentos" onRetry={() => setNonce((current) => current + 1)} />
+    );
+  }
+  if (loading || !token) return <p className={styles.quiet}>Cargando descuentos.</p>;
+
+  const event = events.find((item) => item.id === eventId) ?? null;
 
   return (
-    <>
-      <Section columns={3} gap="md" className={styles.kpiGrid}>
-        <KpiCard label="Cupo total" value={formatNumber(summary.allocation)} tone="accent" />
-        <KpiCard label="Redimido" value={formatNumber(summary.redeemed)} tone="success" />
-        <KpiCard
-          label="Disponible"
-          value={formatNumber(summary.remaining)}
-          hint={`${formatPercentPoints(summary.redemptionRate)} del cupo`}
-        />
-        <KpiCard label="Activas" value={formatNumber(summary.activeCount)} />
-        <KpiCard
-          label="En borrador"
-          value={formatNumber(summary.draftCount)}
-          tone={summary.draftCount > 0 ? 'warning' : 'neutral'}
-        />
-        <KpiCard label="Códigos emitidos" value={formatNumber(summary.codesIssued)} />
-      </Section>
-
-      <Notice tone="info" title="Dónde viven estas campañas">
-        <p>
-          Se guardan dentro de los metadatos del evento <strong>{eventTitle}</strong>, no en una tabla
-          propia: no hay historial ni bitácora por campaña, y borrar el evento se las lleva.
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Descuentos</h1>
+        <p className={styles.quiet}>
+          Campañas que el evento ya guarda. El alta escribe porcentaje o monto fijo. 2×1, envío y
+          cashback no tienen cobro detrás.
         </p>
-      </Notice>
-
-      <div className={styles.panel}>
-        <FilterBar
-          filters={filterDefs}
-          value={filterSelection}
-          onChange={(next) => onStatusFilterChange((next.status?.[0] as StatusFilter) ?? 'ALL')}
-          search={{
-            value: search,
-            onChange: onSearchChange,
-            placeholder: 'Buscar por nombre o tipo…',
-          }}
-        />
-        <div className={styles.panelHead}>
-          <div>
-            <h2>Campañas del evento</h2>
-            <p>
-              {filtered.length} de {views.length} campañas
-              {anyFilter ? ' coinciden con los filtros' : ''}.
-            </p>
-          </div>
-          {anyFilter ? (
-            <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
-              Limpiar filtros
-            </Button>
-          ) : null}
-        </div>
-
-        <DataTable
-          label="Campañas con tipo, estado, cupo, canje y descuento"
-          columns={columns}
-          data={filtered}
-          rowKey={(row) => row.id}
-          onRowClick={(row) => onSelect(row.id)}
-          selectedKeys={selected ? [selected.id] : []}
-          defaultSort={{ key: 'name', direction: 'asc' }}
-          empty={
-            <EmptyState
-              title="Ninguna campaña coincide con los filtros"
-              description="Prueba otro término o quita el filtro de estado."
-              action={
-                <Button type="button" variant="outline" onClick={clearFilters}>
-                  Limpiar filtros
-                </Button>
-              }
-            />
-          }
-        />
+      </header>
+      {events.length === 0 ? <p className={styles.quiet}>No hay eventos.</p> : null}
+      <div className={styles.stack}>
+        {events.map((item) => {
+          const open = item.id === eventId;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+              aria-expanded={open}
+              onClick={() => {
+                setEventId(item.id);
+                setNotice(null);
+              }}
+            >
+              <span>{item.title}</span>
+              <span className={styles.figure}>{open ? 'Abierta' : 'Abrir'}</span>
+            </button>
+          );
+        })}
       </div>
-
-      <div className={styles.twoCol}>
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <div>
-              <h2>Calendario de ventanas</h2>
-              <p>Vigencia de cada campaña sobre la línea de tiempo del evento.</p>
-            </div>
-          </div>
-          {calendar ? (
-            <div className={styles.calendar}>
-              <div className={styles.calendarAxis} aria-hidden>
-                {calendar.ticks.map((tick) => (
-                  <span
-                    key={tick.iso}
-                    className={styles.calendarTick}
-                    style={{ left: `${tick.percent}%` }}
-                  >
-                    {formatDateShort(tick.iso)}
-                  </span>
-                ))}
-                {calendar.todayPercent != null ? (
-                  <span
-                    className={styles.calendarToday}
-                    style={{ left: `${calendar.todayPercent}%` }}
-                  />
-                ) : null}
-              </div>
-              <div className={styles.calendarRows}>
-                {calendar.bars.map((bar) => (
-                  <div key={bar.id} className={styles.calendarRow}>
-                    <div className={styles.calendarLabel}>
-                      <strong>{bar.name}</strong>
-                      <span>
-                        {formatDateShort(bar.startsAt)} – {formatDateShort(bar.endsAt)}
-                      </span>
-                    </div>
-                    <div className={styles.calendarTrack}>
-                      <div
-                        className={[
-                          styles.calendarBar,
-                          bar.live
-                            ? styles.calendarBarActive
-                            : bar.status === 'DRAFT'
-                              ? styles.calendarBarDraft
-                              : bar.status === 'PAUSED'
-                                ? styles.calendarBarPaused
-                                : styles.calendarBarEnded,
-                        ].join(' ')}
-                        style={{
-                          left: `${bar.offsetPercent}%`,
-                          width: `${bar.widthPercent}%`,
+      {event && campaigns.length === 0 ? <p className={styles.quiet}>No hay descuentos.</p> : null}
+      <div className={styles.stack}>
+        {campaigns.map((item) => {
+          const open = openId === item.id;
+          const isPaused = paused[item.id] ?? false;
+          const code = item.codes[0] ?? 'Ninguno';
+          return (
+            <div key={item.id} className={styles.stack}>
+              <button
+                type="button"
+                className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+                aria-expanded={open}
+                onClick={() => setOpenId(open ? null : item.id)}
+              >
+                <span>{item.name}</span>
+                <span className={styles.figure}>
+                  {discountLabel(item.discountType, item.discountValue)}
+                </span>
+              </button>
+              {open ? (
+                <div className={styles.stack}>
+                  <Param name="Código">
+                    <ParameterCard
+                      name="Código"
+                      value={code}
+                      valueStyle="mono"
+                      effect={
+                        item.codes.length > 1
+                          ? `Hay ${formatCount(item.codes.length)} códigos. El servicio los generó.`
+                          : 'El servicio lo genera en la preventa. No se teclea.'
+                      }
+                    />
+                  </Param>
+                  <Param name="Nombre del descuento">
+                    <ParameterCard
+                      name="Nombre del descuento"
+                      value={item.name}
+                      effect="Nombre interno. Esta ruta no lo renombra."
+                    />
+                  </Param>
+                  <Param name="Tipo">
+                    <ParameterCard
+                      name="Tipo"
+                      value={item.discountType === 'fixed' ? 'Monto fijo' : 'Porcentaje'}
+                      effect={`Campaña ${word(CAMPAIGN_TYPE, item.type)}. El alta no escribe 2×1, envío ni cashback.`}
+                    />
+                  </Param>
+                  <Param name="Valor del descuento">
+                    <ParameterCard
+                      name="Valor del descuento"
+                      value={discountLabel(item.discountType, item.discountValue)}
+                      valueStyle="tabular"
+                      effect="Descuento ya guardado. Esta ruta no lo cambia."
+                    />
+                  </Param>
+                  <Param name="Cupo de preventa">
+                    <ParameterCard
+                      name="Cupo de preventa"
+                      value={formatCount(item.allocation)}
+                      valueStyle="tabular"
+                      effect="Tope de 0 a 100 que el alta ya guardó."
+                    />
+                  </Param>
+                  <Param name="Usos por persona">
+                    <ParameterCard
+                      name="Usos por persona"
+                      value={formatCount(item.quantityPerUser)}
+                      valueStyle="tabular"
+                      effect="Tope por persona de esta campaña."
+                    />
+                  </Param>
+                  <Param name="Canjes">
+                    <ParameterCard
+                      name="Canjes"
+                      value={formatCount(item.redeemed)}
+                      valueStyle="tabular"
+                      effect="Los cuenta el servicio."
+                    />
+                  </Param>
+                  <Param name="Descuento desde">
+                    <ParameterCard
+                      name="Descuento desde"
+                      value={formatWhen(item.startsAt)}
+                      effect="Inicio ya guardado."
+                    />
+                  </Param>
+                  <Param name="Descuento hasta">
+                    <ParameterCard name="Descuento hasta" value={formatWhen(item.endsAt)} effect="Fin ya guardado." />
+                  </Param>
+                  <Param name="Estado">
+                    <ParameterCard
+                      name="Estado"
+                      value={word(STATUS, item.status)}
+                      effect="Pausar o reanudar es lo que esta ruta escribe sobre una campaña ya hecha."
+                    >
+                      <Switch
+                        label="Preventa en pausa"
+                        on={isPaused}
+                        onChange={(next) => {
+                          setPaused((current) => ({ ...current, [item.id]: next }));
+                          setNotice(null);
                         }}
-                        title={`${bar.name}: ${formatDateTime(bar.startsAt)} – ${formatDateTime(bar.endsAt)}`}
                       />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    </ParameterCard>
+                  </Param>
+                </div>
+              ) : null}
             </div>
-          ) : (
-            <p className={styles.callout}>
-              Las campañas actuales no tienen fechas de inicio y fin configuradas para dibujar el
-              calendario.
-            </p>
-          )}
-        </section>
-
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <div>
-              <h2>Recomendaciones</h2>
-              <p>Acciones sugeridas según cupo, borradores y ventanas.</p>
-            </div>
-          </div>
-          {recommendations.length === 0 ? (
-            <p className={styles.callout}>No hay recomendaciones pendientes para este evento.</p>
-          ) : (
-            <ul className={styles.recoList}>
-              {recommendations.slice(0, 5).map((item) => {
-                const meta = severityMeta(item.severity);
-                return (
-                  <li key={item.id} className={styles.recoItem}>
-                    <div className={styles.recoTop}>
-                      <span className={styles.recoTitle}>{item.title}</span>
-                      <Badge tone={meta.tone} variant="soft" size="sm">
-                        {meta.label}
-                      </Badge>
-                    </div>
-                    <p className={styles.recoBody}>{item.explanation}</p>
-                    <p className={styles.recoAction}>{item.suggestion}</p>
-                    {item.action ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onRecommendationAction(item.action!)}
-                      >
-                        {item.action.label}
-                      </Button>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+          );
+        })}
+        <Param name="Puntos de lealtad">
+          <ParameterCard
+            name="Puntos de lealtad"
+            value="Sin efecto"
+            effect="El endpoint no escribe. La cuenta no tiene ese dato."
+          />
+        </Param>
       </div>
-
-      {selected ? (
-        <section
-          className={[styles.panel, styles.detailCard, styles.detailCardSelected].join(' ')}
-          aria-label="Detalle de campaña seleccionada"
-        >
-          <div className={styles.detailHead}>
-            <div>
-              <h2>{selected.name}</h2>
-              <p>{campaignTypeLabel(selected.type)}</p>
-            </div>
-            <Badge tone={campaignStatusMeta(selected.status).tone} variant="soft">
-              {campaignStatusMeta(selected.status).label}
-            </Badge>
-          </div>
-          <dl className={styles.detailDl}>
-            <dt>Cupo</dt>
-            <dd>{formatCount(selected.allocation)}</dd>
-            <dt>Redimido</dt>
-            <dd>
-              {formatCount(selected.redeemed)} ({formatPercentPoints(selected.redemptionRate)})
-            </dd>
-            <dt>Descuento</dt>
-            <dd>{discountLabel(selected)}</dd>
-            <dt>Por usuario</dt>
-            <dd>{selected.quantityPerUser != null ? formatCount(selected.quantityPerUser) : '—'}</dd>
-            <dt>Abre</dt>
-            <dd>{formatDateTime(selected.startsAt)}</dd>
-            <dt>Cierra</dt>
-            <dd>{formatDateTime(selected.endsAt)}</dd>
-            <dt>Códigos</dt>
-            <dd>{formatCount(selected.codes.length)}</dd>
-          </dl>
-        </section>
+      {canWrite && event ? (
+        <div className={styles.stack}>
+          <h2 className={styles.sectionTitle}>Nuevo</h2>
+          <Param name="Nombre del descuento">
+            <ParameterCard
+              name="Nombre del descuento"
+              value={draft.name.trim() || '—'}
+              effect="Vacío: Guardar no crea campaña."
+            >
+              <Field
+                label="Nombre del descuento"
+                value={draft.name}
+                onChange={(input) => {
+                  setDraft((current) => ({ ...current, name: input.target.value }));
+                  setNotice(null);
+                }}
+              />
+            </ParameterCard>
+          </Param>
+          <Param name="Tipo de campaña">
+            <ParameterCard
+              name="Tipo de campaña"
+              value={word(CAMPAIGN_TYPE, draft.type)}
+              effect="Preventa genera códigos. Anticipada también deja el descuento."
+            >
+              <Segment
+                label="Tipo de campaña"
+                value={draft.type}
+                options={[
+                  { value: 'presale', label: 'Preventa' },
+                  { value: 'early_bird', label: 'Anticipada' },
+                ]}
+                onChange={(next) => setDraft((current) => ({ ...current, type: next }))}
+              />
+            </ParameterCard>
+          </Param>
+          <Param name="Tipo">
+            <ParameterCard
+              name="Tipo"
+              value={draft.discountType === 'fixed' ? 'Monto fijo' : 'Porcentaje'}
+              effect="El alta solo persiste estos dos."
+            >
+              <Segment
+                label="Tipo"
+                value={draft.discountType}
+                options={[
+                  { value: 'percentage', label: 'Porcentaje' },
+                  { value: 'fixed', label: 'Monto fijo' },
+                ]}
+                onChange={(next) => setDraft((current) => ({ ...current, discountType: next }))}
+              />
+            </ParameterCard>
+          </Param>
+          <Param name="Valor del descuento">
+            <ParameterCard
+              name="Valor del descuento"
+              value={
+                draft.discountType === 'fixed'
+                  ? formatTicketAmount(Number(draft.discountValue) || 0)
+                  : `${draft.discountValue || '0'}%`
+              }
+              valueStyle="tabular"
+              effect="Descuento que se escribe al crear."
+            >
+              {draft.discountType === 'fixed' ? (
+                <Field
+                  label="Valor del descuento"
+                  kind="money"
+                  value={draft.discountValue}
+                  onChange={(input) => setDraft((current) => ({ ...current, discountValue: input.target.value }))}
+                />
+              ) : (
+                <Stepper
+                  label="Valor del descuento"
+                  value={Number(draft.discountValue) || 0}
+                  min={0}
+                  max={100}
+                  unit="%"
+                  onChange={(next) => setDraft((current) => ({ ...current, discountValue: String(next) }))}
+                />
+              )}
+            </ParameterCard>
+          </Param>
+          <Param name="Cupo de preventa">
+            <ParameterCard
+              name="Cupo de preventa"
+              value={formatCount(draft.allocation)}
+              valueStyle="tabular"
+              effect="El API lo acepta de 0 a 100."
+            >
+              <Stepper
+                label="Cupo de preventa"
+                value={draft.allocation}
+                min={0}
+                max={100}
+                onChange={(next) => setDraft((current) => ({ ...current, allocation: next }))}
+              />
+            </ParameterCard>
+          </Param>
+          <Param name="Usos por persona">
+            <ParameterCard
+              name="Usos por persona"
+              value={formatCount(draft.quantityPerUser)}
+              valueStyle="tabular"
+              effect="Mínimo 1."
+            >
+              <Stepper
+                label="Usos por persona"
+                value={draft.quantityPerUser}
+                min={1}
+                max={null}
+                onChange={(next) => setDraft((current) => ({ ...current, quantityPerUser: next }))}
+              />
+            </ParameterCard>
+          </Param>
+          <Param name="Descuento desde">
+            <ParameterCard name="Descuento desde" value={formatWhen(draft.startsAt)} effect="Inicio de la campaña.">
+              <Field
+                label="Descuento desde"
+                type="datetime-local"
+                value={draft.startsAt}
+                onChange={(input) => setDraft((current) => ({ ...current, startsAt: input.target.value }))}
+              />
+            </ParameterCard>
+          </Param>
+          <Param name="Descuento hasta">
+            <ParameterCard name="Descuento hasta" value={formatWhen(draft.endsAt)} effect="Fin de la campaña.">
+              <Field
+                label="Descuento hasta"
+                type="datetime-local"
+                value={draft.endsAt}
+                onChange={(input) => setDraft((current) => ({ ...current, endsAt: input.target.value }))}
+              />
+            </ParameterCard>
+          </Param>
+        </div>
       ) : null}
-    </>
+      {actionError ? (
+        <p className={styles.danger} role="alert">
+          {actionError}
+        </p>
+      ) : null}
+      {canWrite ? (
+        <div className={styles.saveBar}>
+          <p className={styles.quiet} aria-live="polite">
+            {dirty ? 'Sin guardar' : (notice ?? '')}
+          </p>
+          <TicketButton disabled={!dirty || saving} onClick={() => void save()}>
+            Guardar sección
+          </TicketButton>
+        </div>
+      ) : null}
+    </section>
   );
 }
