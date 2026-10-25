@@ -6,6 +6,7 @@
 
 ## Hecho
 
+- 2026-10-25 cursor: Equipo asigna a una persona uno de los 15 roles de Prisma; el catálogo y las llaves siguen en lectura.
 - 2026-10-25 cursor: el saldo de lealtad se guarda en User al pagar; si la campaña trae un número, ese valor se descuenta al cobrar por la misma vía que un código.
 - 2026-10-25 cursor: tarjeta, SPEI y OXXO se guardan en settings; si la clave no está, el método sigue activo.
 - 2026-10-25 cursor: cargo por servicio e IVA se guardan en settings de la organización; vacío sigue la tasa del entorno.

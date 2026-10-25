@@ -8,6 +8,7 @@ import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../../common/audit.service';
+import { assertCatalogRole } from './team-role';
 
 const TEAM_ROLES: UserRole[] = [
   UserRole.PROMOTER,
@@ -76,9 +77,10 @@ export class OrganizationService {
     }
   }
 
+  /** Personas de la organización. Su rol es la columna `User.role`. */
   async listTeam(orgId: string) {
     return this.prisma.user.findMany({
-      where: { organizationId: orgId, role: { in: TEAM_ROLES } },
+      where: { organizationId: orgId },
       select: {
         id: true,
         email: true,
@@ -151,6 +153,7 @@ export class OrganizationService {
     data: { role?: UserRole; active?: boolean },
     actorId?: string,
   ) {
+    const role = assertCatalogRole(data.role);
     const user = await this.prisma.user.findFirst({
       where: { id: userId, organizationId: orgId },
     });
@@ -158,7 +161,10 @@ export class OrganizationService {
 
     const updated = await this.prisma.user.update({
       where: { id: userId },
-      data,
+      data: {
+        ...(role !== undefined ? { role } : {}),
+        ...(data.active !== undefined ? { active: data.active } : {}),
+      },
       select: {
         id: true,
         email: true,
