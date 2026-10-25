@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PermissionKey } from '@boletera/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -7,7 +7,7 @@ import { PermissionsGuard } from '../auth/permissions.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { ReconciliationService } from '../reconciliation/reconciliation.service';
-import { AdminService } from './admin.service';
+import { AdminService, type VenueWrite } from './admin.service';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -115,6 +115,16 @@ export class AdminController {
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'VENUE_MANAGER')
   venues(@Request() req: { user: { organizationId?: string } }) {
     return this.admin.listVenues(req.user.organizationId!);
+  }
+
+  @Patch('venues/:id')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  updateVenue(
+    @Request() req: { user: { organizationId?: string; sub?: string } },
+    @Param('id') id: string,
+    @Body() body: VenueWrite,
+  ) {
+    return this.admin.updateVenue(req.user.organizationId!, id, body, req.user.sub);
   }
 
   @Get('branding')

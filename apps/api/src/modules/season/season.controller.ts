@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { OrgAccessGuard } from '../auth/org-access.guard';
-import { SeasonService } from './season.service';
+import { SeasonService, type SeasonPassWrite } from './season.service';
 
 @ApiTags('Season / Abonos')
 @Controller('season')
@@ -51,5 +51,19 @@ export class SeasonController {
   @ApiBearerAuth()
   list(@Param('orgId') orgId: string) {
     return this.season.list(orgId);
+  }
+
+  @Patch('org/:orgId/:passId')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update season pass / abono' })
+  update(
+    @Param('orgId') orgId: string,
+    @Param('passId') passId: string,
+    @Body() body: SeasonPassWrite,
+    @Request() req: { user?: { sub?: string } },
+  ) {
+    return this.season.update(orgId, passId, body, req.user?.sub);
   }
 }

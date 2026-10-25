@@ -6,6 +6,7 @@
 
 ## Hecho
 
+- 2026-10-25 cursor: recinto y abonos se guardan en las columnas que ya existían; los días de reembolso y de transferencia siguen en lectura porque no hay columna.
 - 2026-10-25 cursor: el editor del plano queda en el lienzo admin; Guardar sección persiste la geometría que ya tenía.
 - 2026-10-25 cursor: Descuentos, cumplimiento, recinto, mapa, organización, marca, partners, abonos, espera, pagos y plataforma en fichas; se edita solo lo que el API ya guarda.
 - 2026-10-25 cursor: Fases se guardan; liquidaciones, facturación, reportes y fraude muestran lo que el API ya devuelve.

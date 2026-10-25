@@ -116,7 +116,7 @@ function RefundsBody() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Reembolsos</h1>
         <p className={styles.quiet}>
-          Los plazos los fija el entorno. Cerrar el dinero en Banorte lo hace una persona.
+          Los días no tienen columna: el entorno los fija y aquí se leen. Cerrar el dinero en Banorte lo hace una persona.
         </p>
       </header>
       <div className={styles.stack}>
@@ -125,7 +125,7 @@ function RefundsBody() {
             name="Días para cerrar"
             value={businessDaysLabel(policy.settlementBusinessDays)}
             valueStyle="tabular"
-            effect="Plazo para enviar la devolución. El correo y la web leen este número."
+            effect="No hay columna. El entorno fija el plazo que leen el correo y la web."
           />
         </Param>
         <Param name="Días del banco">
@@ -133,7 +133,7 @@ function RefundsBody() {
             name="Días del banco"
             value={businessDaysLabel(policy.bankBusinessDays)}
             valueStyle="tabular"
-            effect="Techo del banco emisor, en días hábiles. No se descuentan los festivos."
+            effect="No hay columna. Techo del banco emisor, en días hábiles. No se descuentan los festivos."
           />
         </Param>
         {refunds.length === 0 ? <p className={styles.quiet}>No hay reembolsos.</p> : null}
@@ -147,7 +147,9 @@ function RefundsBody() {
             onCompleted={() => setNonce((current) => current + 1)}
           />
         ))}
-        <p className={styles.tertiary}>Transferencias</p>
+        <p className={styles.tertiary}>
+          Transferencias. No hay un plazo en el modelo: el estado y la época de la clave se leen.
+        </p>
         {transferNote ? <p className={styles.tertiary}>{transferNote}</p> : null}
         {transfers.length === 0 && !transferNote ? (
           <p className={styles.quiet}>No hay transferencias.</p>

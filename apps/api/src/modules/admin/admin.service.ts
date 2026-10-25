@@ -1,5 +1,6 @@
 import { OrderStatus, Prisma, type RefundReason } from '@prisma/client';
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { AuditService } from '../../common/audit.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
 import { NotificationService } from '../notification/notification.service';
@@ -27,6 +28,7 @@ export class AdminService {
     private prisma: PrismaService,
     private payments: PaymentService,
     private notifications: NotificationService,
+    private audit: AuditService,
   ) {}
 
   // ==================== ADMIN DASHBOARD ====================
@@ -139,10 +141,95 @@ export class AdminService {
       where: { organizationId: orgId },
       include: {
         layouts: { where: { isActive: true } },
+        blackouts: { orderBy: { startsAt: 'asc' } },
         _count: { select: { events: true } },
       },
       orderBy: { name: 'asc' },
     });
+  }
+
+  /** Identidad de la sala y sus blackouts. El slug queda como se creó. */
+  async updateVenue(orgId: string, venueId: string, body: VenueWrite, actorId?: string) {
+    const venue = await this.prisma.venue.findFirst({
+      where: { id: venueId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!venue) throw new NotFoundException('Recinto no encontrado');
+
+    const data: Prisma.VenueUpdateInput = {};
+    if (body.name !== undefined) data.name = requiredText(body.name, 'Nombre del recinto');
+    if (body.description !== undefined) data.description = optionalText(body.description, 'Descripción del recinto');
+    if (body.address !== undefined) data.address = requiredText(body.address, 'Dirección');
+    if (body.city !== undefined) data.city = requiredText(body.city, 'Ciudad del recinto');
+    if (body.state !== undefined) data.state = requiredText(body.state, 'Estado del recinto');
+    if (body.country !== undefined) data.country = requiredText(body.country, 'País del recinto');
+    if (body.postalCode !== undefined) data.postalCode = optionalText(body.postalCode, 'Código postal del recinto');
+    if (body.latitude !== undefined) data.latitude = optionalCoord(body.latitude, 'Latitud', -90, 90);
+    if (body.longitude !== undefined) data.longitude = optionalCoord(body.longitude, 'Longitud', -180, 180);
+    if (body.timezone !== undefined) data.timezone = requiredText(body.timezone, 'Zona horaria del recinto');
+    if (body.totalCapacity !== undefined) data.totalCapacity = requiredInt(body.totalCapacity, 'Aforo total', 0);
+    if (body.accessibilitySeats !== undefined) {
+      data.accessibilitySeats = requiredInt(body.accessibilitySeats, 'Butacas accesibles', 0);
+    }
+    if (body.premiumSeats !== undefined) data.premiumSeats = requiredInt(body.premiumSeats, 'Butacas premium', 0);
+    if (body.generalSeats !== undefined) data.generalSeats = requiredInt(body.generalSeats, 'Butacas generales', 0);
+    if (body.phone !== undefined) data.phone = optionalText(body.phone, 'Teléfono del recinto');
+    if (body.email !== undefined) data.email = optionalEmail(body.email);
+    if (body.website !== undefined) data.website = optionalText(body.website, 'Sitio del recinto');
+    if (body.image !== undefined) data.image = optionalText(body.image, 'Imagen del recinto');
+
+    const blackouts = body.blackouts === undefined ? undefined : readBlackouts(body.blackouts);
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (Object.keys(data).length > 0) {
+        await tx.venue.update({ where: { id: venueId }, data });
+      }
+      if (blackouts) {
+        for (const blackout of blackouts) {
+          if (blackout.id) {
+            const owned = await tx.venueBlackout.findFirst({
+              where: { id: blackout.id, venueId },
+              select: { id: true },
+            });
+            if (!owned) throw new NotFoundException('Blackout no encontrado');
+            await tx.venueBlackout.update({
+              where: { id: blackout.id },
+              data: {
+                reason: blackout.reason,
+                startsAt: blackout.startsAt,
+                endsAt: blackout.endsAt,
+                blocking: blackout.blocking,
+              },
+            });
+          } else {
+            await tx.venueBlackout.create({
+              data: {
+                venueId,
+                reason: blackout.reason,
+                startsAt: blackout.startsAt,
+                endsAt: blackout.endsAt,
+                blocking: blackout.blocking,
+                createdBy: actorId,
+              },
+            });
+          }
+        }
+      }
+      return tx.venue.findFirst({
+        where: { id: venueId },
+        include: { blackouts: { orderBy: { startsAt: 'asc' } } },
+      });
+    });
+
+    await this.audit.log({
+      action: 'VENUE_UPDATED',
+      entityType: 'Venue',
+      entityId: venueId,
+      organizationId: orgId,
+      userId: actorId,
+    });
+
+    return updated;
   }
 
   async getTheme(orgId: string) {
@@ -567,6 +654,116 @@ export class AdminService {
       note: `Sugerencia basada en: ${planDescription.slice(0, 200)}. Revisar en editor antes de publicar.`,
     };
   }
+}
+
+export type VenueBlackoutWrite = {
+  id?: string;
+  reason?: string;
+  startsAt?: string;
+  endsAt?: string;
+  blocking?: boolean;
+};
+
+export type VenueWrite = {
+  name?: string;
+  description?: string | null;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  timezone?: string;
+  totalCapacity?: number;
+  accessibilitySeats?: number;
+  premiumSeats?: number;
+  generalSeats?: number;
+  phone?: string | null;
+  email?: string | null;
+  website?: string | null;
+  image?: string | null;
+  blackouts?: VenueBlackoutWrite[];
+};
+
+function requiredText(value: unknown, field: string): string {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new BadRequestException(`${field} no puede quedar vacío`);
+  }
+  return value.trim();
+}
+
+function optionalText(value: unknown, field: string): string | null {
+  if (value === null) return null;
+  if (typeof value !== 'string') throw new BadRequestException(`${field} no es texto`);
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+}
+
+function optionalEmail(value: unknown): string | null {
+  const text = optionalText(value, 'Correo del recinto');
+  if (text && (!text.includes('@') || /\s/.test(text))) {
+    throw new BadRequestException('Correo del recinto no es válido');
+  }
+  return text;
+}
+
+function optionalCoord(value: unknown, field: string, min: number, max: number): number | null {
+  if (value === null || value === '') return null;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
+    throw new BadRequestException(`${field} está fuera de rango`);
+  }
+  return value;
+}
+
+function requiredInt(value: unknown, field: string, min: number): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < min) {
+    throw new BadRequestException(`${field} tiene que ser un entero desde ${min}`);
+  }
+  return value;
+}
+
+function readInstant(value: unknown, field: string): Date {
+  if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
+    throw new BadRequestException(`${field} no es una fecha`);
+  }
+  return new Date(value);
+}
+
+function readBlackouts(value: unknown): {
+  id?: string;
+  reason: string;
+  startsAt: Date;
+  endsAt: Date;
+  blocking: boolean;
+}[] {
+  if (!Array.isArray(value)) throw new BadRequestException('Blackout no es una lista');
+  if (value.length > 50) throw new BadRequestException('Hay demasiados blackouts');
+  return value.map((item) => {
+    if (typeof item !== 'object' || item === null) {
+      throw new BadRequestException('Blackout no es válido');
+    }
+    const row = item as Record<string, unknown>;
+    const reason = requiredText(row.reason, 'Motivo del blackout');
+    const startsAt = readInstant(row.startsAt, 'Blackout desde');
+    const endsAt = readInstant(row.endsAt, 'Blackout hasta');
+    if (endsAt.getTime() <= startsAt.getTime()) {
+      throw new BadRequestException('El blackout termina antes de empezar');
+    }
+    const blocking = row.blocking === undefined ? true : row.blocking;
+    if (typeof blocking !== 'boolean') {
+      throw new BadRequestException('Blackout bloquea no es un interruptor');
+    }
+    let id: string | undefined;
+    if (row.id === undefined || row.id === null || row.id === '') {
+      id = undefined;
+    } else if (typeof row.id !== 'string') {
+      throw new BadRequestException('Blackout no encontrado');
+    } else {
+      id = row.id;
+    }
+    return { id, reason, startsAt, endsAt, blocking };
+  });
 }
 
 
