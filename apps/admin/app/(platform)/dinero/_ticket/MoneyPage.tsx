@@ -146,6 +146,16 @@ function MoneyBody({ section }: { section: MoneySection }) {
   if (!rates || (section === 'cargos' && !org)) {
     return <p className={styles.quiet}>Cargando {TITLE[section].toLowerCase()}.</p>;
   }
-  if (section === 'cargos' && org) return <CargosSection org={org} rates={rates} />;
-  return <IvaSection rates={rates} />;
+  if (section === 'cargos' && org) {
+    return (
+      <CargosSection
+        org={org}
+        rates={rates}
+        token={token}
+        canSave={canSave}
+        onSaved={setRates}
+      />
+    );
+  }
+  return <IvaSection rates={rates} token={token} canSave={canSave} onSaved={setRates} />;
 }

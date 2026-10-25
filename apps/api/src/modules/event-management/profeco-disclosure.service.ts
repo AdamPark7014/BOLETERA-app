@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createHash } from 'crypto';
-import { priceBreakdown } from '../../common/pricing-rates';
+import { priceBreakdown, ratesFromSettings } from '../../common/pricing-rates';
 import { RedisService } from '../../common/redis.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -170,9 +170,11 @@ export class ProfecoDisclosureService {
         offers: { orderBy: { basePrice: 'asc' } },
         salePhases: { orderBy: { startsAt: 'asc' } },
         seatMap: { include: { layout: { include: { sections: { select: { name: true } } } } } },
+        organization: { select: { settings: true } },
       },
     });
     if (!event) throw new NotFoundException(`Evento ${eventId} no encontrado`);
+    const rates = ratesFromSettings(event.organization.settings);
 
     // Una sección puede tener varias ofertas (early bird, general...). Para el
     // público la sección es una sola, así que se agregan: los asientos suman y
@@ -193,7 +195,7 @@ export class ProfecoDisclosureService {
 
     const sections: DisclosedSection[] = [...byZone.entries()]
       .map(([zone, agg]) => {
-        const breakdown = priceBreakdown(agg.base);
+        const breakdown = priceBreakdown(agg.base, rates);
         return {
           zone,
           seats: agg.seats,
@@ -478,20 +480,27 @@ export class ProfecoDisclosureService {
     }[];
     totals: { total: number; available: number; sold: number };
   }> {
-    const offers = await this.prisma.offer.findMany({
-      where: { eventId },
-      select: {
-        zone: true,
-        name: true,
-        basePrice: true,
-        currency: true,
-        totalQuantity: true,
-        remainingQuantity: true,
-        holdQuantity: true,
-        soldQuantity: true,
-      },
-    });
+    const [offers, event] = await Promise.all([
+      this.prisma.offer.findMany({
+        where: { eventId },
+        select: {
+          zone: true,
+          name: true,
+          basePrice: true,
+          currency: true,
+          totalQuantity: true,
+          remainingQuantity: true,
+          holdQuantity: true,
+          soldQuantity: true,
+        },
+      }),
+      this.prisma.event.findUnique({
+        where: { id: eventId },
+        select: { organization: { select: { settings: true } } },
+      }),
+    ]);
     if (!offers.length) throw new NotFoundException(`Evento ${eventId} sin inventario`);
+    const rates = ratesFromSettings(event?.organization.settings);
 
     const byZone = new Map<
       string,
@@ -522,7 +531,7 @@ export class ProfecoDisclosureService {
         available: a.available,
         held: a.held,
         sold: a.sold,
-        totalPrice: priceBreakdown(a.base).total,
+        totalPrice: priceBreakdown(a.base, rates).total,
         currency: a.currency,
         soldOut: a.available <= 0,
       }))

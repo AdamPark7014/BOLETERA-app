@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { allInPrice, priceBreakdown } from '../../common/pricing-rates';
+import { allInPrice, priceBreakdown, ratesFromSettings } from '../../common/pricing-rates';
 import { EventCategory, EventStatus, Prisma } from '@prisma/client';
 import { isPublicCatalogEvent, publicCatalogEventWhere } from '../../common/event-visibility';
 import { PrismaService } from '../prisma/prisma.service';
@@ -85,7 +85,7 @@ export class DiscoveryService {
       orderBy: { startsAt: 'asc' },
       include: {
         venue: { select: { name: true, city: true, slug: true } },
-        organization: { select: { name: true, slug: true } },
+        organization: { select: { name: true, slug: true, settings: true } },
         offers: {
           where: { isAvailable: true },
           select: {
@@ -112,6 +112,7 @@ export class DiscoveryService {
     return events.map((e) => {
       const prices = e.offers.map((o) => Number(o.basePrice)).filter((n) => !Number.isNaN(n));
       const minPrice = prices.length ? Math.min(...prices) : 0;
+      const rates = ratesFromSettings(e.organization.settings);
       return {
         id: e.id,
         slug: e.slug,
@@ -131,11 +132,11 @@ export class DiscoveryService {
         /** @deprecated Precio base sin cargos. No mostrarlo como «desde». */
         minPrice,
         /** Precio final al comprador: es el que debe anunciarse. */
-        minPriceAllIn: allInPrice(minPrice),
-        minPriceBreakdown: priceBreakdown(minPrice),
+        minPriceAllIn: allInPrice(minPrice, rates),
+        minPriceBreakdown: priceBreakdown(minPrice, rates),
         maxPrice: e.maxPrice != null ? Number(e.maxPrice) : null,
         venue: e.venue,
-        organization: e.organization,
+        organization: { name: e.organization.name, slug: e.organization.slug },
         offerCount: e.offers.length,
         offers: e.offers.map((o) => ({
           id: o.id,
@@ -143,8 +144,8 @@ export class DiscoveryService {
           zone: o.zone,
           basePrice: o.basePrice,
           /** Lo que se paga por esta zona, cargos e IVA incluidos. */
-          allInPrice: allInPrice(Number(o.basePrice)),
-          priceBreakdown: priceBreakdown(Number(o.basePrice)),
+          allInPrice: allInPrice(Number(o.basePrice), rates),
+          priceBreakdown: priceBreakdown(Number(o.basePrice), rates),
           remainingQuantity: o.remainingQuantity,
           isAvailable: o.isAvailable,
         })),
@@ -178,16 +179,17 @@ export class DiscoveryService {
       .map((o) => Number(o.basePrice))
       .filter((n) => Number.isFinite(n) && n > 0);
     const cheapest = offerPrices.length ? Math.min(...offerPrices) : 0;
+    const rates = ratesFromSettings(event.organization.settings);
 
     return {
       ...event,
       posterAspect,
-      minPriceAllIn: allInPrice(cheapest),
-      minPriceBreakdown: priceBreakdown(cheapest),
+      minPriceAllIn: allInPrice(cheapest, rates),
+      minPriceBreakdown: priceBreakdown(cheapest, rates),
       offers: event.offers.map((o) => ({
         ...o,
-        allInPrice: allInPrice(Number(o.basePrice)),
-        priceBreakdown: priceBreakdown(Number(o.basePrice)),
+        allInPrice: allInPrice(Number(o.basePrice), rates),
+        priceBreakdown: priceBreakdown(Number(o.basePrice), rates),
       })),
     };
   }

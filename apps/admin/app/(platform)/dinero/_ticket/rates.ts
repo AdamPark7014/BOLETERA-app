@@ -17,8 +17,19 @@ export type PriceExample = {
 export type PricingRates = {
   serviceFeeRate: number;
   taxRate: number;
+  serviceFeeSaved: boolean;
+  taxSaved: boolean;
   example: PriceExample;
 };
+
+/** Misma fórmula que el API: base + cargo + IVA, redondeada a centavos. */
+export function exampleFromRates(base: number, serviceFeeRate: number, taxRate: number): PriceExample {
+  const safeBase = Number.isFinite(base) && base > 0 ? base : 0;
+  const round2 = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+  const fees = round2(safeBase * serviceFeeRate);
+  const taxes = round2(safeBase * taxRate);
+  return { base: round2(safeBase), fees, taxes, total: round2(safeBase + fees + taxes) };
+}
 
 export type ResaleLimits = {
   minPercent: number;
@@ -75,7 +86,13 @@ export function readPricingRates(raw: unknown): PricingRates | null {
   ) {
     return null;
   }
-  return { serviceFeeRate, taxRate, example: { base, fees, taxes, total } };
+  return {
+    serviceFeeRate,
+    taxRate,
+    serviceFeeSaved: row.serviceFeeSaved === true,
+    taxSaved: row.taxSaved === true,
+    example: { base, fees, taxes, total },
+  };
 }
 
 export function readResaleLimits(raw: unknown): ResaleLimits | null {

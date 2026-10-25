@@ -1,22 +1,61 @@
-import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { priceBreakdown, SERVICE_FEE_RATE, TAX_RATE } from '../../common/pricing-rates';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OrgAccessGuard, type OrgScopedRequest } from '../auth/org-access.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+import { type RatePatch } from '../../common/pricing-rates';
 import { PricingService } from './pricing.service';
+
+type ScopedRequest = OrgScopedRequest & { user?: { role?: string } };
+
+function requireScope(req: ScopedRequest): string | null {
+  const scoped = req.scopedOrganizationId ?? null;
+  if (scoped) return scoped;
+  if (req.user?.role === 'SUPER_ADMIN') return null;
+  throw new BadRequestException('organizationId requerido');
+}
 
 @ApiTags('Pricing')
 @Controller('pricing')
 export class PricingController {
   constructor(private pricingService: PricingService) {}
 
-  /** Tasas efectivas del entorno. No escribe y no cambia el cálculo all-in. */
+  /** Tasas de la organización. Vacío, las del entorno. No cambia la fórmula. */
   @Get('rates')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Tasas efectivas de cargo e IVA' })
-  rates() {
-    return {
-      serviceFeeRate: SERVICE_FEE_RATE,
-      taxRate: TAX_RATE,
-      example: priceBreakdown(1000),
-    };
+  readRates(@Request() req: ScopedRequest) {
+    return this.pricingService.readOrgRates(requireScope(req));
+  }
+
+  @Patch('rates')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Guardar tasa de cargo e IVA' })
+  saveRates(
+    @Request() req: ScopedRequest,
+    @Body() body: RatePatch,
+    @CurrentUser() user: { sub?: string; id?: string },
+  ) {
+    const organizationId = requireScope(req);
+    if (!organizationId) throw new BadRequestException('organizationId requerido');
+    return this.pricingService.saveOrgRates(organizationId, body ?? {}, user?.sub || user?.id);
   }
 
   // ==================== CALCULATE PRICE ====================

@@ -7851,7 +7851,7 @@ export namespace Prisma {
       allowResale: boolean
       resaleCommission: number
       /**
-       * Org settings: managerPinHash, varianceThreshold, refundSettlementBusinessDays, refundBankBusinessDays, transferDeadlineDays.
+       * Org settings: managerPinHash, varianceThreshold, refundSettlementBusinessDays, refundBankBusinessDays, transferDeadlineDays, serviceFeeRate, taxRate.
        */
       settings: Prisma.JsonValue | null
       createdAt: Date

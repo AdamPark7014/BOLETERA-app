@@ -1,7 +1,14 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { SERVICE_FEE_RATE, TAX_RATE } from '../../common/pricing-rates';
-import { PrismaService } from '../prisma/prisma.service';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { AuditService } from '../../common/audit.service';
+import {
+  mergeRateSettings,
+  priceBreakdown,
+  ratesFromSettings,
+  type RatePatch,
+} from '../../common/pricing-rates';
+import { PrismaService } from '../prisma/prisma.service';
 
 interface PricingContext {
   eventId: string;
@@ -40,13 +47,67 @@ export class PricingService {
     SURGE_EXTREME: 1.5, // 90%+ sold
   };
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private audit: AuditService,
+  ) {}
+
+  /** Tasas efectivas de la organización. Sin fila, las del entorno. */
+  async readOrgRates(organizationId: string | null) {
+    if (!organizationId) return ratesView(null);
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    return ratesView(org.settings);
+  }
+
+  /**
+   * Guarda en `Organization.settings` solo las tasas que llegan.
+   * No toca plazos, PIN, comisiones ni el cargo de reventa.
+   */
+  async saveOrgRates(organizationId: string, body: RatePatch, actorId?: string) {
+    const patch: RatePatch = {};
+    if (body.serviceFeeRate !== undefined) {
+      patch.serviceFeeRate = requireRate(body.serviceFeeRate, 'Cargo por servicio');
+    }
+    if (body.taxRate !== undefined) {
+      patch.taxRate = requireRate(body.taxRate, 'IVA');
+    }
+    if (patch.serviceFeeRate === undefined && patch.taxRate === undefined) {
+      throw new BadRequestException('No hay tasas que guardar');
+    }
+
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    const settings = mergeRateSettings(org.settings, patch);
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: { settings: settings as Prisma.InputJsonValue },
+    });
+    await this.audit.log({
+      action: 'PRICING_RATES_UPDATED',
+      entityType: 'Organization',
+      entityId: organizationId,
+      organizationId,
+      userId: actorId,
+      metadata: patch as Record<string, unknown>,
+    });
+    return ratesView(settings);
+  }
 
   // ==================== CALCULATE PRICING ====================
 
   async calculatePrice(ctx: PricingContext): Promise<PricingResult> {
     const [event, offer] = await Promise.all([
-      this.prisma.event.findUnique({ where: { id: ctx.eventId } }),
+      this.prisma.event.findUnique({
+        where: { id: ctx.eventId },
+        include: { organization: { select: { settings: true } } },
+      }),
       this.prisma.offer.findUnique({ where: { id: ctx.offerId } }),
     ]);
 
@@ -125,10 +186,11 @@ export class PricingService {
     // 6. Calculate final prices
     const adjustedPrice = new Decimal(basePrice * dynamicMultiplier);
     const subtotal = new Decimal(basePrice * dynamicMultiplier * ctx.quantity - discountAmount);
-    // Mismas tarifas que alimentan el precio «desde» del catálogo: lo anunciado
-    // y lo cobrado no pueden salir de dos sitios distintos.
-    const fees = subtotal.mul(SERVICE_FEE_RATE);
-    const taxes = subtotal.mul(TAX_RATE);
+    // Tasa guardada en la organización; si no hay, la del entorno.
+    // La fórmula no cambia: base + cargo + IVA. Es la misma del precio anunciado.
+    const rates = ratesFromSettings(event.organization.settings);
+    const fees = subtotal.mul(rates.serviceFeeRate);
+    const taxes = subtotal.mul(rates.taxRate);
     const total = subtotal.plus(fees).plus(taxes);
 
     this.logger.log(
@@ -315,6 +377,24 @@ export class PricingService {
     if (!org) return 0;
     return revenue * org.commissionRate;
   }
+}
+
+function ratesView(settings: unknown) {
+  const rates = ratesFromSettings(settings);
+  return {
+    serviceFeeRate: rates.serviceFeeRate,
+    taxRate: rates.taxRate,
+    serviceFeeSaved: rates.serviceFeeSaved,
+    taxSaved: rates.taxSaved,
+    example: priceBreakdown(1000, rates),
+  };
+}
+
+function requireRate(value: unknown, label: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 1) {
+    throw new BadRequestException(`${label} tiene que ser una tasa entre 0 y 1`);
+  }
+  return Number(value.toFixed(4));
 }
 
 
