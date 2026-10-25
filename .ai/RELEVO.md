@@ -6,6 +6,7 @@
 
 ## Hecho
 
+- 2026-10-25 cursor: Equipo muestra los 15 roles de Prisma; el menú reconoce 8 y las llaves se leen, sin Guardar.
 - 2026-10-24 cursor: puerta en el lenguaje visual: zonas que ya devuelve el acceso, escáner de admin y acceso de taquilla.
 - 2026-10-24 cursor: el corte muestra esperado, contado y la diferencia; el descuadre se guarda en el reporte Z que ya existía.
 - 2026-10-24 cursor: el cargo del anuncio usa resaleCommission; vacío sigue en el 8% del servicio.

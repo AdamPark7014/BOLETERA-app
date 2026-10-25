@@ -78,5 +78,6 @@ export function activeIndexId(pathname: string, section: string | null): string 
   if (pathname === '/dinero/iva') return 'iva';
   if (pathname === '/dinero/reembolsos') return 'reembolsos';
   if (pathname === '/access-control' || pathname === '/scanner') return 'puerta';
+  if (pathname === '/staff') return 'equipo';
   return null;
 }
