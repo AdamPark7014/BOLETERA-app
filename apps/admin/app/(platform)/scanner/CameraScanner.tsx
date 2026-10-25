@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { TicketButton } from '@boletera/ui';
 import styles from './scanner.module.scss';
 
 type Props = {
@@ -65,16 +66,18 @@ export function CameraScanner({ onScan, disabled }: Props) {
 
   return (
     <div className={styles.camera}>
-      <button type="button" onClick={() => setActive((a) => !a)} disabled={disabled}>
+      <TicketButton
+        variant="secondary"
+        onClick={() => setActive((current) => !current)}
+        disabled={disabled}
+      >
         {active ? 'Detener cámara' : 'Escanear con cámara'}
-      </button>
-      {error && <p className={styles.error}>{error}</p>}
-      {active && (
-        <video ref={videoRef} className={styles.video} playsInline muted />
-      )}
-      {active && !(window as unknown as { BarcodeDetector?: unknown }).BarcodeDetector && (
-        <p className={styles.hint}>Tu navegador no soporta BarcodeDetector; usa el campo manual.</p>
-      )}
+      </TicketButton>
+      {error ? <p className={styles.cameraNote}>{error}</p> : null}
+      {active ? <video ref={videoRef} className={styles.video} playsInline muted /> : null}
+      {active && !(window as unknown as { BarcodeDetector?: unknown }).BarcodeDetector ? (
+        <p className={styles.hint}>Este navegador no lee códigos con la cámara. Pega el código.</p>
+      ) : null}
     </div>
   );
 }

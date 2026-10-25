@@ -21,15 +21,12 @@
  *    que no existía.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Button,
-  Input,
-  KpiCard,
-  PageHeader,
-  Section,
-} from '@boletera/ui';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Field, NamedStatus, ParameterCard, TicketButton } from '@boletera/ui';
 import { ApiError, adminApi, getStoredToken } from '@/lib/api';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Param } from '../events/_ticket/controls';
+import frame from '../events/_ticket/frame.module.scss';
 import { CameraScanner } from './CameraScanner';
 import styles from './scanner.module.scss';
 
@@ -118,6 +115,16 @@ function feedback(ok: boolean) {
 }
 
 export default function ScannerPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <ScannerBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function ScannerBody() {
   const [code, setCode] = useState('');
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [loading, setLoading] = useState(false);
@@ -125,7 +132,7 @@ export default function ScannerPage() {
   const [online, setOnline] = useState(true);
   const [zoneId, setZoneId] = useState('');
   const [syncReport, setSyncReport] = useState<string | null>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   /**
    * Códigos ya vistos en ESTE dispositivo. Sin red es la única defensa contra
@@ -329,178 +336,187 @@ export default function ScannerPage() {
     if (!verdict) return '';
     switch (verdict.kind) {
       case 'granted':
-        return `Acceso permitido. ${verdict.eventTitle ?? ''} ${verdict.seat ?? ''}`.trim();
+        return `Éxito. ${verdict.eventTitle ?? ''} ${verdict.seat ?? ''}`.trim();
       case 'duplicate':
-        return `Boleto ya escaneado${
+        return `Rechazo. Boleto ya escaneado${
           formatMoment(verdict.firstScanAt) ? ` el ${formatMoment(verdict.firstScanAt)}` : ''
         }.`;
       case 'localDuplicate':
-        return `Ya escaneado en este dispositivo el ${formatMoment(verdict.at) ?? ''}.`;
+        return `Rechazo. Ya escaneado en este equipo el ${formatMoment(verdict.at) ?? ''}.`;
       case 'invalid':
-        return `Boleto no válido. ${verdict.reason}`;
+        return `Rechazo. ${verdict.reason}`;
       case 'queued':
-        return `Sin conexión: escaneo encolado sin validar. ${verdict.pending} pendientes.`;
+        return `Pendiente. Sin conexión: el escaneo no se validó. ${verdict.pending} por sincronizar.`;
       default:
-        return `Error: ${verdict.reason}`;
+        return `No se guardó. ${verdict.reason}`;
     }
   }, [verdict]);
 
+  const rejection = rejectionCopy(verdict);
+
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Operaciones"
-        title="Control de acceso"
-        description="Valida boletos en puerta con lector HID, cámara o captura manual."
-        actions={
-          queued > 0 && online ? (
-            <Button type="button" variant="outline" onClick={() => void flushQueue()}>
-              Sincronizar {queued}
-            </Button>
-          ) : undefined
-        }
-      >
-        <div className={styles.kpiGrid}>
-          <KpiCard
-            label="Conexión"
-            value={online ? 'En línea' : 'Sin conexión'}
-            tone={online ? 'success' : 'warning'}
-            hint={online ? 'Validación en tiempo real' : 'Los escaneos se encolan sin validar'}
-          />
-          <KpiCard
-            label="Cola offline"
-            value={queued}
-            tone={queued > 0 ? 'warning' : 'neutral'}
-            hint={queued > 0 ? 'Pendientes de sincronizar' : 'Sin pendientes'}
-          />
-          <KpiCard
-            label="Puerta"
-            value={zoneId.trim() || 'Sin asignar'}
-            tone={zoneId.trim() ? 'info' : 'neutral'}
-            hint="Identificador de la zona de acceso"
-          />
-        </div>
-      </PageHeader>
+    <section>
+      <header className={frame.sectionHead}>
+        <h1 className={frame.sectionTitle}>Escáner</h1>
+        <p className={frame.quiet}>Pega el código o usa el lector.</p>
+      </header>
 
-      {!online && (
-        <div className={styles.warnBanner} role="status">
-          Sin conexión los escaneos <strong>no se validan</strong>: se guardan y se revisan al
-          sincronizar. Sólo se detectan repetidos de esta misma puerta.
-        </div>
-      )}
+      {!online ? (
+        <p className={frame.danger} role="status">
+          Sin conexión los escaneos no se validan. Se guardan y se revisan al sincronizar. Solo se
+          detectan repetidos de esta misma puerta.
+        </p>
+      ) : null}
 
-      <Section title="Puerta o zona" description="Se registra en cada escaneo y en la sincronización offline.">
-        <Input
-          id="zone"
-          label="Identificador de zona"
-          value={zoneId}
-          onChange={(e) => persistZone(e.target.value)}
-          placeholder="Identificador de la zona de acceso"
-          autoComplete="off"
-          inputSize="lg"
-        />
-      </Section>
-
-      <Section title="Escanear" description="Usa la cámara o el lector de códigos de barras.">
-        <CameraScanner onScan={runScan} disabled={loading} />
-
-        <div className={styles.codeField}>
-          <label htmlFor="code">Código del boleto</label>
-          <textarea
-            id="code"
-            ref={inputRef}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={(e) => {
-              // El lector HID termina con Enter: validar sin tocar el ratón.
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                void runScan(code);
-              }
-            }}
-            placeholder="BLT-… o el contenido del QR"
-            rows={3}
-          />
-        </div>
-
-        <div className={styles.actions}>
-          <Button
-            type="button"
-            size="lg"
-            onClick={() => void runScan(code)}
-            disabled={loading || !code.trim()}
-            loading={loading}
-            loadingLabel="Validando…"
+      <div className={frame.stack}>
+        <Param name="Zona del escaneo">
+          <ParameterCard
+            name="Zona del escaneo"
+            value={zoneId.trim() || '—'}
+            valueStyle="mono"
+            effect="Si se escribe, tiene que ser una zona que ya existe. Vacío, el escaneo no lleva zona."
           >
-            Validar entrada
-          </Button>
-        </div>
-      </Section>
+            <Field
+              id="zone"
+              label="Identificador de la zona"
+              value={zoneId}
+              onChange={(event) => persistZone(event.target.value)}
+              placeholder="Identificador de la zona"
+              autoComplete="off"
+            />
+          </ParameterCard>
+        </Param>
+        <Param name="Canal del escaneo">
+          <ParameterCard
+            name="Canal del escaneo"
+            value="Admin"
+            effect="El escaneo de esta pantalla sale por administración."
+          />
+        </Param>
+        <Param name="Código del boleto">
+          <ParameterCard
+            name="Código del boleto"
+            value={code.trim() || '—'}
+            valueStyle="mono"
+            effect="Lector HID, o el contenido del QR."
+          >
+            <Field
+              id="code"
+              ref={inputRef}
+              label="Código"
+              value={code}
+              autoFocus
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="Código del boleto"
+              onChange={(event) => setCode(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  void runScan(code);
+                }
+              }}
+            />
+          </ParameterCard>
+        </Param>
 
-      {syncReport && (
-        <p className={styles.hint} role="status">
+        {verdict?.kind === 'granted' ? (
+          <Param name="Resultado">
+            <ParameterCard
+              name="Resultado"
+              value="Éxito"
+              effect={verdict.eventTitle || 'Acceso registrado.'}
+            />
+          </Param>
+        ) : null}
+        {verdict?.kind === 'granted' && verdict.seat ? (
+          <ParameterCard name="Butaca" value={verdict.seat} valueStyle="mono" effect="Sección, fila y número." />
+        ) : null}
+        {verdict?.kind === 'granted' && verdict.code ? (
+          <ParameterCard name="Folio" value={verdict.code} valueStyle="mono" effect="Código del boleto." />
+        ) : null}
+        {verdict?.kind === 'queued' ? (
+          <Param name="Resultado">
+            <ParameterCard
+              name="Resultado"
+              value={<NamedStatus status="pendiente" />}
+              effect={`No se comprobó el boleto. Quedan ${verdict.pending} por sincronizar.`}
+            />
+          </Param>
+        ) : null}
+        {rejection ? (
+          <Param name="Resultado">
+            <ParameterCard name="Resultado" value="Rechazo" effect={rejection.effect} />
+          </Param>
+        ) : null}
+        {rejection?.reason ? (
+          <Param name="Motivo del rechazo">
+            <ParameterCard name="Motivo del rechazo" value={rejection.reason} effect="Lo que devolvió el acceso." />
+          </Param>
+        ) : null}
+        {verdict?.kind === 'error' ? (
+          <p className={frame.danger} role="alert">
+            No se guardó. Revisa la conexión. {verdict.reason}
+          </p>
+        ) : null}
+      </div>
+
+      {syncReport ? (
+        <p className={frame.quiet} role="status">
           {syncReport}
         </p>
-      )}
+      ) : null}
 
-      {/* assertive: en una puerta el veredicto no puede esperar a que el lector
-          termine lo que estaba diciendo. */}
       <div aria-live="assertive" className={styles.srOnly}>
         {spoken}
       </div>
 
-      {verdict?.kind === 'granted' && (
-        <div className={styles.ok}>
-          <strong>✓ Acceso permitido</strong>
-          {verdict.eventTitle && <p>{verdict.eventTitle}</p>}
-          {verdict.seat && <p className={styles.seat}>{verdict.seat}</p>}
-          {verdict.code && <code>{verdict.code}</code>}
-        </div>
-      )}
+      <div className={styles.secondaryRow}>
+        <CameraScanner onScan={runScan} disabled={loading} />
+        {queued > 0 && online ? (
+          <TicketButton variant="secondary" onClick={() => void flushQueue()}>
+            Sincronizar {queued}
+          </TicketButton>
+        ) : null}
+      </div>
 
-      {verdict?.kind === 'duplicate' && (
-        <div className={styles.duplicate}>
-          <strong>⟳ Boleto ya escaneado</strong>
-          <p>No es un boleto falso: ya se usó para entrar. Verifica con la persona.</p>
-          <ul>
-            {formatMoment(verdict.firstScanAt) && (
-              <li>Primer escaneo: {formatMoment(verdict.firstScanAt)}</li>
-            )}
-            {verdict.firstScanZoneId && <li>Puerta: {verdict.firstScanZoneId}</li>}
-            {verdict.firstScanBy && <li>Operador: {verdict.firstScanBy}</li>}
-          </ul>
-        </div>
-      )}
-
-      {verdict?.kind === 'localDuplicate' && (
-        <div className={styles.duplicate}>
-          <strong>⟳ Repetido en esta puerta</strong>
-          <p>Se escaneó aquí mismo el {formatMoment(verdict.at)}.</p>
-        </div>
-      )}
-
-      {verdict?.kind === 'queued' && (
-        <div className={styles.queued}>
-          <strong>⏸ Encolado sin validar</strong>
-          <p>
-            No hay conexión, así que <strong>no se comprobó</strong> si el boleto es válido.
-            Quedan {verdict.pending} por sincronizar.
-          </p>
-        </div>
-      )}
-
-      {verdict?.kind === 'invalid' && (
-        <div className={styles.error}>
-          <strong>✕ Boleto no válido</strong>
-          <p>{verdict.reason}</p>
-        </div>
-      )}
-
-      {verdict?.kind === 'error' && (
-        <div className={styles.error}>
-          <strong>No se pudo validar</strong>
-          <p>{verdict.reason}</p>
-        </div>
-      )}
-    </div>
+      <div className={frame.saveBar}>
+        <p className={frame.quiet}>
+          {loading ? 'Validando…' : online ? 'En línea' : 'Sin conexión'}
+          {queued > 0 ? ` · ${queued} en cola` : ''}
+        </p>
+        <TicketButton disabled={loading || !code.trim()} onClick={() => void runScan(code)}>
+          Validar entrada
+        </TicketButton>
+      </div>
+    </section>
   );
+}
+
+function rejectionCopy(
+  verdict: Verdict | null,
+): { effect: string; reason: string } | null {
+  if (!verdict) return null;
+  if (verdict.kind === 'duplicate') {
+    const when = formatMoment(verdict.firstScanAt);
+    const bits = [
+      when ? `Primer escaneo ${when}` : null,
+      verdict.firstScanZoneId ? `Puerta ${verdict.firstScanZoneId}` : null,
+      verdict.firstScanBy ? `Operador ${verdict.firstScanBy}` : null,
+    ].filter(Boolean);
+    return {
+      effect: 'Ya se usó para entrar. Verifica con la persona.',
+      reason: bits.join(' · ') || 'Ya escaneado.',
+    };
+  }
+  if (verdict.kind === 'localDuplicate') {
+    return {
+      effect: 'Repetido en esta puerta.',
+      reason: `Se escaneó aquí el ${formatMoment(verdict.at) ?? '—'}.`,
+    };
+  }
+  if (verdict.kind === 'invalid') {
+    return { effect: 'El boleto no sirve para entrar.', reason: verdict.reason };
+  }
+  return null;
 }
