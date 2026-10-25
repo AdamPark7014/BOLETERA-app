@@ -73,7 +73,7 @@ import {
   type CadEntityRole,
   type GeometryIssueCode,
 } from '@boletera/venue-engine';
-import { Badge, Card } from '@boletera/ui';
+import { Badge, Card, Field, TicketButton } from '@boletera/ui';
 import { GeneratorsModal, type GeneratorApplyPayload } from './SeatMap/GeneratorsModal';
 import { SeatCanvasLayer } from './SeatMap/SeatCanvasLayer';
 import styles from './SeatMapEditor.module.scss';
@@ -191,6 +191,11 @@ type Props = {
   publishStatus?: import('@boletera/shared').LayoutPublishStatusValue;
   destructiveLocked?: boolean;
   readOnly?: boolean;
+  /** La vista pone la única primaria. El botón interno de guardado no se pinta. */
+  hideSaveButton?: boolean;
+  onBindSave?: (save: () => Promise<boolean>) => void;
+  onDirtyChange?: (dirty: boolean) => void;
+  onSavingChange?: (saving: boolean) => void;
 };
 
 const TIERS = ['standard', 'premium', 'economy'] as const;
@@ -386,6 +391,10 @@ export function SeatMapEditor({
   onValidationChange,
   destructiveLocked = false,
   readOnly = false,
+  hideSaveButton = false,
+  onBindSave,
+  onDirtyChange,
+  onSavingChange,
 }: Props) {
   const [map, setMap] = useState<SeatMapData>(() => cloneMap(initial));
   const [selected, setSelected] = useState<ReadonlySet<string>>(EMPTY_SELECTION);
@@ -2095,7 +2104,7 @@ export function SeatMapEditor({
     );
   }
 
-  async function handleSave() {
+  async function handleSave(): Promise<boolean> {
     // El análisis diferido puede ir por detrás del mapa: antes de guardar se
     // fuerza un pase completo sobre el estado actual, no sobre el diferido.
     const freshValidation = validateGeometry(resolveGeometry(map));
@@ -2108,7 +2117,7 @@ export function SeatMapEditor({
           .map((i) => `• ${i.message}`)
           .join('\n')}${errs.length > 8 ? `\n…y ${errs.length - 8} más` : ''}`,
       );
-      return;
+      return false;
     }
 
     /*
@@ -2126,7 +2135,7 @@ export function SeatMapEditor({
           'El API reemplaza el documento entero (no hay guardado parcial), así que ' +
           'cualquier zona que falte se borra.\n\n¿Continuar?',
       );
-      if (!ok) return;
+      if (!ok) return false;
     }
 
     setSaving(true);
@@ -2167,10 +2176,26 @@ export function SeatMapEditor({
         })(),
       };
       await onSave(payload);
+      return true;
     } finally {
       setSaving(false);
     }
   }
+
+  const saveHolder = useRef(handleSave);
+  saveHolder.current = handleSave;
+
+  useEffect(() => {
+    onBindSave?.(() => saveHolder.current());
+  }, [onBindSave]);
+
+  useEffect(() => {
+    onDirtyChange?.(canUndo(history));
+  }, [history, onDirtyChange]);
+
+  useEffect(() => {
+    onSavingChange?.(saving);
+  }, [saving, onSavingChange]);
 
   async function handleTemplate(id: (typeof TEMPLATES)[number]['id']) {
     if (!onApplyTemplate) return;
@@ -3812,21 +3837,24 @@ export function SeatMapEditor({
             </button>
           </div>
 
-          <button type="button" className={styles.primary} onClick={() => void handleSave()} disabled={saving}>
-            {saving ? 'Guardando…' : 'Guardar mapa'}
-          </button>
+          {hideSaveButton ? null : (
+            <button type="button" className={styles.primary} onClick={() => void handleSave()} disabled={saving}>
+              {saving ? 'Guardando…' : 'Guardar mapa'}
+            </button>
+          )}
         </div>
 
         {onAiSuggest && (
           <div className={styles.ai}>
-            <input
+            <Field
+              label="Sugerencia"
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="Describe el venue…"
+              placeholder="Describe la sala"
             />
-            <button type="button" onClick={() => void handleAi()}>
+            <TicketButton variant="secondary" onClick={() => void handleAi()}>
               Generar con prompt
-            </button>
+            </TicketButton>
           </div>
         )}
 

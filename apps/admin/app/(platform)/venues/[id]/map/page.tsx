@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import type { LayoutPublishStatusValue } from '@boletera/shared';
 import type { SeatMapData } from '@boletera/shared';
-import { Badge, Button, PageHeader, type BadgeTone } from '@boletera/ui';
+import { NamedStatus, TicketButton } from '@boletera/ui';
 import { SeatMapEditor, type MapValidationState } from '@/components/SeatMapEditor';
 import { LayoutPublishPanel } from '@/components/LayoutPublishPanel';
 import {
@@ -18,30 +17,36 @@ import {
   type VenueLayoutWorkflow,
 } from '@/lib/platform-api';
 import { ApiStateBoundary, useSession } from '../../../events/_shared/api-state';
+import { AdminFrame } from '../../../events/_ticket/AdminFrame';
+import { SheetSelect } from '../../../events/_ticket/controls';
+import frame from '../../../events/_ticket/frame.module.scss';
 import styles from '../../venues.module.scss';
 
 const STATUS_LABEL: Record<LayoutPublishStatusValue, string> = {
   DRAFT: 'Borrador',
   IN_REVIEW: 'En revisión',
   PUBLISHED: 'Publicado',
-  ARCHIVED: 'Archivado',
+  ARCHIVED: 'Archivo',
 };
 
-function publishStatusTone(status: LayoutPublishStatusValue): BadgeTone {
-  switch (status) {
-    case 'PUBLISHED':
-      return 'success';
-    case 'IN_REVIEW':
-      return 'info';
-    case 'ARCHIVED':
-      return 'warning';
-    default:
-      return 'neutral';
-  }
+function failMessage(cause: unknown): string {
+  if (cause instanceof Error && cause.message.trim()) return cause.message;
+  return 'No se guardó. Revisa la conexión.';
 }
 
 export default function VenueMapEditorPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <EditorBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function EditorBody() {
   const { id: venueId } = useParams<{ id: string }>();
+  const router = useRouter();
   const session = useSession();
   const [map, setMap] = useState<SeatMapData | null>(null);
   const [venueName, setVenueName] = useState('');
@@ -59,17 +64,35 @@ export default function VenueMapEditorPage() {
     warningCount: 0,
   });
   const [layoutVersion, setLayoutVersion] = useState(0);
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const saveRef = useRef<() => Promise<boolean>>(async () => false);
   const token = session.token;
 
   const onValidationChange = useCallback((state: MapValidationState) => {
     setValidation(state);
   }, []);
 
+  const bindSave = useCallback((save: () => Promise<boolean>) => {
+    saveRef.current = save;
+  }, []);
+
+  const onDirtyChange = useCallback((next: boolean) => {
+    setDirty(next);
+    if (next) setNotice(null);
+  }, []);
+
+  const onSavingChange = useCallback((next: boolean) => {
+    setSaving(next);
+  }, []);
+
   const reloadLayout = useCallback(async () => {
     if (!token || !venueId) return;
     const data = await getVenueLayout(token, venueId);
     setMap(data.layout.mapData);
-    setVenueName(data.venue?.name ?? 'Venue');
+    setVenueName(data.venue?.name ?? 'Recinto');
     if (data.layout.publishStatus) setPublishStatus(data.layout.publishStatus);
   }, [token, venueId]);
 
@@ -97,10 +120,32 @@ export default function VenueMapEditorPage() {
 
   const readOnly = publishStatus === 'ARCHIVED';
 
-  const validationHint = useMemo(() => {
-    if (validation.ok) return undefined;
-    return `${validation.errorCount} error(es) en el mapa — corrígelos en el panel Validación`;
-  }, [validation.errorCount, validation.ok]);
+  async function save() {
+    if (saving || readOnly || !dirty) return;
+    setActionError(null);
+    try {
+      const saved = await saveRef.current();
+      if (saved) setNotice('Geometría guardada.');
+    } catch (cause) {
+      setNotice(null);
+      setActionError(failMessage(cause));
+    }
+  }
+
+  async function publishInventory() {
+    if (!token || !publishEventId || !validation.ok || publishing) return;
+    setPublishMsg(null);
+    setActionError(null);
+    setPublishing(true);
+    try {
+      const result = await publishEvent(token, publishEventId);
+      setPublishMsg(`${result.totalSeats} boletos en ${result.sections} zonas`);
+    } catch (cause) {
+      setActionError(failMessage(cause));
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   if (session.status !== 'ready' || error || !map || !token) {
     return (
@@ -110,7 +155,7 @@ export default function VenueMapEditorPage() {
         loading={!map}
         context="abrir el mapa del recinto"
         onRetry={() => setNonce((n) => n + 1)}
-        loadingLabel="Cargando editor de mapa…"
+        loadingLabel="Cargando el plano."
       >
         <span />
       </ApiStateBoundary>
@@ -118,104 +163,83 @@ export default function VenueMapEditorPage() {
   }
 
   const authToken: string = token;
+  const version = workflow?.version;
 
   return (
-    <div className={styles.studioPage}>
-      <PageHeader
-        eyebrow={
-          <span className={styles.statusRow}>
-            <Badge tone={publishStatusTone(publishStatus)} variant="soft">
-              {STATUS_LABEL[publishStatus]}
-            </Badge>
-            {!validation.ok ? (
-              <Badge tone="danger" variant="soft">
-                {validation.errorCount} error(es)
-              </Badge>
-            ) : validation.warningCount > 0 ? (
-              <Badge tone="warning" variant="soft">
-                {validation.warningCount} aviso(s)
-              </Badge>
-            ) : null}
-            {destructiveLocked ? (
-              <Badge tone="warning" variant="soft">
-                Ventas activas
-              </Badge>
-            ) : null}
-          </span>
-        }
-        title={`Diseñador de mapa — ${venueName}`}
-        breadcrumbs={[
-          { label: 'Recintos', href: '/venues' },
-          { label: venueName },
-        ]}
-        description="Plantillas, zoom/pan, secciones y publicación de inventario"
-        actions={
-          <div className={styles.studioActions}>
-            {events.length > 0 ? (
-              <div className={styles.actionGroup}>
-                <label className={styles.selectField}>
-                  <span className={styles.srOnly}>Evento para publicar inventario</span>
-                  <select
-                    value={publishEventId}
-                    onChange={(e) => setPublishEventId(e.target.value)}
-                    aria-label="Evento para publicar inventario"
-                  >
-                    {events.map((ev) => (
-                      <option key={ev.id} value={ev.id}>
-                        {ev.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <Button
-                  disabled={!validation.ok || !publishEventId}
-                  title={validationHint}
-                  loading={publishing}
-                  loadingLabel="Publicando…"
-                  onClick={async () => {
-                    if (!token || !publishEventId) return;
-                    if (!validation.ok) {
-                      setPublishMsg(
-                        `No se puede publicar: ${validation.errorCount} error(es) pendientes en el mapa.`,
-                      );
-                      return;
-                    }
-                    setPublishMsg(null);
-                    setPublishing(true);
-                    try {
-                      const r = await publishEvent(token, publishEventId);
-                      setPublishMsg(`✓ ${r.totalSeats} boletos en ${r.sections} zonas`);
-                    } catch (e) {
-                      setPublishMsg(e instanceof Error ? e.message : 'Error');
-                    } finally {
-                      setPublishing(false);
-                    }
-                  }}
-                >
-                  Publicar inventario (evento)
-                </Button>
-              </div>
-            ) : null}
-            <Link href={`/venues/${venueId}/3d?v=${layoutVersion}`} className={styles.secondaryLink}>
-              Vista 3D
-            </Link>
-          </div>
-        }
-      />
+    <section>
+      <header className={frame.sectionHead}>
+        <h1 className={frame.sectionTitle}>Mapa</h1>
+        <p className={frame.quiet}>
+          {venueName} · {STATUS_LABEL[publishStatus]}
+          {version != null ? ` · v${version}` : ''}
+          {destructiveLocked ? ' · Ventas activas' : ''}
+          {!validation.ok
+            ? ` · ${validation.errorCount} errores`
+            : validation.warningCount > 0
+              ? ` · ${validation.warningCount} avisos`
+              : ''}
+        </p>
+      </header>
+
+      <div className={styles.legend} aria-label="Leyenda del plano">
+        <NamedStatus status="libre" />
+        <NamedStatus status="apartado" />
+        <NamedStatus status="vendido" />
+        <NamedStatus status="bloqueado" />
+        <NamedStatus status="accesible" />
+      </div>
+      <p className={frame.quiet}>
+        Seleccionado es el anillo de esta sesión. No hay degradado de ocupación.
+      </p>
 
       <LayoutPublishPanel
         venueId={venueId}
         token={authToken}
         validationOk={validation.ok}
         validationErrorCount={validation.errorCount}
-        onWorkflowChange={(w) => {
-          setWorkflow(w);
-          setPublishStatus(w.publishStatus);
+        onWorkflowChange={(next) => {
+          setWorkflow(next);
+          setPublishStatus(next.publishStatus);
         }}
         onMapReload={() => void reloadLayout()}
       />
 
-      {publishMsg ? <p className={styles.publishNotice}>{publishMsg}</p> : null}
+      <div className={styles.editorActions}>
+        {events.length > 1 ? (
+          <SheetSelect
+            label="Evento"
+            value={publishEventId}
+            placeholder="Elige la función"
+            options={events.map((event) => ({ value: event.id, label: event.title }))}
+            onChange={(next) => {
+              setPublishEventId(next);
+              setPublishMsg(null);
+            }}
+          />
+        ) : null}
+        {events.length > 0 ? (
+          <TicketButton
+            variant="secondary"
+            disabled={!validation.ok || !publishEventId || publishing}
+            onClick={() => void publishInventory()}
+          >
+            {publishing ? 'Publicando…' : 'Publicar inventario'}
+          </TicketButton>
+        ) : null}
+        <TicketButton
+          variant="secondary"
+          onClick={() => router.push(`/venues/${venueId}/3d?v=${layoutVersion}`)}
+        >
+          Vista 3D
+        </TicketButton>
+      </div>
+
+      {publishMsg ? <p className={frame.quiet}>{publishMsg}</p> : null}
+      {actionError ? (
+        <p className={frame.danger} role="alert">
+          {actionError}
+        </p>
+      ) : null}
 
       <SeatMapEditor
         initial={map}
@@ -223,12 +247,16 @@ export default function VenueMapEditorPage() {
         publishStatus={publishStatus}
         destructiveLocked={destructiveLocked}
         readOnly={readOnly}
+        hideSaveButton
         getAuthToken={() => authToken}
         onValidationChange={onValidationChange}
+        onBindSave={bindSave}
+        onDirtyChange={onDirtyChange}
+        onSavingChange={onSavingChange}
         onSave={async (mapData) => {
           await saveVenueLayout(authToken, venueId, mapData);
           await reloadLayout();
-          setLayoutVersion((v) => v + 1);
+          setLayoutVersion((current) => current + 1);
         }}
         onApplyTemplate={
           readOnly || destructiveLocked
@@ -249,6 +277,15 @@ export default function VenueMapEditorPage() {
               }
         }
       />
-    </div>
+
+      <div className={frame.saveBar}>
+        <p className={frame.quiet} aria-live="polite">
+          {dirty ? 'Sin guardar' : (notice ?? '')}
+        </p>
+        <TicketButton disabled={!dirty || saving || readOnly} onClick={() => void save()}>
+          Guardar sección
+        </TicketButton>
+      </div>
+    </section>
   );
 }

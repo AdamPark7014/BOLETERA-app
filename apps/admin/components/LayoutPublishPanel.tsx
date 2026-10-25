@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Badge, Button, Modal } from '@boletera/ui';
+import { Modal, TicketButton } from '@boletera/ui';
 import type { LayoutPublishStatusValue } from '@boletera/shared';
 import {
   archiveVenueLayout,
@@ -17,17 +17,7 @@ const STATUS_LABEL: Record<LayoutPublishStatusValue, string> = {
   DRAFT: 'Borrador',
   IN_REVIEW: 'En revisión',
   PUBLISHED: 'Publicado',
-  ARCHIVED: 'Archivado',
-};
-
-const STATUS_TONE: Record<
-  LayoutPublishStatusValue,
-  'neutral' | 'info' | 'success' | 'warning'
-> = {
-  DRAFT: 'neutral',
-  IN_REVIEW: 'info',
-  PUBLISHED: 'success',
-  ARCHIVED: 'warning',
+  ARCHIVED: 'Archivo',
 };
 
 type Props = {
@@ -112,38 +102,36 @@ export function LayoutPublishPanel({
         marginBottom: '0.75rem',
       }}
     >
-      <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
-      <span style={{ fontSize: '0.8125rem', opacity: 0.85 }}>
-        v{workflow.version}
+      <span style={{ fontSize: '0.875rem', lineHeight: '20px' }}>
+        {STATUS_LABEL[status]} · v{workflow.version}
         {workflow.salesLocked && (
           <>
             {' · '}
-            <strong>Bloqueado por ventas</strong> ({workflow.soldTicketCount.toLocaleString('es-MX')}{' '}
-            boleto(s))
+            <strong>Ventas activas</strong> ({workflow.soldTicketCount.toLocaleString('es-MX')}{' '}
+            boletos)
           </>
         )}
       </span>
 
       {status === 'DRAFT' && (
-        <Button
+        <TicketButton
           type="button"
-          size="sm"
-          loading={busy === 'review'}
+          variant="secondary"
+          disabled={busy === 'review'}
           onClick={() =>
             void runAction('review', () => submitVenueLayoutReview(token, venueId))
           }
         >
           Enviar a revisión
-        </Button>
+        </TicketButton>
       )}
 
       {status === 'IN_REVIEW' && (
         <>
-          <Button
+          <TicketButton
             type="button"
-            size="sm"
-            loading={busy === 'publish'}
-            disabled={!validationOk}
+            variant="secondary"
+            disabled={busy === 'publish' || !validationOk}
             title={
               validationOk
                 ? undefined
@@ -160,41 +148,39 @@ export function LayoutPublishPanel({
             }}
           >
             Publicar mapa
-          </Button>
-          <Button
+          </TicketButton>
+          <TicketButton
             type="button"
-            size="sm"
             variant="ghost"
-            loading={busy === 'draft'}
+            disabled={busy === 'draft'}
             onClick={() =>
               void runAction('draft', () => revertVenueLayoutDraft(token, venueId))
             }
           >
             Volver a borrador
-          </Button>
+          </TicketButton>
         </>
       )}
 
       {status === 'PUBLISHED' && !workflow.salesLocked && (
-        <Button
+        <TicketButton
           type="button"
-          size="sm"
           variant="ghost"
-          loading={busy === 'archive'}
+          disabled={busy === 'archive'}
           onClick={() =>
             void runAction('archive', () => archiveVenueLayout(token, venueId))
           }
         >
           Archivar
-        </Button>
+        </TicketButton>
       )}
 
-      <Button type="button" size="sm" variant="ghost" onClick={() => setHistoryOpen(true)}>
+      <TicketButton type="button" variant="ghost" onClick={() => setHistoryOpen(true)}>
         Historial ({workflow.snapshots.length})
-      </Button>
+      </TicketButton>
 
       {error && (
-        <span style={{ fontSize: '0.8125rem', color: 'var(--bl-danger, #b91c1c)', width: '100%' }}>
+        <span style={{ fontSize: '0.875rem', lineHeight: '20px', color: 'var(--danger)', width: '100%' }}>
           {error}
         </span>
       )}
@@ -205,9 +191,9 @@ export function LayoutPublishPanel({
         title="Historial de versiones"
         description="Snapshots inmutables creados al publicar o antes de un rollback."
         footer={
-          <Button type="button" variant="ghost" onClick={() => setHistoryOpen(false)}>
+          <TicketButton type="button" variant="ghost" onClick={() => setHistoryOpen(false)}>
             Cerrar
-          </Button>
+          </TicketButton>
         }
       >
         {workflow.snapshots.length === 0 ? (
@@ -234,12 +220,10 @@ export function LayoutPublishPanel({
                     {new Date(snap.createdAt).toLocaleString('es-MX')}
                   </div>
                 </div>
-                <Button
+                <TicketButton
                   type="button"
-                  size="sm"
-                  variant="ghost"
+                  variant="secondary"
                   disabled={workflow.salesLocked || busy === snap.id}
-                  loading={busy === snap.id}
                   title={
                     workflow.salesLocked
                       ? 'Rollback bloqueado: hay ventas vinculadas'
@@ -254,7 +238,7 @@ export function LayoutPublishPanel({
                   }
                 >
                   Restaurar
-                </Button>
+                </TicketButton>
               </li>
             ))}
           </ul>

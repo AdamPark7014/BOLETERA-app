@@ -455,6 +455,20 @@
   gap: var(--bl-space-2);
 }
 
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.editorActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
 .publishNotice {
   margin: var(--bl-space-0);
   padding: var(--bl-space-2-5) var(--bl-space-3);

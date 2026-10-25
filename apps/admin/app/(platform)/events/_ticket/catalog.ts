@@ -88,6 +88,8 @@ export function activeIndexId(pathname: string, section: string | null): string 
   if (pathname === '/campaigns') return 'descuentos';
   if (pathname === '/venues') return 'recinto';
   if (pathname === '/maps') return 'mapa';
+  const venueMap = pathname.split('/').filter(Boolean);
+  if (venueMap.length === 3 && venueMap[0] === 'venues' && venueMap[2] === 'map') return 'mapa';
   if (pathname === '/settings/organization') return 'organizacion';
   if (pathname === '/settings/branding' || pathname === '/settings/content') return 'marca';
   if (pathname === '/partners') return 'partners';

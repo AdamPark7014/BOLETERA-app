@@ -535,24 +535,13 @@
 
 .ai {
   display: flex;
-  gap: var(--bl-space-2);
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
 
-  input {
-    flex: 1;
-    padding: var(--bl-space-2) var(--bl-space-3);
-    border: 1px solid #333;
-    background: var(--bl-gray-900);
-    color: var(--bl-text-inverse);
-    font-size: var(--bl-text-md);
-  }
-
-  button {
-    padding: var(--bl-space-2) var(--bl-space-3);
-    border: 1px solid var(--bl-accent);
-    background: var(--bl-accent);
-    color: var(--bl-text-inverse);
-    cursor: pointer;
-    font-size: var(--bl-text-sm);
+  > :first-child {
+    flex: 1 1 16rem;
+    min-width: 0;
   }
 }
 

@@ -34,6 +34,8 @@ function isTicketSurface(pathname: string): boolean {
   if (pathname === '/payouts' || pathname === '/fraud' || pathname === '/reports') return true;
   if (pathname === '/billing/cfdi') return true;
   if (pathname === '/campaigns' || pathname === '/venues' || pathname === '/maps') return true;
+  const venueMap = pathname.split('/').filter(Boolean);
+  if (venueMap.length === 3 && venueMap[0] === 'venues' && venueMap[2] === 'map') return true;
   if (pathname === '/partners' || pathname === '/season' || pathname === '/waitlist') return true;
   if (pathname === '/platform') return true;
   if (
