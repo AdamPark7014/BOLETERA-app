@@ -8,6 +8,8 @@ import {
   ratesFromSettings,
   type RatePatch,
 } from '../../common/pricing-rates';
+import { CampaignExecutionService } from '../campaign-execution/campaign-execution.service';
+import { promotionDiscount } from '../campaign-execution/loyalty';
 import { PrismaService } from '../prisma/prisma.service';
 
 interface PricingContext {
@@ -17,6 +19,8 @@ interface PricingContext {
   timestamp?: Date;
   customerSegment?: 'EARLY_BUYER' | 'REGULAR' | 'VVIP';
   promotionCode?: string;
+  /** Cortesía: no meter la lealtad en el mismo lugar del código. */
+  skipLoyalty?: boolean;
 }
 
 export interface PricingResult {
@@ -50,6 +54,7 @@ export class PricingService {
   constructor(
     private prisma: PrismaService,
     private audit: AuditService,
+    private campaigns: CampaignExecutionService,
   ) {}
 
   /** Tasas efectivas de la organización. Sin fila, las del entorno. */
@@ -169,23 +174,27 @@ export class PricingService {
       appliedRules.push(`Customer segment: ${ctx.customerSegment || 'REGULAR'}`);
     }
 
-    // 5. Apply promotion/discount
+    // 5. Apply promotion/discount. La lealtad entra aquí, con el mismo código.
+    let promotionCode = ctx.promotionCode?.trim() || '';
+    if (!promotionCode && !ctx.skipLoyalty) {
+      promotionCode = (await this.campaigns.loyaltyChargeCode(ctx.eventId)) ?? '';
+    }
     let discountAmount = 0;
-    if (ctx.promotionCode) {
+    const gross = basePrice * dynamicMultiplier * ctx.quantity;
+    if (promotionCode) {
       const promotion = await this.prisma.promotion.findUnique({
-        where: { code: ctx.promotionCode },
+        where: { code: promotionCode },
       });
 
       if (promotion && this.isPromotionValid(promotion)) {
-        const discount = this.calculateDiscount(promotion, basePrice * dynamicMultiplier * ctx.quantity);
-        discountAmount = discount;
-        appliedRules.push(`Promotion ${ctx.promotionCode}: -${discount.toFixed(2)}`);
+        discountAmount = this.calculateDiscount(promotion, gross);
+        appliedRules.push(`Promotion ${promotionCode}: -${discountAmount.toFixed(2)}`);
       }
     }
 
     // 6. Calculate final prices
     const adjustedPrice = new Decimal(basePrice * dynamicMultiplier);
-    const subtotal = new Decimal(basePrice * dynamicMultiplier * ctx.quantity - discountAmount);
+    const subtotal = new Decimal(gross - discountAmount);
     // Tasa guardada en la organización; si no hay, la del entorno.
     // La fórmula no cambia: base + cargo + IVA. Es la misma del precio anunciado.
     const rates = ratesFromSettings(event.organization.settings);
@@ -242,22 +251,13 @@ export class PricingService {
 
   // ==================== DISCOUNT CALCULATION ====================
 
-  private calculateDiscount(promotion: any, subtotal: number): number {
-    if (promotion.type === 'PERCENTAGE') {
-      const discount = subtotal * (Number(promotion.value) / 100);
-      const maxDiscount = promotion.maxDiscount ? Number(promotion.maxDiscount) : Infinity;
-      return Math.min(discount, maxDiscount);
-    }
-
-    if (promotion.type === 'FIXED_AMOUNT') {
-      return Math.min(Number(promotion.value), subtotal);
-    }
-
-    if (promotion.type === 'BOGO') {
-      return subtotal * 0.5; // Buy one, get one 50% off
-    }
-
-    return 0;
+  private calculateDiscount(promotion: { type: string; value: unknown; maxDiscount?: unknown }, subtotal: number): number {
+    return promotionDiscount(
+      promotion.type,
+      Number(promotion.value),
+      subtotal,
+      promotion.maxDiscount != null ? Number(promotion.maxDiscount) : null,
+    );
   }
 
   // ==================== PROMOTION VALIDATION ====================

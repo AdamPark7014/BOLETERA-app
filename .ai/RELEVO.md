@@ -1,11 +1,12 @@
 # RELEVO
 
 - **Último turno:** cursor
-- **Fecha:** 2026-10-24
+- **Fecha:** 2026-10-25
 - **Rama:** main
 
 ## Hecho
 
+- 2026-10-25 cursor: el saldo de lealtad se guarda en User al pagar; si la campaña trae un número, ese valor se descuenta al cobrar por la misma vía que un código.
 - 2026-10-25 cursor: tarjeta, SPEI y OXXO se guardan en settings; si la clave no está, el método sigue activo.
 - 2026-10-25 cursor: cargo por servicio e IVA se guardan en settings de la organización; vacío sigue la tasa del entorno.
 - 2026-10-25 cursor: días para cerrar, días del banco y plazo de transferencia se guardan en settings de la organización; vacío sigue en 5, 10 y 7 días.

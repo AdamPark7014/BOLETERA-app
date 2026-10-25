@@ -40619,8 +40619,18 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    loyaltyPoints: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    loyaltyPoints: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -40643,6 +40653,7 @@ export namespace Prisma {
     twoFactorSecret: string | null
     active: boolean | null
     lastLogin: Date | null
+    loyaltyPoints: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -40667,6 +40678,7 @@ export namespace Prisma {
     twoFactorSecret: string | null
     active: boolean | null
     lastLogin: Date | null
+    loyaltyPoints: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -40691,11 +40703,20 @@ export namespace Prisma {
     twoFactorSecret: number
     active: number
     lastLogin: number
+    loyaltyPoints: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
+
+  export type UserAvgAggregateInputType = {
+    loyaltyPoints?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    loyaltyPoints?: true
+  }
 
   export type UserMinAggregateInputType = {
     id?: true
@@ -40717,6 +40738,7 @@ export namespace Prisma {
     twoFactorSecret?: true
     active?: true
     lastLogin?: true
+    loyaltyPoints?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -40741,6 +40763,7 @@ export namespace Prisma {
     twoFactorSecret?: true
     active?: true
     lastLogin?: true
+    loyaltyPoints?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -40765,6 +40788,7 @@ export namespace Prisma {
     twoFactorSecret?: true
     active?: true
     lastLogin?: true
+    loyaltyPoints?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -40808,6 +40832,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -40838,6 +40874,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -40862,9 +40900,12 @@ export namespace Prisma {
     twoFactorSecret: string | null
     active: boolean
     lastLogin: Date | null
+    loyaltyPoints: number
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -40903,6 +40944,7 @@ export namespace Prisma {
     twoFactorSecret?: boolean
     active?: boolean
     lastLogin?: boolean
+    loyaltyPoints?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | User$organizationArgs<ExtArgs>
@@ -40936,6 +40978,7 @@ export namespace Prisma {
     twoFactorSecret?: boolean
     active?: boolean
     lastLogin?: boolean
+    loyaltyPoints?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | User$organizationArgs<ExtArgs>
@@ -40961,6 +41004,7 @@ export namespace Prisma {
     twoFactorSecret?: boolean
     active?: boolean
     lastLogin?: boolean
+    loyaltyPoints?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | User$organizationArgs<ExtArgs>
@@ -40986,11 +41030,12 @@ export namespace Prisma {
     twoFactorSecret?: boolean
     active?: boolean
     lastLogin?: boolean
+    loyaltyPoints?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "emailVerified" | "emailVerifiedAt" | "firstName" | "lastName" | "profileImage" | "phone" | "role" | "organizationId" | "password" | "passwordResetToken" | "passwordResetAt" | "provider" | "providerId" | "twoFactorEnabled" | "twoFactorSecret" | "active" | "lastLogin" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "emailVerified" | "emailVerifiedAt" | "firstName" | "lastName" | "profileImage" | "phone" | "role" | "organizationId" | "password" | "passwordResetToken" | "passwordResetAt" | "provider" | "providerId" | "twoFactorEnabled" | "twoFactorSecret" | "active" | "lastLogin" | "loyaltyPoints" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | User$organizationArgs<ExtArgs>
     orders?: boolean | User$ordersArgs<ExtArgs>
@@ -41041,6 +41086,10 @@ export namespace Prisma {
       twoFactorSecret: string | null
       active: boolean
       lastLogin: Date | null
+      /**
+       * Saldo de puntos. Lo escribe awardLoyaltyPoints al pagar. Vacío = 0.
+       */
+      loyaltyPoints: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -41493,6 +41542,7 @@ export namespace Prisma {
     readonly twoFactorSecret: FieldRef<"User", 'String'>
     readonly active: FieldRef<"User", 'Boolean'>
     readonly lastLogin: FieldRef<"User", 'DateTime'>
+    readonly loyaltyPoints: FieldRef<"User", 'Int'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -72778,6 +72828,7 @@ export namespace Prisma {
     twoFactorSecret: 'twoFactorSecret',
     active: 'active',
     lastLogin: 'lastLogin',
+    loyaltyPoints: 'loyaltyPoints',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -76828,6 +76879,7 @@ export namespace Prisma {
     twoFactorSecret?: StringNullableFilter<"User"> | string | null
     active?: BoolFilter<"User"> | boolean
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
+    loyaltyPoints?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     organization?: XOR<OrganizationNullableScalarRelationFilter, OrganizationWhereInput> | null
@@ -76860,6 +76912,7 @@ export namespace Prisma {
     twoFactorSecret?: SortOrderInput | SortOrder
     active?: SortOrder
     lastLogin?: SortOrderInput | SortOrder
+    loyaltyPoints?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     organization?: OrganizationOrderByWithRelationInput
@@ -76895,6 +76948,7 @@ export namespace Prisma {
     twoFactorSecret?: StringNullableFilter<"User"> | string | null
     active?: BoolFilter<"User"> | boolean
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
+    loyaltyPoints?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     organization?: XOR<OrganizationNullableScalarRelationFilter, OrganizationWhereInput> | null
@@ -76927,11 +76981,14 @@ export namespace Prisma {
     twoFactorSecret?: SortOrderInput | SortOrder
     active?: SortOrder
     lastLogin?: SortOrderInput | SortOrder
+    loyaltyPoints?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -76957,6 +77014,7 @@ export namespace Prisma {
     twoFactorSecret?: StringNullableWithAggregatesFilter<"User"> | string | null
     active?: BoolWithAggregatesFilter<"User"> | boolean
     lastLogin?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    loyaltyPoints?: IntWithAggregatesFilter<"User"> | number
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -82612,6 +82670,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -82644,6 +82703,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -82674,6 +82734,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -82706,6 +82767,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -82737,6 +82799,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -82760,6 +82823,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -82784,6 +82848,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -88068,8 +88133,13 @@ export namespace Prisma {
     twoFactorSecret?: SortOrder
     active?: SortOrder
     lastLogin?: SortOrder
+    loyaltyPoints?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type UserAvgOrderByAggregateInput = {
+    loyaltyPoints?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -88092,6 +88162,7 @@ export namespace Prisma {
     twoFactorSecret?: SortOrder
     active?: SortOrder
     lastLogin?: SortOrder
+    loyaltyPoints?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -88116,8 +88187,13 @@ export namespace Prisma {
     twoFactorSecret?: SortOrder
     active?: SortOrder
     lastLogin?: SortOrder
+    loyaltyPoints?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    loyaltyPoints?: SortOrder
   }
 
   export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -95043,6 +95119,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderCreateNestedManyWithoutUserInput
@@ -95073,6 +95150,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -95695,6 +95773,7 @@ export namespace Prisma {
     twoFactorSecret?: StringNullableFilter<"User"> | string | null
     active?: BoolFilter<"User"> | boolean
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
+    loyaltyPoints?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
   }
@@ -103466,6 +103545,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -103497,6 +103577,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
@@ -104044,6 +104125,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -104075,6 +104157,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
@@ -105667,6 +105750,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -105698,6 +105782,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -105764,6 +105849,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -105795,6 +105881,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -105851,6 +105938,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -105882,6 +105970,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -105927,6 +106016,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -105958,6 +106048,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -107338,6 +107429,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -107369,6 +107461,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -107695,6 +107788,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -107726,6 +107820,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -107971,6 +108066,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -108002,6 +108098,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -108047,6 +108144,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -108078,6 +108176,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -108107,6 +108206,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -108138,6 +108238,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -108183,6 +108284,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -108214,6 +108316,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -108368,6 +108471,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -108399,6 +108503,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -108575,6 +108680,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -108606,6 +108712,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -111317,6 +111424,7 @@ export namespace Prisma {
     twoFactorSecret?: string | null
     active?: boolean
     lastLogin?: Date | string | null
+    loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -111800,6 +111908,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUpdateManyWithoutUserNestedInput
@@ -111830,6 +111939,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -111860,6 +111970,7 @@ export namespace Prisma {
     twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

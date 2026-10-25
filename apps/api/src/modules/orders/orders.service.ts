@@ -255,6 +255,10 @@ export class OrdersService {
     let totalAmount = 0;
     let discountAmount = 0;
     const appliedRules: unknown[] = [];
+    let appliedPromotionCode = dto.promotionCode?.trim() || undefined;
+    if (!appliedPromotionCode && !compRequested) {
+      appliedPromotionCode = (await this.campaigns.loyaltyChargeCode(dto.eventId)) ?? undefined;
+    }
 
     for (const group of lineGroups) {
       const offer =
@@ -268,7 +272,8 @@ export class OrdersService {
         eventId: dto.eventId,
         offerId: offer.id,
         quantity: group.holds.length,
-        promotionCode: dto.promotionCode,
+        promotionCode: appliedPromotionCode,
+        skipLoyalty: compRequested,
       });
       const lineSubtotal = Number(pricingResult.subtotal);
       const lineFees = Number(pricingResult.fees);
@@ -299,8 +304,8 @@ export class OrdersService {
     }
 
     let promotionId: string | undefined;
-    if (dto.promotionCode) {
-      const promo = await this.prisma.promotion.findUnique({ where: { code: dto.promotionCode } });
+    if (appliedPromotionCode) {
+      const promo = await this.prisma.promotion.findUnique({ where: { code: appliedPromotionCode } });
       if (promo) promotionId = promo.id;
     }
 
@@ -762,9 +767,14 @@ export class OrdersService {
       }),
     );
 
-    if (dto.promotionCode) {
+    if (appliedPromotionCode) {
       await this.afterSale(order.id, 'registro de uso de promoción', () =>
-        this.campaigns.recordPromotionUse(dto.eventId, dto.promotionCode!),
+        this.campaigns.recordPromotionUse(dto.eventId, appliedPromotionCode),
+      );
+    }
+    if (!compRequested) {
+      await this.afterSale(order.id, 'saldo de lealtad', () =>
+        this.campaigns.awardLoyaltyForPaidOrder(userId, dto.eventId),
       );
     }
 

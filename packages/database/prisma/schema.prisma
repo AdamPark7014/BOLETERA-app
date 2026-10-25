@@ -965,6 +965,9 @@ model User {
   active    Boolean   @default(true)
   lastLogin DateTime?
 
+  /// Saldo de puntos. Lo escribe awardLoyaltyPoints al pagar. Vacío = 0.
+  loyaltyPoints Int @default(0)
+
   // Relations
   orders          Order[]
   reviews         Review[]

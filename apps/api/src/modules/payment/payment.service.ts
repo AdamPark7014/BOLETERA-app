@@ -688,6 +688,15 @@ export class PaymentService {
         await this.campaigns.recordPromotionUse(result.order.eventId, promo.code);
       }
     }
+    try {
+      await this.campaigns.awardLoyaltyForPaidOrder(result.order.userId, result.order.eventId);
+    } catch (error) {
+      this.logger.error(
+        `Orden ${result.order.publicId} cobrada, pero no se guardó el saldo de lealtad: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
     return result;
   }
 

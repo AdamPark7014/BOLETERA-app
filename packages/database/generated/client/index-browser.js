@@ -608,6 +608,7 @@ exports.Prisma.UserScalarFieldEnum = {
   twoFactorSecret: 'twoFactorSecret',
   active: 'active',
   lastLogin: 'lastLogin',
+  loyaltyPoints: 'loyaltyPoints',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

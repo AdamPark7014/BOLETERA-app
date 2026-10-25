@@ -20,6 +20,7 @@ const STATUS: Record<string, string> = {
 const CAMPAIGN_TYPE: Record<string, string> = {
   presale: 'Preventa',
   early_bird: 'Anticipada',
+  loyalty: 'Lealtad',
 };
 
 type EventRow = { id: string; title: string };
@@ -35,6 +36,7 @@ type Campaign = {
   quantityPerUser: number;
   discountType: string;
   discountValue: number;
+  points: number | null;
   codes: string[];
   redeemed: number;
 };
@@ -57,6 +59,59 @@ function word(map: Record<string, string>, value: string): string {
 function discountLabel(type: string, value: number): string {
   if (type === 'fixed') return formatTicketAmount(value);
   return `${value.toLocaleString('es-MX', { maximumFractionDigits: 2 })}%`;
+}
+
+function positiveRule(value: number | null): number | null {
+  return value != null && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+/** Misma lectura que el cobro: puntos, o si no vienen, el descuento. Cero no cuenta. */
+function loyaltyRule(campaign: Campaign): { value: number; discountType: 'percentage' | 'fixed' } | null {
+  if (campaign.type !== 'loyalty') return null;
+  const points = positiveRule(campaign.points);
+  const discount = positiveRule(campaign.discountValue);
+  if (points === null && discount === null) return null;
+  if (discount !== null && campaign.discountType === 'percentage') {
+    return { value: discount, discountType: 'percentage' };
+  }
+  if (discount !== null) return { value: discount, discountType: 'fixed' };
+  return { value: points as number, discountType: 'fixed' };
+}
+
+function loyaltyIsCharging(campaign: Campaign, now: Date): boolean {
+  if (!loyaltyRule(campaign) || campaign.status !== 'ACTIVE') return false;
+  const start = new Date(campaign.startsAt ?? '');
+  const end = new Date(campaign.endsAt ?? '');
+  return start <= now && end >= now;
+}
+
+function loyaltyCard(campaigns: Campaign[], now = new Date()): { value: string; effect: string } {
+  const rules = campaigns.flatMap((item) => {
+    const rule = loyaltyRule(item);
+    return rule ? [{ item, rule }] : [];
+  });
+  if (rules.length === 0) {
+    return {
+      value: 'Sin efecto',
+      effect: 'El endpoint no escribe. La cuenta no tiene ese dato.',
+    };
+  }
+  const charging = rules.find((entry) => loyaltyIsCharging(entry.item, now));
+  const chosen = charging ?? rules[0];
+  const value =
+    chosen.rule.discountType === 'percentage'
+      ? `${chosen.rule.value.toLocaleString('es-MX', { maximumFractionDigits: 2 })}%`
+      : formatTicketAmount(chosen.rule.value);
+  if (!charging) {
+    return {
+      value,
+      effect: 'Sin efecto mientras la campaña no está activa.',
+    };
+  }
+  return {
+    value,
+    effect: 'Se descuenta al cobrar, por la misma vía que un código.',
+  };
 }
 
 function localInput(date: Date): string {
@@ -109,6 +164,7 @@ function readCampaign(raw: unknown): Campaign | null {
     quantityPerUser: readNumber(row.quantityPerUser) ?? 1,
     discountType: readString(row.discountType) ?? 'percentage',
     discountValue: readNumber(row.discountValue) ?? 0,
+    points: readNumber(row.points),
     codes,
     redeemed: readNumber(row.redeemed) ?? 0,
   };
@@ -275,6 +331,7 @@ function DescuentosBody() {
   if (loading || !token) return <p className={styles.quiet}>Cargando descuentos.</p>;
 
   const event = events.find((item) => item.id === eventId) ?? null;
+  const loyalty = loyaltyCard(campaigns);
 
   return (
     <section>
@@ -419,8 +476,9 @@ function DescuentosBody() {
         <Param name="Puntos de lealtad">
           <ParameterCard
             name="Puntos de lealtad"
-            value="Sin efecto"
-            effect="El endpoint no escribe. La cuenta no tiene ese dato."
+            value={loyalty.value}
+            valueStyle={loyalty.value === 'Sin efecto' ? undefined : 'tabular'}
+            effect={loyalty.effect}
           />
         </Param>
       </div>

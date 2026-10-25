@@ -2,6 +2,13 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PromotionType } from '@prisma/client';
+import {
+  loyaltyCharges,
+  loyaltyPromotionCode,
+  loyaltyRuleFromCampaign,
+  persistedLoyaltyPoints,
+  type LoyaltyRule,
+} from './loyalty';
 
 type EventCampaign = {
   id: string;
@@ -17,6 +24,8 @@ type EventCampaign = {
   discountValue: number;
   codes?: string[];
   redeemed?: number;
+  /** Número alterno al descuento. Si no hay descuento, este es el valor. */
+  points?: number;
 };
 
 @Injectable()
@@ -103,6 +112,29 @@ export class CampaignExecutionService {
           value: new Decimal(data.discountValue),
         },
       });
+    }
+
+    const loyaltyRule =
+      data.type === 'loyalty'
+        ? loyaltyRuleFromCampaign({
+            type: 'loyalty',
+            discountType: data.discountType,
+            discountValue: data.discountValue,
+          })
+        : null;
+    if (loyaltyRule) {
+      await this.upsertLoyaltyPromotion(
+        organizationId,
+        {
+          id: campaign.id,
+          name: data.name,
+          startsAt: data.startsAt,
+          endsAt: data.endsAt,
+          allocation: data.allocation,
+          quantityPerUser: data.quantityPerUser,
+        },
+        loyaltyRule,
+      );
     }
 
     campaigns.push(campaign);
@@ -246,11 +278,93 @@ export class CampaignExecutionService {
   async awardLoyaltyPoints(userId: string, eventId: string, points: number) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
-    const meta = (user as { metadata?: Record<string, unknown> }).metadata ?? {};
-    const loyalty = (meta.loyalty as { points?: number; history?: unknown[] }) ?? { points: 0, history: [] };
-    loyalty.points = (loyalty.points ?? 0) + points;
-    loyalty.history = [...(loyalty.history ?? []), { eventId, points, at: new Date().toISOString() }];
-    return { userId, points: loyalty.points };
+    const next = persistedLoyaltyPoints(user.loyaltyPoints, points);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { loyaltyPoints: next },
+    });
+    return { userId, eventId, points: next };
+  }
+
+  /**
+   * Código de la promoción de lealtad activa, si la campaña ya trae un número.
+   * El cobro lo aplica en el mismo lugar que un código tecleado.
+   */
+  async loyaltyChargeCode(eventId: string, now = new Date()): Promise<string | null> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { organizationId: true, metadata: true },
+    });
+    if (!event) return null;
+    const hit = this.activeLoyalty(event.metadata, now);
+    if (!hit) return null;
+    return this.upsertLoyaltyPromotion(event.organizationId, hit.campaign, hit.rule);
+  }
+
+  /** Al pagar: suma el número de la regla al saldo y lo escribe. */
+  async awardLoyaltyForPaidOrder(userId: string, eventId: string) {
+    if (!userId) return null;
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { metadata: true },
+    });
+    if (!event) return null;
+    const hit = this.activeLoyalty(event.metadata);
+    if (!hit) return null;
+    return this.awardLoyaltyPoints(userId, eventId, hit.rule.value);
+  }
+
+  private activeLoyalty(metadata: unknown, now = new Date()) {
+    const campaigns = ((metadata as { campaigns?: EventCampaign[] } | null)?.campaigns ?? []);
+    for (const campaign of campaigns) {
+      if (!campaign?.id || !loyaltyCharges(campaign, now)) continue;
+      const rule = loyaltyRuleFromCampaign(campaign);
+      if (!rule) continue;
+      return { campaign, rule };
+    }
+    return null;
+  }
+
+  private async upsertLoyaltyPromotion(
+    organizationId: string,
+    campaign: {
+      id: string;
+      name: string;
+      startsAt: string | Date;
+      endsAt: string | Date;
+      allocation?: number;
+      quantityPerUser?: number;
+    },
+    rule: LoyaltyRule,
+  ): Promise<string | null> {
+    const startDate = new Date(campaign.startsAt);
+    const endDate = new Date(campaign.endsAt);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return null;
+    const code = loyaltyPromotionCode(campaign.id);
+    const type = rule.discountType === 'percentage' ? PromotionType.PERCENTAGE : PromotionType.FIXED_AMOUNT;
+    await this.prisma.promotion.upsert({
+      where: { code },
+      create: {
+        code,
+        organizationId,
+        name: campaign.name || 'Lealtad',
+        type,
+        value: new Decimal(rule.value),
+        startDate,
+        endDate,
+        usageLimit: campaign.allocation && campaign.allocation > 0 ? campaign.allocation : null,
+        usagePerCustomer:
+          campaign.quantityPerUser && campaign.quantityPerUser > 0 ? campaign.quantityPerUser : 1,
+      },
+      update: {
+        name: campaign.name || 'Lealtad',
+        type,
+        value: new Decimal(rule.value),
+        startDate,
+        endDate,
+      },
+    });
+    return code;
   }
 
   async recordPromotionUse(eventId: string, code: string) {
@@ -295,8 +409,7 @@ export class CampaignExecutionService {
 
   async getLoyaltyBalance(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    const loyalty = ((user as { metadata?: { loyalty?: { points?: number } } })?.metadata?.loyalty) ?? {};
-    return { userId, points: loyalty.points ?? 0 };
+    return { userId, points: user?.loyaltyPoints ?? 0 };
   }
 }
 
