@@ -25,6 +25,7 @@ import { requireInternalApiSecret } from '../auth/jwt-secret';
 import { BanorteReconciliationService } from './banorte-reconciliation.service';
 import { EventCancellationService } from './event-cancellation.service';
 import { type DeadlinePatch } from '../notification/refund-policy';
+import { type MethodPatch } from './payment-methods';
 import { PaymentService } from './payment.service';
 
 /** Petición ya resuelta por `OrgAccessGuard`: `scopedOrganizationId` es el tenant efectivo. */
@@ -131,8 +132,33 @@ export class PaymentController {
 
   @Get('config')
   @ApiOperation({ summary: 'Public payment config (Banorte direct)' })
-  getConfig() {
-    return this.paymentService.getBanortePublicConfig();
+  getConfig(@Query('eventId') eventId?: string) {
+    return this.paymentService.getPublicConfig(eventId);
+  }
+
+  /** Interruptores de la organización. Vacío, tarjeta, SPEI y OXXO siguen activos. */
+  @Get('methods')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Métodos de checkout de la organización' })
+  readMethods(@Request() req: ScopedRequest) {
+    return this.paymentService.readCheckoutMethods(requireScope(req));
+  }
+
+  @Patch('methods')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Guardar tarjeta, SPEI y OXXO' })
+  saveMethods(
+    @Request() req: ScopedRequest,
+    @Body() body: MethodPatch,
+    @CurrentUser() user: { sub?: string; id?: string },
+  ) {
+    const organizationId = requireScope(req);
+    if (!organizationId) throw new BadRequestException('organizationId requerido');
+    return this.paymentService.saveCheckoutMethods(organizationId, body ?? {}, user?.sub || user?.id);
   }
 
   @Get('config/validate')

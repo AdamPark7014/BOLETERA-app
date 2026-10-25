@@ -36,6 +36,7 @@ import { AuditService } from '../../common/audit.service';
 import { isWebLikeChannel } from '../../common/sales-channel';
 import { isKnownAffiliateRef, normalizeAffiliateRef } from '../../common/affiliate-ref';
 import { isDeferredMethod, paymentDeadline } from '../../common/payment-window';
+import { checkoutMethodOffered } from '../payment/payment-methods';
 import { PrismaService } from '../prisma/prisma.service';
 import { requireTicketQrSecret } from '../auth/jwt-secret';
 import { PricingService } from '../pricing/pricing.service';
@@ -151,7 +152,7 @@ export class OrdersService {
       include: {
         offers: { where: { isAvailable: true } },
         // La comisión sale de la organización, no de una constante (F1-21).
-        organization: { select: { id: true, commissionRate: true } },
+        organization: { select: { id: true, commissionRate: true, settings: true } },
       },
     });
     if (!event) throw new NotFoundException('Event not found');
@@ -365,6 +366,13 @@ export class OrdersService {
       throw new ForbiddenException(
         `El método de pago ${method} no está disponible en el canal ${channel}`,
       );
+    }
+    if (
+      dto.untrustedRequest &&
+      (method === 'CARD' || method === 'SPEI' || method === 'OXXO') &&
+      !checkoutMethodOffered(event.organization?.settings, method)
+    ) {
+      throw new ForbiddenException(`El método de pago ${method} no está disponible`);
     }
     const providerId = method === 'CASH' ? 'cash' : 'banorte';
     let provider: PaymentProvider;

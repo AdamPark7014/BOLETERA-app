@@ -54,7 +54,18 @@ type GatewayInfo = {
   productionReady?: boolean;
   buyerNote?: string;
   accountClabeMasked?: string | null;
+  methods?: string[];
 };
+
+function isCheckoutMethod(value: unknown): value is PaymentMethodId {
+  return value === 'CARD' || value === 'SPEI' || value === 'OXXO';
+}
+
+/** Sin lista, los tres de hoy. Una lista vacía es una organización que los apagó. */
+function readOffered(data: GatewayInfo | null): PaymentMethodId[] {
+  if (!data || !Array.isArray(data.methods)) return ['CARD', 'SPEI', 'OXXO'];
+  return data.methods.filter(isCheckoutMethod);
+}
 
 const METHODS: { id: PaymentMethodId; label: string; detail: string }[] = [
   {
@@ -155,6 +166,7 @@ function CheckoutForm() {
   const [priceChange, setPriceChange] = useState<{ from: number; to: number } | null>(null);
   const [failure, setFailure] = useState<ApiErrorInfo | null>(null);
   const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
+  const [offered, setOffered] = useState<PaymentMethodId[] | null>(null);
   const [step, setStep] = useState<'apartado' | 'datos' | 'pago'>('apartado');
   const [tick, setTick] = useState(0);
 
@@ -180,12 +192,25 @@ function CheckoutForm() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API}/payments/config`, { signal: controller.signal })
+    const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
+    fetch(`${API}/payments/config${query}`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: GatewayInfo | null) => setGatewayInfo(data))
-      .catch(() => {});
+      .then((data: GatewayInfo | null) => {
+        setGatewayInfo(data);
+        setOffered(readOffered(data));
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setOffered(['CARD', 'SPEI', 'OXXO']);
+      });
     return () => controller.abort();
-  }, []);
+  }, [eventId]);
+
+  useEffect(() => {
+    if (!offered?.length || offered.includes(method)) return;
+    setMethod(offered[0]);
+  }, [offered, method]);
+
+  const visibleMethods = METHODS.filter((item) => offered?.includes(item.id));
 
   const linesKey = orderLines.map((l) => `${l.offerId}:${l.holdIds.length}`).join('|');
   const pricingItems = useMemo(
@@ -259,8 +284,8 @@ function CheckoutForm() {
     if (!keys.includes(event.key)) return;
     event.preventDefault();
     const forward = event.key === 'ArrowRight' || event.key === 'ArrowDown';
-    const next = (index + (forward ? 1 : -1) + METHODS.length) % METHODS.length;
-    setMethod(METHODS[next].id);
+    const next = (index + (forward ? 1 : -1) + visibleMethods.length) % visibleMethods.length;
+    setMethod(visibleMethods[next].id);
     methodRefs.current[next]?.focus();
   }
 
@@ -397,7 +422,8 @@ function CheckoutForm() {
   const remain = secondsUntil(expiresAt);
   void tick;
   const expired = holdExpired || (Boolean(expiresAt) && remain <= 0);
-  const canPay = !loading && !expired && holdIds.length > 0 && step === 'pago';
+  const canPay =
+    !loading && !expired && holdIds.length > 0 && step === 'pago' && offered != null && offered.includes(method);
   const deferred = isDeferredMethod(method);
   const payAmount = priceChange ? priceChange.to : total;
   const payLabel = deferred ? 'Generar referencia' : `Pagar ${formatTicketAmount(payAmount)}`;
@@ -547,8 +573,13 @@ function CheckoutForm() {
 
         {step === 'pago' ? (
           <div className={purchase.stack}>
+            {offered == null ? <p className={purchase.caption}>Cargando métodos.</p> : null}
+            {offered != null && visibleMethods.length === 0 ? (
+              <p className={purchase.caption}>No hay un método de pago para esta función.</p>
+            ) : null}
+            {visibleMethods.length > 0 ? (
             <div className={purchase.segment} role="radiogroup" aria-label="Método de pago">
-              {METHODS.map((item, index) => (
+              {visibleMethods.map((item, index) => (
                 <button
                   key={item.id}
                   type="button"
@@ -566,7 +597,10 @@ function CheckoutForm() {
                 </button>
               ))}
             </div>
-            <p className={purchase.lead}>{methodLine}</p>
+            ) : null}
+            {visibleMethods.some((item) => item.id === method) ? (
+              <p className={purchase.lead}>{methodLine}</p>
+            ) : null}
             {gatewayInfo?.demo ? (
               <p className={purchase.caption}>Pasarela en demostración. Este cargo no cobra.</p>
             ) : null}

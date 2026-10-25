@@ -36,6 +36,13 @@ import {
   mergeDeadlineSettings,
   type DeadlinePatch,
 } from '../notification/refund-policy';
+import {
+  checkoutMethodOffered,
+  mergeMethodSettings,
+  methodsFromSettings,
+  offeredCheckoutMethods,
+  type MethodPatch,
+} from './payment-methods';
 import { PrismaService } from '../prisma/prisma.service';
 import { CampaignExecutionService } from '../campaign-execution/campaign-execution.service';
 import { NotificationService } from '../notification/notification.service';
@@ -173,6 +180,15 @@ export class PaymentService {
     }
 
     const method = (data.paymentMethod ?? order.paymentMethod ?? 'CARD').toUpperCase();
+    if (method === 'CARD' || method === 'SPEI' || method === 'OXXO') {
+      const org = await this.prisma.organization.findUnique({
+        where: { id: order.event.organizationId },
+        select: { settings: true },
+      });
+      if (!checkoutMethodOffered(org?.settings, method)) {
+        throw new ForbiddenException(`El método de pago ${method} no está disponible`);
+      }
+    }
     const intent = await this.banorte.createIntent({
       amount,
       currency: order.currency,
@@ -1525,6 +1541,68 @@ export class PaymentService {
     };
   }
 
+  /**
+   * Config pública. Sin `eventId`, los tres métodos de hoy.
+   * Con evento, omite el que la organización guardó en falso. No toca
+   * credenciales, CLABE ni el modo demo/vivo.
+   */
+  async getPublicConfig(eventId?: string) {
+    const config = this.getBanortePublicConfig();
+    const id = eventId?.trim();
+    if (!id || id.length > 128) return config;
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: { organization: { select: { settings: true } } },
+    });
+    if (!event) return config;
+    return { ...config, methods: offeredCheckoutMethods(event.organization.settings) };
+  }
+
+  /** Interruptores de la organización. Sin fila, los tres siguen activos. */
+  async readCheckoutMethods(organizationId: string | null) {
+    if (!organizationId) return methodsFromSettings(null);
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    return methodsFromSettings(org.settings);
+  }
+
+  /**
+   * Guarda en `Organization.settings` solo tarjeta, SPEI y OXXO.
+   * No escribe llaves, CLABE, modo Banorte, tasas ni plazos.
+   */
+  async saveCheckoutMethods(organizationId: string, body: MethodPatch, actorId?: string) {
+    const patch: MethodPatch = {};
+    if (body.tarjeta !== undefined) patch.tarjeta = requireMethodFlag(body.tarjeta, 'Tarjeta');
+    if (body.SPEI !== undefined) patch.SPEI = requireMethodFlag(body.SPEI, 'SPEI');
+    if (body.OXXO !== undefined) patch.OXXO = requireMethodFlag(body.OXXO, 'OXXO');
+    if (patch.tarjeta === undefined && patch.SPEI === undefined && patch.OXXO === undefined) {
+      throw new BadRequestException('No hay métodos que guardar');
+    }
+
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    const settings = mergeMethodSettings(org.settings, patch);
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: { settings: settings as Prisma.InputJsonValue },
+    });
+    await this.audit.log({
+      action: 'PAYMENT_METHODS_UPDATED',
+      entityType: 'Organization',
+      entityId: organizationId,
+      organizationId,
+      userId: actorId,
+      metadata: patch as Record<string, unknown>,
+    });
+    return methodsFromSettings(settings);
+  }
+
   getBanortePublicConfig() {
     const cfg = getBanorteConfig();
     const validation = validateBanorteProductionConfig();
@@ -1640,6 +1718,13 @@ export class PaymentService {
     });
     return deadlinesFromSettings(settings);
   }
+}
+
+function requireMethodFlag(value: unknown, label: string): boolean {
+  if (typeof value !== 'boolean') {
+    throw new BadRequestException(`${label} tiene que ser sí o no`);
+  }
+  return value;
 }
 
 function requirePolicyDays(value: unknown, label: string): number {

@@ -6,6 +6,7 @@
 
 ## Hecho
 
+- 2026-10-25 cursor: tarjeta, SPEI y OXXO se guardan en settings; si la clave no está, el método sigue activo.
 - 2026-10-25 cursor: cargo por servicio e IVA se guardan en settings de la organización; vacío sigue la tasa del entorno.
 - 2026-10-25 cursor: días para cerrar, días del banco y plazo de transferencia se guardan en settings de la organización; vacío sigue en 5, 10 y 7 días.
 - 2026-10-25 cursor: recinto y abonos se guardan en las columnas que ya existían; los días de reembolso y de transferencia siguen en lectura porque no hay columna.
