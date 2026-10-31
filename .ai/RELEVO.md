@@ -37,3 +37,6 @@ Lenguaje visual de Black Ticket en `@boletera/ui`.
 ## Siguiente
 
 Faltan el resto de secciones de admin. Reenvío del comprador y captura de CLABE no existen en el API público.
+
+## Ajuste de reglas compartidas — Codex, 2026-10-31
+Se alinearon instrucciones genericas de Cursor con AGENT-POLICY y LOCAL-DELEGATION: instructores autonomos, main y un escritor por archivo; sin handoff automatico ni worktrees. Solo documentos de reglas; sin cambios de codigo. Se conservan A medias/Siguiente/No tocar anteriores. Verificacion: diff de reglas y comprobacion de rama.

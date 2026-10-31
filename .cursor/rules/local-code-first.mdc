@@ -1,5 +1,5 @@
 ---
-description: Cursor NO codifica — Ollama implement primero (ticket obligatorio)
+description: Cursor dirige y revisa — Ollama produce el draft (gate vigente)
 alwaysApply: true
 ---
 
@@ -14,7 +14,7 @@ Cursor: plan fino, elegir archivos, revisar, tests, merge.
 $W = "C:\Users\adpoz\Projects\ai-oss-2026\scripts\ollama-worker.ps1"
 # 1) Ollama escribe el draft (+ ticket 15 min)
 pwsh -File $W -Action implement -File "C:\dev\apps\X\src\file.ts" -Instruction "..."
-# 2a) Aplicar directo:
+# 2a) Solo tras revisar el draft y releer el archivo actual:
 pwsh -File $W -Action implement -File "..." -Instruction "..." -Apply
 # 2b) O lee .ai/drafts\... y Write (el hook lo autoriza con el ticket)
 ```
@@ -30,6 +30,8 @@ Excepciones: `.ai/`, docs `.md`, scripts `ai-os`, `CURSOR_LOCAL_CODE_BYPASS=1`.
 
 - Elegir qué archivo tocar (`find` / digest)
 - Revisar el draft, correr tests
-- Arquitectura / contratos → Claude Max (no Ollama)
+- Arquitectura / contratos → instructor actual; sin handoff automático
 
 Panel: http://127.0.0.1:8788 (acción `implement`)
+
+Politica vigente de Adam (2026-10-31): aplicar C:\dev\scripts\ai-os\AGENT-POLICY.md y LOCAL-DELEGATION.md. Todos los instructores completan su tarea; solo main, un escritor por archivo, draft local revisado antes de integrar. Reemplaza handoff automatico y worktrees por agente.
