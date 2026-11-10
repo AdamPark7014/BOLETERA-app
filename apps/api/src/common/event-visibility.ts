@@ -16,32 +16,28 @@ export function isPublicCatalogEvent(metadata: unknown): boolean {
   return visibility !== 'private' && visibility !== 'hidden';
 }
 
+/**
+ * Un valor de `visibility` que no excluye al evento.
+ *
+ * La rama `AnyNull` sobre la ruta no es redundante: cuando `metadata` existe
+ * pero no trae la llave, Postgres evalúa `NOT (NULL = 'private')` como NULL y
+ * el `NOT` solo dejaba fuera a casi toda la cartelera (todo evento con canales
+ * guardados en metadata y sin `visibility`).
+ */
+function visibilityIsNot(value: 'private' | 'hidden'): Prisma.EventWhereInput {
+  return {
+    OR: [
+      { metadata: { equals: Prisma.DbNull } },
+      { metadata: { equals: Prisma.JsonNull } },
+      { metadata: { path: ['visibility'], equals: Prisma.AnyNull } },
+      { NOT: { metadata: { path: ['visibility'], equals: value } } },
+    ],
+  };
+}
+
 /** Prisma filter: exclude events marked private or hidden in metadata. */
 export function publicCatalogEventWhere(): Prisma.EventWhereInput {
   return {
-    AND: [
-      {
-        OR: [
-          { metadata: { equals: Prisma.DbNull } },
-          { metadata: { equals: Prisma.JsonNull } },
-          {
-            NOT: {
-              metadata: { path: ['visibility'], equals: 'private' },
-            },
-          },
-        ],
-      },
-      {
-        OR: [
-          { metadata: { equals: Prisma.DbNull } },
-          { metadata: { equals: Prisma.JsonNull } },
-          {
-            NOT: {
-              metadata: { path: ['visibility'], equals: 'hidden' },
-            },
-          },
-        ],
-      },
-    ],
+    AND: [visibilityIsNot('private'), visibilityIsNot('hidden')],
   };
 }
