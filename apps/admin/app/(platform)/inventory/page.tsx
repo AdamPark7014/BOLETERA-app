@@ -1,28 +1,16 @@
 'use client';
 
-import Link from 'next/link';
+/**
+ * Inventario de boletos: disponibilidad por zona y tier, holds, bloqueos,
+ * proyección de agotamiento y alertas. Las gráficas de la versión anterior
+ * (dona, barras, anillo) quedan como cifras tabulares con los mismos datos.
+ */
+
 import { Suspense, useDeferredValue, useMemo } from 'react';
-import {
-  Badge,
-  BarChart,
-  Button,
-  Card,
-  CardHeader,
-  DataTable,
-  DonutChart,
-  EmptyState,
-  FilterBar,
-  KpiCard,
-  PageHeader,
-  ProgressRing,
-  Section,
-  SegmentedControl,
-  formatNumber,
-  type DataTableColumn,
-  type DonutSlice,
-  type FilterDefinition,
-} from '@boletera/ui';
-import { QueryError } from '@/components/QueryStates';
+import Link from 'next/link';
+import { Field, TicketButton } from '@boletera/ui';
+import { ApiError } from '@/lib/api';
+import { hasCapability } from '@/lib/permissions';
 import {
   useInventoryAlerts,
   useInventoryAvailability,
@@ -31,14 +19,16 @@ import {
   useInventorySalesPace,
   useInventoryVenues,
 } from '@/lib/queries/inventory';
-import { useSession } from '@/lib/use-session';
-import { ZoneDetailDrawer } from './_components/ZoneDetailDrawer';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Segment, SheetSelect } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import bt from '../orders/_bt/bt.module.scss';
 import {
   buildEventOptions,
   buildSelloutRisks,
   buildZoneRows,
-  pressureRank,
-  zoneBarSeries,
+  statusCountValue,
 } from './_lib/derive';
 import {
   daysAgoIso,
@@ -51,29 +41,90 @@ import {
 } from './_lib/format';
 import {
   PRESSURE_LABEL,
-  PRESSURE_TONE,
   PRESSURE_VALUES,
   RANGE_OPTIONS,
   type InventoryZoneTableRow,
   type RangeKey,
 } from './_lib/types';
 import { useInventoryUrlState } from './_lib/use-inventory-url-state';
-import styles from './inventory.module.scss';
 
-function InventoryCockpit() {
-  const { can, organizationId } = useSession();
-  const canRead = can('event:read');
+const SEVERITY: Record<string, string> = {
+  critical: 'Crítica',
+  warning: 'Aviso',
+  info: 'Información',
+};
+
+const RISK: Record<string, string> = {
+  critical: 'crítico',
+  at_risk: 'en riesgo',
+  on_track: 'en ritmo',
+};
+
+function failMessage(cause: unknown, fallback: string): string {
+  if (cause instanceof ApiError) return cause.userMessage;
+  if (cause instanceof Error && cause.message) return cause.message;
+  return fallback;
+}
+
+function blockedOf(row: InventoryZoneTableRow): number {
+  return Math.max(
+    0,
+    row.totalQuantity - row.remainingQuantity - row.holdQuantity - row.soldQuantity
+  );
+}
+
+function Pair({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className={bt.pair}>
+      <p className={bt.pairLabel}>{label}</p>
+      <p className={tone ? `${bt.pairValue} ${tone}` : bt.pairValue}>{value}</p>
+    </div>
+  );
+}
+
+export default function InventoryPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <InventarioBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function InventarioBody() {
+  const session = useSession();
+  const canSee =
+    hasCapability(session.role, 'events.view') || hasCapability(session.role, 'inventory.monitor');
+
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (session.status === 'loading') return <p className={styles.quiet}>Cargando inventario.</p>;
+  if (!canSee) {
+    return (
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Inventario</h1>
+          <p className={styles.quiet}>Tu rol no ve inventario.</p>
+        </header>
+      </section>
+    );
+  }
+  return <InventarioView orgId={session.orgId} />;
+}
+
+function InventarioView({ orgId }: { orgId: string }) {
   const url = useInventoryUrlState();
   const deferredQuery = useDeferredValue(url.q);
 
   const params = useMemo(
     () => ({
-      organizationId: organizationId ?? undefined,
+      organizationId: orgId,
       from: daysAgoIso(Number(url.range)),
       to: new Date().toISOString(),
       eventId: url.eventId ?? undefined,
     }),
-    [organizationId, url.eventId, url.range],
+    [orgId, url.eventId, url.range]
   );
 
   const inventory = useInventoryMetrics(params);
@@ -85,17 +136,14 @@ function InventoryCockpit() {
   const zoneRows = useMemo(() => buildZoneRows(inventory.data), [inventory.data]);
   const eventOptions = useMemo(
     () => buildEventOptions(zoneRows, events.data, venues.data),
-    [events.data, venues.data, zoneRows],
+    [events.data, venues.data, zoneRows]
   );
 
   const venueEventIds = useMemo(() => {
     if (!url.venueId) return null;
-    const ids = new Set(
-      (events.data ?? [])
-        .filter((event) => event.venueId === url.venueId)
-        .map((event) => event.id),
+    return new Set(
+      (events.data ?? []).filter((event) => event.venueId === url.venueId).map((event) => event.id)
     );
-    return ids;
   }, [events.data, url.venueId]);
 
   const filtered = useMemo(() => {
@@ -113,23 +161,17 @@ function InventoryCockpit() {
 
   const selected = useMemo(
     () => (url.selectedId ? (zoneRows.find((row) => row.id === url.selectedId) ?? null) : null),
-    [url.selectedId, zoneRows],
+    [url.selectedId, zoneRows]
   );
 
   const availability = useInventoryAvailability(selected?.eventId ?? url.eventId);
 
   const summary = inventory.data?.summary;
-  const occupancy =
-    summary && summary.totalCapacity > 0 ? summary.sold / summary.totalCapacity : 0;
 
-  const donutSlices = useMemo<DonutSlice[]>(() => {
+  const statusRows = useMemo(() => {
     const breakdown = inventory.data?.statusBreakdown;
     if (breakdown?.rows?.length) {
-      return breakdown.rows.map((row) => ({
-        id: row.key,
-        label: row.label,
-        value: row.value,
-      }));
+      return breakdown.rows.map((row) => ({ id: row.key, label: row.label, value: row.value }));
     }
     if (!summary) return [];
     return [
@@ -137,20 +179,17 @@ function InventoryCockpit() {
       { id: 'held', label: 'En hold', value: summary.held },
       { id: 'sold', label: 'Vendidos', value: summary.sold },
       { id: 'blocked', label: 'Bloqueados', value: summary.blocked },
-    ].filter((slice) => slice.value > 0);
+    ];
   }, [inventory.data?.statusBreakdown, summary]);
 
-  const bars = useMemo(() => zoneBarSeries(filtered), [filtered]);
   const sellouts = useMemo(() => buildSelloutRisks(filtered), [filtered]);
-
   const inventoryAlerts = useMemo(
     () =>
       (alerts.data?.alerts ?? []).filter(
-        (alert) => alert.domain === 'inventory' || alert.domain === 'events',
+        (alert) => alert.domain === 'inventory' || alert.domain === 'events'
       ),
-    [alerts.data],
+    [alerts.data]
   );
-
   const atRiskEvents = pace.data?.atRisk ?? [];
 
   const venueOptions = useMemo(() => {
@@ -158,543 +197,357 @@ function InventoryCockpit() {
     return (venues.data ?? []).filter((venue) => used.has(venue.name) || used.size === 0);
   }, [eventOptions, venues.data]);
 
-  const filterDefs = useMemo<FilterDefinition[]>(
-    () => [
-      {
-        id: 'pressure',
-        label: 'Presión',
-        options: PRESSURE_VALUES.map((value) => ({
-          value,
-          label: PRESSURE_LABEL[value],
-          count: zoneRows.filter((row) => row.pressure === value).length,
-        })),
-      },
-    ],
-    [zoneRows],
-  );
+  const pressureOptions = [
+    { value: '', label: `Toda presión (${zoneRows.length})` },
+    ...PRESSURE_VALUES.map((value) => ({
+      value,
+      label: `${PRESSURE_LABEL[value]} (${zoneRows.filter((row) => row.pressure === value).length})`,
+    })),
+  ];
+  const eventSelect = [
+    { value: '', label: 'Todos los eventos' },
+    ...eventOptions.map((event) => ({
+      value: event.id,
+      label: event.venueName ? `${event.title} · ${event.venueName}` : event.title,
+    })),
+  ];
+  const venueSelect = [
+    { value: '', label: 'Todos los recintos' },
+    ...venueOptions.map((venue) => ({ value: venue.id, label: venue.name })),
+  ];
 
-  const columns = useMemo<DataTableColumn<InventoryZoneTableRow>[]>(
-    () => [
-      {
-        key: 'zone',
-        header: 'Zona / tier',
-        width: 220,
-        sortValue: (row) => row.zone,
-        render: (row) => (
-          <div className={styles.zoneCell}>
-            <strong>
-              {row.zone} · {row.tierName}
-            </strong>
-            <span>{row.eventTitle}</span>
-          </div>
-        ),
-      },
-      {
-        key: 'remainingQuantity',
-        header: 'Disponibles',
-        width: 110,
-        align: 'right',
-        sortValue: (row) => row.remainingQuantity,
-        render: (row) => formatCount(row.remainingQuantity),
-      },
-      {
-        key: 'holdQuantity',
-        header: 'Holds',
-        width: 90,
-        align: 'right',
-        sortValue: (row) => row.holdQuantity,
-        render: (row) => formatCount(row.holdQuantity),
-      },
-      {
-        key: 'soldQuantity',
-        header: 'Vendidos',
-        width: 100,
-        align: 'right',
-        sortValue: (row) => row.soldQuantity,
-        render: (row) => formatCount(row.soldQuantity),
-      },
-      {
-        key: 'availabilityPercent',
-        header: 'Disponibilidad',
-        width: 120,
-        align: 'right',
-        sortValue: (row) => row.availabilityPercent,
-        render: (row) => formatAvailability(row.availabilityPercent),
-      },
-      {
-        key: 'sellThroughVelocity',
-        header: 'Velocidad',
-        width: 120,
-        align: 'right',
-        sortValue: (row) => row.sellThroughVelocity,
-        render: (row) => formatVelocity(row.sellThroughVelocity),
-      },
-      {
-        key: 'daysToSellOut',
-        header: 'Agotamiento',
-        width: 120,
-        align: 'right',
-        sortValue: (row) => row.daysToSellOut ?? Number.POSITIVE_INFINITY,
-        render: (row) => formatDaysToSellOut(row.daysToSellOut),
-      },
-      {
-        key: 'pressure',
-        header: 'Presión',
-        width: 120,
-        sortValue: (row) => pressureRank(row.pressure),
-        render: (row) => (
-          <Badge tone={PRESSURE_TONE[row.pressure]} variant="soft" size="sm" dot>
-            {PRESSURE_LABEL[row.pressure]}
-          </Badge>
-        ),
-      },
-    ],
-    [],
-  );
+  const filtering = Boolean(url.q || url.pressures.length || url.eventId || url.venueId);
+  const counts = availability.data?.statusCounts;
 
-  const loading = inventory.isPending;
-
-  if (!canRead) {
-    return (
-      <main className={styles.page}>
-        <EmptyState
-          title="Sin permiso para inventario"
-          description="Necesitas event:read para consultar disponibilidad, holds y bloqueos."
-          illustration="inbox"
-          tone="neutral"
-        />
-      </main>
-    );
+  function refresh() {
+    void inventory.refetch();
+    void pace.refetch();
+    void alerts.refetch();
+    void events.refetch();
+    void venues.refetch();
+    void availability.refetch();
   }
 
   return (
-    <main className={styles.page}>
-      <PageHeader
-        eyebrow="Operaciones · Inventario"
-        title="Inventario de boletos"
-        description="Disponibilidad por zona y tier, holds activos, bloqueos operativos, proyección de agotamiento y alertas en vivo."
-        breadcrumbs={[
-          { label: 'Panel', href: '/dashboard' },
-          { label: 'Inventario' },
-        ]}
-        actions={
-          <div className={styles.actions}>
-            <SegmentedControl<RangeKey>
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Inventario</h1>
+        <p className={styles.quiet}>
+          Disponibilidad por zona y tier, holds, bloqueos y proyección de agotamiento. Aquí se lee;
+          los cupos se editan en cada evento.
+        </p>
+        <div className={bt.actions}>
+          <div className={bt.segmentWrap}>
+            <Segment<RangeKey>
               label="Rango de análisis"
-              size="sm"
               value={url.range}
-              onValueChange={url.setRange}
-              options={RANGE_OPTIONS}
+              options={[...RANGE_OPTIONS]}
+              onChange={url.setRange}
             />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={inventory.isFetching}
-              onClick={() => {
-                void inventory.refetch();
-                void pace.refetch();
-                void alerts.refetch();
-                void events.refetch();
-                void venues.refetch();
-                void availability.refetch();
-              }}
-            >
-              Actualizar
-            </Button>
           </div>
-        }
-      />
+          <TicketButton variant="secondary" disabled={inventory.isFetching} onClick={refresh}>
+            Actualizar
+          </TicketButton>
+        </div>
+      </header>
 
       {inventory.error ? (
-        <QueryError error={inventory.error} onRetry={() => void inventory.refetch()} />
+        <ApiErrorView
+          error={inventory.error}
+          context="leer el inventario"
+          onRetry={() => void inventory.refetch()}
+        />
+      ) : inventory.isPending ? (
+        <p className={styles.quiet}>Cargando inventario.</p>
       ) : (
         <>
-          <Section columns={4} gap="sm" aria-label="Indicadores de inventario">
-            <KpiCard
-              label="Disponibles"
-              value={loading ? '—' : formatCount(summary?.available ?? 0)}
-              hint={`${formatCount(summary?.totalCapacity ?? 0)} aforo · ${rangeLabel(url.range)}`}
-              loading={loading}
-              tone="success"
-            />
-            <KpiCard
-              label="En hold"
-              value={loading ? '—' : formatCount(summary?.held ?? 0)}
-              hint={`${formatCount(summary?.activeHolds ?? 0)} holds activos`}
-              loading={loading}
-              tone="warning"
-            />
-            <KpiCard
-              label="Vendidos"
-              value={loading ? '—' : formatCount(summary?.sold ?? 0)}
-              hint={formatOccupancyRatio(summary?.sold ?? 0, summary?.totalCapacity ?? 0)}
-              loading={loading}
-              tone="accent"
-            />
-            <KpiCard
-              label="Bloqueados"
-              value={loading ? '—' : formatCount(summary?.blocked ?? 0)}
-              hint="VIP, prensa, producción y cortesías"
-              loading={loading}
-              tone="info"
-            />
-          </Section>
-
-          <div className={styles.layout}>
-            <div className={styles.mainCol}>
-              <div className={styles.toolbar}>
-                <FilterBar
-                  filters={filterDefs}
-                  value={url.filterSelection}
-                  onChange={url.setFilterSelection}
-                  search={{
-                    value: url.q,
-                    onChange: url.setSearch,
-                    placeholder: 'Buscar zona, tier o evento…',
-                  }}
-                >
-                  {url.eventId || url.venueId ? (
-                    <Button type="button" variant="ghost" size="sm" onClick={url.clearFilters}>
-                      Quitar filtros de evento
-                    </Button>
-                  ) : null}
-                </FilterBar>
-                <div className={styles.filterMeta} role="status">
-                  <span>
-                    {formatNumber(filtered.length)} de {formatNumber(zoneRows.length)} zonas
-                  </span>
-                </div>
+          <div className={styles.rows}>
+            <div className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Aforo</p>
+                <p className={styles.rowMeta}>{rangeLabel(url.range)}</p>
               </div>
+              <span />
+              <p className={styles.figure}>{formatCount(summary?.totalCapacity ?? 0)}</p>
+            </div>
+            {statusRows.map((row) => (
+              <div key={row.id} className={styles.row}>
+                <p className={styles.rowTitle}>{row.label}</p>
+                <span />
+                <p className={styles.figure}>{formatCount(row.value)}</p>
+              </div>
+            ))}
+            <div className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Holds activos</p>
+                <p className={styles.rowMeta}>Apartados vigentes en este momento</p>
+              </div>
+              <span />
+              <p className={styles.figure}>{formatCount(summary?.activeHolds ?? 0)}</p>
+            </div>
+            <div className={styles.row}>
+              <p className={styles.rowTitle}>Ocupación vendida</p>
+              <span />
+              <p className={styles.figure}>
+                {formatOccupancyRatio(summary?.sold ?? 0, summary?.totalCapacity ?? 0)}
+              </p>
+            </div>
+          </div>
 
+          <div className={bt.block}>
+            <div className={bt.toolbar}>
+              <Field
+                label="Buscar"
+                kind="search"
+                value={url.q}
+                placeholder="Zona, tier o evento"
+                onChange={(event) => url.setSearch(event.target.value)}
+              />
+              <div>
+                <p className={bt.filterLabel}>Presión</p>
+                <SheetSelect
+                  label="Presión"
+                  value={url.pressures[0] ?? ''}
+                  placeholder="Toda presión"
+                  options={pressureOptions}
+                  onChange={(value) => url.setFilterSelection(value ? { pressure: [value] } : {})}
+                />
+              </div>
+              <div>
+                <p className={bt.filterLabel}>Evento</p>
+                <SheetSelect
+                  label="Evento"
+                  value={url.eventId ?? ''}
+                  placeholder="Todos los eventos"
+                  options={eventSelect}
+                  onChange={(value) => url.setEventId(value || null)}
+                />
+              </div>
               {venueOptions.length > 0 ? (
-                <div className={styles.venueRow} role="group" aria-label="Filtrar por venue">
-                  <button
-                    type="button"
-                    className={
-                      !url.venueId
-                        ? `${styles.venueChip} ${styles.venueChipActive}`
-                        : styles.venueChip
-                    }
-                    onClick={() => url.setVenueId(null)}
-                  >
-                    Todos los venues
-                  </button>
-                  {venueOptions.slice(0, 8).map((venue) => {
-                    const active = url.venueId === venue.id;
-                    return (
-                      <button
-                        key={venue.id}
-                        type="button"
-                        className={
-                          active
-                            ? `${styles.venueChip} ${styles.venueChipActive}`
-                            : styles.venueChip
-                        }
-                        aria-pressed={active}
-                        onClick={() => url.setVenueId(active ? null : venue.id)}
-                      >
-                        {venue.name}
-                      </button>
-                    );
-                  })}
+                <div>
+                  <p className={bt.filterLabel}>Recinto</p>
+                  <SheetSelect
+                    label="Recinto"
+                    value={url.venueId ?? ''}
+                    placeholder="Todos los recintos"
+                    options={venueSelect}
+                    onChange={(value) => url.setVenueId(value || null)}
+                  />
                 </div>
               ) : null}
-
-              {loading ? (
-                <DataTable
-                  label="Inventario por zona"
-                  columns={columns}
-                  data={[]}
-                  rowKey={(row) => row.id}
-                  loading
-                  loadingRows={8}
-                  maxHeight={480}
-                />
-              ) : filtered.length === 0 ? (
-                zoneRows.length === 0 ? (
-                  <EmptyState
-                    illustration="seats"
-                    title="Sin inventario publicado"
-                    description={
-                      events.data?.length
-                        ? 'Hay eventos, pero /metrics/inventory aún no reporta zonas. Publica ofertas o espera la agregación.'
-                        : 'Crea y publica un evento con ofertas para ver cupos, holds y presión de demanda.'
-                    }
-                    action={
-                      events.data?.length ? (
-                        <Link href="/events">
-                          <Button type="button">Abrir eventos</Button>
-                        </Link>
-                      ) : (
-                        <Link href="/events/new">
-                          <Button type="button">Crear evento</Button>
-                        </Link>
-                      )
-                    }
-                    secondaryAction={
-                      <Link href="/venues">
-                        <Button type="button" variant="secondary">
-                          Gestionar venues
-                        </Button>
-                      </Link>
-                    }
-                  />
-                ) : (
-                  <EmptyState
-                    illustration="search"
-                    title="Sin zonas que coincidan"
-                    description="Ajusta la búsqueda, la presión, el venue o el evento seleccionado."
-                    action={
-                      <Button type="button" variant="secondary" onClick={url.clearFilters}>
-                        Limpiar filtros
-                      </Button>
-                    }
-                  />
-                )
-              ) : (
-                <DataTable
-                  label="Inventario por zona"
-                  columns={columns}
-                  data={filtered}
-                  rowKey={(row) => row.id}
-                  maxHeight={480}
-                  density="compact"
-                  defaultSort={{ key: 'pressure', direction: 'desc' }}
-                  onRowClick={(row) =>
-                    url.setSelectedId(row.id === url.selectedId ? null : row.id)
-                  }
-                />
-              )}
-
-              <Card>
-                <CardHeader
-                  title="Composición por zona"
-                  description="Disponibles, holds, vendidos y bloqueos estimados (top 8 del filtro)"
-                />
-                {filtered.length === 0 ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="chart"
-                    title="Sin series para graficar"
-                    description="Selecciona zonas con inventario para ver la comparación."
-                  />
-                ) : (
-                  <BarChart
-                    label="Inventario por zona"
-                    layout="stacked"
-                    height={260}
-                    series={[
-                      { id: 'available', name: 'Disponibles', data: bars.available },
-                      { id: 'held', name: 'Holds', data: bars.held },
-                      { id: 'sold', name: 'Vendidos', data: bars.sold },
-                      { id: 'blocked', name: 'Bloqueos est.', data: bars.blocked },
-                    ]}
-                    formatValue={(value) => formatCount(value)}
-                  />
-                )}
-              </Card>
             </div>
+            <div className={bt.actions}>
+              <p className={styles.tertiary} role="status">
+                {formatCount(filtered.length)} de {formatCount(zoneRows.length)} zonas
+              </p>
+              {filtering ? (
+                <TicketButton variant="ghost" onClick={url.clearFilters}>
+                  Limpiar filtros
+                </TicketButton>
+              ) : null}
+            </div>
+          </div>
 
-            <div className={styles.sideCol}>
-              <Card>
-                <CardHeader title="Mix de estados" description="Aforo agregado del periodo" />
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
-                  <ProgressRing
-                    label="Ocupación vendida"
-                    value={occupancy * 100}
-                    max={100}
-                    tone={occupancy >= 0.8 ? 'warning' : 'accent'}
-                    size={96}
-                  >
-                    {formatOccupancyRatio(summary?.sold ?? 0, summary?.totalCapacity ?? 0)}
-                  </ProgressRing>
+          <div className={bt.block}>
+            {zoneRows.length === 0 ? (
+              <>
+                <p className={styles.quiet}>
+                  {events.data?.length
+                    ? 'Hay eventos, pero el inventario aún no reporta zonas. Publica ofertas o espera la agregación.'
+                    : 'Sin inventario. Crea y publica un evento con ofertas para ver cupos y holds.'}
+                </p>
+                <div className={bt.actions}>
+                  <Link href="/events" className={bt.link}>
+                    Abrir eventos
+                  </Link>
+                  <Link href="/venues" className={bt.link}>
+                    Recintos
+                  </Link>
                 </div>
-                {donutSlices.length === 0 ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="chart"
-                    title="Sin desglose"
-                    description="El mix aparece cuando hay cupos en el inventario."
-                  />
-                ) : (
-                  <DonutChart
-                    label="Estados de inventario"
-                    slices={donutSlices}
-                    height={220}
-                    centerLabel="Boletos"
-                    formatValue={(value) => formatCount(value)}
-                  />
-                )}
-              </Card>
+              </>
+            ) : filtered.length === 0 ? (
+              <p className={styles.quiet}>Nada con ese criterio.</p>
+            ) : null}
+            {filtered.map((row) => {
+              const open = url.selectedId === row.id;
+              return (
+                <div key={row.id} className={styles.stack}>
+                  <button
+                    type="button"
+                    className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+                    aria-expanded={open}
+                    onClick={() => url.setSelectedId(open ? null : row.id)}
+                  >
+                    <span>
+                      {row.tierName} · {row.eventTitle} · Presión{' '}
+                      {PRESSURE_LABEL[row.pressure].toLowerCase()}
+                    </span>
+                    <span className={styles.figure}>
+                      {formatCount(row.remainingQuantity)} / {formatCount(row.totalQuantity)}
+                    </span>
+                  </button>
+                  {open ? (
+                    <div className={bt.detail}>
+                      <div className={styles.rows}>
+                        <Pair label="Zona" value={row.zone} />
+                        <Pair label="Aforo de la zona" value={formatCount(row.totalQuantity)} />
+                        <Pair label="Disponibles" value={formatCount(row.remainingQuantity)} />
+                        <Pair label="En hold" value={formatCount(row.holdQuantity)} />
+                        <Pair label="Vendidos" value={formatCount(row.soldQuantity)} />
+                        <Pair label="Bloqueos estimados" value={formatCount(blockedOf(row))} />
+                        <Pair
+                          label="Disponibilidad"
+                          value={formatAvailability(row.availabilityPercent)}
+                        />
+                        <Pair label="Velocidad" value={formatVelocity(row.sellThroughVelocity)} />
+                        <Pair
+                          label="Agotamiento estimado"
+                          value={formatDaysToSellOut(row.daysToSellOut)}
+                        />
+                      </div>
+                      <p className={styles.rowTitle}>Disponibilidad en vivo del evento</p>
+                      {availability.isPending ? (
+                        <p className={styles.quiet}>Consultando disponibilidad.</p>
+                      ) : availability.error ? (
+                        <p className={styles.danger} role="alert">
+                          {failMessage(availability.error, 'No se leyó la disponibilidad en vivo.')}
+                        </p>
+                      ) : availability.data ? (
+                        <div className={styles.rows}>
+                          <Pair
+                            label="Holds activos"
+                            value={formatCount(availability.data.activeHolds)}
+                          />
+                          <Pair
+                            label="Disponibles"
+                            value={formatCount(statusCountValue(counts, ['AVAILABLE']))}
+                          />
+                          <Pair
+                            label="Apartados"
+                            value={formatCount(statusCountValue(counts, ['HELD']))}
+                          />
+                          <Pair
+                            label="Vendidos, usados o transferidos"
+                            value={formatCount(
+                              statusCountValue(counts, ['SOLD', 'USED', 'TRANSFERRED'])
+                            )}
+                          />
+                          <Pair
+                            label="Bloqueos y otros"
+                            value={formatCount(
+                              statusCountValue(counts, ['BLOCKED', 'RESERVED_OPS', 'COMP'])
+                            )}
+                          />
+                        </div>
+                      ) : (
+                        <p className={styles.quiet}>
+                          Sin lectura de disponibilidad para este evento.
+                        </p>
+                      )}
+                      <p className={styles.tertiary}>
+                        Oferta <span className={styles.mono}>{row.offerId}</span>
+                      </p>
+                      <Link href={`/events/${row.eventId}`} className={bt.link}>
+                        Abrir el evento
+                      </Link>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
 
-              <Card>
-                <CardHeader
-                  title="Eventos con inventario"
-                  description="Filtra la tabla al hacer clic"
-                />
-                {eventOptions.length === 0 ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="inbox"
-                    title="Sin eventos en métricas"
-                    description="Los eventos con zonas publicadas aparecerán aquí."
-                  />
-                ) : (
-                  <ul className={styles.eventList} aria-label="Eventos">
-                    {eventOptions.slice(0, 8).map((event) => {
-                      const active = url.eventId === event.id;
-                      return (
-                        <li key={event.id}>
-                          <button
-                            type="button"
-                            className={
-                              active
-                                ? `${styles.eventItem} ${styles.eventItemActive}`
-                                : styles.eventItem
-                            }
-                            aria-pressed={active}
-                            onClick={() => url.setEventId(active ? null : event.id)}
-                          >
-                            <strong>{event.title}</strong>
-                            <span className={styles.muted}>
-                              {event.venueName ? `${event.venueName} · ` : ''}
-                              {formatCount(event.zones)} zonas · {formatCount(event.available)}{' '}
-                              libres · {formatCount(event.held)} en hold
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </Card>
+          <div className={bt.block}>
+            <p className={styles.rowTitle}>Riesgo de agotamiento</p>
+            <p className={styles.tertiary}>
+              Zonas a 14 días o menos del agotamiento al ritmo actual.
+            </p>
+            {sellouts.length === 0 ? (
+              <p className={styles.quiet}>
+                Ninguna zona del filtro proyecta agotarse en dos semanas.
+              </p>
+            ) : (
+              <div className={styles.rows}>
+                {sellouts.map((row) => (
+                  <button
+                    key={row.id}
+                    type="button"
+                    className={`${styles.row} ${bt.rowButton} ${bt.rowLink}`}
+                    onClick={() => url.setSelectedId(row.id)}
+                  >
+                    <div className={styles.rowMain}>
+                      <p className={styles.rowTitle}>
+                        {row.tierName} · {row.eventTitle}
+                      </p>
+                      <p className={styles.rowMeta}>{formatCount(row.remainingQuantity)} libres</p>
+                    </div>
+                    <span />
+                    <p className={styles.figure}>{formatDaysToSellOut(row.daysToSellOut)}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-              <Card>
-                <CardHeader
-                  title="Riesgo de agotamiento"
-                  description="Zonas con ≤14 días al sell-out al ritmo actual"
-                />
-                {sellouts.length === 0 ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="success"
-                    title="Sin agotamientos próximos"
-                    description="Ninguna zona filtrada proyecta sell-out en dos semanas."
-                    tone="success"
-                  />
-                ) : (
-                  <ul className={styles.eventList}>
-                    {sellouts.map((row) => (
-                      <li key={row.id}>
-                        <button
-                          type="button"
-                          className={styles.eventItem}
-                          onClick={() => url.setSelectedId(row.id)}
-                        >
-                          <strong>
-                            {row.zone} · {row.tierName}
-                          </strong>
-                          <span className={styles.muted}>
-                            {row.eventTitle} · {formatDaysToSellOut(row.daysToSellOut)} ·{' '}
-                            {formatCount(row.remainingQuantity)} libres
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Card>
+          <div className={bt.block}>
+            <p className={styles.rowTitle}>Riesgo de ritmo</p>
+            <p className={styles.tertiary}>Eventos atrasados contra el ritmo de venta esperado.</p>
+            {pace.isPending ? (
+              <p className={styles.quiet}>Cargando ritmo de venta.</p>
+            ) : pace.error ? (
+              <p className={styles.danger} role="alert">
+                {failMessage(pace.error, 'No se leyó el ritmo de venta.')}
+              </p>
+            ) : atRiskEvents.length === 0 ? (
+              <p className={styles.quiet}>Ningún evento supera el umbral de atraso.</p>
+            ) : (
+              <div className={styles.rows}>
+                {atRiskEvents.slice(0, 5).map((event) => (
+                  <div key={event.eventId} className={styles.row}>
+                    <div className={styles.rowMain}>
+                      <p className={styles.rowTitle}>{event.title}</p>
+                      <p className={styles.rowMeta}>
+                        Riesgo {RISK[event.riskLevel] ?? event.riskLevel}
+                      </p>
+                    </div>
+                    <span />
+                    <p className={styles.figure}>
+                      {event.occupancyPercent.toLocaleString('es-MX', { maximumFractionDigits: 1 })}{' '}
+                      %
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-              <Card>
-                <CardHeader
-                  title="Riesgo de ritmo"
-                  description="Eventos atrasados vs. pace esperado"
-                />
-                {pace.isPending ? (
-                  <p className={styles.muted}>Cargando sales pace…</p>
-                ) : atRiskEvents.length === 0 ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="success"
-                    title="Sin eventos en riesgo"
-                    description="Ningún evento supera el umbral de atraso de venta."
-                    tone="success"
-                  />
-                ) : (
-                  <ul className={styles.eventList}>
-                    {atRiskEvents.slice(0, 5).map((event) => (
-                      <li key={event.eventId} className={styles.eventItem}>
-                        <strong>{event.title}</strong>
-                        <span className={styles.muted}>
-                          {formatNumber(event.occupancyPercent, 1)} % ocupación · riesgo{' '}
-                          {event.riskLevel}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Card>
-
-              <Card>
-                <CardHeader title="Alertas de inventario" description="Señales accionables" />
-                {inventoryAlerts.length === 0 ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="inbox"
-                    title="Sin alertas"
-                    description="No hay recomendaciones de inventario en este periodo."
-                  />
-                ) : (
-                  <ul className={styles.eventList}>
-                    {inventoryAlerts.slice(0, 5).map((alert) => (
-                      <li key={alert.id} className={styles.eventItem}>
-                        <Badge
-                          tone={
-                            alert.severity === 'critical'
-                              ? 'danger'
-                              : alert.severity === 'warning'
-                                ? 'warning'
-                                : 'info'
-                          }
-                          variant="soft"
-                          size="sm"
-                          dot
-                        >
-                          {alert.severity}
-                        </Badge>
-                        <strong>{alert.title}</strong>
-                        <span className={styles.muted}>{alert.explanation}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Card>
-            </div>
+          <div className={bt.block}>
+            <p className={styles.rowTitle}>Alertas</p>
+            {alerts.error ? (
+              <p className={styles.danger} role="alert">
+                {failMessage(alerts.error, 'No se leyeron las alertas.')}
+              </p>
+            ) : inventoryAlerts.length === 0 ? (
+              <p className={styles.quiet}>Sin alertas de inventario en este periodo.</p>
+            ) : (
+              <div className={styles.rows}>
+                {inventoryAlerts.slice(0, 5).map((alert) => (
+                  <div key={alert.id} className={styles.row}>
+                    <div className={styles.rowMain}>
+                      <p className={styles.rowTitle}>{alert.title}</p>
+                      <p className={styles.rowMeta}>{alert.explanation}</p>
+                    </div>
+                    <span />
+                    <p className={alert.severity === 'critical' ? styles.danger : styles.quiet}>
+                      {SEVERITY[alert.severity] ?? alert.severity}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
-
-      <ZoneDetailDrawer
-        row={selected}
-        availability={availability.data}
-        availabilityPending={availability.isPending && Boolean(selected?.eventId)}
-        onClose={() => url.setSelectedId(null)}
-      />
-    </main>
-  );
-}
-
-export default function InventoryPage() {
-  return (
-    <Suspense
-      fallback={
-        <main className={styles.page}>
-          <EmptyState title="Cargando inventario…" illustration="seats" />
-        </main>
-      }
-    >
-      <InventoryCockpit />
-    </Suspense>
+    </section>
   );
 }

@@ -1,0 +1,123 @@
+// Complementos del lenguaje Black Ticket para órdenes, reservaciones e inventario.
+// Solo tokens del lienzo; el resto viene de events/_ticket/frame.module.scss.
+
+.rowLink {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 0;
+}
+
+.rowLink:hover {
+  background: var(--ink-overlay);
+}
+
+.rowLink:focus-visible {
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.filterLabel {
+  margin: 0 0 4px;
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 12px 12px;
+  border-left: 1px solid var(--line);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pairLabel {
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--body-sm);
+}
+
+.pairValue {
+  margin: 0;
+  color: var(--text);
+  font: var(--body-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.link {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  text-decoration-color: var(--gold);
+}
+
+.link:focus-visible {
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 800px) {
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.rowButton {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.segmentWrap {
+  min-width: 300px;
+}
+
+@media (max-width: 800px) {
+  .segmentWrap {
+    min-width: 0;
+    width: 100%;
+  }
+}

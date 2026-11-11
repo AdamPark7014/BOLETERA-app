@@ -1,37 +1,33 @@
 'use client';
 
+/**
+ * Reservaciones y bloqueos.
+ *
+ * Deriva holds de checkout de las órdenes recientes y holds de zona de
+ * `/metrics/inventory`. `GET /admin/orders` devuelve un sobre paginado, no un
+ * arreglo: la versión anterior lo recorría como lista y reventaba con
+ * «orders.filter is not a function». Aquí se lee con `readOrderRows`.
+ */
+
+import { Suspense, useDeferredValue, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Suspense, useDeferredValue, useMemo } from 'react';
+import { Field, TicketButton } from '@boletera/ui';
+import { ApiError } from '@/lib/api';
+import { hasCapability } from '@/lib/permissions';
+import type { OrderRow } from '@/lib/queries/orders';
 import {
-  ActivityFeed,
-  Badge,
-  Button,
-  Card,
-  CardHeader,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  FunnelChart,
-  KpiCard,
-  PageHeader,
-  Section,
-  SegmentedControl,
-  Timeline,
-  formatNumber,
-  type ActivityItem,
-  type DataTableColumn,
-  type FilterDefinition,
-  type TimelineItem,
-} from '@boletera/ui';
-import { QueryError } from '@/components/QueryStates';
-import {
+  useReleaseReservationHold,
   useReservationEvents,
   useReservationInventory,
   useReservationOrders,
   useReservationOrdersMetrics,
 } from '@/lib/queries/reservations';
-import { useSession } from '@/lib/use-session';
-import { ReservationDetailDrawer } from './_components/ReservationDetailDrawer';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Segment, SheetSelect } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import bt from '../orders/_bt/bt.module.scss';
+import { channelWord, readOrderRows } from '../orders/_bt/read';
 import {
   buildReleaseTimeline,
   buildReservationRows,
@@ -45,56 +41,118 @@ import {
   formatMoney,
   formatRelative,
   formatShare,
-  kpiDeltaRatio,
   rangeLabel,
 } from './_lib/format';
 import {
   KIND_LABEL,
-  KIND_TONE,
   KIND_VALUES,
   POLICY_TEMPLATES,
   RANGE_OPTIONS,
   STATUS_LABEL,
-  STATUS_TONE,
   STATUS_VALUES,
   type RangeKey,
   type ReservationRow,
 } from './_lib/types';
 import { useReservationsUrlState } from './_lib/use-reservations-url-state';
-import styles from './reservations.module.scss';
 
-function ReservationsCockpit() {
-  const { can, organizationId } = useSession();
-  const canRead = can('order:read') || can('event:read');
+function failMessage(cause: unknown, fallback: string): string {
+  if (cause instanceof ApiError) return cause.userMessage;
+  if (cause instanceof Error && cause.message) return cause.message;
+  return fallback;
+}
+
+function activityLabel(row: ReservationRow): string {
+  if (row.status === 'released') return 'Liberada o cancelada';
+  if (row.status === 'expired') return 'Hold expirado';
+  if (row.status === 'completed') return 'Convertida a compra';
+  if (row.kind === 'zone_hold') return 'Inventario de zona retenido';
+  return 'Hold de checkout';
+}
+
+export default function ReservationsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <ReservasBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function ReservasBody() {
+  const session = useSession();
+  const canSee =
+    hasCapability(session.role, 'orders.view') || hasCapability(session.role, 'events.view');
+
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (session.status === 'loading') return <p className={styles.quiet}>Cargando reservaciones.</p>;
+  if (!canSee) {
+    return (
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Reservaciones</h1>
+          <p className={styles.quiet}>Tu rol no ve órdenes ni eventos.</p>
+        </header>
+      </section>
+    );
+  }
+  return <ReservasView orgId={session.orgId} />;
+}
+
+function ReservasView({ orgId }: { orgId: string }) {
   const url = useReservationsUrlState();
   const deferredQuery = useDeferredValue(url.q);
 
   const params = useMemo(
     () => ({
-      organizationId: organizationId ?? undefined,
+      organizationId: orgId,
       from: daysAgoIso(Number(url.range)),
       to: new Date().toISOString(),
     }),
-    [organizationId, url.range],
+    [orgId, url.range]
   );
 
   const ordersQuery = useReservationOrders({ scope: 'reservations' });
   const inventory = useReservationInventory(params);
   const ordersMetrics = useReservationOrdersMetrics(params);
   const events = useReservationEvents();
+  const release = useReleaseReservationHold();
+  const [holdInput, setHoldInput] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  /** El API manda `{ data, nextCursor, hasMore }`; el tipo del hook dice arreglo. */
+  const orderPage = useMemo(() => readOrderRows(ordersQuery.data as unknown), [ordersQuery.data]);
+  const orders = useMemo<OrderRow[]>(
+    () =>
+      orderPage.rows.map((row) => ({
+        id: row.id,
+        publicId: row.publicId,
+        status: row.status,
+        channel: row.channel,
+        totalAmount: String(row.amount),
+        currency: row.currency,
+        buyerName: row.buyerName ?? '',
+        buyerEmail: row.buyerEmail ?? '',
+        createdAt: row.createdAt ?? new Date(0).toISOString(),
+        event: { title: row.eventTitle },
+        payment: row.paymentGateway
+          ? { gateway: row.paymentGateway, status: row.paymentStatus ?? '' }
+          : null,
+      })),
+    [orderPage]
+  );
 
   const rows = useMemo(
-    () => buildReservationRows(ordersQuery.data ?? [], inventory.data),
-    [inventory.data, ordersQuery.data],
+    () => buildReservationRows(orders, inventory.data),
+    [inventory.data, orders]
   );
   const kpis = useMemo(
-    () => reservationKpis(rows, inventory.data, ordersQuery.data ?? []),
-    [inventory.data, ordersQuery.data, rows],
+    () => reservationKpis(rows, inventory.data, orders),
+    [inventory.data, orders, rows]
   );
-  const funnel = useMemo(
-    () => conversionFunnel(ordersQuery.data ?? []),
-    [ordersQuery.data],
-  );
+  const funnel = useMemo(() => conversionFunnel(orders), [orders]);
   const releaseFeed = useMemo(() => buildReleaseTimeline(rows), [rows]);
 
   const filtered = useMemo(() => {
@@ -109,472 +167,431 @@ function ReservationsCockpit() {
     });
   }, [deferredQuery, rows, url.kinds, url.statuses]);
 
-  const selected = useMemo(
-    () => (url.selectedId ? (rows.find((row) => row.id === url.selectedId) ?? null) : null),
-    [rows, url.selectedId],
-  );
-
-  const filterDefs = useMemo<FilterDefinition[]>(
-    () => [
-      {
-        id: 'kind',
-        label: 'Tipo',
-        options: KIND_VALUES.map((value) => ({
-          value,
-          label: KIND_LABEL[value],
-          count: rows.filter((row) => row.kind === value).length,
-        })),
-      },
-      {
-        id: 'status',
-        label: 'Estado',
-        options: STATUS_VALUES.map((value) => ({
-          value,
-          label: STATUS_LABEL[value],
-          count: rows.filter((row) => row.status === value).length,
-        })),
-      },
-    ],
-    [rows],
-  );
-
-  const columns = useMemo<DataTableColumn<ReservationRow>[]>(
-    () => [
-      {
-        key: 'title',
-        header: 'Reserva',
-        width: 200,
-        sortValue: (row) => row.title,
-        render: (row) => (
-          <div className={styles.titleCell}>
-            <strong>{row.title}</strong>
-            <span>{row.meta}</span>
-          </div>
-        ),
-      },
-      {
-        key: 'kind',
-        header: 'Tipo',
-        width: 140,
-        sortValue: (row) => row.kind,
-        render: (row) => (
-          <Badge tone={KIND_TONE[row.kind]} variant="soft" size="sm" dot>
-            {KIND_LABEL[row.kind]}
-          </Badge>
-        ),
-      },
-      {
-        key: 'status',
-        header: 'Estado',
-        width: 130,
-        sortValue: (row) => row.status,
-        render: (row) => (
-          <Badge tone={STATUS_TONE[row.status]} variant="soft" size="sm" dot>
-            {STATUS_LABEL[row.status]}
-          </Badge>
-        ),
-      },
-      {
-        key: 'eventTitle',
-        header: 'Evento',
-        width: 180,
-        sortValue: (row) => row.eventTitle,
-      },
-      {
-        key: 'quantity',
-        header: 'Cupos',
-        width: 90,
-        align: 'right',
-        sortValue: (row) => row.quantity,
-        render: (row) => formatCount(row.quantity),
-      },
-      {
-        key: 'amount',
-        header: 'Valor',
-        width: 120,
-        align: 'right',
-        sortValue: (row) => row.amount,
-        render: (row) => (row.amount > 0 ? formatMoney(row.amount, row.currency) : '—'),
-      },
-      {
-        key: 'expiresAt',
-        header: 'Expiración',
-        width: 140,
-        sortValue: (row) => row.expiresAt ?? '',
-        render: (row) => formatExpiry(row.expiresAt),
-      },
-      {
-        key: 'createdAt',
-        header: 'Edad',
-        width: 120,
-        sortValue: (row) => row.createdAt ?? '',
-        render: (row) => formatRelative(row.createdAt),
-      },
-    ],
-    [],
-  );
-
-  const activityItems = useMemo<ActivityItem[]>(() => {
-    return releaseFeed.map((row) => ({
-      id: row.id,
-      actor: row.buyer,
-      action:
-        row.status === 'released'
-          ? 'liberó / canceló una reserva'
-          : row.status === 'expired'
-            ? 'registró expiración de hold'
-            : row.status === 'completed'
-              ? 'convirtió hold a compra'
-              : row.kind === 'zone_hold'
-                ? 'retenido inventario de zona'
-                : 'mantuvo un hold de checkout',
-      target: row.title,
-      timestamp: row.createdAt ?? new Date().toISOString(),
-      detail: `${row.eventTitle} · ${formatCount(row.quantity)} cupos · ${formatExpiry(row.expiresAt)}`,
-    }));
-  }, [releaseFeed]);
-
-  const timelineItems = useMemo<TimelineItem[]>(() => {
-    return [
-      {
-        id: 'holds',
-        title: `${formatCount(kpis.activeHolds)} holds activos`,
-        description: 'Reservas de checkout + holds de inventario',
-        tone: 'info',
-        current: true,
-      },
-      {
-        id: 'expiring',
-        title: `${formatCount(kpis.expiringSoon)} por expirar (≤5 min)`,
-        description: 'TTL estimado de checkout web (15 min)',
-        tone: kpis.expiringSoon > 0 ? 'warning' : 'success',
-      },
-      {
-        id: 'converting',
-        title: `${formatMoney(kpis.convertingAmount)} en conversión`,
-        description: 'Valor MXN de pedidos pendientes de pago',
-        tone: 'warning',
-      },
-      {
-        id: 'released',
-        title: `${formatCount(kpis.released)} liberaciones`,
-        description: 'Cancelaciones que devuelven cupo al inventario',
-        tone: 'neutral',
-      },
-      {
-        id: 'expired',
-        title: `${formatCount(kpis.expired)} expiraciones`,
-        description: 'Holds / pedidos marcados como vencidos',
-        tone: kpis.expired > 0 ? 'danger' : 'success',
-      },
-      {
-        id: 'converted',
-        title: `${formatCount(kpis.completed)} convertidos`,
-        description: 'Pedidos completados en el portafolio',
-        tone: 'success',
-      },
-    ];
-  }, [kpis]);
+  const kindOptions = [
+    { value: '', label: `Todos los tipos (${rows.length})` },
+    ...KIND_VALUES.map((value) => ({
+      value,
+      label: `${KIND_LABEL[value]} (${rows.filter((row) => row.kind === value).length})`,
+    })),
+  ];
+  const statusOptions = [
+    { value: '', label: `Todos los estados (${rows.length})` },
+    ...STATUS_VALUES.map((value) => ({
+      value,
+      label: `${STATUS_LABEL[value]} (${rows.filter((row) => row.status === value).length})`,
+    })),
+  ];
 
   const loading = ordersQuery.isPending || inventory.isPending;
   const listError = ordersQuery.error ?? inventory.error;
+  const filtering = Boolean(url.q || url.kinds.length || url.statuses.length);
 
-  if (!canRead) {
-    return (
-      <main className={styles.page}>
-        <EmptyState
-          title="Sin permiso para reservas"
-          description="Necesitas order:read o event:read para monitorear holds, expiraciones y liberaciones."
-          illustration="inbox"
-          tone="neutral"
-        />
-      </main>
-    );
+  function refresh() {
+    void ordersQuery.refetch();
+    void inventory.refetch();
+    void ordersMetrics.refetch();
+    void events.refetch();
   }
 
+  async function releaseHold(row: ReservationRow) {
+    const holdId = (row.holdId || holdInput).trim();
+    setActionError(null);
+    setNotice(null);
+    if (!holdId) {
+      setActionError('Indica el ID del hold a liberar (SeatHold).');
+      return;
+    }
+    try {
+      const result = await release.mutateAsync({ holdId });
+      if (result.released) {
+        setNotice('Hold liberado; el inventario vuelve a disponible.');
+        setHoldInput('');
+        url.setSelectedId(null);
+      } else {
+        setNotice(`El hold no estaba activo (${result.status ?? 'estado desconocido'}).`);
+      }
+    } catch (cause) {
+      setActionError(failMessage(cause, 'No se pudo liberar el hold.'));
+    }
+  }
+
+  const approval = ordersMetrics.data?.kpis.approvalRate.value;
+
   return (
-    <main className={styles.page}>
-      <PageHeader
-        eyebrow="Operaciones · Reservas"
-        title="Reservas y bloqueos"
-        description="Holds activos, expiración TTL, conversión a compra, liberaciones y timeline operativo derivado de pedidos e inventario."
-        breadcrumbs={[
-          { label: 'Panel', href: '/dashboard' },
-          { label: 'Reservas' },
-        ]}
-        actions={
-          <div className={styles.actions}>
-            <SegmentedControl<RangeKey>
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Reservaciones</h1>
+        <p className={styles.quiet}>
+          Holds de checkout, holds de zona, expiraciones y liberaciones. Se derivan de las órdenes
+          recientes y del inventario; no se inventan holds.
+        </p>
+        <div className={bt.actions}>
+          <div className={bt.segmentWrap}>
+            <Segment<RangeKey>
               label="Rango de análisis"
-              size="sm"
               value={url.range}
-              onValueChange={url.setRange}
-              options={RANGE_OPTIONS}
+              options={[...RANGE_OPTIONS]}
+              onChange={url.setRange}
             />
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={ordersQuery.isFetching || inventory.isFetching}
-              onClick={() => {
-                void ordersQuery.refetch();
-                void inventory.refetch();
-                void ordersMetrics.refetch();
-                void events.refetch();
-              }}
-            >
-              Actualizar
-            </Button>
           </div>
-        }
-      />
+          <TicketButton
+            variant="secondary"
+            disabled={ordersQuery.isFetching || inventory.isFetching}
+            onClick={refresh}
+          >
+            Actualizar
+          </TicketButton>
+        </div>
+      </header>
 
       {listError ? (
-        <QueryError
-          error={listError}
-          onRetry={() => {
-            void ordersQuery.refetch();
-            void inventory.refetch();
-          }}
-        />
+        <ApiErrorView error={listError} context="leer las reservaciones" onRetry={refresh} />
+      ) : loading ? (
+        <p className={styles.quiet}>Cargando reservaciones.</p>
       ) : (
         <>
-          <Section columns={4} gap="sm" aria-label="Indicadores de reservas">
-            <KpiCard
-              label="Reservas activas"
-              value={loading ? '—' : formatCount(kpis.activeReservations)}
-              hint={`${formatCount(kpis.pending)} checkouts · ${formatCount(kpis.expiringSoon)} por expirar · ${rangeLabel(url.range)}`}
-              loading={loading}
-              tone="info"
-            />
-            <KpiCard
-              label="Holds de zona"
-              value={loading ? '—' : formatCount(kpis.zoneHolds)}
-              hint={`${formatCount(kpis.activeHolds)} holds activos reportados`}
-              loading={loading}
-              tone="warning"
-            />
-            <KpiCard
-              label="Liberaciones / expiraciones"
-              value={loading ? '—' : formatCount(kpis.released + kpis.expired)}
-              hint={`${formatCount(kpis.released)} liberadas · ${formatCount(kpis.expired)} expiradas`}
-              loading={loading}
-              tone="neutral"
-            />
-            <KpiCard
-              label="Conversión hold → compra"
-              value={loading ? '—' : formatShare(kpis.conversion)}
-              delta={kpiDeltaRatio(ordersMetrics.data?.kpis.approvalRate.deltaPercent)}
-              deltaLabel="vs. aprobación de pagos"
-              hint={`${formatCount(kpis.completed)} convertidos / ${formatCount(kpis.pending + kpis.completed)} base`}
-              loading={loading || ordersMetrics.isPending}
-              tone="success"
-            />
-          </Section>
+          <div className={styles.rows}>
+            <div className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Reservas activas</p>
+                <p className={styles.rowMeta}>
+                  {formatCount(kpis.pending)} checkouts · {formatCount(kpis.expiringSoon)} por
+                  expirar · {rangeLabel(url.range)}
+                </p>
+              </div>
+              <span />
+              <p className={styles.figure}>{formatCount(kpis.activeReservations)}</p>
+            </div>
+            <div className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Holds de zona</p>
+                <p className={styles.rowMeta}>
+                  {formatCount(kpis.activeHolds)} holds activos reportados
+                </p>
+              </div>
+              <span />
+              <p className={styles.figure}>{formatCount(kpis.zoneHolds)}</p>
+            </div>
+            <div className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Liberaciones y expiraciones</p>
+                <p className={styles.rowMeta}>
+                  {formatCount(kpis.released)} liberadas · {formatCount(kpis.expired)} expiradas
+                </p>
+              </div>
+              <span />
+              <p className={styles.figure}>{formatCount(kpis.released + kpis.expired)}</p>
+            </div>
+            <div className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Conversión hold → compra</p>
+                <p className={styles.rowMeta}>
+                  {formatCount(kpis.completed)} convertidos de{' '}
+                  {formatCount(kpis.pending + kpis.completed)}
+                </p>
+              </div>
+              <span />
+              <p className={styles.figure}>{formatShare(kpis.conversion)}</p>
+            </div>
+            <div className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Tasa de aprobación de pagos</p>
+                <p className={styles.rowMeta}>Sirve para leer el abandono de holds</p>
+              </div>
+              <span />
+              <p className={styles.figure}>
+                {ordersMetrics.isPending
+                  ? '—'
+                  : ordersMetrics.error
+                    ? 'Sin dato'
+                    : `${(approval ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 1 })} %`}
+              </p>
+            </div>
+          </div>
+          {ordersMetrics.error ? (
+            <p className={styles.danger} role="alert">
+              {failMessage(ordersMetrics.error, 'No se leyó la señal de pagos.')}
+            </p>
+          ) : null}
+          {orderPage.hasMore ? (
+            <p className={styles.tertiary}>
+              Solo se leen las órdenes más recientes; hay más en el servidor.
+            </p>
+          ) : null}
 
-          <div className={styles.layout}>
-            <div className={styles.mainCol}>
-              <div className={styles.toolbar}>
-                <FilterBar
-                  filters={filterDefs}
-                  value={url.filterSelection}
-                  onChange={url.setFilterSelection}
-                  search={{
-                    value: url.q,
-                    onChange: url.setSearch,
-                    placeholder: 'Buscar hold, evento, comprador o canal…',
-                  }}
+          <div className={bt.block}>
+            <div className={bt.toolbar}>
+              <Field
+                label="Buscar"
+                kind="search"
+                value={url.q}
+                placeholder="Hold, evento, comprador o canal"
+                onChange={(event) => url.setSearch(event.target.value)}
+              />
+              <div>
+                <p className={bt.filterLabel}>Tipo</p>
+                <SheetSelect
+                  label="Tipo"
+                  value={url.kinds[0] ?? ''}
+                  placeholder="Todos los tipos"
+                  options={kindOptions}
+                  onChange={(value) =>
+                    url.setFilterSelection({
+                      ...(value ? { kind: [value] } : {}),
+                      ...(url.statuses.length ? { status: [...url.statuses] } : {}),
+                    })
+                  }
                 />
-                <div className={styles.filterMeta} role="status">
-                  <span>
-                    {formatNumber(filtered.length)} de {formatNumber(rows.length)} reservas
-                  </span>
-                  {url.q || url.kinds.length || url.statuses.length ? (
-                    <Button type="button" variant="ghost" size="sm" onClick={url.clearFilters}>
-                      Limpiar
-                    </Button>
+              </div>
+              <div>
+                <p className={bt.filterLabel}>Estado</p>
+                <SheetSelect
+                  label="Estado"
+                  value={url.statuses[0] ?? ''}
+                  placeholder="Todos los estados"
+                  options={statusOptions}
+                  onChange={(value) =>
+                    url.setFilterSelection({
+                      ...(url.kinds.length ? { kind: [...url.kinds] } : {}),
+                      ...(value ? { status: [value] } : {}),
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div className={bt.actions}>
+              <p className={styles.tertiary} role="status">
+                {formatCount(filtered.length)} de {formatCount(rows.length)} reservas
+              </p>
+              {filtering ? (
+                <TicketButton variant="ghost" onClick={url.clearFilters}>
+                  Limpiar filtros
+                </TicketButton>
+              ) : null}
+            </div>
+          </div>
+
+          <div className={bt.block}>
+            {rows.length === 0 ? (
+              <>
+                <p className={styles.quiet}>
+                  {(events.data?.length ?? 0) > 0
+                    ? 'Sin reservas activas. No hay holds de checkout ni retención de zona.'
+                    : 'Sin reservas. Publica eventos y abre venta para empezar a ver holds y bloqueos.'}
+                </p>
+                <div className={bt.actions}>
+                  <Link href="/orders" className={bt.link}>
+                    Ver órdenes
+                  </Link>
+                  <Link href="/inventory" className={bt.link}>
+                    Ver inventario
+                  </Link>
+                </div>
+              </>
+            ) : filtered.length === 0 ? (
+              <p className={styles.quiet}>Nada con ese criterio.</p>
+            ) : null}
+            {filtered.map((row) => {
+              const open = url.selectedId === row.id;
+              const canRelease =
+                row.kind === 'checkout' || row.kind === 'zone_hold' || Boolean(row.holdId);
+              return (
+                <div key={row.id} className={styles.stack}>
+                  <button
+                    type="button"
+                    className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+                    aria-expanded={open}
+                    onClick={() => {
+                      url.setSelectedId(open ? null : row.id);
+                      setHoldInput('');
+                    }}
+                  >
+                    <span>
+                      <span className={row.kind === 'checkout' ? styles.mono : undefined}>
+                        {row.title}
+                      </span>{' '}
+                      · {KIND_LABEL[row.kind]} · {STATUS_LABEL[row.status]}
+                    </span>
+                    <span className={styles.figure}>{formatCount(row.quantity)}</span>
+                  </button>
+                  {open ? (
+                    <div className={bt.detail}>
+                      <div className={styles.rows}>
+                        <div className={bt.pair}>
+                          <p className={bt.pairLabel}>Evento</p>
+                          <p className={bt.pairValue}>{row.eventTitle}</p>
+                        </div>
+                        <div className={bt.pair}>
+                          <p className={bt.pairLabel}>Cupos</p>
+                          <p className={bt.pairValue}>{formatCount(row.quantity)}</p>
+                        </div>
+                        <div className={bt.pair}>
+                          <p className={bt.pairLabel}>Valor</p>
+                          <p className={bt.pairValue}>
+                            {row.amount > 0 ? formatMoney(row.amount, row.currency) : '—'}
+                          </p>
+                        </div>
+                        <div className={bt.pair}>
+                          <p className={bt.pairLabel}>Canal</p>
+                          <p className={bt.pairValue}>{channelWord(row.channel)}</p>
+                        </div>
+                        <div className={bt.pair}>
+                          <p className={bt.pairLabel}>Edad</p>
+                          <p className={bt.pairValue}>{formatRelative(row.createdAt)}</p>
+                        </div>
+                        <div className={bt.pair}>
+                          <p className={bt.pairLabel}>Expiración</p>
+                          <p className={bt.pairValue}>{formatExpiry(row.expiresAt)}</p>
+                        </div>
+                        <div className={bt.pair}>
+                          <p className={bt.pairLabel}>Responsable</p>
+                          <p className={bt.pairValue}>{row.buyer}</p>
+                        </div>
+                      </div>
+                      <p className={styles.rowMeta}>{row.meta}</p>
+                      {row.orderId ? (
+                        <Link href={`/orders/${row.orderId}`} className={bt.link}>
+                          Abrir la orden {row.title}
+                        </Link>
+                      ) : null}
+                      {canRelease ? (
+                        <>
+                          {!row.holdId ? (
+                            <Field
+                              label="ID de SeatHold"
+                              hint="Si lo conoces. Liberar usa DELETE /inventory/holds/:id."
+                              placeholder="hold_…"
+                              autoComplete="off"
+                              value={holdInput}
+                              onChange={(event) => setHoldInput(event.target.value)}
+                            />
+                          ) : null}
+                          <div className={bt.actions}>
+                            <TicketButton
+                              variant="danger"
+                              disabled={release.isPending}
+                              onClick={() => void releaseHold(row)}
+                            >
+                              {release.isPending ? 'Liberando' : 'Liberar hold'}
+                            </TicketButton>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
                   ) : null}
                 </div>
+              );
+            })}
+          </div>
+
+          {actionError ? (
+            <p className={styles.danger} role="alert">
+              {actionError}
+            </p>
+          ) : null}
+          {notice ? (
+            <p className={styles.quiet} aria-live="polite">
+              {notice}
+            </p>
+          ) : null}
+
+          <div className={bt.block}>
+            <p className={styles.rowTitle}>Embudo hold → compra</p>
+            {funnel.every((stage) => stage.value === 0) ? (
+              <p className={styles.quiet}>
+                Sin embudo todavía. Aparece con órdenes pendientes o completadas.
+              </p>
+            ) : (
+              <div className={styles.rows}>
+                {funnel.map((stage) => (
+                  <div key={stage.id} className={styles.row}>
+                    <p className={styles.rowTitle}>{stage.label}</p>
+                    <span />
+                    <p className={styles.figure}>{formatCount(stage.value)}</p>
+                  </div>
+                ))}
               </div>
+            )}
+          </div>
 
-              {loading ? (
-                <DataTable
-                  label="Reservas y bloqueos"
-                  columns={columns}
-                  data={[]}
-                  rowKey={(row) => row.id}
-                  loading
-                  loadingRows={8}
-                  maxHeight={480}
-                />
-              ) : filtered.length === 0 ? (
-                rows.length === 0 ? (
-                  <EmptyState
-                    illustration="seats"
-                    title="Sin reservas activas"
-                    description={
-                      (events.data?.length ?? 0) > 0
-                        ? 'No hay holds de checkout ni retención de zona. El módulo se actualizará con pedidos pendientes o holds de inventario.'
-                        : 'Publica eventos y abre venta para empezar a monitorear holds y bloqueos.'
-                    }
-                    action={
-                      (events.data?.length ?? 0) > 0 ? (
-                        <Link href="/orders">
-                          <Button type="button">Ver órdenes</Button>
-                        </Link>
-                      ) : (
-                        <Link href="/events/new">
-                          <Button type="button">Crear evento</Button>
-                        </Link>
-                      )
-                    }
-                    secondaryAction={
-                      (events.data?.length ?? 0) > 0 ? (
-                        <Link href="/inventory">
-                          <Button type="button" variant="secondary">
-                            Ver inventario
-                          </Button>
-                        </Link>
-                      ) : (
-                        <Link href="/events">
-                          <Button type="button" variant="secondary">
-                            Catálogo de eventos
-                          </Button>
-                        </Link>
-                      )
-                    }
-                  />
-                ) : (
-                  <EmptyState
-                    illustration="search"
-                    title="Sin coincidencias"
-                    description="Ajusta la búsqueda o los filtros de tipo y estado."
-                    action={
-                      <Button type="button" variant="secondary" onClick={url.clearFilters}>
-                        Limpiar filtros
-                      </Button>
-                    }
-                  />
-                )
-              ) : (
-                <DataTable
-                  label="Reservas y bloqueos"
-                  columns={columns}
-                  data={filtered}
-                  rowKey={(row) => row.id}
-                  maxHeight={480}
-                  density="compact"
-                  defaultSort={{ key: 'createdAt', direction: 'desc' }}
-                  onRowClick={(row) =>
-                    url.setSelectedId(row.id === url.selectedId ? null : row.id)
-                  }
-                />
-              )}
-
-              <Card>
-                <CardHeader
-                  title="Embudo hold → compra"
-                  description="Pendientes, convertidos y liberaciones/expiraciones del portafolio"
-                />
-                {funnel.every((stage) => stage.value === 0) ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="chart"
-                    title="Sin embudo todavía"
-                    description="Cuando existan pedidos pendientes o completados se dibujará la conversión."
-                  />
-                ) : (
-                  <FunnelChart
-                    label="Conversión de reservas"
-                    stages={[...funnel]}
-                    conversionBase="previous"
-                    formatValue={(value) => formatCount(value)}
-                  />
-                )}
-              </Card>
+          <div className={bt.block}>
+            <p className={styles.rowTitle}>Línea operativa</p>
+            <div className={styles.rows}>
+              <div className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>Holds activos</p>
+                  <p className={styles.rowMeta}>Checkout más holds de inventario</p>
+                </div>
+                <span />
+                <p className={styles.figure}>{formatCount(kpis.activeHolds)}</p>
+              </div>
+              <div className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>Por expirar en 5 min o menos</p>
+                  <p className={styles.rowMeta}>TTL estimado del checkout web (15 min)</p>
+                </div>
+                <span />
+                <p className={styles.figure}>{formatCount(kpis.expiringSoon)}</p>
+              </div>
+              <div className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>En conversión</p>
+                  <p className={styles.rowMeta}>Valor de órdenes pendientes de pago</p>
+                </div>
+                <span />
+                <p className={styles.figure}>{formatMoney(kpis.convertingAmount)}</p>
+              </div>
+              <div className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>Bloqueos operativos</p>
+                  <p className={styles.rowMeta}>VIP, prensa, producción y cortesías</p>
+                </div>
+                <span />
+                <p className={styles.figure}>{formatCount(kpis.blocked)}</p>
+              </div>
             </div>
+          </div>
 
-            <div className={styles.sideCol}>
-              <Card>
-                <CardHeader
-                  title="Línea de tiempo operativa"
-                  description="Holds → expiración → conversión / liberación"
-                />
-                <Timeline items={timelineItems} density="sm" label="Estados de reserva" />
-              </Card>
+          <div className={bt.block}>
+            <p className={styles.rowTitle}>Actividad reciente</p>
+            {releaseFeed.length === 0 ? (
+              <p className={styles.quiet}>Sin actividad.</p>
+            ) : (
+              <div className={styles.rows}>
+                {releaseFeed.map((row) => (
+                  <div key={row.id} className={styles.row}>
+                    <div className={styles.rowMain}>
+                      <p className={styles.rowTitle}>
+                        {activityLabel(row)} · {row.title}
+                      </p>
+                      <p className={styles.rowMeta}>
+                        {row.buyer} · {row.eventTitle} · {formatExpiry(row.expiresAt)}
+                      </p>
+                    </div>
+                    <span />
+                    <p className={styles.quiet}>{formatRelative(row.createdAt)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-              <Card>
-                <CardHeader
-                  title="Políticas sugeridas"
-                  description="Plantillas; no se publican automáticamente"
-                />
-                <ul className={styles.policyList}>
-                  {POLICY_TEMPLATES.map((policy) => (
-                    <li key={policy.id} className={styles.policyItem}>
-                      <strong>{policy.title}</strong>
-                      <p className={styles.muted}>{policy.detail}</p>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-
-              <Card>
-                <CardHeader
-                  title="Actividad reciente"
-                  description="Conversiones, liberaciones y expiraciones"
-                />
-                <ActivityFeed
-                  items={activityItems}
-                  loading={loading}
-                  empty={
-                    <EmptyState
-                      size="sm"
-                      illustration="inbox"
-                      title="Sin actividad"
-                      description="Los holds y liberaciones aparecerán aquí."
-                    />
-                  }
-                />
-              </Card>
-
-              <Card>
-                <CardHeader title="Señal de pagos" description="Contexto del motor de órdenes" />
-                <KpiCard
-                  label="Tasa de aprobación"
-                  value={
-                    ordersMetrics.isPending
-                      ? '—'
-                      : `${formatNumber(ordersMetrics.data?.kpis.approvalRate.value ?? 0, 1)} %`
-                  }
-                  delta={kpiDeltaRatio(ordersMetrics.data?.kpis.approvalRate.deltaPercent)}
-                  loading={ordersMetrics.isPending}
-                  tone="success"
-                  hint="Útil para interpretar abandono de holds"
-                />
-              </Card>
+          <div className={bt.block}>
+            <p className={styles.rowTitle}>Políticas sugeridas</p>
+            <p className={styles.tertiary}>Plantillas de lectura. No se publican ni se guardan.</p>
+            <div className={styles.rows}>
+              {POLICY_TEMPLATES.map((policy) => (
+                <div key={policy.id} className={styles.row}>
+                  <div className={styles.rowMain}>
+                    <p className={styles.rowTitle}>{policy.title}</p>
+                    <p className={styles.rowMeta}>{policy.detail}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </>
       )}
-
-      <ReservationDetailDrawer
-        row={selected}
-        onClose={() => url.setSelectedId(null)}
-      />
-    </main>
-  );
-}
-
-export default function ReservationsPage() {
-  return (
-    <Suspense
-      fallback={
-        <main className={styles.page}>
-          <EmptyState title="Cargando reservas…" illustration="seats" />
-        </main>
-      }
-    >
-      <ReservationsCockpit />
-    </Suspense>
+    </section>
   );
 }
