@@ -12,6 +12,7 @@ import {
   formatRatio,
 } from '../_lib/format';
 import { confidenceLabel, sufficiencyLabel } from '../_lib/labels';
+import { formatAiReason, readAiReason } from '../_lib/status';
 import { FigureRow, PanelEmpty, PanelError, PanelSkeleton } from './PanelState';
 
 export function ForecastPanel({
@@ -44,8 +45,11 @@ export function ForecastPanel({
   if (!data)
     return <PanelEmpty title="Sin predicción" description="No hay proyección para este evento." />;
 
+  const reason = readAiReason(data);
+
   return (
     <div className={styles.stack}>
+      {reason ? <p className={styles.quiet}>{formatAiReason(reason)}</p> : null}
       <p className={styles.tertiary}>
         Confianza {confidenceLabel(data.projectedOccupancyPercent.level)} ·{' '}
         {sufficiencyLabel(data.projectedOccupancyPercent.sufficiency)} · {data.daysUntilEvent} días

@@ -273,8 +273,9 @@ function Copiloto() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>IA</h1>
         <p className={styles.quiet}>
-          Chat anclado a métricas y eventos, recomendaciones del motor y acciones con confirmación
-          humana. Si el ai-engine no responde, no se inventan cifras.
+          Cálculos deterministas sobre órdenes, reembolsos y señales de fraude reales: agregados,
+          reglas estadísticas y plantillas, sin modelo de lenguaje. Lo que no tiene fuente queda
+          vacío con su motivo.
         </p>
         <p className={styles.tertiary}>
           {range.label} · America/Mexico_City · MXN · última generación:{' '}

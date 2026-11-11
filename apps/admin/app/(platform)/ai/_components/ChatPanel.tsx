@@ -37,7 +37,7 @@ export function ChatPanel({ bundle, loading = false }: ChatPanelProps) {
     setMessages([
       createMessage(
         'system',
-        'Copiloto contextual: solo responde con hechos ya cargados del ai-engine (métricas, eventos, anomalías, insights). Si falta dato, lo declara. Las acciones que cambian datos requieren confirmación humana.'
+        'Copiloto contextual: solo responde con hechos ya calculados en esta pantalla (métricas, eventos, anomalías, recomendaciones); no usa modelo de lenguaje. Si falta dato, lo declara. Las acciones que cambian datos requieren confirmación humana.'
       ),
     ]);
   }, []);

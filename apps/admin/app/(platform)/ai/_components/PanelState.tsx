@@ -3,7 +3,12 @@
 import type { ReactNode } from 'react';
 import { TicketButton } from '@boletera/ui';
 import styles from '../../events/_ticket/frame.module.scss';
-import { aiErrorMessage, isAiServiceUnavailable } from '../_lib/status';
+import {
+  aiErrorMessage,
+  formatAiReason,
+  isAiServiceUnavailable,
+  readAiReason,
+} from '../_lib/status';
 
 /**
  * Estados del panel de IA en Black Ticket: cargando, motor no conectado, error y vacío.
@@ -59,11 +64,21 @@ export function PanelError({ error, onRetry }: { error: unknown; onRetry?: () =>
   );
 }
 
-export function PanelEmpty({ title, description }: { title: string; description: string }) {
+export function PanelEmpty({
+  title,
+  description,
+  reason,
+}: {
+  title: string;
+  description: string;
+  /** Motivo concreto devuelto por el API (`reason`), si lo hay. */
+  reason?: string | null;
+}) {
   return (
     <div className={styles.stack}>
       <p className={styles.rowTitle}>{title}</p>
-      <p className={styles.quiet}>{description}</p>
+      {reason ? <p className={styles.quiet}>{formatAiReason(reason)}</p> : null}
+      <p className={reason ? styles.tertiary : styles.quiet}>{description}</p>
     </div>
   );
 }
@@ -90,7 +105,9 @@ export function PanelState<T>({
   if (error) return <PanelError error={error} onRetry={onRetry} />;
   if (isPending) return <PanelSkeleton />;
   if (data === undefined || isEmpty(data))
-    return <PanelEmpty title={emptyTitle} description={emptyDescription} />;
+    return (
+      <PanelEmpty title={emptyTitle} description={emptyDescription} reason={readAiReason(data)} />
+    );
   return <>{children(data)}</>;
 }
 
