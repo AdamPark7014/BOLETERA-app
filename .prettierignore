@@ -1,0 +1,10 @@
+# Además de .gitignore (dist, .next, node_modules…), que Prettier ya lee.
+# Generado: lo reescribe `prisma generate`.
+packages/database/generated/
+pnpm-lock.yaml
+*.tsbuildinfo
+test-results/
+# Notas y reglas de agentes: su formato lo cuidan sus scripts.
+.ai/
+.claude/
+.cursor/
