@@ -86,8 +86,7 @@ export function usePricingUrlState() {
       pageSize: isPageSize(rawSize) ? rawSize : DEFAULT_PAGE_SIZE,
       offerId: searchParams.get('oferta'),
       filterSelection,
-      hasFilters:
-        query.trim().length > 0 || directions.length > 0 || approvalOnly || clampedOnly,
+      hasFilters: query.trim().length > 0 || directions.length > 0 || approvalOnly || clampedOnly,
     };
   }, [searchParams]);
 
@@ -101,14 +100,13 @@ export function usePricingUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   /** Cambiar de evento invalida la paginación y el detalle abierto. */
   const setEventId = useCallback(
-    (eventId: string) =>
-      replaceParams({ evento: eventId || null, pagina: null, oferta: null }),
-    [replaceParams],
+    (eventId: string) => replaceParams({ evento: eventId || null, pagina: null, oferta: null }),
+    [replaceParams]
   );
 
   const setView = useCallback(
@@ -117,12 +115,12 @@ export function usePricingUrlState() {
         vista: view === 'recomendaciones' ? null : view,
         pagina: null,
       }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setQuery = useCallback(
     (query: string) => replaceParams({ q: query || null, pagina: null }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setFilterSelection = useCallback(
@@ -136,12 +134,12 @@ export function usePricingUrlState() {
         pagina: null,
       });
     },
-    [replaceParams],
+    [replaceParams]
   );
 
   const setPage = useCallback(
     (page: number) => replaceParams({ pagina: page > 1 ? String(page) : null }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setPageSize = useCallback(
@@ -150,12 +148,12 @@ export function usePricingUrlState() {
         tam: size === DEFAULT_PAGE_SIZE ? null : String(size),
         pagina: null,
       }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setOfferId = useCallback(
     (offerId: string | null) => replaceParams({ oferta: offerId }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const clearFilters = useCallback(
@@ -167,7 +165,7 @@ export function usePricingUrlState() {
         banda: null,
         pagina: null,
       }),
-    [replaceParams],
+    [replaceParams]
   );
 
   return {

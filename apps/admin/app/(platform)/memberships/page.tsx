@@ -1,24 +1,16 @@
 'use client';
 
-import { Suspense, useDeferredValue, useMemo, useState } from 'react';
-import {
-  Badge,
-  Button,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  KpiCard,
-  PageHeader,
-  Section,
-  SegmentedControl,
-  SkeletonCard,
-  type DataTableColumn,
-  type FilterDefinition,
-  type FilterSelection,
-} from '@boletera/ui';
-import { QueryError } from '@/components/QueryStates';
-import { Notice } from '../orders/_ui/States';
-import { useToast } from '@/components/Toast/ToastProvider';
+/**
+ * Membresías: planes, adopción, beneficios canjeados, renovaciones y retención.
+ *
+ * Todo sale de `/memberships/organization/:orgId/*`. Si el API responde 404
+ * (módulo sin publicar) se dice tal cual: no se inventan plantillas ni cifras.
+ * Se conservan las dos escrituras de antes: crear plan y renovar membresía.
+ */
+
+import { Suspense, useDeferredValue, useMemo, useState, type FormEvent } from 'react';
+import { Field, ParameterCard, TicketButton } from '@boletera/ui';
+import { HttpError } from '@/lib/http';
 import {
   useCreateMembershipPlan,
   useMembershipBenefitUsage,
@@ -28,20 +20,14 @@ import {
   useMembershipRenewals,
   useMembershipRetention,
   useRenewMembership,
-  type MembershipPlan,
+  type CreateMembershipPlanInput,
 } from '@/lib/queries/memberships';
-import { useSession } from '@/lib/use-session';
-import { AdoptionPanel } from './_components/AdoptionPanel';
-import { BenefitsPanel } from './_components/BenefitsPanel';
-import { CreatePlanModal, type CreatePlanPayload } from './_components/CreatePlanModal';
-import { PanelUnavailable } from './_components/PanelState';
-import { RenewalPanel } from './_components/RenewalPanel';
-import {
-  formatCount,
-  formatMoney,
-  formatMoneyPrecise,
-  formatRatio,
-} from './_lib/money';
+import { useSession as useAppSession } from '@/lib/use-session';
+import { AnonymousView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Param, Segment, SheetSelect } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { formatCount, formatMoney, formatMoneyPrecise, formatRatio, toCents } from './_lib/money';
 import {
   adoptionByTier,
   adoptionRate,
@@ -52,499 +38,664 @@ import {
   planPriceCents,
   planRevenueCents,
   planStatusMeta,
+  renewalStatusMeta,
   retentionSeries,
+  slugify,
   SORT_OPTIONS,
   STATUS_FILTER_OPTIONS,
   statusOf,
   usageByBenefit,
   type SortKey,
-  type StatusFilter,
 } from './_lib/plans';
 import { isMembershipsUnavailable } from './_lib/status';
 import { useMembershipsUrlState } from './_lib/use-memberships-url-state';
-import styles from './memberships.module.scss';
+import local from './memberships.module.scss';
 
-function MembershipsCockpit() {
-  const { organizationId, status: sessionStatus, can } = useSession();
-  const toast = useToast();
+type Period = 'MONTHLY' | 'ANNUAL' | 'SEASON';
+
+const PERIOD_OPTIONS: { value: Period; label: string }[] = [
+  { value: 'ANNUAL', label: 'Anual' },
+  { value: 'MONTHLY', label: 'Mensual' },
+  { value: 'SEASON', label: 'Temporada' },
+];
+
+type FormState = {
+  name: string;
+  slug: string;
+  tier: string;
+  price: string;
+  billingPeriod: Period;
+  maxMembers: string;
+  description: string;
+  slugTouched: boolean;
+};
+
+function defaultForm(): FormState {
+  return {
+    name: '',
+    slug: '',
+    tier: 'Premium',
+    price: '2499',
+    billingPeriod: 'ANNUAL',
+    maxMembers: '',
+    description: '',
+    slugTouched: false,
+  };
+}
+
+function errorText(error: unknown): string {
+  if (error instanceof HttpError) {
+    return error.status ? `Error ${error.status} · ${error.message}` : error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return 'Sin respuesta.';
+}
+
+/** Estado de un bloque secundario: cargando, sin endpoint, error o vacío. */
+function PanelNote({
+  pending,
+  error,
+  empty,
+  emptyText,
+  path,
+  onRetry,
+}: {
+  pending: boolean;
+  error: unknown;
+  empty: boolean;
+  emptyText: string;
+  path: string;
+  onRetry: () => void;
+}) {
+  if (error) {
+    return (
+      <div className={styles.stack}>
+        <p className={styles.danger} role="alert">
+          {isMembershipsUnavailable(error)
+            ? `No disponible: ${path} no responde.`
+            : errorText(error)}
+        </p>
+        <div>
+          <TicketButton variant="ghost" onClick={onRetry}>
+            Reintentar
+          </TicketButton>
+        </div>
+      </div>
+    );
+  }
+  if (pending) return <p className={styles.quiet}>Cargando.</p>;
+  if (empty) return <p className={styles.quiet}>{emptyText}</p>;
+  return null;
+}
+
+export default function MembershipsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <MembresiasGate />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function MembresiasGate() {
+  const session = useSession();
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (session.status === 'loading') return <p className={styles.quiet}>Cargando membresías.</p>;
+  return <MembresiasBody orgId={session.orgId} />;
+}
+
+function MembresiasBody({ orgId }: { orgId: string }) {
+  const { can } = useAppSession();
+  const canManage = can('memberships.manage');
   const url = useMembershipsUrlState();
   const deferredQ = useDeferredValue(url.q);
-  const canManage = can('memberships.manage');
 
-  const plansQuery = useMembershipPlans(organizationId);
-  const metricsQuery = useMembershipMetrics(organizationId);
-  const benefitsQuery = useMembershipBenefits(organizationId);
-  const usageQuery = useMembershipBenefitUsage(organizationId);
-  const renewalsQuery = useMembershipRenewals(organizationId);
-  const retentionQuery = useMembershipRetention(organizationId);
-  const createPlan = useCreateMembershipPlan(organizationId ?? '');
-  const renewMembership = useRenewMembership(organizationId ?? '');
+  const plansQuery = useMembershipPlans(orgId);
+  const metricsQuery = useMembershipMetrics(orgId);
+  const benefitsQuery = useMembershipBenefits(orgId);
+  const usageQuery = useMembershipBenefitUsage(orgId);
+  const renewalsQuery = useMembershipRenewals(orgId);
+  const retentionQuery = useMembershipRetention(orgId);
+  const createPlan = useCreateMembershipPlan(orgId);
+  const renewMembership = useRenewMembership(orgId);
 
-  const [createOpen, setCreateOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [form, setForm] = useState<FormState>(defaultForm);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [renewBusyId, setRenewBusyId] = useState<string | null>(null);
 
-  const plans = plansQuery.data ?? [];
-  const renewals = renewalsQuery.data ?? [];
-  const benefits = benefitsQuery.data ?? [];
+  const plans = useMemo(() => plansQuery.data ?? [], [plansQuery.data]);
+  const renewals = useMemo(() => renewalsQuery.data ?? [], [renewalsQuery.data]);
+  const benefits = useMemo(() => benefitsQuery.data ?? [], [benefitsQuery.data]);
   const kpis = useMemo(
     () => computeMembershipKpis(plans, metricsQuery.data),
-    [metricsQuery.data, plans],
+    [metricsQuery.data, plans]
   );
   const alerts = useMemo(
     () => buildMembershipAlerts(plans, renewals, benefits),
-    [benefits, plans, renewals],
+    [benefits, plans, renewals]
   );
   const buckets = useMemo(() => adoptionByTier(plans), [plans]);
   const usageRows = useMemo(
-    () => (usageQuery.data ? usageByBenefit(usageQuery.data) : undefined),
-    [usageQuery.data],
+    () => (usageQuery.data ? usageByBenefit(usageQuery.data) : []),
+    [usageQuery.data]
   );
   const retentionRows = useMemo(
-    () => (retentionQuery.data ? retentionSeries(retentionQuery.data) : undefined),
-    [retentionQuery.data],
+    () => (retentionQuery.data ? retentionSeries(retentionQuery.data) : []),
+    [retentionQuery.data]
   );
-
   const filtered = useMemo(
-    () =>
-      filterAndSortPlans(plans, {
-        query: deferredQ,
-        status: url.status,
-        sort: url.sort,
-      }),
-    [deferredQ, plans, url.sort, url.status],
+    () => filterAndSortPlans(plans, { query: deferredQ, status: url.status, sort: url.sort }),
+    [deferredQ, plans, url.sort, url.status]
   );
 
-  const filterSelection = useMemo<FilterSelection>(() => {
-    const next: Record<string, readonly string[]> = {};
-    if (url.status !== 'all') next.status = [url.status];
-    return next;
-  }, [url.status]);
+  const plansUnavailable = Boolean(plansQuery.error) && isMembershipsUnavailable(plansQuery.error);
+  const metricsUnavailable =
+    Boolean(metricsQuery.error) && isMembershipsUnavailable(metricsQuery.error);
+  const blank = plansUnavailable ? '—' : null;
 
-  const filterDefs = useMemo<FilterDefinition[]>(
-    () => [
-      {
-        id: 'status',
-        label: 'Estado',
-        multiple: false,
-        options: STATUS_FILTER_OPTIONS.filter((option) => option.value !== 'all').map(
-          (option) => ({ value: option.value, label: option.label }),
-        ),
-      },
-    ],
-    [],
-  );
-
-  const primaryUnavailable =
-    Boolean(plansQuery.error) && isMembershipsUnavailable(plansQuery.error);
-
-  async function onCreate(payload: CreatePlanPayload) {
-    if (!organizationId) return;
-    await createPlan.mutateAsync(payload);
-    setCreateOpen(false);
-    toast.success(`Plan «${payload.name}» publicado`);
+  async function submitPlan(event: FormEvent) {
+    event.preventDefault();
+    setFormError(null);
+    const name = form.name.trim();
+    if (!name) {
+      setFormError('El nombre es obligatorio.');
+      return;
+    }
+    const price = Number(form.price);
+    if (!Number.isFinite(price) || price <= 0) {
+      setFormError('El precio debe ser mayor a 0.');
+      return;
+    }
+    const maxMembers = form.maxMembers.trim() ? Number(form.maxMembers) : undefined;
+    if (maxMembers !== undefined && (!Number.isFinite(maxMembers) || maxMembers < 1)) {
+      setFormError('El cupo máximo debe ser un entero positivo.');
+      return;
+    }
+    const payload: CreateMembershipPlanInput = {
+      name,
+      slug: form.slug.trim() || slugify(name),
+      tier: form.tier.trim() || 'Standard',
+      price,
+      billingPeriod: form.billingPeriod,
+      description: form.description.trim() || undefined,
+      maxMembers,
+    };
+    try {
+      await createPlan.mutateAsync(payload);
+      setNotice(`Plan «${name}» publicado.`);
+      setForm(defaultForm());
+      setFormOpen(false);
+    } catch (cause) {
+      setFormError(cause instanceof Error ? cause.message : 'No se pudo crear el plan.');
+    }
   }
 
-  async function onRenew(membershipId: string) {
+  async function renew(membershipId: string) {
     setRenewBusyId(membershipId);
+    setActionError(null);
     try {
       await renewMembership.mutateAsync(membershipId);
-      toast.success('Renovación solicitada');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo renovar');
+      setNotice('Renovación solicitada.');
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : 'No se pudo renovar.');
     } finally {
       setRenewBusyId(null);
     }
   }
 
-  const columns: DataTableColumn<MembershipPlan>[] = [
-    {
-      key: 'name',
-      header: 'Plan / tier',
-      width: 220,
-      sortValue: (row) => row.name,
-      render: (row) => (
-        <div className={styles.planMeta}>
-          <strong>{row.name}</strong>
-          <small>
-            {row.tier} · {billingLabel(row.billingPeriod)} · {row.slug}
-          </small>
-        </div>
-      ),
-    },
-    {
-      key: 'adoption',
-      header: 'Adopción',
-      width: 160,
-      sortValue: (row) => adoptionRate(row),
-      render: (row) => {
-        const rate = adoptionRate(row);
-        return (
-          <div className={styles.adoptionCell}>
-            <strong>
-              {row.maxMembers != null ? formatRatio(rate) : formatCount(row.memberCount)}
-            </strong>
-            {row.maxMembers != null ? (
-              <div
-                className={styles.bar}
-                role="meter"
-                aria-label={`Adopción ${Math.round(rate * 100)}%`}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.round(rate * 100)}
-              >
-                <span style={{ width: `${Math.min(rate * 100, 100)}%` }} />
-              </div>
-            ) : null}
-            <small>
-              {formatCount(row.memberCount)}
-              {row.maxMembers != null ? `/${formatCount(row.maxMembers)}` : ''} miembros
-            </small>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'renewal',
-      header: 'Renovación',
-      width: 110,
-      align: 'right',
-      sortValue: (row) => row.renewalRate ?? -1,
-      render: (row) => (
-        <div className={styles.stackCell}>
-          <strong>{formatRatio(row.renewalRate)}</strong>
-          <small>tasa</small>
-        </div>
-      ),
-    },
-    {
-      key: 'revenue',
-      header: 'Ingreso',
-      width: 130,
-      align: 'right',
-      sortValue: (row) => planRevenueCents(row),
-      render: (row) => (
-        <div className={styles.stackCell}>
-          <strong>{formatMoney(planRevenueCents(row))}</strong>
-          <small>{formatMoneyPrecise(planPriceCents(row))} c/u</small>
-        </div>
-      ),
-    },
-    {
-      key: 'benefits',
-      header: 'Beneficios',
-      width: 100,
-      align: 'right',
-      sortValue: (row) => row.benefitCount ?? 0,
-      render: (row) => (
-        <div className={styles.stackCell}>
-          <strong>{formatCount(row.benefitCount ?? 0)}</strong>
-          <small>ligados</small>
-        </div>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Estado',
-      width: 120,
-      sortValue: (row) => statusOf(row),
-      render: (row) => {
-        const meta = planStatusMeta(statusOf(row));
-        return (
-          <Badge tone={meta.tone} variant="soft" size="sm" dot>
-            {meta.label}
-          </Badge>
-        );
-      },
-    },
-  ];
-
-  if (sessionStatus === 'loading') {
-    return (
-      <div className={styles.page} aria-busy="true">
-        <SkeletonCard lines={3} />
-        <SkeletonCard lines={2} />
-        <SkeletonCard lines={6} />
-      </div>
-    );
-  }
-
-  if (!organizationId) {
-    return (
-      <div className={styles.page}>
-        <EmptyState
-          title="Sin organización"
-          description="Inicia sesión con una cuenta vinculada a una organización."
-          illustration="error"
-        />
-      </div>
-    );
-  }
+  const figuresPending = plansQuery.isPending || metricsQuery.isPending;
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Retención"
-        title="Membresías"
-        description="Tiers, beneficios, adopción, renovación e ingresos recurrentes"
-        actions={
-          <Button
-            type="button"
-            disabled={!canManage}
-            title={!canManage ? 'Requiere memberships.manage' : undefined}
-            onClick={() => setCreateOpen(true)}
-          >
-            Nuevo plan
-          </Button>
-        }
-      />
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Membresías</h1>
+        <p className={styles.quiet}>
+          Planes, beneficios, adopción, renovación e ingreso recurrente.
+        </p>
+      </header>
 
-      {primaryUnavailable ? (
-        <Notice
-          tone="warn"
-          title="API de membresías pendiente"
-          actions={
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => void plansQuery.refetch()}
-            >
-              Reintentar
-            </Button>
-          }
-        >
-          <p>
-            Los paneles esperan contratos en /memberships/organization/:orgId. No se muestran
-            plantillas ni proyecciones inventadas como métricas reales.
+      {plansUnavailable ? (
+        <div className={styles.stack}>
+          <Param name="API de membresías">
+            <ParameterCard
+              name="API de membresías"
+              value="No disponible"
+              effect="Los planes se leen de /memberships/organization/:org. No se muestran plantillas ni proyecciones como cifras reales."
+            />
+          </Param>
+          <p className={styles.danger} role="alert">
+            {errorText(plansQuery.error)}
           </p>
-        </Notice>
-      ) : null}
-
-      {alerts.length > 0 && !primaryUnavailable ? (
-        <div className={styles.alerts} aria-label="Alertas de membresías">
-          {alerts.map((alert) => (
-            <div key={alert.id} className={styles.alert} role="status">
-              <Badge tone={alert.tone} variant="soft" size="sm" dot>
-                Atención
-              </Badge>
-              <span>{alert.text}</span>
-            </div>
-          ))}
+          <div>
+            <TicketButton variant="secondary" onClick={() => void plansQuery.refetch()}>
+              Reintentar
+            </TicketButton>
+          </div>
         </div>
       ) : null}
 
-      <Section columns={4} gap="md" className={styles.kpiStrip} aria-label="Indicadores de membresías">
-        <KpiCard
-          label="Miembros activos"
-          value={primaryUnavailable ? '—' : formatCount(kpis.activeMembers)}
-          loading={plansQuery.isPending || metricsQuery.isPending}
-          hint={
-            metricsQuery.error && isMembershipsUnavailable(metricsQuery.error)
-              ? 'Métricas vía API pendientes'
-              : `${formatCount(kpis.activePlans)} plan${kpis.activePlans === 1 ? '' : 'es'} activos`
-          }
-          tone="accent"
-        />
-        <KpiCard
-          label="Beneficios canjeados"
-          value={primaryUnavailable ? '—' : formatCount(kpis.benefitsRedeemed)}
-          loading={metricsQuery.isPending}
-          hint="Desde metrics / usage"
-          tone="info"
-        />
-        <KpiCard
-          label="Tasa de renovación"
-          value={primaryUnavailable ? '—' : formatRatio(kpis.renewalRate)}
-          loading={plansQuery.isPending || metricsQuery.isPending}
-          hint="Promedio de planes o metrics"
-          tone="success"
-        />
-        <KpiCard
-          label="Ingresos"
-          value={primaryUnavailable ? '—' : formatMoney(kpis.revenueCents)}
-          loading={plansQuery.isPending || metricsQuery.isPending}
-          hint={
-            kpis.retention12m != null
-              ? `Retención 12m ${formatRatio(kpis.retention12m)}`
-              : `${formatCount(kpis.planCount)} planes en catálogo`
-          }
-          tone="warning"
-        />
-      </Section>
+      <ul
+        className={`${styles.rows} ${plansUnavailable ? local.block : ''}`}
+        aria-label="Cifras de membresías"
+      >
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Miembros activos</p>
+            <p className={styles.rowMeta}>
+              {metricsUnavailable
+                ? 'Métricas no disponibles'
+                : `${formatCount(kpis.activePlans)} plan${kpis.activePlans === 1 ? '' : 'es'} activos`}
+            </p>
+          </div>
+          <span />
+          <p className={styles.figure}>
+            {blank ?? (figuresPending ? '…' : formatCount(kpis.activeMembers))}
+          </p>
+        </li>
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Beneficios canjeados</p>
+            <p className={styles.rowMeta}>Según métricas</p>
+          </div>
+          <span />
+          <p className={styles.figure}>
+            {blank ?? (metricsQuery.isPending ? '…' : formatCount(kpis.benefitsRedeemed))}
+          </p>
+        </li>
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Tasa de renovación</p>
+            <p className={styles.rowMeta}>Promedio de planes o métricas</p>
+          </div>
+          <span />
+          <p className={styles.figure}>
+            {blank ?? (figuresPending ? '…' : formatRatio(kpis.renewalRate))}
+          </p>
+        </li>
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Ingresos</p>
+            <p className={styles.rowMeta}>
+              {kpis.retention12m != null
+                ? `Retención a 12 meses ${formatRatio(kpis.retention12m)}`
+                : `${formatCount(kpis.planCount)} planes en catálogo`}
+            </p>
+          </div>
+          <span />
+          <p className={styles.figure}>
+            {blank ?? (figuresPending ? '…' : formatMoney(kpis.revenueCents))}
+          </p>
+        </li>
+      </ul>
+      {metricsQuery.error && !plansUnavailable ? (
+        <p className={styles.tertiary} role="status">
+          Métricas: {errorText(metricsQuery.error)}
+        </p>
+      ) : null}
 
-      <div className={styles.toolbar}>
-        <SegmentedControl
+      {alerts.length > 0 && !plansUnavailable ? (
+        <div className={local.block}>
+          <p className={local.subTitle}>Atención</p>
+          <ul className={styles.rows}>
+            {alerts.map((alert) => (
+              <li key={alert.id} className={styles.row}>
+                <p className={alert.tone === 'danger' ? styles.out : styles.quiet}>{alert.text}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className={`${styles.stack} ${local.block}`}>
+        <Segment
           label="Vista de membresías"
-          size="sm"
           value={url.tab}
-          onValueChange={(value) => url.setTab(value)}
           options={[
-            { value: 'tiers', label: 'Tiers y adopción' },
+            { value: 'tiers', label: 'Planes y adopción' },
             { value: 'renewals', label: 'Renovación y retención' },
           ]}
+          onChange={(value) => url.setTab(value)}
         />
       </div>
 
       {url.tab === 'renewals' ? (
-        <RenewalPanel
-          renewals={renewalsQuery.data}
-          retention={retentionRows}
-          renewalsPending={renewalsQuery.isPending}
-          retentionPending={retentionQuery.isPending}
-          renewalsError={renewalsQuery.error}
-          retentionError={retentionQuery.error}
-          onRetryRenewals={() => void renewalsQuery.refetch()}
-          onRetryRetention={() => void retentionQuery.refetch()}
-          onRenew={canManage ? onRenew : undefined}
-          renewBusyId={renewBusyId}
-          canManage={canManage}
-        />
-      ) : plansQuery.error && !isMembershipsUnavailable(plansQuery.error) ? (
-        <QueryError error={plansQuery.error} onRetry={() => void plansQuery.refetch()} />
-      ) : primaryUnavailable ? (
-        <PanelUnavailable onRetry={() => void plansQuery.refetch()} />
-      ) : (
-        <div className={styles.layout}>
-          <Section
-            title="Catálogo de planes"
-            description="Tiers, cupo, renovación e ingreso estimado por plan."
-            actions={
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => void plansQuery.refetch()}
-              >
-                Actualizar
-              </Button>
-            }
-          >
-            <div className={styles.filters}>
-              <FilterBar
-                filters={filterDefs}
-                value={filterSelection}
-                onChange={(next) => {
-                  const status = (next.status?.[0] as StatusFilter | undefined) ?? 'all';
-                  url.setStatus(status);
-                }}
-                search={{
-                  value: url.q,
-                  onChange: url.setSearch,
-                  placeholder: 'Buscar por nombre, slug o tier',
-                }}
-              >
-                <SegmentedControl
-                  label="Filtro rápido de estado"
-                  size="sm"
-                  value={
-                    url.status === 'all' || url.status === 'active' || url.status === 'full'
-                      ? url.status
-                      : 'all'
-                  }
-                  onValueChange={(value) => url.setStatus(value)}
-                  options={[
-                    { value: 'all', label: 'Todos' },
-                    { value: 'active', label: 'Activos' },
-                    { value: 'full', label: 'Cupo lleno' },
-                  ]}
-                />
-                <select
-                  className={styles.sortSelect}
-                  aria-label="Ordenar planes"
-                  value={url.sort}
-                  onChange={(e) => url.setSort(e.target.value as SortKey)}
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </FilterBar>
-            </div>
-
-            <div className={styles.tableMeta}>
-              <span className={styles.muted}>
-                {formatCount(filtered.length)} de {formatCount(plans.length)} resultados
-              </span>
-            </div>
-
-            <DataTable
-              label="Catálogo de planes de membresía"
-              columns={columns}
-              data={filtered}
-              rowKey={(row) => row.id}
-              loading={plansQuery.isPending}
-              maxHeight={520}
-              rowHeight={64}
-              empty={
-                <EmptyState
-                  title={plans.length === 0 ? 'Sin planes' : 'Sin resultados'}
-                  description={
-                    plans.length === 0
-                      ? 'Crea el primer plan para medir adopción y renovación.'
-                      : 'Ajusta filtros o limpia la URL.'
-                  }
-                  illustration={plans.length === 0 ? 'seats' : 'search'}
-                  action={
-                    plans.length === 0 ? (
-                      <Button
-                        type="button"
-                        disabled={!canManage}
-                        onClick={() => setCreateOpen(true)}
-                      >
-                        Crear plan
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={url.clearFilters}
-                      >
-                        Limpiar filtros
-                      </Button>
-                    )
-                  }
-                />
-              }
+        <>
+          <div className={local.block}>
+            <p className={local.subTitle}>Renovaciones</p>
+            <PanelNote
+              pending={renewalsQuery.isPending}
+              error={renewalsQuery.error}
+              empty={renewals.length === 0}
+              emptyText="No hay membresías en ventana de renovación."
+              path="/renewals"
+              onRetry={() => void renewalsQuery.refetch()}
             />
-          </Section>
+            {renewals.length > 0 ? (
+              <ul className={styles.rows}>
+                {renewals.slice(0, 10).map((item) => {
+                  const due = ['DUE', 'OVERDUE'].includes(item.status.toUpperCase());
+                  return (
+                    <li key={item.id} className={styles.row}>
+                      <div className={styles.rowMain}>
+                        <p className={styles.rowTitle}>{item.memberName}</p>
+                        <p className={styles.rowMeta}>
+                          {item.planName} · vence{' '}
+                          {new Date(item.expiresAt).toLocaleDateString('es-MX')} ·{' '}
+                          {renewalStatusMeta(item.status).label}
+                        </p>
+                      </div>
+                      <p className={styles.figure}>
+                        {item.amount != null ? formatMoney(toCents(item.amount)) : '—'}
+                      </p>
+                      {canManage && due ? (
+                        <TicketButton
+                          variant="secondary"
+                          disabled={renewBusyId === item.membershipId}
+                          onClick={() => void renew(item.membershipId)}
+                        >
+                          Renovar
+                        </TicketButton>
+                      ) : (
+                        <span />
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </div>
+          <div className={local.block}>
+            <p className={local.subTitle}>Retención</p>
+            <PanelNote
+              pending={retentionQuery.isPending}
+              error={retentionQuery.error}
+              empty={retentionRows.length === 0}
+              emptyText="Sin serie de retención."
+              path="/retention"
+              onRetry={() => void retentionQuery.refetch()}
+            />
+            {retentionRows.length > 0 ? (
+              <ul className={styles.rows}>
+                {retentionRows.map((point) => (
+                  <li key={point.label} className={styles.row}>
+                    <p className={styles.rowTitle}>{point.label}</p>
+                    <span />
+                    <p className={styles.figure}>{point.value}%</p>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </>
+      ) : plansUnavailable ? null : (
+        <>
+          <div className={local.block}>
+            <p className={local.subTitle}>Planes</p>
+            {plansQuery.error ? (
+              <PanelNote
+                pending={false}
+                error={plansQuery.error}
+                empty={false}
+                emptyText=""
+                path="/plans"
+                onRetry={() => void plansQuery.refetch()}
+              />
+            ) : (
+              <div className={styles.stack}>
+                <div className={local.tools}>
+                  <Field
+                    label="Buscar"
+                    kind="search"
+                    value={url.q}
+                    placeholder="Nombre, slug o tier"
+                    onChange={(event) => url.setSearch(event.target.value)}
+                  />
+                  <div>
+                    <p className={local.label}>Orden</p>
+                    <SheetSelect
+                      label="Ordenar planes"
+                      value={url.sort}
+                      placeholder="Orden"
+                      options={SORT_OPTIONS.map((option) => ({
+                        value: option.value,
+                        label: option.label,
+                      }))}
+                      onChange={(value) => url.setSort(value as SortKey)}
+                    />
+                  </div>
+                </div>
+                <Segment
+                  label="Estado del plan"
+                  value={url.status}
+                  options={STATUS_FILTER_OPTIONS.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                  onChange={(value) => url.setStatus(value)}
+                />
+                {plansQuery.isPending ? <p className={styles.quiet}>Cargando planes.</p> : null}
+                {!plansQuery.isPending && plans.length === 0 ? (
+                  <p className={styles.quiet}>
+                    Sin planes. Crea el primero para medir adopción y renovación.
+                  </p>
+                ) : null}
+                {plans.length > 0 && filtered.length === 0 ? (
+                  <div className={styles.stack}>
+                    <p className={styles.quiet}>Ningún plan con ese criterio.</p>
+                    <div>
+                      <TicketButton variant="ghost" onClick={url.clearFilters}>
+                        Limpiar filtros
+                      </TicketButton>
+                    </div>
+                  </div>
+                ) : null}
+                {filtered.length > 0 ? (
+                  <>
+                    <p className={styles.tertiary}>
+                      {formatCount(filtered.length)} de {formatCount(plans.length)}
+                    </p>
+                    <ul className={styles.rows}>
+                      {filtered.map((plan) => (
+                        <li key={plan.id} className={styles.row}>
+                          <div className={styles.rowMain}>
+                            <p className={styles.rowTitle}>{plan.name}</p>
+                            <p className={styles.rowMeta}>
+                              {[
+                                plan.tier,
+                                billingLabel(plan.billingPeriod),
+                                plan.slug,
+                                planStatusMeta(statusOf(plan)).label,
+                                `${formatMoneyPrecise(planPriceCents(plan))} c/u`,
+                                `${formatCount(plan.benefitCount ?? 0)} beneficios`,
+                                `renovación ${formatRatio(plan.renewalRate)}`,
+                              ].join(' · ')}
+                            </p>
+                          </div>
+                          <p className={styles.tertiary}>
+                            {formatCount(plan.memberCount)}
+                            {plan.maxMembers != null
+                              ? `/${formatCount(plan.maxMembers)} · ${formatRatio(adoptionRate(plan))}`
+                              : ' miembros'}
+                          </p>
+                          <p className={styles.figure}>{formatMoney(planRevenueCents(plan))}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+              </div>
+            )}
+          </div>
 
-          <div className={styles.stack}>
-            <AdoptionPanel buckets={buckets} loading={plansQuery.isPending} />
-            <BenefitsPanel
-              usage={usageRows}
-              isPending={usageQuery.isPending}
+          <div className={local.block}>
+            <p className={local.subTitle}>Adopción por tier</p>
+            {plansQuery.isPending ? <p className={styles.quiet}>Cargando.</p> : null}
+            {!plansQuery.isPending && buckets.length === 0 ? (
+              <p className={styles.quiet}>Sin tiers. Aparecen al publicar planes.</p>
+            ) : null}
+            {buckets.length > 0 ? (
+              <ul className={styles.rows}>
+                {buckets.map((item) => (
+                  <li key={item.tier} className={styles.row}>
+                    <div className={styles.rowMain}>
+                      <p className={styles.rowTitle}>{item.tier}</p>
+                      <p className={styles.rowMeta}>
+                        {formatCount(item.plans)} plan{item.plans === 1 ? '' : 'es'} ·{' '}
+                        {formatMoney(item.revenueCents)}
+                        {item.renewalRate != null
+                          ? ` · renovación ${formatRatio(item.renewalRate)}`
+                          : ''}
+                      </p>
+                    </div>
+                    <span />
+                    <p className={styles.figure}>{formatCount(item.members)}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
+          <div className={local.block}>
+            <p className={local.subTitle}>Beneficios canjeados</p>
+            <PanelNote
+              pending={usageQuery.isPending}
               error={usageQuery.error}
+              empty={usageRows.length === 0}
+              emptyText="Aún no hay canjes registrados."
+              path="/benefits/usage"
               onRetry={() => void usageQuery.refetch()}
             />
+            {usageRows.length > 0 ? (
+              <ul className={styles.rows}>
+                {usageRows.map((row) => (
+                  <li key={row.label} className={styles.row}>
+                    <p className={styles.rowTitle}>{row.label}</p>
+                    <span />
+                    <p className={styles.figure}>{formatCount(row.value)}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
-        </div>
+        </>
       )}
 
-      <CreatePlanModal
-        open={createOpen}
-        busy={createPlan.isPending}
-        onClose={() => setCreateOpen(false)}
-        onSubmit={onCreate}
-      />
-    </div>
-  );
-}
+      {formOpen ? (
+        <form
+          className={`${local.form} ${local.block}`}
+          onSubmit={(event) => void submitPlan(event)}
+        >
+          <p className={`${local.subTitle} ${local.formWide}`}>Nuevo plan</p>
+          <Field
+            label="Nombre"
+            value={form.name}
+            autoFocus
+            onChange={(event) => {
+              const name = event.target.value;
+              setForm((prev) => ({
+                ...prev,
+                name,
+                slug: prev.slugTouched ? prev.slug : slugify(name),
+              }));
+            }}
+          />
+          <Field
+            label="Slug"
+            value={form.slug}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, slug: event.target.value, slugTouched: true }))
+            }
+          />
+          <Field
+            label="Tier"
+            value={form.tier}
+            onChange={(event) => setForm((prev) => ({ ...prev, tier: event.target.value }))}
+          />
+          <Field
+            label="Precio"
+            kind="money"
+            trailing="MXN"
+            value={form.price}
+            onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))}
+          />
+          <div>
+            <p className={local.label}>Periodo</p>
+            <Segment
+              label="Periodo"
+              value={form.billingPeriod}
+              options={PERIOD_OPTIONS}
+              onChange={(value) => setForm((prev) => ({ ...prev, billingPeriod: value }))}
+            />
+          </div>
+          <Field
+            label="Cupo máximo"
+            hint="Opcional"
+            inputMode="numeric"
+            value={form.maxMembers}
+            onChange={(event) => setForm((prev) => ({ ...prev, maxMembers: event.target.value }))}
+          />
+          <div className={local.formWide}>
+            <Field
+              label="Descripción"
+              hint="Opcional"
+              value={form.description}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, description: event.target.value }))
+              }
+            />
+          </div>
+          {formError ? (
+            <p className={`${styles.danger} ${local.formWide}`} role="alert">
+              {formError}
+            </p>
+          ) : null}
+          <div className={`${local.actions} ${local.formWide}`}>
+            <TicketButton type="submit" disabled={createPlan.isPending}>
+              {createPlan.isPending ? 'Creando' : 'Crear plan'}
+            </TicketButton>
+            <TicketButton
+              type="button"
+              variant="ghost"
+              disabled={createPlan.isPending}
+              onClick={() => {
+                setForm(defaultForm());
+                setFormError(null);
+                setFormOpen(false);
+              }}
+            >
+              Cancelar
+            </TicketButton>
+          </div>
+        </form>
+      ) : null}
 
-export default function MembershipsPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className={styles.page} aria-busy="true">
-          <SkeletonCard lines={3} />
-          <SkeletonCard lines={2} />
-          <SkeletonCard lines={6} />
-        </div>
-      }
-    >
-      <MembershipsCockpit />
-    </Suspense>
+      {actionError ? (
+        <p className={styles.danger} role="alert">
+          {actionError}
+        </p>
+      ) : null}
+
+      <div className={styles.saveBar}>
+        <p className={styles.quiet} aria-live="polite">
+          {notice ?? (canManage ? '' : 'Tu rol consulta; crear planes pide permiso de membresías.')}
+        </p>
+        {!formOpen ? (
+          <TicketButton
+            disabled={!canManage}
+            onClick={() => {
+              setNotice(null);
+              setFormOpen(true);
+            }}
+          >
+            Nuevo plan
+          </TicketButton>
+        ) : null}
+      </div>
+    </section>
   );
 }

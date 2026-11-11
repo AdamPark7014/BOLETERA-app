@@ -90,7 +90,7 @@ export type MembershipKpis = {
 
 export function computeMembershipKpis(
   plans: readonly MembershipPlan[],
-  metrics: MembershipMetrics | undefined,
+  metrics: MembershipMetrics | undefined
 ): MembershipKpis {
   const fromPlans = {
     activeMembers: plans.reduce((sum, plan) => sum + plan.memberCount, 0),
@@ -103,9 +103,7 @@ export function computeMembershipKpis(
     .map((plan) => normalizeRate(plan.renewalRate ?? null))
     .filter((rate): rate is number => rate !== null);
   const avgPlanRenewal =
-    planRenewals.length > 0
-      ? planRenewals.reduce((a, b) => a + b, 0) / planRenewals.length
-      : null;
+    planRenewals.length > 0 ? planRenewals.reduce((a, b) => a + b, 0) / planRenewals.length : null;
 
   return {
     activeMembers: metrics?.activeMembers ?? fromPlans.activeMembers,
@@ -127,7 +125,7 @@ export type MembershipAlert = {
 export function buildMembershipAlerts(
   plans: readonly MembershipPlan[],
   renewals: readonly MembershipRenewal[],
-  benefits: readonly MembershipBenefit[],
+  benefits: readonly MembershipBenefit[]
 ): MembershipAlert[] {
   const items: MembershipAlert[] = [];
   const inactive = plans.filter((plan) => !plan.active);
@@ -208,15 +206,14 @@ export function adoptionByTier(plans: readonly MembershipPlan[]): TierBucket[] {
       plans: current.plans + 1,
       members: current.members + plan.memberCount,
       revenueCents: current.revenueCents + planRevenueCents(plan),
-      renewalRate:
-        rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : null,
+      renewalRate: rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : null,
     });
   }
   return [...map.values()].sort((a, b) => b.members - a.members);
 }
 
 export function retentionSeries(
-  points: readonly MembershipRetentionPoint[],
+  points: readonly MembershipRetentionPoint[]
 ): Array<{ label: string; value: number }> {
   return points.map((point) => {
     const rate = normalizeRate(point.value) ?? 0;
@@ -225,7 +222,7 @@ export function retentionSeries(
 }
 
 export function usageByBenefit(
-  usage: readonly MembershipBenefitUsage[],
+  usage: readonly MembershipBenefitUsage[]
 ): Array<{ label: string; value: number }> {
   return [...usage]
     .sort((a, b) => b.redemptions - a.redemptions)
@@ -252,7 +249,7 @@ export function renewalStatusMeta(status: string): { label: string; tone: BadgeT
 
 export function filterAndSortPlans(
   plans: readonly MembershipPlan[],
-  opts: { query: string; status: StatusFilter; sort: SortKey },
+  opts: { query: string; status: StatusFilter; sort: SortKey }
 ): MembershipPlan[] {
   const needle = opts.query.trim().toLocaleLowerCase('es-MX');
   const filtered = plans.filter((plan) => {

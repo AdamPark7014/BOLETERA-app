@@ -1,9 +1,5 @@
 import type { BadgeTone, StatusTone } from '@boletera/ui';
-import type {
-  PricingConfidence,
-  PricingDirection,
-  PricingFactorCode,
-} from './types';
+import type { PricingConfidence, PricingDirection, PricingFactorCode } from './types';
 
 const FACTOR_LABELS: Record<PricingFactorCode, string> = {
   sales_pace: 'Ritmo de venta',

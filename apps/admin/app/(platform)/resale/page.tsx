@@ -1,36 +1,21 @@
 'use client';
 
 /**
- * Marketplace de reventa.
+ * Reventa: listados del mercado secundario y control de sobreprecio.
  *
- * La pantalla anterior pedía los listados con un `fetch` anónimo y mostraba
- * `${'$'}{askingPrice}` sin moneda: imposible distinguir "no hay reventa" de
- * "la petición falló", y un precio sin moneda no sirve para vigilar sobreprecio.
- * Ahora la petición va autenticada, el sobreprecio se calcula contra el precio
- * original y los listados por encima del umbral se señalan.
+ * Solo lectura. La petición va autenticada y el sobreprecio se calcula contra el
+ * precio original que devuelve el API; un listado arriba del umbral se señala.
  */
 
-import { useCallback, useMemo, useState } from 'react';
-import {
-  Badge,
-  Button,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  KpiCard,
-  PageHeader,
-  Section,
-  formatNumber,
-  type BadgeTone,
-  type DataTableColumn,
-  type FilterDefinition,
-  type FilterSelection,
-} from '@boletera/ui';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { TicketButton, formatTicketAmount } from '@boletera/ui';
 import { adminApi } from '@/lib/api';
-import { Notice, ResourceView } from '../orders/_ui/States';
-import { useResource } from '../orders/_ui/useResource';
-import { formatDateTime, formatMoney, formatPercent, toNumber } from '../orders/_ui/format';
-import styles from './resale.module.scss';
+import { AnonymousView, ApiErrorView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Segment } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { formatCount, formatWhen, readNumber } from '../events/_ticket/read';
+import local from './resale.module.scss';
 
 type Listing = {
   id: string;
@@ -49,312 +34,235 @@ type Listing = {
 
 type ListingsResponse = { listings?: Listing[] } | Listing[];
 
-type ResaleTableRow = {
-  id: string;
+type Row = {
   listing: Listing;
   asking: number;
   original: number;
   markup: number | null;
-  currency: string;
 };
 
-const STATUS: Record<string, { label: string; tone: BadgeTone }> = {
-  ACTIVE: { label: 'Activo', tone: 'success' },
-  PENDING: { label: 'Pendiente', tone: 'warning' },
-  SOLD: { label: 'Vendido', tone: 'info' },
-  CANCELLED: { label: 'Cancelado', tone: 'danger' },
-  EXPIRED: { label: 'Expirado', tone: 'neutral' },
+const STATUS: Record<string, string> = {
+  ACTIVE: 'Activo',
+  PENDING: 'Pendiente',
+  SOLD: 'Vendido',
+  CANCELLED: 'Cancelado',
+  EXPIRED: 'Expirado',
 };
 
 /** Umbral a partir del cual el sobreprecio merece revisión. */
 const MARKUP_ALERT = 20;
 
+function statusWord(value: string): string {
+  return STATUS[value] ?? value;
+}
+
+function markupLabel(value: number): string {
+  const rounded = Math.round(value);
+  return `${rounded > 0 ? '+' : ''}${rounded}%`;
+}
+
 export default function ResaleAdminPage() {
-  const [status, setStatus] = useState('ALL');
-
-  const resource = useResource<Listing[]>(
-    useCallback(
-      async ({ token, signal }) => {
-        const res = await adminApi<ListingsResponse>('/resale/listings?limit=50', token, { signal });
-        return Array.isArray(res) ? res : (res.listings ?? []);
-      },
-      [],
-    ),
-    { requiresOrg: false },
-  );
-
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Marketplace"
-        title="Reventa"
-        description="Listados del marketplace y control de sobreprecio"
-        actions={
-          <Button
-            type="button"
-            variant="outline"
-            loading={resource.state.phase === 'loading'}
-            loadingLabel="Actualizando…"
-            onClick={() => resource.reload()}
-          >
-            Actualizar
-          </Button>
-        }
-      />
-
-      <ResourceView resource={resource} context="los listados de reventa" loadingRows={5}>
-        {(listings) => <ListingsView listings={listings} status={status} setStatus={setStatus} />}
-      </ResourceView>
-    </div>
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <ReventaBody />
+      </AdminFrame>
+    </Suspense>
   );
 }
 
-function ListingsView({
-  listings,
-  status,
-  setStatus,
-}: {
-  listings: Listing[];
-  status: string;
-  setStatus: (s: string) => void;
-}) {
-  const rows = useMemo<ResaleTableRow[]>(
+function ReventaBody() {
+  const session = useSession();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const [status, setStatus] = useState('ALL');
+  const [nonce, setNonce] = useState(0);
+  const token = session.token;
+
+  useEffect(() => {
+    if (!token) {
+      if (session.status !== 'loading') setLoading(false);
+      return;
+    }
+    let alive = true;
+    setRefreshing(true);
+    adminApi<ListingsResponse>('/resale/listings?limit=50', token)
+      .then((res) => {
+        if (!alive) return;
+        setError(null);
+        setListings(Array.isArray(res) ? res : (res.listings ?? []));
+      })
+      .catch((cause: unknown) => {
+        if (alive) setError(cause);
+      })
+      .finally(() => {
+        if (!alive) return;
+        setLoading(false);
+        setRefreshing(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [token, session.status, nonce]);
+
+  const rows = useMemo<Row[]>(
     () =>
-      listings.map((listing) => {
-        const asking = toNumber(listing.askingPrice);
-        const original = toNumber(
-          listing.priceComparison?.originalPrice ?? listing.ticket?.offer?.basePrice ?? null,
-        );
-        const markup = original > 0 ? ((asking - original) / original) * 100 : null;
-        return {
-          id: listing.id,
-          listing,
-          asking,
-          original,
-          markup,
-          currency: listing.currency || 'MXN',
-        };
-      }),
-    [listings],
+      listings
+        .map((listing) => {
+          const asking = readNumber(listing.askingPrice) ?? 0;
+          const original =
+            readNumber(
+              listing.priceComparison?.originalPrice ?? listing.ticket?.offer?.basePrice ?? null
+            ) ?? 0;
+          const markup = original > 0 ? ((asking - original) / original) * 100 : null;
+          return { listing, asking, original, markup };
+        })
+        .sort((a, b) => (b.markup ?? -Infinity) - (a.markup ?? -Infinity)),
+    [listings]
   );
 
-  const statusCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const listing of listings) {
-      counts.set(listing.status, (counts.get(listing.status) ?? 0) + 1);
-    }
-    return counts;
+  const counts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const listing of listings) map.set(listing.status, (map.get(listing.status) ?? 0) + 1);
+    return map;
   }, [listings]);
 
-  const statusFilterDefs = useMemo<FilterDefinition[]>(
-    () => [
-      {
-        id: 'status',
-        label: 'Estado',
-        multiple: false,
-        options: Array.from(statusCounts.entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(([value, count]) => ({
-            value,
-            label: STATUS[value]?.label ?? value,
-            count,
-          })),
-      },
-    ],
-    [statusCounts],
-  );
+  const flagged = rows.filter((row) => row.markup !== null && row.markup > MARKUP_ALERT).length;
+  const offers = rows.reduce((sum, row) => sum + (row.listing.offers?.length ?? 0), 0);
+  const visible = status === 'ALL' ? rows : rows.filter((row) => row.listing.status === status);
+  const statusOptions = [
+    { value: 'ALL', label: 'Todos' },
+    ...[...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([value, count]) => ({ value, label: `${statusWord(value)} · ${count}` })),
+  ];
 
-  const filterSelection = useMemo<FilterSelection>(() => {
-    const selection: Record<string, readonly string[]> = {};
-    if (status !== 'ALL') selection.status = [status];
-    return selection;
-  }, [status]);
-
-  const visible = useMemo(
-    () => (status === 'ALL' ? rows : rows.filter((row) => row.listing.status === status)),
-    [rows, status],
-  );
-
-  const flagged = useMemo(
-    () => rows.filter((row) => row.markup !== null && row.markup > MARKUP_ALERT),
-    [rows],
-  );
-
-  const activeCount = statusCounts.get('ACTIVE') ?? 0;
-  const totalOffers = useMemo(
-    () => rows.reduce((sum, row) => sum + (row.listing.offers?.length ?? 0), 0),
-    [rows],
-  );
-
-  const anyFilter = status !== 'ALL';
-
-  const columns = useMemo<readonly DataTableColumn<ResaleTableRow>[]>(
-    () => [
-      {
-        key: 'ticket',
-        header: 'Boleto',
-        width: 180,
-        sortValue: (row) => row.listing.ticket?.code ?? row.id,
-        render: (row) => (
-          <div className={styles.ticketCell}>
-            <code className={styles.code}>
-              {row.listing.ticket?.code ?? row.id.slice(0, 8)}
-            </code>
-            {row.listing.createdAt ? (
-              <span className={styles.subtle}>{formatDateTime(row.listing.createdAt)}</span>
-            ) : null}
-          </div>
-        ),
-      },
-      {
-        key: 'event',
-        header: 'Evento',
-        width: 220,
-        sortValue: (row) => row.listing.ticket?.event?.title ?? '',
-        render: (row) => row.listing.ticket?.event?.title ?? '—',
-      },
-      {
-        key: 'original',
-        header: 'Precio original',
-        width: 140,
-        align: 'right',
-        sortValue: (row) => row.original,
-        render: (row) =>
-          row.original > 0 ? formatMoney(row.original, row.currency) : '—',
-      },
-      {
-        key: 'asking',
-        header: 'Precio pedido',
-        width: 140,
-        align: 'right',
-        sortValue: (row) => row.asking,
-        render: (row) => formatMoney(row.asking, row.currency),
-      },
-      {
-        key: 'markup',
-        header: 'Sobreprecio',
-        width: 130,
-        align: 'right',
-        sortValue: (row) => row.markup ?? -1,
-        render: (row) => {
-          const high = row.markup !== null && row.markup > MARKUP_ALERT;
-          if (row.markup === null) return '—';
-          return (
-            <div className={styles.markupCell}>
-              <span className={styles.numeric}>{formatPercent(row.markup, 0)}</span>
-              {high ? (
-                <Badge tone="danger" variant="soft" size="sm">
-                  Revisar
-                </Badge>
-              ) : null}
-            </div>
-          );
-        },
-      },
-      {
-        key: 'offers',
-        header: 'Ofertas',
-        width: 90,
-        align: 'right',
-        sortValue: (row) => row.listing.offers?.length ?? 0,
-        render: (row) => formatNumber(row.listing.offers?.length ?? 0),
-      },
-      {
-        key: 'status',
-        header: 'Estado',
-        width: 130,
-        sortValue: (row) => row.listing.status,
-        render: (row) => {
-          const meta = STATUS[row.listing.status] ?? {
-            label: row.listing.status,
-            tone: 'neutral' as BadgeTone,
-          };
-          return (
-            <Badge tone={meta.tone} variant="soft" size="sm" dot>
-              {meta.label}
-            </Badge>
-          );
-        },
-      },
-    ],
-    [],
-  );
-
-  if (listings.length === 0) {
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (error) {
     return (
-      <EmptyState
-        title="Sin listados de reventa"
-        description="Aparecerán aquí en cuanto un asistente ponga su boleto a la venta."
+      <ApiErrorView
+        error={error}
+        context="abrir reventa"
+        onRetry={() => setNonce((current) => current + 1)}
       />
     );
   }
+  if (loading || !token) return <p className={styles.quiet}>Cargando reventa.</p>;
 
   return (
-    <>
-      <Section columns={4} gap="md" className={styles.kpiStrip}>
-        <KpiCard label="Listados" value={formatNumber(listings.length)} tone="accent" />
-        <KpiCard
-          label="Activos"
-          value={formatNumber(activeCount)}
-          tone={activeCount > 0 ? 'success' : 'neutral'}
-        />
-        <KpiCard
-          label="Sobreprecio alto"
-          value={formatNumber(flagged.length)}
-          tone={flagged.length > 0 ? 'warning' : 'neutral'}
-          invertDelta
-          hint={`Más de ${MARKUP_ALERT}% sobre el precio original`}
-        />
-        <KpiCard label="Ofertas recibidas" value={formatNumber(totalOffers)} />
-      </Section>
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Reventa</h1>
+        <p className={styles.quiet}>
+          Listados del mercado secundario. Se señala lo que pide más de {MARKUP_ALERT}% sobre el
+          precio original.
+        </p>
+      </header>
 
-      {flagged.length > 0 && (
-        <Notice tone="warn" title={`${flagged.length} listado(s) con sobreprecio alto`}>
-          <p>
-            Piden más de {MARKUP_ALERT}% por encima del precio original. Revisa si el evento tiene
-            tope de reventa antes de dejarlos publicados.
+      <ul className={styles.rows}>
+        <li className={styles.row}>
+          <p className={styles.rowTitle}>Listados</p>
+          <span />
+          <p className={styles.figure}>{formatCount(listings.length)}</p>
+        </li>
+        <li className={styles.row}>
+          <p className={styles.rowTitle}>Activos</p>
+          <span />
+          <p className={styles.figure}>{formatCount(counts.get('ACTIVE') ?? 0)}</p>
+        </li>
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Sobreprecio alto</p>
+            <p className={styles.rowMeta}>Más de {MARKUP_ALERT}% sobre el precio original</p>
+          </div>
+          <span />
+          <p className={styles.figure}>{formatCount(flagged)}</p>
+        </li>
+        <li className={styles.row}>
+          <p className={styles.rowTitle}>Ofertas recibidas</p>
+          <span />
+          <p className={styles.figure}>{formatCount(offers)}</p>
+        </li>
+      </ul>
+
+      {flagged > 0 ? (
+        <p className={`${styles.out} ${local.note}`} role="status">
+          {flagged === 1 ? 'Un listado pide' : `${flagged} listados piden`} más de {MARKUP_ALERT}%
+          sobre el original. Revisa el tope de reventa del evento antes de dejarlos publicados.
+        </p>
+      ) : null}
+
+      <div className={`${styles.stack} ${local.block}`}>
+        {listings.length > 0 ? (
+          <Segment
+            label="Estado del listado"
+            value={status}
+            options={statusOptions}
+            onChange={setStatus}
+          />
+        ) : null}
+        {listings.length === 0 ? (
+          <p className={styles.quiet}>
+            Sin listados. Aparecen cuando un asistente pone su boleto a la venta.
           </p>
-        </Notice>
-      )}
-
-      <div className={styles.panel}>
-        <FilterBar
-          filters={statusFilterDefs}
-          value={filterSelection}
-          onChange={(next) => setStatus(next.status?.[0] ?? 'ALL')}
-        />
-        <div className={styles.panelHead}>
-          <p>
-            {visible.length === listings.length
-              ? `${formatNumber(visible.length)} listados en pantalla`
-              : `${formatNumber(visible.length)} de ${formatNumber(listings.length)} listados coinciden con los filtros`}
-          </p>
-          {anyFilter ? (
-            <Button type="button" variant="ghost" size="sm" onClick={() => setStatus('ALL')}>
-              Limpiar filtros
-            </Button>
-          ) : null}
-        </div>
-
-        <DataTable
-          label="Listados de reventa con boleto, evento, precio pedido y sobreprecio"
-          columns={columns}
-          data={visible}
-          rowKey={(row) => row.id}
-          defaultSort={{ key: 'markup', direction: 'desc' }}
-          empty={
-            <EmptyState
-              title="Ningún listado con ese estado"
-              description="Quita el filtro para ver el resto."
-              action={
-                <Button type="button" variant="outline" onClick={() => setStatus('ALL')}>
-                  Limpiar filtros
-                </Button>
-              }
-            />
-          }
-        />
+        ) : null}
+        {listings.length === 50 ? <p className={styles.tertiary}>Se muestran 50.</p> : null}
+        {listings.length > 0 && visible.length === 0 ? (
+          <p className={styles.quiet}>Ningún listado con ese estado.</p>
+        ) : null}
+        {visible.length > 0 ? (
+          <ul className={styles.rows}>
+            {visible.map((row) => {
+              const currency = row.listing.currency || 'MXN';
+              const high = row.markup !== null && row.markup > MARKUP_ALERT;
+              const meta = [
+                row.listing.ticket?.code ?? row.listing.id.slice(0, 8),
+                statusWord(row.listing.status),
+                row.listing.offers?.length
+                  ? `${formatCount(row.listing.offers.length)} ofertas`
+                  : null,
+                row.listing.createdAt ? formatWhen(row.listing.createdAt) : null,
+              ].filter(Boolean);
+              return (
+                <li key={row.listing.id} className={styles.row}>
+                  <div className={styles.rowMain}>
+                    <p className={styles.rowTitle}>
+                      {row.listing.ticket?.event?.title ?? 'Evento sin nombre'}
+                    </p>
+                    <p className={styles.rowMeta}>{meta.join(' · ')}</p>
+                    <p className={styles.rowMeta}>
+                      Original{' '}
+                      {row.original > 0 ? `${formatTicketAmount(row.original)} ${currency}` : '—'}
+                    </p>
+                  </div>
+                  <p className={high ? styles.out : styles.tertiary}>
+                    {row.markup === null ? '—' : markupLabel(row.markup)}
+                    {high ? ' · Revisar' : ''}
+                  </p>
+                  <p className={styles.figure}>
+                    {formatTicketAmount(row.asking)} {currency}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
       </div>
-    </>
+
+      <div className={styles.saveBar}>
+        <p className={styles.quiet} aria-live="polite">
+          {refreshing ? 'Actualizando.' : ''}
+        </p>
+        <TicketButton
+          variant="secondary"
+          disabled={refreshing}
+          onClick={() => setNonce((current) => current + 1)}
+        >
+          Actualizar
+        </TicketButton>
+      </div>
+    </section>
   );
 }

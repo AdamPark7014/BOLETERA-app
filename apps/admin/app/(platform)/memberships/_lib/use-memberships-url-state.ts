@@ -2,12 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  SORT_OPTIONS,
-  STATUS_FILTER_OPTIONS,
-  type SortKey,
-  type StatusFilter,
-} from './plans';
+import { SORT_OPTIONS, STATUS_FILTER_OPTIONS, type SortKey, type StatusFilter } from './plans';
 
 export type MembershipsUrlState = {
   q: string;
@@ -59,32 +54,27 @@ export function useMembershipsUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   return {
     ...state,
-    setSearch: useCallback(
-      (q: string) => replaceParams({ q: q || null }),
-      [replaceParams],
-    ),
+    setSearch: useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]),
     setStatus: useCallback(
-      (status: StatusFilter) =>
-        replaceParams({ status: status === 'all' ? null : status }),
-      [replaceParams],
+      (status: StatusFilter) => replaceParams({ status: status === 'all' ? null : status }),
+      [replaceParams]
     ),
     setSort: useCallback(
       (sort: SortKey) => replaceParams({ sort: sort === 'members' ? null : sort }),
-      [replaceParams],
+      [replaceParams]
     ),
     setTab: useCallback(
-      (tab: MembershipsUrlState['tab']) =>
-        replaceParams({ tab: tab === 'tiers' ? null : tab }),
-      [replaceParams],
+      (tab: MembershipsUrlState['tab']) => replaceParams({ tab: tab === 'tiers' ? null : tab }),
+      [replaceParams]
     ),
     clearFilters: useCallback(
       () => replaceParams({ q: null, status: null, sort: null }),
-      [replaceParams],
+      [replaceParams]
     ),
   };
 }

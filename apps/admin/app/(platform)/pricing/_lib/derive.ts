@@ -28,11 +28,7 @@ export type Paged<T> = {
   to: number;
 };
 
-export function paginate<T>(
-  rows: readonly T[],
-  page: number,
-  pageSize: PageSize,
-): Paged<T> {
+export function paginate<T>(rows: readonly T[], page: number, pageSize: PageSize): Paged<T> {
   const total = rows.length;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const current = Math.min(Math.max(page, 1), pageCount);
@@ -61,7 +57,7 @@ export type RecommendationSummary = {
 };
 
 export function summarizeRecommendations(
-  recommendations: readonly OfferRecommendation[],
+  recommendations: readonly OfferRecommendation[]
 ): RecommendationSummary {
   return recommendations.reduce<RecommendationSummary>(
     (summary, item) => ({
@@ -81,7 +77,7 @@ export function summarizeRecommendations(
       autoApplicable: 0,
       requiresApproval: 0,
       clamped: 0,
-    },
+    }
   );
 }
 
@@ -96,7 +92,7 @@ export type RecommendationFilters = {
 
 export function filterRecommendations(
   recommendations: readonly OfferRecommendation[],
-  filters: RecommendationFilters,
+  filters: RecommendationFilters
 ): readonly OfferRecommendation[] {
   const needle = filters.query.trim().toLocaleLowerCase('es-MX');
   return recommendations.filter((item) => {
@@ -106,9 +102,7 @@ export function filterRecommendations(
     if (filters.approvalOnly && !item.requiresApproval) return false;
     if (filters.clampedOnly && !item.guardrail.clamped) return false;
     if (!needle) return true;
-    return `${item.name} ${item.zone} ${item.offerId}`
-      .toLocaleLowerCase('es-MX')
-      .includes(needle);
+    return `${item.name} ${item.zone} ${item.offerId}`.toLocaleLowerCase('es-MX').includes(needle);
   });
 }
 
@@ -121,9 +115,10 @@ export function isActionable(item: OfferRecommendation): boolean {
 }
 
 /** Precio vigente contra recomendado por oferta. Ambas cifras son reales. */
-export function priceComparisonSeries(
-  recommendations: readonly OfferRecommendation[],
-): { current: readonly ChartDatum[]; recommended: readonly ChartDatum[] } {
+export function priceComparisonSeries(recommendations: readonly OfferRecommendation[]): {
+  current: readonly ChartDatum[];
+  recommended: readonly ChartDatum[];
+} {
   const labelled = recommendations.map((item) => ({
     label: item.zone === item.name ? item.name : `${item.zone} · ${item.name}`,
     item,
@@ -156,7 +151,7 @@ export type PendingRow = PendingRecommendation & {
 export function buildPendingRows(
   pending: readonly PendingRecommendation[],
   recommendations: readonly OfferRecommendation[],
-  now: number,
+  now: number
 ): readonly PendingRow[] {
   const byOffer = new Map(recommendations.map((item) => [item.offerId, item]));
   return pending.map((row) => {
@@ -165,8 +160,7 @@ export function buildPendingRows(
     const currentPrice = payload?.currentPrice ?? match?.currentPrice ?? 0;
     const expiresAt = new Date(row.createdAt).getTime() + PENDING_TTL_MS;
     const delta =
-      payload?.deltaPercent ??
-      (currentPrice > 0 ? row.adjustedPrice / currentPrice - 1 : 0);
+      payload?.deltaPercent ?? (currentPrice > 0 ? row.adjustedPrice / currentPrice - 1 : 0);
     return {
       ...row,
       offerName: match?.name ?? 'Oferta fuera del paquete vigente',
@@ -182,14 +176,14 @@ export function buildPendingRows(
 
 export function filterPendingRows(
   rows: readonly PendingRow[],
-  query: string,
+  query: string
 ): readonly PendingRow[] {
   const needle = query.trim().toLocaleLowerCase('es-MX');
   if (!needle) return rows;
   return rows.filter((row) =>
     `${row.offerName} ${row.zone} ${row.offerId} ${row.id}`
       .toLocaleLowerCase('es-MX')
-      .includes(needle),
+      .includes(needle)
   );
 }
 

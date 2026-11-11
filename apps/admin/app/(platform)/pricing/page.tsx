@@ -1,44 +1,53 @@
 'use client';
 
+/**
+ * Precios dinámicos por evento: recomendaciones por oferta, cola de aprobación
+ * humana y señales del motor.
+ *
+ * Conserva todas las llamadas y acciones de la consola anterior: previsualizar,
+ * generar y aplicar seguros, aplicar selección (con o sin aprobación), aprobar o
+ * rechazar con nota, e historial por oferta. Si el API responde 404 en
+ * recomendaciones o en la cola, se muestra tal cual, sin inventar paquetes.
+ */
+
 import Link from 'next/link';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import {
-  Badge,
-  BarChart,
-  Button,
-  EmptyState,
-  FilterBar,
-  KpiCard,
-  PageHeader,
-  Section,
-  SegmentedControl,
-  Skeleton,
-  SkeletonCard,
-  StatusDot,
+  Field,
+  ParameterCard,
+  TicketButton,
   formatCurrency,
+  formatDateTime,
+  formatDelta,
   formatNumber,
   formatPercent,
-  type FilterDefinition,
-  type SegmentedOption,
 } from '@boletera/ui';
-import { useToast } from '@/components/Toast/ToastProvider';
-import { PermissionError } from '@/lib/http';
+import { HttpError, PermissionError } from '@/lib/http';
 import { useEvents } from '@/lib/queries';
-import { useSession } from '@/lib/use-session';
-import { PendingApprovalsPanel } from './_components/PendingApprovalsPanel';
-import { RecommendationDetailDrawer } from './_components/RecommendationDetailDrawer';
-import { RecommendationsTable } from './_components/RecommendationsTable';
-import { SignalsPanel } from './_components/SignalsPanel';
+import { useSession as useAppSession } from '@/lib/use-session';
+import { AnonymousView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Param, Segment, SheetSelect, Switch } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
 import {
+  PAGE_SIZES,
   buildPendingRows,
   filterPendingRows,
   filterRecommendations,
   generatedAgeLabel,
   isActionable,
   paginate,
-  priceComparisonSeries,
   summarizeRecommendations,
+  type PageSize,
+  type PendingRow,
 } from './_lib/derive';
+import {
+  confidenceLabel,
+  describeHistoryReason,
+  directionLabel,
+  factorLabel,
+  shortId,
+} from './_lib/labels';
 import {
   useApplyRecommendations,
   useOfferPriceHistory,
@@ -49,43 +58,64 @@ import {
   useReviewRecommendation,
   useUpdateDynamicPrices,
 } from './_lib/queries';
-import {
-  usePricingUrlState,
-  type PricingView,
-} from './_lib/use-pricing-url-state';
-import type { OfferRecommendation } from './_lib/types';
-import styles from './pricing.module.scss';
+import type {
+  OfferRecommendation,
+  PriceHistoryEntry,
+  PricingDirection,
+  RecommendationBundle,
+  RevenueEstimate,
+} from './_lib/types';
+import { toAmount } from './_lib/types';
+import { usePricingUrlState, type PricingView } from './_lib/use-pricing-url-state';
+import local from './pricing.module.scss';
 
-const VIEW_OPTIONS: readonly SegmentedOption<PricingView>[] = [
+const VIEW_OPTIONS: { value: PricingView; label: string }[] = [
   { value: 'recomendaciones', label: 'Recomendaciones' },
   { value: 'aprobaciones', label: 'Aprobaciones' },
   { value: 'senales', label: 'Señales' },
 ];
 
-const VIEW_LABELS: Record<PricingView, string> = {
-  recomendaciones: 'Recomendaciones',
-  aprobaciones: 'Aprobaciones',
-  senales: 'Señales',
-};
+type DirectionChoice = 'todas' | PricingDirection;
 
-function PricingSkeleton() {
+const DIRECTION_OPTIONS: { value: DirectionChoice; label: string }[] = [
+  { value: 'todas', label: 'Todas' },
+  { value: 'increase', label: 'Subir' },
+  { value: 'decrease', label: 'Bajar' },
+  { value: 'hold', label: 'Mantener' },
+];
+
+function errorText(error: unknown): string {
+  if (error instanceof HttpError) {
+    return error.status ? `Error ${error.status} · ${error.message}` : error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return 'Sin respuesta.';
+}
+
+function failText(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+export default function PricingPage() {
   return (
-    <div className={styles.page} aria-busy="true" aria-label="Cargando pricing">
-      <SkeletonCard lines={3} />
-      <div className={styles.kpiGrid}>
-        <SkeletonCard lines={2} />
-        <SkeletonCard lines={2} />
-        <SkeletonCard lines={2} />
-        <SkeletonCard lines={2} />
-      </div>
-      <Skeleton height={280} />
-    </div>
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <PreciosGate />
+      </AdminFrame>
+    </Suspense>
   );
 }
 
-function PricingConsole() {
-  const toast = useToast();
-  const { status, can } = useSession();
+function PreciosGate() {
+  const session = useSession();
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (session.status === 'loading') return <p className={styles.quiet}>Cargando precios.</p>;
+  return <PreciosBody />;
+}
+
+function PreciosBody() {
+  const { can } = useAppSession();
   const canWrite = can('price:write');
   const url = usePricingUrlState();
   const eventsQ = useEvents();
@@ -93,15 +123,17 @@ function PricingConsole() {
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [now] = useState(() => Date.now());
   const [previewMode, setPreviewMode] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  // Primer evento disponible si la URL no trae uno válido.
+  // Primer evento disponible si la URL no trae uno.
   useEffect(() => {
     if (url.eventId || !eventsQ.data?.length) return;
     url.setEventId(eventsQ.data[0].id);
   }, [eventsQ.data, url.eventId, url.setEventId]);
 
   const eventExists = Boolean(
-    url.eventId && eventsQ.data?.some((event) => event.id === url.eventId),
+    url.eventId && eventsQ.data?.some((event) => event.id === url.eventId)
   );
   const activeEventId = eventExists ? url.eventId : '';
 
@@ -113,40 +145,28 @@ function PricingConsole() {
   const previewMutation = usePreviewRecommendations(activeEventId);
   const updateMutation = useUpdateDynamicPrices(activeEventId);
 
-  const selectedRecommendation = useMemo(() => {
-    if (!url.offerId || !bundleQ.data) return null;
-    return (
-      bundleQ.data.recommendations.find((item) => item.offerId === url.offerId) ?? null
-    );
-  }, [bundleQ.data, url.offerId]);
-
-  const historyQ = useOfferPriceHistory(selectedRecommendation?.offerId ?? null);
-
-  const summary = useMemo(
-    () => summarizeRecommendations(bundleQ.data?.recommendations ?? []),
-    [bundleQ.data],
+  const recommendations = useMemo(() => bundleQ.data?.recommendations ?? [], [bundleQ.data]);
+  const openRecommendation = useMemo(
+    () =>
+      url.offerId ? (recommendations.find((item) => item.offerId === url.offerId) ?? null) : null,
+    [recommendations, url.offerId]
   );
+  const historyQ = useOfferPriceHistory(openRecommendation?.offerId ?? null);
 
+  const summary = useMemo(() => summarizeRecommendations(recommendations), [recommendations]);
   const filtered = useMemo(
     () =>
-      filterRecommendations(bundleQ.data?.recommendations ?? [], {
+      filterRecommendations(recommendations, {
         query: url.query,
         directions: url.directions,
         approvalOnly: url.approvalOnly,
         clampedOnly: url.clampedOnly,
       }),
-    [
-      bundleQ.data,
-      url.approvalOnly,
-      url.clampedOnly,
-      url.directions,
-      url.query,
-    ],
+    [recommendations, url.approvalOnly, url.clampedOnly, url.directions, url.query]
   );
-
   const page = useMemo(
     () => paginate(filtered, url.page, url.pageSize),
-    [filtered, url.page, url.pageSize],
+    [filtered, url.page, url.pageSize]
   );
 
   // Si los filtros dejan la página fuera de rango, corrige la URL.
@@ -155,66 +175,38 @@ function PricingConsole() {
   }, [page.page, url.page, url.setPage]);
 
   const pendingRows = useMemo(
-    () =>
-      buildPendingRows(
-        pendingQ.data ?? [],
-        bundleQ.data?.recommendations ?? [],
-        now,
-      ),
-    [bundleQ.data, now, pendingQ.data],
+    () => buildPendingRows(pendingQ.data ?? [], recommendations, now),
+    [now, pendingQ.data, recommendations]
   );
-
   const filteredPending = useMemo(
     () => filterPendingRows(pendingRows, url.query),
-    [pendingRows, url.query],
+    [pendingRows, url.query]
   );
-
-  const chartSeries = useMemo(() => {
-    const actionable = filtered.filter(isActionable).slice(0, 12);
-    return priceComparisonSeries(actionable);
-  }, [filtered]);
-
-  const filterDefs = useMemo<FilterDefinition[]>(() => {
-    const recommendations = bundleQ.data?.recommendations ?? [];
-    const countDirection = (direction: OfferRecommendation['direction']) =>
-      recommendations.filter((item) => item.direction === direction).length;
-    return [
-      {
-        id: 'direccion',
-        label: 'Dirección',
-        multiple: true,
-        options: [
-          { value: 'increase', label: 'Subir', count: countDirection('increase') },
-          { value: 'decrease', label: 'Bajar', count: countDirection('decrease') },
-          { value: 'hold', label: 'Mantener', count: countDirection('hold') },
-        ],
-      },
-      {
-        id: 'marca',
-        label: 'Marcas',
-        multiple: true,
-        options: [
-          {
-            value: 'aprobacion',
-            label: 'Requiere aprobación',
-            count: summary.requiresApproval,
-          },
-          {
-            value: 'banda',
-            label: 'Acotadas por banda',
-            count: summary.clamped,
-          },
-        ],
-      },
-    ];
-  }, [bundleQ.data, summary.clamped, summary.requiresApproval]);
 
   const selectedEvent = eventsQ.data?.find((event) => event.id === activeEventId);
   const forbidden =
-    bundleQ.error instanceof PermissionError ||
-    pendingQ.error instanceof PermissionError;
+    bundleQ.error instanceof PermissionError || pendingQ.error instanceof PermissionError;
+
+  function setMarks(next: { approval?: boolean; clamped?: boolean }) {
+    const approval = next.approval ?? url.approvalOnly;
+    const clamped = next.clamped ?? url.clampedOnly;
+    const marks = [approval ? 'aprobacion' : null, clamped ? 'banda' : null].filter(
+      (mark): mark is string => mark != null
+    );
+    url.setFilterSelection({ direccion: url.directions, marca: marks });
+  }
+
+  function setDirection(choice: DirectionChoice) {
+    url.setFilterSelection({
+      direccion: choice === 'todas' ? [] : [choice],
+      marca: [url.approvalOnly ? 'aprobacion' : null, url.clampedOnly ? 'banda' : null].filter(
+        (mark): mark is string => mark != null
+      ),
+    });
+  }
 
   async function refreshAll() {
+    setActionError(null);
     await Promise.all([
       eventsQ.refetch(),
       bundleQ.refetch(),
@@ -226,544 +218,842 @@ function PricingConsole() {
 
   async function onPreview() {
     if (!activeEventId) return;
+    setActionError(null);
     try {
       await previewMutation.mutateAsync();
       setPreviewMode(true);
       url.setView('recomendaciones');
-      toast.success('Vista previa generada sin escribir DynamicPrice');
+      setNotice('Vista previa generada. No se escribió ningún precio.');
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'No se pudo previsualizar',
-      );
+      setActionError(failText(error, 'No se pudo previsualizar.'));
     }
   }
 
   async function onGenerate() {
     if (!activeEventId) return;
+    setActionError(null);
     try {
       const result = await updateMutation.mutateAsync();
       setPreviewMode(false);
       setSelectedKeys([]);
-      toast.success(
+      setNotice(
         result.message ||
-          `Aplicadas ${result.applied} · pendientes ${result.pendingApproval} · retenidas ${result.held}`,
+          `Aplicadas ${result.applied} · pendientes ${result.pendingApproval} · retenidas ${result.held}`
       );
       if (result.pendingApproval > 0) url.setView('aprobaciones');
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'No se pudo generar',
-      );
+      setActionError(failText(error, 'No se pudo generar.'));
     }
   }
 
   async function applyOffers(offerIds: readonly string[], confirmApproval: boolean) {
     if (!activeEventId || offerIds.length === 0) return;
+    setActionError(null);
     try {
-      const result = await applyMutation.mutateAsync({
-        offerIds,
-        confirmApproval,
-      });
+      const result = await applyMutation.mutateAsync({ offerIds, confirmApproval });
       setSelectedKeys([]);
       setPreviewMode(false);
       const parts = [
         result.applied.length ? `${result.applied.length} aplicadas` : null,
-        result.pendingCreated.length
-          ? `${result.pendingCreated.length} encoladas`
-          : null,
+        result.pendingCreated.length ? `${result.pendingCreated.length} encoladas` : null,
         result.skipped.length ? `${result.skipped.length} omitidas` : null,
       ].filter(Boolean);
-      toast.success(parts.join(' · ') || 'Sin cambios');
+      setNotice(parts.join(' · ') || 'Sin cambios.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo aplicar');
+      setActionError(failText(error, 'No se pudo aplicar.'));
     }
   }
 
-  async function review(
-    recommendationId: string,
-    decision: 'approve' | 'reject',
-    note: string,
-  ) {
+  async function review(recommendationId: string, decision: 'approve' | 'reject', note: string) {
+    setActionError(null);
     try {
       await reviewMutation.mutateAsync({ recommendationId, decision, note });
-      toast.success(decision === 'approve' ? 'Recomendación aprobada' : 'Recomendación rechazada');
+      setNotice(decision === 'approve' ? 'Recomendación aprobada.' : 'Recomendación rechazada.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo revisar');
+      setActionError(failText(error, 'No se pudo revisar.'));
     }
   }
 
-  if (status === 'loading') {
-    return <PricingSkeleton />;
+  const head = (
+    <header className={styles.sectionHead}>
+      <h1 className={styles.sectionTitle}>Precios</h1>
+      <p className={styles.quiet}>
+        Recomendaciones por oferta, cola de aprobación y señales del motor. Se calcula por evento.
+      </p>
+    </header>
+  );
+
+  if (eventsQ.error) {
+    return (
+      <section>
+        {head}
+        <div className={styles.stack}>
+          <p className={styles.danger} role="alert">
+            No se pudo cargar el catálogo de eventos. {errorText(eventsQ.error)}
+          </p>
+          <div>
+            <TicketButton variant="secondary" onClick={() => void eventsQ.refetch()}>
+              Reintentar
+            </TicketButton>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  if (eventsQ.isPending) {
+    return (
+      <section>
+        {head}
+        <p className={styles.quiet}>Cargando eventos.</p>
+      </section>
+    );
+  }
+  if (!eventsQ.data?.length) {
+    return (
+      <section>
+        {head}
+        <div className={styles.stack}>
+          <p className={styles.quiet}>Sin eventos. Crea o publica uno para evaluar precios.</p>
+          <Link href="/events/new" className={local.link}>
+            Crear evento
+          </Link>
+        </div>
+      </section>
+    );
   }
 
+  const busy = previewMutation.isPending || updateMutation.isPending;
+  const refreshing = bundleQ.isFetching || pendingQ.isFetching || revenueQ.isFetching;
+
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Revenue suite · Pricing dinámico"
-        title="Consola de pricing"
-        description="Recomendaciones explicables por oferta, cola de aprobación humana y señales reales del motor. Solo se muestra lo que publica la API del evento seleccionado."
-        breadcrumbs={[
-          { label: 'TicketOS', href: '/dashboard' },
-          { label: 'Pricing' },
-        ]}
-        actions={
-          <div className={styles.headerActions}>
-            {bundleQ.data ? (
-              <StatusDot
-                tone={bundleQ.data.enableDynamic ? 'success' : 'warning'}
-                label={
-                  bundleQ.data.enableDynamic
-                    ? 'Pricing dinámico activo'
-                    : 'Pricing dinámico apagado'
-                }
-              />
-            ) : null}
-            {activeEventId ? (
-              <Link href={`/events/${activeEventId}`} className={styles.hubLink}>
-                Hub del evento
-              </Link>
-            ) : null}
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={previewMutation.isPending}
-              disabled={!activeEventId || updateMutation.isPending}
-              onClick={() => void onPreview()}
-            >
-              Previsualizar
-            </Button>
-            {canWrite ? (
-              <Button
-                size="sm"
-                loading={updateMutation.isPending}
-                disabled={!activeEventId || previewMutation.isPending}
-                onClick={() => void onGenerate()}
-              >
-                Generar y aplicar seguros
-              </Button>
-            ) : null}
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={
-                bundleQ.isFetching || pendingQ.isFetching || revenueQ.isFetching
-              }
-              disabled={!activeEventId}
-              onClick={() => void refreshAll()}
-            >
-              Actualizar
-            </Button>
-          </div>
-        }
-      >
-        <div className={styles.eventSelect}>
-          <label htmlFor="pricing-event">Evento</label>
-          <select
-            id="pricing-event"
+    <section>
+      {head}
+
+      <div className={styles.stack}>
+        <div className={local.eventPick}>
+          <SheetSelect
+            label="Evento"
             value={activeEventId}
-            disabled={eventsQ.isPending || !eventsQ.data?.length}
-            onChange={(event) => {
+            placeholder="Elige un evento"
+            options={eventsQ.data.map((event) => ({ value: event.id, label: event.title }))}
+            onChange={(value) => {
               setSelectedKeys([]);
               setPreviewMode(false);
-              url.setEventId(event.target.value);
+              setNotice(null);
+              url.setEventId(value);
             }}
+          />
+        </div>
+        {activeEventId ? (
+          <Link href={`/events/${activeEventId}`} className={local.link}>
+            Abrir la ficha del evento
+          </Link>
+        ) : null}
+        <div className={local.toolbar}>
+          <TicketButton
+            variant="secondary"
+            disabled={!activeEventId || busy}
+            onClick={() => void onPreview()}
           >
-            {!eventsQ.data?.length ? (
-              <option value="">Sin eventos</option>
-            ) : (
-              eventsQ.data.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.title}
-                </option>
-              ))
-            )}
-          </select>
-        </div>
-      </PageHeader>
-
-      {!canWrite ? (
-        <p className={styles.permissionNote} role="note">
-          Tu rol puede consultar recomendaciones, pero no aplicarlas ni revisar la
-          cola. Necesitas el permiso <code>price:write</code>.
-        </p>
-      ) : null}
-
-      {previewMode && bundleQ.data ? (
-        <div className={styles.previewBanner} role="status">
-          <Badge tone="info">Preview</Badge>
-          <span>
-            Bundle calculado sin persistir DynamicPrice ·{' '}
-            {generatedAgeLabel(bundleQ.data, now)}
-          </span>
+            {previewMutation.isPending ? 'Previsualizando' : 'Previsualizar'}
+          </TicketButton>
           {canWrite ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              loading={updateMutation.isPending}
-              onClick={() => void onGenerate()}
-            >
-              Confirmar generación
-            </Button>
+            <TicketButton disabled={!activeEventId || busy} onClick={() => void onGenerate()}>
+              {updateMutation.isPending ? 'Generando' : 'Generar y aplicar seguros'}
+            </TicketButton>
           ) : null}
+          <TicketButton
+            variant="ghost"
+            disabled={!activeEventId || refreshing}
+            onClick={() => void refreshAll()}
+          >
+            {refreshing ? 'Actualizando' : 'Actualizar'}
+          </TicketButton>
         </div>
-      ) : null}
+        {!canWrite ? (
+          <p className={styles.tertiary}>
+            Tu rol consulta. Aplicar y revisar la cola pide el permiso price:write.
+          </p>
+        ) : null}
+        {previewMode && bundleQ.data ? (
+          <div className={local.toolbar}>
+            <p className={styles.quiet} role="status">
+              Vista previa sin guardar · {generatedAgeLabel(bundleQ.data, now)}
+            </p>
+            {canWrite ? (
+              <TicketButton variant="secondary" disabled={busy} onClick={() => void onGenerate()}>
+                Confirmar generación
+              </TicketButton>
+            ) : null}
+          </div>
+        ) : null}
+        {actionError ? (
+          <p className={styles.danger} role="alert">
+            {actionError}
+          </p>
+        ) : null}
+        {notice ? (
+          <p className={styles.quiet} aria-live="polite">
+            {notice}
+          </p>
+        ) : null}
+      </div>
 
-      {eventsQ.error ? (
-        <EmptyState
-          illustration="error"
-          tone="danger"
-          title="No se pudo cargar el catálogo de eventos"
-          description={
-            eventsQ.error instanceof Error
-              ? eventsQ.error.message
-              : 'Error inesperado al listar eventos.'
-          }
-          action={
-            <Button onClick={() => void eventsQ.refetch()}>Reintentar</Button>
-          }
-        />
-      ) : eventsQ.isPending ? (
-        <PricingSkeleton />
-      ) : !eventsQ.data?.length ? (
-        <EmptyState
-          illustration="inbox"
-          title="Sin eventos en la organización"
-          description="Crea o publica un evento para evaluar recomendaciones de precio. Esta consola opera por evento, no inventa plantillas globales."
-          action={
-            <Link href="/events/new" className={styles.hubLink}>
-              Crear evento
-            </Link>
-          }
-        />
-      ) : !activeEventId ? (
-        <EmptyState
-          illustration="search"
-          title="Selecciona un evento"
-          description="Las recomendaciones, la cola de aprobación y las señales se calculan por evento."
-        />
+      {!activeEventId ? (
+        <p className={`${styles.quiet} ${local.block}`}>Elige un evento.</p>
       ) : forbidden ? (
-        <EmptyState
-          illustration="error"
-          tone="danger"
-          title="Sin permiso para ver pricing"
-          description="Tu rol no tiene acceso a las recomendaciones de este evento. Pide a un administrador el permiso de lectura de pricing."
-        />
-      ) : bundleQ.error ? (
-        <EmptyState
-          illustration="error"
-          tone="danger"
-          title="No se pudieron cargar las recomendaciones"
-          description={
-            bundleQ.error instanceof Error
-              ? bundleQ.error.message
-              : 'Error inesperado al consultar el motor de pricing.'
-          }
-          action={
-            <Button onClick={() => void bundleQ.refetch()}>Reintentar</Button>
-          }
-        />
+        <p className={`${styles.danger} ${local.block}`} role="alert">
+          Tu rol no tiene acceso a los precios de este evento. Pide a un administrador el permiso de
+          lectura de precios.
+        </p>
       ) : (
         <>
-          <Section columns={4} gap="md" aria-label="Resumen de pricing">
-            <KpiCard
-              label="Ofertas evaluadas"
-              value={formatNumber(summary.total)}
-              hint={
-                selectedEvent
-                  ? selectedEvent.title
-                  : bundleQ.data?.title ?? 'Evento seleccionado'
-              }
-              tone="accent"
-              loading={bundleQ.isPending}
-            />
-            <KpiCard
-              label="Pendientes de aprobación"
-              value={formatNumber(pendingRows.length)}
-              hint={
-                pendingRows.some((row) => row.expired)
-                  ? 'Hay recomendaciones expiradas (> 24 h)'
-                  : 'Cola humana del evento'
-              }
-              tone={pendingRows.length > 0 ? 'warning' : 'neutral'}
-              loading={pendingQ.isPending}
-            />
-            <KpiCard
-              label="Auto-aplicables"
-              value={formatNumber(summary.autoApplicable)}
-              hint={`${formatNumber(summary.requiresApproval)} exigen firma`}
-              tone={summary.autoApplicable > 0 ? 'success' : 'neutral'}
-              loading={bundleQ.isPending}
-            />
-            <KpiCard
-              label="Ocupación"
-              value={
-                bundleQ.data
-                  ? formatPercent(bundleQ.data.signals.occupancyPercent / 100)
-                  : '—'
-              }
-              hint={
-                bundleQ.data
-                  ? `${formatNumber(bundleQ.data.signals.soldTickets)} / ${formatNumber(bundleQ.data.signals.totalCapacity)} boletos`
-                  : 'Señales del motor'
-              }
-              tone="info"
-              loading={bundleQ.isPending}
-            />
-          </Section>
-
+          <ul className={`${styles.rows} ${local.block}`} aria-label="Resumen de precios">
+            <li className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Ofertas evaluadas</p>
+                <p className={styles.rowMeta}>
+                  {selectedEvent?.title ?? bundleQ.data?.title ?? 'Evento elegido'}
+                </p>
+              </div>
+              <span />
+              <p className={styles.figure}>{bundleQ.data ? formatNumber(summary.total) : '—'}</p>
+            </li>
+            <li className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Pendientes de aprobación</p>
+                <p className={styles.rowMeta}>
+                  {pendingRows.some((row) => row.expired)
+                    ? 'Hay recomendaciones vencidas (más de 24 h)'
+                    : 'Cola humana'}
+                </p>
+              </div>
+              <span />
+              <p className={styles.figure}>
+                {pendingQ.data ? formatNumber(pendingRows.length) : '—'}
+              </p>
+            </li>
+            <li className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Aplicables sin firma</p>
+                <p className={styles.rowMeta}>
+                  {formatNumber(summary.requiresApproval)} piden firma
+                </p>
+              </div>
+              <span />
+              <p className={styles.figure}>
+                {bundleQ.data ? formatNumber(summary.autoApplicable) : '—'}
+              </p>
+            </li>
+            <li className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>Ocupación</p>
+                <p className={styles.rowMeta}>
+                  {bundleQ.data
+                    ? `${formatNumber(bundleQ.data.signals.soldTickets)} / ${formatNumber(bundleQ.data.signals.totalCapacity)} boletos`
+                    : 'Señales del motor'}
+                </p>
+              </div>
+              <span />
+              <p className={styles.figure}>
+                {bundleQ.data ? formatPercent(bundleQ.data.signals.occupancyPercent / 100) : '—'}
+              </p>
+            </li>
+          </ul>
           {bundleQ.data ? (
-            <p className={styles.summaryLine}>
-              {bundleQ.data.summary} · {generatedAgeLabel(bundleQ.data, now)}
+            <p className={styles.tertiary}>
+              {bundleQ.data.summary} · {generatedAgeLabel(bundleQ.data, now)} · dinámico{' '}
+              {bundleQ.data.enableDynamic ? 'encendido' : 'apagado'}
             </p>
           ) : null}
 
-          <div className={styles.layout}>
-            <div className={styles.stack}>
-              <Section
-                title="Comparativa de precios"
-                description="Precio vigente vs. recomendado · hasta 12 ofertas accionables del filtro actual"
-                className={styles.card}
-              >
-                {bundleQ.isPending ? (
-                  <Skeleton height={240} />
-                ) : chartSeries.current.length === 0 ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="chart"
-                    title="Sin ofertas accionables"
-                    description="No hay alzas ni bajas en el filtro actual para graficar. Los holds no mueven precio."
-                  />
-                ) : (
-                  <BarChart
-                    label="Precio vigente frente a recomendado por oferta"
-                    height={240}
-                    formatValue={(value) => formatCurrency(value, 0)}
-                    series={[
-                      {
-                        id: 'current',
-                        name: 'Vigente',
-                        data: chartSeries.current,
-                      },
-                      {
-                        id: 'recommended',
-                        name: 'Recomendado',
-                        data: chartSeries.recommended,
-                      },
-                    ]}
-                  />
-                )}
-              </Section>
-
-              <Section className={styles.card}>
-                <div className={styles.toolbar}>
-                  <SegmentedControl
-                    size="sm"
-                    label="Vista de pricing"
-                    options={VIEW_OPTIONS}
-                    value={url.view}
-                    onValueChange={url.setView}
-                  />
-                  <Badge tone="neutral" variant="outline">
-                    {VIEW_LABELS[url.view]}
-                  </Badge>
-                </div>
-
-                {url.view !== 'senales' ? (
-                  <FilterBar
-                    filters={url.view === 'recomendaciones' ? filterDefs : []}
-                    value={url.filterSelection}
-                    onChange={url.setFilterSelection}
-                    search={{
-                      value: url.query,
-                      onChange: url.setQuery,
-                      placeholder:
-                        url.view === 'aprobaciones'
-                          ? 'Buscar oferta o id de recomendación…'
-                          : 'Buscar oferta, zona o id…',
-                    }}
-                  />
-                ) : null}
-
-                {url.view === 'recomendaciones' ? (
-                  <RecommendationsTable
-                    page={page}
-                    pageSize={url.pageSize}
-                    loading={bundleQ.isPending}
-                    canWrite={canWrite}
-                    selectedKeys={selectedKeys}
-                    applying={applyMutation.isPending}
-                    emptyBecauseFilters={
-                      url.hasFilters && (bundleQ.data?.recommendations.length ?? 0) > 0
-                    }
-                    onSelectionChange={setSelectedKeys}
-                    onRowOpen={url.setOfferId}
-                    onPageChange={url.setPage}
-                    onPageSizeChange={url.setPageSize}
-                    onClearFilters={url.clearFilters}
-                    onApplySelection={(confirmApproval) => {
-                      void applyOffers(selectedKeys, confirmApproval);
-                    }}
-                  />
-                ) : null}
-
-                {url.view === 'aprobaciones' ? (
-                  pendingQ.error && !(pendingQ.error instanceof PermissionError) ? (
-                    <EmptyState
-                      size="sm"
-                      tone="danger"
-                      illustration="error"
-                      title="No se pudo cargar la cola"
-                      description={
-                        pendingQ.error instanceof Error
-                          ? pendingQ.error.message
-                          : 'Error inesperado.'
-                      }
-                      action={
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void pendingQ.refetch()}
-                        >
-                          Reintentar
-                        </Button>
-                      }
-                    />
-                  ) : (
-                    <PendingApprovalsPanel
-                      rows={filteredPending}
-                      loading={pendingQ.isPending}
-                      canWrite={canWrite}
-                      reviewingId={
-                        reviewMutation.isPending
-                          ? (reviewMutation.variables?.recommendationId ?? null)
-                          : null
-                      }
-                      emptyBecauseFilters={
-                        url.query.trim().length > 0 && pendingRows.length > 0
-                      }
-                      onClearFilters={url.clearFilters}
-                      onApprove={(id, note) => void review(id, 'approve', note)}
-                      onReject={(id, note) => void review(id, 'reject', note)}
-                    />
-                  )
-                ) : null}
-
-                {url.view === 'senales' ? (
-                  <SignalsPanel
-                    bundle={bundleQ.data}
-                    revenue={revenueQ.data}
-                    revenueLoading={revenueQ.isPending}
-                    revenueError={
-                      revenueQ.error instanceof Error ? revenueQ.error : null
-                    }
-                  />
-                ) : null}
-              </Section>
-            </div>
-
-            <aside className={styles.stack} aria-label="Resumen lateral">
-              <Section title="Desglose del paquete" className={styles.card}>
-                {bundleQ.isPending ? (
-                  <Skeleton height={160} />
-                ) : summary.total === 0 ? (
-                  <EmptyState
-                    size="sm"
-                    illustration="inbox"
-                    title="Paquete vacío"
-                    description="El motor no evaluó ofertas para este evento."
-                  />
-                ) : (
-                  <ul className={styles.recs}>
-                    <li className={styles.rec}>
-                      <p className={styles.recTitle}>
-                        {formatNumber(summary.increases)} alzas ·{' '}
-                        {formatNumber(summary.decreases)} bajas ·{' '}
-                        {formatNumber(summary.holds)} holds
-                      </p>
-                      <p className={styles.recBody}>
-                        {formatNumber(summary.autoApplicable)} seguras para aplicar ·{' '}
-                        {formatNumber(summary.requiresApproval)} con firma ·{' '}
-                        {formatNumber(summary.clamped)} acotadas por banda
-                      </p>
-                    </li>
-                    {bundleQ.data?.enableDynamic === false ? (
-                      <li className={styles.rec}>
-                        <Badge tone="warning">Dinámico apagado</Badge>
-                        <p className={styles.recBody}>
-                          El evento tiene el pricing dinámico desactivado. Las
-                          recomendaciones siguen siendo consultables, pero la ocupación
-                          no aplica surge.
-                        </p>
-                        <p className={styles.recAction}>
-                          Actívalo desde el hub del evento → pestaña Pricing.
-                        </p>
-                      </li>
-                    ) : null}
-                  </ul>
-                )}
-              </Section>
-
-              <Section title="Contratos de datos" className={styles.card}>
-                <ul className={styles.recs}>
-                  <li className={styles.rec}>
-                    <p className={styles.recTitle}>Disponibles</p>
-                    <p className={styles.recBody}>
-                      <code className={styles.mono}>
-                        GET /pricing/events/:id/recommendations
-                      </code>
-                      <br />
-                      <code className={styles.mono}>
-                        GET /pricing/events/:id/recommendations/pending
-                      </code>
-                      <br />
-                      <code className={styles.mono}>
-                        GET /pricing/events/:id/revenue-estimate
-                      </code>
-                      <br />
-                      <code className={styles.mono}>
-                        GET /pricing/offers/:id/history
-                      </code>
-                    </p>
-                  </li>
-                  <li className={styles.rec}>
-                    <p className={styles.recTitle}>Acciones</p>
-                    <p className={styles.recBody}>
-                      <code className={styles.mono}>
-                        POST …/recommendations/apply
-                      </code>
-                      <br />
-                      <code className={styles.mono}>
-                        POST /pricing/recommendations/:id/approve|reject
-                      </code>
-                    </p>
-                  </li>
-                </ul>
-              </Section>
-            </aside>
+          <div className={`${styles.stack} ${local.block}`}>
+            <Segment
+              label="Vista de precios"
+              value={url.view}
+              options={VIEW_OPTIONS}
+              onChange={url.setView}
+            />
+            {url.view !== 'senales' ? (
+              <Field
+                label="Buscar"
+                kind="search"
+                value={url.query}
+                placeholder={
+                  url.view === 'aprobaciones' ? 'Oferta o id de recomendación' : 'Oferta, zona o id'
+                }
+                onChange={(event) => url.setQuery(event.target.value)}
+              />
+            ) : null}
           </div>
+
+          {url.view === 'recomendaciones' ? (
+            <div className={local.block}>
+              {bundleQ.error ? (
+                <BundleUnavailable error={bundleQ.error} onRetry={() => void bundleQ.refetch()} />
+              ) : bundleQ.isPending ? (
+                <p className={styles.quiet}>Cargando recomendaciones.</p>
+              ) : (
+                <div className={styles.stack}>
+                  <Segment
+                    label="Dirección"
+                    value={url.directions.length === 1 ? url.directions[0] : 'todas'}
+                    options={DIRECTION_OPTIONS}
+                    onChange={setDirection}
+                  />
+                  <div className={local.toolbar}>
+                    <Switch
+                      label="Solo las que piden aprobación"
+                      on={url.approvalOnly}
+                      onChange={(on) => setMarks({ approval: on })}
+                    />
+                    <p className={styles.quiet}>
+                      Solo con aprobación · {formatNumber(summary.requiresApproval)}
+                    </p>
+                    <Switch
+                      label="Solo acotadas por banda"
+                      on={url.clampedOnly}
+                      onChange={(on) => setMarks({ clamped: on })}
+                    />
+                    <p className={styles.quiet}>
+                      Solo acotadas por banda · {formatNumber(summary.clamped)}
+                    </p>
+                  </div>
+                  <p className={styles.tertiary}>
+                    {formatNumber(summary.increases)} alzas · {formatNumber(summary.decreases)}{' '}
+                    bajas · {formatNumber(summary.holds)} sin cambio
+                  </p>
+                  {bundleQ.data?.enableDynamic === false ? (
+                    <p className={styles.quiet}>
+                      El evento tiene el precio dinámico apagado. Las recomendaciones se consultan,
+                      pero la ocupación no sube precio. Se enciende en la ficha del evento.
+                    </p>
+                  ) : null}
+
+                  {selectedKeys.length > 0 ? (
+                    <div className={local.toolbar} role="status">
+                      <p className={styles.quiet}>
+                        {formatNumber(selectedKeys.length)} seleccionada
+                        {selectedKeys.length === 1 ? '' : 's'}
+                      </p>
+                      <TicketButton
+                        variant="secondary"
+                        disabled={!canWrite || applyMutation.isPending}
+                        onClick={() => void applyOffers(selectedKeys, false)}
+                      >
+                        Aplicar seguras
+                      </TicketButton>
+                      <TicketButton
+                        variant="secondary"
+                        disabled={!canWrite || applyMutation.isPending}
+                        onClick={() => void applyOffers(selectedKeys, true)}
+                      >
+                        Aplicar con aprobación
+                      </TicketButton>
+                      <TicketButton
+                        variant="ghost"
+                        disabled={applyMutation.isPending}
+                        onClick={() => setSelectedKeys([])}
+                      >
+                        Limpiar
+                      </TicketButton>
+                    </div>
+                  ) : null}
+
+                  {recommendations.length === 0 ? (
+                    <p className={styles.quiet}>El motor no evaluó ofertas para este evento.</p>
+                  ) : filtered.length === 0 ? (
+                    <div className={styles.stack}>
+                      <p className={styles.quiet}>Ninguna oferta con ese criterio.</p>
+                      <div>
+                        <TicketButton variant="ghost" onClick={url.clearFilters}>
+                          Limpiar filtros
+                        </TicketButton>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {page.rows.map((item) => (
+                        <RecommendationItem
+                          key={item.offerId}
+                          item={item}
+                          open={url.offerId === item.offerId}
+                          canWrite={canWrite}
+                          applying={applyMutation.isPending}
+                          selected={selectedKeys.includes(item.offerId)}
+                          history={historyQ.data ?? []}
+                          historyPending={historyQ.isPending}
+                          historyError={historyQ.error}
+                          onToggle={() =>
+                            url.setOfferId(url.offerId === item.offerId ? null : item.offerId)
+                          }
+                          onSelect={(on) =>
+                            setSelectedKeys((current) =>
+                              on
+                                ? [...current, item.offerId]
+                                : current.filter((key) => key !== item.offerId)
+                            )
+                          }
+                          onApply={() => void applyOffers([item.offerId], false)}
+                          onRetryHistory={() => void historyQ.refetch()}
+                        />
+                      ))}
+                      <div className={local.toolbar}>
+                        <p className={styles.tertiary}>
+                          {formatNumber(page.from)}–{formatNumber(page.to)} de{' '}
+                          {formatNumber(page.total)}
+                        </p>
+                        <TicketButton
+                          variant="ghost"
+                          disabled={page.page <= 1}
+                          onClick={() => url.setPage(page.page - 1)}
+                        >
+                          Anterior
+                        </TicketButton>
+                        <TicketButton
+                          variant="ghost"
+                          disabled={page.page >= page.pageCount}
+                          onClick={() => url.setPage(page.page + 1)}
+                        >
+                          Siguiente
+                        </TicketButton>
+                        <Segment
+                          label="Por página"
+                          value={String(url.pageSize)}
+                          options={PAGE_SIZES.map((size) => ({
+                            value: String(size),
+                            label: String(size),
+                          }))}
+                          onChange={(value) => url.setPageSize(Number(value) as PageSize)}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {url.view === 'aprobaciones' ? (
+            <div className={local.block}>
+              {pendingQ.error ? (
+                <div className={styles.stack}>
+                  <Param name="Cola de aprobación">
+                    <ParameterCard
+                      name="Cola de aprobación"
+                      value="No disponible"
+                      effect="La cola se lee de /pricing/events/:id/recommendations/pending."
+                    />
+                  </Param>
+                  <p className={styles.danger} role="alert">
+                    {errorText(pendingQ.error)}
+                  </p>
+                  <div>
+                    <TicketButton variant="secondary" onClick={() => void pendingQ.refetch()}>
+                      Reintentar
+                    </TicketButton>
+                  </div>
+                </div>
+              ) : pendingQ.isPending ? (
+                <p className={styles.quiet}>Cargando la cola.</p>
+              ) : filteredPending.length === 0 ? (
+                <div className={styles.stack}>
+                  <p className={styles.quiet}>
+                    {url.query.trim() && pendingRows.length > 0
+                      ? 'Ninguna recomendación pendiente coincide con la búsqueda.'
+                      : 'Cola vacía. Las que pasan del tope automático aparecen aquí al aplicarlas.'}
+                  </p>
+                  {url.query.trim() && pendingRows.length > 0 ? (
+                    <div>
+                      <TicketButton variant="ghost" onClick={url.clearFilters}>
+                        Limpiar búsqueda
+                      </TicketButton>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className={styles.stack}>
+                  {[...filteredPending]
+                    .sort(
+                      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    )
+                    .map((row) => (
+                      <PendingItem
+                        key={row.id}
+                        row={row}
+                        canWrite={canWrite}
+                        reviewing={
+                          reviewMutation.isPending &&
+                          reviewMutation.variables?.recommendationId === row.id
+                        }
+                        onReview={(decision, note) => void review(row.id, decision, note)}
+                      />
+                    ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {url.view === 'senales' ? (
+            <SignalsBlock
+              bundle={bundleQ.data}
+              bundleError={bundleQ.error}
+              revenue={revenueQ.data}
+              revenuePending={revenueQ.isPending}
+              revenueError={revenueQ.error}
+              onRetryRevenue={() => void revenueQ.refetch()}
+            />
+          ) : null}
         </>
       )}
+    </section>
+  );
+}
 
-      <RecommendationDetailDrawer
-        recommendation={selectedRecommendation}
-        canWrite={canWrite}
-        applying={applyMutation.isPending}
-        history={historyQ.data ?? []}
-        historyLoading={historyQ.isPending}
-        historyError={historyQ.error instanceof Error ? historyQ.error : null}
-        onClose={() => url.setOfferId(null)}
-        onApplySafe={(offerId) => void applyOffers([offerId], false)}
-        onQueueApproval={(offerId) => void applyOffers([offerId], false)}
-        onRetryHistory={() => void historyQ.refetch()}
-      />
+function BundleUnavailable({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  return (
+    <div className={styles.stack}>
+      <Param name="Recomendaciones">
+        <ParameterCard
+          name="Recomendaciones"
+          value="No disponible"
+          effect="El paquete se lee de /pricing/events/:id/recommendations. Sin respuesta no se muestran precios sugeridos."
+        />
+      </Param>
+      <p className={styles.danger} role="alert">
+        {errorText(error)}
+      </p>
+      <div>
+        <TicketButton variant="secondary" onClick={onRetry}>
+          Reintentar
+        </TicketButton>
+      </div>
     </div>
   );
 }
 
-export default function PricingPage() {
+function RecommendationItem({
+  item,
+  open,
+  canWrite,
+  applying,
+  selected,
+  history,
+  historyPending,
+  historyError,
+  onToggle,
+  onSelect,
+  onApply,
+  onRetryHistory,
+}: {
+  item: OfferRecommendation;
+  open: boolean;
+  canWrite: boolean;
+  applying: boolean;
+  selected: boolean;
+  history: readonly PriceHistoryEntry[];
+  historyPending: boolean;
+  historyError: unknown;
+  onToggle: () => void;
+  onSelect: (on: boolean) => void;
+  onApply: () => void;
+  onRetryHistory: () => void;
+}) {
+  const actionable = isActionable(item);
+  const label = item.zone === item.name ? item.name : `${item.zone} · ${item.name}`;
+  const marks = [
+    directionLabel(item.direction),
+    formatDelta(item.deltaPercent),
+    item.requiresApproval ? 'pide aprobación' : null,
+    item.guardrail.clamped ? 'acotada' : null,
+  ].filter(Boolean);
   return (
-    <Suspense fallback={<PricingSkeleton />}>
-      <PricingConsole />
-    </Suspense>
+    <div className={styles.stack}>
+      <button
+        type="button"
+        className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        <span>
+          {label}
+          <span className={styles.rowMeta}> · {marks.join(' · ')}</span>
+        </span>
+        <span className={styles.figure}>
+          {formatCurrency(item.currentPrice)} → {formatCurrency(item.recommendedPrice)}
+        </span>
+      </button>
+      {open ? (
+        <div className={local.detail}>
+          <p className={styles.mono}>{item.offerId}</p>
+          <ul className={styles.rows}>
+            <DetailRow name="Precio vigente" value={formatCurrency(item.currentPrice)} />
+            <DetailRow name="Recomendado" value={formatCurrency(item.recommendedPrice)} />
+            <DetailRow name="Precio base" value={formatCurrency(item.basePrice)} />
+            <DetailRow name="Variación" value={formatDelta(item.deltaPercent)} />
+            <DetailRow
+              name="Multiplicador"
+              value={`×${formatNumber(item.recommendedMultiplier, 3)}`}
+            />
+            <DetailRow name="Confianza" value={confidenceLabel(item.confidence)} />
+            <DetailRow
+              name="Banda"
+              value={`${item.guardrail.bandLabel}${item.guardrail.clamped ? ' · acotado' : ''}`}
+            />
+          </ul>
+          <p className={styles.quiet}>{item.explanation}</p>
+          <p className={styles.tertiary}>
+            {item.guardrail.clamped
+              ? `El candidato era ${formatCurrency(item.guardrail.preClampPrice)}; el motor lo recortó a ${formatCurrency(item.guardrail.floor)} – ${formatCurrency(item.guardrail.ceiling)}.`
+              : `Dentro de ${formatCurrency(item.guardrail.floor)} – ${formatCurrency(item.guardrail.ceiling)}.`}
+          </p>
+
+          <p className={local.subTitle}>Factores</p>
+          {item.factors.length === 0 ? (
+            <p className={styles.quiet}>El motor no adjuntó factores para esta oferta.</p>
+          ) : (
+            <ul className={styles.rows}>
+              {item.factors.map((factor) => (
+                <li key={`${factor.code}-${factor.detail}`} className={styles.row}>
+                  <div className={styles.rowMain}>
+                    <p className={styles.rowTitle}>{factorLabel(factor.code)}</p>
+                    <p className={styles.rowMeta}>{factor.detail}</p>
+                  </div>
+                  <p className={styles.tertiary}>
+                    {factor.threshold !== undefined
+                      ? `umbral ${formatNumber(factor.threshold, 2)}`
+                      : ''}
+                  </p>
+                  <p className={styles.figure}>×{formatNumber(factor.contribution, 3)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <p className={local.subTitle}>Historial de precios</p>
+          {historyError ? (
+            <div className={styles.stack}>
+              <p className={styles.danger} role="alert">
+                {errorText(historyError)}
+              </p>
+              <div>
+                <TicketButton variant="ghost" onClick={onRetryHistory}>
+                  Reintentar
+                </TicketButton>
+              </div>
+            </div>
+          ) : historyPending ? (
+            <p className={styles.quiet}>Cargando historial.</p>
+          ) : history.length === 0 ? (
+            <p className={styles.quiet}>Sin cambios de precio registrados.</p>
+          ) : (
+            <ul className={styles.rows}>
+              {history.map((entry) => {
+                const reason = describeHistoryReason(entry.reason);
+                return (
+                  <li key={entry.id} className={styles.row}>
+                    <div className={styles.rowMain}>
+                      <p className={styles.rowTitle}>{reason.label}</p>
+                      <p className={styles.rowMeta}>
+                        {[formatDateTime(entry.createdAt), reason.detail || null]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </p>
+                    </div>
+                    <p className={styles.tertiary}>×{formatNumber(entry.priceMultiplier, 3)}</p>
+                    <p className={styles.figure}>{formatCurrency(toAmount(entry.adjustedPrice))}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {actionable && canWrite ? (
+            <div className={local.toolbar}>
+              <Switch label={`Seleccionar ${label}`} on={selected} onChange={onSelect} />
+              <p className={styles.quiet}>Incluir en la selección</p>
+              <TicketButton variant="secondary" disabled={applying} onClick={onApply}>
+                {item.requiresApproval ? 'Encolar aprobación' : 'Aplicar cambio seguro'}
+              </TicketButton>
+            </div>
+          ) : null}
+          {!actionable ? (
+            <p className={styles.tertiary}>Sin cambio: no hay nada que aplicar.</p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function DetailRow({ name, value }: { name: string; value: string }) {
+  return (
+    <li className={styles.row}>
+      <p className={styles.rowTitle}>{name}</p>
+      <span />
+      <p className={styles.figure}>{value}</p>
+    </li>
+  );
+}
+
+function PendingItem({
+  row,
+  canWrite,
+  reviewing,
+  onReview,
+}: {
+  row: PendingRow;
+  canWrite: boolean;
+  reviewing: boolean;
+  onReview: (decision: 'approve' | 'reject', note: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState('');
+  return (
+    <div className={styles.stack}>
+      <button
+        type="button"
+        className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>
+          {row.offerName}
+          <span className={styles.rowMeta}>
+            {' '}
+            · {row.zone} · {directionLabel(row.direction)} {formatDelta(row.deltaPercent)}
+            {row.expired ? ' · vencida' : ''}
+          </span>
+        </span>
+        <span className={styles.figure}>
+          {formatCurrency(row.currentPrice)} → {formatCurrency(row.adjustedPrice)}
+        </span>
+      </button>
+      {open ? (
+        <div className={local.detail}>
+          <p className={styles.mono}>{shortId(row.id)}</p>
+          <p className={styles.quiet}>
+            {row.payload?.explanation ?? 'Sin explicación adjunta; revisa el paquete vigente.'}
+          </p>
+          <p className={styles.tertiary}>
+            Creada {formatDateTime(row.createdAt)} ·{' '}
+            {row.expired
+              ? 'vencida: genera un paquete nuevo'
+              : `vence ${formatDateTime(row.expiresAt)}`}
+          </p>
+          {canWrite ? (
+            <>
+              <Field
+                label="Nota"
+                hint="Queda en la bitácora. En un rechazo, es el motivo."
+                value={note}
+                maxLength={500}
+                onChange={(event) => setNote(event.target.value)}
+              />
+              <div className={local.toolbar}>
+                <TicketButton
+                  variant="secondary"
+                  disabled={row.expired || reviewing}
+                  onClick={() => onReview('approve', note)}
+                >
+                  Aprobar
+                </TicketButton>
+                <TicketButton
+                  variant="danger"
+                  disabled={reviewing}
+                  onClick={() => onReview('reject', note)}
+                >
+                  Rechazar
+                </TicketButton>
+              </div>
+            </>
+          ) : (
+            <p className={styles.tertiary}>Revisar la cola pide el permiso price:write.</p>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function SignalsBlock({
+  bundle,
+  bundleError,
+  revenue,
+  revenuePending,
+  revenueError,
+  onRetryRevenue,
+}: {
+  bundle: RecommendationBundle | undefined;
+  bundleError: unknown;
+  revenue: RevenueEstimate | undefined;
+  revenuePending: boolean;
+  revenueError: unknown;
+  onRetryRevenue: () => void;
+}) {
+  return (
+    <>
+      <div className={local.block}>
+        <p className={local.subTitle}>Señales del evento</p>
+        {bundle ? (
+          <ul className={styles.rows}>
+            <DetailRow
+              name="Días al evento"
+              value={formatNumber(bundle.signals.daysUntilEvent, 1)}
+            />
+            <DetailRow
+              name="Ocupación"
+              value={formatPercent(bundle.signals.occupancyPercent / 100)}
+            />
+            <DetailRow name="Ritmo esperado" value={formatPercent(bundle.signals.expectedPace)} />
+            <DetailRow name="Ritmo real" value={formatPercent(bundle.signals.actualPace)} />
+            <DetailRow
+              name="Diferencia de ritmo"
+              value={`${formatNumber(bundle.signals.paceDelta * 100, 1)} pp`}
+            />
+            <DetailRow
+              name="Vendidos / aforo"
+              value={`${formatNumber(bundle.signals.soldTickets)} / ${formatNumber(bundle.signals.totalCapacity)}`}
+            />
+          </ul>
+        ) : (
+          <p
+            className={bundleError ? styles.danger : styles.quiet}
+            role={bundleError ? 'alert' : undefined}
+          >
+            {bundleError
+              ? `Las señales vienen con las recomendaciones. ${errorText(bundleError)}`
+              : 'Sin señales todavía.'}
+          </p>
+        )}
+      </div>
+      <div className={local.block}>
+        <p className={local.subTitle}>Estimación de ingreso</p>
+        <p className={styles.tertiary}>Ingreso bruto a precio base, según el API.</p>
+        {revenueError ? (
+          <div className={styles.stack}>
+            <p className={styles.danger} role="alert">
+              {errorText(revenueError)}
+            </p>
+            <div>
+              <TicketButton variant="ghost" onClick={onRetryRevenue}>
+                Reintentar
+              </TicketButton>
+            </div>
+          </div>
+        ) : revenuePending ? (
+          <p className={styles.quiet}>Cargando estimación.</p>
+        ) : !revenue ? (
+          <p className={styles.quiet}>El API no devolvió estimación para este evento.</p>
+        ) : (
+          <ul className={styles.rows}>
+            <DetailRow name="Ingreso bruto" value={formatCurrency(revenue.grossRevenue, 0)} />
+            <DetailRow name="Comisión" value={formatCurrency(revenue.commission, 0)} />
+            <DetailRow name="Ingreso neto" value={formatCurrency(revenue.netRevenue, 0)} />
+            <DetailRow name="Ocupación reportada" value={`${revenue.occupancyPercent}%`} />
+          </ul>
+        )}
+      </div>
+    </>
   );
 }

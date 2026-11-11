@@ -22,7 +22,12 @@ const RANGE_META: Record<
 > = {
   '7d': { label: '7 días', days: 7, granularity: 'day', comparisonLabel: 'vs. 7 días previos' },
   '30d': { label: '30 días', days: 30, granularity: 'day', comparisonLabel: 'vs. 30 días previos' },
-  '90d': { label: '90 días', days: 90, granularity: 'week', comparisonLabel: 'vs. 90 días previos' },
+  '90d': {
+    label: '90 días',
+    days: 90,
+    granularity: 'week',
+    comparisonLabel: 'vs. 90 días previos',
+  },
 };
 
 export const RANGE_KEYS: readonly RangeKey[] = ['7d', '30d', '90d'];
@@ -325,13 +330,15 @@ export const DEFAULT_ALLOCATION: AllocationForm = CHANNEL_ORDER.reduce((acc, key
 }, {} as AllocationForm);
 
 DEFAULT_ALLOCATION.web = { allocation: 50, enabled: true, responsibleParty: '', locations: [] };
-DEFAULT_ALLOCATION.taquilla = { allocation: 35, enabled: true, responsibleParty: '', locations: [] };
+DEFAULT_ALLOCATION.taquilla = {
+  allocation: 35,
+  enabled: true,
+  responsibleParty: '',
+  locations: [],
+};
 DEFAULT_ALLOCATION.api = { allocation: 15, enabled: true, responsibleParty: '', locations: [] };
 
-function parseChannelEntry(
-  raw: unknown,
-  fallback: ChannelFormEntry,
-): ChannelFormEntry {
+function parseChannelEntry(raw: unknown, fallback: ChannelFormEntry): ChannelFormEntry {
   const record = asRecord(raw);
   return {
     allocation: readNumber(record, 'allocation') ?? fallback.allocation,
@@ -344,7 +351,7 @@ function parseChannelEntry(
 }
 
 export function parseAllocationFromMetadata(
-  metadata: Record<string, unknown> | undefined,
+  metadata: Record<string, unknown> | undefined
 ): AllocationForm {
   const channels = asRecord(metadata?.channels);
   const form = {} as AllocationForm;
@@ -371,9 +378,7 @@ export function toChannelConfiguration(form: AllocationForm): ChannelConfigurati
     config[key] = {
       enabled: entry.enabled,
       allocation: entry.enabled ? entry.allocation : 0,
-      ...(entry.responsibleParty.trim()
-        ? { responsibleParty: entry.responsibleParty.trim() }
-        : {}),
+      ...(entry.responsibleParty.trim() ? { responsibleParty: entry.responsibleParty.trim() } : {}),
       ...(key === 'taquilla' && entry.locations.length ? { locations: entry.locations } : {}),
     };
   }
@@ -446,7 +451,7 @@ export function buildRevenueMix(
     secondaryValue?: number;
     percentOfTotal?: number;
   }>,
-  total: number,
+  total: number
 ): RevenueSlice[] {
   return rows
     .map((row) => ({
@@ -454,9 +459,7 @@ export function buildRevenueMix(
       label: row.label || channelLabel(row.key),
       value: row.value,
       orders: typeof row.secondaryValue === 'number' ? row.secondaryValue : 0,
-      percent:
-        row.percentOfTotal ??
-        (total > 0 ? Math.round((row.value / total) * 1000) / 10 : 0),
+      percent: row.percentOfTotal ?? (total > 0 ? Math.round((row.value / total) * 1000) / 10 : 0),
     }))
     .sort((a, b) => b.value - a.value);
 }
@@ -497,7 +500,7 @@ export function buildChannelAlerts(
   cards: readonly ChannelHealthCard[],
   mix: readonly RevenueSlice[],
   allocation: AllocationForm,
-  allocationIssue: AllocationIssue,
+  allocationIssue: AllocationIssue
 ): ChannelAlert[] {
   const list: ChannelAlert[] = [];
 
@@ -579,7 +582,7 @@ export function buildChannelAlerts(
       severity: 'info',
       title: 'Web tiene mucha asignación y poco ingreso',
       explanation: `Asignaste ${webAllocation} % a web pero solo genera ${formatPercentPoints(
-        webMix.percent,
+        webMix.percent
       )} del ingreso del periodo.`,
       suggestion: 'Considera mover cupo a POS o partners si el ritmo web no recupera.',
     });

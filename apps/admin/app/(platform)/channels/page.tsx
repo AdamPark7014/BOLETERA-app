@@ -1,23 +1,31 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+/**
+ * Canales de venta por evento: reparto de inventario entre los 13 canales,
+ * responsables, salud y mezcla de ingresos de 7 días.
+ *
+ * Guarda lo mismo que guardaba la pantalla anterior (`POST /channels/:id/configure`
+ * con activación, reparto, responsable y ubicaciones de taquilla). La ficha del
+ * evento (`/events/:id?seccion=canales`) edita activación y reparto con sus
+ * propios controles; aquí no se agrega lógica nueva.
+ */
+
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Badge, Button, KpiCard, PageHeader, Section } from '@boletera/ui';
-import {
-  listEvents,
-  getChannelHealth,
-  getChannelAnalytics,
-  configureChannels,
-  type EventRow,
-} from '@/lib/platform-api';
+import { Field, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError } from '@/lib/api';
 import {
-  AnonymousView,
-  ApiErrorView,
-  NoOrgView,
-  useSession,
-} from '../events/_shared/api-state';
-import styles from './channels.module.scss';
+  configureChannels,
+  getChannelAnalytics,
+  getChannelHealth,
+  listEvents,
+  type EventRow,
+} from '@/lib/platform-api';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Param, SheetSelect, Stepper, Switch } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import local from './channels.module.scss';
 import {
   CHANNEL_ORDER,
   RESPONSIBLE_PARTY_CHANNELS,
@@ -26,7 +34,6 @@ import {
   buildRevenueMix,
   channelLabel,
   formatCount,
-  formatMxn,
   formatMs,
   formatPercentPoints,
   formatSeconds,
@@ -39,42 +46,140 @@ import {
   toChannelConfiguration,
   validateAllocation,
   type AllocationForm,
+  type ChannelFormEntry,
   type ChannelKey,
 } from './model';
 
-export default function ChannelsPage() {
-  const [events, setEvents] = useState<EventRow[]>([]);
-  const [selected, setSelected] = useState('');
-  const [healthRaw, setHealthRaw] = useState<unknown>(null);
-  const [analyticsRaw, setAnalyticsRaw] = useState<unknown>(null);
-  const [allocation, setAllocation] = useState<AllocationForm>(() =>
-    parseAllocationFromMetadata(undefined),
+/** Cupo que recupera un canal al encenderse si estaba en 0. Igual que antes. */
+const DEFAULT_FALLBACK: Partial<Record<ChannelKey, number>> = {
+  web: 50,
+  taquilla: 35,
+  api: 15,
+  mobile: 5,
+  admin: 3,
+  promoter: 2,
+  corporate: 2,
+  phone: 2,
+  affiliate: 1,
+};
+
+function failMessage(cause: unknown): string {
+  if (cause instanceof ApiError) return `${cause.userMessage} (${cause.status})`;
+  if (cause instanceof Error) return cause.message;
+  return 'No se guardó. Revisa la conexión.';
+}
+
+function readMessage(cause: unknown): string {
+  if (cause instanceof ApiError) return `${cause.userMessage} (${cause.status})`;
+  if (cause instanceof Error) return cause.message;
+  return 'Sin respuesta.';
+}
+
+function entryValue(entry: ChannelFormEntry): string {
+  return entry.enabled ? `Activo · ${entry.allocation}%` : 'Inactivo';
+}
+
+function sameEntry(a: ChannelFormEntry, b: ChannelFormEntry): boolean {
+  return (
+    a.enabled === b.enabled &&
+    a.allocation === b.allocation &&
+    a.responsibleParty.trim() === b.responsibleParty.trim() &&
+    a.locations.join('|') === b.locations.join('|')
   );
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [error, setError] = useState<unknown>(null);
-  const [nonce, setNonce] = useState(0);
+}
+
+function money(value: number): string {
+  return `${formatTicketAmount(value)} MXN`;
+}
+
+export default function ChannelsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <CanalesBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function CanalesBody() {
   const session = useSession();
   const token = session.token;
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+  const [selected, setSelected] = useState('');
+  const [healthRaw, setHealthRaw] = useState<unknown>(null);
+  const [healthError, setHealthError] = useState<string | null>(null);
+  const [analyticsRaw, setAnalyticsRaw] = useState<unknown>(null);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [allocation, setAllocation] = useState<AllocationForm>(() =>
+    parseAllocationFromMetadata(undefined)
+  );
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [nonce, setNonce] = useState(0);
+  const [readNonce, setReadNonce] = useState(0);
 
   useEffect(() => {
     if (!token) return;
+    let alive = true;
     setError(null);
     listEvents(token)
       .then((list) => {
+        if (!alive) return;
         setEvents(list);
-        if (list[0] && !selected) setSelected(list[0].id);
+        setSelected((current) => current || list[0]?.id || '');
       })
-      .catch(setError);
-  }, [token, nonce, selected]);
+      .catch((cause: unknown) => {
+        if (alive) setError(cause);
+      })
+      .finally(() => {
+        if (alive) setEventsLoaded(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [token, nonce]);
+
+  const selectedEvent = events.find((event) => event.id === selected);
+  const stored = useMemo(
+    () => parseAllocationFromMetadata(selectedEvent?.metadata),
+    [selectedEvent]
+  );
+
+  useEffect(() => {
+    setAllocation(stored);
+  }, [stored]);
 
   useEffect(() => {
     if (!selected || !token) return;
-    getChannelHealth(token, selected).then(setHealthRaw).catch(() => setHealthRaw(null));
-    getChannelAnalytics(token, selected).then(setAnalyticsRaw).catch(() => setAnalyticsRaw(null));
-    const ev = events.find((e) => e.id === selected);
-    if (ev?.metadata) setAllocation(parseAllocationFromMetadata(ev.metadata));
-  }, [selected, events, token]);
+    let alive = true;
+    setHealthError(null);
+    setAnalyticsError(null);
+    getChannelHealth(token, selected)
+      .then((value) => {
+        if (alive) setHealthRaw(value);
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setHealthRaw(null);
+        setHealthError(readMessage(cause));
+      });
+    getChannelAnalytics(token, selected)
+      .then((value) => {
+        if (alive) setAnalyticsRaw(value);
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setAnalyticsRaw(null);
+        setAnalyticsError(readMessage(cause));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [selected, token, readNonce]);
 
   const healthCards = useMemo(() => parseChannelHealth(healthRaw), [healthRaw]);
   const healthSummary = useMemo(() => summarizeHealth(healthCards), [healthCards]);
@@ -83,7 +188,7 @@ export default function ChannelsPage() {
 
   const revenueMix = useMemo(() => {
     const bucket =
-      (analyticsRaw as { last7days?: Record<string, { revenue: number; orders: number }> })
+      (analyticsRaw as { last7days?: Record<string, { revenue: number; orders: number }> } | null)
         ?.last7days ?? {};
     const rows = CHANNEL_ORDER.map((key) => {
       const stats = bucket[key.toUpperCase()] ?? bucket[key];
@@ -100,53 +205,54 @@ export default function ChannelsPage() {
 
   const alerts = useMemo(
     () => buildChannelAlerts(healthCards, revenueMix, allocation, allocationIssue),
-    [healthCards, revenueMix, allocation, allocationIssue],
+    [healthCards, revenueMix, allocation, allocationIssue]
   );
 
-  function patchChannel(key: ChannelKey, patch: Partial<AllocationForm[ChannelKey]>) {
-    setAllocation((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], ...patch },
-    }));
+  const changes = CHANNEL_ORDER.flatMap((key) => {
+    const before = stored[key];
+    const after = allocation[key];
+    if (sameEntry(before, after)) return [];
+    const parts: string[] = [];
+    if (entryValue(before) !== entryValue(after))
+      parts.push(`${entryValue(before)} → ${entryValue(after)}`);
+    if (before.responsibleParty.trim() !== after.responsibleParty.trim()) parts.push('responsable');
+    if (before.locations.join('|') !== after.locations.join('|')) parts.push('ubicaciones');
+    return [`${channelLabel(key)}: ${parts.join(', ')}`];
+  });
+  // Sin reparto guardado, el formulario parte de valores por omisión: se puede guardar tal cual.
+  const neverSaved = selectedEvent != null && !selectedEvent.metadata?.channels;
+  const dirty = changes.length > 0;
+  const canSave = dirty || neverSaved;
+
+  function patchChannel(key: ChannelKey, patch: Partial<ChannelFormEntry>) {
+    setAllocation((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+    setNotice(null);
   }
 
   function toggleChannel(key: ChannelKey, enabled: boolean) {
-    patchChannel(key, {
-      enabled,
-      allocation: enabled ? prevAllocationFor(key) : 0,
-    });
-  }
-
-  function prevAllocationFor(key: ChannelKey): number {
     const entry = allocation[key];
-    if (entry.allocation > 0) return entry.allocation;
-    return DEFAULT_FALLBACK[key] ?? 0;
+    const restored = entry.allocation > 0 ? entry.allocation : (DEFAULT_FALLBACK[key] ?? 0);
+    patchChannel(key, { enabled, allocation: enabled ? restored : 0 });
   }
 
   async function save() {
     const issue = validateAllocation(allocation);
     if (issue) {
-      setMsg(issue.message);
+      setSaveError(issue.message);
       return;
     }
-    if (!token || !selected) return;
+    if (!token || !selected || saving) return;
     setSaving(true);
-    setMsg(null);
+    setSaveError(null);
+    const summary = changes.join(' · ');
     try {
       await configureChannels(token, selected, toChannelConfiguration(allocation));
-      setMsg('Canales guardados');
+      setNotice(summary || 'Canales guardados.');
       const list = await listEvents(token);
       setEvents(list);
-      getChannelHealth(token, selected).then(setHealthRaw).catch(() => setHealthRaw(null));
-      getChannelAnalytics(token, selected).then(setAnalyticsRaw).catch(() => setAnalyticsRaw(null));
-    } catch (e) {
-      setMsg(
-        e instanceof ApiError
-          ? `${e.userMessage} (${e.status})`
-          : e instanceof Error
-            ? e.message
-            : 'Error',
-      );
+      setReadNonce((current) => current + 1);
+    } catch (cause) {
+      setSaveError(failMessage(cause));
     } finally {
       setSaving(false);
     }
@@ -159,322 +265,274 @@ export default function ChannelsPage() {
       <ApiErrorView
         error={error}
         context="cargar los eventos de tu organización"
-        onRetry={() => setNonce((n) => n + 1)}
+        onRetry={() => setNonce((current) => current + 1)}
       />
+    );
+  }
+  if (!token || !eventsLoaded) return <p className={styles.quiet}>Cargando canales.</p>;
+
+  if (events.length === 0) {
+    return (
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Canales</h1>
+          <p className={styles.quiet}>Sin eventos. El reparto de canales se define por evento.</p>
+        </header>
+      </section>
     );
   }
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Distribución · Canales"
-        title="Canales de venta"
-        description="Configura los 13 canales del dominio: activación, asignación de inventario (debe sumar 100 % entre canales habilitados) y responsables."
-        breadcrumbs={[
-          { label: 'TicketOS', href: '/dashboard' },
-          { label: 'Canales' },
-        ]}
-        actions={
-          selected ? (
-            <Link href={`/events/${selected}`} className={styles.hubLink}>
-              Hub del evento
-            </Link>
-          ) : null
-        }
-      >
-        <div className={styles.eventSelect}>
-          <label htmlFor="channel-event-select">Evento</label>
-          <select
-            id="channel-event-select"
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Canales</h1>
+        <p className={styles.quiet}>
+          Reparto de inventario por canal. Solo los canales activos cuentan, y deben sumar 100%.
+        </p>
+        <div className={local.eventPick}>
+          <SheetSelect
+            label="Evento"
             value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-          >
-            {events.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.title}
-              </option>
-            ))}
-          </select>
+            placeholder="Elige un evento"
+            options={events.map((event) => ({ value: event.id, label: event.title }))}
+            onChange={(value) => {
+              setSelected(value);
+              setNotice(null);
+              setSaveError(null);
+            }}
+          />
         </div>
-      </PageHeader>
+        {selected ? (
+          <Link href={`/events/${selected}?seccion=canales`} className={local.link}>
+            Abrir la ficha del evento
+          </Link>
+        ) : null}
+      </header>
 
-      <Section columns={4} gap="sm" aria-label="Indicadores de canales">
-        <KpiCard
-          label="Canales saludables"
-          value={formatCount(healthSummary.healthy)}
-          hint={`de ${formatCount(healthCards.length)} canales`}
-          tone="success"
-        />
-        <KpiCard
-          label="Órdenes (salud)"
-          value={formatCount(healthSummary.totalOrders)}
-          hint="todas las fuentes"
-          tone="accent"
-        />
-        <KpiCard
-          label="Ingresos (salud)"
-          value={formatMxn(healthSummary.totalRevenue)}
-          hint="último snapshot"
-          tone="info"
-        />
-        <KpiCard
-          label="Asignación"
-          value={`${total} %`}
-          hint={total === 100 ? 'Lista para guardar' : 'Debe sumar 100 %'}
-          tone={total === 100 ? 'success' : 'danger'}
-        />
-        <KpiCard
-          label="Peor error rate"
-          value={
-            healthSummary.worstErrorRate != null
+      <ul className={styles.rows} aria-label="Cifras de canales">
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Canales saludables</p>
+            <p className={styles.rowMeta}>De {formatCount(healthCards.length)} canales</p>
+          </div>
+          <span />
+          <p className={styles.figure}>{formatCount(healthSummary.healthy)}</p>
+        </li>
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Órdenes</p>
+            <p className={styles.rowMeta}>Todas las fuentes, según salud</p>
+          </div>
+          <span />
+          <p className={styles.figure}>{formatCount(healthSummary.totalOrders)}</p>
+        </li>
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Ingresos</p>
+            <p className={styles.rowMeta}>Último corte de salud</p>
+          </div>
+          <span />
+          <p className={styles.figure}>{money(healthSummary.totalRevenue)}</p>
+        </li>
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Peor tasa de error</p>
+            <p className={styles.rowMeta}>Telemetría</p>
+          </div>
+          <span />
+          <p className={styles.figure}>
+            {healthSummary.worstErrorRate != null
               ? formatPercentPoints(healthSummary.worstErrorRate * 100)
-              : '—'
-          }
-          hint="telemetría"
-          tone={
-            healthSummary.worstErrorRate != null && healthSummary.worstErrorRate >= 0.05
-              ? 'warning'
-              : 'neutral'
-          }
-        />
-        <KpiCard
-          label="Peor latencia"
-          value={
-            healthSummary.worstLatencyMs != null ? formatMs(healthSummary.worstLatencyMs) : '—'
-          }
-          hint="web / móvil"
-          tone="neutral"
-        />
-      </Section>
-
-      <Section
-        title="Asignación por canal"
-        description="Solo los canales habilitados cuentan hacia el 100 % de inventario."
-        className={styles.panel}
-      >
-
-        <div className={styles.formGrid}>
-          {CHANNEL_ORDER.map((key) => {
-            const entry = allocation[key];
-            const showResponsible = RESPONSIBLE_PARTY_CHANNELS.includes(key);
-            return (
-              <div key={key} className={styles.channelField}>
-                <div className={styles.channelFieldHead}>
-                  <span className={styles.channelFieldLabel}>{channelLabel(key)}</span>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={entry.enabled}
-                      onChange={(e) => toggleChannel(key, e.target.checked)}
-                    />
-                    {entry.enabled ? 'Activo' : 'Off'}
-                  </label>
-                </div>
-                <label className={styles.fieldLabel} htmlFor={`alloc-${key}`}>
-                  Asignación %
-                </label>
-                <input
-                  id={`alloc-${key}`}
-                  className={styles.input}
-                  type="number"
-                  min={0}
-                  max={100}
-                  disabled={!entry.enabled}
-                  value={entry.allocation}
-                  onChange={(e) =>
-                    patchChannel(key, { allocation: Number(e.target.value) || 0 })
-                  }
-                />
-                {showResponsible && (
-                  <>
-                    <label className={styles.fieldLabel} htmlFor={`resp-${key}`}>
-                      {responsiblePartyLabel(key)}
-                    </label>
-                    <input
-                      id={`resp-${key}`}
-                      className={styles.input}
-                      type="text"
-                      disabled={!entry.enabled}
-                      placeholder="Nombre o referencia"
-                      value={entry.responsibleParty}
-                      onChange={(e) => patchChannel(key, { responsibleParty: e.target.value })}
-                    />
-                  </>
-                )}
-                {key === 'taquilla' && entry.enabled && (
-                  <>
-                    <label className={styles.fieldLabel} htmlFor="taq-locations">
-                      Ubicaciones (coma)
-                    </label>
-                    <input
-                      id="taq-locations"
-                      className={styles.input}
-                      type="text"
-                      placeholder="Centro, Norte, VIP booth"
-                      value={entry.locations.join(', ')}
-                      onChange={(e) =>
-                        patchChannel(key, {
-                          locations: e.target.value
-                            .split(',')
-                            .map((s) => s.trim())
-                            .filter(Boolean),
-                        })
-                      }
-                    />
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className={styles.totalRow}>
-          <p className={total === 100 ? styles.totalOk : styles.totalBad}>
-            Total habilitado: {total} % {total !== 100 && '(ajusta hasta 100 %)'}
+              : '—'}
           </p>
-          <div className={styles.formActions}>
-            <Button
-              type="button"
-              loading={saving}
-              disabled={allocationIssue !== null}
-              onClick={() => void save()}
-            >
-              Guardar asignación
-            </Button>
+        </li>
+        <li className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowTitle}>Peor latencia</p>
+            <p className={styles.rowMeta}>Web y móvil</p>
           </div>
-        </div>
+          <span />
+          <p className={styles.figure}>
+            {healthSummary.worstLatencyMs != null ? formatMs(healthSummary.worstLatencyMs) : '—'}
+          </p>
+        </li>
+      </ul>
+      {healthError ? (
+        <p className={styles.danger} role="alert">
+          Salud de canales sin respuesta: {healthError}
+        </p>
+      ) : null}
 
-        {allocationIssue && (
-          <div className={styles.callout} role="alert">
-            {allocationIssue.message}
-          </div>
-        )}
-        {msg && !allocationIssue && (
-          <div className={styles.successBanner} style={{ marginTop: '0.85rem' }}>
-            {msg}
-          </div>
-        )}
-      </Section>
-
-      <div className={styles.twoCol}>
-        <Section
-          title="Salud en tiempo real"
-          description="Estado operativo de los 13 canales de venta."
-          className={styles.panel}
-        >
-          <div className={styles.healthGrid}>
-            {healthCards.map((card) => {
-              const meta = healthStatusMeta(card.status);
-              return (
-                <article key={card.key} className={styles.healthCard}>
-                  <div className={styles.healthTop}>
-                    <h3 className={styles.healthTitle}>{card.label}</h3>
-                    <Badge tone={meta.tone}>{meta.label}</Badge>
-                  </div>
-                  <dl className={styles.healthMeta}>
-                    <div>
-                      <dt>Órdenes</dt>
-                      <dd>{formatCount(card.orders)}</dd>
+      <div className={local.block}>
+        <p className={local.subTitle}>Reparto</p>
+        <p className={total === 100 ? styles.quiet : styles.out}>Activos suman {total}%</p>
+      </div>
+      <div className={styles.stack}>
+        {CHANNEL_ORDER.map((key) => {
+          const entry = allocation[key];
+          const label = channelLabel(key);
+          const notes = [
+            entry.responsibleParty.trim() ? entry.responsibleParty.trim() : null,
+            key === 'taquilla' && entry.locations.length > 0 ? entry.locations.join(', ') : null,
+          ].filter((line): line is string => line != null);
+          return (
+            <Param key={key} name={label}>
+              <ParameterCard
+                name={label}
+                value={entryValue(entry)}
+                valueStyle="tabular"
+                effect="Parte del reparto. Los activos suman 100."
+                closedNote={notes.length > 0 ? notes.join(' · ') : undefined}
+                advanced={
+                  RESPONSIBLE_PARTY_CHANNELS.includes(key) ? (
+                    <div className={styles.stack}>
+                      <Field
+                        label={responsiblePartyLabel(key)}
+                        value={entry.responsibleParty}
+                        placeholder="Nombre o referencia"
+                        disabled={!entry.enabled}
+                        onChange={(event) =>
+                          patchChannel(key, { responsibleParty: event.target.value })
+                        }
+                      />
+                      {key === 'taquilla' ? (
+                        <Field
+                          label="Ubicaciones"
+                          hint="Separadas por coma"
+                          value={entry.locations.join(', ')}
+                          placeholder="Centro, Norte"
+                          disabled={!entry.enabled}
+                          onChange={(event) =>
+                            patchChannel(key, {
+                              locations: event.target.value
+                                .split(',')
+                                .map((item) => item.trim())
+                                .filter(Boolean),
+                            })
+                          }
+                        />
+                      ) : null}
                     </div>
-                    <div>
-                      <dt>Ingresos</dt>
-                      <dd>{formatMxn(card.revenue)}</dd>
-                    </div>
-                    {card.errorRate != null && (
-                      <div>
-                        <dt>Error rate</dt>
-                        <dd>{formatPercentPoints(card.errorRate * 100)}</dd>
-                      </div>
-                    )}
-                    {card.latencyMs != null && (
-                      <div>
-                        <dt>Latencia</dt>
-                        <dd>{formatMs(card.latencyMs)}</dd>
-                      </div>
-                    )}
-                    {card.syncLagSec != null && (
-                      <div>
-                        <dt>Sync lag</dt>
-                        <dd>{formatSeconds(card.syncLagSec)}</dd>
-                      </div>
-                    )}
-                    {card.activeTerminals != null && (
-                      <div>
-                        <dt>Terminales</dt>
-                        <dd>{formatCount(card.activeTerminals)}</dd>
-                      </div>
-                    )}
-                    {card.activePartners != null && (
-                      <div>
-                        <dt>Partners</dt>
-                        <dd>{formatCount(card.activePartners)}</dd>
-                      </div>
-                    )}
-                  </dl>
-                </article>
-              );
-            })}
-          </div>
-        </Section>
-
-        <Section
-          title="Mix de ingresos (7 días)"
-          description="Desglose analítico por canal desde la API de reporting."
-          className={styles.panel}
+                  ) : undefined
+                }
+              >
+                <div className={styles.stack}>
+                  <Switch
+                    label={`${label} activo`}
+                    on={entry.enabled}
+                    onChange={(on) => toggleChannel(key, on)}
+                  />
+                  {entry.enabled ? (
+                    <Stepper
+                      label={`Cupo ${label}`}
+                      value={entry.allocation}
+                      min={0}
+                      max={100}
+                      unit="%"
+                      onChange={(value) => patchChannel(key, { allocation: value })}
+                    />
+                  ) : null}
+                </div>
+              </ParameterCard>
+            </Param>
+          );
+        })}
+      </div>
+      {saveError ? (
+        <p className={styles.danger} role="alert">
+          {saveError}
+        </p>
+      ) : null}
+      <div className={styles.saveBar}>
+        <p className={allocationIssue && dirty ? styles.out : styles.quiet} aria-live="polite">
+          {dirty
+            ? allocationIssue
+              ? allocationIssue.message
+              : `Sin guardar · ${changes.join(' · ')}`
+            : (notice ??
+              (neverSaved ? 'Sin reparto guardado. Se muestran los valores por omisión.' : ''))}
+        </p>
+        <TicketButton
+          disabled={!canSave || saving || allocationIssue !== null}
+          onClick={() => void save()}
         >
-          {revenueMix.length === 0 ? (
-            <p className={styles.fieldHint}>Sin órdenes completadas en el periodo.</p>
-          ) : (
-            <ul className={styles.mixList}>
-              {revenueMix.map((slice) => (
-                <li key={slice.id} className={styles.mixItem}>
-                  <span className={styles.mixName}>{slice.label}</span>
-                  <span className={styles.mixOrders}>{formatCount(slice.orders)} órdenes</span>
-                  <span className={styles.mixRev}>
-                    {formatMxn(slice.value)} · {formatPercentPoints(slice.percent)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
+          Guardar sección
+        </TicketButton>
       </div>
 
-      {alerts.length > 0 && (
-        <Section
-          title="Alertas y recomendaciones"
-          description="Señales automáticas a partir de salud, mix y asignación."
-          className={styles.panel}
-        >
-          <ul className={styles.alertList}>
-            {alerts.map((alert) => {
-              const meta = severityMeta(alert.severity);
-              return (
-                <li key={alert.id} className={styles.alertItem}>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <Badge tone={meta.tone}>{meta.label}</Badge>
-                    <span className={styles.alertTitle}>{alert.title}</span>
-                  </div>
-                  <p className={styles.alertBody}>{alert.explanation}</p>
-                  <p className={styles.alertAction}>{alert.suggestion}</p>
-                </li>
-              );
-            })}
+      <div className={local.block}>
+        <p className={local.subTitle}>Salud</p>
+        <ul className={styles.rows}>
+          {healthCards.map((card) => {
+            const meta = [
+              healthStatusMeta(card.status).label,
+              `${formatCount(card.orders)} órdenes`,
+              card.errorRate != null ? `Error ${formatPercentPoints(card.errorRate * 100)}` : null,
+              card.latencyMs != null ? `Latencia ${formatMs(card.latencyMs)}` : null,
+              card.syncLagSec != null ? `Retraso ${formatSeconds(card.syncLagSec)}` : null,
+              card.activeTerminals != null
+                ? `${formatCount(card.activeTerminals)} terminales`
+                : null,
+              card.activePartners != null ? `${formatCount(card.activePartners)} partners` : null,
+            ].filter(Boolean);
+            return (
+              <li key={card.key} className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>{card.label}</p>
+                  <p className={styles.rowMeta}>{meta.join(' · ')}</p>
+                </div>
+                <span />
+                <p className={styles.figure}>{money(card.revenue)}</p>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div className={local.block}>
+        <p className={local.subTitle}>Mezcla de ingresos · 7 días</p>
+        {analyticsError ? (
+          <p className={styles.danger} role="alert">
+            Analítica de canales sin respuesta: {analyticsError}
+          </p>
+        ) : revenueMix.length === 0 ? (
+          <p className={styles.quiet}>Sin órdenes completadas en el periodo.</p>
+        ) : (
+          <ul className={styles.rows}>
+            {revenueMix.map((slice) => (
+              <li key={slice.id} className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>{slice.label}</p>
+                  <p className={styles.rowMeta}>{formatCount(slice.orders)} órdenes</p>
+                </div>
+                <p className={styles.tertiary}>{formatPercentPoints(slice.percent)}</p>
+                <p className={styles.figure}>{money(slice.value)}</p>
+              </li>
+            ))}
           </ul>
-        </Section>
-      )}
-    </div>
+        )}
+      </div>
+
+      {alerts.length > 0 ? (
+        <div className={local.block}>
+          <p className={local.subTitle}>Alertas</p>
+          <ul className={styles.rows}>
+            {alerts.map((alert) => (
+              <li key={alert.id} className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>{alert.title}</p>
+                  <p className={styles.rowMeta}>{alert.explanation}</p>
+                  <p className={styles.rowMeta}>{alert.suggestion}</p>
+                </div>
+                <span />
+                <p className={alert.severity === 'critical' ? styles.out : styles.tertiary}>
+                  {severityMeta(alert.severity).label}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
   );
 }
-
-const DEFAULT_FALLBACK: Partial<Record<ChannelKey, number>> = {
-  web: 50,
-  taquilla: 35,
-  api: 15,
-  mobile: 5,
-  admin: 3,
-  promoter: 2,
-  corporate: 2,
-  phone: 2,
-  affiliate: 1,
-};

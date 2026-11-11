@@ -1,0 +1,180 @@
+/* Rejilla del calendario en el lenguaje Black Ticket: solo tokens, sin color por estado. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.filterLabel {
+  margin: 0 0 4px;
+  color: var(--text-secondary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+.block {
+  margin-top: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.weekday {
+  padding: 8px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  min-height: 88px;
+  margin: 0;
+  padding: 8px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--ink);
+  color: var(--text);
+  font: var(--caption);
+  text-align: left;
+  cursor: pointer;
+}
+
+.compact .cell {
+  min-height: 64px;
+}
+
+.cell:hover {
+  background: var(--ink-overlay);
+}
+
+.cell:focus-visible {
+  outline: 1.5px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.outside {
+  color: var(--text-tertiary);
+}
+
+.today .dayNumber {
+  color: var(--gold);
+}
+
+.selected {
+  background: var(--gold-wash);
+  box-shadow: inset 2px 0 0 var(--gold);
+}
+
+.dayNumber {
+  font: var(--body-sm);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.item {
+  overflow: hidden;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.item time {
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weekDay {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  background: var(--ink-raised);
+}
+
+.weekHead {
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+.eventLink {
+  display: block;
+  min-width: 0;
+  color: var(--text);
+  font: var(--body-sm);
+  text-decoration: none;
+}
+
+.eventLink:hover {
+  text-decoration: underline;
+}
+
+.eventLink:focus-visible {
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.link {
+  color: var(--text-secondary);
+  font: var(--body-sm);
+}
+
+@media (max-width: 800px) {
+  .week {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cell {
+    min-height: 56px;
+  }
+
+  .item {
+    display: none;
+  }
+}
+
+.count {
+  display: none;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 800px) {
+  .count {
+    display: block;
+  }
+}
+
+/* Aquí la barra no guarda nada: va al final, sin quedarse fija sobre la rejilla. */
+.footer {
+  position: static;
+}
