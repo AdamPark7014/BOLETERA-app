@@ -6,19 +6,7 @@ const MXN = new Intl.NumberFormat('es-MX', {
   maximumFractionDigits: 0,
 });
 
-const MXN_COMPACT = new Intl.NumberFormat('es-MX', {
-  style: 'currency',
-  currency: 'MXN',
-  notation: 'compact',
-  maximumFractionDigits: 1,
-});
-
 const COUNT = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 });
-
-const COUNT_COMPACT = new Intl.NumberFormat('es-MX', {
-  notation: 'compact',
-  maximumFractionDigits: 1,
-});
 
 const PERCENT = new Intl.NumberFormat('es-MX', {
   style: 'percent',
@@ -33,19 +21,9 @@ export function formatMxn(value: number | undefined | null): string {
   return MXN.format(value);
 }
 
-export function formatMxnCompact(value: number | undefined | null): string {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return '—';
-  return MXN_COMPACT.format(value);
-}
-
 export function formatCount(value: number | undefined | null): string {
   if (typeof value !== 'number' || !Number.isFinite(value)) return '—';
   return COUNT.format(value);
-}
-
-export function formatCountCompact(value: number | undefined | null): string {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return '—';
-  return COUNT_COMPACT.format(value);
 }
 
 export function formatPercentPoints(value: number | undefined | null): string {
@@ -57,16 +35,6 @@ export function formatPercentPoints(value: number | undefined | null): string {
 export function formatDeltaPercent(deltaPercent: number | null | undefined): string {
   if (deltaPercent == null || !Number.isFinite(deltaPercent)) return 'sin base';
   return PERCENT.format(deltaPercent / 100);
-}
-
-/**
- * Convierte los puntos porcentuales de la API en la razón que esperan
- * `TrendPill` y `KpiCard` (12.5 → 0.125). `undefined` cuando no hay base
- * comparable, para que el componente muestre su estado neutro.
- */
-export function toDeltaRatio(deltaPercent: number | null | undefined): number | undefined {
-  if (deltaPercent == null || !Number.isFinite(deltaPercent)) return undefined;
-  return deltaPercent / 100;
 }
 
 export function formatKpiScalar(unit: MetricsKpi['unit'], value: number): string {
@@ -86,16 +54,6 @@ export function formatKpiValue(kpi: MetricsKpi): string {
   return formatKpiScalar(kpi.unit, kpi.value);
 }
 
-export function deltaTone(
-  deltaPercent: number | null | undefined,
-  invert = false,
-): 'up' | 'down' | 'flat' {
-  if (deltaPercent == null || Math.abs(deltaPercent) < 0.05) return 'flat';
-  const positive = deltaPercent > 0;
-  if (invert) return positive ? 'down' : 'up';
-  return positive ? 'up' : 'down';
-}
-
 export function formatRelative(iso: string | undefined | null): string {
   if (!iso) return '';
   const date = new Date(iso);
@@ -108,7 +66,7 @@ export function formatRelative(iso: string | undefined | null): string {
   return RELATIVE.format(Math.round(diffSec / 86_400), 'day');
 }
 
-export function formatDayShort(iso: string): string {
+function formatDayShort(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   return date.toLocaleDateString('es-MX', {
@@ -118,7 +76,7 @@ export function formatDayShort(iso: string): string {
   });
 }
 
-export function formatHourShort(iso: string): string {
+function formatHourShort(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   return date.toLocaleTimeString('es-MX', {
@@ -141,21 +99,6 @@ export function formatBucket(iso: string, granularity: MetricsGranularity): stri
     });
   }
   return formatDayShort(iso);
-}
-
-export function severityTone(
-  severity: MetricsAlertSeverity,
-): 'neutral' | 'info' | 'warning' | 'danger' {
-  switch (severity) {
-    case 'critical':
-      return 'danger';
-    case 'warning':
-      return 'warning';
-    case 'info':
-      return 'info';
-    default:
-      return 'neutral';
-  }
 }
 
 export function severityLabel(severity: MetricsAlertSeverity): string {
@@ -186,21 +129,26 @@ export function riskLabel(level: string): string {
   }
 }
 
-export function riskTone(level: string): 'success' | 'warning' | 'danger' | 'neutral' {
-  switch (level) {
-    case 'on_track':
-      return 'success';
-    case 'watch':
-      return 'warning';
-    case 'at_risk':
-    case 'critical':
-      return 'danger';
-    default:
-      return 'neutral';
-  }
-}
+/** Copia local de las etiquetas de canal: el tablero no depende de la carpeta de órdenes. */
+const CHANNEL_LABELS: Record<string, string> = {
+  WEB: 'Web',
+  TAQUILLA: 'Taquilla',
+  API: 'API',
+  ADMIN: 'Admin',
+  PROMOTER: 'Promotor',
+  COURTESY: 'Cortesía',
+  CORPORATE: 'Corporativo',
+  MOBILE: 'App móvil',
+  PHONE: 'Teléfono',
+  INVITATION: 'Invitación',
+  AFFILIATE: 'Afiliado',
+  VIP: 'VIP',
+  RESALE: 'Reventa',
+};
 
-export { channelLabel, CHANNEL_LABELS } from '../orders/_lib/format';
+export function channelLabel(channel: string): string {
+  return CHANNEL_LABELS[channel] ?? CHANNEL_LABELS[channel.toUpperCase()] ?? channel;
+}
 
 export function orderStatusLabel(status: string): string {
   const map: Record<string, string> = {
@@ -212,21 +160,6 @@ export function orderStatusLabel(status: string): string {
     EXPIRED: 'Expirada',
   };
   return map[status] ?? status;
-}
-
-export function orderStatusTone(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
-  switch (status) {
-    case 'COMPLETED':
-      return 'success';
-    case 'PENDING':
-      return 'warning';
-    case 'FAILED':
-    case 'CANCELLED':
-    case 'EXPIRED':
-      return 'danger';
-    default:
-      return 'neutral';
-  }
 }
 
 export function alertHref(entityType?: string, entityId?: string): string | null {
@@ -247,10 +180,4 @@ export function alertHref(entityType?: string, entityId?: string): string | null
     default:
       return null;
   }
-}
-
-/** Mensaje legible de cualquier error de red o de la API. */
-export function errorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) return error.message;
-  return fallback;
 }

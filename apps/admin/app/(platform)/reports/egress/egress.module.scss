@@ -1,47 +1,89 @@
-.muted {
-  margin: var(--bl-space-0);
-  color: var(--bl-text-tertiary);
-  font-size: var(--bl-text-sm);
+// Piezas propias de Egress que no están en frame.module.scss. Solo tokens.
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
 }
 
-.badge {
-  display: inline-block;
-  font-size: var(--bl-text-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.45rem;
-  border-radius: var(--bl-radius-sm);
+.counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
-.badgeOk {
-  background: var(--bl-success-subtle);
-  color: var(--bl-success-text);
+.count {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  background: var(--ink-raised);
 }
 
-.badgeWarn {
-  background: var(--bl-warning-subtle);
-  color: var(--bl-warning-text);
+.count .figure {
+  text-align: left;
 }
 
-.badgeCritical {
-  background: var(--bl-accent-subtle);
-  color: var(--bl-accent-text);
+.filter {
+  margin-bottom: 12px;
 }
 
-.badgeNetwork {
-  background: var(--bl-surface-sunken);
-  color: var(--bl-text-secondary);
+.link {
+  color: var(--text);
+  font: var(--body-sm);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  white-space: nowrap;
 }
 
-.badgeEmpty {
-  background: var(--bl-surface);
-  color: var(--bl-text-disabled);
+.link:hover {
+  text-decoration-color: var(--text-secondary);
 }
 
-.reason {
-  margin-top: 0.25rem;
-  font-size: var(--bl-text-xs);
-  color: var(--bl-text-tertiary);
-  max-width: 14rem;
+.link:focus-visible {
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.state {
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--body-sm);
+  white-space: nowrap;
+}
+
+.figure {
+  margin: 0;
+  color: var(--text);
+  font: var(--money);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 800px) {
+  .counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Las opciones del Segment no se parten en dos renglones. */
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.seg [role='radio'] {
+  flex: 0 0 auto;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.generated {
+  margin-top: 12px;
 }

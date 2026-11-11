@@ -52,9 +52,7 @@ export function aiSegmentLabel(segment: string | null): string {
   return AI_SEGMENT_LABEL[segment] ?? segment;
 }
 
-export function priorityTone(
-  priority: 'low' | 'medium' | 'high' | 'urgent',
-): BadgeTone {
+export function priorityTone(priority: 'low' | 'medium' | 'high' | 'urgent'): BadgeTone {
   switch (priority) {
     case 'urgent':
       return 'danger';
@@ -67,9 +65,7 @@ export function priorityTone(
   }
 }
 
-export function priorityLabel(
-  priority: 'low' | 'medium' | 'high' | 'urgent',
-): string {
+export function priorityLabel(priority: 'low' | 'medium' | 'high' | 'urgent'): string {
   switch (priority) {
     case 'urgent':
       return 'Urgente';

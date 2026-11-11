@@ -44,7 +44,7 @@ export function useDashboardData(range: DashboardRange, metric: DashboardMetric)
   const params = useMemo(() => ({ from: range.from, to: range.to }), [range.from, range.to]);
   const previousParams = useMemo(
     () => ({ from: range.previousFrom, to: range.previousTo }),
-    [range.previousFrom, range.previousTo],
+    [range.previousFrom, range.previousTo]
   );
 
   const executive = useExecutiveMetrics(params);
@@ -87,17 +87,17 @@ export function useDashboardData(range: DashboardRange, metric: DashboardMetric)
       ordersSeries.data?.series,
       revenueSeries.data?.series,
       ticketsSeries.data?.series,
-    ],
+    ]
   );
 
   const chartData = useMemo(
     () => toChartData(points[metric], range.granularity),
-    [metric, points, range.granularity],
+    [metric, points, range.granularity]
   );
 
   const comparisonData = useMemo(
     () => alignComparison(chartData, comparisonSeries.data?.series[0]?.points ?? EMPTY_POINTS),
-    [chartData, comparisonSeries.data?.series],
+    [chartData, comparisonSeries.data?.series]
   );
 
   const stats = useMemo(() => seriesStats(chartData), [chartData]);
@@ -118,7 +118,10 @@ export function useDashboardData(range: DashboardRange, metric: DashboardMetric)
   const failures = useMemo<QueryFailure[]>(() => {
     const candidates: readonly { source: string; error: unknown }[] = [
       { source: 'Resumen ejecutivo', error: executive.error },
-      { source: 'Serie temporal', error: revenueSeries.error ?? ordersSeries.error ?? ticketsSeries.error },
+      {
+        source: 'Serie temporal',
+        error: revenueSeries.error ?? ordersSeries.error ?? ticketsSeries.error,
+      },
       { source: 'Ritmo de venta', error: salesPace.error },
       { source: 'Alertas', error: alerts.error },
       { source: 'Actividad', error: overview.error },

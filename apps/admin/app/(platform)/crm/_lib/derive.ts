@@ -1,6 +1,6 @@
 import type { AiCustomerSegmentRow } from '@boletera/shared';
 import type { OrderRow } from '@/lib/queries/orders';
-import { parseMoney } from './format';
+import { orderAmount, orderCurrency } from './format';
 import { SEGMENT_DESCRIPTION, SEGMENT_LABEL, SEGMENT_TONE } from './labels';
 import type {
   ChurnBand,
@@ -57,7 +57,7 @@ function classifySegment(
   completedOrders: number,
   totalSpend: number,
   lastOrderAt: string | null,
-  vipThreshold: number,
+  vipThreshold: number
 ): CustomerSegment {
   const days = daysSince(lastOrderAt);
   if (days > 180) return 'inactive';
@@ -71,10 +71,7 @@ function classifySegment(
 function percentileThresholds(sortedAsc: number[]): [number, number, number, number] {
   if (sortedAsc.length === 0) return [1, 2, 3, 4];
   const at = (p: number) => {
-    const idx = Math.min(
-      sortedAsc.length - 1,
-      Math.max(0, Math.floor(p * (sortedAsc.length - 1))),
-    );
+    const idx = Math.min(sortedAsc.length - 1, Math.max(0, Math.floor(p * (sortedAsc.length - 1))));
     return sortedAsc[idx] ?? 0;
   };
   return [at(0.2), at(0.4), at(0.6), at(0.8)];
@@ -100,7 +97,7 @@ type Acc = {
  */
 export function buildCustomerRows(
   orders: readonly OrderRow[],
-  aiByEmail: ReadonlyMap<string, AiCustomerSegmentRow> = new Map(),
+  aiByEmail: ReadonlyMap<string, AiCustomerSegmentRow> = new Map()
 ): CrmCustomerRow[] {
   const byEmail = new Map<string, Acc>();
 
@@ -108,7 +105,7 @@ export function buildCustomerRows(
     const emailKey = order.buyerEmail?.trim().toLowerCase() || 'sin-email';
     const existing = byEmail.get(emailKey);
     const completed = isCompleted(order.status);
-    const amount = completed ? parseMoney(order.totalAmount) : 0;
+    const amount = completed ? orderAmount(order) : 0;
     const eventTitle = order.event?.title?.trim() || 'Sin evento';
 
     if (!existing) {
@@ -118,7 +115,7 @@ export function buildCustomerRows(
         ordersCount: 1,
         completedOrders: completed ? 1 : 0,
         totalSpend: amount,
-        currency: order.currency || 'MXN',
+        currency: orderCurrency(order),
         lastOrderAt: order.createdAt,
         firstOrderAt: order.createdAt,
         lastCompletedAt: completed ? order.createdAt : null,
@@ -133,10 +130,7 @@ export function buildCustomerRows(
       existing.completedOrders += 1;
       existing.totalSpend += amount;
       const created = new Date(order.createdAt).getTime();
-      if (
-        !existing.lastCompletedAt ||
-        created > new Date(existing.lastCompletedAt).getTime()
-      ) {
+      if (!existing.lastCompletedAt || created > new Date(existing.lastCompletedAt).getTime()) {
         existing.lastCompletedAt = order.createdAt;
       }
     }
@@ -168,8 +162,8 @@ export function buildCustomerRows(
   const freqThresholds = percentileThresholds(freqs);
   const vipThreshold =
     spends.length >= 4
-      ? spends[Math.floor(spends.length * 0.9)] ?? spends[spends.length - 1] ?? 0
-      : spends[spends.length - 1] ?? 0;
+      ? (spends[Math.floor(spends.length * 0.9)] ?? spends[spends.length - 1] ?? 0)
+      : (spends[spends.length - 1] ?? 0);
 
   return [...byEmail.entries()]
     .map(([id, row]) => {
@@ -194,7 +188,7 @@ export function buildCustomerRows(
         row.completedOrders,
         row.totalSpend,
         row.lastCompletedAt ?? row.lastOrderAt,
-        vipThreshold,
+        vipThreshold
       );
       const ai = aiByEmail.get(id);
       const channelList = [...row.channels].sort((a, b) => a.localeCompare(b, 'es-MX'));
@@ -260,23 +254,17 @@ export function crmKpis(customers: readonly CrmCustomerRow[]): CrmKpis {
 }
 
 /** Top compradores frecuentes (F ≥ 3 o top N por completedOrders). */
-export function frequentBuyers(
-  customers: readonly CrmCustomerRow[],
-  limit = 8,
-): CrmCustomerRow[] {
+export function frequentBuyers(customers: readonly CrmCustomerRow[], limit = 8): CrmCustomerRow[] {
   return [...customers]
     .filter((row) => row.completedOrders >= 2)
-    .sort(
-      (a, b) =>
-        b.completedOrders - a.completedOrders || b.totalSpend - a.totalSpend,
-    )
+    .sort((a, b) => b.completedOrders - a.completedOrders || b.totalSpend - a.totalSpend)
     .slice(0, limit);
 }
 
 /** Clientes con churn band high/medium ordenados por riesgo. */
 export function churnRiskCustomers(
   customers: readonly CrmCustomerRow[],
-  limit = 8,
+  limit = 8
 ): CrmCustomerRow[] {
   return [...customers]
     .filter((row) => row.churnBand !== 'low' && row.completedOrders > 0)
@@ -285,7 +273,7 @@ export function churnRiskCustomers(
 }
 
 export function indexAiByEmail(
-  rows: readonly AiCustomerSegmentRow[] | undefined,
+  rows: readonly AiCustomerSegmentRow[] | undefined
 ): Map<string, AiCustomerSegmentRow> {
   const map = new Map<string, AiCustomerSegmentRow>();
   if (!rows) return map;

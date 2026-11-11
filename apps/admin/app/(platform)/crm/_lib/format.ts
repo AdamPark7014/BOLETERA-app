@@ -24,7 +24,11 @@ export function formatShare(ratio: number): string {
   return formatPercent(ratio, 1);
 }
 
-export function formatRfm(scores: { recency: number; frequency: number; monetary: number }): string {
+export function formatRfm(scores: {
+  recency: number;
+  frequency: number;
+  monetary: number;
+}): string {
   return `R${scores.recency}·F${scores.frequency}·M${scores.monetary}`;
 }
 
@@ -60,4 +64,27 @@ export function rangeLabel(range: CrmRangeKey): string {
 export function formatChurnPct(risk: number): string {
   if (!Number.isFinite(risk)) return '—';
   return formatPercent(Math.min(1, Math.max(0, risk)), 0);
+}
+
+/**
+ * Monto de un pedido tal como lo manda `GET /admin/orders`. El tipo `OrderRow`
+ * de `lib` dice `totalAmount`, pero el API hoy devuelve `expectedAmount`
+ * (y `chargedAmount` cuando ya se cobró). Se lee el primero que exista.
+ */
+export function orderAmount(order: object): number {
+  const row = order as Record<string, unknown>;
+  for (const key of ['totalAmount', 'chargedAmount', 'expectedAmount']) {
+    const value = row[key];
+    if (value != null && value !== '') return parseMoney(value as string | number);
+  }
+  return 0;
+}
+
+export function orderCurrency(order: object): string {
+  const row = order as Record<string, unknown>;
+  for (const key of ['currency', 'chargedCurrency', 'expectedCurrency']) {
+    const value = row[key];
+    if (typeof value === 'string' && value.trim()) return value;
+  }
+  return 'MXN';
 }

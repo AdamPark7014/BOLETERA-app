@@ -24,7 +24,7 @@ export function buildCrmRecommendations(input: {
   const out: CrmRecommendation[] = [];
   const atRisk = input.customers.filter((c) => c.segment === 'at_risk').length;
   const inactiveVip = input.customers.filter(
-    (c) => c.segment === 'inactive' && c.completedOrders >= 2 && c.totalSpend > 0,
+    (c) => c.segment === 'inactive' && c.completedOrders >= 2 && c.totalSpend > 0
   ).length;
   const waiting = input.waitlist.filter((w) => {
     const s = w.status.toUpperCase();
@@ -124,7 +124,5 @@ export function buildCrmRecommendations(input: {
     });
   }
 
-  return out.sort(
-    (a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority],
-  );
+  return out.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
 }

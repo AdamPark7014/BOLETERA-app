@@ -3,39 +3,22 @@
 /**
  * Bitácora de auditoría.
  *
- * La pantalla anterior pedía 80 filas y las pintaba tal cual: sin filtros, sin
- * actor y comiéndose el error con `.catch(() => setRows([]))`, así que "no hay
- * eventos" y "no tienes permiso" se veían exactamente igual.
- *
  * Nota sobre el API: `GET /organization/:orgId/audit` solo acepta `limit`. No
  * hay filtros de servidor ni paginación expuesta, así que el filtrado es del
- * lado del cliente sobre la ventana traída. Está bien para operar el día a día;
- * para forensics de verdad hace falta filtrar en el servidor (ver ENTREGA).
+ * lado del cliente sobre la ventana traída.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Badge,
-  Button,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  KpiCard,
-  PageHeader,
-  Section,
-  SegmentedControl,
-  formatNumber,
-  type DataTableColumn,
-  type FilterDefinition,
-  type FilterSelection,
-} from '@boletera/ui';
-import { ApiError, getStoredToken } from '@/lib/api';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Field, TicketButton } from '@boletera/ui';
+import { hasCapability } from '@/lib/permissions';
 import { getAuditLog } from '@/lib/platform-api';
-import { useSession } from '@/components/Session/SessionProvider';
-import { Notice } from '../orders/_ui/States';
-import { formatDateTime } from '../orders/_ui/format';
-import { actionLabel, actionTone, entityLabel } from './_lib/labels';
-import styles from './audit.module.scss';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Segment, SheetSelect } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { formatCount, formatWhen } from '../events/_ticket/read';
+import { actionLabel, entityLabel } from './_lib/labels';
+import own from './audit.module.scss';
 
 type AuditRow = {
   id: string;
@@ -47,14 +30,15 @@ type AuditRow = {
   metadata?: Record<string, unknown> | null;
 };
 
-/** Cuántas filas se traen por ventana. El API tope real es su propio `take`. */
-const PAGE_SIZES = [80, 200, 500];
+/** Cuántas filas se traen por ventana. */
+const PAGE_SIZES = ['80', '200', '500'] as const;
+type PageSize = (typeof PAGE_SIZES)[number];
+
+const LIMIT_OPTIONS = PAGE_SIZES.map((value) => ({ value, label: `Últimas ${value}` }));
 
 /**
- * Acciones destacadas. Las seis primeras son las que el API empezó a auditar
- * hace poco y son justo las que se buscan cuando algo salió mal con el dinero o
- * con un acceso; se listan explícitas para poder filtrarlas sin saber su nombre
- * exacto de memoria.
+ * Acciones destacadas: las que se buscan cuando algo salió mal con el dinero o
+ * con un acceso. Se listan explícitas para filtrarlas sin saber su nombre.
  */
 const NOTABLE_ACTIONS: { value: string; label: string; severity: 'alert' | 'info' }[] = [
   { value: 'payment.settlement_mismatch', label: 'Descuadre de liquidación', severity: 'alert' },
@@ -65,9 +49,8 @@ const NOTABLE_ACTIONS: { value: string; label: string; severity: 'alert' | 'info
   { value: 'access.qr.reissued_by_staff', label: 'QR reemitido en puerta', severity: 'info' },
 ];
 
-const NOTABLE_BY_VALUE = new Map(NOTABLE_ACTIONS.map((a) => [a.value, a]));
+const NOTABLE_BY_VALUE = new Map(NOTABLE_ACTIONS.map((item) => [item.value, item]));
 
-/** Rangos rápidos; el rango a medida siempre está disponible debajo. */
 type QuickRange = 'all' | 'today' | '7d' | '30d';
 
 const QUICK_RANGES: { value: QuickRange; label: string }[] = [
@@ -77,10 +60,7 @@ const QUICK_RANGES: { value: QuickRange; label: string }[] = [
   { value: '30d', label: '30 días' },
 ];
 
-const LIMIT_OPTIONS = PAGE_SIZES.map((n) => ({
-  value: String(n),
-  label: `Últimas ${n}`,
-}));
+const ALL_ACTIONS = '__todas__';
 
 function startOfQuickRange(range: QuickRange): Date | null {
   const now = new Date();
@@ -97,7 +77,7 @@ function startOfQuickRange(range: QuickRange): Date | null {
 }
 
 /** El API no une con `User`: el correo solo aparece si la acción lo guardó. */
-function actorOf(row: AuditRow): { label: string; hint: string } {
+function actorOf(row: AuditRow): string {
   const meta = row.metadata ?? {};
   const email =
     typeof meta.actorEmail === 'string'
@@ -105,115 +85,109 @@ function actorOf(row: AuditRow): { label: string; hint: string } {
       : typeof meta.email === 'string'
         ? meta.email
         : null;
-  if (email) return { label: email, hint: row.userId ?? '' };
-  if (row.userId) return { label: row.userId, hint: 'Solo ID: el API no devuelve el correo' };
-  return { label: 'Sistema', hint: 'Acción sin usuario (proceso automático o webhook)' };
+  if (email) return email;
+  if (row.userId) return row.userId;
+  return 'Sistema';
+}
+
+function labelOf(action: string): string {
+  return NOTABLE_BY_VALUE.get(action)?.label ?? actionLabel(action);
 }
 
 export default function AuditPage() {
-  const { organizationId } = useSession();
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <AuditoriaBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function AuditoriaBody() {
+  const session = useSession();
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [limit, setLimit] = useState(PAGE_SIZES[0]);
-
-  // Filtros
+  const [error, setError] = useState<unknown>(null);
+  const [limit, setLimit] = useState<PageSize>('80');
+  const [nonce, setNonce] = useState(0);
   const [actor, setActor] = useState('');
   const [action, setAction] = useState('');
   const [quick, setQuick] = useState<QuickRange>('all');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-
-  const load = useCallback(async () => {
-    const token = getStoredToken();
-    if (!token || !organizationId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      setRows(await getAuditLog(token, organizationId, limit));
-    } catch (err) {
-      // Un 401 ya lo reintentó `adminApi` tras reautenticar; si llega aquí es otra cosa.
-      setError(err instanceof ApiError ? err.userMessage : 'No se pudo cargar la bitácora.');
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [organizationId, limit]);
+  const token = session.token;
+  const orgId = session.status === 'ready' ? session.orgId : null;
+  const canSee = hasCapability(session.role, 'audit.view');
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!token || !orgId || !canSee) {
+      if (session.status !== 'loading') setLoading(false);
+      return;
+    }
+    let alive = true;
+    setLoading(true);
+    setError(null);
+    getAuditLog(token, orgId, Number(limit))
+      .then((payload) => {
+        if (alive) setRows(Array.isArray(payload) ? payload : []);
+      })
+      .catch((cause: unknown) => {
+        if (!alive) return;
+        setRows([]);
+        setError(cause);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [token, orgId, canSee, session.status, limit, nonce]);
 
-  /** Acciones presentes en los datos + las destacadas, para el desplegable. */
   const actionOptions = useMemo(() => {
-    const present = new Set(rows.map((r) => r.action));
-    NOTABLE_ACTIONS.forEach((a) => present.add(a.value));
-    return [...present].sort();
-  }, [rows]);
-
-  const actionCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const row of rows) counts.set(row.action, (counts.get(row.action) ?? 0) + 1);
-    return counts;
-  }, [rows]);
-
-  const actionFilterDefs = useMemo<FilterDefinition[]>(() => {
-    const notableOptions = NOTABLE_ACTIONS.map((item) => ({
+    const notable = NOTABLE_ACTIONS.map((item) => ({
       value: item.value,
-      label: item.label,
-      count: actionCounts.get(item.value) ?? 0,
+      label: `${item.label} · ${formatCount(counts.get(item.value) ?? 0)}`,
     }));
-    const otherOptions = actionOptions
+    const others = [...counts.keys()]
       .filter((value) => !NOTABLE_BY_VALUE.has(value))
+      .sort()
       .map((value) => ({
         value,
-        label: actionLabel(value),
-        count: actionCounts.get(value) ?? 0,
+        label: `${actionLabel(value)} · ${formatCount(counts.get(value) ?? 0)}`,
       }));
-    return [
-      {
-        id: 'action',
-        label: 'Acción',
-        multiple: false,
-        options: [...notableOptions, ...otherOptions],
-      },
-    ];
-  }, [actionCounts, actionOptions]);
-
-  const filterSelection = useMemo<FilterSelection>(() => {
-    const selection: Record<string, readonly string[]> = {};
-    if (action) selection.action = [action];
-    return selection;
-  }, [action]);
+    return [{ value: ALL_ACTIONS, label: 'Todas las acciones' }, ...notable, ...others];
+  }, [rows]);
 
   const filtered = useMemo(() => {
     const quickStart = startOfQuickRange(quick);
     const fromDate = from ? new Date(`${from}T00:00:00`) : quickStart;
-    // El día "hasta" se incluye entero: quien escribe 16/08 espera ver el 16.
+    // El día "hasta" se incluye entero.
     const toDate = to ? new Date(`${to}T23:59:59.999`) : null;
     const needle = actor.trim().toLowerCase();
-
-    return rows.filter((r) => {
-      if (action && r.action !== action) return false;
-      const when = new Date(r.createdAt);
-      if (fromDate && when < fromDate) return false;
-      if (toDate && when > toDate) return false;
-      if (needle) {
-        const { label } = actorOf(r);
-        const haystack = `${label} ${r.userId ?? ''}`.toLowerCase();
-        if (!haystack.includes(needle)) return false;
-      }
-      return true;
-    });
+    return rows
+      .filter((row) => {
+        if (action && row.action !== action) return false;
+        const when = new Date(row.createdAt);
+        if (fromDate && when < fromDate) return false;
+        if (toDate && when > toDate) return false;
+        if (needle) {
+          const haystack = `${actorOf(row)} ${row.userId ?? ''}`.toLowerCase();
+          if (!haystack.includes(needle)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [rows, actor, action, quick, from, to]);
 
   const alerts = useMemo(
-    () => filtered.filter((r) => NOTABLE_BY_VALUE.get(r.action)?.severity === 'alert').length,
-    [filtered],
+    () => filtered.filter((row) => NOTABLE_BY_VALUE.get(row.action)?.severity === 'alert').length,
+    [filtered]
   );
-
-  const distinctActions = useMemo(() => new Set(rows.map((r) => r.action)).size, [rows]);
-
+  const distinctActions = useMemo(() => new Set(rows.map((row) => row.action)).size, [rows]);
   const anyFilter = Boolean(actor || action || from || to || quick !== 'all');
 
   function clearFilters() {
@@ -224,235 +198,189 @@ export default function AuditPage() {
     setTo('');
   }
 
-  function onFilterChange(next: FilterSelection) {
-    setAction(next.action?.[0] ?? '');
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (!canSee && session.status !== 'loading') {
+    return (
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Auditoría</h1>
+          <p className={styles.quiet}>Sin secciones.</p>
+        </header>
+      </section>
+    );
   }
-
-  function onQuickRangeChange(value: QuickRange) {
-    setQuick(value);
-    setFrom('');
-    setTo('');
+  if (error) {
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir la auditoría"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
-
-  const columns = useMemo<readonly DataTableColumn<AuditRow>[]>(
-    () => [
-      {
-        key: 'createdAt',
-        header: 'Fecha',
-        width: 190,
-        sortValue: (row) => row.createdAt,
-        render: (row) => <span className={styles.when}>{formatDateTime(row.createdAt)}</span>,
-      },
-      {
-        key: 'actor',
-        header: 'Actor',
-        width: 220,
-        sortValue: (row) => actorOf(row).label,
-        render: (row) => {
-          const who = actorOf(row);
-          return (
-            <div>
-              <span className={styles.actor}>{who.label}</span>
-              {who.hint ? <span className={styles.actorHint}>{who.hint}</span> : null}
-            </div>
-          );
-        },
-      },
-      {
-        key: 'action',
-        header: 'Acción',
-        width: 260,
-        sortValue: (row) => row.action,
-        render: (row) => {
-          const notable = NOTABLE_BY_VALUE.get(row.action);
-          return (
-            <div>
-              {notable ? (
-                <Badge
-                  tone={notable.severity === 'alert' ? 'danger' : 'info'}
-                  variant="soft"
-                  size="sm"
-                >
-                  {notable.label}
-                </Badge>
-              ) : (
-                <Badge tone={actionTone(row.action)} variant="soft" size="sm">
-                  {actionLabel(row.action)}
-                </Badge>
-              )}
-              <span className={styles.actionCode}>{row.action}</span>
-            </div>
-          );
-        },
-      },
-      {
-        key: 'entity',
-        header: 'Entidad',
-        width: 200,
-        sortValue: (row) => row.entityType,
-        render: (row) => (
-          <div>
-            <span className={styles.entity}>{entityLabel(row.entityType)}</span>
-            {row.entityId ? (
-              <code className={styles.entityId} title={row.entityId}>
-                {row.entityId.slice(0, 12)}…
-              </code>
-            ) : null}
-          </div>
-        ),
-      },
-    ],
-    [],
-  );
+  if (!token || (loading && rows.length === 0))
+    return <p className={styles.quiet}>Cargando auditoría.</p>;
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Compliance"
-        title="Auditoría"
-        description="Traza inmutable de acciones críticas — compliance y forensics"
-        actions={
-          <Button
-            type="button"
-            variant="outline"
-            loading={loading}
-            loadingLabel="Actualizando…"
-            onClick={() => void load()}
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Auditoría</h1>
+        <p className={styles.quiet}>
+          Acciones críticas de la organización. Los filtros se aplican sobre las filas traídas.
+        </p>
+      </header>
+
+      <div className={own.counts}>
+        <div className={own.count}>
+          <p className={styles.rowMeta}>Eventos traídos</p>
+          <p className={own.figure}>{formatCount(rows.length)}</p>
+        </div>
+        <div className={own.count}>
+          <p className={styles.rowMeta}>Coinciden</p>
+          <p className={own.figure}>{formatCount(filtered.length)}</p>
+        </div>
+        <div className={own.count}>
+          <p className={styles.rowMeta}>Requieren revisión</p>
+          <p className={own.figure}>{formatCount(alerts)}</p>
+        </div>
+        <div className={own.count}>
+          <p className={styles.rowMeta}>Acciones distintas</p>
+          <p className={own.figure}>{formatCount(distinctActions)}</p>
+        </div>
+      </div>
+
+      {alerts > 0 ? (
+        <div className={own.alert}>
+          <p className={styles.danger} role="alert">
+            {formatCount(alerts)} {alerts === 1 ? 'evento' : 'eventos'} de pago o inventario por
+            revisar: descuadres, liquidaciones fallidas o inventario insuficiente.
+          </p>
+        </div>
+      ) : null}
+
+      <div className={own.filters}>
+        <div className={own.line}>
+          <div className={own.grow}>
+            <Field
+              label="Actor"
+              kind="search"
+              placeholder="Correo o ID de usuario"
+              value={actor}
+              onChange={(event) => setActor(event.target.value)}
+            />
+          </div>
+          <div className={own.grow}>
+            <p className={own.label}>Acción</p>
+            <SheetSelect
+              label="Acción"
+              value={action || ALL_ACTIONS}
+              placeholder="Todas las acciones"
+              options={actionOptions}
+              onChange={(next) => setAction(next === ALL_ACTIONS ? '' : next)}
+            />
+          </div>
+        </div>
+        <div className={own.line}>
+          <div className={own.fixed}>
+            <p className={own.label}>Rango</p>
+            <div className={own.seg}>
+              <Segment
+                label="Rango"
+                value={quick}
+                options={QUICK_RANGES}
+                onChange={(next) => {
+                  setQuick(next);
+                  setFrom('');
+                  setTo('');
+                }}
+              />
+            </div>
+          </div>
+          <div className={own.date}>
+            <Field
+              label="Desde"
+              type="date"
+              value={from}
+              max={to || undefined}
+              onChange={(event) => {
+                setFrom(event.target.value);
+                setQuick('all');
+              }}
+            />
+          </div>
+          <div className={own.date}>
+            <Field
+              label="Hasta"
+              type="date"
+              value={to}
+              min={from || undefined}
+              onChange={(event) => {
+                setTo(event.target.value);
+                setQuick('all');
+              }}
+            />
+          </div>
+          <div className={own.fixed}>
+            <p className={own.label}>Filas a traer</p>
+            <div className={own.seg}>
+              <Segment
+                label="Filas a traer"
+                value={limit}
+                options={LIMIT_OPTIONS}
+                onChange={setLimit}
+              />
+            </div>
+          </div>
+        </div>
+        <div className={own.line}>
+          <p className={styles.tertiary}>
+            {loading
+              ? 'Actualizando.'
+              : `${formatCount(filtered.length)} de ${formatCount(rows.length)} eventos traídos.`}
+          </p>
+          {anyFilter ? (
+            <TicketButton variant="ghost" onClick={clearFilters}>
+              Limpiar filtros
+            </TicketButton>
+          ) : null}
+          <TicketButton
+            variant="secondary"
+            disabled={loading}
+            onClick={() => setNonce((current) => current + 1)}
           >
             Actualizar
-          </Button>
-        }
-      />
+          </TicketButton>
+        </div>
+      </div>
 
-      <Section columns={4} gap="md">
-        <KpiCard label="Eventos traídos" value={formatNumber(rows.length)} tone="accent" />
-        <KpiCard
-          label="Coinciden filtro"
-          value={formatNumber(filtered.length)}
-          hint={anyFilter ? 'Sobre la ventana cargada' : 'Sin filtros activos'}
-        />
-        <KpiCard
-          label="Requieren revisión"
-          value={formatNumber(alerts)}
-          tone={alerts > 0 ? 'warning' : 'neutral'}
-          invertDelta
-        />
-        <KpiCard label="Acciones distintas" value={formatNumber(distinctActions)} />
-      </Section>
-
-      {alerts > 0 && (
-        <Notice tone="danger" title={`${alerts} evento(s) de pago o inventario requieren revisión`}>
-          <p>
-            Descuadres de liquidación, inventario insuficiente y liquidaciones fallidas son lo primero
-            que hay que mirar al abrir esta pantalla.
-          </p>
-        </Notice>
+      {filtered.length === 0 ? (
+        <p className={styles.quiet}>
+          {rows.length === 0
+            ? 'No hay eventos de auditoría para esta organización.'
+            : 'Ningún evento coincide. Amplía el rango, trae más filas o quita un filtro.'}
+        </p>
+      ) : (
+        <div className={styles.rows}>
+          {filtered.map((row) => (
+            <div key={row.id} className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>{labelOf(row.action)}</p>
+                <p className={styles.rowMeta}>
+                  {actorOf(row)} · <span className={own.code}>{row.action}</span>
+                </p>
+              </div>
+              <p className={styles.rowMeta}>
+                {entityLabel(row.entityType)}
+                {row.entityId ? (
+                  <span className={own.code}> {row.entityId.slice(0, 12)}</span>
+                ) : null}
+              </p>
+              <p className={own.when}>{formatWhen(row.createdAt)}</p>
+            </div>
+          ))}
+        </div>
       )}
-
-      <div className={styles.toolbar}>
-        <FilterBar
-          className={styles.filterBar}
-          filters={actionFilterDefs}
-          value={filterSelection}
-          onChange={onFilterChange}
-          search={{
-            value: actor,
-            onChange: setActor,
-            placeholder: 'Actor: correo o ID de usuario…',
-          }}
-        >
-          <SegmentedControl
-            label="Rango rápido"
-            size="sm"
-            options={QUICK_RANGES}
-            value={quick}
-            onValueChange={onQuickRangeChange}
-          />
-          <SegmentedControl
-            label="Filas a traer"
-            size="sm"
-            options={LIMIT_OPTIONS}
-            value={String(limit)}
-            onValueChange={(value) => setLimit(Number(value))}
-          />
-        </FilterBar>
-        <div className={styles.filterMeta}>
-          <span>
-            {loading
-              ? 'Cargando eventos…'
-              : `${filtered.length} de ${rows.length} eventos traídos${
-                  anyFilter ? ' coinciden con los filtros' : ''
-                }.`}
-          </span>
-          {anyFilter ? (
-            <button type="button" className={styles.clearBtn} onClick={clearFilters}>
-              Limpiar filtros
-            </button>
-          ) : null}
-        </div>
-      </div>
-
-      <div className={styles.dateRow}>
-        <div className={styles.field}>
-          <label htmlFor="audit-from">Desde</label>
-          <input
-            id="audit-from"
-            type="date"
-            value={from}
-            max={to || undefined}
-            onChange={(e) => {
-              setFrom(e.target.value);
-              setQuick('all');
-            }}
-          />
-        </div>
-        <div className={styles.field}>
-          <label htmlFor="audit-to">Hasta</label>
-          <input
-            id="audit-to"
-            type="date"
-            value={to}
-            min={from || undefined}
-            onChange={(e) => {
-              setTo(e.target.value);
-              setQuick('all');
-            }}
-          />
-        </div>
-      </div>
-
-      <DataTable
-        label="Eventos de auditoría de la organización, del más reciente al más antiguo"
-        columns={columns}
-        data={filtered}
-        rowKey={(row) => row.id}
-        loading={loading}
-        loadingRows={8}
-        error={error}
-        onRetry={() => void load()}
-        defaultSort={{ key: 'createdAt', direction: 'desc' }}
-        empty={
-          <EmptyState
-            title={
-              rows.length === 0
-                ? 'Sin eventos registrados'
-                : 'Ningún evento coincide con los filtros'
-            }
-            description={
-              rows.length === 0
-                ? 'No hay eventos de auditoría para esta organización.'
-                : 'Prueba a ampliar el rango, traer más filas o quitar algún filtro.'
-            }
-            action={
-              anyFilter ? (
-                <Button type="button" variant="outline" onClick={clearFilters}>
-                  Limpiar filtros
-                </Button>
-              ) : undefined
-            }
-          />
-        }
-      />
-    </div>
+    </section>
   );
 }

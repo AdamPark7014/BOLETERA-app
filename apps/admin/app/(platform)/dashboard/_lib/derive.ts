@@ -1,4 +1,3 @@
-import type { ChartDatum } from '@boletera/ui';
 import type {
   EventSalesPaceRow,
   ExecutiveSummaryMetrics,
@@ -10,6 +9,9 @@ import type {
 } from '@boletera/shared';
 import type { PlatformOverview } from '@/lib/platform-api';
 import { channelLabel, formatBucket, formatCount, formatMxn } from '../format';
+
+/** Un punto de la serie, ya con etiqueta legible. */
+export type ChartDatum = { label: string; value: number };
 
 /** Métricas que el panel de serie temporal sabe graficar. */
 export type DashboardMetric = 'revenue' | 'orders' | 'tickets';
@@ -43,7 +45,7 @@ export function metricFormatter(metric: DashboardMetric): (value: number) => str
 /** Convierte los puntos de la API en datos de chart con etiquetas legibles. */
 export function toChartData(
   points: readonly MetricsTimePoint[],
-  granularity: MetricsGranularity,
+  granularity: MetricsGranularity
 ): ChartDatum[] {
   return points.map((point) => ({
     label: point.label ?? formatBucket(point.bucket, granularity),
@@ -58,7 +60,7 @@ export function toChartData(
  */
 export function alignComparison(
   current: readonly ChartDatum[],
-  previous: readonly MetricsTimePoint[],
+  previous: readonly MetricsTimePoint[]
 ): ChartDatum[] {
   if (current.length === 0) return [];
   // La ventana previa puede traer un bucket de más o de menos por el borde.
@@ -102,7 +104,7 @@ export function sparklineValues(points: readonly MetricsTimePoint[]): number[] {
  */
 export function derivedAverageTicket(
   revenue: readonly MetricsTimePoint[],
-  tickets: readonly MetricsTimePoint[],
+  tickets: readonly MetricsTimePoint[]
 ): number[] {
   return revenue.map((point, index) => {
     const sold = tickets[index]?.value ?? 0;
@@ -132,8 +134,7 @@ export function channelRows(breakdown: MetricsBreakdown | undefined): ChannelRow
       label: row.label && row.label !== row.key ? row.label : channelLabel(row.key),
       revenue: row.value,
       orders: typeof row.secondaryValue === 'number' ? row.secondaryValue : 0,
-      percent:
-        row.percentOfTotal ?? (total > 0 ? Math.round((row.value / total) * 1000) / 10 : 0),
+      percent: row.percentOfTotal ?? (total > 0 ? Math.round((row.value / total) * 1000) / 10 : 0),
     }))
     .sort((a, b) => b.revenue - a.revenue);
 }
@@ -159,14 +160,13 @@ const RISK_WEIGHT: Record<EventSalesPaceRow['riskLevel'], number> = {
 /** Ordena por riesgo y, dentro del mismo nivel, por cercanía del evento. */
 export function paceSummary(
   metrics: { events: EventSalesPaceRow[] } | undefined,
-  limit: number,
+  limit: number
 ): PaceSummary {
   const events = metrics?.events ?? [];
   const rows = [...events]
     .sort(
       (a, b) =>
-        RISK_WEIGHT[a.riskLevel] - RISK_WEIGHT[b.riskLevel] ||
-        a.daysUntilEvent - b.daysUntilEvent,
+        RISK_WEIGHT[a.riskLevel] - RISK_WEIGHT[b.riskLevel] || a.daysUntilEvent - b.daysUntilEvent
     )
     .slice(0, limit);
 
@@ -195,7 +195,7 @@ const SEVERITY_WEIGHT: Record<MetricsAlertSeverity, number> = {
 export function filterAlerts(
   alerts: readonly MetricsAlert[] | undefined,
   filter: AlertFilter,
-  limit: number,
+  limit: number
 ): MetricsAlert[] {
   const list = alerts ?? [];
   return list
@@ -203,7 +203,7 @@ export function filterAlerts(
     .sort(
       (a, b) =>
         SEVERITY_WEIGHT[a.severity] - SEVERITY_WEIGHT[b.severity] ||
-        Date.parse(b.detectedAt) - Date.parse(a.detectedAt),
+        Date.parse(b.detectedAt) - Date.parse(a.detectedAt)
     )
     .slice(0, limit);
 }
@@ -214,10 +214,7 @@ export function filterAlerts(
 
 export type RecentOrder = NonNullable<PlatformOverview['recentOrders']>[number];
 
-export function recentOrders(
-  overview: PlatformOverview | undefined,
-  limit: number,
-): RecentOrder[] {
+export function recentOrders(overview: PlatformOverview | undefined, limit: number): RecentOrder[] {
   return (overview?.recentOrders ?? []).slice(0, limit);
 }
 

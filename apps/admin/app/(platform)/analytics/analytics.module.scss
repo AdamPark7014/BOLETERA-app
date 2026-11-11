@@ -1,79 +1,79 @@
-.wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--bl-space-5);
-  min-width: 0;
-}
+// Piezas propias de Analítica que no están en frame.module.scss. Solo tokens.
 
-.kpiStrip {
-  margin-top: calc(var(--bl-space-2) * -1);
-}
-
-.panel {
-  padding: var(--bl-space-4) var(--bl-space-4);
-  background: var(--bl-elevated);
-  border: 1px solid var(--bl-border);
-  border-radius: var(--bl-radius-lg);
-}
-
-.muted {
-  color: var(--bl-text-tertiary);
-  font-size: var(--bl-text-sm);
-  margin: var(--bl-space-0);
+.toolbar {
   display: flex;
   flex-wrap: wrap;
+  gap: 12px;
   align-items: center;
-  gap: var(--bl-space-2);
+  margin-bottom: 24px;
 }
 
-.bars {
-  list-style: none;
-  margin: var(--bl-space-0);
-  padding: var(--bl-space-0);
-  display: flex;
-  flex-direction: column;
-  gap: var(--bl-space-3);
+.block {
+  margin-bottom: 32px;
 }
 
-.barMeta {
+.blockHead {
   display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--bl-space-4);
-  align-items: baseline;
-  margin-bottom: 0.35rem;
-
-  strong {
-    font-size: var(--bl-text-md);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--bl-space-2);
-    min-width: 0;
-  }
-
-  span {
-    font-size: var(--bl-text-xs);
-    color: var(--bl-text-tertiary);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
+  margin-bottom: 12px;
 }
 
-.rank {
-  flex: none;
-  min-width: 1.25rem;
-  justify-content: center;
+.blockTitle {
+  margin: 0;
+  color: var(--text);
+  font: var(--body-sm);
+  font-weight: var(--weight-medium);
 }
 
-.barTrack {
-  height: 0.45rem;
-  background: var(--bl-surface-sunken);
-  border-radius: var(--bl-radius-full);
-  overflow: hidden;
+.num {
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--body-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
 }
 
-.barFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--bl-accent), var(--bl-accent-hover));
-  border-radius: var(--bl-radius-full);
-  min-width: 0.35rem;
+/* Las cifras nunca se cortan: si no caben, bajan de renglón. */
+.amount {
+  margin: 0;
+  color: var(--text);
+  font: var(--money);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.link {
+  color: var(--text);
+  font: var(--body-sm);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.link:hover {
+  text-decoration-color: var(--text-secondary);
+}
+
+.link:focus-visible {
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Las opciones del Segment no se parten en dos renglones. */
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.seg [role='radio'] {
+  flex: 0 0 auto;
+  padding: 0 12px;
+  white-space: nowrap;
 }

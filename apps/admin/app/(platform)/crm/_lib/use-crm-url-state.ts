@@ -6,13 +6,7 @@ import type { FilterSelection } from '@boletera/ui';
 import type { CrmRangeKey, CustomerSegment } from './types';
 
 const RANGE_VALUES = new Set<string>(['30', '90', '365']);
-const SEGMENT_VALUES = new Set<string>([
-  'vip',
-  'recurrent',
-  'new',
-  'at_risk',
-  'inactive',
-]);
+const SEGMENT_VALUES = new Set<string>(['vip', 'recurrent', 'new', 'at_risk', 'inactive']);
 
 function isRange(value: string): value is CrmRangeKey {
   return RANGE_VALUES.has(value);
@@ -77,18 +71,15 @@ export function useCrmUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   const setRange = useCallback(
     (range: CrmRangeKey) => replaceParams({ range: range === '90' ? null : range }),
-    [replaceParams],
+    [replaceParams]
   );
 
-  const setSearch = useCallback(
-    (q: string) => replaceParams({ q: q || null }),
-    [replaceParams],
-  );
+  const setSearch = useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]);
 
   const setFilterSelection = useCallback(
     (selection: FilterSelection) => {
@@ -99,7 +90,7 @@ export function useCrmUrlState() {
         channel: channels.length ? channels.join(',') : null,
       });
     },
-    [replaceParams],
+    [replaceParams]
   );
 
   const toggleSegment = useCallback(
@@ -110,18 +101,17 @@ export function useCrmUrlState() {
       const next = [...current];
       replaceParams({ segment: next.length ? next.join(',') : null });
     },
-    [replaceParams, state.segments],
+    [replaceParams, state.segments]
   );
 
   const setSelectedId = useCallback(
-    (customerId: string | null) =>
-      replaceParams({ customer: customerId }),
-    [replaceParams],
+    (customerId: string | null) => replaceParams({ customer: customerId }),
+    [replaceParams]
   );
 
   const clearFilters = useCallback(
     () => replaceParams({ q: null, segment: null, channel: null }),
-    [replaceParams],
+    [replaceParams]
   );
 
   return {
