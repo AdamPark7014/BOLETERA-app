@@ -77,7 +77,7 @@ export type VenueNameLookup = ReadonlyMap<string, string>;
  */
 export function buildBreadcrumbs(
   pathname: string,
-  venueNames?: VenueNameLookup,
+  venueNames?: VenueNameLookup
 ): BreadcrumbCrumb[] {
   const segments = pathname.split('/').filter(Boolean);
   if (segments.length === 0) {

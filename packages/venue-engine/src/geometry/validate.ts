@@ -41,10 +41,7 @@ function pointInPolygon(x: number, y: number, points: [number, number][]): boole
   return inside;
 }
 
-function touchesLevel(
-  levelId: string | undefined,
-  entityLevelId: string | undefined,
-): boolean {
+function touchesLevel(levelId: string | undefined, entityLevelId: string | undefined): boolean {
   if (!levelId) return true;
   if (!entityLevelId) return true;
   return entityLevelId === levelId;
@@ -56,13 +53,11 @@ function touchesLevel(
  */
 export function validateGeometry(
   scene: ResolvedVenueScene,
-  options?: ValidateGeometryOptions,
+  options?: ValidateGeometryOptions
 ): GeometryValidation {
   const issues: GeometryIssue[] = [];
   const levelId = options?.levelId;
-  const seats = levelId
-    ? scene.seats.filter((s) => touchesLevel(levelId, s.levelId))
-    : scene.seats;
+  const seats = levelId ? scene.seats.filter((s) => touchesLevel(levelId, s.levelId)) : scene.seats;
   const sections = levelId
     ? scene.sections.filter((s) => touchesLevel(levelId, s.levelId))
     : scene.sections;
@@ -71,9 +66,7 @@ export function validateGeometry(
   const strict = Boolean(scene.map.venue?.cadLocks?.strictOverlaps);
   const overlapSeverity = strict ? 'error' : 'warning';
 
-  const pitchBySection = new Map(
-    scene.sections.map((s) => [s.id, s.seatPitch ?? 26] as const),
-  );
+  const pitchBySection = new Map(scene.sections.map((s) => [s.id, s.seatPitch ?? 26] as const));
 
   // Spatial hash for overlap detection (same-level only)
   const cellSize = 12;
@@ -136,7 +129,10 @@ export function validateGeometry(
   }
 
   for (const seat of seats) {
-    if (!seat.position || ![seat.position.x, seat.position.y, seat.position.z].every(Number.isFinite)) {
+    if (
+      !seat.position ||
+      ![seat.position.x, seat.position.y, seat.position.z].every(Number.isFinite)
+    ) {
       issues.push({
         code: 'missing_position',
         severity: 'error',
@@ -463,7 +459,7 @@ export function validateGeometry(
     .map(([code, v]) => ({ code, severity: v.severity, count: v.count }))
     // Errores primero, y dentro de cada grupo lo más numeroso arriba.
     .sort((a, b) =>
-      a.severity === b.severity ? b.count - a.count : a.severity === 'error' ? -1 : 1,
+      a.severity === b.severity ? b.count - a.count : a.severity === 'error' ? -1 : 1
     );
 
   return {

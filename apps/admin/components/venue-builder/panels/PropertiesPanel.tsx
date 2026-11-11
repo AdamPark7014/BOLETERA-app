@@ -39,7 +39,7 @@ const SectionProperties = memo(function SectionProperties({
   const patch = (
     label: string,
     before: Parameters<typeof updateSectionCommand>[2],
-    after: Parameters<typeof updateSectionCommand>[3],
+    after: Parameters<typeof updateSectionCommand>[3]
   ) => ctx.history.execute(updateSectionCommand(label, section.id, before, after));
 
   return (
@@ -48,7 +48,9 @@ const SectionProperties = memo(function SectionProperties({
         <input
           className={styles.input}
           value={section.name}
-          onChange={(event) => patch('Renombrar zona', { name: section.name }, { name: event.target.value })}
+          onChange={(event) =>
+            patch('Renombrar zona', { name: section.name }, { name: event.target.value })
+          }
         />
       </Field>
       <div className={styles.fieldRow}>
@@ -57,7 +59,9 @@ const SectionProperties = memo(function SectionProperties({
             type="color"
             className={styles.colorInput}
             value={section.color}
-            onChange={(event) => patch('Color de zona', { color: section.color }, { color: event.target.value })}
+            onChange={(event) =>
+              patch('Color de zona', { color: section.color }, { color: event.target.value })
+            }
           />
         </Field>
         <Field label="Nivel">
@@ -69,7 +73,7 @@ const SectionProperties = memo(function SectionProperties({
               patch(
                 'Nivel de zona',
                 { levelId: section.levelId },
-                { levelId: event.target.value || undefined },
+                { levelId: event.target.value || undefined }
               )
             }
           />
@@ -85,7 +89,7 @@ const SectionProperties = memo(function SectionProperties({
               patch(
                 'Paso de asiento',
                 { seatPitch: section.seatPitch },
-                { seatPitch: numberOrKeep(event.target.value, section.seatPitch ?? 26) },
+                { seatPitch: numberOrKeep(event.target.value, section.seatPitch ?? 26) }
               )
             }
           />
@@ -99,7 +103,7 @@ const SectionProperties = memo(function SectionProperties({
               patch(
                 'Paso de fila',
                 { rowPitch: section.rowPitch },
-                { rowPitch: numberOrKeep(event.target.value, section.rowPitch ?? 28) },
+                { rowPitch: numberOrKeep(event.target.value, section.rowPitch ?? 28) }
               )
             }
           />
@@ -115,7 +119,7 @@ const SectionProperties = memo(function SectionProperties({
               patch(
                 'Rake de zona',
                 { rake: section.rake },
-                { rake: numberOrKeep(event.target.value, section.rake ?? 0) },
+                { rake: numberOrKeep(event.target.value, section.rake ?? 0) }
               )
             }
           />
@@ -130,7 +134,7 @@ const SectionProperties = memo(function SectionProperties({
               patch(
                 'Curvatura de zona',
                 { curvature: section.curvature },
-                { curvature: numberOrKeep(event.target.value, section.curvature ?? 0) },
+                { curvature: numberOrKeep(event.target.value, section.curvature ?? 0) }
               )
             }
           />
@@ -147,8 +151,8 @@ const SectionProperties = memo(function SectionProperties({
         Bloquear geometría de la zona
       </label>
       <p className={styles.emptyHint}>
-        {section.seats.length.toLocaleString('es-MX')} asientos ·{' '}
-        {section.blocks?.length ?? 0} bloques paramétricos
+        {section.seats.length.toLocaleString('es-MX')} asientos · {section.blocks?.length ?? 0}{' '}
+        bloques paramétricos
       </p>
     </PanelSection>
   );
@@ -215,7 +219,9 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
     const patchStage = (next: Partial<typeof stage>) =>
       stores.history
         .getState()
-        .execute(setVenueMetaCommand('Ajustar escenario', { stage }, { stage: { ...stage, ...next } }));
+        .execute(
+          setVenueMetaCommand('Ajustar escenario', { stage }, { stage: { ...stage, ...next } })
+        );
     return (
       <PanelSection title="Escenario">
         <div className={styles.fieldRow}>
@@ -286,8 +292,8 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
           { furniture: list },
           {
             furniture: list.map((item) => (item.id === furniture.id ? { ...item, ...next } : item)),
-          },
-        ),
+          }
+        )
       );
     return (
       <PanelSection title="Mobiliario">
@@ -295,9 +301,7 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
           <select
             className={styles.select}
             value={furniture.type}
-            onChange={(event) =>
-              patchItem({ type: event.target.value as typeof furniture.type })
-            }
+            onChange={(event) => patchItem({ type: event.target.value as typeof furniture.type })}
           >
             <option value="led">Pantalla LED</option>
             <option value="speaker">Audio</option>
@@ -337,15 +341,17 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
           .execute(
             setSeatAttributesCommand('Editar asiento', [
               { id: seat.id, before: attrs, after: { ...attrs, ...next } },
-            ]),
+            ])
           );
       const patchPose = (next: { x?: number; y?: number }) => {
         const before = poseOf(seat);
-        stores.history.getState().execute(
-          transformSeatsCommand('Mover asiento', [
-            { id: seat.id, before, after: { ...before, ...next } },
-          ]),
-        );
+        stores.history
+          .getState()
+          .execute(
+            transformSeatsCommand('Mover asiento', [
+              { id: seat.id, before, after: { ...before, ...next } },
+            ])
+          );
       };
       return (
         <>
@@ -408,10 +414,18 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
           Caja: {mapToMeters(width, scale).toFixed(2)} × {mapToMeters(height, scale).toFixed(2)} m
         </p>
         <div className={styles.btnRow}>
-          <button type="button" className={styles.ghostBtn} onClick={() => rotateSelection(ctx, -15)}>
+          <button
+            type="button"
+            className={styles.ghostBtn}
+            onClick={() => rotateSelection(ctx, -15)}
+          >
             Rotar −15°
           </button>
-          <button type="button" className={styles.ghostBtn} onClick={() => rotateSelection(ctx, 15)}>
+          <button
+            type="button"
+            className={styles.ghostBtn}
+            onClick={() => rotateSelection(ctx, 15)}
+          >
             Rotar +15°
           </button>
         </div>
@@ -432,7 +446,11 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
           </button>
         </div>
         <div className={styles.btnRow}>
-          <button type="button" className={styles.ghostBtn} onClick={() => alignSelection(ctx, 'left')}>
+          <button
+            type="button"
+            className={styles.ghostBtn}
+            onClick={() => alignSelection(ctx, 'left')}
+          >
             Alinear ←
           </button>
           <button
@@ -442,7 +460,11 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
           >
             Centrar ↔
           </button>
-          <button type="button" className={styles.ghostBtn} onClick={() => alignSelection(ctx, 'top')}>
+          <button
+            type="button"
+            className={styles.ghostBtn}
+            onClick={() => alignSelection(ctx, 'top')}
+          >
             Alinear ↑
           </button>
         </div>
@@ -480,13 +502,15 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
               type="number"
               value={venue.scale ?? 40}
               onChange={(event) =>
-                stores.history.getState().execute(
-                  setVenueMetaCommand(
-                    'Escala del venue',
-                    { scale: venue.scale },
-                    { scale: Math.max(1, numberOrKeep(event.target.value, venue.scale ?? 40)) },
-                  ),
-                )
+                stores.history
+                  .getState()
+                  .execute(
+                    setVenueMetaCommand(
+                      'Escala del venue',
+                      { scale: venue.scale },
+                      { scale: Math.max(1, numberOrKeep(event.target.value, venue.scale ?? 40)) }
+                    )
+                  )
               }
             />
           </Field>
@@ -510,8 +534,8 @@ export const PropertiesPanel = memo(function PropertiesPanel() {
                   { cadLocks: venue.cadLocks },
                   {
                     cadLocks: { ...(venue.cadLocks ?? {}), strictOverlaps: event.target.checked },
-                  },
-                ),
+                  }
+                )
               )
             }
           />

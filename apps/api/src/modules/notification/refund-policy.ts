@@ -70,7 +70,7 @@ export function refundPolicy(config?: { get(key: string): unknown }): RefundPoli
   return {
     settlementBusinessDays: readDays(
       read('REFUND_SETTLEMENT_BUSINESS_DAYS'),
-      DEFAULT_SETTLEMENT_BUSINESS_DAYS,
+      DEFAULT_SETTLEMENT_BUSINESS_DAYS
     ),
     bankBusinessDays: readDays(read('REFUND_BANK_BUSINESS_DAYS'), DEFAULT_BANK_BUSINESS_DAYS),
   };
@@ -97,7 +97,7 @@ function storedDays(raw: unknown): number | null {
  */
 export function deadlinesFromSettings(
   settings: unknown,
-  config?: { get(key: string): unknown },
+  config?: { get(key: string): unknown }
 ): DeadlinePolicy {
   const record = settingsRecord(settings);
   const env = refundPolicy(config);
@@ -117,7 +117,7 @@ export function deadlinesFromSettings(
 /** Conserva el resto del JSON (PIN, umbral, partners) y escribe solo lo que llega. */
 export function mergeDeadlineSettings(
   settings: unknown,
-  patch: DeadlinePatch,
+  patch: DeadlinePatch
 ): Record<string, unknown> {
   const next = { ...settingsRecord(settings) };
   if (patch.settlementBusinessDays != null) {
@@ -232,7 +232,7 @@ export type RefundStatusCopy = {
  */
 export function refundStatusCopy(
   status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'DISPUTED' | string,
-  args: { methodLabel: string; sentBy: string; visibleBy: string },
+  args: { methodLabel: string; sentBy: string; visibleBy: string }
 ): RefundStatusCopy {
   switch (String(status).toUpperCase()) {
     case 'COMPLETED':
@@ -330,8 +330,7 @@ export function buyerVisibleRefundNote(notes: string | null | undefined): string
     .map((segment) => segment.trim())
     .filter(
       (segment) =>
-        segment.startsWith(COMPENSATION_NOTE_PREFIX) ||
-        segment.startsWith(CANCELLATION_NOTE_PREFIX),
+        segment.startsWith(COMPENSATION_NOTE_PREFIX) || segment.startsWith(CANCELLATION_NOTE_PREFIX)
     );
   return visible.length > 0 ? visible.join(' ') : null;
 }

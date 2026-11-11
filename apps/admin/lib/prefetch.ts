@@ -12,37 +12,36 @@ import type { VenueRow } from './queries/venues';
 export function prefetchAdminRoute(
   client: QueryClient,
   href: string,
-  organizationId: string | null,
+  organizationId: string | null
 ): Promise<void> {
   const tasks: Promise<unknown>[] = [];
   if (href === '/dashboard') {
     tasks.push(
       client.prefetchQuery({
         queryKey: queryKeys.overview.platform(),
-        queryFn: ({ signal }) =>
-          http<PlatformOverview>('/admin/platform/overview', { signal }),
-      }),
+        queryFn: ({ signal }) => http<PlatformOverview>('/admin/platform/overview', { signal }),
+      })
     );
   } else if (href === '/events' || href === '/calendar') {
     tasks.push(
       client.prefetchQuery({
         queryKey: queryKeys.events.list(),
         queryFn: ({ signal }) => http<EventRow[]>('/admin/events', { signal }),
-      }),
+      })
     );
   } else if (href === '/orders') {
     tasks.push(
       client.prefetchQuery({
         queryKey: queryKeys.orders.list(),
         queryFn: ({ signal }) => http<OrderRow[]>('/admin/orders', { signal }),
-      }),
+      })
     );
   } else if (href === '/maps') {
     tasks.push(
       client.prefetchQuery({
         queryKey: queryKeys.venues.list(),
         queryFn: ({ signal }) => http<VenueRow[]>('/admin/venues', { signal }),
-      }),
+      })
     );
   } else if (href === '/settings/organization' && organizationId) {
     tasks.push(
@@ -50,7 +49,7 @@ export function prefetchAdminRoute(
         queryKey: queryKeys.organization.detail(organizationId),
         queryFn: ({ signal }) =>
           http<Record<string, unknown>>(`/organization/${organizationId}`, { signal }),
-      }),
+      })
     );
   }
   return Promise.all(tasks).then(() => undefined);
@@ -61,7 +60,7 @@ export function usePrefetchNavigation() {
   const { organizationId } = useSession();
   const prefetch = useCallback(
     (href: string) => prefetchAdminRoute(client, href, organizationId),
-    [client, organizationId],
+    [client, organizationId]
   );
   const linkProps = useCallback(
     (href: string) => ({
@@ -72,7 +71,7 @@ export function usePrefetchNavigation() {
         void prefetch(href);
       },
     }),
-    [prefetch],
+    [prefetch]
   );
   return { prefetch, linkProps };
 }

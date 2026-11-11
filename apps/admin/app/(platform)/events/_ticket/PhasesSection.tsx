@@ -104,7 +104,10 @@ function readPhase(raw: unknown, zone: string): Draft | null {
   const ends = readString(row.endsAt);
   if (!id || !starts || !ends) return null;
   const channels = Array.isArray(row.channels)
-    ? row.channels.filter((item): item is string => typeof item === 'string' && CHANNELS.includes(item as (typeof CHANNELS)[number]))
+    ? row.channels.filter(
+        (item): item is string =>
+          typeof item === 'string' && CHANNELS.includes(item as (typeof CHANNELS)[number])
+      )
     : [];
   return {
     id,
@@ -137,8 +140,12 @@ function blank(zone: string, eventStarts: string | null): Draft {
   const start = new Date();
   const eventTime = eventStarts ? new Date(eventStarts).getTime() : Number.NaN;
   const eventStarted = Number.isFinite(eventTime) && eventTime <= start.getTime();
-  const end = !eventStarted && Number.isFinite(eventTime) ? new Date(eventTime) : new Date(start.getTime() + 60 * 60 * 1000);
-  const safeEnd = end.getTime() > start.getTime() ? end : new Date(start.getTime() + 60 * 60 * 1000);
+  const end =
+    !eventStarted && Number.isFinite(eventTime)
+      ? new Date(eventTime)
+      : new Date(start.getTime() + 60 * 60 * 1000);
+  const safeEnd =
+    end.getTime() > start.getTime() ? end : new Date(start.getTime() + 60 * 60 * 1000);
   return {
     id: 'nueva',
     isNew: true,
@@ -171,7 +178,8 @@ function patchBody(draft: Draft, base: Draft, zone: string): Record<string, unkn
   const body: Record<string, unknown> = {};
   if (draft.name.trim() !== base.name.trim()) body.name = draft.name.trim();
   if (draft.kind !== base.kind) body.kind = draft.kind;
-  if ((draft.code.trim() || null) !== (base.code.trim() || null)) body.code = draft.code.trim() || null;
+  if ((draft.code.trim() || null) !== (base.code.trim() || null))
+    body.code = draft.code.trim() || null;
   if (draft.startsLocal !== base.startsLocal) body.startsAt = toIso(draft.startsLocal, zone);
   if (draft.endsLocal !== base.endsLocal) body.endsAt = toIso(draft.endsLocal, zone);
   if (draft.status !== base.status) body.status = draft.status;
@@ -180,7 +188,8 @@ function patchBody(draft: Draft, base: Draft, zone: string): Record<string, unkn
   if (draft.maxPerOrder !== base.maxPerOrder) body.maxPerOrder = draft.maxPerOrder;
   if (draft.discount !== base.discount) body.discountPercent = draft.discount;
   if (draft.priority !== base.priority) body.priority = draft.priority;
-  if ((draft.notes.trim() || null) !== (base.notes.trim() || null)) body.notes = draft.notes.trim() || null;
+  if ((draft.notes.trim() || null) !== (base.notes.trim() || null))
+    body.notes = draft.notes.trim() || null;
   return body;
 }
 
@@ -194,21 +203,31 @@ function changeLine(draft: Draft, base: Draft | null): string {
     parts.push(`Tipo de fase: ${labelOf(KINDS, base.kind)} → ${labelOf(KINDS, draft.kind)}`);
   }
   if ((draft.code.trim() || 'Ninguno') !== (base.code.trim() || 'Ninguno')) {
-    parts.push(`Código de acceso: ${base.code.trim() || 'Ninguno'} → ${draft.code.trim() || 'Ninguno'}`);
+    parts.push(
+      `Código de acceso: ${base.code.trim() || 'Ninguno'} → ${draft.code.trim() || 'Ninguno'}`
+    );
   }
   if (draft.startsLocal !== base.startsLocal) parts.push('Inicio de la fase');
   if (draft.endsLocal !== base.endsLocal) parts.push('Fin de la fase');
   if (draft.status !== base.status) {
-    parts.push(`Estado de la fase: ${labelOf(STATUSES, base.status)} → ${labelOf(STATUSES, draft.status)}`);
+    parts.push(
+      `Estado de la fase: ${labelOf(STATUSES, base.status)} → ${labelOf(STATUSES, draft.status)}`
+    );
   }
   if (!sameChannels(draft.channels, base.channels)) {
-    parts.push(`Canales de la fase: ${channelsValue(base.channels)} → ${channelsValue(draft.channels)}`);
+    parts.push(
+      `Canales de la fase: ${channelsValue(base.channels)} → ${channelsValue(draft.channels)}`
+    );
   }
   if (draft.allocation !== base.allocation) {
-    parts.push(`Cupo de la fase: ${allocationValue(base.allocation)} → ${allocationValue(draft.allocation)}`);
+    parts.push(
+      `Cupo de la fase: ${allocationValue(base.allocation)} → ${allocationValue(draft.allocation)}`
+    );
   }
   if (draft.maxPerOrder !== base.maxPerOrder) {
-    parts.push(`Máximo por orden en la fase: ${base.maxPerOrder ?? 'El de la zona'} → ${draft.maxPerOrder ?? 'El de la zona'}`);
+    parts.push(
+      `Máximo por orden en la fase: ${base.maxPerOrder ?? 'El de la zona'} → ${draft.maxPerOrder ?? 'El de la zona'}`
+    );
   }
   if (draft.discount !== base.discount) {
     parts.push(`Descuento de la fase: ${base.discount}% → ${draft.discount}%`);
@@ -265,8 +284,18 @@ function ChannelSheet({
         {channelsValue(value)}
       </button>
       {open ? (
-        <div className={controlStyles.sheet} role="listbox" aria-label="Canales de la fase" aria-multiselectable="true">
-          <Field label="Buscar" kind="search" value={query} onChange={(event) => setQuery(event.target.value)} />
+        <div
+          className={controlStyles.sheet}
+          role="listbox"
+          aria-label="Canales de la fase"
+          aria-multiselectable="true"
+        >
+          <Field
+            label="Buscar"
+            kind="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
           <p className={styles.tertiary}>Vacío: los trece.</p>
           {shown.length === 0 ? <p className={styles.quiet}>Nada con ese criterio.</p> : null}
           {shown.map((channel) => {
@@ -279,7 +308,9 @@ function ChannelSheet({
                 aria-selected={selected}
                 className={controlStyles.option}
                 onClick={() => {
-                  onChange(selected ? value.filter((item) => item !== channel) : [...value, channel]);
+                  onChange(
+                    selected ? value.filter((item) => item !== channel) : [...value, channel]
+                  );
                 }}
               >
                 {channelLabel(channel)}
@@ -323,7 +354,9 @@ export function PhasesSection({
       const next = readPhases(payload, zone);
       setSaved(next);
       setDrafts(next);
-      setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+      setOpenId((current) =>
+        current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+      );
     } catch (cause) {
       setLoadError(failMessage(cause));
     } finally {
@@ -338,7 +371,9 @@ export function PhasesSection({
   }, [eventId, token]);
 
   function patch(id: string, partial: Partial<Draft>) {
-    setDrafts((current) => current.map((item) => (item.id === id ? { ...item, ...partial } : item)));
+    setDrafts((current) =>
+      current.map((item) => (item.id === id ? { ...item, ...partial } : item))
+    );
     setNotice(null);
     setError(null);
   }
@@ -398,7 +433,9 @@ export function PhasesSection({
     try {
       const payload = await adminApi<unknown>(`/events/manage/${eventId}/sale-phases`, token);
       const next = readPhases(payload, zone);
-      const keptById = new Map(keep.filter((draft) => !draft.isNew).map((draft) => [draft.id, draft]));
+      const keptById = new Map(
+        keep.filter((draft) => !draft.isNew).map((draft) => [draft.id, draft])
+      );
       const merged = [
         ...next.map((draft) => keptById.get(draft.id) ?? draft),
         ...keep.filter((draft) => draft.isNew),
@@ -592,7 +629,10 @@ export function PhasesSection({
                             onChange={(next) => patch(draft.id, { allocation: next })}
                           />
                           {draft.allocation != null ? (
-                            <TicketButton variant="ghost" onClick={() => patch(draft.id, { allocation: null })}>
+                            <TicketButton
+                              variant="ghost"
+                              onClick={() => patch(draft.id, { allocation: null })}
+                            >
                               Sin tope
                             </TicketButton>
                           ) : null}
@@ -603,7 +643,9 @@ export function PhasesSection({
                   <Param name="Máximo por orden en la fase">
                     <ParameterCard
                       name="Máximo por orden en la fase"
-                      value={draft.maxPerOrder == null ? 'El de la zona' : String(draft.maxPerOrder)}
+                      value={
+                        draft.maxPerOrder == null ? 'El de la zona' : String(draft.maxPerOrder)
+                      }
                       valueStyle="tabular"
                       effect="Si queda vacío, manda el máximo de la zona."
                     >
@@ -617,7 +659,10 @@ export function PhasesSection({
                             onChange={(next) => patch(draft.id, { maxPerOrder: next })}
                           />
                           {draft.maxPerOrder != null ? (
-                            <TicketButton variant="ghost" onClick={() => patch(draft.id, { maxPerOrder: null })}>
+                            <TicketButton
+                              variant="ghost"
+                              onClick={() => patch(draft.id, { maxPerOrder: null })}
+                            >
                               El de la zona
                             </TicketButton>
                           ) : null}
@@ -691,7 +736,11 @@ export function PhasesSection({
       {canWrite ? (
         <div className={styles.saveBar}>
           <p className={styles.quiet} aria-live="polite">
-            {dirty && !valid ? 'La fase necesita nombre, inicio y un fin posterior.' : dirty ? 'Sin guardar' : (notice ?? '')}
+            {dirty && !valid
+              ? 'La fase necesita nombre, inicio y un fin posterior.'
+              : dirty
+                ? 'Sin guardar'
+                : (notice ?? '')}
           </p>
           <TicketButton disabled={!dirty || !valid || saving} onClick={() => void save()}>
             Guardar sección

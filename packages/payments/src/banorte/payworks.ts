@@ -84,15 +84,14 @@ export type BanorteQueryStatus = WebhookStatus;
 /** Consulta estado de transacción (ajusta URL según manual Payworks de tu afiliación). */
 export async function queryBanorteTransactionStatus(
   cfg: BanorteConfig,
-  reference: string,
+  reference: string
 ): Promise<PaymentStatusResult> {
   if (cfg.isDemo || !cfg.user || !cfg.password) {
     return { status: 'pending' };
   }
 
   const queryUrl =
-    process.env.BANORTE_QUERY_URL ??
-    'https://eps.banorte.com/secure3d/consultaTransaccion.htm';
+    process.env.BANORTE_QUERY_URL ?? 'https://eps.banorte.com/secure3d/consultaTransaccion.htm';
 
   try {
     const params = new URLSearchParams({
@@ -126,12 +125,18 @@ export async function queryBanorteTransactionStatus(
 }
 
 /** Referencia SPEI única ligada a la orden (abono a cuenta Banorte). */
-export function buildSpeiReference(publicId: string, accountClabe: string): {
+export function buildSpeiReference(
+  publicId: string,
+  accountClabe: string
+): {
   clabe: string;
   concept: string;
   reference: string;
 } {
-  const reference = publicId.replace(/[^A-Z0-9]/gi, '').slice(-12).toUpperCase();
+  const reference = publicId
+    .replace(/[^A-Z0-9]/gi, '')
+    .slice(-12)
+    .toUpperCase();
   return {
     clabe: accountClabe,
     concept: `BOLETERA ${reference}`,

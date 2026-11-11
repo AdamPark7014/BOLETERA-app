@@ -74,7 +74,7 @@ export function mapToStudioSeats(map: SeatMapData): StudioSeat[] {
 export function applyColorMode(
   seats: StudioSeat[],
   mode: StudioColorMode,
-  sightlines: SightlineResult | null,
+  sightlines: SightlineResult | null
 ): Seat3D[] {
   const scoreById = new Map(sightlines?.scores.map((s) => [s.seatId, s]) ?? []);
   const prices = seats
@@ -104,7 +104,7 @@ export function applyColorMode(
 export function filterSeatsByLayers(
   seats: StudioSeat[],
   layers: LayerVisibility,
-  levelFilter: string | 'ALL',
+  levelFilter: string | 'ALL'
 ): StudioSeat[] {
   return seats.filter((seat) => {
     if (levelFilter !== 'ALL' && seat.levelId && seat.levelId !== levelFilter) return false;
@@ -140,6 +140,8 @@ export function stageFromMap(map: SeatMapData | null): StageDraft {
   };
 }
 
-export function extractLevels(map: SeatMapData | null): Array<{ id: string; name: string; elevation?: number; zIndex?: number }> {
+export function extractLevels(
+  map: SeatMapData | null
+): Array<{ id: string; name: string; elevation?: number; zIndex?: number }> {
   return map?.venue?.levels ?? [];
 }

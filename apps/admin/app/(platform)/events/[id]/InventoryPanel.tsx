@@ -3,13 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import {
-  Badge,
-  Card,
-  CardHeader,
-  EmptyState,
-  ProgressRing,
-} from '@boletera/ui';
+import { Badge, Card, CardHeader, EmptyState, ProgressRing } from '@boletera/ui';
 import type { InventoryMetrics } from '@boletera/shared';
 import type { SeatMapData } from '@boletera/shared';
 import { flatSeats, normalizeSeatMap, resolveOfferForSection } from '@boletera/venue-engine';
@@ -18,10 +12,9 @@ import { useVenueLayout } from '@/lib/queries/venues';
 import { formatCount, formatPercentPoints } from './format';
 import styles from './event-hub.module.scss';
 
-const Venue3DViewer = dynamic(
-  () => import('@boletera/venue-3d').then((m) => m.Venue3DViewer),
-  { ssr: false },
-);
+const Venue3DViewer = dynamic(() => import('@boletera/venue-3d').then((m) => m.Venue3DViewer), {
+  ssr: false,
+});
 
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
 
@@ -66,7 +59,7 @@ export function InventoryPanel({
   const venueMapData: SeatMapData | null = layoutQuery.data?.layout.mapData ?? null;
   const normalizedVenueMap = useMemo(
     () => (venueMapData ? normalizeSeatMap(venueMapData) : null),
-    [venueMapData],
+    [venueMapData]
   );
 
   const seatsFor3d = useMemo(() => {
@@ -106,8 +99,7 @@ export function InventoryPanel({
     });
   }, [normalizedVenueMap, hub.event.offers, seats3dStatus]);
 
-  const zones =
-    inventoryMetrics?.byZone.filter((row) => row.eventId === eventId) ?? [];
+  const zones = inventoryMetrics?.byZone.filter((row) => row.eventId === eventId) ?? [];
   const summary = inventoryMetrics?.summary;
   const hubInv = hub.inventory;
 
@@ -152,11 +144,7 @@ export function InventoryPanel({
           actions={
             summary ? (
               <ProgressRing
-                value={
-                  summary.totalCapacity > 0
-                    ? (summary.sold / summary.totalCapacity) * 100
-                    : 0
-                }
+                value={summary.totalCapacity > 0 ? (summary.sold / summary.totalCapacity) * 100 : 0}
                 label="Ocupación"
                 size={56}
               />
@@ -221,7 +209,12 @@ export function InventoryPanel({
                         {formatPercentPoints(zone.availabilityPercent)}
                       </Badge>
                     </td>
-                    <td>{zone.sellThroughVelocity.toLocaleString('es-MX', { maximumFractionDigits: 2 })}/día</td>
+                    <td>
+                      {zone.sellThroughVelocity.toLocaleString('es-MX', {
+                        maximumFractionDigits: 2,
+                      })}
+                      /día
+                    </td>
                     <td>
                       {zone.daysToSellOut == null
                         ? '—'
@@ -300,7 +293,8 @@ export function InventoryPanel({
           </div>
         )}
         <p className={styles.hint}>
-          Publica inventario antes de vender. Los estados en vivo dependen del endpoint 3D del evento.
+          Publica inventario antes de vender. Los estados en vivo dependen del endpoint 3D del
+          evento.
         </p>
       </Card>
     </div>

@@ -8,7 +8,7 @@ import { formatBucketLabel } from './period';
  */
 export function toChartSeries(
   response: MetricsTimeSeriesResponse | undefined,
-  options: { id: string; name: string; color?: string },
+  options: { id: string; name: string; color?: string }
 ): ChartSeries | null {
   const series = response?.series[0];
   if (!series || series.points.length === 0) return null;

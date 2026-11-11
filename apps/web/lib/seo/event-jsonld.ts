@@ -46,9 +46,7 @@ function offerAvailability(o: EventJsonLdOffer): string {
 export function buildEventJsonLd(input: EventJsonLdInput) {
   const eventUrl = `${input.origin.replace(/\/$/, '')}/events/${input.slug}`;
   const when = new Date(input.startsAt);
-  const end = input.endsAt
-    ? new Date(input.endsAt)
-    : new Date(when.getTime() + 3 * 60 * 60 * 1000);
+  const end = input.endsAt ? new Date(input.endsAt) : new Date(when.getTime() + 3 * 60 * 60 * 1000);
   const currency = input.currency || 'MXN';
   const image =
     absUrlWithOrigin(input.origin, input.bannerImage || input.image) ||

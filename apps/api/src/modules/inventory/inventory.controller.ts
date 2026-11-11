@@ -81,7 +81,7 @@ export class InventoryController {
   constructor(
     private inventory: InventoryService,
     private waitingRoom: WaitingRoomService,
-    private guestSession: GuestSessionService,
+    private guestSession: GuestSessionService
   ) {}
 
   /**
@@ -97,7 +97,7 @@ export class InventoryController {
     if (!(await this.waitingRoom.isGated(eventId))) return;
     if (!this.waitingRoom.verifyPass(pass, eventId)) {
       throw new ForbiddenException(
-        'Este evento tiene sala de espera: entra a la fila y espera tu turno para apartar lugares.',
+        'Este evento tiene sala de espera: entra a la fila y espera tu turno para apartar lugares.'
       );
     }
   }
@@ -126,7 +126,7 @@ export class InventoryController {
     @Param('eventId') eventId: string,
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
-    @Query('status') status?: string,
+    @Query('status') status?: string
   ) {
     const parsedStatus = status ? (status.toUpperCase() as TicketStatus) : undefined;
     if (parsedStatus && !Object.values(TicketStatus).includes(parsedStatus)) {
@@ -181,7 +181,7 @@ export class InventoryController {
     @CurrentUser() user: PublicUser,
     @Headers('x-channel') channelHeader?: string,
     @Headers('x-cashier-id') cashierHeader?: string,
-    @Headers('idempotency-key') idempotencyKey?: string,
+    @Headers('idempotency-key') idempotencyKey?: string
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
@@ -215,7 +215,7 @@ export class InventoryController {
     @CurrentUser() user: PublicUser,
     @Headers('x-channel') channelHeader?: string,
     @Headers('x-cashier-id') cashierHeader?: string,
-    @Headers('idempotency-key') idempotencyKey?: string,
+    @Headers('idempotency-key') idempotencyKey?: string
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
@@ -244,7 +244,7 @@ export class InventoryController {
     @Param('id') id: string,
     @CurrentUser() user: PublicUser,
     @Body() body?: { sessionId?: string },
-    @Headers('x-session-id') sessionHeader?: string,
+    @Headers('x-session-id') sessionHeader?: string
   ) {
     return this.inventory.releaseHold(id, {
       sessionId: body?.sessionId ?? sessionHeader,
@@ -280,10 +280,9 @@ export class InventoryController {
     },
     @CurrentUser() user: { sub: string; role?: string },
     @Headers('x-channel') channelHeader?: string,
-    @Headers('idempotency-key') idempotencyKey?: string,
+    @Headers('idempotency-key') idempotencyKey?: string
   ) {
-    const channel =
-      parseSalesChannel(body.channel ?? channelHeader) ?? SalesChannel.TAQUILLA;
+    const channel = parseSalesChannel(body.channel ?? channelHeader) ?? SalesChannel.TAQUILLA;
     return this.inventory.createHold({
       eventId: body.eventId,
       seatIds: body.seatIds,
@@ -313,10 +312,9 @@ export class InventoryController {
       channel?: string;
     },
     @CurrentUser() user: { sub: string; role?: string },
-    @Headers('x-channel') channelHeader?: string,
+    @Headers('x-channel') channelHeader?: string
   ) {
-    const channel =
-      parseSalesChannel(body.channel ?? channelHeader) ?? SalesChannel.TAQUILLA;
+    const channel = parseSalesChannel(body.channel ?? channelHeader) ?? SalesChannel.TAQUILLA;
     return this.inventory.createBestAvailableHold({
       eventId: body.eventId,
       offerId: body.offerId,
@@ -337,7 +335,7 @@ export class InventoryController {
   @ApiBearerAuth()
   releaseAsStaff(
     @Param('id') id: string,
-    @CurrentUser() user: { sub: string; role?: string; organizationId?: string | null },
+    @CurrentUser() user: { sub: string; role?: string; organizationId?: string | null }
   ) {
     // El id del hold no dice de qué organización es, así que EventOrgAccessGuard
     // no puede actuar aquí: la comprobación baja al servicio, que resuelve el
@@ -360,7 +358,7 @@ export class InventoryController {
     const channel = channelHeader?.trim().toUpperCase();
     if (channel && channel !== SalesChannel.WEB) {
       throw new ForbiddenException(
-        'x-channel no se acepta en rutas públicas. Usa /inventory/staff/holds con un token de taquilla.',
+        'x-channel no se acepta en rutas públicas. Usa /inventory/staff/holds con un token de taquilla.'
       );
     }
     if (cashierHeader?.trim()) {

@@ -20,19 +20,10 @@ import type { PaymentErrorCode } from './errors';
  */
 export type SalesChannelType = SalesChannelValue;
 
-export type PaymentProviderId =
-  | 'stripe'
-  | 'banorte'
-  | 'cash'
-  | 'oxxo'
-  | 'clip'
-  | 'spei';
+export type PaymentProviderId = 'stripe' | 'banorte' | 'cash' | 'oxxo' | 'clip' | 'spei';
 
 /** Banorte-supported subset of shared PaymentMethod values. */
-export type BanortePaymentMethod = Extract<
-  PaymentMethodValue,
-  'CARD' | 'SPEI' | 'OXXO' | 'CASH'
->;
+export type BanortePaymentMethod = Extract<PaymentMethodValue, 'CARD' | 'SPEI' | 'OXXO' | 'CASH'>;
 
 export { PaymentMethod, PAYMENT_METHOD_VALUES };
 
@@ -139,7 +130,9 @@ export interface PaymentProvider {
 }
 
 /** Resolve a MoneyAmount from PaymentContext (amountMinor preferred). */
-export function resolveContextMoney(ctx: Pick<PaymentContext, 'amount' | 'amountMinor' | 'currency'>): MoneyAmount {
+export function resolveContextMoney(
+  ctx: Pick<PaymentContext, 'amount' | 'amountMinor' | 'currency'>
+): MoneyAmount {
   const currency: CurrencyCode = toCurrencyCode(ctx.currency);
   if (ctx.amountMinor !== undefined) {
     return moneyFromMinor(ctx.amountMinor, currency);

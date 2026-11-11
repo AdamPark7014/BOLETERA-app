@@ -34,7 +34,12 @@ export function TicketsPdfLink({
   if (accessToken) {
     const href = orderApiUrl(apiBase, publicId, '/tickets.pdf', accessToken);
     return (
-      <TicketButton type="button" onClick={() => { window.location.href = href; }}>
+      <TicketButton
+        type="button"
+        onClick={() => {
+          window.location.href = href;
+        }}
+      >
         Descargar PDF
       </TicketButton>
     );
@@ -53,7 +58,7 @@ export function TicketsPdfLink({
         setError(
           res.status === 401 || res.status === 403
             ? 'Abre la orden desde el enlace del correo para descargar el PDF.'
-            : 'No pudimos generar el PDF. Inténtalo de nuevo.',
+            : 'No pudimos generar el PDF. Inténtalo de nuevo.'
         );
         return;
       }

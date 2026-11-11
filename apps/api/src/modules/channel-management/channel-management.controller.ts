@@ -24,7 +24,10 @@ export class ChannelManagementController {
   @Post(':eventId/allocate-inventory')
   @Roles('PROMOTER', 'ADMIN')
   @ApiOperation({ summary: 'Allocate inventory to channels' })
-  async allocateInventory(@Param('eventId') eventId: string, @Body() data: { totalTickets: number }) {
+  async allocateInventory(
+    @Param('eventId') eventId: string,
+    @Body() data: { totalTickets: number }
+  ) {
     return await this.channelService.allocateInventoryToChannels(eventId, data.totalTickets);
   }
 
@@ -59,9 +62,10 @@ export class ChannelManagementController {
   @Post(':eventId/taquilla-location')
   @Roles('PROMOTER', 'ADMIN')
   @ApiOperation({ summary: 'Add taquilla location' })
-  async addTaquillaLocation(@Param('eventId') eventId: string, @Body() location: TaquillaLocationDto) {
+  async addTaquillaLocation(
+    @Param('eventId') eventId: string,
+    @Body() location: TaquillaLocationDto
+  ) {
     return await this.channelService.addTaquillaLocation(eventId, location);
   }
 }
-
-

@@ -38,9 +38,7 @@ const withAisles = {
   },
 };
 
-const networked = summarizeEgressReport(
-  buildEgressReport(withAisles, { venueName: 'Con red' }),
-);
+const networked = summarizeEgressReport(buildEgressReport(withAisles, { venueName: 'Con red' }));
 assert(STATUSES.has(networked.status), `bad status ${networked.status}`);
 assert(networked.hasNetwork === true, 'hasNetwork');
 assert(typeof networked.statusReason === 'string' && networked.statusReason.length > 0, 'reason');
@@ -48,8 +46,8 @@ assert(typeof networked.statusReason === 'string' && networked.statusReason.leng
 const noNet = summarizeEgressReport(
   buildEgressReport(
     { ...theater, venue: { ...theater.venue, aisles: undefined, stairs: undefined } },
-    { venueName: 'Sin red' },
-  ),
+    { venueName: 'Sin red' }
+  )
 );
 assert(noNet.status === 'no-network', `expected no-network got ${noNet.status}`);
 assert(noNet.sections > 0, 'noNet should still count sections');
@@ -57,8 +55,8 @@ assert(noNet.sections > 0, 'noNet should still count sections');
 const empty = summarizeEgressReport(
   buildEgressReport(
     { version: 3, sections: [], viewport: { width: 100, height: 100 } },
-    { venueName: 'Vacío' },
-  ),
+    { venueName: 'Vacío' }
+  )
 );
 assert(empty.status === 'empty', `empty status ${empty.status}`);
 

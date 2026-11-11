@@ -39,7 +39,7 @@ assert(
     const seat = scene.seats.find((x) => x.id === s.seatId);
     return !seat?.levelId || seat.levelId === 'lvl-floor';
   }),
-  'floor seats only',
+  'floor seats only'
 );
 
 console.log('VIEW_HEAT_3D_SMOKE_OK', {

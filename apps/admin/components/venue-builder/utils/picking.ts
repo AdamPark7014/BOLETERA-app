@@ -1,9 +1,7 @@
 import type { SeatMapData } from '@boletera/shared';
 import type { WorldPoint } from '@boletera/venue-engine/render';
 
-export type VenuePick =
-  | { kind: 'stage' }
-  | { kind: 'furniture'; id: string };
+export type VenuePick = { kind: 'stage' } | { kind: 'furniture'; id: string };
 
 /** Half height used by the renderer when it draws the stage plate. */
 const STAGE_HALF_HEIGHT = 18;
@@ -15,7 +13,7 @@ const STAGE_HALF_HEIGHT = 18;
 export function pickVenueEntity(
   scene: SeatMapData,
   world: WorldPoint,
-  tolerance: number,
+  tolerance: number
 ): VenuePick | null {
   const furniture = scene.venue?.furniture ?? [];
   let best: { id: string; dist: number } | null = null;

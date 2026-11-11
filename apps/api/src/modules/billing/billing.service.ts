@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { createHash, randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../../common/audit.service';
@@ -15,7 +11,7 @@ import { AuditService } from '../../common/audit.service';
 export class BillingService {
   constructor(
     private prisma: PrismaService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   async upsertFiscalProfile(
@@ -29,7 +25,7 @@ export class BillingService {
       pacMode?: string;
       pacProvider?: string;
       pacApiKey?: string;
-    },
+    }
   ) {
     return this.prisma.fiscalProfile.upsert({
       where: { organizationId: orgId },
@@ -68,7 +64,7 @@ export class BillingService {
       receptorRfc: string;
       receptorNombre: string;
       receptorUsoCfdi?: string;
-    },
+    }
   ) {
     const profile = await this.prisma.fiscalProfile.findUnique({
       where: { organizationId: orgId },
@@ -93,9 +89,7 @@ export class BillingService {
     const total = Number(order.totalAmount);
 
     const isSandbox = profile.pacMode !== 'production';
-    const uuid = isSandbox
-      ? randomUUID()
-      : randomUUID(); // production: replace with PAC response UUID
+    const uuid = isSandbox ? randomUUID() : randomUUID(); // production: replace with PAC response UUID
 
     const xml = this.buildSandboxXml({
       uuid,

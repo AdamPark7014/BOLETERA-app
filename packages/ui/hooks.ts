@@ -60,8 +60,7 @@ export function useSetPricingRules(eventId: string) {
 export function useCreateCampaign() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) =>
-      apiClient.createCampaign(data.organizationId, data.eventId, data),
+    mutationFn: (data: any) => apiClient.createCampaign(data.organizationId, data.eventId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
     },
@@ -114,7 +113,10 @@ export function useGetRealtimeDashboard(organizationId: string, eventId?: string
   });
 }
 
-export function useGetSettlementReport(organizationId: string, period: 'DAILY' | 'WEEKLY' | 'MONTHLY') {
+export function useGetSettlementReport(
+  organizationId: string,
+  period: 'DAILY' | 'WEEKLY' | 'MONTHLY'
+) {
   return useQuery({
     queryKey: ['settlement', organizationId, period],
     queryFn: () => apiClient.getSettlementReport(organizationId, period),
@@ -214,7 +216,7 @@ export function useGetAISeatRecommendations(
     count?: number;
     viewQuality?: 'best' | 'good' | 'any';
     tier?: 'premium' | 'standard' | 'economy';
-  } = {},
+  } = {}
 ) {
   const eventId = preferences.eventId ?? layoutIdOrEventId;
   return useQuery({

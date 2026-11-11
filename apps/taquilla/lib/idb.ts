@@ -49,7 +49,8 @@ export function openDb(): Promise<IDBDatabase> {
     req.onerror = () => reject(req.error ?? new Error('IndexedDB error'));
     // Otra pestaña de la terminal con una versión vieja abierta bloquea la
     // migración: es mejor decirlo que quedarse colgado sin cola offline.
-    req.onblocked = () => reject(new Error('Cierra las otras pestañas de Taquilla para actualizar el almacén local'));
+    req.onblocked = () =>
+      reject(new Error('Cierra las otras pestañas de Taquilla para actualizar el almacén local'));
   }).catch((err: unknown) => {
     dbPromise = null;
     throw err;
@@ -60,7 +61,7 @@ export function openDb(): Promise<IDBDatabase> {
 function run<T>(
   storeName: string,
   mode: IDBTransactionMode,
-  fn: (store: IDBObjectStore) => IDBRequest<T>,
+  fn: (store: IDBObjectStore) => IDBRequest<T>
 ): Promise<T> {
   return openDb().then(
     (db) =>
@@ -69,7 +70,7 @@ function run<T>(
         const request = fn(tx.objectStore(storeName));
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error ?? new Error('IndexedDB request error'));
-      }),
+      })
   );
 }
 
@@ -110,7 +111,7 @@ export function idbBulkPut<T>(store: string, values: T[]): Promise<void> {
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error ?? new Error('IndexedDB bulk error'));
         tx.onabort = () => reject(tx.error ?? new Error('IndexedDB bulk abort'));
-      }),
+      })
   );
 }
 
@@ -125,6 +126,6 @@ export function idbBulkDelete(store: string, keys: IDBValidKey[]): Promise<void>
         for (const key of keys) os.delete(key);
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error ?? new Error('IndexedDB bulk delete error'));
-      }),
+      })
   );
 }

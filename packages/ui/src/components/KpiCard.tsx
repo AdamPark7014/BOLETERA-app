@@ -94,7 +94,9 @@ export function KpiCard({
 
       <div className={styles.footer}>
         {delta === undefined ? (
-          hint ? <span className={styles.hint}>{hint}</span> : null
+          hint ? (
+            <span className={styles.hint}>{hint}</span>
+          ) : null
         ) : (
           <TrendPill value={delta} invertColors={invertDelta} comparison={deltaLabel} />
         )}

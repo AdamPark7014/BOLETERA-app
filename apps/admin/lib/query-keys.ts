@@ -44,48 +44,31 @@ export const queryKeys = {
     all: scope('ai'),
     forecast: (eventId: string, params: Record<string, unknown> = {}) =>
       scope('ai', 'forecast', eventId, params),
-    anomalies: (params: Record<string, unknown> = {}) =>
-      scope('ai', 'anomalies', params),
-    fraudRisk: (params: Record<string, unknown> = {}) =>
-      scope('ai', 'fraud-risk', params),
+    anomalies: (params: Record<string, unknown> = {}) => scope('ai', 'anomalies', params),
+    fraudRisk: (params: Record<string, unknown> = {}) => scope('ai', 'fraud-risk', params),
     fraudOrder: (orderId: string, params: Record<string, unknown> = {}) =>
       scope('ai', 'fraud-order', orderId, params),
     recommendations: (params: Record<string, unknown> = {}) =>
       scope('ai', 'recommendations', params),
-    executive: (params: Record<string, unknown> = {}) =>
-      scope('ai', 'executive', params),
+    executive: (params: Record<string, unknown> = {}) => scope('ai', 'executive', params),
     /** @deprecated Prefer `executive` — kept for cache key continuity during rename. */
-    narrative: (params: Record<string, unknown> = {}) =>
-      scope('ai', 'executive', params),
-    segmentation: (params: Record<string, unknown> = {}) =>
-      scope('ai', 'segmentation', params),
+    narrative: (params: Record<string, unknown> = {}) => scope('ai', 'executive', params),
+    segmentation: (params: Record<string, unknown> = {}) => scope('ai', 'segmentation', params),
   },
   metrics: {
     all: scope('metrics'),
-    executive: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'executive', params),
-    salesPace: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'sales-pace', params),
-    inventory: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'inventory', params),
-    orders: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'orders', params),
-    access: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'access', params),
-    resale: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'resale', params),
-    waitlist: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'waitlist', params),
-    campaigns: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'campaigns', params),
-    fraud: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'fraud', params),
-    settlements: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'settlements', params),
-    timeseries: (params: Record<string, unknown>) =>
-      scope('metrics', 'timeseries', params),
-    alerts: (params: Record<string, unknown> = {}) =>
-      scope('metrics', 'alerts', params),
+    executive: (params: Record<string, unknown> = {}) => scope('metrics', 'executive', params),
+    salesPace: (params: Record<string, unknown> = {}) => scope('metrics', 'sales-pace', params),
+    inventory: (params: Record<string, unknown> = {}) => scope('metrics', 'inventory', params),
+    orders: (params: Record<string, unknown> = {}) => scope('metrics', 'orders', params),
+    access: (params: Record<string, unknown> = {}) => scope('metrics', 'access', params),
+    resale: (params: Record<string, unknown> = {}) => scope('metrics', 'resale', params),
+    waitlist: (params: Record<string, unknown> = {}) => scope('metrics', 'waitlist', params),
+    campaigns: (params: Record<string, unknown> = {}) => scope('metrics', 'campaigns', params),
+    fraud: (params: Record<string, unknown> = {}) => scope('metrics', 'fraud', params),
+    settlements: (params: Record<string, unknown> = {}) => scope('metrics', 'settlements', params),
+    timeseries: (params: Record<string, unknown>) => scope('metrics', 'timeseries', params),
+    alerts: (params: Record<string, unknown> = {}) => scope('metrics', 'alerts', params),
   },
   campaigns: {
     all: scope('campaigns'),
@@ -100,8 +83,7 @@ export const queryKeys = {
   /** Claves de composición CRM (sin GET /crm/*; cache de vistas derivadas). */
   crm: {
     all: scope('crm'),
-    workspace: (params: Record<string, unknown> = {}) =>
-      scope('crm', 'workspace', params),
+    workspace: (params: Record<string, unknown> = {}) => scope('crm', 'workspace', params),
   },
   resale: {
     all: scope('resale'),
@@ -119,10 +101,8 @@ export const queryKeys = {
     all: scope('api-management'),
     /** Comparte caché con partners.keys — misma fuente GET /partners/:org/keys. */
     keys: (organizationId: string) => scope('partners', organizationId, 'keys'),
-    usage: (organizationId: string) =>
-      scope('api-management', organizationId, 'usage'),
-    quotas: (organizationId: string) =>
-      scope('api-management', organizationId, 'quotas'),
+    usage: (organizationId: string) => scope('api-management', organizationId, 'usage'),
+    quotas: (organizationId: string) => scope('api-management', organizationId, 'quotas'),
   },
   integrations: {
     all: scope('integrations'),
@@ -143,42 +123,33 @@ export const queryKeys = {
   },
   inventory: {
     all: scope('inventory'),
-    metrics: (params: Record<string, unknown> = {}) =>
-      scope('inventory', 'metrics', params),
-    salesPace: (params: Record<string, unknown> = {}) =>
-      scope('inventory', 'sales-pace', params),
-    alerts: (params: Record<string, unknown> = {}) =>
-      scope('inventory', 'alerts', params),
+    metrics: (params: Record<string, unknown> = {}) => scope('inventory', 'metrics', params),
+    salesPace: (params: Record<string, unknown> = {}) => scope('inventory', 'sales-pace', params),
+    alerts: (params: Record<string, unknown> = {}) => scope('inventory', 'alerts', params),
     availability: (eventId: string) => scope('inventory', 'availability', eventId),
   },
   reservations: {
     all: scope('reservations'),
-    inventory: (params: Record<string, unknown> = {}) =>
-      scope('reservations', 'inventory', params),
+    inventory: (params: Record<string, unknown> = {}) => scope('reservations', 'inventory', params),
     ordersMetrics: (params: Record<string, unknown> = {}) =>
       scope('reservations', 'orders-metrics', params),
-    orders: (filters: Record<string, unknown> = {}) =>
-      scope('reservations', 'orders', filters),
+    orders: (filters: Record<string, unknown> = {}) => scope('reservations', 'orders', filters),
   },
   pricing: {
     all: scope('pricing'),
-    recommendations: (eventId: string) =>
-      scope('pricing', 'recommendations', eventId),
+    recommendations: (eventId: string) => scope('pricing', 'recommendations', eventId),
     pending: (eventId: string) => scope('pricing', 'pending', eventId),
     revenue: (eventId: string) => scope('pricing', 'revenue-estimate', eventId),
-    history: (offerId: string, limit: number) =>
-      scope('pricing', 'history', offerId, limit),
+    history: (offerId: string, limit: number) => scope('pricing', 'history', offerId, limit),
     event: (eventId: string) => scope('pricing', eventId),
   },
   audit: {
     all: scope('audit'),
-    log: (organizationId: string, limit: number) =>
-      scope('audit', organizationId, limit),
+    log: (organizationId: string, limit: number) => scope('audit', organizationId, limit),
   },
   billing: {
     all: scope('billing'),
-    fiscalProfile: (organizationId: string) =>
-      scope('billing', organizationId, 'fiscal-profile'),
+    fiscalProfile: (organizationId: string) => scope('billing', organizationId, 'fiscal-profile'),
     invoices: (organizationId: string) => scope('billing', organizationId, 'invoices'),
   },
   season: {
@@ -199,17 +170,12 @@ export const queryKeys = {
   },
   sponsorships: {
     all: scope('sponsorships'),
-    sponsors: (organizationId: string) =>
-      scope('sponsorships', organizationId, 'sponsors'),
+    sponsors: (organizationId: string) => scope('sponsorships', organizationId, 'sponsors'),
     assets: (organizationId: string) => scope('sponsorships', organizationId, 'assets'),
-    packages: (organizationId: string) =>
-      scope('sponsorships', organizationId, 'packages'),
-    activations: (organizationId: string) =>
-      scope('sponsorships', organizationId, 'activations'),
-    compliance: (organizationId: string) =>
-      scope('sponsorships', organizationId, 'compliance'),
-    activity: (organizationId: string) =>
-      scope('sponsorships', organizationId, 'activity'),
+    packages: (organizationId: string) => scope('sponsorships', organizationId, 'packages'),
+    activations: (organizationId: string) => scope('sponsorships', organizationId, 'activations'),
+    compliance: (organizationId: string) => scope('sponsorships', organizationId, 'compliance'),
+    activity: (organizationId: string) => scope('sponsorships', organizationId, 'activity'),
   },
   reports: {
     all: scope('reports'),
@@ -219,8 +185,7 @@ export const queryKeys = {
   organization: {
     all: scope('organization'),
     detail: (organizationId: string) => scope('organization', organizationId),
-    capabilities: (organizationId: string) =>
-      scope('organization', organizationId, 'capabilities'),
+    capabilities: (organizationId: string) => scope('organization', organizationId, 'capabilities'),
     team: (organizationId: string) => scope('organization', organizationId, 'team'),
   },
   branding: {

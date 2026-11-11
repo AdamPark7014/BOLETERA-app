@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useRef,
-  type ReactNode,
-  type RefObject,
-} from 'react';
+import { createContext, useContext, useMemo, useRef, type ReactNode, type RefObject } from 'react';
 import type { InteractionOverlay, ScreenPoint } from '@boletera/venue-engine/render';
 import { createOverlayPainter } from '../canvas/useRendererBridge';
 import { useRendererHandle } from '../canvas/renderer-context';

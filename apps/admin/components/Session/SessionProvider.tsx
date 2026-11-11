@@ -283,7 +283,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         resolvingRef.current = false;
       }
     },
-    [email, settleWaiters],
+    [email, settleWaiters]
   );
 
   const capabilities = useMemo(() => capabilitiesFor(role), [role]);
@@ -318,7 +318,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       expiringSoon,
       requireReauth,
       logout,
-    ],
+    ]
   );
 
   return (
@@ -391,7 +391,12 @@ function ExpiryWarning({
         aria-label="Ocultar aviso de sesión"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path
+            d="M6 6l12 12M18 6L6 18"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
     </div>
@@ -429,7 +434,7 @@ function ReauthModal({
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key !== 'Tab') return;
     const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([readonly]), [href], [tabindex]:not([tabindex="-1"])',
+      'button:not([disabled]), input:not([readonly]), [href], [tabindex]:not([tabindex="-1"])'
     );
     if (!focusables?.length) return;
     const first = focusables[0];
@@ -456,7 +461,7 @@ function ReauthModal({
           ? 'Contraseña incorrecta.'
           : err instanceof ApiError
             ? err.userMessage
-            : 'No se pudo reautenticar.',
+            : 'No se pudo reautenticar.'
       );
     } finally {
       setBusy(false);

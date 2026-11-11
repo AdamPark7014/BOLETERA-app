@@ -80,7 +80,7 @@ const MAX_MANIFEST_PAGES = 60;
 /** Descarga el manifiesto completo y lo guarda en IndexedDB. */
 export async function downloadManifest(
   eventId: string,
-  opts: { eventTitle?: string; onProgress?: (loaded: number) => void } = {},
+  opts: { eventTitle?: string; onProgress?: (loaded: number) => void } = {}
 ): Promise<ManifestMeta> {
   if (!idbAvailable()) throw new Error('Este navegador no permite almacenamiento offline');
   let cursor: string | null = null;
@@ -93,11 +93,11 @@ export async function downloadManifest(
     const qs = new URLSearchParams({ limit: String(MANIFEST_PAGE_LIMIT) });
     if (cursor) qs.set('cursor', cursor);
     const data = await apiJson<ManifestPage>(
-      `/access/events/${encodeURIComponent(eventId)}/manifest?${qs.toString()}`,
+      `/access/events/${encodeURIComponent(eventId)}/manifest?${qs.toString()}`
     );
     await idbBulkPut<ManifestEntry>(
       STORE_MANIFEST,
-      data.entries.map((e) => ({ ...e, eventId })),
+      data.entries.map((e) => ({ ...e, eventId }))
     );
     loaded += data.entries.length;
     issuedAt = data.issuedAt;

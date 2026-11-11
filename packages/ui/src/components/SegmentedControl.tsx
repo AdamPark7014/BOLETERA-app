@@ -53,7 +53,7 @@ export function SegmentedControl<T extends string = string>({
     defaultValue ?? firstValue,
     (next) => {
       if (next !== undefined) onValueChange?.(next);
-    },
+    }
   );
 
   const enabled = options.filter((option) => !option.disabled);
@@ -78,7 +78,7 @@ export function SegmentedControl<T extends string = string>({
         ?.querySelector<HTMLElement>(`[data-segment="${next.value}"]`)
         ?.focus({ preventScroll: true });
     },
-    [enabled, value, setValue],
+    [enabled, value, setValue]
   );
 
   return (

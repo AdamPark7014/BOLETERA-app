@@ -33,11 +33,12 @@ export const CHANNEL_LABELS: Record<SalesChannel, string> = {
   RESALE: 'Reventa',
 };
 
-export const RANGE_OPTIONS: ReadonlyArray<{ value: MetricsRangeKey; label: string; days: number }> = [
-  { value: '7d', label: '7 días', days: 7 },
-  { value: '30d', label: '30 días', days: 30 },
-  { value: '90d', label: '90 días', days: 90 },
-];
+export const RANGE_OPTIONS: ReadonlyArray<{ value: MetricsRangeKey; label: string; days: number }> =
+  [
+    { value: '7d', label: '7 días', days: 7 },
+    { value: '30d', label: '30 días', days: 30 },
+    { value: '90d', label: '90 días', days: 90 },
+  ];
 
 export const STALE_PENDING_HOURS = 2;
 
@@ -104,7 +105,7 @@ export function kpiDeltaRatio(deltaPercent: number | null | undefined): number |
 
 export function formatKpiValue(
   value: number,
-  unit: 'mxn' | 'count' | 'percent' | 'ratio' | undefined,
+  unit: 'mxn' | 'count' | 'percent' | 'ratio' | undefined
 ): string {
   if (unit === 'mxn') return money(value);
   if (unit === 'percent') {

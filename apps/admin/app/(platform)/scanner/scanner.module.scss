@@ -4,7 +4,9 @@
 // «permitido» de «rechazado» sólo por verde y rojo).
 
 $ink: var(--bl-gray-900);
-$muted: var(--bl-gray-600); // 7.0:1 sobre blanco — el var(--bl-gray-500) anterior no llegaba a 4.5:1
+$muted: var(
+  --bl-gray-600
+); // 7.0:1 sobre blanco — el var(--bl-gray-500) anterior no llegaba a 4.5:1
 $border: var(--bl-gray-300);
 
 .page {

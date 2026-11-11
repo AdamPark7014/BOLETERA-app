@@ -56,7 +56,7 @@ export function Tabs({
   const [value, setValue] = useControllableState(
     controlledValue,
     defaultValue ?? firstId,
-    onValueChange,
+    onValueChange
   );
 
   const enabled = items.filter((item) => !item.disabled);
@@ -89,7 +89,7 @@ export function Tabs({
         if (last) focusTab(last.id);
       }
     },
-    [enabled, activeIndex, focusTab],
+    [enabled, activeIndex, focusTab]
   );
 
   const activeItem = items.find((item) => item.id === value);

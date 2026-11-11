@@ -38,8 +38,7 @@ export function useInventoryUrlState() {
     const rangeRaw = searchParams.get('range') ?? '90';
     const range: RangeKey = isRangeKey(rangeRaw) ? rangeRaw : '90';
     const pressures = parseList(searchParams.get('pressure')).filter(isPressure);
-    const filterSelection: FilterSelection =
-      pressures.length > 0 ? { pressure: pressures } : {};
+    const filterSelection: FilterSelection = pressures.length > 0 ? { pressure: pressures } : {};
     return {
       range,
       q: searchParams.get('q') ?? '',
@@ -61,34 +60,31 @@ export function useInventoryUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   return {
     ...state,
-    setRange: useCallback(
-      (range: RangeKey) => replaceParams({ range }),
-      [replaceParams],
-    ),
+    setRange: useCallback((range: RangeKey) => replaceParams({ range }), [replaceParams]),
     setSearch: useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]),
     setEventId: useCallback(
       (eventId: string | null) => replaceParams({ event: eventId }),
-      [replaceParams],
+      [replaceParams]
     ),
     setVenueId: useCallback(
       (venueId: string | null) => replaceParams({ venue: venueId, event: null }),
-      [replaceParams],
+      [replaceParams]
     ),
     setFilterSelection: useCallback(
       (selection: FilterSelection) => {
         const pressures = selection.pressure ?? [];
         replaceParams({ pressure: pressures.length ? pressures.join(',') : null });
       },
-      [replaceParams],
+      [replaceParams]
     ),
     setSelectedId: useCallback(
       (zoneId: string | null) => replaceParams({ zone: zoneId }),
-      [replaceParams],
+      [replaceParams]
     ),
     clearFilters: useCallback(
       () =>
@@ -98,7 +94,7 @@ export function useInventoryUrlState() {
           event: null,
           venue: null,
         }),
-      [replaceParams],
+      [replaceParams]
     ),
   };
 }

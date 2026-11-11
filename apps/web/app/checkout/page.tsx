@@ -7,18 +7,22 @@ import { Field, Money, NamedStatus, TicketButton, formatTicketAmount } from '@bo
 import { SiteHeader } from '@/components/SiteHeader';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import { authHeaders, getStoredUser } from '@/lib/auth';
-import { checkoutFingerprint, clearCheckoutAttempt, getCheckoutIdempotencyKey } from '@/lib/checkout-attempt';
+import {
+  checkoutFingerprint,
+  clearCheckoutAttempt,
+  getCheckoutIdempotencyKey,
+} from '@/lib/checkout-attempt';
 import { useCartStore } from '@/lib/cart-store';
 import { orderPath, saveOrderAccessToken } from '@/lib/order-access';
-import { formatCountdown, isDeferredMethod, secondsUntil, type PaymentMethodId } from '@/lib/payment-window';
+import {
+  formatCountdown,
+  isDeferredMethod,
+  secondsUntil,
+  type PaymentMethodId,
+} from '@/lib/payment-window';
 import { releaseHolds } from '@/lib/release-holds';
 import purchase from '@/components/purchase/purchase.module.scss';
-import {
-  fetchCartPricing,
-  pricingTotal,
-  sameTotal,
-  type CartPricing,
-} from '@/lib/pricing';
+import { fetchCartPricing, pricingTotal, sameTotal, type CartPricing } from '@/lib/pricing';
 import { clearAffiliateRef, getAffiliateRefForEvent } from '@/lib/affiliate-ref';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -112,7 +116,7 @@ function CheckoutForm() {
   const offerId = params.get('offerId') ?? '';
   const urlHoldIds = useMemo(
     () => (params.get('holdIds') ?? '').split(',').filter(Boolean),
-    [params],
+    [params]
   );
   const rawCart = useCartStore((s) => s.items.find((i) => i.eventId === eventId));
   const removeFromCart = useCartStore((s) => s.removeAt);
@@ -121,28 +125,34 @@ function CheckoutForm() {
   const cartItem = rawCart
     ? {
         ...rawCart,
-        lines:
-          rawCart.lines?.length
-            ? rawCart.lines
-            : rawCart.offerId && rawCart.holdIds
-              ? [
-                  {
-                    offerId: rawCart.offerId,
-                    holdIds: rawCart.holdIds,
-                    seatLabels: rawCart.seatLabels,
-                    quantity: rawCart.holdIds.length,
-                    lineTotal: rawCart.lineTotal,
-                  },
-                ]
-              : [],
+        lines: rawCart.lines?.length
+          ? rawCart.lines
+          : rawCart.offerId && rawCart.holdIds
+            ? [
+                {
+                  offerId: rawCart.offerId,
+                  holdIds: rawCart.holdIds,
+                  seatLabels: rawCart.seatLabels,
+                  quantity: rawCart.holdIds.length,
+                  lineTotal: rawCart.lineTotal,
+                },
+              ]
+            : [],
       }
     : null;
-  const orderLines =
-    cartItem?.lines?.length
-      ? cartItem.lines
-      : offerId && urlHoldIds.length
-        ? [{ offerId, holdIds: urlHoldIds, quantity: urlHoldIds.length, offerName: undefined, seatLabels: undefined }]
-        : [];
+  const orderLines = cartItem?.lines?.length
+    ? cartItem.lines
+    : offerId && urlHoldIds.length
+      ? [
+          {
+            offerId,
+            holdIds: urlHoldIds,
+            quantity: urlHoldIds.length,
+            offerName: undefined,
+            seatLabels: undefined,
+          },
+        ]
+      : [];
   const holdIds = orderLines.flatMap((l) => l.holdIds);
   const cartExpires = cartItem?.expiresAt;
   const expiresAt = params.get('expiresAt') || cartExpires || null;
@@ -221,7 +231,7 @@ function CheckoutForm() {
       })),
     // `linesKey` resume la forma del pedido; recalcular por identidad de array
     // dispararía una petición de precio en cada render.
-    [linesKey], // eslint-disable-line react-hooks/exhaustive-deps
+    [linesKey] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // Precio completo desde el primer render de esta pantalla: sin él, el
@@ -233,7 +243,7 @@ function CheckoutForm() {
     fetchCartPricing(
       API,
       { eventId, items: pricingItems, promotionCode: promoValid ? promo : undefined },
-      controller.signal,
+      controller.signal
     )
       .then((data) => {
         if (controller.signal.aborted || !data) return;
@@ -403,7 +413,7 @@ function CheckoutForm() {
             ref: action.reference ?? '',
             clabe: action.metadata?.clabe ?? '',
             concept: action.metadata?.concept ?? '',
-          }),
+          })
         );
         return;
       }
@@ -423,7 +433,12 @@ function CheckoutForm() {
   void tick;
   const expired = holdExpired || (Boolean(expiresAt) && remain <= 0);
   const canPay =
-    !loading && !expired && holdIds.length > 0 && step === 'pago' && offered != null && offered.includes(method);
+    !loading &&
+    !expired &&
+    holdIds.length > 0 &&
+    step === 'pago' &&
+    offered != null &&
+    offered.includes(method);
   const deferred = isDeferredMethod(method);
   const payAmount = priceChange ? priceChange.to : total;
   const payLabel = deferred ? 'Generar referencia' : `Pagar ${formatTicketAmount(payAmount)}`;
@@ -578,25 +593,25 @@ function CheckoutForm() {
               <p className={purchase.caption}>No hay un método de pago para esta función.</p>
             ) : null}
             {visibleMethods.length > 0 ? (
-            <div className={purchase.segment} role="radiogroup" aria-label="Método de pago">
-              {visibleMethods.map((item, index) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={method === item.id}
-                  tabIndex={method === item.id ? 0 : -1}
-                  ref={(element) => {
-                    methodRefs.current[index] = element;
-                  }}
-                  onKeyDown={(event) => onMethodKeyDown(event, index)}
-                  aria-pressed={method === item.id}
-                  onClick={() => setMethod(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+              <div className={purchase.segment} role="radiogroup" aria-label="Método de pago">
+                {visibleMethods.map((item, index) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={method === item.id}
+                    tabIndex={method === item.id ? 0 : -1}
+                    ref={(element) => {
+                      methodRefs.current[index] = element;
+                    }}
+                    onKeyDown={(event) => onMethodKeyDown(event, index)}
+                    aria-pressed={method === item.id}
+                    onClick={() => setMethod(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             ) : null}
             {visibleMethods.some((item) => item.id === method) ? (
               <p className={purchase.lead}>{methodLine}</p>
@@ -656,7 +671,11 @@ function CheckoutForm() {
           </p>
           <Money label="Total" amount={total} currency={Boolean(pricing)} lines={moneyLines} />
           {step === 'apartado' ? (
-            <TicketButton type="button" disabled={expired || holdIds.length === 0} onClick={goDatos}>
+            <TicketButton
+              type="button"
+              disabled={expired || holdIds.length === 0}
+              onClick={goDatos}
+            >
               Escribir datos
             </TicketButton>
           ) : null}
@@ -666,7 +685,11 @@ function CheckoutForm() {
             </TicketButton>
           ) : null}
           {step === 'pago' ? (
-            <TicketButton type="button" disabled={!canPay || !pricing || pricingLoading} onClick={() => void pay()}>
+            <TicketButton
+              type="button"
+              disabled={!canPay || !pricing || pricingLoading}
+              onClick={() => void pay()}
+            >
               {loading ? 'Pagando' : payLabel}
             </TicketButton>
           ) : null}

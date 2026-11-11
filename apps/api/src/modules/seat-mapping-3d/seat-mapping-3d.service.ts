@@ -106,7 +106,7 @@ export class SeatMapping3DService {
   private mapToSections3D(
     map: SeatMapData,
     ticketMap?: Map<string, string>,
-    sightlineBySeat?: Map<string, { score: number; grade: string }>,
+    sightlineBySeat?: Map<string, { score: number; grade: string }>
   ): Section3D[] {
     const scene = resolveGeometry(map);
     const projected = projectTo3D(scene);
@@ -118,10 +118,7 @@ export class SeatMapping3DService {
         const pose = poseById.get(s.id);
         const sight = sightlineBySeat?.get(s.id);
         const statusRaw = ticketMap?.get(s.id) ?? 'available';
-        const status =
-          s.visibility?.blocked
-            ? 'blocked'
-            : (statusRaw as SeatPosition['status']);
+        const status = s.visibility?.blocked ? 'blocked' : (statusRaw as SeatPosition['status']);
         return {
           id: s.id,
           label: s.label,
@@ -167,7 +164,7 @@ export class SeatMapping3DService {
     const map = await this.loadVenueMap(venueId);
     if (!map || !map.sections.some((s) => s.seats.length)) {
       throw new BadRequestException(
-        'Venue has no authored seat map. Open the map editor and apply a template first.',
+        'Venue has no authored seat map. Open the map editor and apply a template first.'
       );
     }
 
@@ -254,11 +251,11 @@ export class SeatMapping3DService {
     });
 
     const selectedSeat = selectedSeatId
-      ? venue.flatMap((s) => s.seats).find((s) => s.id === selectedSeatId) ?? null
+      ? (venue.flatMap((s) => s.seats).find((s) => s.id === selectedSeatId) ?? null)
       : null;
 
     this.logger.log(
-      `Interactive status for ${venueName}: ${Object.keys(statusBySeat).length} seats (inventory)`,
+      `Interactive status for ${venueName}: ${Object.keys(statusBySeat).length} seats (inventory)`
     );
 
     return {
@@ -290,7 +287,7 @@ export class SeatMapping3DService {
       count: number;
       accessible?: boolean;
       viewQuality?: 'best' | 'good' | 'any';
-    },
+    }
   ) {
     const { map } = await this.loadEventMap(eventId);
     const ticketMap = await this.ticketStatusMap(eventId);
@@ -304,7 +301,8 @@ export class SeatMapping3DService {
       if (s.visibility?.blocked) return false;
       if (preferences.tier && s.tier && s.tier !== preferences.tier) return false;
       const grade = scoreById.get(s.id)?.grade;
-      if (preferences.viewQuality === 'best' && grade !== 'premium' && grade !== 'good') return false;
+      if (preferences.viewQuality === 'best' && grade !== 'premium' && grade !== 'good')
+        return false;
       if (preferences.viewQuality === 'good' && (grade === 'restricted' || grade === 'blocked')) {
         return false;
       }

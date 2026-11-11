@@ -70,7 +70,11 @@ export function convexHull(points: readonly [number, number][]): [number, number
  * fuera. Se infla el polígono desde su centroide para que la mancha cubra las
  * butacas de verdad.
  */
-function inflate(points: [number, number][], centroid: [number, number], pad: number): [number, number][] {
+function inflate(
+  points: [number, number][],
+  centroid: [number, number],
+  pad: number
+): [number, number][] {
   return points.map(([x, y]) => {
     const dx = x - centroid[0];
     const dy = y - centroid[1];
@@ -82,7 +86,7 @@ function inflate(points: [number, number][], centroid: [number, number], pad: nu
 export function buildSectionShapes(
   sections: readonly SectionInput[],
   seats: readonly RenderSeat[],
-  seatPitch: number,
+  seatPitch: number
 ): SectionShape[] {
   const indexesBySection = new Map<string, number[]>();
   for (let i = 0; i < seats.length; i++) {
@@ -127,9 +131,8 @@ export function buildSectionShapes(
       ? [sumX / indexes.length, sumY / indexes.length]
       : [(minX + maxX) / 2, (minY + maxY) / 2];
 
-    const polygon = authored.length >= 3
-      ? authored
-      : inflate(convexHull(pts), centroid, seatPitch * 0.7);
+    const polygon =
+      authored.length >= 3 ? authored : inflate(convexHull(pts), centroid, seatPitch * 0.7);
 
     shapes.push({
       id: section.id,

@@ -36,7 +36,7 @@ const totalSeatsCache: Cache<SeatMapData, number> = { key: null, value: null };
 
 export function selectTotalSeats(scene: SeatMapData): number {
   return cached(totalSeatsCache, scene, () =>
-    scene.sections.reduce((sum, section) => sum + section.seats.length, 0),
+    scene.sections.reduce((sum, section) => sum + section.seats.length, 0)
   );
 }
 
@@ -67,7 +67,7 @@ export function selectRenderScene(state: EditorState): SeatMapData {
 /** World AABB of a set of seats (null when none of them resolve). */
 export function selectSelectionBounds(
   scene: SeatMapData,
-  seatIds: readonly string[],
+  seatIds: readonly string[]
 ): WorldRect | null {
   const index = selectSeatIndex(scene);
   let minX = Infinity;
@@ -88,10 +88,7 @@ export function selectSelectionBounds(
   return { minX, minY, maxX, maxY };
 }
 
-export function selectSection(
-  scene: SeatMapData,
-  sectionId: string | null,
-): SeatMapSection | null {
+export function selectSection(scene: SeatMapData, sectionId: string | null): SeatMapSection | null {
   if (!sectionId) return null;
   return scene.sections.find((section) => section.id === sectionId) ?? null;
 }

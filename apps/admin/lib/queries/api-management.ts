@@ -7,12 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { http } from '../http';
 import { queryKeys } from '../query-keys';
-import {
-  useApiKeys,
-  useCreateApiKey,
-  useRevokeApiKey,
-  type ApiKey,
-} from './partners';
+import { useApiKeys, useCreateApiKey, useRevokeApiKey, type ApiKey } from './partners';
 
 export type { ApiKey };
 
@@ -46,7 +41,10 @@ export type ApiUsageSummary = {
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ROTATION_WARN_MS = 90 * DAY_MS;
 
-function deriveUsage(keys: readonly ApiKey[], now: number): Omit<ApiUsageSummary, 'organizationId'> {
+function deriveUsage(
+  keys: readonly ApiKey[],
+  now: number
+): Omit<ApiUsageSummary, 'organizationId'> {
   const active = keys.filter((key) => key.active);
   let usedIn24h = 0;
   let usedIn7d = 0;
@@ -129,7 +127,7 @@ export function useRotateManagedApiKey(organizationId: string) {
         throw new Error(
           error instanceof Error
             ? `Clave nueva emitida (${created.keyPrefix}…), pero no se pudo revocar la anterior: ${error.message}`
-            : `Clave nueva emitida (${created.keyPrefix}…), pero no se pudo revocar la anterior.`,
+            : `Clave nueva emitida (${created.keyPrefix}…), pero no se pudo revocar la anterior.`
         );
       }
       return created;
@@ -220,7 +218,7 @@ export function useInvalidateApiKeys(organizationId: string) {
 
 export async function createApiKeyDirect(
   organizationId: string,
-  body: CreateApiKeyInput,
+  body: CreateApiKeyInput
 ): Promise<CreatedApiKey> {
   return http<CreatedApiKey>(`/partners/${organizationId}/keys`, {
     method: 'POST',

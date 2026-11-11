@@ -24,7 +24,7 @@ type BridgeOptions = {
 function composeOverlay(
   renderer: SeatMapRenderer,
   state: EditorStore,
-  extra: Partial<InteractionOverlay> | null,
+  extra: Partial<InteractionOverlay> | null
 ): void {
   const overlay: InteractionOverlay = {
     selectedIds: state.selection.seatIds,
@@ -132,7 +132,7 @@ export function useRendererBridge({ handle, editor, overlayExtraRef }: BridgeOpt
 export function createOverlayPainter(
   handle: RendererHandle,
   editor: EditorStoreApi,
-  overlayExtraRef: { current: Partial<InteractionOverlay> | null },
+  overlayExtraRef: { current: Partial<InteractionOverlay> | null }
 ): OverlayComposer {
   return (extra) => {
     overlayExtraRef.current = extra;

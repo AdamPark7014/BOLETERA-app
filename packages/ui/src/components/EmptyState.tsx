@@ -80,7 +80,10 @@ function Illustration({ name }: { name: EmptyIllustration }) {
     case 'inbox':
       return (
         <>
-          <path className={styles.fillSoft} d="M20 54h22l6 12h24l6-12h22v22a8 8 0 0 1-8 8H28a8 8 0 0 1-8-8z" />
+          <path
+            className={styles.fillSoft}
+            d="M20 54h22l6 12h24l6-12h22v22a8 8 0 0 1-8 8H28a8 8 0 0 1-8-8z"
+          />
           <path
             className={styles.strokeSoft}
             d="M20 54 32 26a6 6 0 0 1 6-4h44a6 6 0 0 1 6 4l12 28"

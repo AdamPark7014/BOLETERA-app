@@ -196,7 +196,7 @@ export function DataTable<T extends Record<string, unknown>>({
       if (controlledSort === undefined) setInternalSort(next);
       onSortChange?.(next);
     },
-    [columns, sort, controlledSort, onSortChange],
+    [columns, sort, controlledSort, onSortChange]
   );
 
   // ------------------------------------------------------------- seleccion
@@ -206,7 +206,7 @@ export function DataTable<T extends Record<string, unknown>>({
       if (selectedKeys === undefined) setInternalSelection(keys);
       onSelectionChange?.(keys);
     },
-    [selectedKeys, onSelectionChange],
+    [selectedKeys, onSelectionChange]
   );
 
   const toggleRow = useCallback(
@@ -231,7 +231,7 @@ export function DataTable<T extends Record<string, unknown>>({
       }
       lastClickedIndex.current = index;
     },
-    [selectionSet, sortedData, rowKey, commitSelection],
+    [selectionSet, sortedData, rowKey, commitSelection]
   );
 
   const allKeys = useMemo(() => sortedData.map(rowKey), [sortedData, rowKey]);
@@ -258,7 +258,7 @@ export function DataTable<T extends Record<string, unknown>>({
 
   const columnWidth = useCallback(
     (column: DataTableColumn<T>) => widths[column.key] ?? column.width ?? DEFAULT_WIDTH,
-    [widths],
+    [widths]
   );
 
   const gridTemplate = useMemo(() => {
@@ -298,7 +298,7 @@ export function DataTable<T extends Record<string, unknown>>({
       handle.addEventListener('pointerup', onUp);
       handle.addEventListener('pointercancel', onUp);
     },
-    [columnWidth, resizeColumn],
+    [columnWidth, resizeColumn]
   );
 
   const resizeWithKeyboard = useCallback(
@@ -312,7 +312,7 @@ export function DataTable<T extends Record<string, unknown>>({
         resizeColumn(column, columnWidth(column) - step);
       }
     },
-    [columnWidth, resizeColumn],
+    [columnWidth, resizeColumn]
   );
 
   // --------------------------------------------------------- virtualizacion
@@ -350,7 +350,7 @@ export function DataTable<T extends Record<string, unknown>>({
       }
       return low;
     },
-    [offsets, rowPx, sortedData.length],
+    [offsets, rowPx, sortedData.length]
   );
 
   const range = useMemo(() => {
@@ -359,7 +359,7 @@ export function DataTable<T extends Record<string, unknown>>({
     const end = clamp(
       findIndexAt(scrollTop + viewportHeight) + overscan + 1,
       start,
-      sortedData.length,
+      sortedData.length
     );
     const padTop = offsets ? (offsets[start] ?? 0) : start * rowPx;
     return { start, end, padTop };
@@ -405,7 +405,9 @@ export function DataTable<T extends Record<string, unknown>>({
             type="checkbox"
             checked={allSelected}
             onChange={() => commitSelection(allSelected ? [] : allKeys)}
-            aria-label={allSelected ? 'Deseleccionar todas las filas' : 'Seleccionar todas las filas'}
+            aria-label={
+              allSelected ? 'Deseleccionar todas las filas' : 'Seleccionar todas las filas'
+            }
           />
         </div>
       ) : null}
@@ -503,17 +505,16 @@ export function DataTable<T extends Record<string, unknown>>({
       </div>
     );
   } else if (sortedData.length === 0) {
-    body =
-      empty ?? (
-        <EmptyState
-          className={styles.state}
-          size="sm"
-          tone="neutral"
-          illustration="search"
-          title="Sin resultados"
-          description="Ajusta los filtros o amplia el rango de fechas para ver informacion aqui."
-        />
-      );
+    body = empty ?? (
+      <EmptyState
+        className={styles.state}
+        size="sm"
+        tone="neutral"
+        illustration="search"
+        title="Sin resultados"
+        description="Ajusta los filtros o amplia el rango de fechas para ver informacion aqui."
+      />
+    );
   } else {
     const visible = sortedData.slice(range.start, range.end);
     body = (
@@ -538,7 +539,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     styles.row,
                     styles.bodyRow,
                     isSelected && styles.selected,
-                    onRowClick && styles.clickable,
+                    onRowClick && styles.clickable
                   )}
                   role="row"
                   aria-rowindex={index + 2}
@@ -600,9 +601,7 @@ export function DataTable<T extends Record<string, unknown>>({
                       role="cell"
                     >
                       <span className={styles.cellContent}>
-                        {column.render
-                          ? column.render(row, index)
-                          : String(row[column.key] ?? '')}
+                        {column.render ? column.render(row, index) : String(row[column.key] ?? '')}
                       </span>
                     </div>
                   ))}
@@ -647,7 +646,8 @@ export function DataTable<T extends Record<string, unknown>>({
       {selectable && selection.length > 0 ? (
         <div className={styles.selectionBar} role="status">
           <span>
-            {selection.length} {selection.length === 1 ? 'fila seleccionada' : 'filas seleccionadas'}
+            {selection.length}{' '}
+            {selection.length === 1 ? 'fila seleccionada' : 'filas seleccionadas'}
           </span>
           <Button variant="ghost" size="sm" onClick={() => commitSelection([])}>
             Limpiar seleccion

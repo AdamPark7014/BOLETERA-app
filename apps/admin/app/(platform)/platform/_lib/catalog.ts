@@ -302,7 +302,7 @@ function resolveState(enabled: boolean, activation: ActivationSource): Capabilit
 function resolveExplanation(
   state: CapabilityState,
   definition: CapabilityDefinition,
-  usage: CapabilityUsageReading | null,
+  usage: CapabilityUsageReading | null
 ): string {
   if (state === 'active') {
     if (usage) return `En operación con ${usage.value} ${usage.label}.`;

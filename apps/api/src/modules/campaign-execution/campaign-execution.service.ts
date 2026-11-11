@@ -37,7 +37,7 @@ export class CampaignExecutionService {
   private async getEventCampaigns(eventId: string): Promise<EventCampaign[]> {
     const event = await this.prisma.event.findUnique({ where: { id: eventId } });
     if (!event) throw new BadRequestException('Event not found');
-    return ((event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? []);
+    return (event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? [];
   }
 
   private async saveCampaigns(eventId: string, campaigns: EventCampaign[]) {
@@ -62,7 +62,7 @@ export class CampaignExecutionService {
       quantityPerUser: number;
       discountType: 'percentage' | 'fixed';
       discountValue: number;
-    },
+    }
   ) {
     const event = await this.prisma.event.findFirst({
       where: { id: eventId, organizationId },
@@ -85,8 +85,9 @@ export class CampaignExecutionService {
       redeemed: 0,
       codes:
         data.type === 'presale'
-          ? Array.from({ length: Math.min(data.allocation, 500) }, () =>
-              `PS${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          ? Array.from(
+              { length: Math.min(data.allocation, 500) },
+              () => `PS${Math.random().toString(36).substring(2, 8).toUpperCase()}`
             )
           : undefined,
     };
@@ -99,7 +100,10 @@ export class CampaignExecutionService {
           code,
           organizationId,
           name: data.name,
-          type: data.discountType === 'percentage' ? PromotionType.PERCENTAGE : PromotionType.FIXED_AMOUNT,
+          type:
+            data.discountType === 'percentage'
+              ? PromotionType.PERCENTAGE
+              : PromotionType.FIXED_AMOUNT,
           value: new Decimal(data.discountValue),
           startDate: data.startsAt,
           endDate: data.endsAt,
@@ -133,7 +137,7 @@ export class CampaignExecutionService {
           allocation: data.allocation,
           quantityPerUser: data.quantityPerUser,
         },
-        loyaltyRule,
+        loyaltyRule
       );
     }
 
@@ -153,7 +157,7 @@ export class CampaignExecutionService {
       select: { id: true, metadata: true },
     });
     for (const event of events) {
-      const campaigns = ((event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? []);
+      const campaigns = (event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? [];
       const idx = campaigns.findIndex((c) => c.id === campaignId);
       if (idx >= 0) {
         campaigns[idx].status = 'ACTIVE';
@@ -179,7 +183,7 @@ export class CampaignExecutionService {
   private async setStatus(campaignId: string, status: EventCampaign['status']) {
     const events = await this.prisma.event.findMany({ select: { id: true, metadata: true } });
     for (const event of events) {
-      const campaigns = ((event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? []);
+      const campaigns = (event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? [];
       const idx = campaigns.findIndex((c) => c.id === campaignId);
       if (idx >= 0) {
         campaigns[idx].status = status;
@@ -193,10 +197,7 @@ export class CampaignExecutionService {
   async getActiveCampaigns(eventId: string) {
     const now = new Date();
     return (await this.getEventCampaigns(eventId)).filter(
-      (c) =>
-        c.status === 'ACTIVE' &&
-        new Date(c.startsAt) <= now &&
-        new Date(c.endsAt) >= now,
+      (c) => c.status === 'ACTIVE' && new Date(c.startsAt) <= now && new Date(c.endsAt) >= now
     );
   }
 
@@ -233,13 +234,11 @@ export class CampaignExecutionService {
   async applyDiscount(campaignId: string, basePrice: number, quantity: number) {
     const events = await this.prisma.event.findMany({ select: { id: true, metadata: true } });
     for (const event of events) {
-      const campaigns = ((event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? []);
+      const campaigns = (event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? [];
       const c = campaigns.find((x) => x.id === campaignId);
       if (c && c.status === 'ACTIVE') {
         const unit =
-          c.discountType === 'percentage'
-            ? basePrice * (c.discountValue / 100)
-            : c.discountValue;
+          c.discountType === 'percentage' ? basePrice * (c.discountValue / 100) : c.discountValue;
         return {
           basePrice,
           discountAmount: unit,
@@ -253,7 +252,7 @@ export class CampaignExecutionService {
   async getCampaignAnalytics(campaignId: string) {
     const events = await this.prisma.event.findMany({ select: { id: true, metadata: true } });
     for (const event of events) {
-      const campaigns = ((event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? []);
+      const campaigns = (event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? [];
       const c = campaigns.find((x) => x.id === campaignId);
       if (c) {
         const redeemed = c.redeemed ?? 0;
@@ -315,7 +314,7 @@ export class CampaignExecutionService {
   }
 
   private activeLoyalty(metadata: unknown, now = new Date()) {
-    const campaigns = ((metadata as { campaigns?: EventCampaign[] } | null)?.campaigns ?? []);
+    const campaigns = (metadata as { campaigns?: EventCampaign[] } | null)?.campaigns ?? [];
     for (const campaign of campaigns) {
       if (!campaign?.id || !loyaltyCharges(campaign, now)) continue;
       const rule = loyaltyRuleFromCampaign(campaign);
@@ -335,13 +334,14 @@ export class CampaignExecutionService {
       allocation?: number;
       quantityPerUser?: number;
     },
-    rule: LoyaltyRule,
+    rule: LoyaltyRule
   ): Promise<string | null> {
     const startDate = new Date(campaign.startsAt);
     const endDate = new Date(campaign.endsAt);
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return null;
     const code = loyaltyPromotionCode(campaign.id);
-    const type = rule.discountType === 'percentage' ? PromotionType.PERCENTAGE : PromotionType.FIXED_AMOUNT;
+    const type =
+      rule.discountType === 'percentage' ? PromotionType.PERCENTAGE : PromotionType.FIXED_AMOUNT;
     await this.prisma.promotion.upsert({
       where: { code },
       create: {
@@ -391,13 +391,11 @@ export class CampaignExecutionService {
   async exportPresaleCodesCsv(campaignId: string) {
     const events = await this.prisma.event.findMany({ select: { id: true, metadata: true } });
     for (const event of events) {
-      const campaigns = ((event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? []);
+      const campaigns = (event.metadata as { campaigns?: EventCampaign[] })?.campaigns ?? [];
       const c = campaigns.find((x) => x.id === campaignId);
       if (!c?.codes?.length) continue;
       const header = 'code,campaign,eventId,status';
-      const rows = c.codes.map(
-        (code) => `${code},${c.name},${event.id},${c.status}`,
-      );
+      const rows = c.codes.map((code) => `${code},${c.name},${event.id},${c.status}`);
       return {
         filename: `presale-${campaignId}.csv`,
         csv: [header, ...rows].join('\n'),
@@ -412,5 +410,3 @@ export class CampaignExecutionService {
     return { userId, points: user?.loyaltyPoints ?? 0 };
   }
 }
-
-

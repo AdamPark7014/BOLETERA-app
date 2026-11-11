@@ -5,7 +5,7 @@ export function stepIsValid(
   step: StepId,
   form: EventDraftForm,
   schedule: ScheduleBuilderValue,
-  preview: SchedulePreview | null,
+  preview: SchedulePreview | null
 ): boolean {
   switch (step) {
     case 'datos':
@@ -13,11 +13,7 @@ export function stepIsValid(
     case 'recinto':
       return Boolean(form.venueId) && form.capacity > 0 && form.basePrice >= 0;
     case 'programacion':
-      return Boolean(
-        schedule.rule.startLocal &&
-          preview &&
-          preview.totals.occurrences > 0,
-      );
+      return Boolean(schedule.rule.startLocal && preview && preview.totals.occurrences > 0);
     case 'ventas':
       return true;
     case 'revisar':
@@ -30,7 +26,7 @@ export function stepIsValid(
 }
 
 export function residencyFrequency(
-  rule: ScheduleBuilderValue['rule'],
+  rule: ScheduleBuilderValue['rule']
 ): 'daily' | 'weekly' | 'biweekly' | 'monthly' {
   if (rule.frequency === 'DAILY') return 'daily';
   if (rule.frequency === 'MONTHLY') return 'monthly';

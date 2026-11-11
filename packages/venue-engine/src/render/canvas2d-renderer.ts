@@ -94,7 +94,11 @@ export class Canvas2DRenderer {
     if (ctx.layers.isVisible('analysis') && ctx.analysis) {
       drawCalls += this.drawAnalysis(ctx);
     }
-    if (ctx.layers.isVisible('seats') && ctx.lod === 'seats' && ctx.lodController.showLabels(camera, ctx.scene.seatRadius)) {
+    if (
+      ctx.layers.isVisible('seats') &&
+      ctx.lod === 'seats' &&
+      ctx.lodController.showLabels(camera, ctx.scene.seatRadius)
+    ) {
       drawCalls += this.drawLabels(ctx);
     }
     if (ctx.layers.isVisible('grid')) drawCalls += this.drawGridAndRulers(ctx);

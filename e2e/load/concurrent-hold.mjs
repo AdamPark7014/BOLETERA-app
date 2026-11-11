@@ -17,7 +17,11 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { PrismaClient, HoldStatus, TicketStatus } from '../../packages/database/generated/client/index.js';
+import {
+  PrismaClient,
+  HoldStatus,
+  TicketStatus,
+} from '../../packages/database/generated/client/index.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 for (const line of readFileSync(resolve(repoRoot, '.env'), 'utf8').split(/\r?\n/)) {
@@ -198,8 +202,8 @@ const results = await Promise.all(
       status: 'error',
       detail: String(e).slice(0, 60),
       holds: [],
-    })),
-  ),
+    }))
+  )
 );
 
 const winners = results.filter((r) => r.ok);
@@ -238,10 +242,7 @@ const idempKey = `hold-${stamp}`;
 const first = await attemptHold(9999, ctx, idempKey);
 const retry = await attemptHold(9999, ctx, idempKey);
 const idempOk =
-  first.ok &&
-  retry.ok &&
-  first.holds[0]?.id &&
-  first.holds[0].id === retry.holds[0]?.id;
+  first.ok && retry.ok && first.holds[0]?.id && first.holds[0].id === retry.holds[0]?.id;
 
 console.log('\n── Idempotency-Key ──');
 console.log(`  primer intento ........... ${first.ok ? '2xx' : first.status}`);

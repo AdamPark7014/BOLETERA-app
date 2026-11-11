@@ -62,7 +62,8 @@ export default function WillcallPage() {
         keys: 'Enter',
         label: 'Entregar',
         whileTyping: true,
-        match: (e) => e.key === 'Enter' && document.activeElement === document.getElementById('entregar'),
+        match: (e) =>
+          e.key === 'Enter' && document.activeElement === document.getElementById('entregar'),
         run: () => {
           if (selected && !selected.pickedUpAt && verified[selected.orderId]) {
             void fulfill(selected.orderId);
@@ -79,7 +80,7 @@ export default function WillcallPage() {
     ],
     // fulfill is stable enough for this screen: it closes over the latest search.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [router, selected, verified],
+    [router, selected, verified]
   );
 
   async function search(e?: FormEvent) {
@@ -110,7 +111,9 @@ export default function WillcallPage() {
       await willcallFulfill(orderId);
       setToast(null);
       setRows((list) =>
-        list.map((r) => (r.orderId === orderId ? { ...r, pickedUpAt: new Date().toISOString() } : r)),
+        list.map((r) =>
+          r.orderId === orderId ? { ...r, pickedUpAt: new Date().toISOString() } : r
+        )
       );
       setVerified((v) => ({ ...v, [orderId]: false }));
       searchRef.current?.focus();
@@ -219,7 +222,11 @@ export default function WillcallPage() {
                   })}
                 </p>
               )}
-              <button type="button" className={styles.secondary} onClick={() => void reprint(selected.orderId)}>
+              <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => void reprint(selected.orderId)}
+              >
                 Imprimir
               </button>
             </>
@@ -229,7 +236,9 @@ export default function WillcallPage() {
           <TicketButton
             id="entregar"
             fullWidth
-            disabled={!selected || Boolean(selected.pickedUpAt) || !verified[selected?.orderId ?? '']}
+            disabled={
+              !selected || Boolean(selected.pickedUpAt) || !verified[selected?.orderId ?? '']
+            }
             onClick={() => selected && void fulfill(selected.orderId)}
           >
             Entregar

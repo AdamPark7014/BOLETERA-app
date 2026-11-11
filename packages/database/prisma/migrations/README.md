@@ -7,11 +7,11 @@ directorio sustituye ese flujo.
 
 ## Migraciones existentes
 
-| Migración | Contenido |
-| --- | --- |
-| `00000000000000_baseline` | Esquema completo tal como lo dejaba `db push`. **No se ejecuta nunca sobre una base que ya existía** (ver más abajo). |
+| Migración                                    | Contenido                                                                                                                                            |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `00000000000000_baseline`                    | Esquema completo tal como lo dejaba `db push`. **No se ejecuta nunca sobre una base que ya existía** (ver más abajo).                                |
 | `20260815119000_order_status_pending_refund` | `OrderStatus.PENDING_REFUND`. En su propia migración porque PostgreSQL no permite usar un valor de enum dentro de la misma transacción que lo añade. |
-| `20260815120000_onsale_hardening` | Endurecimiento del onsale: token de acceso de orden, invitaciones de organización e índices asociados. |
+| `20260815120000_onsale_hardening`            | Endurecimiento del onsale: token de acceso de orden, invitaciones de organización e índices asociados.                                               |
 
 ---
 

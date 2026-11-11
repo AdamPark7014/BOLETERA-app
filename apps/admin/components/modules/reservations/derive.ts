@@ -25,7 +25,7 @@ function checkoutStatus(order: OrderRow): ReservationStatus {
 
 export function buildReservationRows(
   orders: readonly OrderRow[],
-  inventory: InventoryMetrics | undefined,
+  inventory: InventoryMetrics | undefined
 ): ReservationRow[] {
   const checkoutRows: ReservationRow[] = orders
     .filter((order) => PENDING_CHECKOUT.has(order.status.toUpperCase()))
@@ -49,7 +49,8 @@ export function buildReservationRows(
     .map((zone) => ({
       id: `zone:${zone.eventId}:${zone.offerId}`,
       kind: 'zone_hold' as const,
-      status: zone.holdQuantity / Math.max(zone.totalQuantity, 1) >= 0.2 ? 'expired_risk' : 'active',
+      status:
+        zone.holdQuantity / Math.max(zone.totalQuantity, 1) >= 0.2 ? 'expired_risk' : 'active',
       title: `${zone.zone} · ${zone.tierName}`,
       meta: `${zone.holdQuantity} asientos en hold`,
       eventTitle: zone.eventTitle,
@@ -91,17 +92,17 @@ export function buildReservationRows(
 export function reservationKpis(
   rows: readonly ReservationRow[],
   inventory: InventoryMetrics | undefined,
-  orders: readonly OrderRow[],
+  orders: readonly OrderRow[]
 ) {
-  const activeCheckout = rows.filter((row) => row.kind === 'checkout' && row.status !== 'completed');
+  const activeCheckout = rows.filter(
+    (row) => row.kind === 'checkout' && row.status !== 'completed'
+  );
   const zoneHolds = inventory?.summary.held ?? 0;
   const blocked = inventory?.summary.blocked ?? 0;
   const activeHolds = inventory?.summary.activeHolds ?? activeCheckout.length;
 
   const completed = orders.filter((order) => COMPLETED.has(order.status.toUpperCase())).length;
-  const pending = orders.filter((order) =>
-    PENDING_CHECKOUT.has(order.status.toUpperCase()),
-  ).length;
+  const pending = orders.filter((order) => PENDING_CHECKOUT.has(order.status.toUpperCase())).length;
   const conversionBase = completed + pending;
   const conversion = conversionBase > 0 ? completed / conversionBase : 0;
 
@@ -122,9 +123,7 @@ export function reservationKpis(
 }
 
 export function conversionFunnel(orders: readonly OrderRow[]) {
-  const pending = orders.filter((order) =>
-    PENDING_CHECKOUT.has(order.status.toUpperCase()),
-  ).length;
+  const pending = orders.filter((order) => PENDING_CHECKOUT.has(order.status.toUpperCase())).length;
   const completed = orders.filter((order) => COMPLETED.has(order.status.toUpperCase())).length;
   const failed = orders.filter((order) => {
     const status = order.status.toUpperCase();

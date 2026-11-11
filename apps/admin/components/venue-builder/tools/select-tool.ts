@@ -1,6 +1,11 @@
 import type { SeatMapFurniture, SeatMapStage } from '@boletera/shared';
 import type { SeatPatch, WorldPoint, WorldRect } from '@boletera/venue-engine/render';
-import { poseOf, setVenueMetaCommand, transformSeatsCommand, type SeatPose } from '../store/commands';
+import {
+  poseOf,
+  setVenueMetaCommand,
+  transformSeatsCommand,
+  type SeatPose,
+} from '../store/commands';
 import { selectSeatIndex, selectTotalSeats } from '../store/selectors';
 import { selectableSeatIds } from '../transform/transform-ops';
 import { handlesForRect, rectFromPoints, translateRect } from '../utils/geometry';
@@ -144,7 +149,10 @@ export function createSelectTool(): Tool {
 
       if (state.mode === 'lasso') {
         const last = state.points[state.points.length - 1];
-        if (Math.hypot(event.world.x - last.x, event.world.y - last.y) > 2 / ctx.renderer.camera.zoom) {
+        if (
+          Math.hypot(event.world.x - last.x, event.world.y - last.y) >
+          2 / ctx.renderer.camera.zoom
+        ) {
           state.points.push(event.world);
         }
         ctx.paintOverlay({ lasso: state.points });
@@ -217,8 +225,8 @@ export function createSelectTool(): Tool {
                 id: item.id,
                 before: item.pose,
                 after: { ...item.pose, x: item.pose.x + delta.x, y: item.pose.y + delta.y },
-              })),
-            ),
+              }))
+            )
           );
         } else if (state.live) {
           ctx.renderer.updateSeats(seatPatchFor(dragged, { x: 0, y: 0 }));
@@ -234,8 +242,8 @@ export function createSelectTool(): Tool {
             setVenueMetaCommand(
               'Mover escenario',
               { stage: origin },
-              { stage: { ...origin, x: origin.x + delta.x, y: origin.y + delta.y } },
-            ),
+              { stage: { ...origin, x: origin.x + delta.x, y: origin.y + delta.y } }
+            )
           );
         }
         reset(ctx);
@@ -254,10 +262,10 @@ export function createSelectTool(): Tool {
                 furniture: furniture.map((item) =>
                   item.id === origin.id
                     ? { ...item, x: origin.x + delta.x, y: origin.y + delta.y }
-                    : item,
+                    : item
                 ),
-              },
-            ),
+              }
+            )
           );
         }
         reset(ctx);

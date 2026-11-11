@@ -164,22 +164,26 @@ export const AiSuggestPanel = memo(function AiSuggestPanel({ onAiSuggest }: AiSu
       const proposed = normalizeAiSuggestResult(raw, scene.venue);
       if (isEmptyProposal(proposed)) {
         setPreview(null);
-        setError('La IA devolvió un layout vacío (0 zonas). Ajusta el prompt e inténtalo de nuevo.');
+        setError(
+          'La IA devolvió un layout vacío (0 zonas). Ajusta el prompt e inténtalo de nuevo.'
+        );
         return;
       }
       const current = stores.editor.getState().scene;
       const diff = diffLayouts(current, proposed);
       setPreview({ prompt: trimmed, proposed, diff });
-      stores.editor.getState().setStatus(
-        `Vista previa IA: ${proposed.sections.length} zonas · ${diff.capacityAfter} asientos`,
-      );
+      stores.editor
+        .getState()
+        .setStatus(
+          `Vista previa IA: ${proposed.sections.length} zonas · ${diff.capacityAfter} asientos`
+        );
     } catch (err) {
       setPreview(null);
       const hint = suggestTemplateFromPrompt(trimmed);
       setError(
         err instanceof Error
           ? `${err.message}. Sugerencia local: plantilla «${hint.template}» (~${hint.capacity}).`
-          : `No se pudo generar la sugerencia. Prueba la plantilla local «${hint.template}».`,
+          : `No se pudo generar la sugerencia. Prueba la plantilla local «${hint.template}».`
       );
     } finally {
       setLoading(false);
@@ -190,9 +194,9 @@ export const AiSuggestPanel = memo(function AiSuggestPanel({ onAiSuggest }: AiSu
   const applyPreview = () => {
     if (!preview) return;
     replaceScene(ctx, 'Sugerencia IA', preview.proposed);
-    stores.editor.getState().setStatus(
-      `Sugerencia IA aplicada (${preview.proposed.sections.length} zonas)`,
-    );
+    stores.editor
+      .getState()
+      .setStatus(`Sugerencia IA aplicada (${preview.proposed.sections.length} zonas)`);
     clearPreview();
     setPrompt('');
   };
@@ -270,11 +274,7 @@ export const AiSuggestPanel = memo(function AiSuggestPanel({ onAiSuggest }: AiSu
             </header>
 
             <div className={styles.sideBySide}>
-              <MiniMapPreview
-                map={scene}
-                label="Actual"
-                emptyLabel="Mapa actual vacío"
-              />
+              <MiniMapPreview map={scene} label="Actual" emptyLabel="Mapa actual vacío" />
               <MiniMapPreview
                 map={preview.proposed}
                 label="Propuesta IA"

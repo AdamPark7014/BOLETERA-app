@@ -43,30 +43,29 @@ export function useOrgUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   const setTab = useCallback(
     (tab: OrgTab) => replaceParams({ tab: tab === 'profile' ? null : tab }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setSearch = useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]);
 
   const setStatus = useCallback(
-    (status: MemberStatusFilter) =>
-      replaceParams({ status: status === 'all' ? null : status }),
-    [replaceParams],
+    (status: MemberStatusFilter) => replaceParams({ status: status === 'all' ? null : status }),
+    [replaceParams]
   );
 
   const setRole = useCallback(
     (role: string) => replaceParams({ role: role === 'all' ? null : role }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const clearTeamFilters = useCallback(
     () => replaceParams({ q: null, status: null, role: null }),
-    [replaceParams],
+    [replaceParams]
   );
 
   return { ...state, setTab, setSearch, setStatus, setRole, clearTeamFilters };

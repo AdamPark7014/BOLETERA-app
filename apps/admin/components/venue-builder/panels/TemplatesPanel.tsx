@@ -2,10 +2,7 @@
 
 import { memo, useState } from 'react';
 import type { SeatMapData, SeatMapSection } from '@boletera/shared';
-import {
-  generateLayoutTemplate,
-  type LayoutTemplateId,
-} from '@boletera/venue-engine';
+import { generateLayoutTemplate, type LayoutTemplateId } from '@boletera/venue-engine';
 import { replaceScene } from '../bulk/bulk-ops';
 import { useEditor, useVenueBuilderStores } from '../store/store-context';
 import type { TransformContext } from '../transform/transform-ops';

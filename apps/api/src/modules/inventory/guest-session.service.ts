@@ -55,7 +55,7 @@ function secret(): string {
     // Sin secreto la firma no vale nada. Mejor fallar al arrancar que emitir
     // identidades que cualquiera puede falsificar creyendo que estan firmadas.
     throw new Error(
-      'Falta GUEST_SESSION_SECRET (o JWT_SECRET): la identidad de invitado no se puede firmar.',
+      'Falta GUEST_SESSION_SECRET (o JWT_SECRET): la identidad de invitado no se puede firmar.'
     );
   }
   return value;
@@ -122,7 +122,7 @@ export class GuestSessionService {
     if (parts.length !== 4 || parts[0] !== VERSION) {
       if (STRICT) {
         throw new BadRequestException(
-          'Sesión de invitado no válida. Recarga la página para obtener una nueva.',
+          'Sesión de invitado no válida. Recarga la página para obtener una nueva.'
         );
       }
       return { id: token, signed: false };
@@ -136,7 +136,7 @@ export class GuestSessionService {
       // Se rechaza aunque el modo estricto este apagado.
       this.logger.warn('Identidad de invitado con firma inválida; rechazada.');
       throw new BadRequestException(
-        'Sesión de invitado no válida. Recarga la página para obtener una nueva.',
+        'Sesión de invitado no válida. Recarga la página para obtener una nueva.'
       );
     }
 
@@ -145,7 +145,7 @@ export class GuestSessionService {
       // El margen de 60 s hacia el futuro absorbe un reloj adelantado; mas que
       // eso es un token manipulado para no caducar nunca.
       throw new BadRequestException(
-        'Sesión de invitado expirada. Recarga la página para continuar.',
+        'Sesión de invitado expirada. Recarga la página para continuar.'
       );
     }
 

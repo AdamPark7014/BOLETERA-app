@@ -63,7 +63,7 @@ export class PaymentController {
   constructor(
     private paymentService: PaymentService,
     private reconciliation: BanorteReconciliationService,
-    private cancellations: EventCancellationService,
+    private cancellations: EventCancellationService
   ) {}
 
   /**
@@ -90,7 +90,7 @@ export class PaymentController {
       justification?: string;
       compensationRate?: number;
       dryRun?: boolean;
-    },
+    }
   ) {
     return await this.cancellations.cancelEvent({
       eventId,
@@ -115,7 +115,7 @@ export class PaymentController {
     @Param('eventId') eventId: string,
     @Request() req: ScopedRequest,
     @CurrentUser() user: { email?: string; sub?: string },
-    @Body() dto: { newStartsAt: string; reason: string },
+    @Body() dto: { newStartsAt: string; reason: string }
   ) {
     const newStartsAt = new Date(dto.newStartsAt);
     if (Number.isNaN(newStartsAt.getTime())) {
@@ -154,11 +154,15 @@ export class PaymentController {
   saveMethods(
     @Request() req: ScopedRequest,
     @Body() body: MethodPatch,
-    @CurrentUser() user: { sub?: string; id?: string },
+    @CurrentUser() user: { sub?: string; id?: string }
   ) {
     const organizationId = requireScope(req);
     if (!organizationId) throw new BadRequestException('organizationId requerido');
-    return this.paymentService.saveCheckoutMethods(organizationId, body ?? {}, user?.sub || user?.id);
+    return this.paymentService.saveCheckoutMethods(
+      organizationId,
+      body ?? {},
+      user?.sub || user?.id
+    );
   }
 
   @Get('config/validate')
@@ -185,7 +189,7 @@ export class PaymentController {
       paymentMethod?: string;
       publicId?: string;
     },
-    @Headers('idempotency-key') idempotencyKey?: string,
+    @Headers('idempotency-key') idempotencyKey?: string
   ) {
     // El cuerpo no decide cuánto se cobra: se descartan amount/currency.
     const { amount: _ignoredAmount, currency: _ignoredCurrency, ...safe } = dto;
@@ -211,7 +215,7 @@ export class PaymentController {
       orderId: string;
       intentId?: string;
       externalId?: string;
-    },
+    }
   ) {
     return await this.paymentService.confirmBanortePayment(dto);
   }
@@ -225,7 +229,7 @@ export class PaymentController {
     @Param('orderId') orderId: string,
     @Body() dto: { reason: string; amount?: number; notes?: string },
     @Request() req: ScopedRequest,
-    @CurrentUser() user: { email?: string; sub?: string; id?: string },
+    @CurrentUser() user: { email?: string; sub?: string; id?: string }
   ) {
     return await this.paymentService.createRefund({
       orderId,
@@ -259,14 +263,14 @@ export class PaymentController {
   saveRefundPolicy(
     @Request() req: ScopedRequest,
     @Body() body: DeadlinePatch,
-    @CurrentUser() user: { sub?: string; id?: string },
+    @CurrentUser() user: { sub?: string; id?: string }
   ) {
     const organizationId = requireScope(req);
     if (!organizationId) throw new BadRequestException('organizationId requerido');
     return this.paymentService.saveDeadlinePolicy(
       organizationId,
       body ?? {},
-      user?.sub || user?.id,
+      user?.sub || user?.id
     );
   }
 
@@ -281,7 +285,7 @@ export class PaymentController {
     @Query('eventId') eventId?: string,
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
-    @Query('sort') sort?: string,
+    @Query('sort') sort?: string
   ) {
     return await this.paymentService.listRefunds({
       organizationId: requireScope(req),
@@ -305,7 +309,7 @@ export class PaymentController {
     @Request() req: ScopedRequest,
     @Query('from') from?: string,
     @Query('to') to?: string,
-    @Query('eventId') eventId?: string,
+    @Query('eventId') eventId?: string
   ) {
     return await this.paymentService.reconciliationReport({
       organizationId: requireScope(req),
@@ -328,7 +332,7 @@ export class PaymentController {
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('cursor') cursor?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return await this.paymentService.listSettlementIncidents({
       organizationId: requireScope(req),
@@ -352,13 +356,13 @@ export class PaymentController {
     @Param('refundId') refundId: string,
     @Body() dto: { banorteReference?: string },
     @Request() req: ScopedRequest,
-    @CurrentUser() user: { email?: string; sub?: string },
+    @CurrentUser() user: { email?: string; sub?: string }
   ) {
     return await this.paymentService.completeManualRefund(
       refundId,
       user?.email || user?.sub || 'admin',
       dto.banorteReference,
-      requireScope(req),
+      requireScope(req)
     );
   }
 
@@ -367,7 +371,7 @@ export class PaymentController {
   async handleBanorteWebhook(
     @Body() body: Record<string, unknown>,
     @Headers('x-banorte-signature') sig: string,
-    @Headers('x-signature') sigAlt: string,
+    @Headers('x-signature') sigAlt: string
   ) {
     return await this.paymentService.handleBanorteWebhook(body, sig || sigAlt);
   }
@@ -400,9 +404,7 @@ export class PaymentController {
   @Get('webhooks/banorte/return')
   @ApiOperation({ summary: 'Return URL after Payworks (consulta idempotente, no muta estado)' })
   async payworksReturn(@Query('orderId') orderId: string, @Query('result') result: string) {
-    const status = orderId
-      ? await this.paymentService.getOrderPaymentStatus(orderId)
-      : null;
+    const status = orderId ? await this.paymentService.getOrderPaymentStatus(orderId) : null;
     return {
       ok: result === 'ok',
       orderId,

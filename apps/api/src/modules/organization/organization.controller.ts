@@ -40,7 +40,7 @@ export class OrganizationController {
       commissionRate: number;
       allowResale: boolean;
       resaleCommission: number;
-    }>,
+    }>
   ) {
     return this.orgService.updateOrganization(orgId, body);
   }
@@ -62,7 +62,7 @@ export class OrganizationController {
       lastName: string;
       role: UserRole;
       password: string;
-    },
+    }
   ) {
     return this.orgService.inviteTeamMember(orgId, body);
   }
@@ -72,7 +72,7 @@ export class OrganizationController {
   updateMember(
     @Param('orgId') orgId: string,
     @Param('userId') userId: string,
-    @Body() body: { role?: UserRole; active?: boolean },
+    @Body() body: { role?: UserRole; active?: boolean }
   ) {
     return this.orgService.updateTeamMember(orgId, userId, body);
   }
@@ -83,5 +83,3 @@ export class OrganizationController {
     return this.orgService.getAuditLog(orgId, limit ? parseInt(limit, 10) : 50);
   }
 }
-
-

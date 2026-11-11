@@ -61,7 +61,7 @@ function deriveTicketKey(
   masterSecret: string,
   ticketId: string,
   eventId: string,
-  keyEpoch = 0,
+  keyEpoch = 0
 ): Buffer {
   // La epoca 0 NO se anade al material: asi la clave es identica a la de antes
   // de que existiera este campo, y las carteras ya descargadas siguen abriendo
@@ -76,7 +76,7 @@ function signWindowV2(
   ticketId: string,
   eventId: string,
   window: number,
-  keyEpoch = 0,
+  keyEpoch = 0
 ): string {
   const key = deriveTicketKey(masterSecret, ticketId, eventId, keyEpoch);
   return createHmac('sha256', key)
@@ -90,7 +90,7 @@ function signWindowV1(
   masterSecret: string,
   ticketId: string,
   eventId: string,
-  window: number,
+  window: number
 ): string {
   return createHmac('sha256', masterSecret)
     .update(`${ticketId}:${eventId}:${window}`)
@@ -136,7 +136,7 @@ export function signTicketPayload(
   ticketId: string,
   eventId: string,
   secret: string,
-  keyEpoch = 0,
+  keyEpoch = 0
 ): string {
   return `${V2_PREFIX}${signWindowV2(secret, ticketId, eventId, currentWindow(), keyEpoch)}`;
 }
@@ -158,7 +158,7 @@ export function verifyTicketSignature(
    * base: firmar con una version anterior es exactamente lo que hace el
    * telefono de quien ya regalo el boleto, y debe fallar.
    */
-  keyEpoch = 0,
+  keyEpoch = 0
 ): boolean {
   if (!signature) return false;
 
@@ -169,7 +169,7 @@ export function verifyTicketSignature(
     const raw = signature.slice(V2_PREFIX.length);
     return matchesAny(
       raw,
-      windows.map((w) => signWindowV2(secret, ticketId, eventId, w, keyEpoch)),
+      windows.map((w) => signWindowV2(secret, ticketId, eventId, w, keyEpoch))
     );
   }
 
@@ -177,7 +177,7 @@ export function verifyTicketSignature(
 
   return matchesAny(
     signature,
-    windows.map((w) => signWindowV1(secret, ticketId, eventId, w)),
+    windows.map((w) => signWindowV1(secret, ticketId, eventId, w))
   );
 }
 
@@ -190,7 +190,7 @@ export function buildQrPayload(
   ticketId: string,
   eventId: string,
   secret: string,
-  keyEpoch = 0,
+  keyEpoch = 0
 ): string {
   const sig = signTicketPayload(ticketId, eventId, secret, keyEpoch);
   return JSON.stringify({ v: QR_PAYLOAD_VERSION, t: ticketId, e: eventId, s: sig });
@@ -212,7 +212,7 @@ export function deriveTicketKeyHex(
   ticketId: string,
   eventId: string,
   secret: string,
-  keyEpoch = 0,
+  keyEpoch = 0
 ): string {
   return deriveTicketKey(secret, ticketId, eventId, keyEpoch).toString('hex');
 }
@@ -231,7 +231,7 @@ export function ticketManifestDigest(
   ticketId: string,
   eventId: string,
   status: string,
-  secret: string,
+  secret: string
 ): string {
   const key = deriveTicketKey(secret, ticketId, eventId);
   return createHmac('sha256', key).update(`manifest:${status}`).digest('hex').slice(0, 12);
@@ -249,7 +249,7 @@ export function signEventManifest(
   eventId: string,
   issuedAt: string,
   entries: { id: string; st: string; h: string }[],
-  secret: string,
+  secret: string
 ): string {
   const canonical = entries.map((e) => `${e.id}.${e.st}.${e.h}`).join(',');
   return createHmac('sha256', secret)

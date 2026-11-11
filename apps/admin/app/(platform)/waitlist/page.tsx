@@ -91,7 +91,7 @@ function EsperaBody() {
           list.flatMap((item) => {
             const entry = readEntry(item);
             return entry ? [entry] : [];
-          }),
+          })
         );
       })
       .catch((cause: unknown) => {
@@ -112,7 +112,7 @@ function EsperaBody() {
     setActionError(null);
     try {
       const result = asRecord(
-        await adminApi(`/waitlist/event/${eventId}/notify`, token, { method: 'POST', body: '{}' }),
+        await adminApi(`/waitlist/event/${eventId}/notify`, token, { method: 'POST', body: '{}' })
       );
       const count = typeof result.notified === 'number' ? result.notified : null;
       setNotice(count == null ? `Avisados · ${title}` : `Avisados · ${title} · ${count}`);
@@ -137,7 +137,13 @@ function EsperaBody() {
     );
   }
   if (error) {
-    return <ApiErrorView error={error} context="abrir la espera" onRetry={() => setNonce((current) => current + 1)} />;
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir la espera"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando espera.</p>;
 

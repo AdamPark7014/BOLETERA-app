@@ -193,7 +193,7 @@ export function useCreateMembershipPlan(organizationId: string) {
     onSuccess: (plan) =>
       client.setQueryData<MembershipPlan[]>(
         queryKeys.memberships.plans(organizationId),
-        (current = []) => [...current, plan],
+        (current = []) => [...current, plan]
       ),
     onSettled: () => {
       void client.invalidateQueries({

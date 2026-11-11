@@ -215,14 +215,14 @@ export function channelNotes(raw: Record<string, unknown>): string[] {
   const locations = raw.locations;
   if (Array.isArray(locations) && locations.length > 0) {
     const names = locations.map((item) =>
-      typeof item === 'string' ? item : (readString(asRecord(item).name) ?? 'Ubicación'),
+      typeof item === 'string' ? item : (readString(asRecord(item).name) ?? 'Ubicación')
     );
     lines.push(names.join(', '));
   }
   const partners = raw.partners;
   if (Array.isArray(partners) && partners.length > 0) {
     const names = partners.map((item) =>
-      typeof item === 'string' ? item : (readString(asRecord(item).name) ?? 'Partner'),
+      typeof item === 'string' ? item : (readString(asRecord(item).name) ?? 'Partner')
     );
     lines.push(names.join(', '));
   }

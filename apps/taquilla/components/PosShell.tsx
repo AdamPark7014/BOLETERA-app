@@ -62,7 +62,7 @@ export function PosShell({
     setTerminalLabel(getTerminalLabel());
     const user = getTaquillaUser();
     setCashierName(
-      user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email : getOrgName(),
+      user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email : getOrgName()
     );
   }, []);
 
@@ -79,17 +79,21 @@ export function PosShell({
   const palette = useMemo<PaletteItem[]>(
     () => [
       { label: 'Cortesía', keys: 'C', run: () => router.push('/venta?comp=1') },
-      { label: 'Reimprimir', keys: 'F7', run: () => {
-        const receipt = getLastReceipt();
-        if (receipt) void printReceipt(receipt);
-      } },
+      {
+        label: 'Reimprimir',
+        keys: 'F7',
+        run: () => {
+          const receipt = getLastReceipt();
+          if (receipt) void printReceipt(receipt);
+        },
+      },
       { label: 'Entregar', keys: 'F4', run: () => router.push('/willcall') },
       { label: 'Buscar boleto', keys: 'F3', run: () => router.push('/buscar') },
       { label: 'Corte de caja', keys: 'F12', run: () => router.push('/corte') },
       { label: 'Funciones', keys: 'F2', run: () => router.push('/venta') },
       { label: 'Conectar impresora', keys: '', run: () => void connectSerialPrinter() },
     ],
-    [router],
+    [router]
   );
 
   const globalHotkeys = useMemo<Hotkey[]>(
@@ -119,9 +123,27 @@ export function PosShell({
         hidden: true,
         run: () => router.push('/venta'),
       },
-      { keys: 'F3', label: 'Buscar', whileTyping: true, hidden: true, run: () => router.push('/buscar') },
-      { keys: 'F4', label: 'Entregar', whileTyping: true, hidden: true, run: () => router.push('/willcall') },
-      { keys: 'F6', label: 'Acceso', whileTyping: true, hidden: true, run: () => router.push('/acceso') },
+      {
+        keys: 'F3',
+        label: 'Buscar',
+        whileTyping: true,
+        hidden: true,
+        run: () => router.push('/buscar'),
+      },
+      {
+        keys: 'F4',
+        label: 'Entregar',
+        whileTyping: true,
+        hidden: true,
+        run: () => router.push('/willcall'),
+      },
+      {
+        keys: 'F6',
+        label: 'Acceso',
+        whileTyping: true,
+        hidden: true,
+        run: () => router.push('/acceso'),
+      },
       {
         keys: 'F7',
         label: 'Reimprimir',
@@ -132,7 +154,13 @@ export function PosShell({
           if (receipt) void printReceipt(receipt);
         },
       },
-      { keys: 'F12', label: 'Corte', whileTyping: true, hidden: true, run: () => router.push('/corte') },
+      {
+        keys: 'F12',
+        label: 'Corte',
+        whileTyping: true,
+        hidden: true,
+        run: () => router.push('/corte'),
+      },
       ...(escapeGoesBack
         ? [
             {
@@ -146,7 +174,7 @@ export function PosShell({
           ]
         : []),
     ],
-    [router, backHref, escapeGoesBack],
+    [router, backHref, escapeGoesBack]
   );
 
   const paletteHotkeys = useMemo<Hotkey[]>(
@@ -187,12 +215,12 @@ export function PosShell({
             },
           ]
         : [],
-    [paletteOpen, palette, paletteIndex],
+    [paletteOpen, palette, paletteIndex]
   );
 
   const merged = useMemo(
     () => [...paletteHotkeys, ...hotkeys, ...globalHotkeys],
-    [paletteHotkeys, hotkeys, globalHotkeys],
+    [paletteHotkeys, hotkeys, globalHotkeys]
   );
   useHotkeys(merged, hotkeysEnabled);
 
@@ -223,7 +251,11 @@ export function PosShell({
       <HotkeyBar hotkeys={merged} enabled={hotkeysEnabled} />
 
       {paletteOpen ? (
-        <div className={styles.paletteScrim} role="presentation" onClick={() => setPaletteOpen(false)}>
+        <div
+          className={styles.paletteScrim}
+          role="presentation"
+          onClick={() => setPaletteOpen(false)}
+        >
           <div
             className={styles.palette}
             role="dialog"

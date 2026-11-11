@@ -30,5 +30,3 @@ export class OptionalJwtAuthGuard implements CanActivate {
     return true;
   }
 }
-
-

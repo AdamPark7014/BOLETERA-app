@@ -76,12 +76,12 @@ export function usePlanUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   const setQuery = useCallback(
     (value: string) => replaceParams({ q: value || null }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setFilterSelection = useCallback(
@@ -89,23 +89,22 @@ export function usePlanUrlState() {
       const groups = selection.grupo ?? [];
       replaceParams({ grupo: groups.length > 0 ? groups.join(',') : null });
     },
-    [replaceParams],
+    [replaceParams]
   );
 
   const setState = useCallback(
     (value: CapabilityStateFilter) => replaceParams({ estado: value === 'todas' ? null : value }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setDeliveries = useCallback(
-    (value: DeliveryFilter) =>
-      replaceParams({ entregas: value === 'pendientes' ? null : value }),
-    [replaceParams],
+    (value: DeliveryFilter) => replaceParams({ entregas: value === 'pendientes' ? null : value }),
+    [replaceParams]
   );
 
   const clearFilters = useCallback(
     () => replaceParams({ q: null, grupo: null, estado: null }),
-    [replaceParams],
+    [replaceParams]
   );
 
   return {

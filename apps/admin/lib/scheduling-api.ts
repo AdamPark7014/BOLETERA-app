@@ -1,4 +1,9 @@
-import type { RecurrenceRule, SaleState, ScheduleConflict, ScheduleOccurrence } from '@boletera/shared';
+import type {
+  RecurrenceRule,
+  SaleState,
+  ScheduleConflict,
+  ScheduleOccurrence,
+} from '@boletera/shared';
 import { http } from './http';
 
 export type SalePhaseKind = 'PRESALE' | 'MEMBERS' | 'PUBLIC' | 'LAST_MINUTE' | 'DOOR';
@@ -264,14 +269,14 @@ export function getSeries(seriesId: string) {
 
 export function updateSeries(
   seriesId: string,
-  body: { name?: string; description?: string; status?: EventSeriesStatus },
+  body: { name?: string; description?: string; status?: EventSeriesStatus }
 ) {
   return http<SeriesDetail>(`${BASE}/series/${seriesId}`, { method: 'PATCH', body });
 }
 
 export function extendSeries(
   seriesId: string,
-  body: { count?: number; untilLocal?: string; publish?: boolean; force?: boolean },
+  body: { count?: number; untilLocal?: string; publish?: boolean; force?: boolean }
 ) {
   return http<{ added: number; series: SeriesDetail }>(`${BASE}/series/${seriesId}/extend`, {
     method: 'POST',
@@ -292,7 +297,7 @@ export function setSaleWindows(
     salesEndAt?: string | null;
     doorsAt?: string | null;
     durationMinutes?: number | null;
-  },
+  }
 ) {
   return http<EventScheduleDetail>(`${BASE}/events/${eventId}/windows`, { method: 'PUT', body });
 }
@@ -306,7 +311,7 @@ export function rescheduleEvent(
     reason: string;
     force?: boolean;
     keepStatus?: boolean;
-  },
+  }
 ) {
   return http<{ conflicts: ScheduleConflict[] }>(`${BASE}/events/${eventId}/reschedule`, {
     method: 'PATCH',
@@ -336,7 +341,7 @@ export function upsertSalePhase(
     discountPercent?: number | null;
     priority?: number;
     notes?: string | null;
-  },
+  }
 ) {
   return http<SalePhase>(`${BASE}/events/${eventId}/phases`, { method: 'PUT', body });
 }
@@ -369,11 +374,11 @@ export function listBlackouts(venueId: string) {
 
 export function createBlackout(
   venueId: string,
-  body: { reason: string; startsAt: string; endsAt: string; blocking?: boolean },
+  body: { reason: string; startsAt: string; endsAt: string; blocking?: boolean }
 ) {
   return http<{ blackout: VenueBlackout; affectedEvents: number }>(
     `${BASE}/venues/${venueId}/blackouts`,
-    { method: 'POST', body },
+    { method: 'POST', body }
   );
 }
 

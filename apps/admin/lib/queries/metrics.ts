@@ -27,12 +27,7 @@ export type MetricsRangeParams = {
   eventId?: string;
 };
 
-export type MetricsTimeseriesMetric =
-  | 'revenue'
-  | 'orders'
-  | 'tickets'
-  | 'refunds'
-  | 'checkins';
+export type MetricsTimeseriesMetric = 'revenue' | 'orders' | 'tickets' | 'refunds' | 'checkins';
 
 /** Params for GET /metrics/timeseries. */
 export type TimeseriesParams = MetricsRangeParams & {
@@ -44,7 +39,7 @@ export type TimeseriesParams = MetricsRangeParams & {
 const METRICS_STALE_TIME = 20_000;
 
 function toQueryString(
-  params: Record<string, string | number | boolean | undefined | null>,
+  params: Record<string, string | number | boolean | undefined | null>
 ): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -87,8 +82,7 @@ export function useEventSalesPace(params: MetricsRangeParams = {}) {
 export function useInventoryMetrics(params: MetricsRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.metrics.inventory(params),
-    queryFn: ({ signal }) =>
-      http<InventoryMetrics>(metricsUrl('inventory', params), { signal }),
+    queryFn: ({ signal }) => http<InventoryMetrics>(metricsUrl('inventory', params), { signal }),
     staleTime: METRICS_STALE_TIME,
   });
 }
@@ -96,8 +90,7 @@ export function useInventoryMetrics(params: MetricsRangeParams = {}) {
 export function useOrdersMetrics(params: MetricsRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.metrics.orders(params),
-    queryFn: ({ signal }) =>
-      http<OrdersPaymentsMetrics>(metricsUrl('orders', params), { signal }),
+    queryFn: ({ signal }) => http<OrdersPaymentsMetrics>(metricsUrl('orders', params), { signal }),
     staleTime: METRICS_STALE_TIME,
   });
 }
@@ -114,8 +107,7 @@ export function useAccessMetrics(params: MetricsRangeParams = {}) {
 export function useResaleMetrics(params: MetricsRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.metrics.resale(params),
-    queryFn: ({ signal }) =>
-      http<ResaleMetrics>(metricsUrl('resale', params), { signal }),
+    queryFn: ({ signal }) => http<ResaleMetrics>(metricsUrl('resale', params), { signal }),
     staleTime: METRICS_STALE_TIME,
   });
 }
@@ -123,8 +115,7 @@ export function useResaleMetrics(params: MetricsRangeParams = {}) {
 export function useWaitlistMetrics(params: MetricsRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.metrics.waitlist(params),
-    queryFn: ({ signal }) =>
-      http<WaitlistMetrics>(metricsUrl('waitlist', params), { signal }),
+    queryFn: ({ signal }) => http<WaitlistMetrics>(metricsUrl('waitlist', params), { signal }),
     staleTime: METRICS_STALE_TIME,
   });
 }
@@ -141,8 +132,7 @@ export function useCampaignMetrics(params: MetricsRangeParams = {}) {
 export function useFraudMetrics(params: MetricsRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.metrics.fraud(params),
-    queryFn: ({ signal }) =>
-      http<FraudSignalsMetrics>(metricsUrl('fraud', params), { signal }),
+    queryFn: ({ signal }) => http<FraudSignalsMetrics>(metricsUrl('fraud', params), { signal }),
     staleTime: METRICS_STALE_TIME,
   });
 }
@@ -169,7 +159,7 @@ export function useMetricsTimeseries(params: TimeseriesParams) {
           granularity: params.granularity,
           metric: params.metric,
         })}`,
-        { signal },
+        { signal }
       ),
     staleTime: METRICS_STALE_TIME,
   });
@@ -178,8 +168,7 @@ export function useMetricsTimeseries(params: TimeseriesParams) {
 export function useMetricsAlerts(params: MetricsRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.metrics.alerts(params),
-    queryFn: ({ signal }) =>
-      http<MetricsAlertsResponse>(metricsUrl('alerts', params), { signal }),
+    queryFn: ({ signal }) => http<MetricsAlertsResponse>(metricsUrl('alerts', params), { signal }),
     staleTime: METRICS_STALE_TIME,
   });
 }

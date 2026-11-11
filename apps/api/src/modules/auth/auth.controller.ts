@@ -32,7 +32,7 @@ type ScopedRequest = {
 export class AuthController {
   constructor(
     private auth: AuthService,
-    private invitations: InvitationsService,
+    private invitations: InvitationsService
   ) {}
 
   @Post('login')
@@ -45,7 +45,12 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   register(
     @Body()
-    body: { email: string; password: string; firstName: string; lastName: string },
+    body: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    }
   ) {
     return this.auth.register(body);
   }
@@ -121,7 +126,7 @@ export class AuthController {
       email: string;
       role: UserRole;
       expiresInDays?: number;
-    },
+    }
   ) {
     return this.invitations.createInvitation({
       organizationId: req.scopedOrganizationId ?? body.organizationId ?? '',
@@ -139,10 +144,7 @@ export class AuthController {
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List invitations for an organization' })
-  listInvitations(
-    @Request() req: ScopedRequest,
-    @Query('organizationId') organizationId?: string,
-  ) {
+  listInvitations(@Request() req: ScopedRequest, @Query('organizationId') organizationId?: string) {
     return this.invitations.listByOrganization(req.scopedOrganizationId ?? organizationId);
   }
 

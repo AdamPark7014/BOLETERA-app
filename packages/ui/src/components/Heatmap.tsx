@@ -75,7 +75,7 @@ export function Heatmap({
         }),
       ]),
     }),
-    [rows, columns, values, formatValue],
+    [rows, columns, values, formatValue]
   );
 
   const topAxis = 20;

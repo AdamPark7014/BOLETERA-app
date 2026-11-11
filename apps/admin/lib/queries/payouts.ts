@@ -27,7 +27,7 @@ export function usePayouts() {
 
 export function useSettlementReport(
   organizationId: string | null,
-  period: 'DAILY' | 'WEEKLY' | 'MONTHLY',
+  period: 'DAILY' | 'WEEKLY' | 'MONTHLY'
 ) {
   return useQuery({
     queryKey: queryKeys.payouts.settlement(organizationId ?? '', period),

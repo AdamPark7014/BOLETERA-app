@@ -62,12 +62,9 @@ export function useRealtime<T>({
       const onMessage = (event: MessageEvent<string>) => {
         try {
           const incoming = parseRef.current(event.data);
-          client.setQueryData<T>(keyRef.current, (current) =>
-            mergeRef.current(current, incoming),
-          );
+          client.setQueryData<T>(keyRef.current, (current) => mergeRef.current(current, incoming));
         } catch (cause) {
-          const parseError =
-            cause instanceof Error ? cause : new Error('Evento SSE inválido');
+          const parseError = cause instanceof Error ? cause : new Error('Evento SSE inválido');
           setError(parseError);
           console.error('No se pudo procesar una actualización en tiempo real', parseError);
         }
@@ -105,8 +102,7 @@ export function useRealtime<T>({
 
 export function useRealtimeDashboardUpdates(eventId?: string) {
   const { organizationId } = useSession();
-  const base =
-    process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://127.0.0.1:4000/api/v1';
+  const base = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://127.0.0.1:4000/api/v1';
   const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
   const url = organizationId
     ? `${base}/reports/dashboard/realtime/${organizationId}/stream${query}`

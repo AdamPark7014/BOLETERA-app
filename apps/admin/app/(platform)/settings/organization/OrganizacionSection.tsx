@@ -234,7 +234,11 @@ export function OrganizacionBody() {
   }
   if (error) {
     return (
-      <ApiErrorView error={error} context="abrir la organización" onRetry={() => setNonce((current) => current + 1)} />
+      <ApiErrorView
+        error={error}
+        context="abrir la organización"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
     );
   }
   if (loading || !org || !draft) return <p className={styles.quiet}>Cargando organización.</p>;
@@ -255,14 +259,26 @@ export function OrganizacionBody() {
       </header>
       <div className={styles.stack}>
         <Param name="Nombre de la organización">
-          <ParameterCard name="Nombre de la organización" value={draft.name} effect="Razón visible.">
+          <ParameterCard
+            name="Nombre de la organización"
+            value={draft.name}
+            effect="Razón visible."
+          >
             {canSave ? (
-              <Field label="Nombre de la organización" value={draft.name} onChange={(event) => setField('name', event.target.value)} />
+              <Field
+                label="Nombre de la organización"
+                value={draft.name}
+                onChange={(event) => setField('name', event.target.value)}
+              />
             ) : null}
           </ParameterCard>
         </Param>
         <Param name="Descripción de la organización">
-          <ParameterCard name="Descripción de la organización" value={draft.description || '—'} effect="Texto corto.">
+          <ParameterCard
+            name="Descripción de la organización"
+            value={draft.description || '—'}
+            effect="Texto corto."
+          >
             {canSave ? (
               <Field
                 label="Descripción de la organización"
@@ -275,46 +291,126 @@ export function OrganizacionBody() {
         <Param name="Sitio">
           <ParameterCard name="Sitio" value={draft.website || '—'} effect="Web de la organización.">
             {canSave ? (
-              <Field label="Sitio" value={draft.website} onChange={(event) => setField('website', event.target.value)} />
+              <Field
+                label="Sitio"
+                value={draft.website}
+                onChange={(event) => setField('website', event.target.value)}
+              />
             ) : null}
           </ParameterCard>
         </Param>
         <Param name="Correo de la organización">
           <ParameterCard name="Correo de la organización" value={draft.email} effect="Contacto.">
             {canSave ? (
-              <Field label="Correo de la organización" value={draft.email} onChange={(event) => setField('email', event.target.value)} />
+              <Field
+                label="Correo de la organización"
+                value={draft.email}
+                onChange={(event) => setField('email', event.target.value)}
+              />
             ) : null}
           </ParameterCard>
         </Param>
         <Param name="Teléfono de la organización">
-          <ParameterCard name="Teléfono de la organización" value={draft.phone || '—'} effect="Contacto.">
+          <ParameterCard
+            name="Teléfono de la organización"
+            value={draft.phone || '—'}
+            effect="Contacto."
+          >
             {canSave ? (
-              <Field label="Teléfono de la organización" value={draft.phone} onChange={(event) => setField('phone', event.target.value)} />
+              <Field
+                label="Teléfono de la organización"
+                value={draft.phone}
+                onChange={(event) => setField('phone', event.target.value)}
+              />
             ) : null}
           </ParameterCard>
         </Param>
-        <Read name="Slug de la organización" value={text(org.slug)} mono effect="Único. Esta ruta no lo cambia." />
+        <Read
+          name="Slug de la organización"
+          value={text(org.slug)}
+          mono
+          effect="Único. Esta ruta no lo cambia."
+        />
         <Read name="Tipo" value={word(ORG_TYPE, org.type)} effect="Esta ruta no lo cambia." />
         <Read name="País" value={text(org.country)} effect="País de la organización." />
-        <Read name="Zona horaria de la org" value={text(org.timezone)} effect="Default de altas. Aquí se lee." />
-        <Read name="Moneda de la org" value={text(org.currency)} effect="Default de altas. Aquí se lee." />
-        <Read name="Dirección de la org" value={text(org.address)} effect="Calle. Esta ruta no la guarda." />
-        <Read name="Ciudad de la org" value={text(org.city)} effect="Ciudad. Esta ruta no la guarda." />
-        <Read name="Estado de la org" value={text(org.state)} effect="Entidad. Esta ruta no la guarda." />
-        <Read name="CP de la org" value={text(org.postalCode)} effect="Código postal. Esta ruta no lo guarda." />
-        <Read name="Logo de la org" value={org.logoUrl ?? 'Sin imagen'} effect="La cartelera lee el logo de Marca." />
-        <Read name="Banner de la org" value={org.bannerUrl ?? 'Sin imagen'} effect="La cartelera lee Marca." />
-        <Read name="Titular de la cuenta" value={text(org.bankAccountName)} effect="Dato bancario. Esta ruta no lo guarda." />
-        <Read name="Código de banco" value={text(org.bankCode)} effect="Dato bancario. Esta ruta no lo guarda." />
-        <Read name="Routing" value={text(org.bankRoutingNumber)} effect="Dato bancario. Esta ruta no lo guarda." />
-        <Read name="Número de cuenta" value={maskAccount(org.bankAccountNumber)} mono effect="Enmascarado. No se copia a liquidaciones." />
-        <Read name="PayPal" value={text(org.paypalEmail)} effect="No hay cobro PayPal al comprador." />
+        <Read
+          name="Zona horaria de la org"
+          value={text(org.timezone)}
+          effect="Default de altas. Aquí se lee."
+        />
+        <Read
+          name="Moneda de la org"
+          value={text(org.currency)}
+          effect="Default de altas. Aquí se lee."
+        />
+        <Read
+          name="Dirección de la org"
+          value={text(org.address)}
+          effect="Calle. Esta ruta no la guarda."
+        />
+        <Read
+          name="Ciudad de la org"
+          value={text(org.city)}
+          effect="Ciudad. Esta ruta no la guarda."
+        />
+        <Read
+          name="Estado de la org"
+          value={text(org.state)}
+          effect="Entidad. Esta ruta no la guarda."
+        />
+        <Read
+          name="CP de la org"
+          value={text(org.postalCode)}
+          effect="Código postal. Esta ruta no lo guarda."
+        />
+        <Read
+          name="Logo de la org"
+          value={org.logoUrl ?? 'Sin imagen'}
+          effect="La cartelera lee el logo de Marca."
+        />
+        <Read
+          name="Banner de la org"
+          value={org.bannerUrl ?? 'Sin imagen'}
+          effect="La cartelera lee Marca."
+        />
+        <Read
+          name="Titular de la cuenta"
+          value={text(org.bankAccountName)}
+          effect="Dato bancario. Esta ruta no lo guarda."
+        />
+        <Read
+          name="Código de banco"
+          value={text(org.bankCode)}
+          effect="Dato bancario. Esta ruta no lo guarda."
+        />
+        <Read
+          name="Routing"
+          value={text(org.bankRoutingNumber)}
+          effect="Dato bancario. Esta ruta no lo guarda."
+        />
+        <Read
+          name="Número de cuenta"
+          value={maskAccount(org.bankAccountNumber)}
+          mono
+          effect="Enmascarado. No se copia a liquidaciones."
+        />
+        <Read
+          name="PayPal"
+          value={text(org.paypalEmail)}
+          effect="No hay cobro PayPal al comprador."
+        />
         <Read
           name="Stripe"
           value="No usar"
-          effect={org.stripeAccountId ? 'Hay un identificador legado. No se usa.' : 'Legado. Sin control.'}
+          effect={
+            org.stripeAccountId ? 'Hay un identificador legado. No se usa.' : 'Legado. Sin control.'
+          }
         />
-        <Read name="RFC en la org" value={text(org.taxId)} effect="El fiscal que factura es el perfil de Facturación." />
+        <Read
+          name="RFC en la org"
+          value={text(org.taxId)}
+          effect="El fiscal que factura es el perfil de Facturación."
+        />
         <Read name="Verificada" value={yesNo(org.verified)} effect="Esta ruta no la cambia." />
         <Read name="KYC" value={word(CHECK, org.kycStatus)} effect="Esta ruta no lo cambia." />
         <Read name="AML" value={word(CHECK, org.amlStatus)} effect="Esta ruta no lo cambia." />
@@ -351,7 +447,12 @@ function Read({
 }) {
   return (
     <Param name={name}>
-      <ParameterCard name={name} value={value} valueStyle={mono ? 'mono' : 'text'} effect={effect} />
+      <ParameterCard
+        name={name}
+        value={value}
+        valueStyle={mono ? 'mono' : 'text'}
+        effect={effect}
+      />
     </Param>
   );
 }

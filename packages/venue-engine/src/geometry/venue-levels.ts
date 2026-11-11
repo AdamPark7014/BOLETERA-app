@@ -15,26 +15,24 @@ export function removeVenueLevel(input: SeatMapData, levelId: string): SeatMapDa
   return {
     ...map,
     version: 3,
-    sections: map.sections.map((s) =>
-      s.levelId === levelId ? { ...s, levelId: undefined } : s,
-    ),
+    sections: map.sections.map((s) => (s.levelId === levelId ? { ...s, levelId: undefined } : s)),
     venue: {
       ...(map.venue ?? {}),
       levels: reindexed.length ? reindexed : undefined,
       aisles: (map.venue?.aisles ?? []).map((a) =>
-        a.levelId === levelId ? { ...a, levelId: undefined } : a,
+        a.levelId === levelId ? { ...a, levelId: undefined } : a
       ),
       exits: (map.venue?.exits ?? []).map((e) =>
-        e.levelId === levelId ? { ...e, levelId: undefined } : e,
+        e.levelId === levelId ? { ...e, levelId: undefined } : e
       ),
       obstacles: (map.venue?.obstacles ?? []).map((o) =>
-        o.levelId === levelId ? { ...o, levelId: undefined } : o,
+        o.levelId === levelId ? { ...o, levelId: undefined } : o
       ),
       furniture: (map.venue?.furniture ?? []).map((f) =>
-        f.levelId === levelId ? { ...f, levelId: undefined } : f,
+        f.levelId === levelId ? { ...f, levelId: undefined } : f
       ),
       focusPoints: (map.venue?.focusPoints ?? []).map((f) =>
-        f.levelId === levelId ? { ...f, levelId: undefined } : f,
+        f.levelId === levelId ? { ...f, levelId: undefined } : f
       ),
       stairs: (map.venue?.stairs ?? []).map((st) => ({
         ...st,
@@ -49,7 +47,7 @@ export function removeVenueLevel(input: SeatMapData, levelId: string): SeatMapDa
 export function patchVenueLevel(
   input: SeatMapData,
   levelId: string,
-  patch: Partial<Pick<SeatMapLevel, 'name' | 'elevation' | 'zIndex'>>,
+  patch: Partial<Pick<SeatMapLevel, 'name' | 'elevation' | 'zIndex'>>
 ): SeatMapData {
   const map = migrateToV3(input);
   const levels = map.venue?.levels ?? [];

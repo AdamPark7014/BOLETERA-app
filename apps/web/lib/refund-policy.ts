@@ -41,12 +41,12 @@ function finiteDays(raw: number | null | undefined, fallback: number): number {
  */
 export function buyerRefundPolicy(
   settlementBusinessDays?: number | null,
-  bankBusinessDays?: number | null,
+  bankBusinessDays?: number | null
 ): RefundPolicy {
   return {
     settlementBusinessDays: finiteDays(
       settlementBusinessDays,
-      REFUND_POLICY.settlementBusinessDays,
+      REFUND_POLICY.settlementBusinessDays
     ),
     bankBusinessDays: finiteDays(bankBusinessDays, REFUND_POLICY.bankBusinessDays),
   };
@@ -55,11 +55,11 @@ export function buyerRefundPolicy(
 export const REFUND_POLICY: RefundPolicy = {
   settlementBusinessDays: readDays(
     process.env.NEXT_PUBLIC_REFUND_SETTLEMENT_BUSINESS_DAYS,
-    DEFAULT_SETTLEMENT_BUSINESS_DAYS,
+    DEFAULT_SETTLEMENT_BUSINESS_DAYS
   ),
   bankBusinessDays: readDays(
     process.env.NEXT_PUBLIC_REFUND_BANK_BUSINESS_DAYS,
-    DEFAULT_BANK_BUSINESS_DAYS,
+    DEFAULT_BANK_BUSINESS_DAYS
   ),
 };
 
@@ -153,7 +153,7 @@ export type RefundStatusCopy = {
  */
 export function refundStatusCopy(
   status: string | null | undefined,
-  args: { methodLabel: string; sentBy: string; visibleBy: string },
+  args: { methodLabel: string; sentBy: string; visibleBy: string }
 ): RefundStatusCopy {
   switch (String(status ?? 'PENDING').toUpperCase()) {
     case 'COMPLETED':
@@ -265,7 +265,7 @@ export function summarizeRefunds(refunds: OrderRefund[] | null | undefined): Ref
   // necesita saber que aún espera, no que «una» ya se cerró.
   const open = settlement.find((r) => String(r.status).toUpperCase() === 'PENDING');
   const failed = settlement.find((r) =>
-    ['FAILED', 'DISPUTED'].includes(String(r.status).toUpperCase()),
+    ['FAILED', 'DISPUTED'].includes(String(r.status).toUpperCase())
   );
   const leading = failed ?? open ?? settlement[settlement.length - 1] ?? refunds[0];
   const requestedAt = leading?.requestedAt ? new Date(leading.requestedAt) : null;
@@ -288,7 +288,7 @@ export function summarizeRefunds(refunds: OrderRefund[] | null | undefined): Ref
  */
 export function orderHasRefund(status: string | null | undefined): boolean {
   return ['REFUNDED', 'PARTIALLY_REFUNDED', 'PENDING_REFUND'].includes(
-    String(status ?? '').toUpperCase(),
+    String(status ?? '').toUpperCase()
   );
 }
 
@@ -298,7 +298,9 @@ export function orderHasRefund(status: string | null | undefined): boolean {
  * Sin las filas de `Refund` no se puede afirmar un importe ni una fecha, así
  * que aquí NO se inventa ninguno: se dice lo que sí se sabe.
  */
-export function refundFallbackCopy(orderStatus: string | null | undefined): RefundStatusCopy | null {
+export function refundFallbackCopy(
+  orderStatus: string | null | undefined
+): RefundStatusCopy | null {
   switch (String(orderStatus ?? '').toUpperCase()) {
     case 'REFUNDED':
       return {

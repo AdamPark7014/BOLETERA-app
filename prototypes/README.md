@@ -21,5 +21,5 @@ Esta fuera del workspace por dos razones:
    nada al resto del repo.
 
 Para trabajarlo: `cd prototypes/staff-mobile-expo && npm install` (npm, no
-pnpm: fuera del workspace no hay enlaces de workspace:*; sustituye la
+pnpm: fuera del workspace no hay enlaces de workspace:\*; sustituye la
 dependencia `@boletera/shared` por una copia local si hace falta).

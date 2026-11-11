@@ -23,7 +23,7 @@ export type ReleaseHoldResult = {
 const STALE_TIME = 20_000;
 
 function toQueryString(
-  params: Record<string, string | number | boolean | undefined | null>,
+  params: Record<string, string | number | boolean | undefined | null>
 ): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -47,8 +47,7 @@ function metricsUrl(path: string, params: ReservationRangeParams = {}): string {
 export function useReservationInventory(params: ReservationRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.reservations.inventory(params),
-    queryFn: ({ signal }) =>
-      http<InventoryMetrics>(metricsUrl('inventory', params), { signal }),
+    queryFn: ({ signal }) => http<InventoryMetrics>(metricsUrl('inventory', params), { signal }),
     staleTime: STALE_TIME,
   });
 }
@@ -57,8 +56,7 @@ export function useReservationInventory(params: ReservationRangeParams = {}) {
 export function useReservationOrdersMetrics(params: ReservationRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.reservations.ordersMetrics(params),
-    queryFn: ({ signal }) =>
-      http<OrdersPaymentsMetrics>(metricsUrl('orders', params), { signal }),
+    queryFn: ({ signal }) => http<OrdersPaymentsMetrics>(metricsUrl('orders', params), { signal }),
     staleTime: STALE_TIME,
   });
 }
@@ -80,13 +78,7 @@ export function useReservationEvents() {
 export function useReleaseReservationHold() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      holdId,
-      sessionId,
-    }: {
-      holdId: string;
-      sessionId?: string;
-    }) => {
+    mutationFn: ({ holdId, sessionId }: { holdId: string; sessionId?: string }) => {
       const qs = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
       return http<ReleaseHoldResult>(`/inventory/holds/${holdId}${qs}`, {
         method: 'DELETE',

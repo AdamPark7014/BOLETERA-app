@@ -28,7 +28,7 @@ export function HotkeyBar({ hotkeys, enabled = true }: { hotkeys: Hotkey[]; enab
         run: () => setHelpOpen(false),
       },
     ],
-    enabled,
+    enabled
   );
 
   const groups = useMemo(() => {

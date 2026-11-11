@@ -1,26 +1,26 @@
-import type { Metadata } from "next";
-import { Bebas_Neue, Space_Grotesk } from "next/font/google";
-import { SiteFooter } from "@/components/SiteFooter";
-import { BlackTicketRoot } from "@boletera/ui";
-import { TenantBrandProvider } from "@/components/TenantBrand";
-import { buildOrganizationWebsiteJsonLd } from "@/lib/seo/event-jsonld";
-import { getSiteOrigin } from "@/lib/site-url";
-import { fetchTenantCurrent, tenantThemeStyle } from "@/lib/tenant";
+import type { Metadata } from 'next';
+import { Bebas_Neue, Space_Grotesk } from 'next/font/google';
+import { SiteFooter } from '@/components/SiteFooter';
+import { BlackTicketRoot } from '@boletera/ui';
+import { TenantBrandProvider } from '@/components/TenantBrand';
+import { buildOrganizationWebsiteJsonLd } from '@/lib/seo/event-jsonld';
+import { getSiteOrigin } from '@/lib/site-url';
+import { fetchTenantCurrent, tenantThemeStyle } from '@/lib/tenant';
 // El sistema de diseno va PRIMERO: define los --bl-* de los que
 // derivan los tokens locales. Sin esta linea cada pantalla caia a
 // su reserva codificada a mano y las familias de gris no concordaban.
-import "@boletera/ui/src/styles/theme.scss";
-import "./globals.css";
+import '@boletera/ui/src/styles/theme.scss';
+import './globals.css';
 
 const headingFont = Bebas_Neue({
-  subsets: ["latin"],
-  variable: "--font-heading",
-  weight: "400"
+  subsets: ['latin'],
+  variable: '--font-heading',
+  weight: '400',
 });
 
 const bodyFont = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-body"
+  subsets: ['latin'],
+  variable: '--font-body',
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -32,13 +32,13 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `${tenant.name} | Boletos oficiales`,
     description: `Compra boletos oficiales en ${tenant.name}: inventario real, mapa de asientos y pagos Banorte.`,
     icons: {
-      icon: favicon || "/favicon.svg",
-      apple: favicon || logo || "/favicon.svg",
+      icon: favicon || '/favicon.svg',
+      apple: favicon || logo || '/favicon.svg',
     },
     openGraph: {
       siteName: tenant.name,
-      locale: "es_MX",
-      type: "website",
+      locale: 'es_MX',
+      type: 'website',
     },
   };
 }

@@ -56,7 +56,7 @@ export function ZonesSection({
   const surgeLabel = surge == null ? '—' : `${Math.round(surge <= 1 ? surge * 100 : surge)}%`;
   const [openId, setOpenId] = useState<string | null>(offers[0]?.id ?? null);
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() =>
-    Object.fromEntries(offers.map((offer) => [offer.id, draftOf(offer)])),
+    Object.fromEntries(offers.map((offer) => [offer.id, draftOf(offer)]))
   );
   const [quotes, setQuotes] = useState<Record<string, PriceQuote>>({});
   const [saving, setSaving] = useState(false);
@@ -88,7 +88,7 @@ export function ZonesSection({
         } catch {
           return null;
         }
-      }),
+      })
     ).then((rows) => {
       if (!alive) return;
       const next: Record<string, PriceQuote> = {};
@@ -107,12 +107,17 @@ export function ZonesSection({
     const draft = drafts[offer.id] ?? draftOf(offer);
     const price = Number(draft.price);
     const lines: string[] = [];
-    if (draft.name.trim() !== offer.name) lines.push(`Nombre de ${offer.zone}: ${offer.name} → ${draft.name.trim()}`);
+    if (draft.name.trim() !== offer.name)
+      lines.push(`Nombre de ${offer.zone}: ${offer.name} → ${draft.name.trim()}`);
     if (Number.isFinite(price) && price !== offer.basePrice) {
-      lines.push(`Precio de ${offer.zone}: ${formatTicketAmount(offer.basePrice)} → ${formatTicketAmount(price)}`);
+      lines.push(
+        `Precio de ${offer.zone}: ${formatTicketAmount(offer.basePrice)} → ${formatTicketAmount(price)}`
+      );
     }
     if (draft.available !== offer.isAvailable) {
-      lines.push(`A la venta ${offer.zone}: ${yesNo(offer.isAvailable)} → ${yesNo(draft.available)}`);
+      lines.push(
+        `A la venta ${offer.zone}: ${yesNo(offer.isAvailable)} → ${yesNo(draft.available)}`
+      );
     }
     return lines;
   });
@@ -127,7 +132,8 @@ export function ZonesSection({
   function patch(id: string, partial: Partial<Draft>) {
     setDrafts((current) => {
       const offer = offers.find((item) => item.id === id);
-      const base = current[id] ?? (offer ? draftOf(offer) : { name: '', price: '', available: true });
+      const base =
+        current[id] ?? (offer ? draftOf(offer) : { name: '', price: '', available: true });
       return { ...current, [id]: { ...base, ...partial } };
     });
     setNotice(null);
@@ -239,14 +245,20 @@ export function ZonesSection({
                           label="Precio base"
                           kind="money"
                           value={draft.price}
-                          error={priceInvalid ? 'El precio tiene que ser mayor que $0.00.' : undefined}
+                          error={
+                            priceInvalid ? 'El precio tiene que ser mayor que $0.00.' : undefined
+                          }
                           onChange={(event) => patch(offer.id, { price: event.target.value })}
                         />
                       ) : null}
                     </ParameterCard>
                   </Param>
                   <Param name="Moneda de la oferta">
-                    <ParameterCard name="Moneda de la oferta" value={offer.currency} effect="Moneda de esta zona." />
+                    <ParameterCard
+                      name="Moneda de la oferta"
+                      value={offer.currency}
+                      effect="Moneda de esta zona."
+                    />
                   </Param>
                   <Param name="Cupo de la zona">
                     <ParameterCard
@@ -305,7 +317,11 @@ export function ZonesSection({
                     />
                   </Param>
                   <Param name="Tarjetas restringidas">
-                    <ParameterCard name="Tarjetas restringidas" value={offer.cards} effect="Restricción de la zona." />
+                    <ParameterCard
+                      name="Tarjetas restringidas"
+                      value={offer.cards}
+                      effect="Restricción de la zona."
+                    />
                   </Param>
                   <Param name="Vigencia desde">
                     <ParameterCard

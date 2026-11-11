@@ -36,10 +36,7 @@ function ShellTopbarComponent({
     return map;
   }, [venues]);
 
-  const crumbs = useMemo(
-    () => buildBreadcrumbs(pathname, venueNames),
-    [pathname, venueNames],
-  );
+  const crumbs = useMemo(() => buildBreadcrumbs(pathname, venueNames), [pathname, venueNames]);
 
   return (
     <header className={styles.topbar}>

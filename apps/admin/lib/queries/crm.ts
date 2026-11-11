@@ -1,10 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  useAiCustomerSegmentation,
-  useAiRecommendations,
-} from './ai';
+import { useAiCustomerSegmentation, useAiRecommendations } from './ai';
 import { useAuditLog } from './audit';
 import { usePromoterAnalytics } from './analytics';
 import {
@@ -43,7 +40,7 @@ export function useCrmWorkspace(params: CrmWorkspaceParams) {
       from: params.from,
       to: params.to,
     }),
-    [orgId, params.from, params.to],
+    [orgId, params.from, params.to]
   );
 
   const orders = useOrders({ scope: 'crm', limit: 500 });

@@ -1,9 +1,5 @@
 import type { SeatMapBlock, SeatMapSeat } from '@boletera/shared';
-import {
-  numberRow,
-  rowLabelAt,
-  type NumberingConvention,
-} from './numbering';
+import { numberRow, rowLabelAt, type NumberingConvention } from './numbering';
 
 export type StraightRowOptions = {
   origin: { x: number; y: number };
@@ -68,9 +64,13 @@ function rowLabelFromIndex(
   start: string | undefined,
   index: number,
   numbering?: NumberingConvention,
-  totalRows?: number,
+  totalRows?: number
 ): string {
-  return rowLabelAt(index, { ...numbering, startRowLabel: start ?? numbering?.startRowLabel }, totalRows);
+  return rowLabelAt(
+    index,
+    { ...numbering, startRowLabel: start ?? numbering?.startRowLabel },
+    totalRows
+  );
 }
 
 /** Generate a straight row of seats with consistent spacing (no overlaps). */

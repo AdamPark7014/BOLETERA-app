@@ -8,11 +8,9 @@ const HEX_RE = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 const SUBDOMAIN_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const MAX_LOGO_DATA_BYTES = 180_000;
 
-export const STOREFRONT_FONT =
-  '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif';
+export const STOREFRONT_FONT = '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif';
 
-export const TICKET_DISPLAY_FONT =
-  '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif';
+export const TICKET_DISPLAY_FONT = '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif';
 
 export type BrandDraft = {
   primaryColor: string;
@@ -120,7 +118,9 @@ export function previewTextColor(background: string): string {
 }
 
 export function derivePalette(primaryInput: string, secondaryHint?: string | null): DerivedPalette {
-  const primary = isValidHex(primaryInput) ? normalizeHex(primaryInput) : DEFAULT_DRAFT.primaryColor;
+  const primary = isValidHex(primaryInput)
+    ? normalizeHex(primaryInput)
+    : DEFAULT_DRAFT.primaryColor;
   const onPrimary = previewTextColor(primary);
   const secondary =
     secondaryHint && isValidHex(secondaryHint)
@@ -167,8 +167,7 @@ export function validateBrandingDraft(draft: BrandDraft): FieldErrors {
   } else {
     const onWhite = contrastRatio(normalizeHex(draft.primaryColor), '#ffffff');
     if (onWhite < 3) {
-      errors.primaryColor =
-        'El contraste sobre fondo claro es insuficiente (mín. 3:1 para UI).';
+      errors.primaryColor = 'El contraste sobre fondo claro es insuficiente (mín. 3:1 para UI).';
     }
   }
   if (!draft.subdomain.trim()) {
@@ -178,10 +177,9 @@ export function validateBrandingDraft(draft: BrandDraft): FieldErrors {
       'Solo minúsculas, números y guiones (2–63 caracteres, sin empezar/terminar con guion).';
   }
   if (!isValidLogoUrl(draft.logoUrl)) {
-    errors.logoUrl =
-      draft.logoUrl.trim().startsWith('data:')
-        ? 'El archivo del logo es demasiado grande (máx. ~180 KB). Usa una URL HTTPS.'
-        : 'La URL del logo debe ser http(s) válida.';
+    errors.logoUrl = draft.logoUrl.trim().startsWith('data:')
+      ? 'El archivo del logo es demasiado grande (máx. ~180 KB). Usa una URL HTTPS.'
+      : 'La URL del logo debe ser http(s) válida.';
   }
   return errors;
 }
@@ -246,7 +244,7 @@ export function readLogoFileAsDataUrl(file: File): Promise<string> {
   }
   if (file.size > MAX_LOGO_DATA_BYTES) {
     return Promise.reject(
-      new Error('El archivo supera ~180 KB. Súbelo a un CDN e ingresa la URL HTTPS.'),
+      new Error('El archivo supera ~180 KB. Súbelo a un CDN e ingresa la URL HTTPS.')
     );
   }
   return new Promise((resolve, reject) => {

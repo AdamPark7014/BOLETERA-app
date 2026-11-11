@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  ActivityFeed,
-  Card,
-  CardHeader,
-  EmptyState,
-} from '@boletera/ui';
+import { ActivityFeed, Card, CardHeader, EmptyState } from '@boletera/ui';
 import type { ActivityItem } from '@boletera/ui';
 import type { AuditEntry } from '@/lib/queries/audit';
 import { formatRelative } from './format';
@@ -19,16 +14,13 @@ type Props = {
   canReadAudit: boolean;
 };
 
-function toActivityItems(
-  entries: readonly AuditEntry[],
-  eventId: string,
-): ActivityItem[] {
+function toActivityItems(entries: readonly AuditEntry[], eventId: string): ActivityItem[] {
   return entries
     .filter(
       (entry) =>
         entry.entityId === eventId ||
         entry.entityType.toLowerCase().includes('event') ||
-        String(entry.metadata?.eventId ?? '') === eventId,
+        String(entry.metadata?.eventId ?? '') === eventId
     )
     .slice(0, 40)
     .map((entry) => ({
@@ -41,13 +33,7 @@ function toActivityItems(
     }));
 }
 
-export function ActivityPanel({
-  eventId,
-  entries,
-  loading,
-  error,
-  canReadAudit,
-}: Props) {
+export function ActivityPanel({ eventId, entries, loading, error, canReadAudit }: Props) {
   if (!canReadAudit) {
     return (
       <div

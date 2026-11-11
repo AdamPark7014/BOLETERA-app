@@ -33,7 +33,7 @@ async function ensureDemoGateway(request: APIRequestContext) {
 
 async function createPendingAsyncOrder(
   request: APIRequestContext,
-  paymentMethod: 'SPEI' | 'OXXO',
+  paymentMethod: 'SPEI' | 'OXXO'
 ): Promise<PendingOrder> {
   const eventsRes = await request.get(`${API}/discovery/events`);
   if (!eventsRes.ok()) throw new Error(`Sin catálogo (${eventsRes.status()})`);
@@ -48,7 +48,7 @@ async function createPendingAsyncOrder(
     offers: { id: string; remainingQuantity?: number; isAvailable?: boolean }[];
   };
   const offer = detail.offers.find(
-    (o) => o.isAvailable !== false && (o.remainingQuantity ?? 1) > 0,
+    (o) => o.isAvailable !== false && (o.remainingQuantity ?? 1) > 0
   );
   if (!offer?.id) throw new Error('Sin ofertas disponibles');
 

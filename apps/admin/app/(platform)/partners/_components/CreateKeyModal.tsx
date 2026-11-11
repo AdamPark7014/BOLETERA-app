@@ -2,11 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { Button, Input, Modal } from '@boletera/ui';
-import {
-  GRANTABLE_SCOPES,
-  SCOPE_CATALOG,
-  type GrantableScope,
-} from '../_lib/scopes';
+import { GRANTABLE_SCOPES, SCOPE_CATALOG, type GrantableScope } from '../_lib/scopes';
 import styles from '../partners.module.scss';
 
 export type CreateKeyPayload = {
@@ -119,12 +115,7 @@ export function CreateKeyModal({ open, busy, onClose, onSubmit }: CreateKeyModal
           <Button type="button" variant="ghost" disabled={busy} onClick={handleClose}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            form="create-api-key"
-            loading={busy}
-            loadingLabel="Generando…"
-          >
+          <Button type="submit" form="create-api-key" loading={busy} loadingLabel="Generando…">
             Generar
           </Button>
         </div>
@@ -144,8 +135,8 @@ export function CreateKeyModal({ open, busy, onClose, onSubmit }: CreateKeyModal
         <fieldset className={styles.scopeFieldset}>
           <legend>Scopes concedibles</legend>
           <p className={styles.muted}>
-            Solo se ofrecen los scopes que el backend acepta hoy (
-            {GRANTABLE_SCOPES.length} disponibles).
+            Solo se ofrecen los scopes que el backend acepta hoy ({GRANTABLE_SCOPES.length}{' '}
+            disponibles).
           </p>
           <div className={styles.scopeGrid}>
             {SCOPE_CATALOG.map((scope) => (

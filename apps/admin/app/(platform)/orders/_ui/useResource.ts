@@ -102,7 +102,7 @@ type Options = {
 
 export function useResource<T>(
   loader: (ctx: LoaderContext) => Promise<T>,
-  options: Options = {},
+  options: Options = {}
 ): Resource<T> {
   const { requiresOrg = true, deps = [] } = options;
   const session = useAdminSession();
@@ -151,7 +151,7 @@ export function useResource<T>(
   const reload = useCallback(() => setNonce((n) => n + 1), []);
   const patch = useCallback((updater: (current: T) => T) => {
     setState((prev) =>
-      prev.phase === 'ready' ? { phase: 'ready', data: updater(prev.data) } : prev,
+      prev.phase === 'ready' ? { phase: 'ready', data: updater(prev.data) } : prev
     );
   }, []);
 

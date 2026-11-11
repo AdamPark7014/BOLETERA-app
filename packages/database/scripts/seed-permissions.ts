@@ -89,7 +89,10 @@ export async function seedPermissions(prisma: PrismaClient): Promise<void> {
     permissionIds.set(def.key, row.id);
   }
 
-  for (const [role, keys] of Object.entries(ROLE_DEFAULT_PERMISSIONS) as [UserRole, readonly string[]][]) {
+  for (const [role, keys] of Object.entries(ROLE_DEFAULT_PERMISSIONS) as [
+    UserRole,
+    readonly string[],
+  ][]) {
     for (const key of keys) {
       const permissionId = permissionIds.get(key);
       if (!permissionId) continue;

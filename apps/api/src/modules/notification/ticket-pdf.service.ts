@@ -75,7 +75,7 @@ export class TicketPdfService {
 
   constructor(
     private readonly config: ConfigService,
-    private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService
   ) {}
 
   async buildPdfBuffer(opts: TicketPdfOptions): Promise<Buffer> {
@@ -183,7 +183,7 @@ export class TicketPdfService {
       }
     } catch (error) {
       this.logger.warn(
-        `No se pudo completar el contexto del PDF de ${opts.publicId}: ${error instanceof Error ? error.message : String(error)}`,
+        `No se pudo completar el contexto del PDF de ${opts.publicId}: ${error instanceof Error ? error.message : String(error)}`
       );
     }
 
@@ -201,8 +201,13 @@ export class TicketPdfService {
     ticket: TicketPdfRow,
     index: number,
     total: number,
-    context: { event: EventContext; totalAmount: unknown; currency: string; offerByTicketCode: Map<string, string> },
-    opts: TicketPdfOptions,
+    context: {
+      event: EventContext;
+      totalAmount: unknown;
+      currency: string;
+      offerByTicketCode: Map<string, string>;
+    },
+    opts: TicketPdfOptions
   ) {
     const left = MARGIN;
     const width = doc.page.width - MARGIN * 2;
@@ -226,7 +231,11 @@ export class TicketPdfService {
     y += 16;
 
     // --- Evento y recinto
-    doc.fillColor('#000000').font('Helvetica-Bold').fontSize(20).text(event.title, left, y, { width });
+    doc
+      .fillColor('#000000')
+      .font('Helvetica-Bold')
+      .fontSize(20)
+      .text(event.title, left, y, { width });
     y = doc.y + 6;
 
     doc
@@ -237,11 +246,17 @@ export class TicketPdfService {
     y = doc.y + 2;
 
     const venueName = event.venueName ?? 'Recinto por confirmar';
-    const venueAddress = [event.venueAddress, event.venueCity, event.venueState].filter(Boolean).join(', ');
+    const venueAddress = [event.venueAddress, event.venueCity, event.venueState]
+      .filter(Boolean)
+      .join(', ');
     doc.font('Helvetica').fontSize(11).fillColor('#111111').text(venueName, left, y, { width });
     y = doc.y;
     if (venueAddress) {
-      doc.font('Helvetica').fontSize(9.5).fillColor('#444444').text(venueAddress, left, y, { width });
+      doc
+        .font('Helvetica')
+        .fontSize(9.5)
+        .fillColor('#444444')
+        .text(venueAddress, left, y, { width });
       y = doc.y;
     }
     y += 14;
@@ -255,14 +270,22 @@ export class TicketPdfService {
     const infoWidth = qrX - left - 32;
     let infoY = boxTop + 16;
     const field = (label: string, value: string, size = 13) => {
-      doc.font('Helvetica').fontSize(8).fillColor('#555555').text(label.toUpperCase(), left + 16, infoY, {
-        width: infoWidth,
-        characterSpacing: 0.6,
-      });
+      doc
+        .font('Helvetica')
+        .fontSize(8)
+        .fillColor('#555555')
+        .text(label.toUpperCase(), left + 16, infoY, {
+          width: infoWidth,
+          characterSpacing: 0.6,
+        });
       infoY = doc.y + 1;
-      doc.font('Helvetica-Bold').fontSize(size).fillColor('#000000').text(value, left + 16, infoY, {
-        width: infoWidth,
-      });
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(size)
+        .fillColor('#000000')
+        .text(value, left + 16, infoY, {
+          width: infoWidth,
+        });
       infoY = doc.y + 8;
     };
 
@@ -286,19 +309,37 @@ export class TicketPdfService {
       .font('Helvetica')
       .fontSize(7.5)
       .fillColor('#444444')
-      .text('Validación en taquilla', qrX, boxTop + QR_SIZE + 18, { width: QR_SIZE, align: 'center' });
+      .text('Validación en taquilla', qrX, boxTop + QR_SIZE + 18, {
+        width: QR_SIZE,
+        align: 'center',
+      });
 
     // --- Código legible: es el dato con el que trabaja el personal de taquilla.
     let codeY = boxTop + boxHeight + 14;
-    doc.font('Helvetica').fontSize(8).fillColor('#555555').text('CÓDIGO DEL BOLETO', left, codeY, { characterSpacing: 0.6 });
+    doc
+      .font('Helvetica')
+      .fontSize(8)
+      .fillColor('#555555')
+      .text('CÓDIGO DEL BOLETO', left, codeY, { characterSpacing: 0.6 });
     codeY = doc.y + 2;
-    doc.font('Courier-Bold').fontSize(20).fillColor('#000000').text(ticket.code, left, codeY, { width });
+    doc
+      .font('Courier-Bold')
+      .fontSize(20)
+      .fillColor('#000000')
+      .text(ticket.code, left, codeY, { width });
     let y2 = doc.y + 14;
 
     // --- Cómo entrar. Es la parte que evita discusiones en la puerta.
-    const webUrl = String(this.config.get('WEB_URL') ?? process.env.WEB_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    const webUrl = String(
+      this.config.get('WEB_URL') ?? process.env.WEB_URL ?? 'http://localhost:3000'
+    ).replace(/\/$/, '');
     const orderUrl = `${webUrl}/orders/${opts.publicId}`;
-    doc.roundedRect(left, y2, width, 96, 8).lineWidth(1).strokeColor('#777777').dash(3, { space: 2 }).stroke();
+    doc
+      .roundedRect(left, y2, width, 96, 8)
+      .lineWidth(1)
+      .strokeColor('#777777')
+      .dash(3, { space: 2 })
+      .stroke();
     doc.undash();
     doc
       .font('Helvetica-Bold')
@@ -315,13 +356,17 @@ export class TicketPdfService {
           '3. Lleva identificación oficial con el mismo nombre de la compra.',
         left + 14,
         doc.y + 3,
-        { width: width - 28, lineGap: 1.5 },
+        { width: width - 28, lineGap: 1.5 }
       );
     y2 += 106;
 
     // --- Condiciones y pie
     const conditions = policyLine(event);
-    doc.font('Helvetica').fontSize(8).fillColor('#444444').text(`Condiciones: ${conditions}`, left, y2, { width });
+    doc
+      .font('Helvetica')
+      .fontSize(8)
+      .fillColor('#444444')
+      .text(`Condiciones: ${conditions}`, left, y2, { width });
 
     const footerY = doc.page.height - MARGIN - 26;
     doc.moveTo(left, footerY).lineTo(right, footerY).lineWidth(0.5).strokeColor('#999999').stroke();
@@ -338,7 +383,7 @@ export class TicketPdfService {
           'La reproducción de este boleto no otorga accesos adicionales: cada código admite una sola entrada.',
         left,
         footerY + 6,
-        { width },
+        { width }
       );
   }
 }

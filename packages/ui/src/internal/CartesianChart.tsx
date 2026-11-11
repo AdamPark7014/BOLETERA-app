@@ -62,7 +62,7 @@ export function CartesianChart({
       labels.map((_unused, index) => {
         running[index] = (running[index] ?? 0) + (item.data[index]?.value ?? 0);
         return running[index] ?? 0;
-      }),
+      })
     );
   }, [series, labels, stacked]);
 
@@ -110,13 +110,17 @@ export function CartesianChart({
         const innerHeight = Math.max(1, height - margin.top - margin.bottom);
         const baseline = margin.top + innerHeight;
 
-        const band = bandScale(Math.max(1, labels.length), [margin.left, margin.left + innerWidth], 0);
+        const band = bandScale(
+          Math.max(1, labels.length),
+          [margin.left, margin.left + innerWidth],
+          0
+        );
         const y = linearScale(domain, [baseline, margin.top]);
         const gridValues = hideGrid && hideYAxis ? [] : ticks(domain, tickCount);
         const shownLabels = visibleLabelIndices(labels.length, Math.max(2, Math.floor(width / 78)));
 
         const seriesPoints: Point[][] = stackedValues.map((values) =>
-          values.map((value, index) => ({ x: band.center(index), y: y(value) })),
+          values.map((value, index) => ({ x: band.center(index), y: y(value) }))
         );
 
         const onMove = (event: MouseEvent<SVGRectElement>): void => {
@@ -151,7 +155,12 @@ export function CartesianChart({
                   />
                 )}
                 {hideYAxis ? null : (
-                  <text className={styles.axisLabel} x={margin.left - 8} y={y(value)} textAnchor="end">
+                  <text
+                    className={styles.axisLabel}
+                    x={margin.left - 8}
+                    y={y(value)}
+                    textAnchor="end"
+                  >
                     {formatAxis(value)}
                   </text>
                 )}
@@ -171,7 +180,7 @@ export function CartesianChart({
                     >
                       {text}
                     </text>
-                  ) : null,
+                  ) : null
                 )}
 
             {/* Las areas se pintan en orden inverso para que la serie 0 quede encima. */}
@@ -208,7 +217,7 @@ export function CartesianChart({
                       r={2.5}
                       fill={colors[index]}
                     />
-                  )),
+                  ))
                 )
               : null}
 

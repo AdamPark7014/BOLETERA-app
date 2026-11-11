@@ -6,13 +6,7 @@ import {
   type StudioUrlState,
 } from './types';
 
-const COLOR_MODES: readonly StudioColorMode[] = [
-  'zone',
-  'tier',
-  'price',
-  'status',
-  'sightline',
-];
+const COLOR_MODES: readonly StudioColorMode[] = ['zone', 'tier', 'price', 'status', 'sightline'];
 
 const CAMERAS: readonly CameraPreset[] = ['orbit', 'plan', 'side', 'stage', 'seat'];
 
@@ -78,7 +72,7 @@ export function buildMapEditorHref(
     seatId: string | null;
     colorMode: StudioColorMode;
     levelId: string | 'ALL';
-  },
+  }
 ): string {
   const params = new URLSearchParams();
   params.set('from', '3d');
@@ -96,7 +90,7 @@ export function buildStudioHref(
     colorMode?: StudioColorMode;
     levelId?: string | 'ALL';
     camera?: CameraPreset;
-  },
+  }
 ): string {
   return `/venues/${venueId}/3d${buildStudioSearchParams({
     studio: state.studio ?? true,

@@ -83,10 +83,7 @@ export function HomeModules({
   return (
     <div className={styles.wrap}>
       {trending.length > 0 && (
-        <section
-          className={`${styles.band} ${styles.bandLight}`}
-          aria-labelledby="home-trending"
-        >
+        <section className={`${styles.band} ${styles.bandLight}`} aria-labelledby="home-trending">
           <div className={styles.bandInner}>
             <div className={styles.head}>
               <h2 id="home-trending">Lo más buscado</h2>
@@ -119,10 +116,7 @@ export function HomeModules({
         </section>
       )}
 
-      <section
-        className={`${styles.band} ${styles.bandMuted}`}
-        aria-labelledby="home-experiences"
-      >
+      <section className={`${styles.band} ${styles.bandMuted}`} aria-labelledby="home-experiences">
         <div className={styles.bandInner}>
           <div className={styles.head}>
             <h2 id="home-experiences">Experiencias destacadas</h2>
@@ -138,7 +132,12 @@ export function HomeModules({
                       style={{ backgroundImage: `url(${item.image})` }}
                     >
                       <div className={styles.experienceOverlay} aria-hidden="true" />
-                      <Badge tone="accent" variant="solid" size="sm" className={styles.experienceBadge}>
+                      <Badge
+                        tone="accent"
+                        variant="solid"
+                        size="sm"
+                        className={styles.experienceBadge}
+                      >
                         Destacado
                       </Badge>
                       <div className={styles.experienceCopy}>
@@ -155,10 +154,7 @@ export function HomeModules({
       </section>
 
       {cities.length > 0 && (
-        <section
-          className={`${styles.band} ${styles.bandWarm}`}
-          aria-labelledby="home-cities"
-        >
+        <section className={`${styles.band} ${styles.bandWarm}`} aria-labelledby="home-cities">
           <div className={styles.bandInner}>
             <div className={styles.head}>
               <h2 id="home-cities">Ciudades más buscadas</h2>
@@ -168,11 +164,7 @@ export function HomeModules({
           <div className={styles.carouselViewport} tabIndex={0} aria-label="Ciudades más buscadas">
             <ul className={styles.carouselTrack}>
               {cities.map((c) => {
-                const photo = resolveCityImage(
-                  c.name,
-                  siteContent,
-                  '/hero/01-festival.jpg',
-                );
+                const photo = resolveCityImage(c.name, siteContent, '/hero/01-festival.jpg');
                 return (
                   <li key={c.name} className={styles.cityItem}>
                     <Link
@@ -203,10 +195,7 @@ export function HomeModules({
       )}
 
       {venues.length > 0 && (
-        <section
-          className={`${styles.band} ${styles.bandDark}`}
-          aria-labelledby="home-venues"
-        >
+        <section className={`${styles.band} ${styles.bandDark}`} aria-labelledby="home-venues">
           <div className={styles.bandInner}>
             <div className={styles.head}>
               <h2 id="home-venues">Inmuebles</h2>
@@ -225,7 +214,12 @@ export function HomeModules({
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={v.image} alt="" loading="lazy" decoding="async" />
                         ) : null}
-                        <Badge tone="accent" variant="solid" size="sm" className={styles.venueBadge}>
+                        <Badge
+                          tone="accent"
+                          variant="solid"
+                          size="sm"
+                          className={styles.venueBadge}
+                        >
                           {v.eventCount} evento{v.eventCount === 1 ? '' : 's'}
                         </Badge>
                       </div>

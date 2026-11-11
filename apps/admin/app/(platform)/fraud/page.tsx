@@ -120,7 +120,9 @@ function FraudeBody() {
           return flag ? [flag] : [];
         });
         setFlags(next);
-        setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+        setOpenId((current) =>
+          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+        );
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -164,7 +166,13 @@ function FraudeBody() {
     );
   }
   if (error) {
-    return <ApiErrorView error={error} context="abrir fraude" onRetry={() => setNonce((current) => current + 1)} />;
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir fraude"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando fraude.</p>;
 
@@ -172,7 +180,9 @@ function FraudeBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Fraude</h1>
-        <p className={styles.quiet}>Casos que ya marcó el servicio. Resolver deja el caso en Resuelto.</p>
+        <p className={styles.quiet}>
+          Casos que ya marcó el servicio. Resolver deja el caso en Resuelto.
+        </p>
       </header>
       <div className={styles.stack}>
         <Param name="Detección">
@@ -214,7 +224,11 @@ function FraudeBody() {
                     />
                   </Param>
                   <Param name="Severidad">
-                    <ParameterCard name="Severidad" value={word(SEVERITY, flag.severity)} effect="Baja, media, alta o crítica." />
+                    <ParameterCard
+                      name="Severidad"
+                      value={word(SEVERITY, flag.severity)}
+                      effect="Baja, media, alta o crítica."
+                    />
                   </Param>
                   <Param name="Puntaje">
                     <ParameterCard

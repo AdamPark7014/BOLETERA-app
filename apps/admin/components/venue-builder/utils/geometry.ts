@@ -95,7 +95,7 @@ export function distance(a: WorldPoint, b: WorldPoint): number {
 export function circleFromThreePoints(
   a: WorldPoint,
   b: WorldPoint,
-  c: WorldPoint,
+  c: WorldPoint
 ): { center: WorldPoint; radius: number } | null {
   const d = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
   if (Math.abs(d) < 1e-6) return null;
@@ -155,7 +155,7 @@ export function scalePoint(
   point: WorldPoint,
   pivot: WorldPoint,
   factorX: number,
-  factorY: number,
+  factorY: number
 ): WorldPoint {
   return {
     x: pivot.x + (point.x - pivot.x) * factorX,

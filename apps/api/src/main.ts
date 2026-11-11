@@ -54,11 +54,14 @@ async function bootstrap() {
   const trustProxy = process.env.TRUST_PROXY;
   if (trustProxy) {
     const hops = Number.parseInt(trustProxy, 10);
-    app.getHttpAdapter().getInstance().set('trust proxy', Number.isFinite(hops) ? hops : trustProxy);
+    app
+      .getHttpAdapter()
+      .getInstance()
+      .set('trust proxy', Number.isFinite(hops) ? hops : trustProxy);
   } else if (isProduction) {
     console.warn(
       'TRUST_PROXY no está definido: si el API está detrás de un balanceador, el rate ' +
-        'limiting verá una sola IP para todo el tráfico. Define TRUST_PROXY=1 (o los saltos que haya).',
+        'limiting verá una sola IP para todo el tráfico. Define TRUST_PROXY=1 (o los saltos que haya).'
     );
   }
 
@@ -67,7 +70,7 @@ async function bootstrap() {
       // API is consumed cross-origin by web/admin/taquilla in local and prod.
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
-    }),
+    })
   );
 
   // Global prefix
@@ -80,13 +83,14 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       transform: true,
       transformOptions: { enableImplicitConversion: true },
-    }),
+    })
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
   // CORS — web :3000/:3010, admin :3001, taquilla :3002 (+ LAN / loopback en dev)
-  const configured = (process.env.CORS_ORIGIN ||
+  const configured = (
+    process.env.CORS_ORIGIN ||
     'http://localhost:3000,http://localhost:3010,http://localhost:3001,http://localhost:3002,http://127.0.0.1:3000,http://127.0.0.1:3010,http://127.0.0.1:3001,http://127.0.0.1:3002'
   )
     .split(',')
@@ -139,7 +143,7 @@ async function bootstrap() {
     // Fallar al arrancar es preferible a publicar el mapa del API sin candado.
     throw new Error(
       'ENABLE_API_DOCS=true en producción exige API_DOCS_USER y API_DOCS_PASSWORD. ' +
-        'Define ambos o deja ENABLE_API_DOCS=false.',
+        'Define ambos o deja ENABLE_API_DOCS=false.'
     );
   }
 
@@ -153,7 +157,7 @@ async function bootstrap() {
     const config = new DocumentBuilder()
       .setTitle('Boletera Platform API')
       .setDescription(
-        'Enterprise Ticketing System - Official API Documentation. Handles discovery, inventory, pricing, orders, payments, fraud detection, resale marketplace, and analytics.',
+        'Enterprise Ticketing System - Official API Documentation. Handles discovery, inventory, pricing, orders, payments, fraud detection, resale marketplace, and analytics.'
       )
       .setVersion('1.0.0')
       .addBearerAuth()
@@ -193,5 +197,3 @@ void bootstrap().catch((error) => {
   console.error('Bootstrap error:', error);
   process.exit(1);
 });
-
-

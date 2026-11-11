@@ -80,8 +80,8 @@ export function Popover({
           toBox(anchor.getBoundingClientRect()),
           toBox(panel.getBoundingClientRect()),
           placement,
-          alignment,
-        ),
+          alignment
+        )
       );
     };
 
@@ -99,7 +99,7 @@ export function Popover({
   useEffect(() => {
     if (wasOpen.current && !open) {
       const focusable = anchorRef.current?.querySelector<HTMLElement>(
-        'button, [href], input, [tabindex]:not([tabindex="-1"])',
+        'button, [href], input, [tabindex]:not([tabindex="-1"])'
       );
       focusable?.focus({ preventScroll: true });
     }

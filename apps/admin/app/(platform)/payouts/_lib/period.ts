@@ -97,7 +97,7 @@ export function formatDateTime(value: string | Date | null | undefined): string 
 
 export function formatBucketLabel(
   value: string,
-  granularity: 'hour' | 'day' | 'week' | 'month',
+  granularity: 'hour' | 'day' | 'week' | 'month'
 ): string {
   const date = toValidDate(value);
   if (!date) return value;
@@ -113,7 +113,10 @@ export function toValidDate(value: string | Date | null | undefined): Date | nul
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /** Días completos transcurridos entre `value` y `now` (negativo si es futuro). */
-export function daysSince(value: string | Date | null | undefined, now = new Date()): number | null {
+export function daysSince(
+  value: string | Date | null | undefined,
+  now = new Date()
+): number | null {
   const date = toValidDate(value);
   if (!date) return null;
   return Math.floor((now.getTime() - date.getTime()) / MS_PER_DAY);

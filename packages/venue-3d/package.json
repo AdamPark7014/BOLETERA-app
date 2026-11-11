@@ -4,7 +4,9 @@
   "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "scripts": { "check-types": "tsc --noEmit" },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
   "dependencies": {
     "@boletera/shared": "workspace:*",
     "@boletera/venue-engine": "workspace:*"

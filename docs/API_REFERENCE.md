@@ -1,7 +1,7 @@
 # BOLETERA API Reference - Complete Endpoint Documentation
 
 > **MEGA HEAVY API DOCUMENTATION**
-> 
+>
 > **Version:** 3.0  
 > **Last Updated:** May 17, 2026  
 > **Status:** Production Ready  
@@ -28,6 +28,7 @@
 ## AUTHENTICATION & AUTHORIZATION
 
 ### JWT Token Structure
+
 ```json
 {
   "header": {
@@ -46,6 +47,7 @@
 ```
 
 ### Authorization Levels
+
 ```
 ✅ CUSTOMER    → Can purchase, view owned orders, resell
 ✅ PROMOTER    → Can create events, manage campaigns, view analytics
@@ -60,6 +62,7 @@
 ## EVENT MANAGEMENT ENDPOINTS
 
 ### 1. Create Single Event
+
 ```
 POST /api/v1/events/manage/create
 Content-Type: application/json
@@ -110,6 +113,7 @@ STATUS CODES:
 ```
 
 ### 2. Create Event Series
+
 ```
 POST /api/v1/events/manage/series/create
 Authorization: Bearer {token}
@@ -156,6 +160,7 @@ RESPONSE (201 CREATED):
 ```
 
 ### 3. Create Residency
+
 ```
 POST /api/v1/events/manage/residency/create
 Authorization: Bearer {token}
@@ -184,6 +189,7 @@ RESPONSE (201 CREATED):
 ```
 
 ### 4. Set Pricing Rules
+
 ```
 POST /api/v1/events/manage/{eventId}/pricing/rules
 Authorization: Bearer {token}
@@ -235,6 +241,7 @@ RESPONSE (200 OK):
 ```
 
 ### 5. Allocate Channels
+
 ```
 POST /api/v1/events/manage/{eventId}/channels/allocate
 Authorization: Bearer {token}
@@ -289,6 +296,7 @@ ERRORS:
 ```
 
 ### 6. Create Campaign
+
 ```
 POST /api/v1/events/manage/{eventId}/campaigns/create
 Authorization: Bearer {token}
@@ -327,6 +335,7 @@ RESPONSE (201 CREATED):
 ```
 
 ### 7. Get Event Calendar
+
 ```
 GET /api/v1/events/manage/{organizationId}/calendar?month=2026-05
 Authorization: Bearer {token}
@@ -358,6 +367,7 @@ RESPONSE (200 OK):
 ## CHANNEL MANAGEMENT ENDPOINTS
 
 ### 8. Configure Channels
+
 ```
 POST /api/v1/channels/config/{eventId}
 Authorization: Bearer {token}
@@ -399,6 +409,7 @@ RESPONSE (200 OK):
 ```
 
 ### 9. Get Channel Health
+
 ```
 GET /api/v1/channels/{eventId}/health
 Authorization: Bearer {token}
@@ -439,6 +450,7 @@ RESPONSE (200 OK):
 ```
 
 ### 10. Dynamic Reallocation
+
 ```
 POST /api/v1/channels/{eventId}/reallocate
 Authorization: Bearer {token}
@@ -475,6 +487,7 @@ RESPONSE (200 OK):
 ```
 
 ### 11. Get Channel Analytics
+
 ```
 GET /api/v1/channels/{eventId}/analytics?period=last_7_days
 Authorization: Bearer {token}
@@ -521,6 +534,7 @@ RESPONSE (200 OK):
 ```
 
 ### 12. Add API Partner
+
 ```
 POST /api/v1/channels/{eventId}/partners/add
 Authorization: Bearer {token}
@@ -551,6 +565,7 @@ RESPONSE (201 CREATED):
 ## LAYOUT MANAGEMENT ENDPOINTS
 
 ### 13. Create Venue Layout
+
 ```
 POST /api/v1/layouts/venue/{venueId}
 Authorization: Bearer {token}
@@ -613,6 +628,7 @@ RESPONSE (201 CREATED):
 ```
 
 ### 14. Calculate Sightline Scores
+
 ```
 POST /api/v1/layouts/{layoutId}/sightlines
 Authorization: Bearer {token}
@@ -631,6 +647,7 @@ RESPONSE (200 OK):
 ```
 
 ### 15. Get Seat Recommendations (canonical)
+
 ```
 POST /api/v1/3d/events/{eventId}/recommendations
 Authorization: Bearer {token}
@@ -658,6 +675,7 @@ RESPONSE (200 OK):
 > Removed: `GET /layouts/{layoutId}/recommendations/:eventId` (use this endpoint).
 
 ### 16. Get Occupancy Heatmap (canonical)
+
 ```
 GET /api/v1/3d/events/{eventId}/heatmap
 
@@ -674,6 +692,7 @@ RESPONSE (200 OK):
 > Removed: `GET /layouts/{layoutId}/heatmap/{eventId}`.
 
 ### 17. Live Interactive Seat Status (canonical)
+
 ```
 GET /api/v1/3d/events/{eventId}/interactive
 
@@ -692,6 +711,7 @@ Geometry is projected client-side from published `SeatMapData` via `@boletera/ve
 > Removed: `GET /layouts/{layoutId}/3d/{eventId}`.
 
 ### 18. Hold Seats
+
 ```
 POST /api/v1/layouts/{layoutId}/seats/hold
 Authorization: Bearer {token}
@@ -716,6 +736,7 @@ RESPONSE (200 OK):
 ## SEARCH & DISCOVERY ENDPOINTS
 
 ### 19. Search Events (AI-Powered)
+
 ```
 GET /api/v1/search/events
 Authorization: Bearer {token}
@@ -754,6 +775,7 @@ RESPONSE (200 OK):
 ```
 
 ### 20. Get Search Facets
+
 ```
 GET /api/v1/search/facets
 Authorization: Bearer {token}
@@ -778,6 +800,7 @@ RESPONSE (200 OK):
 ```
 
 ### 21. Autocomplete Search
+
 ```
 GET /api/v1/search/autocomplete?q=taylor
 Authorization: Bearer {token}
@@ -805,6 +828,7 @@ RESPONSE (200 OK):
 ```
 
 ### 22. Get Trending Events
+
 ```
 GET /api/v1/search/trending?limit=10
 Authorization: Bearer {token}
@@ -826,6 +850,7 @@ RESPONSE (200 OK):
 ```
 
 ### 23. Get Personalized Recommendations
+
 ```
 GET /api/v1/search/recommendations/{userId}
 Authorization: Bearer {token}
@@ -851,6 +876,7 @@ RESPONSE (200 OK):
 ## CAMPAIGN MANAGEMENT ENDPOINTS
 
 ### 24. Create Campaign
+
 ```
 POST /api/v1/campaigns/create/{organizationId}/{eventId}
 Authorization: Bearer {token}
@@ -879,6 +905,7 @@ RESPONSE (201 CREATED):
 ```
 
 ### 25. Publish Campaign
+
 ```
 POST /api/v1/campaigns/{campaignId}/publish
 Authorization: Bearer {token}
@@ -892,6 +919,7 @@ RESPONSE (200 OK):
 ```
 
 ### 26. Validate Presale Code
+
 ```
 POST /api/v1/campaigns/validate-code
 Authorization: Bearer {token}
@@ -920,6 +948,7 @@ OR (invalid):
 ```
 
 ### 27. Get Campaign Analytics
+
 ```
 GET /api/v1/campaigns/{campaignId}/analytics
 Authorization: Bearer {token}
@@ -946,6 +975,7 @@ RESPONSE (200 OK):
 ```
 
 ### 28. Award Loyalty Points
+
 ```
 POST /api/v1/campaigns/{userId}/loyalty/award
 Authorization: Bearer {token}
@@ -967,6 +997,7 @@ RESPONSE (200 OK):
 ```
 
 ### 29. Get Loyalty Balance
+
 ```
 GET /api/v1/campaigns/{userId}/loyalty/balance
 Authorization: Bearer {token}
@@ -985,6 +1016,7 @@ RESPONSE (200 OK):
 ## TAQUILLA / POS ENDPOINTS
 
 ### 30. Initialize Terminal
+
 ```
 POST /api/v1/taquilla/terminal/init
 Authorization: Bearer {token}
@@ -1012,6 +1044,7 @@ RESPONSE (201 CREATED):
 ```
 
 ### 31. Start Cashier Session
+
 ```
 POST /api/v1/taquilla/session/start
 Authorization: Bearer {token}
@@ -1033,6 +1066,7 @@ RESPONSE (200 OK):
 ```
 
 ### 32. Quick Checkout (< 45 seconds)
+
 ```
 POST /api/v1/taquilla/checkout
 Authorization: Bearer {token}
@@ -1065,6 +1099,7 @@ RESPONSE (200 OK):
 ```
 
 ### 33. Process Payment
+
 ```
 POST /api/v1/taquilla/payment
 Authorization: Bearer {token}
@@ -1091,6 +1126,7 @@ RESPONSE (200 OK):
 ```
 
 ### 34. Generate Receipt
+
 ```
 GET /api/v1/taquilla/receipt/{orderId}
 Authorization: Bearer {token}
@@ -1126,6 +1162,7 @@ RESPONSE (200 OK):
 ```
 
 ### 35. End Cashier Session
+
 ```
 POST /api/v1/taquilla/session/end
 Authorization: Bearer {token}
@@ -1152,6 +1189,7 @@ RESPONSE (200 OK):
 ```
 
 ### 36. Terminal Analytics
+
 ```
 GET /api/v1/taquilla/analytics/{terminalId}/{period}
 Authorization: Bearer {token}
@@ -1180,6 +1218,7 @@ RESPONSE (200 OK):
 ## REPORTING & ANALYTICS ENDPOINTS
 
 ### 37. Real-Time Dashboard
+
 ```
 GET /api/v1/reports/dashboard/realtime/{organizationId}
 Authorization: Bearer {token}
@@ -1223,6 +1262,7 @@ RESPONSE (200 OK):
 ```
 
 ### 38. Settlement Report
+
 ```
 GET /api/v1/reports/settlement/{organizationId}/{period}
 Authorization: Bearer {token}
@@ -1255,6 +1295,7 @@ RESPONSE (200 OK):
 ```
 
 ### 39. Occupancy Heatmap
+
 ```
 GET /api/v1/reports/heatmap/{eventId}
 Authorization: Bearer {token}
@@ -1288,6 +1329,7 @@ RESPONSE (200 OK):
 ```
 
 ### 40. Occupancy Prediction
+
 ```
 GET /api/v1/reports/predict/{eventId}
 Authorization: Bearer {token}
@@ -1304,6 +1346,7 @@ RESPONSE (200 OK):
 ```
 
 ### 41. Channel Performance
+
 ```
 GET /api/v1/reports/channels/{organizationId}
 Authorization: Bearer {token}
@@ -1345,6 +1388,7 @@ RESPONSE (200 OK):
 ```
 
 ### 42. Customer Analytics
+
 ```
 GET /api/v1/reports/customers/{organizationId}
 Authorization: Bearer {token}
@@ -1362,6 +1406,7 @@ RESPONSE (200 OK):
 ```
 
 ### 43. Revenue Forecast
+
 ```
 GET /api/v1/reports/forecast/{organizationId}/30
 Authorization: Bearer {token}
@@ -1391,6 +1436,7 @@ RESPONSE (200 OK):
 ## COMMON PATTERNS
 
 ### Error Response Format
+
 ```json
 {
   "error": {
@@ -1413,6 +1459,7 @@ RESPONSE (200 OK):
 ```
 
 ### Pagination
+
 ```
 GET /api/v1/events?page=1&limit=20&sort=startDate&order=desc
 
@@ -1429,6 +1476,7 @@ RESPONSE:
 ```
 
 ### Rate Limiting
+
 ```
 Headers:
 X-RateLimit-Limit: 1000
@@ -1442,4 +1490,3 @@ X-RateLimit-Reset: 2026-05-17T15:00:00Z
 **Total Endpoints Documented:** 43+ (core endpoints)  
 **Additional Endpoints:** 30+ (derived from CRUD operations)  
 **Total API Coverage:** 75+ endpoints
-

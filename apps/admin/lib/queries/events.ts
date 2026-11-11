@@ -36,7 +36,7 @@ export function useEventCalendar(month: number, year: number) {
     queryFn: ({ signal }) =>
       http<{ calendar: Record<string, unknown[]>; totalEvents: number }>(
         `/events/manage/calendar/${month}/${year}`,
-        { signal },
+        { signal }
       ),
   });
 }
@@ -134,12 +134,8 @@ export function usePublishEvent(eventId: string) {
       const snapshots = client.getQueriesData<EventRow[]>({
         queryKey: queryKeys.events.lists(),
       });
-      client.setQueriesData<EventRow[]>(
-        { queryKey: queryKeys.events.lists() },
-        (events) =>
-          events?.map((event) =>
-            event.id === eventId ? { ...event, status: 'PUBLISHED' } : event,
-          ),
+      client.setQueriesData<EventRow[]>({ queryKey: queryKeys.events.lists() }, (events) =>
+        events?.map((event) => (event.id === eventId ? { ...event, status: 'PUBLISHED' } : event))
       );
       return { snapshots };
     },
@@ -170,8 +166,7 @@ export function useUpdateOffer(eventId: string) {
         method: 'PUT',
         body,
       }),
-    onSettled: () =>
-      client.invalidateQueries({ queryKey: queryKeys.events.hub(eventId) }),
+    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.events.hub(eventId) }),
   });
 }
 
@@ -183,7 +178,6 @@ export function useSetEventPricing(eventId: string) {
       dynamicPricingEnabled: boolean;
       customZonePricing?: Record<string, number>;
     }) => http(`/events/manage/${eventId}/pricing`, { method: 'PUT', body }),
-    onSettled: () =>
-      client.invalidateQueries({ queryKey: queryKeys.events.hub(eventId) }),
+    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.events.hub(eventId) }),
   });
 }

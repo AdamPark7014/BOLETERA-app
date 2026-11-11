@@ -158,7 +158,7 @@ export type SettlementCheck = {
 export function checkSettlement(
   totalAmount: string | number | null | undefined,
   payment: PaymentLike,
-  currency: string | null | undefined,
+  currency: string | null | undefined
 ): SettlementCheck {
   const expected = toNumber(totalAmount);
   const hasSettledAmount = payment && payment.amount !== null && payment.amount !== undefined;
@@ -219,7 +219,9 @@ export function buildOrderTimeline(order: OrderTimelineInput): TimelineStep[] {
     key: 'attempt',
     label: 'Intento de cobro',
     at: attemptedAt,
-    detail: payment ? `${payment.gateway ?? 'pasarela'} · ${payment.status ?? 'sin estado'}` : undefined,
+    detail: payment
+      ? `${payment.gateway ?? 'pasarela'} · ${payment.status ?? 'sin estado'}`
+      : undefined,
     state: !payment
       ? FAILED_ORDER_STATES.has(status)
         ? 'failed'
@@ -230,7 +232,8 @@ export function buildOrderTimeline(order: OrderTimelineInput): TimelineStep[] {
   });
 
   const settledAt = payment?.processedAt ?? order.completedAt ?? null;
-  const settled = !!payment && !paymentFailed && (paymentStatus === 'COMPLETED' || !!payment.processedAt);
+  const settled =
+    !!payment && !paymentFailed && (paymentStatus === 'COMPLETED' || !!payment.processedAt);
   steps.push({
     key: 'settled',
     label: 'Liquidada por la pasarela',
@@ -257,7 +260,12 @@ export function buildOrderTimeline(order: OrderTimelineInput): TimelineStep[] {
   });
 
   const anyRefund = refunds.length > 0;
-  if (anyRefund || status === 'REFUNDED' || status === 'PARTIALLY_REFUNDED' || status === 'PENDING_REFUND') {
+  if (
+    anyRefund ||
+    status === 'REFUNDED' ||
+    status === 'PARTIALLY_REFUNDED' ||
+    status === 'PENDING_REFUND'
+  ) {
     const completed = refunds.filter((r) => r.status === 'COMPLETED');
     const open = refunds.filter((r) => isRefundOpen(r.status));
     steps.push({
@@ -269,7 +277,13 @@ export function buildOrderTimeline(order: OrderTimelineInput): TimelineStep[] {
         : open.length
           ? `${open.length} sin cerrar en Banorte`
           : `${completed.length} completado(s)`,
-      state: !anyRefund ? 'pending' : open.length ? 'current' : completed.length ? 'done' : 'failed',
+      state: !anyRefund
+        ? 'pending'
+        : open.length
+          ? 'current'
+          : completed.length
+            ? 'done'
+            : 'failed',
     });
   }
 

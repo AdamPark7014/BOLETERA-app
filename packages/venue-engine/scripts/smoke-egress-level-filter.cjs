@@ -91,13 +91,19 @@ assert(all.paths.length >= 2, `all paths ${all.paths.length}`);
 const floorOnly = buildEgressPathOverlays(scene, { analysis, levelId: 'lvl-floor' });
 assert(
   floorOnly.paths.every((p) => !p.levelId || p.levelId === 'lvl-floor'),
-  'floor filter',
+  'floor filter'
 );
-assert(floorOnly.paths.some((p) => p.sectionId === 'pit'), 'pit path');
+assert(
+  floorOnly.paths.some((p) => p.sectionId === 'pit'),
+  'pit path'
+);
 assert(!floorOnly.paths.some((p) => p.sectionId === 'balc'), 'no balc on floor filter');
 
 const balcOnly = buildEgressPathOverlays(scene, { analysis, levelId: 'lvl-balc' });
-assert(balcOnly.paths.some((p) => p.sectionId === 'balc'), 'balc path');
+assert(
+  balcOnly.paths.some((p) => p.sectionId === 'balc'),
+  'balc path'
+);
 assert(!balcOnly.paths.some((p) => p.sectionId === 'pit'), 'no pit on balc filter');
 
 const p3Floor = projectEgressOverlaysTo3D(scene, { analysis, levelId: 'lvl-floor' });

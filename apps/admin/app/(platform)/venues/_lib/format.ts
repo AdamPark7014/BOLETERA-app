@@ -1,12 +1,7 @@
 import type { BadgeTone } from '@boletera/ui';
 import type { EgressOverviewVenue } from '@/lib/platform-api';
 import type { VenueRow } from '@/lib/queries/venues';
-import {
-  toCapacity,
-  toCity,
-  type HealthStatus,
-  type VenuePortfolioRow,
-} from './types';
+import { toCapacity, toCity, type HealthStatus, type VenuePortfolioRow } from './types';
 
 export const HEALTH_LABEL: Record<HealthStatus, string> = {
   ok: 'Saludable',
@@ -84,7 +79,7 @@ export function venueMatchesQuery(row: VenuePortfolioRow, query: string): boolea
 
 export function buildPortfolioRows(
   venues: readonly VenueRow[],
-  egressByVenueId: ReadonlyMap<string, EgressOverviewVenue>,
+  egressByVenueId: ReadonlyMap<string, EgressOverviewVenue>
 ): VenuePortfolioRow[] {
   return venues.map((venue) => {
     const layouts = venue.layouts ?? [];

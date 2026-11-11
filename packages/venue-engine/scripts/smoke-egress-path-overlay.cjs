@@ -41,8 +41,14 @@ const overlay = buildEgressPathOverlays(scene);
 assert(overlay.hasNetwork, 'has network');
 assert(overlay.seedMode === 'exits', `seed ${overlay.seedMode}`);
 assert(overlay.paths.length >= 1, `paths ${overlay.paths.length}`);
-assert(overlay.paths.every((p) => p.points.length >= 2), 'polyline points');
-assert(overlay.paths.some((p) => p.reachable), 'reachable path');
+assert(
+  overlay.paths.every((p) => p.points.length >= 2),
+  'polyline points'
+);
+assert(
+  overlay.paths.some((p) => p.reachable),
+  'reachable path'
+);
 
 const analysis = analyzeCirculation(scene);
 const first = overlay.paths[0];

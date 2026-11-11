@@ -41,10 +41,7 @@ export function invoiceStatusMeta(invoice: CfdiInvoice): InvoiceStatusMeta {
   return { label: status, tone: 'neutral', kind: 'other' };
 }
 
-export function matchesInvoiceFilter(
-  invoice: CfdiInvoice,
-  filter: InvoiceFilter,
-): boolean {
+export function matchesInvoiceFilter(invoice: CfdiInvoice, filter: InvoiceFilter): boolean {
   if (filter === 'ALL') return true;
   if (filter === 'ERROR') return invoice.status === 'ERROR';
   if (filter === 'PENDING') return invoice.status === 'DRAFT' || !invoice.uuid;

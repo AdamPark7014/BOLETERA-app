@@ -38,7 +38,7 @@ function seatsFromBlocks(sec: SeatMapSection, inherit: boolean): SeatMapSeat[] {
  */
 export function regenerateSeatsFromBlocks(
   input: SeatMapData | null | undefined,
-  opts?: RegenerateBlocksOptions,
+  opts?: RegenerateBlocksOptions
 ): SeatMapData {
   const map = migrateToV3(input ?? { sections: [], version: 3 });
   const inherit = opts?.inheritSectionParams !== false;

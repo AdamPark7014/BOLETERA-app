@@ -21,7 +21,7 @@ describe('withSafeRetry', () => {
         sleep: async (ms) => {
           delays.push(ms);
         },
-      },
+      }
     );
     assert.equal(result, 'ok');
     assert.equal(attempts, 3);
@@ -35,8 +35,7 @@ describe('withSafeRetry', () => {
           operation: 'create_intent',
           maxAttempts: 2,
         }),
-      (err: unknown) =>
-        PaymentError.isPaymentError(err) && err.code === 'MISSING_IDEMPOTENCY_KEY',
+      (err: unknown) => PaymentError.isPaymentError(err) && err.code === 'MISSING_IDEMPOTENCY_KEY'
     );
   });
 
@@ -56,7 +55,7 @@ describe('withSafeRetry', () => {
         maxAttempts: 3,
         baseDelayMs: 1,
         sleep: async () => undefined,
-      },
+      }
     );
     assert.equal(result, 'intent');
     assert.equal(attempts, 2);

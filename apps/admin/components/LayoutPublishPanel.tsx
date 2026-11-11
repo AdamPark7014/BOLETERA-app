@@ -61,11 +61,7 @@ export function LayoutPublishPanel({
     void refresh();
   }, [refresh]);
 
-  async function runAction(
-    key: string,
-    fn: () => Promise<VenueLayoutWorkflow>,
-    reloadMap = false,
-  ) {
+  async function runAction(key: string, fn: () => Promise<VenueLayoutWorkflow>, reloadMap = false) {
     setBusy(key);
     setError(null);
     try {
@@ -118,9 +114,7 @@ export function LayoutPublishPanel({
           type="button"
           variant="secondary"
           disabled={busy === 'review'}
-          onClick={() =>
-            void runAction('review', () => submitVenueLayoutReview(token, venueId))
-          }
+          onClick={() => void runAction('review', () => submitVenueLayoutReview(token, venueId))}
         >
           Enviar a revisión
         </TicketButton>
@@ -140,7 +134,7 @@ export function LayoutPublishPanel({
             onClick={() => {
               if (!validationOk) {
                 setError(
-                  `No se puede publicar: ${validationErrorCount} error(es) pendientes en el mapa.`,
+                  `No se puede publicar: ${validationErrorCount} error(es) pendientes en el mapa.`
                 );
                 return;
               }
@@ -153,9 +147,7 @@ export function LayoutPublishPanel({
             type="button"
             variant="ghost"
             disabled={busy === 'draft'}
-            onClick={() =>
-              void runAction('draft', () => revertVenueLayoutDraft(token, venueId))
-            }
+            onClick={() => void runAction('draft', () => revertVenueLayoutDraft(token, venueId))}
           >
             Volver a borrador
           </TicketButton>
@@ -167,9 +159,7 @@ export function LayoutPublishPanel({
           type="button"
           variant="ghost"
           disabled={busy === 'archive'}
-          onClick={() =>
-            void runAction('archive', () => archiveVenueLayout(token, venueId))
-          }
+          onClick={() => void runAction('archive', () => archiveVenueLayout(token, venueId))}
         >
           Archivar
         </TicketButton>
@@ -180,7 +170,14 @@ export function LayoutPublishPanel({
       </TicketButton>
 
       {error && (
-        <span style={{ fontSize: '0.875rem', lineHeight: '20px', color: 'var(--danger)', width: '100%' }}>
+        <span
+          style={{
+            fontSize: '0.875rem',
+            lineHeight: '20px',
+            color: 'var(--danger)',
+            width: '100%',
+          }}
+        >
           {error}
         </span>
       )}
@@ -233,7 +230,7 @@ export function LayoutPublishPanel({
                     void runAction(
                       snap.id,
                       () => rollbackVenueLayout(token, venueId, snap.id),
-                      true,
+                      true
                     )
                   }
                 >

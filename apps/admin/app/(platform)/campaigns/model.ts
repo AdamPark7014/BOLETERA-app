@@ -21,7 +21,12 @@ const RANGE_META: Record<
 > = {
   '7d': { label: '7 días', days: 7, granularity: 'day', comparisonLabel: 'vs. 7 días previos' },
   '30d': { label: '30 días', days: 30, granularity: 'day', comparisonLabel: 'vs. 30 días previos' },
-  '90d': { label: '90 días', days: 90, granularity: 'week', comparisonLabel: 'vs. 90 días previos' },
+  '90d': {
+    label: '90 días',
+    days: 90,
+    granularity: 'week',
+    comparisonLabel: 'vs. 90 días previos',
+  },
 };
 
 export const RANGE_KEYS: readonly RangeKey[] = ['7d', '30d', '90d'];
@@ -112,7 +117,7 @@ export function formatRelative(iso: string | null | undefined): string {
 export function toLocalInputValue(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours(),
+    date.getHours()
   )}:${pad(date.getMinutes())}`;
 }
 
@@ -326,7 +331,7 @@ export function summarizeRevenue(
     discountGiven: number;
     ordersAttributed: number;
     conversionRate: number;
-  }>,
+  }>
 ): RevenueSummary {
   const revenueAttributed = promotions.reduce((sum, item) => sum + item.revenueAttributed, 0);
   const discountGiven = promotions.reduce((sum, item) => sum + item.discountGiven, 0);
@@ -379,11 +384,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function buildCalendar(
   campaigns: readonly CampaignView[],
-  now = new Date(),
+  now = new Date()
 ): CalendarModel | null {
   const scheduled = campaigns.filter(
     (item): item is CampaignView & { startsAt: string; endsAt: string } =>
-      Boolean(item.startsAt && item.endsAt),
+      Boolean(item.startsAt && item.endsAt)
   );
   if (scheduled.length === 0) return null;
 
@@ -482,7 +487,7 @@ export function buildRecommendations(
     usageCount: number;
     usageLimit: number | null;
   }>,
-  revenue: RevenueSummary,
+  revenue: RevenueSummary
 ): Recommendation[] {
   const list: Recommendation[] = [];
 
@@ -519,7 +524,7 @@ export function buildRecommendations(
         severity: campaign.redemptionRate >= 95 ? 'critical' : 'warning',
         title: `«${campaign.name}» casi agota su cupo`,
         explanation: `Se redimió ${formatPercentPoints(campaign.redemptionRate)} de ${formatCount(
-          campaign.allocation,
+          campaign.allocation
         )} lugares; quedan ${formatCount(campaign.remaining)}.`,
         suggestion: 'Amplía el cupo o prepara una campaña de continuidad antes de que se agote.',
         action: { kind: 'compose', label: 'Crear campaña de continuidad' },
@@ -537,7 +542,8 @@ export function buildRecommendations(
         severity: 'warning',
         title: `«${campaign.name}» no registra redenciones`,
         explanation: 'Lleva más de 48 h publicada sin una sola redención de código.',
-        suggestion: 'Revisa la difusión del código y el descuento ofrecido frente a la competencia.',
+        suggestion:
+          'Revisa la difusión del código y el descuento ofrecido frente a la competencia.',
       });
     }
 
@@ -546,7 +552,8 @@ export function buildRecommendations(
         id: `codes-${campaign.id}`,
         severity: 'info',
         title: `${formatCount(campaign.codes.length)} códigos listos en «${campaign.name}»`,
-        explanation: 'Los códigos de preventa ya están generados y pueden entregarse a la audiencia.',
+        explanation:
+          'Los códigos de preventa ya están generados y pueden entregarse a la audiencia.',
         suggestion: 'Exporta el CSV para cargarlo en tu herramienta de email o CRM.',
         action: { kind: 'export', campaignId: campaign.id, label: 'Exportar códigos' },
       });
@@ -560,9 +567,10 @@ export function buildRecommendations(
         severity: 'warning',
         title: `El código ${promotion.code} rinde por debajo del promedio`,
         explanation: `Convierte ${formatPercentPoints(promotion.conversionRate)} y otorgó ${formatMxn(
-          promotion.discountGiven,
+          promotion.discountGiven
         )} en descuentos para ${formatMxn(promotion.revenueAttributed)} de ingreso.`,
-        suggestion: 'Reduce el descuento o reasigna el presupuesto a los códigos con mejor retorno.',
+        suggestion:
+          'Reduce el descuento o reasigna el presupuesto a los códigos con mejor retorno.',
       });
     }
   }
@@ -573,7 +581,8 @@ export function buildRecommendations(
       severity: revenue.roas < 1.5 ? 'critical' : 'warning',
       title: 'El retorno del descuento es bajo',
       explanation: `Cada peso de descuento genera ${formatRatio(revenue.roas)} de ingreso atribuido en el periodo.`,
-      suggestion: 'Concentra el presupuesto en los códigos fuertes y limita los descuentos abiertos.',
+      suggestion:
+        'Concentra el presupuesto en los códigos fuertes y limita los descuentos abiertos.',
     });
   }
 

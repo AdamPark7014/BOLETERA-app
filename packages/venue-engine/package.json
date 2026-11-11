@@ -24,6 +24,10 @@
     "smoke": "node scripts/run-smokes.cjs",
     "bench:render": "pnpm build && node scripts/bench-render.cjs"
   },
-  "dependencies": { "@boletera/shared": "workspace:*" },
-  "devDependencies": { "typescript": "^5.9.2" }
+  "dependencies": {
+    "@boletera/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
 }

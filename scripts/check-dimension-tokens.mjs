@@ -33,7 +33,7 @@ const DEFINEN_ESCALA = /_variables\.scss$|[/\\]theme\.scss$/;
 
 const archivos = execSync(
   `git -C "${raiz}" ls-files "apps/*.scss" "apps/*.css" "packages/ui/src/**/*.scss"`,
-  { encoding: 'utf8' },
+  { encoding: 'utf8' }
 )
   .split(/\r?\n/)
   .filter((f) => f && !DEFINEN_ESCALA.test(f));
@@ -73,13 +73,13 @@ for (const rel of archivos) {
   const radio = contar(
     texto,
     /border-radius:\s*([^;{}\n]+)/g,
-    (v) => v.includes('%') || v.includes('/'),
+    (v) => v.includes('%') || v.includes('/')
   );
 
   const tipo = contar(
     texto,
     /font-size:\s*([^;{}\n]+)/g,
-    (v) => v.includes('clamp') || v.includes('%') || (v.includes('em') && !v.endsWith('rem')),
+    (v) => v.includes('clamp') || v.includes('%') || (v.includes('em') && !v.endsWith('rem'))
   );
 
   let espacio = 0;
@@ -88,7 +88,7 @@ for (const rel of archivos) {
       texto,
       new RegExp(`\\b${prop}:\\s*([^;{}\\n]+)`, 'g'),
       // Los negativos son solapes deliberados (un borde que se come 1 px).
-      (v) => v.includes('calc') || v.includes('%') || v.includes('auto') || v.startsWith('-'),
+      (v) => v.includes('calc') || v.includes('%') || v.includes('auto') || v.startsWith('-')
     );
   }
 
@@ -129,7 +129,9 @@ if (!existsSync(BASELINE)) {
 const base = JSON.parse(readFileSync(BASELINE, 'utf8'));
 
 if (total > base.total) {
-  console.log(`\n❌ Han aparecido ${total - base.total} literales de dimensión nuevos (línea base: ${base.total}).`);
+  console.log(
+    `\n❌ Han aparecido ${total - base.total} literales de dimensión nuevos (línea base: ${base.total}).`
+  );
   console.log('   Usa la escala del sistema:');
   console.log('     espaciado   var(--bl-space-1 … --bl-space-24)');
   console.log('     tipografía  var(--bl-text-2xs … --bl-text-6xl)');
@@ -139,7 +141,9 @@ if (total > base.total) {
 }
 
 if (total < base.total) {
-  console.log(`\n✅ ${base.total - total} literales de dimensión menos que la línea base. Sella con --sellar.`);
+  console.log(
+    `\n✅ ${base.total - total} literales de dimensión menos que la línea base. Sella con --sellar.`
+  );
 } else {
   console.log('\n✅ Sin literales de dimensión nuevos.');
 }

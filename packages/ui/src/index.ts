@@ -65,7 +65,16 @@ export {
 
 export { hexToRgb, mixHex, readableTextOn, rgbToHex } from './lib/color';
 
-export { bandScale, clamp, extent, linearScale, nearestIndex, niceDomain, sum, ticks } from './lib/scale';
+export {
+  bandScale,
+  clamp,
+  extent,
+  linearScale,
+  nearestIndex,
+  niceDomain,
+  sum,
+  ticks,
+} from './lib/scale';
 export type { BandScale, Extent, LinearScale, Point } from './lib/scale';
 
 export { bestMatch, fuzzyMatch, highlightSegments } from './lib/fuzzy';
@@ -84,12 +93,7 @@ export {
 } from './lib/hooks';
 export type { ElementSize } from './lib/hooks';
 
-export type {
-  CartesianChartProps,
-  ChartDatum,
-  ChartSeries,
-  ValueFormatter,
-} from './lib/chart';
+export type { CartesianChartProps, ChartDatum, ChartSeries, ValueFormatter } from './lib/chart';
 
 // ----------------------------------------------------------------- primitivas
 

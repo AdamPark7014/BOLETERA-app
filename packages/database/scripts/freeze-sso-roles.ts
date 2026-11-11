@@ -50,7 +50,7 @@ interface Row {
 
 async function main() {
   console.log(
-    `\n[freeze-sso-roles] modo: ${APPLY ? 'APPLY (escribe en la base)' : 'DRY-RUN (no escribe nada)'}\n`,
+    `\n[freeze-sso-roles] modo: ${APPLY ? 'APPLY (escribe en la base)' : 'DRY-RUN (no escribe nada)'}\n`
   );
 
   const users = await prisma.user.findMany({
@@ -163,12 +163,12 @@ async function main() {
 
   const orphans = rows.filter((row) => row.outcome === 'ORPHAN_NO_ORG');
   if (orphans.length) {
-    console.log(
-      '\nCuentas con rol privilegiado y SIN organización (el SSO les dio rol pero',
-    );
+    console.log('\nCuentas con rol privilegiado y SIN organización (el SSO les dio rol pero');
     console.log('nunca tenant). Asígnales organización o degrádalas a CUSTOMER:');
     for (const orphan of orphans) {
-      console.log(`  - ${orphan.email}  role=${orphan.role}  provider=${orphan.provider ?? 'null'}`);
+      console.log(
+        `  - ${orphan.email}  role=${orphan.role}  provider=${orphan.provider ?? 'null'}`
+      );
     }
   }
 
@@ -176,7 +176,7 @@ async function main() {
     console.log('\n--- Detalle ---');
     for (const row of rows) {
       console.log(
-        `  [${row.outcome}] ${row.email} role=${row.role} org=${row.organizationId ?? '-'} provider=${row.provider ?? 'null'}`,
+        `  [${row.outcome}] ${row.email} role=${row.role} org=${row.organizationId ?? '-'} provider=${row.provider ?? 'null'}`
       );
     }
   }

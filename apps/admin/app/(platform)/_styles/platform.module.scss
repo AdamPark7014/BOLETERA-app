@@ -56,7 +56,9 @@
   font-weight: var(--weight-medium);
   cursor: pointer;
   text-decoration: none;
-  transition: background var(--transition-fast), transform 0.1s;
+  transition:
+    background var(--transition-fast),
+    transform 0.1s;
   @include m.tap-target;
   @include m.focus-ring;
 
@@ -88,7 +90,9 @@
   color: var(--color-text);
   cursor: pointer;
   text-decoration: none;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
   @include m.tap-target;
   @include m.focus-ring;
 
@@ -116,7 +120,9 @@
   border-radius: var(--radius-xl);
   padding: 1.125rem var(--space-5);
   box-shadow: var(--shadow-xs);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 
   &:hover {
     border-color: var(--color-border-strong);
@@ -324,7 +330,9 @@
       color: var(--color-text);
       background: var(--color-surface);
       min-height: var(--tap-min);
-      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      transition:
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
 
       /**
        * Antes: `outline: none` + borde oscuro. El borde solo no es un indicador

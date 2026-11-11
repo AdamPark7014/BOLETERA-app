@@ -48,7 +48,15 @@ export type { OverlayDrawContext } from './canvas2d-renderer';
 
 export { SeatMapRenderer } from './seat-map-renderer';
 
-export { clamp, lerp, niceStep, rectIntersects, rectContainsPoint, pointInPolygon, expandRect } from './math';
+export {
+  clamp,
+  lerp,
+  niceStep,
+  rectIntersects,
+  rectContainsPoint,
+  pointInPolygon,
+  expandRect,
+} from './math';
 
 export type {
   WorldPoint,

@@ -101,28 +101,156 @@ type DemoOrderSpec = {
 };
 
 const DEMO_CHANNEL_ORDERS: DemoOrderSpec[] = [
-  { publicId: 'SEED-ORD-WEB-001', eventSlug: 'concierto-demo-2026', channel: SalesChannel.WEB, totalAmount: 1600, daysAgo: 0, buyerName: 'Laura Vega', buyerEmail: 'laura.vega@example.com' },
-  { publicId: 'SEED-ORD-MOBILE-001', eventSlug: 'concierto-demo-2026', channel: SalesChannel.MOBILE, totalAmount: 2400, daysAgo: 0, buyerName: 'Diego Ruiz', buyerEmail: 'diego.ruiz@example.com' },
-  { publicId: 'SEED-ORD-TAQUILLA-001', eventSlug: 'clasico-regio', channel: SalesChannel.TAQUILLA, totalAmount: 3300, daysAgo: 0, buyerName: 'Familia Ortiz', buyerEmail: 'ortiz@example.com' },
-  { publicId: 'SEED-ORD-API-001', eventSlug: 'festival-verano-mty', channel: SalesChannel.API, totalAmount: 3960, daysAgo: 0, buyerName: 'Partner API', buyerEmail: 'api.partner@example.com' },
-  { publicId: 'SEED-ORD-ADMIN-001', eventSlug: 'concierto-demo-2026', channel: SalesChannel.ADMIN, totalAmount: 800, daysAgo: 1, buyerName: 'Backoffice Demo', buyerEmail: 'admin@demo.boletera.com' },
-  { publicId: 'SEED-ORD-PROMOTER-001', eventSlug: 'concierto-demo-2026', channel: SalesChannel.PROMOTER, totalAmount: 1200, daysAgo: 2, buyerName: 'Promotor Ana', buyerEmail: 'promotor@demo.boletera.com' },
-  { publicId: 'SEED-ORD-COURTESY-001', eventSlug: 'clasico-regio', channel: SalesChannel.COURTESY, totalAmount: 0, daysAgo: 3, buyerName: 'Prensa Local', buyerEmail: 'prensa@example.com' },
-  { publicId: 'SEED-ORD-CORPORATE-001', eventSlug: 'clasico-regio', channel: SalesChannel.CORPORATE, totalAmount: 8800, daysAgo: 4, buyerName: 'Grupo Regio SA', buyerEmail: 'compras@gruporegio.mx' },
-  { publicId: 'SEED-ORD-MOBILE-002', eventSlug: 'festival-verano-mty', channel: SalesChannel.MOBILE, totalAmount: 1980, daysAgo: 5, buyerName: 'Sofía N.', buyerEmail: 'sofia.n@example.com' },
-  { publicId: 'SEED-ORD-PHONE-001', eventSlug: 'concierto-demo-2026', channel: SalesChannel.PHONE, totalAmount: 1600, daysAgo: 6, buyerName: 'Call center #42', buyerEmail: 'callcenter@example.com' },
-  { publicId: 'SEED-ORD-INVITATION-001', eventSlug: 'festival-verano-mty', channel: SalesChannel.INVITATION, totalAmount: 990, daysAgo: 7, buyerName: 'Invitado VIP', buyerEmail: 'invitado@example.com' },
-  { publicId: 'SEED-ORD-AFFILIATE-001', eventSlug: 'festival-verano-mty', channel: SalesChannel.AFFILIATE, totalAmount: 2970, daysAgo: 8, buyerName: 'Afiliado Jorge', buyerEmail: 'afiliado@demo.boletera.com' },
-  { publicId: 'SEED-ORD-VIP-001', eventSlug: 'clasico-regio', channel: SalesChannel.VIP, totalAmount: 4320, daysAgo: 9, buyerName: 'Club Palco', buyerEmail: 'palco@example.com' },
-  { publicId: 'SEED-ORD-RESALE-001', eventSlug: 'concierto-demo-2026', channel: SalesChannel.RESALE, totalAmount: 920, daysAgo: 10, buyerName: 'Reventa segura', buyerEmail: 'resale@example.com' },
-  { publicId: 'SEED-ORD-WEB-002', eventSlug: 'noche-indie-cdmx', channel: SalesChannel.WEB, totalAmount: 900, daysAgo: 12, buyerName: 'Marco P.', buyerEmail: 'marco.p@example.com' },
-  { publicId: 'SEED-ORD-TAQUILLA-002', eventSlug: 'stand-up-gdl', channel: SalesChannel.TAQUILLA, totalAmount: 640, daysAgo: 14, buyerName: 'Walk-in GDL', buyerEmail: 'walkin@example.com' },
+  {
+    publicId: 'SEED-ORD-WEB-001',
+    eventSlug: 'concierto-demo-2026',
+    channel: SalesChannel.WEB,
+    totalAmount: 1600,
+    daysAgo: 0,
+    buyerName: 'Laura Vega',
+    buyerEmail: 'laura.vega@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-MOBILE-001',
+    eventSlug: 'concierto-demo-2026',
+    channel: SalesChannel.MOBILE,
+    totalAmount: 2400,
+    daysAgo: 0,
+    buyerName: 'Diego Ruiz',
+    buyerEmail: 'diego.ruiz@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-TAQUILLA-001',
+    eventSlug: 'clasico-regio',
+    channel: SalesChannel.TAQUILLA,
+    totalAmount: 3300,
+    daysAgo: 0,
+    buyerName: 'Familia Ortiz',
+    buyerEmail: 'ortiz@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-API-001',
+    eventSlug: 'festival-verano-mty',
+    channel: SalesChannel.API,
+    totalAmount: 3960,
+    daysAgo: 0,
+    buyerName: 'Partner API',
+    buyerEmail: 'api.partner@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-ADMIN-001',
+    eventSlug: 'concierto-demo-2026',
+    channel: SalesChannel.ADMIN,
+    totalAmount: 800,
+    daysAgo: 1,
+    buyerName: 'Backoffice Demo',
+    buyerEmail: 'admin@demo.boletera.com',
+  },
+  {
+    publicId: 'SEED-ORD-PROMOTER-001',
+    eventSlug: 'concierto-demo-2026',
+    channel: SalesChannel.PROMOTER,
+    totalAmount: 1200,
+    daysAgo: 2,
+    buyerName: 'Promotor Ana',
+    buyerEmail: 'promotor@demo.boletera.com',
+  },
+  {
+    publicId: 'SEED-ORD-COURTESY-001',
+    eventSlug: 'clasico-regio',
+    channel: SalesChannel.COURTESY,
+    totalAmount: 0,
+    daysAgo: 3,
+    buyerName: 'Prensa Local',
+    buyerEmail: 'prensa@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-CORPORATE-001',
+    eventSlug: 'clasico-regio',
+    channel: SalesChannel.CORPORATE,
+    totalAmount: 8800,
+    daysAgo: 4,
+    buyerName: 'Grupo Regio SA',
+    buyerEmail: 'compras@gruporegio.mx',
+  },
+  {
+    publicId: 'SEED-ORD-MOBILE-002',
+    eventSlug: 'festival-verano-mty',
+    channel: SalesChannel.MOBILE,
+    totalAmount: 1980,
+    daysAgo: 5,
+    buyerName: 'Sofía N.',
+    buyerEmail: 'sofia.n@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-PHONE-001',
+    eventSlug: 'concierto-demo-2026',
+    channel: SalesChannel.PHONE,
+    totalAmount: 1600,
+    daysAgo: 6,
+    buyerName: 'Call center #42',
+    buyerEmail: 'callcenter@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-INVITATION-001',
+    eventSlug: 'festival-verano-mty',
+    channel: SalesChannel.INVITATION,
+    totalAmount: 990,
+    daysAgo: 7,
+    buyerName: 'Invitado VIP',
+    buyerEmail: 'invitado@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-AFFILIATE-001',
+    eventSlug: 'festival-verano-mty',
+    channel: SalesChannel.AFFILIATE,
+    totalAmount: 2970,
+    daysAgo: 8,
+    buyerName: 'Afiliado Jorge',
+    buyerEmail: 'afiliado@demo.boletera.com',
+  },
+  {
+    publicId: 'SEED-ORD-VIP-001',
+    eventSlug: 'clasico-regio',
+    channel: SalesChannel.VIP,
+    totalAmount: 4320,
+    daysAgo: 9,
+    buyerName: 'Club Palco',
+    buyerEmail: 'palco@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-RESALE-001',
+    eventSlug: 'concierto-demo-2026',
+    channel: SalesChannel.RESALE,
+    totalAmount: 920,
+    daysAgo: 10,
+    buyerName: 'Reventa segura',
+    buyerEmail: 'resale@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-WEB-002',
+    eventSlug: 'noche-indie-cdmx',
+    channel: SalesChannel.WEB,
+    totalAmount: 900,
+    daysAgo: 12,
+    buyerName: 'Marco P.',
+    buyerEmail: 'marco.p@example.com',
+  },
+  {
+    publicId: 'SEED-ORD-TAQUILLA-002',
+    eventSlug: 'stand-up-gdl',
+    channel: SalesChannel.TAQUILLA,
+    totalAmount: 640,
+    daysAgo: 14,
+    buyerName: 'Walk-in GDL',
+    buyerEmail: 'walkin@example.com',
+  },
 ];
 
 async function seedDemoChannelOrders(
   orgId: string,
   userId: string,
-  eventsBySlug: Map<string, { id: string }>,
+  eventsBySlug: Map<string, { id: string }>
 ) {
   for (const spec of DEMO_CHANNEL_ORDERS) {
     const event = eventsBySlug.get(spec.eventSlug);
@@ -187,7 +315,11 @@ type DemoUserSpec = {
   role: UserRole;
 };
 
-async function upsertDemoUsers(orgId: string, passwordHash: string, users: readonly DemoUserSpec[]) {
+async function upsertDemoUsers(
+  orgId: string,
+  passwordHash: string,
+  users: readonly DemoUserSpec[]
+) {
   for (const u of users) {
     await prisma.user.upsert({
       where: { email: u.email },
@@ -209,7 +341,7 @@ type PartnerRef = { email: string; refCode: string; commissionRate?: number };
 
 async function assignPartnerRefCodes(
   orgId: string,
-  partners: { promoters?: PartnerRef[]; affiliates?: PartnerRef[] },
+  partners: { promoters?: PartnerRef[]; affiliates?: PartnerRef[] }
 ) {
   const org = await prisma.organization.findUnique({ where: { id: orgId } });
   const current = (org?.settings as Record<string, unknown> | null) ?? {};
@@ -267,7 +399,7 @@ async function seedWaitlistEntries(
     lastName?: string;
     quantity?: number;
     priority?: number;
-  }>,
+  }>
 ) {
   for (const entry of entries) {
     await prisma.waitlistEntry.upsert({
@@ -339,7 +471,10 @@ type EnsureEventOpts = {
 };
 
 async function ensureEvent(opts: EnsureEventOpts) {
-  const slugKey = opts.slug.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-16);
+  const slugKey = opts.slug
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toUpperCase()
+    .slice(-16);
   const totalSeats = opts.snapshot.sections.reduce((n, s) => n + s.seats.length, 0);
   const channelSlots = opts.channels ?? DEMO_EVENT_CHANNEL_CONFIGS[opts.slug];
   const meta: Record<string, unknown> = {
@@ -451,7 +586,10 @@ async function ensureEvent(opts: EnsureEventOpts) {
         const seatExists = await prisma.seat.findUnique({ where: { id: seat.id } });
         await prisma.ticket.create({
           data: {
-            code: `TKT-${slugKey}-${seat.id.replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase()}`,
+            code: `TKT-${slugKey}-${seat.id
+              .replace(/[^a-zA-Z0-9]/g, '')
+              .slice(-10)
+              .toUpperCase()}`,
             eventId: event.id,
             offerId: offer.id,
             status: TicketStatus.AVAILABLE,
@@ -540,7 +678,7 @@ async function persistLayoutFromTemplate(
   venueId: string,
   name: string,
   template: LayoutTemplateId,
-  opts?: { capacity?: number },
+  opts?: { capacity?: number }
 ) {
   const mapData = generateLayoutTemplate(template, {
     idPrefix: `${venueId.slice(-8)}-${template}`,
@@ -583,7 +721,7 @@ async function persistLayoutFromTemplate(
     });
 
     const rowLabels = Array.from(
-      new Set(sec.seats.map((s) => s.row || s.label.split('-')[0] || 'A')),
+      new Set(sec.seats.map((s) => s.row || s.label.split('-')[0] || 'A'))
     );
     const rowIds = new Map<string, string>();
     for (let ri = 0; ri < rowLabels.length; ri++) {
@@ -612,7 +750,9 @@ async function persistLayoutFromTemplate(
 
   const refreshed = await prisma.venueLayout.findFirstOrThrow({
     where: { id: layout.id },
-    include: { sections: { include: { seats: { include: { row: true } } }, orderBy: { sortOrder: 'asc' } } },
+    include: {
+      sections: { include: { seats: { include: { row: true } } }, orderBy: { sortOrder: 'asc' } },
+    },
   });
 
   const snapshot: SeatMapData = {
@@ -701,12 +841,42 @@ async function seedArenaNorte(passwordHash: string) {
   });
 
   const demoUsers = [
-    { email: 'admin@arena-norte.mx', firstName: 'Patricia', lastName: 'Norte', role: UserRole.SUPER_ADMIN },
-    { email: 'taquilla@arena-norte.mx', firstName: 'Roberto', lastName: 'Taquilla', role: UserRole.TAQUILLA },
-    { email: 'promotor@arena-norte.mx', firstName: 'Elena', lastName: 'Promotora', role: UserRole.PROMOTER },
-    { email: 'afiliado@arena-norte.mx', firstName: 'Miguel', lastName: 'Afiliado', role: UserRole.AFFILIATE },
-    { email: 'scanner@arena-norte.mx', firstName: 'Sandra', lastName: 'Accesos', role: UserRole.SCANNER },
-    { email: 'comprador@arena-norte.mx', firstName: 'Cliente', lastName: 'Norte', role: UserRole.CUSTOMER },
+    {
+      email: 'admin@arena-norte.mx',
+      firstName: 'Patricia',
+      lastName: 'Norte',
+      role: UserRole.SUPER_ADMIN,
+    },
+    {
+      email: 'taquilla@arena-norte.mx',
+      firstName: 'Roberto',
+      lastName: 'Taquilla',
+      role: UserRole.TAQUILLA,
+    },
+    {
+      email: 'promotor@arena-norte.mx',
+      firstName: 'Elena',
+      lastName: 'Promotora',
+      role: UserRole.PROMOTER,
+    },
+    {
+      email: 'afiliado@arena-norte.mx',
+      firstName: 'Miguel',
+      lastName: 'Afiliado',
+      role: UserRole.AFFILIATE,
+    },
+    {
+      email: 'scanner@arena-norte.mx',
+      firstName: 'Sandra',
+      lastName: 'Accesos',
+      role: UserRole.SCANNER,
+    },
+    {
+      email: 'comprador@arena-norte.mx',
+      firstName: 'Cliente',
+      lastName: 'Norte',
+      role: UserRole.CUSTOMER,
+    },
   ] as const;
   await upsertDemoUsers(org.id, passwordHash, demoUsers);
   await assignPartnerRefCodes(org.id, {
@@ -734,9 +904,14 @@ async function seedArenaNorte(passwordHash: string) {
   const arenaLayout = await persistLayoutFromTemplate(venue.id, 'Layout Arena Norte', 'arena', {
     capacity: 180,
   });
-  const stadiumLayout = await persistLayoutFromTemplate(venue.id, 'Layout Estadio Norte', 'stadium', {
-    capacity: 220,
-  });
+  const stadiumLayout = await persistLayoutFromTemplate(
+    venue.id,
+    'Layout Estadio Norte',
+    'stadium',
+    {
+      capacity: 220,
+    }
+  );
 
   const soldOutEvent = await ensureEvent({
     organizationId: org.id,
@@ -775,7 +950,8 @@ async function seedArenaNorte(passwordHash: string) {
     organizationId: org.id,
     slug: 'concierto-waitlist-mty',
     title: 'Pop Estelar — Lista de Espera',
-    description: 'Show agotado con lista de espera activa. Ideal para probar notificaciones waitlist.',
+    description:
+      'Show agotado con lista de espera activa. Ideal para probar notificaciones waitlist.',
     category: 'MUSIC',
     venueId: venue.id,
     startsAt: inDays(10),
@@ -787,10 +963,34 @@ async function seedArenaNorte(passwordHash: string) {
   });
   await markEventSoldOut(waitlistEvent.id);
   await seedWaitlistEntries(waitlistEvent.id, [
-    { email: 'espera1@example.com', firstName: 'Valeria', lastName: 'López', quantity: 2, priority: 10 },
-    { email: 'espera2@example.com', firstName: 'Héctor', lastName: 'Mora', quantity: 1, priority: 5 },
-    { email: 'espera3@example.com', firstName: 'Renata', lastName: 'Vega', quantity: 4, priority: 0 },
-    { email: 'espera4@example.com', firstName: 'Pablo', lastName: 'Soto', quantity: 2, priority: 3 },
+    {
+      email: 'espera1@example.com',
+      firstName: 'Valeria',
+      lastName: 'López',
+      quantity: 2,
+      priority: 10,
+    },
+    {
+      email: 'espera2@example.com',
+      firstName: 'Héctor',
+      lastName: 'Mora',
+      quantity: 1,
+      priority: 5,
+    },
+    {
+      email: 'espera3@example.com',
+      firstName: 'Renata',
+      lastName: 'Vega',
+      quantity: 4,
+      priority: 0,
+    },
+    {
+      email: 'espera4@example.com',
+      firstName: 'Pablo',
+      lastName: 'Soto',
+      quantity: 2,
+      priority: 3,
+    },
   ]);
 
   const gaEvent = await ensureEvent({
@@ -839,9 +1039,13 @@ async function seedArenaNorte(passwordHash: string) {
         snapshot: arenaLayout.snapshot,
         seriesId: comedyTour.id,
         seriesOrder: i + 1,
-        extraMetadata: { eventKind: 'series', seriesSlug: comedyTour.slug, scenario: 'multi-session' },
-      }),
-    ),
+        extraMetadata: {
+          eventKind: 'series',
+          seriesSlug: comedyTour.slug,
+          scenario: 'multi-session',
+        },
+      })
+    )
   );
   await markPartialSales(tourEvents[0].id, 0.7);
 
@@ -865,15 +1069,47 @@ async function seedArenaNorte(passwordHash: string) {
   const customerUser = await prisma.user.findUniqueOrThrow({ where: { email: customer.email } });
   const eventsBySlug = new Map(
     [soldOutEvent, partialEvent, waitlistEvent, gaEvent, flagship, ...tourEvents].map(
-      (e) => [e.slug, { id: e.id }] as const,
-    ),
+      (e) => [e.slug, { id: e.id }] as const
+    )
   );
 
   const extraOrders: DemoOrderSpec[] = [
-    { publicId: 'AN-ORD-WEB-001', eventSlug: 'liga-norte-j12', channel: SalesChannel.WEB, totalAmount: 1440, daysAgo: 1, buyerName: 'Familia Garza', buyerEmail: 'garza@example.com' },
-    { publicId: 'AN-ORD-TAQUILLA-001', eventSlug: 'liga-norte-j12', channel: SalesChannel.TAQUILLA, totalAmount: 960, daysAgo: 2, buyerName: 'Walk-in MTY', buyerEmail: 'walkin.mty@example.com' },
-    { publicId: 'AN-ORD-PROMO-001', eventSlug: 'electro-arena-norte', channel: SalesChannel.PROMOTER, totalAmount: 1760, daysAgo: 3, buyerName: 'Promo Elena', buyerEmail: 'promotor@arena-norte.mx' },
-    { publicId: 'AN-ORD-AFF-001', eventSlug: 'festival-urbano-ga-mty', channel: SalesChannel.AFFILIATE, totalAmount: 1300, daysAgo: 4, buyerName: 'Afiliado Miguel', buyerEmail: 'afiliado@arena-norte.mx' },
+    {
+      publicId: 'AN-ORD-WEB-001',
+      eventSlug: 'liga-norte-j12',
+      channel: SalesChannel.WEB,
+      totalAmount: 1440,
+      daysAgo: 1,
+      buyerName: 'Familia Garza',
+      buyerEmail: 'garza@example.com',
+    },
+    {
+      publicId: 'AN-ORD-TAQUILLA-001',
+      eventSlug: 'liga-norte-j12',
+      channel: SalesChannel.TAQUILLA,
+      totalAmount: 960,
+      daysAgo: 2,
+      buyerName: 'Walk-in MTY',
+      buyerEmail: 'walkin.mty@example.com',
+    },
+    {
+      publicId: 'AN-ORD-PROMO-001',
+      eventSlug: 'electro-arena-norte',
+      channel: SalesChannel.PROMOTER,
+      totalAmount: 1760,
+      daysAgo: 3,
+      buyerName: 'Promo Elena',
+      buyerEmail: 'promotor@arena-norte.mx',
+    },
+    {
+      publicId: 'AN-ORD-AFF-001',
+      eventSlug: 'festival-urbano-ga-mty',
+      channel: SalesChannel.AFFILIATE,
+      totalAmount: 1300,
+      daysAgo: 4,
+      buyerName: 'Afiliado Miguel',
+      buyerEmail: 'afiliado@arena-norte.mx',
+    },
   ];
   for (const spec of extraOrders) {
     const event = eventsBySlug.get(spec.eventSlug);
@@ -962,17 +1198,51 @@ async function seedTeatroCapital(passwordHash: string) {
   });
 
   const demoUsers = [
-    { email: 'admin@teatro-capital.mx', firstName: 'Claudia', lastName: 'Capital', role: UserRole.SUPER_ADMIN },
-    { email: 'finanzas@teatro-capital.mx', firstName: 'Andrés', lastName: 'Finanzas', role: UserRole.FINANCE },
-    { email: 'promotor@teatro-capital.mx', firstName: 'Lucía', lastName: 'Promotora', role: UserRole.PROMOTER },
-    { email: 'afiliado@teatro-capital.mx', firstName: 'Tomás', lastName: 'Afiliado', role: UserRole.AFFILIATE },
-    { email: 'scanner@teatro-capital.mx', firstName: 'Paola', lastName: 'Accesos', role: UserRole.SCANNER },
-    { email: 'comprador@teatro-capital.mx', firstName: 'Cliente', lastName: 'Capital', role: UserRole.CUSTOMER },
+    {
+      email: 'admin@teatro-capital.mx',
+      firstName: 'Claudia',
+      lastName: 'Capital',
+      role: UserRole.SUPER_ADMIN,
+    },
+    {
+      email: 'finanzas@teatro-capital.mx',
+      firstName: 'Andrés',
+      lastName: 'Finanzas',
+      role: UserRole.FINANCE,
+    },
+    {
+      email: 'promotor@teatro-capital.mx',
+      firstName: 'Lucía',
+      lastName: 'Promotora',
+      role: UserRole.PROMOTER,
+    },
+    {
+      email: 'afiliado@teatro-capital.mx',
+      firstName: 'Tomás',
+      lastName: 'Afiliado',
+      role: UserRole.AFFILIATE,
+    },
+    {
+      email: 'scanner@teatro-capital.mx',
+      firstName: 'Paola',
+      lastName: 'Accesos',
+      role: UserRole.SCANNER,
+    },
+    {
+      email: 'comprador@teatro-capital.mx',
+      firstName: 'Cliente',
+      lastName: 'Capital',
+      role: UserRole.CUSTOMER,
+    },
   ] as const;
   await upsertDemoUsers(org.id, passwordHash, demoUsers);
   await assignPartnerRefCodes(org.id, {
-    promoters: [{ email: 'promotor@teatro-capital.mx', refCode: 'TC-PROMO-01', commissionRate: 0.07 }],
-    affiliates: [{ email: 'afiliado@teatro-capital.mx', refCode: 'TC-AFF-01', commissionRate: 0.04 }],
+    promoters: [
+      { email: 'promotor@teatro-capital.mx', refCode: 'TC-PROMO-01', commissionRate: 0.07 },
+    ],
+    affiliates: [
+      { email: 'afiliado@teatro-capital.mx', refCode: 'TC-AFF-01', commissionRate: 0.04 },
+    ],
   });
 
   const venue = await prisma.venue.upsert({
@@ -992,9 +1262,14 @@ async function seedTeatroCapital(passwordHash: string) {
     },
   });
 
-  const theaterLayout = await persistLayoutFromTemplate(venue.id, 'Layout Teatro Capital', 'theater', {
-    capacity: 150,
-  });
+  const theaterLayout = await persistLayoutFromTemplate(
+    venue.id,
+    'Layout Teatro Capital',
+    'theater',
+    {
+      capacity: 150,
+    }
+  );
 
   const privateEvent = await ensureEvent({
     organizationId: org.id,
@@ -1080,9 +1355,13 @@ async function seedTeatroCapital(passwordHash: string) {
         snapshot: theaterLayout.snapshot,
         seriesId: residency.id,
         seriesOrder: i + 1,
-        extraMetadata: { eventKind: 'residency', seriesSlug: residency.slug, scenario: 'multi-session' },
-      }),
-    ),
+        extraMetadata: {
+          eventKind: 'residency',
+          seriesSlug: residency.slug,
+          scenario: 'multi-session',
+        },
+      })
+    )
   );
   await markPartialSales(residencyEvents[0].id, 0.85);
   await markPartialSales(residencyEvents[1].id, 0.5);
@@ -1103,23 +1382,65 @@ async function seedTeatroCapital(passwordHash: string) {
   });
   await markEventSoldOut(waitlistEvent.id);
   await seedWaitlistEntries(waitlistEvent.id, [
-    { email: 'suscriptor1@example.com', firstName: 'Diana', lastName: 'Reyes', quantity: 2, priority: 20 },
-    { email: 'suscriptor2@example.com', firstName: 'Fernando', lastName: 'Castro', quantity: 1, priority: 15 },
-    { email: 'suscriptor3@example.com', firstName: 'Isabel', lastName: 'Núñez', quantity: 2, priority: 8 },
+    {
+      email: 'suscriptor1@example.com',
+      firstName: 'Diana',
+      lastName: 'Reyes',
+      quantity: 2,
+      priority: 20,
+    },
+    {
+      email: 'suscriptor2@example.com',
+      firstName: 'Fernando',
+      lastName: 'Castro',
+      quantity: 1,
+      priority: 15,
+    },
+    {
+      email: 'suscriptor3@example.com',
+      firstName: 'Isabel',
+      lastName: 'Núñez',
+      quantity: 2,
+      priority: 8,
+    },
   ]);
 
   const customer = demoUsers.find((u) => u.role === UserRole.CUSTOMER)!;
   const customerUser = await prisma.user.findUniqueOrThrow({ where: { email: customer.email } });
   const eventsBySlug = new Map(
     [privateEvent, partialEvent, gaEvent, waitlistEvent, ...residencyEvents].map(
-      (e) => [e.slug, { id: e.id }] as const,
-    ),
+      (e) => [e.slug, { id: e.id }] as const
+    )
   );
 
   const extraOrders: DemoOrderSpec[] = [
-    { publicId: 'TC-ORD-WEB-001', eventSlug: 'musical-temporada-capital', channel: SalesChannel.WEB, totalAmount: 1360, daysAgo: 1, buyerName: 'Pareja Méndez', buyerEmail: 'mendez@example.com' },
-    { publicId: 'TC-ORD-CORP-001', eventSlug: 'musical-temporada-capital', channel: SalesChannel.CORPORATE, totalAmount: 6800, daysAgo: 5, buyerName: 'Empresa Patrocinadora', buyerEmail: 'patrocinios@teatro-capital.mx' },
-    { publicId: 'TC-ORD-PROMO-001', eventSlug: 'residencia-drama-capital-1', channel: SalesChannel.PROMOTER, totalAmount: 1040, daysAgo: 2, buyerName: 'Promo Lucía', buyerEmail: 'promotor@teatro-capital.mx' },
+    {
+      publicId: 'TC-ORD-WEB-001',
+      eventSlug: 'musical-temporada-capital',
+      channel: SalesChannel.WEB,
+      totalAmount: 1360,
+      daysAgo: 1,
+      buyerName: 'Pareja Méndez',
+      buyerEmail: 'mendez@example.com',
+    },
+    {
+      publicId: 'TC-ORD-CORP-001',
+      eventSlug: 'musical-temporada-capital',
+      channel: SalesChannel.CORPORATE,
+      totalAmount: 6800,
+      daysAgo: 5,
+      buyerName: 'Empresa Patrocinadora',
+      buyerEmail: 'patrocinios@teatro-capital.mx',
+    },
+    {
+      publicId: 'TC-ORD-PROMO-001',
+      eventSlug: 'residencia-drama-capital-1',
+      channel: SalesChannel.PROMOTER,
+      totalAmount: 1040,
+      daysAgo: 2,
+      buyerName: 'Promo Lucía',
+      buyerEmail: 'promotor@teatro-capital.mx',
+    },
   ];
   for (const spec of extraOrders) {
     const event = eventsBySlug.get(spec.eventSlug);
@@ -1184,7 +1505,6 @@ async function seedTeatroCapital(passwordHash: string) {
 }
 
 async function main() {
-
   try {
     await seedPermissions(prisma);
   } catch (err) {
@@ -1291,8 +1611,12 @@ async function main() {
 
   await upsertDemoUsers(org.id, passwordHash, demoUsers);
   await assignPartnerRefCodes(org.id, {
-    promoters: [{ email: 'promotor@demo.boletera.com', refCode: 'DEMO-PROMO-01', commissionRate: 0.08 }],
-    affiliates: [{ email: 'afiliado@demo.boletera.com', refCode: 'DEMO-AFF-01', commissionRate: 0.05 }],
+    promoters: [
+      { email: 'promotor@demo.boletera.com', refCode: 'DEMO-PROMO-01', commissionRate: 0.08 },
+    ],
+    affiliates: [
+      { email: 'afiliado@demo.boletera.com', refCode: 'DEMO-AFF-01', commissionRate: 0.05 },
+    ],
   });
 
   const venue = await prisma.venue.upsert({
@@ -1551,7 +1875,8 @@ async function main() {
       organizationId: org.id,
       slug: 'open-air-fest-cdmx',
       title: 'Open Air Fest',
-      description: 'Festival al aire libre con lineup multi-género. Incluye acceso a zonas comunes.',
+      description:
+        'Festival al aire libre con lineup multi-género. Incluye acceso a zonas comunes.',
       category: 'FESTIVAL',
       venueId: venue.id,
       startsAt: inDays(21),
@@ -1564,9 +1889,7 @@ async function main() {
     }),
   ]);
 
-  const eventsBySlug = new Map(
-    [event, ...catalog].map((e) => [e.slug, { id: e.id }] as const),
-  );
+  const eventsBySlug = new Map([event, ...catalog].map((e) => [e.slug, { id: e.id }] as const));
   await seedDemoChannelOrders(org.id, customer.id, eventsBySlug);
 
   const arenaNorte = await seedArenaNorte(passwordHash);
@@ -1616,7 +1939,6 @@ async function main() {
     },
   });
 }
-
 
 main()
   .catch(console.error)

@@ -1,12 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  Button,
-  Card,
-  CardHeader,
-  EmptyState,
-} from '@boletera/ui';
+import { Button, Card, CardHeader, EmptyState } from '@boletera/ui';
 import type { EventHub } from '@/lib/platform-api';
 import styles from './event-hub.module.scss';
 

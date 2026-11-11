@@ -58,8 +58,10 @@ assert(/^egress-Teatro_Demo-\d{4}-\d{2}-\d{2}\.csv$/.test(name), `filename ${nam
 
 const issues = validateGeometry(resolveGeometry(map)).issues;
 assert(
-  issues.some((i) => i.code === 'slow_clearance' || i.code === 'egress_bottleneck' || i.code === 'long_egress'),
-  'policy triggers validate',
+  issues.some(
+    (i) => i.code === 'slow_clearance' || i.code === 'egress_bottleneck' || i.code === 'long_egress'
+  ),
+  'policy triggers validate'
 );
 
 const relaxed = {
@@ -75,15 +77,15 @@ const relaxed = {
   },
 };
 const relaxedIssues = validateGeometry(resolveGeometry(relaxed)).issues.filter((i) =>
-  ['slow_clearance', 'long_egress'].includes(i.code),
+  ['slow_clearance', 'long_egress'].includes(i.code)
 );
 assert(relaxedIssues.length === 0, 'relaxed policy clears slow/long warnings');
 
 const strictCount = issues.filter((i) =>
-  ['slow_clearance', 'long_egress', 'egress_bottleneck'].includes(i.code),
+  ['slow_clearance', 'long_egress', 'egress_bottleneck'].includes(i.code)
 ).length;
 const relaxedBn = validateGeometry(resolveGeometry(relaxed)).issues.filter(
-  (i) => i.code === 'egress_bottleneck',
+  (i) => i.code === 'egress_bottleneck'
 ).length;
 assert(strictCount >= relaxedBn, 'strict policy has at least as many egress issues');
 

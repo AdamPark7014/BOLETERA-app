@@ -52,10 +52,7 @@ export default async function VenuesPage() {
         {failed ? (
           <div className={styles.error} role="alert">
             <strong>No pudimos cargar los recintos</strong>
-            <p>
-              Es un problema temporal de nuestro lado. Vuelve a intentarlo en unos
-              minutos.
-            </p>
+            <p>Es un problema temporal de nuestro lado. Vuelve a intentarlo en unos minutos.</p>
             <Link href="/">Ver la cartelera</Link>
           </div>
         ) : venues.length === 0 ? (

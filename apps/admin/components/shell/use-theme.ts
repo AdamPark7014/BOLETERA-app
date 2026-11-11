@@ -75,7 +75,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setPreference,
       cycle,
     }),
-    [cycle, preference, resolved, setPreference],
+    [cycle, preference, resolved, setPreference]
   );
 
   return createElement(ThemeContext.Provider, { value }, children);

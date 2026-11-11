@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { EmptyState, PageHeader, Skeleton, useReducedMotion } from '@boletera/ui';
@@ -15,11 +8,7 @@ import { layoutSeatsAuto, type Venue3DHeatMode } from '@boletera/venue-3d';
 import type { SeatMapData } from '@boletera/shared';
 import { QueryError } from '@/components/QueryStates';
 import { useToast } from '@/components/Toast/ToastProvider';
-import {
-  useApplyLayoutTemplate,
-  useSaveVenueLayout,
-  useVenueLayout,
-} from '@/lib/queries/venues';
+import { useApplyLayoutTemplate, useSaveVenueLayout, useVenueLayout } from '@/lib/queries/venues';
 import { useEventsByVenue, usePublishEvent } from '@/lib/queries/events';
 import { CameraPanel } from './panels/CameraPanel';
 import { LayersPanel } from './panels/LayersPanel';
@@ -55,13 +44,10 @@ import { applySightlinesToMap, useSightlineAnalysis } from './useSightlineAnalys
 import { useStudioKeyboard } from './useStudioKeyboard';
 import styles from './Venue3DStudio.module.scss';
 
-const Venue3DViewer = dynamic(
-  () => import('@boletera/venue-3d').then((mod) => mod.Venue3DViewer),
-  {
-    ssr: false,
-    loading: () => <div className={styles.skeletonViewport} aria-label="Cargando visor 3D" />,
-  },
-);
+const Venue3DViewer = dynamic(() => import('@boletera/venue-3d').then((mod) => mod.Venue3DViewer), {
+  ssr: false,
+  loading: () => <div className={styles.skeletonViewport} aria-label="Cargando visor 3D" />,
+});
 
 type Venue3DStudioProps = {
   venueId: string;
@@ -95,7 +81,7 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
   const [draftMap, setDraftMap] = useState<SeatMapData | null>(null);
   const [stage, setStage] = useState<StageDraft>(() => stageFromMap(null));
   const [selectedIds, setSelectedIds] = useState<string[]>(
-    initialUrl.seatId ? [initialUrl.seatId] : [],
+    initialUrl.seatId ? [initialUrl.seatId] : []
   );
   const [camera, setCamera] = useState<CameraPreset>(initialUrl.camera);
   const [colorMode, setColorMode] = useState<StudioColorMode>(initialUrl.colorMode);
@@ -143,28 +129,25 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
 
   const workingMap = useMemo(
     () => (draftMap ? withStage(draftMap, stage) : null),
-    [draftMap, stage],
+    [draftMap, stage]
   );
 
   const levels = useMemo(() => extractLevels(workingMap), [workingMap]);
-  const allSeats = useMemo(
-    () => (workingMap ? mapToStudioSeats(workingMap) : []),
-    [workingMap],
-  );
+  const allSeats = useMemo(() => (workingMap ? mapToStudioSeats(workingMap) : []), [workingMap]);
 
   const { result: sightlineResult, bySeat: sightlineBySeat } = useSightlineAnalysis(
     workingMap,
-    levelFilter,
+    levelFilter
   );
 
   const visibleSeats = useMemo(
     () => filterSeatsByLayers(allSeats, layers, levelFilter),
-    [allSeats, layers, levelFilter],
+    [allSeats, layers, levelFilter]
   );
 
   const coloredSeats = useMemo(
     () => applyColorMode(visibleSeats, colorMode, sightlineResult),
-    [visibleSeats, colorMode, sightlineResult],
+    [visibleSeats, colorMode, sightlineResult]
   );
 
   const layout = useMemo(
@@ -179,7 +162,7 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
         furniture: layers.furniture ? workingMap?.venue?.furniture : [],
         focusPoints: workingMap?.venue?.focusPoints,
       }),
-    [coloredSeats, workingMap, layers],
+    [coloredSeats, workingMap, layers]
   );
 
   const selectedSeat = useMemo(() => {
@@ -261,7 +244,7 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
         setViewportFading(false);
       }, 160);
     },
-    [reducedMotion, selectedIds.length, visibleSeats],
+    [reducedMotion, selectedIds.length, visibleSeats]
   );
 
   const fitVenue = useCallback(() => {
@@ -284,13 +267,11 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
       const current = selectedIds[0];
       const index = current ? visibleSeats.findIndex((seat) => seat.id === current) : -1;
       const nextIndex =
-        index < 0
-          ? 0
-          : (index + direction + visibleSeats.length) % visibleSeats.length;
+        index < 0 ? 0 : (index + direction + visibleSeats.length) % visibleSeats.length;
       setSelectedIds([visibleSeats[nextIndex].id]);
       if (camera === 'seat') setViewerEpoch((n) => n + 1);
     },
-    [visibleSeats, selectedIds, camera],
+    [visibleSeats, selectedIds, camera]
   );
 
   useStudioKeyboard({
@@ -298,8 +279,7 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
     onCameraPreset: transitionCamera,
     onColorMode: onColorModeChange,
     onFit: fitVenue,
-    onToggleSeatView: () =>
-      transitionCamera(camera === 'seat' ? 'orbit' : 'seat'),
+    onToggleSeatView: () => transitionCamera(camera === 'seat' ? 'orbit' : 'seat'),
     onSelectNextSeat: selectNextSeat,
     onClearSelection: () => setSelectedIds([]),
   });
@@ -351,12 +331,8 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
     try {
       if (workingMap) await saveLayout.mutateAsync(workingMap);
       const result = await publishEvent.mutateAsync();
-      setMessage(
-        `Publicado en evento: ${result.totalSeats} boletos · ${result.sections} zonas`,
-      );
-      toast.success(
-        `Publicado: ${result.totalSeats} boletos · ${result.sections} zonas`,
-      );
+      setMessage(`Publicado en evento: ${result.totalSeats} boletos · ${result.sections} zonas`);
+      toast.success(`Publicado: ${result.totalSeats} boletos · ${result.sections} zonas`);
     } catch (error) {
       const text = error instanceof Error ? error.message : 'Error al publicar';
       setMessage(text);
@@ -419,7 +395,11 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
         />
         {studio && (
           <TemplatesPanel
-            busy={applyTemplate.isPending ? String(applyTemplate.variables?.template ?? 'template') : null}
+            busy={
+              applyTemplate.isPending
+                ? String(applyTemplate.variables?.template ?? 'template')
+                : null
+            }
             events={(eventsQuery.data ?? []).map((event) => ({
               id: event.id,
               title: event.title,
@@ -462,7 +442,7 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
     );
   }
 
-  const selectedSightline = selectedSeat ? sightlineBySeat.get(selectedSeat.id) ?? null : null;
+  const selectedSightline = selectedSeat ? (sightlineBySeat.get(selectedSeat.id) ?? null) : null;
 
   return (
     <div className={styles.studio}>
@@ -538,9 +518,7 @@ export function Venue3DStudio({ venueId }: Venue3DStudioProps) {
               stairs={layers.structure ? workingMap.venue?.stairs : []}
               exits={layers.exits && layers.structure ? workingMap.venue?.exits : []}
               furniture={
-                layers.furniture && layers.opacity.furniture > 0
-                  ? workingMap.venue?.furniture
-                  : []
+                layers.furniture && layers.opacity.furniture > 0 ? workingMap.venue?.furniture : []
               }
               focusPoints={workingMap.venue?.focusPoints}
               levels={levels}

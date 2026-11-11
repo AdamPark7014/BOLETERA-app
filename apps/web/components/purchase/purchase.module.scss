@@ -283,7 +283,9 @@
   background: var(--ink-raised);
   border-radius: var(--r-xl);
   border: 1px solid var(--line);
-  box-shadow: inset 0 0 0 12px var(--ink-raised), inset 0 0 0 13px var(--gold);
+  box-shadow:
+    inset 0 0 0 12px var(--ink-raised),
+    inset 0 0 0 13px var(--gold);
   padding: 32px 28px;
   display: flex;
   flex-direction: column;

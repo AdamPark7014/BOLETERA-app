@@ -11,11 +11,7 @@ import { useVenues } from '@/lib/queries';
 import type { OrderRow } from '@/lib/queries/orders';
 import { useSession } from '@/lib/use-session';
 import { ShellIcon } from './icons';
-import {
-  NAV_GROUPS,
-  filterNavGroupsForRole,
-  flattenNavItems,
-} from './nav-config';
+import { NAV_GROUPS, filterNavGroupsForRole, flattenNavItems } from './nav-config';
 import { useTheme } from './use-theme';
 
 export type CommandPaletteMode = 'all' | 'shortcuts';
@@ -241,9 +237,7 @@ function ShellCommandPaletteComponent({
     const eventActions: CommandAction[] = events.slice(0, 40).map((event) => ({
       id: `event-${event.id}`,
       label: event.title,
-      description: event.venue?.name
-        ? `${event.venue.name} · ${event.status}`
-        : event.status,
+      description: event.venue?.name ? `${event.venue.name} · ${event.status}` : event.status,
       group: 'Eventos',
       keywords: [event.slug, event.status],
       icon: <ShellIcon name="events" size={16} />,
@@ -289,20 +283,10 @@ function ShellCommandPaletteComponent({
       onOpenChange={onOpenChange}
       actions={actions}
       placeholder={
-        mode === 'shortcuts'
-          ? 'Atajos de teclado…'
-          : 'Buscar módulos, acciones, eventos, órdenes…'
+        mode === 'shortcuts' ? 'Atajos de teclado…' : 'Buscar módulos, acciones, eventos, órdenes…'
       }
       emptyMessage="Sin coincidencias. Prueba con otro término."
-      groupOrder={[
-        'Acciones',
-        'Navegación',
-        'Eventos',
-        'Órdenes',
-        'Venues',
-        'Atajos',
-        'Cuenta',
-      ]}
+      groupOrder={['Acciones', 'Navegación', 'Eventos', 'Órdenes', 'Venues', 'Atajos', 'Cuenta']}
     />
   );
 }

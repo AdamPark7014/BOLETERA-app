@@ -12,12 +12,7 @@ import {
 } from 'react';
 import { cx } from '../lib/cx';
 import { bestMatch, fuzzyMatch, highlightSegments } from '../lib/fuzzy';
-import {
-  useControllableState,
-  useEscapeKey,
-  useLockBodyScroll,
-  useMounted,
-} from '../lib/hooks';
+import { useControllableState, useEscapeKey, useLockBodyScroll, useMounted } from '../lib/hooks';
 import styles from './CommandPalette.module.scss';
 
 /** Comando ejecutable desde la paleta. */
@@ -166,7 +161,7 @@ export function CommandPalette({
       close();
       entry.action.onSelect();
     },
-    [close],
+    [close]
   );
 
   const onKeyDown = useCallback(
@@ -198,7 +193,7 @@ export function CommandPalette({
           break;
       }
     },
-    [flat, activeIndex, run],
+    [flat, activeIndex, run]
   );
 
   // Mantiene visible la opcion activa al navegar con el teclado.
@@ -210,14 +205,21 @@ export function CommandPalette({
 
   if (!open || !mounted) return null;
 
-  const activeId = flat[activeIndex] ? `${baseId}-option-${flat[activeIndex].action.id}` : undefined;
+  const activeId = flat[activeIndex]
+    ? `${baseId}-option-${flat[activeIndex].action.id}`
+    : undefined;
   let cursor = -1;
 
   return (
     <div className={cx(styles.layer, className)}>
       <div className={styles.backdrop} onClick={close} role="presentation" />
 
-      <div className={styles.palette} role="dialog" aria-modal="true" aria-label="Paleta de comandos">
+      <div
+        className={styles.palette}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Paleta de comandos"
+      >
         <div className={styles.searchRow}>
           <svg className={styles.searchIcon} viewBox="0 0 16 16" aria-hidden="true">
             <circle cx="7" cy="7" r="4.5" />
@@ -246,7 +248,13 @@ export function CommandPalette({
           <kbd className={styles.escHint}>Esc</kbd>
         </div>
 
-        <div ref={listRef} id={`${baseId}-list`} role="listbox" aria-label="Comandos" className={styles.list}>
+        <div
+          ref={listRef}
+          id={`${baseId}-list`}
+          role="listbox"
+          aria-label="Comandos"
+          className={styles.list}
+        >
           {flat.length === 0 ? (
             <p className={styles.empty}>{emptyMessage}</p>
           ) : (
@@ -284,11 +292,13 @@ export function CommandPalette({
                                 </mark>
                               ) : (
                                 <span key={segmentIndex}>{segment.text}</span>
-                              ),
+                              )
                           )}
                         </span>
                         {entry.action.description ? (
-                          <span className={styles.optionDescription}>{entry.action.description}</span>
+                          <span className={styles.optionDescription}>
+                            {entry.action.description}
+                          </span>
                         ) : null}
                       </span>
 

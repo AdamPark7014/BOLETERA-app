@@ -44,7 +44,7 @@ function estimateExpiry(createdAt: string): string {
 
 export function buildReservationRows(
   orders: readonly OrderRow[],
-  inventory: InventoryMetrics | undefined,
+  inventory: InventoryMetrics | undefined
 ): ReservationRow[] {
   const checkoutRows: ReservationRow[] = orders
     .filter((order) => {
@@ -136,19 +136,17 @@ export function buildReservationRows(
 export function reservationKpis(
   rows: readonly ReservationRow[],
   inventory: InventoryMetrics | undefined,
-  orders: readonly OrderRow[],
+  orders: readonly OrderRow[]
 ) {
   const activeCheckout = rows.filter(
-    (row) => row.kind === 'checkout' && row.status !== 'completed',
+    (row) => row.kind === 'checkout' && row.status !== 'completed'
   );
   const zoneHolds = inventory?.summary.held ?? 0;
   const blocked = inventory?.summary.blocked ?? 0;
   const activeHolds = inventory?.summary.activeHolds ?? activeCheckout.length;
 
   const completed = orders.filter((order) => COMPLETED.has(order.status.toUpperCase())).length;
-  const pending = orders.filter((order) =>
-    PENDING_CHECKOUT.has(order.status.toUpperCase()),
-  ).length;
+  const pending = orders.filter((order) => PENDING_CHECKOUT.has(order.status.toUpperCase())).length;
   const released = orders.filter((order) => RELEASED.has(order.status.toUpperCase())).length;
   const expired = orders.filter((order) => {
     const status = order.status.toUpperCase();
@@ -182,9 +180,7 @@ export function reservationKpis(
 }
 
 export function conversionFunnel(orders: readonly OrderRow[]) {
-  const pending = orders.filter((order) =>
-    PENDING_CHECKOUT.has(order.status.toUpperCase()),
-  ).length;
+  const pending = orders.filter((order) => PENDING_CHECKOUT.has(order.status.toUpperCase())).length;
   const completed = orders.filter((order) => COMPLETED.has(order.status.toUpperCase())).length;
   const lost = orders.filter((order) => {
     const status = order.status.toUpperCase();
@@ -212,7 +208,7 @@ export function buildReleaseTimeline(rows: readonly ReservationRow[]) {
         row.status === 'expired_risk' ||
         row.status === 'converting' ||
         row.status === 'completed' ||
-        row.kind === 'zone_hold',
+        row.kind === 'zone_hold'
     )
     .slice(0, 10);
 }

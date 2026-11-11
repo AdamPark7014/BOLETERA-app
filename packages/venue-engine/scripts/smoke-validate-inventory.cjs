@@ -42,8 +42,8 @@ function baseSection(id, overrides = {}) {
   const v = validateGeometry(resolveGeometry(map), { skipAccessibility: true });
   const integrity = v.issues.filter((i) =>
     ['duplicate_seat_id', 'duplicate_seat_label', 'missing_row_label', 'empty_section'].includes(
-      i.code,
-    ),
+      i.code
+    )
   );
   assert(integrity.length === 0, `mapa limpio no debe tener avisos: ${JSON.stringify(integrity)}`);
   assert(Array.isArray(v.summary), 'debe devolver resumen por código');
@@ -93,17 +93,26 @@ function baseSection(id, overrides = {}) {
 /* ── Zona vacía ─────────────────────────────────────────────────────────── */
 {
   const empty = { ...baseSection('vacia'), seats: [] };
-  const v = validateGeometry(
-    resolveGeometry({ version: 3, sections: [baseSection('a'), empty] }),
-    { skipAccessibility: true },
-  );
+  const v = validateGeometry(resolveGeometry({ version: 3, sections: [baseSection('a'), empty] }), {
+    skipAccessibility: true,
+  });
   const issues = find(v.issues, 'empty_section');
   assert(issues.length === 1, 'debe avisar de la zona sin butacas');
   assert(issues[0].severity === 'error', 'una zona numerada sin butacas es error');
   console.log('zona vacía:', issues[0].message);
 
   // Pero una zona GA (con contorno) sin butacas es legítima: solo aviso.
-  const ga = { ...empty, shape: { points: [[0, 0], [100, 0], [100, 100], [0, 100]] } };
+  const ga = {
+    ...empty,
+    shape: {
+      points: [
+        [0, 0],
+        [100, 0],
+        [100, 100],
+        [0, 100],
+      ],
+    },
+  };
   const v2 = validateGeometry(resolveGeometry({ version: 3, sections: [baseSection('a'), ga] }), {
     skipAccessibility: true,
   });
@@ -164,11 +173,11 @@ function baseSection(id, overrides = {}) {
   const v2 = validateGeometry(resolveGeometry({ version: 3, sections: [section] }));
   assert(
     find(v2.issues, 'accessible_no_companion').length === 0,
-    'una plaza con acompañante no debe avisar',
+    'una plaza con acompañante no debe avisar'
   );
   assert(
     find(v2.issues, 'accessible_orphan_companion').length === 0,
-    'no debe haber acompañantes huérfanos',
+    'no debe haber acompañantes huérfanos'
   );
 
   // Acompañante que apunta a una plaza inexistente.
@@ -177,13 +186,13 @@ function baseSection(id, overrides = {}) {
     seats: section.seats.map((s) =>
       s.metadata?.accessibleKind === 'companion'
         ? { ...s, metadata: { ...s.metadata, companionOf: 'no-existe' } }
-        : s,
+        : s
     ),
   };
   const v3 = validateGeometry(resolveGeometry({ version: 3, sections: [orphaned] }));
   assert(
     find(v3.issues, 'accessible_orphan_companion').length === 1,
-    'debe detectar el acompañante huérfano',
+    'debe detectar el acompañante huérfano'
   );
   console.log('huérfano:', find(v3.issues, 'accessible_orphan_companion')[0].message);
 }
@@ -220,7 +229,7 @@ function baseSection(id, overrides = {}) {
   });
   assert(
     find(v2.issues, 'row_numbering_gap').length === 0,
-    'la convención de pares/impares no debe reportarse como hueco',
+    'la convención de pares/impares no debe reportarse como hueco'
   );
 }
 

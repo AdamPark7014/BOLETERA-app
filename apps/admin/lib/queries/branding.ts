@@ -20,8 +20,7 @@ export function useBranding() {
 export function useUpdateBranding() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (body: Branding) =>
-      http<Branding>('/admin/branding', { method: 'PUT', body }),
+    mutationFn: (body: Branding) => http<Branding>('/admin/branding', { method: 'PUT', body }),
     onMutate: async (branding) => {
       const key = queryKeys.branding.detail();
       await client.cancelQueries({ queryKey: key });
@@ -34,7 +33,6 @@ export function useUpdateBranding() {
     },
     onError: (_error, _branding, context) =>
       client.setQueryData(queryKeys.branding.detail(), context?.previous),
-    onSettled: () =>
-      client.invalidateQueries({ queryKey: queryKeys.branding.detail() }),
+    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.branding.detail() }),
   });
 }

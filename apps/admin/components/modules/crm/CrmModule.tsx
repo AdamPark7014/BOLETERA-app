@@ -41,12 +41,7 @@ import {
   kpiDeltaRatio,
   rangeLabel,
 } from './format';
-import {
-  SEGMENT_LABEL,
-  SEGMENT_TONE,
-  type CrmCustomerRow,
-  type RangeKey,
-} from './types';
+import { SEGMENT_LABEL, SEGMENT_TONE, type CrmCustomerRow, type RangeKey } from './types';
 import styles from './crm.module.scss';
 
 const RANGE_OPTIONS: ReadonlyArray<{ value: RangeKey; label: string }> = [
@@ -70,7 +65,7 @@ export function CrmModule() {
       from: daysAgoIso(Number(range)),
       to: new Date().toISOString(),
     }),
-    [organizationId, range],
+    [organizationId, range]
   );
 
   const ordersQuery = useOrders();
@@ -82,10 +77,7 @@ export function CrmModule() {
     metric: 'orders',
   });
 
-  const customers = useMemo(
-    () => buildCustomerRows(ordersQuery.data ?? []),
-    [ordersQuery.data],
-  );
+  const customers = useMemo(() => buildCustomerRows(ordersQuery.data ?? []), [ordersQuery.data]);
   const segments = useMemo(() => buildSegmentCards(customers), [customers]);
   const kpis = useMemo(() => crmKpis(customers), [customers]);
 
@@ -113,7 +105,7 @@ export function CrmModule() {
           })),
       },
     ],
-    [customers, segments],
+    [customers, segments]
   );
 
   const segmentFilter = filters.segment ?? [];
@@ -138,7 +130,7 @@ export function CrmModule() {
 
   const selected = useMemo(
     () => (selectedId ? (customers.find((row) => row.id === selectedId) ?? null) : null),
-    [customers, selectedId],
+    [customers, selectedId]
   );
 
   const seriesData = useMemo(() => {
@@ -225,7 +217,7 @@ export function CrmModule() {
         sortValue: (row) => row.channels,
       },
     ],
-    [],
+    []
   );
 
   const loading = ordersQuery.isPending;
@@ -250,10 +242,7 @@ export function CrmModule() {
         eyebrow="Relación con clientes"
         title="CRM operativo"
         description="Cartera de compradores, segmentos y valor de vida derivados de pedidos reales. Sin inventar perfiles."
-        breadcrumbs={[
-          { label: 'Panel', href: '/dashboard' },
-          { label: 'CRM' },
-        ]}
+        breadcrumbs={[{ label: 'Panel', href: '/dashboard' }, { label: 'CRM' }]}
         actions={
           <div className={styles.actions}>
             <SegmentedControl<RangeKey>
@@ -300,9 +289,7 @@ export function CrmModule() {
         <KpiCard
           label="Pedidos completados"
           value={
-            metricsLoading
-              ? '—'
-              : formatNumber(ordersMetrics.data?.kpis.completedOrders.value ?? 0)
+            metricsLoading ? '—' : formatNumber(ordersMetrics.data?.kpis.completedOrders.value ?? 0)
           }
           delta={kpiDeltaRatio(ordersMetrics.data?.kpis.completedOrders.deltaPercent)}
           deltaLabel="vs. periodo previo"
@@ -357,7 +344,7 @@ export function CrmModule() {
                             ? current.filter((value) => value !== segment.id)
                             : [...current, segment.id];
                           const rest: FilterSelection = Object.fromEntries(
-                            Object.entries(filters).filter(([key]) => key !== 'segment'),
+                            Object.entries(filters).filter(([key]) => key !== 'segment')
                           );
                           setFilters(next.length ? { ...rest, segment: next } : rest);
                         }}
@@ -452,9 +439,7 @@ export function CrmModule() {
                 maxHeight={480}
                 density="compact"
                 defaultSort={{ key: 'totalSpend', direction: 'desc' }}
-                onRowClick={(row) =>
-                  setSelectedId(row.id === selectedId ? null : row.id)
-                }
+                onRowClick={(row) => setSelectedId(row.id === selectedId ? null : row.id)}
               />
             )}
           </div>
@@ -466,7 +451,11 @@ export function CrmModule() {
                 description={`Serie diaria · ${rangeLabel(range)}`}
               />
               {timeseries.isPending ? (
-                <EmptyState size="sm" title="Cargando serie…" description="Consultando /metrics/timeseries" />
+                <EmptyState
+                  size="sm"
+                  title="Cargando serie…"
+                  description="Consultando /metrics/timeseries"
+                />
               ) : seriesData.length === 0 ? (
                 <EmptyState
                   size="sm"
@@ -519,7 +508,10 @@ export function CrmModule() {
             </Card>
 
             <Card>
-              <CardHeader title="Actividad reciente" description="Últimos pedidos de la organización" />
+              <CardHeader
+                title="Actividad reciente"
+                description="Últimos pedidos de la organización"
+              />
               <ActivityFeed
                 items={activityItems}
                 loading={loading}
@@ -590,8 +582,8 @@ function CustomerDrawerBody({ customer }: { customer: CrmCustomerRow }) {
         </div>
       </dl>
       <p className={styles.muted}>
-        Perfil derivado de pedidos. El timeline CRM dedicado se activará cuando exista
-        GET /crm/customers/:id/timeline.
+        Perfil derivado de pedidos. El timeline CRM dedicado se activará cuando exista GET
+        /crm/customers/:id/timeline.
       </p>
     </div>
   );

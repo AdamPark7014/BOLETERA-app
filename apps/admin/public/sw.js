@@ -28,7 +28,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => cached);
       return cached ?? network;
-    }),
+    })
   );
 });
 
@@ -37,7 +37,7 @@ self.addEventListener('sync', (event) => {
     event.waitUntil(
       self.clients.matchAll().then((clients) => {
         clients.forEach((c) => c.postMessage({ type: 'FLUSH_OFFLINE_SCANS' }));
-      }),
+      })
     );
   }
 });

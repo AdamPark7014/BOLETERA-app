@@ -38,7 +38,7 @@ export class TenantContextInterceptor implements NestInterceptor {
         userId: user?.sub,
         privileged,
       },
-      () => next.handle(),
+      () => next.handle()
     );
   }
 

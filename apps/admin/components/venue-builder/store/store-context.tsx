@@ -31,7 +31,8 @@ export function VenueBuilderStoreProvider({
 
 export function useVenueBuilderStores(): VenueBuilderStores {
   const stores = useContext(StoresContext);
-  if (!stores) throw new Error('useVenueBuilderStores must be used inside VenueBuilderStoreProvider');
+  if (!stores)
+    throw new Error('useVenueBuilderStores must be used inside VenueBuilderStoreProvider');
   return stores;
 }
 

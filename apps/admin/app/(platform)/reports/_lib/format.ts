@@ -56,7 +56,7 @@ export function formatPercent(value: number | null | undefined, digits = 1): str
 
 export function formatKpiValue(
   value: number,
-  unit: 'mxn' | 'count' | 'percent' | 'ratio' | undefined,
+  unit: 'mxn' | 'count' | 'percent' | 'ratio' | undefined
 ): string {
   if (unit === 'mxn') return money(value);
   if (unit === 'percent') return formatPercent(value);
@@ -86,9 +86,7 @@ export function formatDateTime(value: string | Date | null | undefined): string 
 
 export { channelLabel, CHANNEL_LABELS } from '../../orders/_lib/format';
 
-export function paceRiskLabel(
-  risk: 'on_track' | 'watch' | 'at_risk' | 'critical',
-): string {
+export function paceRiskLabel(risk: 'on_track' | 'watch' | 'at_risk' | 'critical'): string {
   switch (risk) {
     case 'on_track':
       return 'En ritmo';
@@ -102,7 +100,7 @@ export function paceRiskLabel(
 }
 
 export function paceRiskTone(
-  risk: 'on_track' | 'watch' | 'at_risk' | 'critical',
+  risk: 'on_track' | 'watch' | 'at_risk' | 'critical'
 ): 'success' | 'info' | 'warning' | 'danger' {
   switch (risk) {
     case 'on_track':

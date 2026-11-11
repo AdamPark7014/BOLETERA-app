@@ -108,7 +108,10 @@ export function formatMoney(amount: unknown, currency = 'MXN'): string {
  * su teléfono: una función que llega tarde por una diferencia horaria es una
  * queja garantizada. Por eso la zona se imprime siempre.
  */
-export function formatEventDateTime(date: Date | string | null | undefined, timezone?: string | null): string {
+export function formatEventDateTime(
+  date: Date | string | null | undefined,
+  timezone?: string | null
+): string {
   if (!date) return 'Por confirmar';
   const value = date instanceof Date ? date : new Date(date);
   if (Number.isNaN(value.getTime())) return 'Por confirmar';
@@ -133,7 +136,10 @@ export function formatEventDateTime(date: Date | string | null | undefined, time
 }
 
 /** Fecha corta (sin hora) para vencimientos y plazos administrativos. */
-export function formatDate(date: Date | string | null | undefined, timezone?: string | null): string {
+export function formatDate(
+  date: Date | string | null | undefined,
+  timezone?: string | null
+): string {
   if (!date) return 'Sin fecha';
   const value = date instanceof Date ? date : new Date(date);
   if (Number.isNaN(value.getTime())) return 'Sin fecha';
@@ -168,7 +174,7 @@ function renderDetails(block: Extract<EmailBlock, { kind: 'details' }>): string 
       (row, index) => `<tr>
 <td style="padding:8px 12px;border-top:${index === 0 ? '0' : `1px solid ${COLOR.border}`};color:${COLOR.muted};font-size:13px;width:38%;vertical-align:top">${escapeHtml(row.label)}</td>
 <td style="padding:8px 12px;border-top:${index === 0 ? '0' : `1px solid ${COLOR.border}`};color:${COLOR.ink};font-size:14px;font-weight:600;vertical-align:top">${escapeHtml(row.value)}</td>
-</tr>`,
+</tr>`
     )
     .join('');
   return `${title}<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;border:1px solid ${COLOR.border};border-radius:8px;border-collapse:separate;margin:0 0 20px">${rows}</table>`;
@@ -197,7 +203,10 @@ function renderList(block: Extract<EmailBlock, { kind: 'list' }>): string {
     : '';
   const tag = block.ordered ? 'ol' : 'ul';
   const items = block.items
-    .map((item) => `<li style="margin:0 0 6px;color:${COLOR.ink};font-size:14px;line-height:1.5">${escapeHtml(item)}</li>`)
+    .map(
+      (item) =>
+        `<li style="margin:0 0 6px;color:${COLOR.ink};font-size:14px;line-height:1.5">${escapeHtml(item)}</li>`
+    )
     .join('');
   return `${title}<${tag} style="margin:0 0 20px;padding-left:20px">${items}</${tag}>`;
 }
@@ -263,14 +272,20 @@ function renderBlockText(block: EmailBlock): string[] {
       return [`${block.label}: ${block.url}`, ...(block.helper ? [block.helper] : []), ''];
     case 'list': {
       const lines = block.title ? [block.title] : [];
-      block.items.forEach((item, i) => lines.push(`  ${block.ordered ? `${i + 1}.` : '-'} ${item}`));
+      block.items.forEach((item, i) =>
+        lines.push(`  ${block.ordered ? `${i + 1}.` : '-'} ${item}`)
+      );
       lines.push('');
       return lines;
     }
     case 'callout':
       return [`** ${block.title ? `${block.title}: ` : ''}${block.text}`, ''];
     case 'code':
-      return [`${block.label ?? 'Código'}: ${block.value}`, ...(block.helper ? [block.helper] : []), ''];
+      return [
+        `${block.label ?? 'Código'}: ${block.value}`,
+        ...(block.helper ? [block.helper] : []),
+        '',
+      ];
     case 'divider':
       return ['------------------------------------------------------------', ''];
     default:
@@ -332,7 +347,10 @@ ${footer}
     'Correo transaccional relacionado con tu compra.',
   ];
   // Se colapsan los saltos triples que dejan los bloques al concatenarse.
-  const text = textLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  const text = textLines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 
   return { subject: doc.subject, html, text };
 }

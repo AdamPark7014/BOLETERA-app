@@ -73,7 +73,7 @@ export type GeneratorsModalProps = {
 function numInput(
   value: number,
   onChange: (n: number) => void,
-  opts: { min?: number; step?: number; max?: number } = {},
+  opts: { min?: number; step?: number; max?: number } = {}
 ) {
   return (
     <input
@@ -171,7 +171,7 @@ export function GeneratorsModal({
 
   const ctx = useMemo(
     () => ({ map, activeSection, blockParams }),
-    [map, activeSection, blockParams],
+    [map, activeSection, blockParams]
   );
 
   const computePreview = useCallback((): GeneratorPreviewResult => {
@@ -228,7 +228,10 @@ export function GeneratorsModal({
       return;
     }
     if (tab === 'template' && preview.templateMap) {
-      onPreviewChange(preview.templateMap.sections.flatMap((s) => s.seats), null);
+      onPreviewChange(
+        preview.templateMap.sections.flatMap((s) => s.seats),
+        null
+      );
       return;
     }
     onPreviewChange(preview.seats.length ? preview.seats : null, null);
@@ -356,7 +359,12 @@ export function GeneratorsModal({
   }
 
   return (
-    <div className={styles.backdrop} role="dialog" aria-modal="true" aria-label="Generadores de layout">
+    <div
+      className={styles.backdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Generadores de layout"
+    >
       <div className={styles.modal}>
         <header className={styles.header}>
           <div>
@@ -394,17 +402,25 @@ export function GeneratorsModal({
                 <div className={styles.fieldRow}>
                   <label className={styles.field}>
                     <span>Filas</span>
-                    {numInput(sectionParams.rows, (n) => setSectionParams((p) => ({ ...p, rows: Math.max(1, n) })), {
-                      min: 1,
-                      max: 120,
-                    })}
+                    {numInput(
+                      sectionParams.rows,
+                      (n) => setSectionParams((p) => ({ ...p, rows: Math.max(1, n) })),
+                      {
+                        min: 1,
+                        max: 120,
+                      }
+                    )}
                   </label>
                   <label className={styles.field}>
                     <span>Butacas / fila</span>
-                    {numInput(sectionParams.cols, (n) => setSectionParams((p) => ({ ...p, cols: Math.max(1, n) })), {
-                      min: 1,
-                      max: 120,
-                    })}
+                    {numInput(
+                      sectionParams.cols,
+                      (n) => setSectionParams((p) => ({ ...p, cols: Math.max(1, n) })),
+                      {
+                        min: 1,
+                        max: 120,
+                      }
+                    )}
                   </label>
                 </div>
                 <div className={styles.fieldRow}>
@@ -413,7 +429,7 @@ export function GeneratorsModal({
                     {numInput(
                       sectionParams.seatPitch,
                       (n) => setSectionParams((p) => ({ ...p, seatPitch: Math.max(8, n) })),
-                      { min: 8 },
+                      { min: 8 }
                     )}
                   </label>
                   <label className={styles.field}>
@@ -421,24 +437,27 @@ export function GeneratorsModal({
                     {numInput(
                       sectionParams.rowPitch,
                       (n) => setSectionParams((p) => ({ ...p, rowPitch: Math.max(8, n) })),
-                      { min: 8 },
+                      { min: 8 }
                     )}
                   </label>
                 </div>
                 <div className={styles.fieldRow}>
                   <label className={styles.field}>
                     <span>Rake (Z)</span>
-                    {numInput(sectionParams.rake, (n) => setSectionParams((p) => ({ ...p, rake: n })), {
-                      min: 0,
-                    })}
+                    {numInput(
+                      sectionParams.rake,
+                      (n) => setSectionParams((p) => ({ ...p, rake: n })),
+                      {
+                        min: 0,
+                      }
+                    )}
                   </label>
                   <label className={styles.field}>
                     <span>Curvatura</span>
                     {numInput(
                       sectionParams.curvature,
                       (n) => setSectionParams((p) => ({ ...p, curvature: Math.max(0, n) })),
-                      { min: 0,
-                        step: 0.5 },
+                      { min: 0, step: 0.5 }
                     )}
                   </label>
                 </div>
@@ -448,7 +467,9 @@ export function GeneratorsModal({
                     className={styles.input}
                     value={sectionParams.skipColumns}
                     placeholder="6,7 o every:8"
-                    onChange={(e) => setSectionParams((p) => ({ ...p, skipColumns: e.target.value }))}
+                    onChange={(e) =>
+                      setSectionParams((p) => ({ ...p, skipColumns: e.target.value }))
+                    }
                   />
                 </label>
                 <div className={styles.fieldRow}>
@@ -458,7 +479,9 @@ export function GeneratorsModal({
                       className={styles.input}
                       value={sectionParams.startRowLabel}
                       maxLength={3}
-                      onChange={(e) => setSectionParams((p) => ({ ...p, startRowLabel: e.target.value }))}
+                      onChange={(e) =>
+                        setSectionParams((p) => ({ ...p, startRowLabel: e.target.value }))
+                      }
                     />
                   </label>
                   <label className={styles.field}>
@@ -486,7 +509,9 @@ export function GeneratorsModal({
                     <input
                       className={styles.input}
                       value={sectionParams.sectionName}
-                      onChange={(e) => setSectionParams((p) => ({ ...p, sectionName: e.target.value }))}
+                      onChange={(e) =>
+                        setSectionParams((p) => ({ ...p, sectionName: e.target.value }))
+                      }
                     />
                   </label>
                 )}
@@ -498,16 +523,20 @@ export function GeneratorsModal({
                 <div className={styles.fieldRow}>
                   <label className={styles.field}>
                     <span>Butacas</span>
-                    {numInput(rowParams.count, (n) => setRowParams((p) => ({ ...p, count: Math.max(1, n) })), {
-                      min: 1,
-                    })}
+                    {numInput(
+                      rowParams.count,
+                      (n) => setRowParams((p) => ({ ...p, count: Math.max(1, n) })),
+                      {
+                        min: 1,
+                      }
+                    )}
                   </label>
                   <label className={styles.field}>
                     <span>Seat pitch</span>
                     {numInput(
                       rowParams.seatPitch,
                       (n) => setRowParams((p) => ({ ...p, seatPitch: Math.max(8, n) })),
-                      { min: 8 },
+                      { min: 8 }
                     )}
                   </label>
                 </div>
@@ -525,7 +554,7 @@ export function GeneratorsModal({
                     {numInput(
                       rowParams.startNumber,
                       (n) => setRowParams((p) => ({ ...p, startNumber: Math.max(1, n) })),
-                      { min: 1 },
+                      { min: 1 }
                     )}
                   </label>
                 </div>
@@ -540,7 +569,7 @@ export function GeneratorsModal({
                     {numInput(
                       curvedParams.count,
                       (n) => setCurvedParams((p) => ({ ...p, count: Math.max(1, n) })),
-                      { min: 1 },
+                      { min: 1 }
                     )}
                   </label>
                   <label className={styles.field}>
@@ -548,7 +577,7 @@ export function GeneratorsModal({
                     {numInput(
                       curvedParams.radius,
                       (n) => setCurvedParams((p) => ({ ...p, radius: Math.max(40, n) })),
-                      { min: 40 },
+                      { min: 40 }
                     )}
                   </label>
                 </div>
@@ -557,9 +586,9 @@ export function GeneratorsModal({
                     <span>Arco (°)</span>
                     {numInput(
                       curvedParams.spanDeg,
-                      (n) => setCurvedParams((p) => ({ ...p, spanDeg: Math.max(10, Math.min(180, n)) })),
-                      { min: 10,
-                        max: 180 },
+                      (n) =>
+                        setCurvedParams((p) => ({ ...p, spanDeg: Math.max(10, Math.min(180, n)) })),
+                      { min: 10, max: 180 }
                     )}
                   </label>
                   <label className={styles.field}>
@@ -567,7 +596,7 @@ export function GeneratorsModal({
                     {numInput(
                       curvedParams.seatPitch,
                       (n) => setCurvedParams((p) => ({ ...p, seatPitch: Math.max(8, n) })),
-                      { min: 8 },
+                      { min: 8 }
                     )}
                   </label>
                 </div>
@@ -590,7 +619,7 @@ export function GeneratorsModal({
                     {numInput(
                       tablesParams.tableCount,
                       (n) => setTablesParams((p) => ({ ...p, tableCount: Math.max(1, n) })),
-                      { min: 1 },
+                      { min: 1 }
                     )}
                   </label>
                   <label className={styles.field}>
@@ -598,7 +627,7 @@ export function GeneratorsModal({
                     {numInput(
                       tablesParams.tablesPerRow,
                       (n) => setTablesParams((p) => ({ ...p, tablesPerRow: Math.max(1, n) })),
-                      { min: 1 },
+                      { min: 1 }
                     )}
                   </label>
                 </div>
@@ -608,8 +637,7 @@ export function GeneratorsModal({
                     {numInput(
                       tablesParams.seatsPerTable,
                       (n) => setTablesParams((p) => ({ ...p, seatsPerTable: Math.max(2, n) })),
-                      { min: 2,
-                        max: 24 },
+                      { min: 2, max: 24 }
                     )}
                   </label>
                   <label className={styles.field}>
@@ -617,7 +645,7 @@ export function GeneratorsModal({
                     {numInput(
                       tablesParams.tablePitch,
                       (n) => setTablesParams((p) => ({ ...p, tablePitch: Math.max(60, n) })),
-                      { min: 60 },
+                      { min: 60 }
                     )}
                   </label>
                 </div>
@@ -637,15 +665,23 @@ export function GeneratorsModal({
                 <div className={styles.fieldRow}>
                   <label className={styles.field}>
                     <span>Ancho</span>
-                    {numInput(gaParams.width, (n) => setGaParams((p) => ({ ...p, width: Math.max(40, n) })), {
-                      min: 40,
-                    })}
+                    {numInput(
+                      gaParams.width,
+                      (n) => setGaParams((p) => ({ ...p, width: Math.max(40, n) })),
+                      {
+                        min: 40,
+                      }
+                    )}
                   </label>
                   <label className={styles.field}>
                     <span>Profundidad</span>
-                    {numInput(gaParams.height, (n) => setGaParams((p) => ({ ...p, height: Math.max(40, n) })), {
-                      min: 40,
-                    })}
+                    {numInput(
+                      gaParams.height,
+                      (n) => setGaParams((p) => ({ ...p, height: Math.max(40, n) })),
+                      {
+                        min: 40,
+                      }
+                    )}
                   </label>
                 </div>
                 <label className={styles.field}>
@@ -653,8 +689,7 @@ export function GeneratorsModal({
                   {numInput(
                     gaParams.capacity,
                     (n) => setGaParams((p) => ({ ...p, capacity: Math.max(1, n) })),
-                    { min: 1,
-                      step: 50 },
+                    { min: 1, step: 50 }
                   )}
                 </label>
               </>
@@ -686,8 +721,7 @@ export function GeneratorsModal({
                   {numInput(
                     templateParams.capacity,
                     (n) => setTemplateParams((p) => ({ ...p, capacity: Math.max(40, n) })),
-                    { min: 40,
-                      step: 100 },
+                    { min: 40, step: 100 }
                   )}
                 </label>
                 <p className={styles.hint}>
@@ -709,7 +743,7 @@ export function GeneratorsModal({
                     {numInput(
                       renumberParams.startNumber,
                       (n) => setRenumberParams((p) => ({ ...p, startNumber: Math.max(1, n) })),
-                      { min: 1 },
+                      { min: 1 }
                     )}
                   </label>
                   <label className={styles.field}>

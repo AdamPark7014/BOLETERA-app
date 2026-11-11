@@ -23,7 +23,7 @@ export class ResaleController {
       currency?: string;
       sellerName?: string;
     },
-    @Request() req: { user: { sub: string; email?: string } },
+    @Request() req: { user: { sub: string; email?: string } }
   ) {
     return await this.resaleService.createListing({
       ...dto,
@@ -41,7 +41,7 @@ export class ResaleController {
   async makeOffer(
     @Param('listingId') listingId: string,
     @Body() dto: { offerPrice: number },
-    @Request() req: { user: { sub: string; email?: string } },
+    @Request() req: { user: { sub: string; email?: string } }
   ) {
     return await this.resaleService.makeOffer({
       listingId,
@@ -89,7 +89,7 @@ export class ResaleController {
     @Query('eventId') eventId?: string,
     @Query('offerId') offerId?: string,
     @Query('limit') limit?: number,
-    @Query('offset') offset?: number,
+    @Query('offset') offset?: number
   ) {
     return await this.resaleService.listActiveListings({
       eventId,
@@ -121,5 +121,3 @@ export class ResaleController {
     return await this.resaleService.performAntiScalpingCheck(ticketId);
   }
 }
-
-

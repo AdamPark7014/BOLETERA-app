@@ -11,5 +11,3 @@ import { WaitlistService } from './waitlist.service';
   exports: [WaitlistService],
 })
 export class WaitlistModule {}
-
-

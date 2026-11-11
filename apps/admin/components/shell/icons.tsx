@@ -58,8 +58,7 @@ const PATHS: Record<IconName, string> = {
   calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
   series: 'M4 5h12M4 12h16M4 19h9M18 8v8',
   orders: 'M6 4h12l2 6-7 10-7-10zM3 10h18',
-  mapPin:
-    'M12 21s-7-7-7-12a7 7 0 0 1 14 0c0 5-7 12-7 12zM12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
+  mapPin: 'M12 21s-7-7-7-12a7 7 0 0 1 14 0c0 5-7 12-7 12zM12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
   channels: 'M4 12h4l3-7 4 14 3-7h2',
   campaigns: 'M3 11l18-7-7 18-2-7-9-4z',
   resale:
@@ -77,8 +76,7 @@ const PATHS: Record<IconName, string> = {
   platform: 'M4 6h16v12H4zM8 10h8M8 14h5M12 2v4M12 18v4',
   waitlist: 'M4 6h16v12H4zM8 10h8M8 14h5M12 2v4',
   partners: 'M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7l8-4zM9 12h6M12 9v6',
-  billing:
-    'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 15h6M9 11h6',
+  billing: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 15h6M9 11h6',
   season: 'M4 4h16v4H4zM4 10h10v10H4zM16 10h4v10h-4z',
   team: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
   audit:
@@ -92,8 +90,7 @@ const PATHS: Record<IconName, string> = {
   chevronDown: 'M6 9l6 6 6-6',
   chevronRight: 'M9 6l6 6-6 6',
   star: 'M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.9 7.2 18l.9-5.4L4.2 8.7l5.4-.8z',
-  starFilled:
-    'M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.9 7.2 18l.9-5.4L4.2 8.7l5.4-.8z',
+  starFilled: 'M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.9 7.2 18l.9-5.4L4.2 8.7l5.4-.8z',
   sun: 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
   moon: 'M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z',
   monitor: 'M3 5h18v12H3zM8 21h8M12 17v4',

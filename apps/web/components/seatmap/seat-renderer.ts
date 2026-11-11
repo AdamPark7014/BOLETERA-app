@@ -33,7 +33,7 @@ export type CanvasSize = { width: number; height: number; dpr: number };
  */
 export function prepareCanvas(
   canvas: HTMLCanvasElement,
-  size: CanvasSize,
+  size: CanvasSize
 ): CanvasRenderingContext2D | null {
   const ctx = canvas.getContext('2d', { alpha: true });
   if (!ctx) return null;
@@ -148,7 +148,7 @@ export function drawSectionLayer(
   size: CanvasSize,
   view: ViewTransform,
   paints: readonly SectionPaint[],
-  opts: { showLabels: boolean; faded: boolean },
+  opts: { showLabels: boolean; faded: boolean }
 ): void {
   ctx.clearRect(0, 0, size.width, size.height);
   const { scale, tx, ty } = view;
@@ -254,7 +254,7 @@ export function drawSeatLayer(
   ctx: CanvasRenderingContext2D,
   size: CanvasSize,
   view: ViewTransform,
-  input: SeatLayerInput,
+  input: SeatLayerInput
 ): number {
   ctx.clearRect(0, 0, size.width, size.height);
   const { scale, tx, ty } = view;

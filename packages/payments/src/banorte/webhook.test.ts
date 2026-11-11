@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { describe, it } from 'node:test';
-import {
-  parseBanorteStatusText,
-  verifyBanorteWebhookSignature,
-} from './webhook.ts';
+import { parseBanorteStatusText, verifyBanorteWebhookSignature } from './webhook.ts';
 
 describe('verifyBanorteWebhookSignature', () => {
   it('accepts a valid HMAC with timing-safe compare', () => {

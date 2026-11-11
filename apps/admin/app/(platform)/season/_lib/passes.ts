@@ -84,7 +84,7 @@ export function computeSeasonKpis(passes: readonly SeasonPass[]): SeasonKpis {
   const inventory = Math.max(capacity - sold, 0);
   const adoption = safeRatio(sold, capacity) ?? 0;
   const renewable = passes.filter(
-    (pass) => pass.active && adoptionRate(pass) >= 0.7 && !isSoldOut(pass),
+    (pass) => pass.active && adoptionRate(pass) >= 0.7 && !isSoldOut(pass)
   ).length;
 
   return {
@@ -107,10 +107,7 @@ export type SeasonAlert = {
 export function buildSeasonAlerts(passes: readonly SeasonPass[]): SeasonAlert[] {
   const items: SeasonAlert[] = [];
   const low = passes.filter(
-    (pass) =>
-      pass.active &&
-      remaining(pass) > 0 &&
-      remaining(pass) / pass.maxQuantity <= 0.15,
+    (pass) => pass.active && remaining(pass) > 0 && remaining(pass) / pass.maxQuantity <= 0.15
   );
   const soldOut = passes.filter((pass) => pass.active && isSoldOut(pass));
   const inactive = passes.filter((pass) => !pass.active);
@@ -229,7 +226,7 @@ export function filterAndSortPasses(
     season: string;
     status: StatusFilter;
     sort: SortKey;
-  },
+  }
 ): SeasonPass[] {
   const rows = passes.filter((pass) => {
     const matchesSearch = matchesPassQuery(pass, options.query);

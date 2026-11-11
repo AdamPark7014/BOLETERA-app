@@ -1,8 +1,4 @@
-const {
-  resolveGeometry,
-  analyzeCirculation,
-  buildCirculationGraph,
-} = require('../dist/index.js');
+const { resolveGeometry, analyzeCirculation, buildCirculationGraph } = require('../dist/index.js');
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -138,11 +134,11 @@ const balcVia = analysisStair.egress.sections.find((s) => s.sectionId === 'sec-b
 assert(balcVia?.pathLength != null, 'balcony reaches plaza exit via stair');
 assert(
   analysisStair.graph.nodes.some((n) => n.kind === 'stair' && n.levelId === balc),
-  'stair from-level node',
+  'stair from-level node'
 );
 assert(
   analysisStair.graph.nodes.some((n) => n.kind === 'stair' && n.levelId === plaza),
-  'stair to-level node',
+  'stair to-level node'
 );
 
 // Without stair, balcony cannot reach plaza-only exit
@@ -153,7 +149,7 @@ const noBridge = {
 const analysisIsolated = analyzeCirculation(resolveGeometry(noBridge));
 assert(
   analysisIsolated.unreachableSections.includes('sec-balc'),
-  'balcony unreachable without stair to plaza exit',
+  'balcony unreachable without stair to plaza exit'
 );
 
 console.log('MULTI_LEVEL_STAIRS_SMOKE_OK', {

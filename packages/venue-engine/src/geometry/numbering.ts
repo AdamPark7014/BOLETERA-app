@@ -92,7 +92,7 @@ function alphabetFor(scheme: RowLabelScheme): string {
     return ALPHABET.split('')
       .filter(
         (c) =>
-          !AMBIGUOUS_ROW_LETTERS.includes(c as (typeof AMBIGUOUS_ROW_LETTERS)[number]) && c !== 'Q',
+          !AMBIGUOUS_ROW_LETTERS.includes(c as (typeof AMBIGUOUS_ROW_LETTERS)[number]) && c !== 'Q'
       )
       .join('');
   }
@@ -136,7 +136,7 @@ function labelToIndex(label: string, alphabet: string): number {
 export function rowLabelAt(
   index: number,
   convention: NumberingConvention = {},
-  totalRows?: number,
+  totalRows?: number
 ): string {
   const scheme = convention.rowScheme ?? DEFAULT_CONVENTION.rowScheme;
   const prefix = convention.rowPrefix ?? '';
@@ -205,7 +205,7 @@ export function seatNumberAt(
   rowLabel: string,
   convention: NumberingConvention = {},
   rowIndex = 0,
-  seatsBefore = 0,
+  seatsBefore = 0
 ): SeatNumbering {
   const scheme = convention.seatScheme ?? DEFAULT_CONVENTION.seatScheme;
   const start = convention.startSeatNumber ?? DEFAULT_CONVENTION.startSeatNumber;
@@ -292,10 +292,10 @@ export function numberRow(
   rowLabel: string,
   convention: NumberingConvention = {},
   rowIndex = 0,
-  seatsBefore = 0,
+  seatsBefore = 0
 ): SeatNumbering[] {
   return Array.from({ length: seatsInRow }, (_, c) =>
-    seatNumberAt(c, seatsInRow, rowLabel, convention, rowIndex, seatsBefore),
+    seatNumberAt(c, seatsInRow, rowLabel, convention, rowIndex, seatsBefore)
   );
 }
 
@@ -307,7 +307,7 @@ export function numberRow(
 export function previewConvention(
   rows: number,
   seatsPerRow: number,
-  convention: NumberingConvention = {},
+  convention: NumberingConvention = {}
 ): { labels: string[][]; duplicates: string[]; ok: boolean } {
   const labels: string[][] = [];
   const seen = new Map<string, number>();

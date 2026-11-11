@@ -32,10 +32,9 @@ export function useSaasCapabilities(organizationId: string | null) {
   return useQuery({
     queryKey: queryKeys.organization.capabilities(organizationId ?? ''),
     queryFn: ({ signal }) =>
-      http<SaasCapabilities>(
-        `/organization/capabilities?organizationId=${organizationId}`,
-        { signal },
-      ),
+      http<SaasCapabilities>(`/organization/capabilities?organizationId=${organizationId}`, {
+        signal,
+      }),
     enabled: Boolean(organizationId),
   });
 }
@@ -43,8 +42,7 @@ export function useSaasCapabilities(organizationId: string | null) {
 export function useTeam(organizationId: string | null) {
   return useQuery({
     queryKey: queryKeys.organization.team(organizationId ?? ''),
-    queryFn: ({ signal }) =>
-      http<TeamMember[]>(`/organization/${organizationId}/team`, { signal }),
+    queryFn: ({ signal }) => http<TeamMember[]>(`/organization/${organizationId}/team`, { signal }),
     enabled: Boolean(organizationId),
   });
 }
@@ -60,7 +58,7 @@ export function useInviteTeamMember(organizationId: string) {
     onSuccess: (member) =>
       client.setQueryData<TeamMember[]>(
         queryKeys.organization.team(organizationId),
-        (team = []) => [...team, member],
+        (team = []) => [...team, member]
       ),
   });
 }

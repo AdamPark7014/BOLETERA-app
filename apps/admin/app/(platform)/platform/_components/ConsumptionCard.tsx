@@ -46,9 +46,9 @@ export function ConsumptionCard({ rows }: ConsumptionCardProps) {
 
       <CardFooter className={styles.cardNote}>
         <p>
-          Tu plan no expone cupos ni topes para estos contadores, así que no verás barras de
-          límite: solo el consumo real. Si necesitas un tope contratado, se define fuera de esta
-          vista con tu ejecutivo.
+          Tu plan no expone cupos ni topes para estos contadores, así que no verás barras de límite:
+          solo el consumo real. Si necesitas un tope contratado, se define fuera de esta vista con
+          tu ejecutivo.
         </p>
       </CardFooter>
     </Card>

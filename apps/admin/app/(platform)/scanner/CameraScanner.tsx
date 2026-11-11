@@ -29,7 +29,13 @@ export function CameraScanner({ onScan, disabled }: Props) {
           await videoRef.current.play();
         }
 
-        const Detector = (window as unknown as { BarcodeDetector?: new () => { detect: (src: ImageBitmapSource) => Promise<{ rawValue: string }[]> } }).BarcodeDetector;
+        const Detector = (
+          window as unknown as {
+            BarcodeDetector?: new () => {
+              detect: (src: ImageBitmapSource) => Promise<{ rawValue: string }[]>;
+            };
+          }
+        ).BarcodeDetector;
         if (Detector && videoRef.current) {
           const detector = new Detector();
           const tick = async () => {

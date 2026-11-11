@@ -120,7 +120,7 @@ export function CarteleraBoard({
   const current = list[active];
   const filtering = Boolean(query.trim()) || category !== 'ALL' || city !== 'ALL';
   const visibleCities = cities.filter((name) =>
-    name.toLocaleLowerCase('es-MX').includes(cityQuery.trim().toLocaleLowerCase('es-MX')),
+    name.toLocaleLowerCase('es-MX').includes(cityQuery.trim().toLocaleLowerCase('es-MX'))
   );
 
   function open(event: EventHit | undefined) {
@@ -153,7 +153,7 @@ export function CarteleraBoard({
           </button>
         </div>
         <button type="button" className={styles.textButton} onClick={() => setSheet('category')}>
-          {category === 'ALL' ? 'Categoría' : CATEGORY_LABEL[category] ?? category}
+          {category === 'ALL' ? 'Categoría' : (CATEGORY_LABEL[category] ?? category)}
         </button>
         <button type="button" className={styles.textButton} onClick={() => setSheet('city')}>
           {city === 'ALL' ? 'Ciudad' : city}
@@ -164,7 +164,11 @@ export function CarteleraBoard({
         <div className={styles.error} role="alert">
           <span>No se cargó la cartelera.</span>
           <span>Revisa la conexión.</span>
-          <TicketButton type="button" variant="secondary" onClick={() => setReloadKey((n) => n + 1)}>
+          <TicketButton
+            type="button"
+            variant="secondary"
+            onClick={() => setReloadKey((n) => n + 1)}
+          >
             Reintentar
           </TicketButton>
         </div>
@@ -255,47 +259,47 @@ export function CarteleraBoard({
                 onChange={(event) => setCityQuery(event.target.value)}
               />
             ) : null}
-            {sheet === 'category'
-              ? CATEGORIES.map((item) => (
+            {sheet === 'category' ? (
+              CATEGORIES.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  aria-pressed={category === item.key}
+                  onClick={() => {
+                    setCategory(item.key);
+                    setSheet(null);
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))
+            ) : (
+              <>
+                <button
+                  type="button"
+                  aria-pressed={city === 'ALL'}
+                  onClick={() => {
+                    setCity('ALL');
+                    setSheet(null);
+                  }}
+                >
+                  Todas
+                </button>
+                {visibleCities.map((name) => (
                   <button
-                    key={item.key}
+                    key={name}
                     type="button"
-                    aria-pressed={category === item.key}
+                    aria-pressed={city === name}
                     onClick={() => {
-                      setCategory(item.key);
+                      setCity(name);
                       setSheet(null);
                     }}
                   >
-                    {item.label}
+                    {name}
                   </button>
-                ))
-              : (
-                  <>
-                    <button
-                      type="button"
-                      aria-pressed={city === 'ALL'}
-                      onClick={() => {
-                        setCity('ALL');
-                        setSheet(null);
-                      }}
-                    >
-                      Todas
-                    </button>
-                    {visibleCities.map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        aria-pressed={city === name}
-                        onClick={() => {
-                          setCity(name);
-                          setSheet(null);
-                        }}
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </>
-                )}
+                ))}
+              </>
+            )}
           </div>
         </div>
       ) : null}

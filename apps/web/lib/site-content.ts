@@ -10,7 +10,7 @@ export async function fetchSiteContent(): Promise<SiteContent> {
 }
 
 export function heroSlidesToSrc(
-  slides: SiteContent['heroSlides'],
+  slides: SiteContent['heroSlides']
 ): Array<{ url: string; src: string; srcMobile: string; label: string; alt: string }> {
   return slides.map((slide) => ({
     ...slide,

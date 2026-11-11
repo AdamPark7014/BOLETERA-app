@@ -123,8 +123,7 @@ export function SeatInspectorPanel({
             <div className={styles.summaryGrid} aria-label="Resumen de visibilidad del recinto">
               {(Object.keys(GRADE_LABELS) as Array<keyof typeof GRADE_LABELS>).map((grade) => (
                 <div key={grade}>
-                  <span>{GRADE_LABELS[grade]}</span>{' '}
-                  <strong>{summary[grade]}</strong>
+                  <span>{GRADE_LABELS[grade]}</span> <strong>{summary[grade]}</strong>
                 </div>
               ))}
             </div>

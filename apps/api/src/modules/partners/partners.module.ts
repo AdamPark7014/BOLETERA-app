@@ -12,5 +12,3 @@ import { PartnersService } from './partners.service';
   exports: [PartnersService, ApiKeyGuard],
 })
 export class PartnersModule {}
-
-

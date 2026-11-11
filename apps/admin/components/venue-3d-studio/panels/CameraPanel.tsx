@@ -35,7 +35,8 @@ export function CameraPanel({ camera, reducedMotion, onChange, onFit }: CameraPa
           Encuadrar recinto
         </button>
         <p className={styles.hint}>
-          Órbita: arrastra para rotar, rueda para acercar. {reducedMotion
+          Órbita: arrastra para rotar, rueda para acercar.{' '}
+          {reducedMotion
             ? 'Movimiento reducido activo: sin auto-rotación ni fundidos.'
             : 'Las vistas cambian con una transición suave.'}
         </p>

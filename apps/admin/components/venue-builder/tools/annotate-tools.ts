@@ -67,7 +67,9 @@ export function createAnnotateTool(): Tool {
     },
 
     onPointerMove: (ctx, event) => {
-      ctx.editor.getState().setDraft({ kind: 'dot', at: ctx.snap(event.world).point, label: 'Nota' });
+      ctx.editor
+        .getState()
+        .setDraft({ kind: 'dot', at: ctx.snap(event.world).point, label: 'Nota' });
     },
 
     cancel: (ctx) => {

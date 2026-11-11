@@ -1,6 +1,6 @@
 # BOLETERA - System Integration & Webhooks Architecture
 
-> **MEGA Heavy Integration Document** 
+> **MEGA Heavy Integration Document**
 > **Document Version:** 3.0
 > **Status:** Complete & Integrated
 
@@ -144,6 +144,7 @@ TIER 4: POST-SALE
 ### **Webhooks Emitted by System**
 
 All webhooks include:
+
 ```typescript
 {
   id: "evt_xyz",
@@ -161,15 +162,15 @@ All webhooks include:
 ✅ order.created
    When: Order placed but not yet paid
    Data: {orderId, customerId, eventId, totalAmount, channel}
-   
+
 ✅ order.completed
    When: Payment successful, tickets issued
    Data: {orderId, paymentId, tickets: [{id, barcode}]}
-   
+
 ✅ order.cancelled
    When: Customer cancels or time expires
    Data: {orderId, reason, refundAmount}
-   
+
 ✅ order.failed
    When: Payment failed
    Data: {orderId, paymentId, errorCode, errorMessage}
@@ -181,15 +182,15 @@ All webhooks include:
 ✅ event.published
    When: Event goes live
    Data: {eventId, title, startDate, capacity}
-   
+
 ✅ event.sold_out
    When: Occupancy reaches 100%
    Data: {eventId, soldOut: true, occupancy: 100}
-   
+
 ✅ event.trending
    When: Occupancy crosses 70%
    Data: {eventId, occupancy: 70.5, trendingScore: 0.85}
-   
+
 ✅ event.approaching
    When: Event starts in <24 hours
    Data: {eventId, hoursRemaining: 23.5}
@@ -201,11 +202,11 @@ All webhooks include:
 ✅ campaign.published
    When: Campaign becomes active
    Data: {campaignId, type, allocation}
-   
+
 ✅ campaign.code_redeemed
    When: Presale code used
    Data: {campaignId, code, userId, timestamp}
-   
+
 ✅ campaign.sold_out
    When: Campaign allocation exhausted
    Data: {campaignId, totalRedeemed, revenue}
@@ -217,7 +218,7 @@ All webhooks include:
 ✅ channel.reallocated
    When: Inventory moved between channels
    Data: {eventId, from: 'WEB', to: 'TAQUILLA', quantity: 50}
-   
+
 ✅ channel.health_changed
    When: Channel health status changes
    Data: {channel, status: 'healthy'|'degraded'|'down', details}
@@ -229,7 +230,7 @@ All webhooks include:
 ✅ terminal.offline
    When: Taquilla terminal goes offline
    Data: {terminalId, mode: 'OFFLINE', queuedTransactions: 12}
-   
+
 ✅ terminal.online
    When: Terminal reconnects
    Data: {terminalId, mode: 'ONLINE', syncedTransactions: 12}
@@ -453,7 +454,7 @@ User clicks "Checkout"
   → Bull: analytics:log_order job queued
   → Bull: predict:fraud_score job queued
   → Return: {orderId, status: 'processing'}
-  
+
 [Asynchronously]
   → PaymentService.processPayment()
   → Emits: order.completed webhook

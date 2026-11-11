@@ -37,7 +37,7 @@ export class VenueLayoutService {
   constructor(
     private prisma: PrismaService,
     private channels: ChannelManagementService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   async getActiveLayout(venueId: string, organizationId: string) {
@@ -148,7 +148,9 @@ export class VenueLayoutService {
 
   private assertEditableStatus(status: LayoutPublishStatus, allowArchived = false) {
     if (status === LayoutPublishStatus.ARCHIVED && !allowArchived) {
-      throw new ConflictException('El layout está archivado. Restaura una versión o crea uno nuevo.');
+      throw new ConflictException(
+        'El layout está archivado. Restaura una versión o crea uno nuevo.'
+      );
     }
   }
 
@@ -161,7 +163,7 @@ export class VenueLayoutService {
       metadata?: unknown;
       label?: string;
       createdBy?: string;
-    },
+    }
   ) {
     return this.prisma.venueLayoutSnapshot.create({
       data: {
@@ -341,7 +343,7 @@ export class VenueLayoutService {
     const sales = await this.getLayoutSalesLock(layout.id);
     if (sales.locked) {
       throw new ConflictException(
-        `No se puede archivar: ${sales.soldCount} boleto(s) vendido(s) en ${sales.eventCount} evento(s).`,
+        `No se puede archivar: ${sales.soldCount} boleto(s) vendido(s) en ${sales.eventCount} evento(s).`
       );
     }
 
@@ -371,13 +373,13 @@ export class VenueLayoutService {
     venueId: string,
     organizationId: string,
     snapshotId: string,
-    userId: string,
+    userId: string
   ) {
     const { layout, venue } = await this.getActiveLayout(venueId, organizationId);
     const sales = await this.getLayoutSalesLock(layout.id);
     if (sales.locked) {
       throw new ForbiddenException(
-        `Rollback bloqueado: ${sales.soldCount} boleto(s) vendido(s) vinculan este layout.`,
+        `Rollback bloqueado: ${sales.soldCount} boleto(s) vendido(s) vinculan este layout.`
       );
     }
 
@@ -530,11 +532,13 @@ export class VenueLayoutService {
         venue: stored?.venue ?? (layout.metadata as SeatMapData['venue']) ?? undefined,
       };
     }
-    return (layout.mapData as SeatMapData) ?? {
-      version: 3,
-      sections: [],
-      viewport: { width: 800, height: 500, minX: 0, minY: 0 },
-    };
+    return (
+      (layout.mapData as SeatMapData) ?? {
+        version: 3,
+        sections: [],
+        viewport: { width: 800, height: 500, minX: 0, minY: 0 },
+      }
+    );
   }
 
   private seatCoord3d(seat: SeatMapData['sections'][0]['seats'][0]): object | undefined {
@@ -556,7 +560,7 @@ export class VenueLayoutService {
   }
 
   private viewQualityFromVisibility(
-    visibility: SeatMapData['sections'][0]['seats'][0]['visibility'],
+    visibility: SeatMapData['sections'][0]['seats'][0]['visibility']
   ): number | null {
     if (!visibility) return null;
     if (visibility.blocked) return 0;
@@ -569,7 +573,12 @@ export class VenueLayoutService {
     venueId: string,
     organizationId: string,
     mapData: SeatMapData,
-    opts?: { userId?: string; skipDestructiveCheck?: boolean; forceDraft?: boolean; allowArchived?: boolean },
+    opts?: {
+      userId?: string;
+      skipDestructiveCheck?: boolean;
+      forceDraft?: boolean;
+      allowArchived?: boolean;
+    }
   ) {
     const { layout, venue } = await this.getActiveLayout(venueId, organizationId);
     this.assertEditableStatus(layout.publishStatus, opts?.allowArchived);
@@ -585,8 +594,7 @@ export class VenueLayoutService {
       sales.locked
     ) {
       throw new ForbiddenException({
-        message:
-          'Edición destructiva bloqueada: hay ventas vinculadas a este mapa publicado.',
+        message: 'Edición destructiva bloqueada: hay ventas vinculadas a este mapa publicado.',
         reasons: destructive,
         soldTicketCount: sales.soldCount,
       });
@@ -683,7 +691,7 @@ export class VenueLayoutService {
         }
 
         const rowLabels = Array.from(
-          new Set(sec.seats.map((s) => s.row || s.label.split('-')[0] || 'A')),
+          new Set(sec.seats.map((s) => s.row || s.label.split('-')[0] || 'A'))
         );
         const rowByLabel = new Map<string, string>();
         for (let ri = 0; ri < rowLabels.length; ri++) {
@@ -701,9 +709,7 @@ export class VenueLayoutService {
           }
         }
 
-        const keepSeatIds = Array.from(
-          new Set(sec.seats.map((s) => s.id).filter(Boolean)),
-        );
+        const keepSeatIds = Array.from(new Set(sec.seats.map((s) => s.id).filter(Boolean)));
         if (keepSeatIds.length) {
           await tx.seat.deleteMany({
             where: {
@@ -718,9 +724,7 @@ export class VenueLayoutService {
         for (const seat of sec.seats) {
           const rowLabel = seat.row || seat.label.split('-')[0] || 'A';
           const rowId = rowByLabel.get(rowLabel)!;
-          const existing = seat.id
-            ? await tx.seat.findFirst({ where: { id: seat.id } })
-            : null;
+          const existing = seat.id ? await tx.seat.findFirst({ where: { id: seat.id } }) : null;
           if (existing) {
             await tx.seat.update({
               where: { id: existing.id },
@@ -779,9 +783,7 @@ export class VenueLayoutService {
       if (mapData.venue) nextMap.venue = mapData.venue;
       // Preserve section geometry params that may only exist on inbound payload
       for (const sec of mapData.sections) {
-        const target = nextMap.sections.find(
-          (s) => s.id === sec.id || s.slug === sec.slug,
-        );
+        const target = nextMap.sections.find((s) => s.id === sec.id || s.slug === sec.slug);
         if (!target) continue;
         if (sec.blocks) target.blocks = sec.blocks;
         if (sec.rake != null) target.rake = sec.rake;
@@ -841,7 +843,7 @@ export class VenueLayoutService {
     venueId: string,
     organizationId: string,
     template: LayoutTemplateId,
-    opts?: { capacity?: number; sectionCount?: number },
+    opts?: { capacity?: number; sectionCount?: number }
   ) {
     const mapData = generateLayoutTemplate(template, {
       capacity: opts?.capacity,
@@ -877,7 +879,7 @@ export class VenueLayoutService {
   async getEgressReport(
     venueId: string,
     organizationId: string,
-    opts?: { mapData?: SeatMapData; format?: 'json' | 'csv' | 'pdf' },
+    opts?: { mapData?: SeatMapData; format?: 'json' | 'csv' | 'pdf' }
   ): Promise<
     | { format: 'json'; report: EgressReport; filename: string }
     | { format: 'csv'; csv: string; filename: string; report: EgressReport }
@@ -1044,7 +1046,9 @@ export class VenueLayoutService {
     return { generatedAt: new Date().toISOString(), venues: rows, counts };
   }
 
-  async exportEgressOverviewCsv(organizationId: string): Promise<{ csv: string; filename: string }> {
+  async exportEgressOverviewCsv(
+    organizationId: string
+  ): Promise<{ csv: string; filename: string }> {
     const overview = await this.getEgressOverview(organizationId);
     const day = new Date().toISOString().slice(0, 10);
     return {
@@ -1080,7 +1084,9 @@ export class VenueLayoutService {
 
     const layout = event.venue.layouts[0];
     if (!layout?.sections.length) {
-      throw new BadRequestException('El venue no tiene mapa con asientos. Guarda el layout primero.');
+      throw new BadRequestException(
+        'El venue no tiene mapa con asientos. Guarda el layout primero.'
+      );
     }
 
     const snapshotData = this.layoutToMapData(layout);
@@ -1106,7 +1112,11 @@ export class VenueLayoutService {
       if (event.seatMap) {
         await tx.eventSeatMap.update({
           where: { id: event.seatMap.id },
-          data: { snapshotData: snapshotData as object, layoutId: layout.id, publishedAt: new Date() },
+          data: {
+            snapshotData: snapshotData as object,
+            layoutId: layout.id,
+            publishedAt: new Date(),
+          },
         });
       } else {
         await tx.eventSeatMap.create({
@@ -1231,5 +1241,3 @@ export class VenueLayoutService {
     return result;
   }
 }
-
-

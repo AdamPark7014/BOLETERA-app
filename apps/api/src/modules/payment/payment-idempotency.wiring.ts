@@ -20,7 +20,7 @@ export class PaymentIdempotencyWiring implements OnModuleInit {
     if (!process.env.REDIS_URL) {
       this.logger.warn(
         'REDIS_URL ausente — idempotencia de payment intents en memoria del proceso ' +
-          '(no segura entre réplicas de API).',
+          '(no segura entre réplicas de API).'
       );
       return;
     }
@@ -42,8 +42,6 @@ export class PaymentIdempotencyWiring implements OnModuleInit {
     };
 
     configurePaymentIdempotencyStore(createRedisIdempotencyStore(client));
-    this.logger.log(
-      'Idempotencia de payment intents sobre Redis (cluster-safe entre réplicas).',
-    );
+    this.logger.log('Idempotencia de payment intents sobre Redis (cluster-safe entre réplicas).');
   }
 }

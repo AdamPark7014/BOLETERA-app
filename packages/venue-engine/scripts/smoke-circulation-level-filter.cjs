@@ -1,8 +1,4 @@
-const {
-  resolveGeometry,
-  analyzeCirculation,
-  filterCirculationGraph,
-} = require('../dist/index.js');
+const { resolveGeometry, analyzeCirculation, filterCirculationGraph } = require('../dist/index.js');
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -96,13 +92,19 @@ assert(balc.edges.length < analysis.graph.edges.length, 'balc fewer edges');
 const floorSections = floor.nodes.filter((n) => n.kind === 'section');
 assert(
   floorSections.every((n) => !n.levelId || n.levelId === 'lvl-floor'),
-  'floor sections only',
+  'floor sections only'
 );
-assert(floorSections.some((n) => n.sectionId === 'pit'), 'pit kept');
+assert(
+  floorSections.some((n) => n.sectionId === 'pit'),
+  'pit kept'
+);
 assert(!floorSections.some((n) => n.sectionId === 'balc'), 'balc section hidden on floor');
 
 const balcSections = balc.nodes.filter((n) => n.kind === 'section');
-assert(balcSections.some((n) => n.sectionId === 'balc'), 'balc kept');
+assert(
+  balcSections.some((n) => n.sectionId === 'balc'),
+  'balc kept'
+);
 assert(!balcSections.some((n) => n.sectionId === 'pit'), 'pit hidden on balc');
 
 const floorHasStair = floor.edges.some((e) => e.kind === 'stair');

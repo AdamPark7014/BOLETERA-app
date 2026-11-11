@@ -92,7 +92,10 @@ function readDraft(value: unknown): FormState | null {
     seriesCount: asText(record.seriesCount, '3'),
     residencyCount: asText(record.residencyCount, '8'),
     frequency:
-      frequency === 'daily' || frequency === 'weekly' || frequency === 'biweekly' || frequency === 'monthly'
+      frequency === 'daily' ||
+      frequency === 'weekly' ||
+      frequency === 'biweekly' ||
+      frequency === 'monthly'
         ? frequency
         : 'weekly',
   };
@@ -182,15 +185,18 @@ function CreateBody() {
   const seriesCount = Number(form.seriesCount);
   const residencyCount = Number(form.residencyCount);
 
-  const titleError = form.title.trim().length > 0 && form.title.trim().length < 3
-    ? 'El título necesita al menos 3 caracteres.'
-    : undefined;
-  const startError = form.startDate && start && start.getTime() < Date.now()
-    ? 'La fecha de inicio ya pasó.'
-    : undefined;
-  const endError = start && end && end.getTime() <= start.getTime()
-    ? 'El fin es anterior o igual al inicio.'
-    : undefined;
+  const titleError =
+    form.title.trim().length > 0 && form.title.trim().length < 3
+      ? 'El título necesita al menos 3 caracteres.'
+      : undefined;
+  const startError =
+    form.startDate && start && start.getTime() < Date.now()
+      ? 'La fecha de inicio ya pasó.'
+      : undefined;
+  const endError =
+    start && end && end.getTime() <= start.getTime()
+      ? 'El fin es anterior o igual al inicio.'
+      : undefined;
   const salesError =
     salesStart && salesEnd && salesEnd.getTime() <= salesStart.getTime()
       ? 'La venta cierra antes de abrir.'
@@ -215,7 +221,8 @@ function CreateBody() {
     form.basePrice !== '' && (!Number.isFinite(price) || price <= 0)
       ? 'El precio tiene que ser mayor que $0.00.'
       : undefined;
-  const zoneError = form.zoneName !== '' && !form.zoneName.trim() ? 'La zona necesita un nombre.' : undefined;
+  const zoneError =
+    form.zoneName !== '' && !form.zoneName.trim() ? 'La zona necesita un nombre.' : undefined;
   const seriesError =
     form.type === 'series' && (seriesCount < 2 || seriesCount > 52)
       ? 'Una serie necesita entre 2 y 52 fechas.'
@@ -306,7 +313,7 @@ function CreateBody() {
           ? cause.userMessage
           : cause instanceof Error
             ? cause.message
-            : 'No se guardó. Revisa la conexión.',
+            : 'No se guardó. Revisa la conexión.'
       );
     } finally {
       setSaving(false);
@@ -375,7 +382,9 @@ function CreateBody() {
                   onChange={(venueId) => set('venueId', venueId)}
                 />
                 {venueError ? <p className={styles.danger}>{venueError}</p> : null}
-                {map.status === 'loading' ? <p className={styles.tertiary}>Leyendo el mapa.</p> : null}
+                {map.status === 'loading' ? (
+                  <p className={styles.tertiary}>Leyendo el mapa.</p>
+                ) : null}
               </>
             ) : null}
           </ParameterCard>
@@ -537,7 +546,9 @@ function CreateBody() {
       ) : null}
       {canCreate ? (
         <div className={styles.saveBar}>
-          <p className={styles.tertiary}>Apartado 15 min · Reembolsable · Transferible · Cargo 10% · IVA 16%.</p>
+          <p className={styles.tertiary}>
+            Apartado 15 min · Reembolsable · Transferible · Cargo 10% · IVA 16%.
+          </p>
           <TicketButton disabled={!ready || saving} onClick={() => void submit()}>
             Crear evento
           </TicketButton>

@@ -82,7 +82,7 @@ export const ImportExportPanel = memo(function ImportExportPanel() {
     replaceScene(ctx, `Importar CAD (${mode})`, result.map);
     setReview(null);
     editor().setStatus(
-      `CAD: ${result.stats.sections} zonas · ${result.stats.aisles} pasillos · ${result.stats.exits} salidas`,
+      `CAD: ${result.stats.sections} zonas · ${result.stats.aisles} pasillos · ${result.stats.exits} salidas`
     );
   };
 
@@ -108,7 +108,7 @@ export const ImportExportPanel = memo(function ImportExportPanel() {
     editor().setStatus(
       isPdf
         ? 'PDF como referencia (visor nativo del navegador; para geometría usa DXF/SVG)'
-        : 'Imagen de fondo cargada',
+        : 'Imagen de fondo cargada'
     );
   };
 
@@ -131,7 +131,9 @@ export const ImportExportPanel = memo(function ImportExportPanel() {
           <button
             type="button"
             className={styles.ghostBtn}
-            onClick={() => downloadText('seat-map.dxf', exportSeatMapToDxf(scene), 'application/dxf')}
+            onClick={() =>
+              downloadText('seat-map.dxf', exportSeatMapToDxf(scene), 'application/dxf')
+            }
           >
             DXF
           </button>
@@ -181,9 +183,7 @@ export const ImportExportPanel = memo(function ImportExportPanel() {
                     onChange={(event) => {
                       const role = event.target.value as CadEntityRole;
                       setReview((prev) =>
-                        prev
-                          ? prev.map((row, i) => (i === index ? { ...row, role } : row))
-                          : prev,
+                        prev ? prev.map((row, i) => (i === index ? { ...row, role } : row)) : prev
                       );
                     }}
                   >
@@ -196,9 +196,7 @@ export const ImportExportPanel = memo(function ImportExportPanel() {
                 </li>
               ))}
             </ul>
-            {review.length > 40 && (
-              <p className={styles.emptyHint}>…y {review.length - 40} más</p>
-            )}
+            {review.length > 40 && <p className={styles.emptyHint}>…y {review.length - 40} más</p>}
             <div className={styles.btnRow}>
               <button
                 type="button"

@@ -84,7 +84,7 @@ export class SearchService {
             category: event.category,
           },
         };
-      }),
+      })
     );
 
     ranked.sort((a, b) => b.score - a.score);
@@ -101,7 +101,7 @@ export class SearchService {
       _count: { orders: number };
     },
     query: string,
-    userId?: string,
+    userId?: string
   ) {
     const q = query.toLowerCase();
     let contentMatching = 40;
@@ -201,7 +201,7 @@ export class SearchService {
             limit: 8,
             organizationId,
           },
-          userId,
+          userId
         );
       }
     }

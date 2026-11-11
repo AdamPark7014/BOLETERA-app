@@ -76,7 +76,7 @@ export class WaitingRoomService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    private readonly redis: RedisService
   ) {}
 
   // --- claves ---------------------------------------------------------------
@@ -147,7 +147,8 @@ export class WaitingRoomService {
 
     const isOpen = Date.now() >= new Date(config.opensAt).getTime();
     const score = isOpen
-      ? FIFO_SCORE_BASE + (await this.redis.incrementWithTtl(this.seqKey(eventId), 1, QUEUE_TTL_SECONDS) ?? 0)
+      ? FIFO_SCORE_BASE +
+        ((await this.redis.incrementWithTtl(this.seqKey(eventId), 1, QUEUE_TTL_SECONDS)) ?? 0)
       : await this.lotteryScore(eventId, memberId);
 
     await this.redis.zAdd(this.queueKey(eventId), score, memberId, QUEUE_TTL_SECONDS);

@@ -33,7 +33,7 @@ export const TicketButton = forwardRef<HTMLButtonElement, TicketButtonProps>(fun
     children,
     ...rest
   },
-  ref,
+  ref
 ) {
   const resolved = useTicketDensity(density);
 
@@ -47,7 +47,7 @@ export const TicketButton = forwardRef<HTMLButtonElement, TicketButtonProps>(fun
         styles[variant],
         styles[resolved],
         fullWidth && styles.fullWidth,
-        className,
+        className
       )}
       {...rest}
     >

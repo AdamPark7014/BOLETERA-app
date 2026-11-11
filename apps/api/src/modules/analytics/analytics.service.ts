@@ -18,33 +18,27 @@ export class AnalyticsService {
 
     if (!event) throw new BadRequestException('Event not found');
 
-    const [
-      completedOrders,
-      failedOrders,
-      totalTickets,
-      soldTickets,
-      refundedTickets,
-      fraudFlags,
-    ] = await Promise.all([
-      this.prisma.order.count({
-        where: { eventId, status: 'COMPLETED' },
-      }),
-      this.prisma.order.count({
-        where: { eventId, status: 'FAILED' },
-      }),
-      this.prisma.ticket.count({
-        where: { eventId },
-      }),
-      this.prisma.ticket.count({
-        where: { eventId, status: 'SOLD' },
-      }),
-      this.prisma.ticket.count({
-        where: { eventId, status: 'REFUNDED' },
-      }),
-      this.prisma.fraudFlag.count({
-        where: { eventId, status: 'FLAGGED' },
-      }),
-    ]);
+    const [completedOrders, failedOrders, totalTickets, soldTickets, refundedTickets, fraudFlags] =
+      await Promise.all([
+        this.prisma.order.count({
+          where: { eventId, status: 'COMPLETED' },
+        }),
+        this.prisma.order.count({
+          where: { eventId, status: 'FAILED' },
+        }),
+        this.prisma.ticket.count({
+          where: { eventId },
+        }),
+        this.prisma.ticket.count({
+          where: { eventId, status: 'SOLD' },
+        }),
+        this.prisma.ticket.count({
+          where: { eventId, status: 'REFUNDED' },
+        }),
+        this.prisma.fraudFlag.count({
+          where: { eventId, status: 'FLAGGED' },
+        }),
+      ]);
 
     const totalRevenue = await this.getEventRevenue(eventId);
     const commission = totalRevenue * event.organization.commissionRate;
@@ -115,7 +109,10 @@ export class AnalyticsService {
       dateRange: { startDate, endDate: now },
       metrics: {
         totalOrders: orders.length,
-        totalTicketsSold: orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0),
+        totalTicketsSold: orders.reduce(
+          (sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0),
+          0
+        ),
         totalRevenue,
         commission,
         netRevenue,
@@ -168,22 +165,25 @@ export class AnalyticsService {
     const netAmount = grossRevenue - refundAmount - commissionAmount;
 
     // Group by event
-    const eventBreakdown = orders.reduce((acc, order) => {
-      const eventKey = order.event.id;
-      if (!acc[eventKey]) {
-        acc[eventKey] = {
-          eventId: order.event.id,
-          eventTitle: order.event.title,
-          orders: 0,
-          ticketsSold: 0,
-          revenue: 0,
-        };
-      }
-      acc[eventKey].orders += 1;
-      acc[eventKey].ticketsSold += order.items.reduce((s, i) => s + i.quantity, 0);
-      acc[eventKey].revenue += Number(order.totalAmount);
-      return acc;
-    }, {} as Record<string, any>);
+    const eventBreakdown = orders.reduce(
+      (acc, order) => {
+        const eventKey = order.event.id;
+        if (!acc[eventKey]) {
+          acc[eventKey] = {
+            eventId: order.event.id,
+            eventTitle: order.event.title,
+            orders: 0,
+            ticketsSold: 0,
+            revenue: 0,
+          };
+        }
+        acc[eventKey].orders += 1;
+        acc[eventKey].ticketsSold += order.items.reduce((s, i) => s + i.quantity, 0);
+        acc[eventKey].revenue += Number(order.totalAmount);
+        return acc;
+      },
+      {} as Record<string, any>
+    );
 
     const payout = await this.prisma.promoterPayout.create({
       data: {
@@ -271,20 +271,23 @@ export class AnalyticsService {
       },
     });
 
-    const ltv = repeatCustomers.reduce((sum, customer) => {
-      return sum + customer.orders.reduce((s, o) => s + Number(o.totalAmount), 0);
-    }, 0) / Math.max(repeatCustomers.length, 1);
+    const ltv =
+      repeatCustomers.reduce((sum, customer) => {
+        return sum + customer.orders.reduce((s, o) => s + Number(o.totalAmount), 0);
+      }, 0) / Math.max(repeatCustomers.length, 1);
 
     return {
       totalCustomers,
       newCustomers30Days: newCustomers,
       repeatCustomers: repeatCustomers.length,
       avgCustomerLTV: ltv,
-      topCustomers: repeatCustomers.sort((a, b) => {
-        const aTotal = a.orders.reduce((s, o) => s + Number(o.totalAmount), 0);
-        const bTotal = b.orders.reduce((s, o) => s + Number(o.totalAmount), 0);
-        return bTotal - aTotal;
-      }).slice(0, 10),
+      topCustomers: repeatCustomers
+        .sort((a, b) => {
+          const aTotal = a.orders.reduce((s, o) => s + Number(o.totalAmount), 0);
+          const bTotal = b.orders.reduce((s, o) => s + Number(o.totalAmount), 0);
+          return bTotal - aTotal;
+        })
+        .slice(0, 10),
     };
   }
 
@@ -351,20 +354,23 @@ export class AnalyticsService {
       include: { event: true },
     });
 
-    const grouped = orders.reduce((acc, order) => {
-      const key = order.event.id;
-      if (!acc[key]) {
-        acc[key] = {
-          eventId: order.event.id,
-          eventTitle: order.event.title,
-          orders: 0,
-          revenue: 0,
-        };
-      }
-      acc[key].orders += 1;
-      acc[key].revenue += Number(order.totalAmount);
-      return acc;
-    }, {} as Record<string, { eventId: string; eventTitle: string; orders: number; revenue: number }>);
+    const grouped = orders.reduce(
+      (acc, order) => {
+        const key = order.event.id;
+        if (!acc[key]) {
+          acc[key] = {
+            eventId: order.event.id,
+            eventTitle: order.event.title,
+            orders: 0,
+            revenue: 0,
+          };
+        }
+        acc[key].orders += 1;
+        acc[key].revenue += Number(order.totalAmount);
+        return acc;
+      },
+      {} as Record<string, { eventId: string; eventTitle: string; orders: number; revenue: number }>
+    );
 
     return Object.values(grouped)
       .sort((a, b) => b.revenue - a.revenue)
@@ -389,5 +395,3 @@ export class AnalyticsService {
     }
   }
 }
-
-

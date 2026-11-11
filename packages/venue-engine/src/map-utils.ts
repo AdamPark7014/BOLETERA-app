@@ -17,7 +17,7 @@ export function seatToViewCoords(seat: SeatMapSeat): { x: number; y: number; z: 
 }
 
 export function buildAvailabilityMap(
-  seats: { id: string; status: string }[],
+  seats: { id: string; status: string }[]
 ): Record<string, string> {
   return Object.fromEntries(seats.map((s) => [s.id, s.status]));
 }
@@ -92,9 +92,7 @@ export function normalizeSeatMap(raw: unknown): SeatMapData {
   };
 }
 
-export function flatSeats(
-  map: SeatMapData,
-): Array<
+export function flatSeats(map: SeatMapData): Array<
   SeatMapSeat & {
     sectionId: string;
     sectionName: string;
@@ -109,6 +107,6 @@ export function flatSeats(
       sectionName: sec.name,
       sectionColor: sec.color,
       levelId: s.levelId ?? sec.levelId,
-    })),
+    }))
   );
 }

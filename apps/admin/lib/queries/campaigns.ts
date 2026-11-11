@@ -40,10 +40,10 @@ export function useCreateCampaign(organizationId: string, eventId: string) {
         body,
       }),
     onSuccess: (campaign) =>
-      client.setQueryData<Campaign[]>(
-        queryKeys.campaigns.list(eventId),
-        (current = []) => [...current, campaign],
-      ),
+      client.setQueryData<Campaign[]>(queryKeys.campaigns.list(eventId), (current = []) => [
+        ...current,
+        campaign,
+      ]),
   });
 }
 
@@ -58,15 +58,14 @@ export function usePublishCampaign(eventId: string) {
       const previous = client.getQueryData<Campaign[]>(key);
       client.setQueryData<Campaign[]>(key, (campaigns) =>
         campaigns?.map((campaign) =>
-          campaign.id === campaignId ? { ...campaign, status: 'ACTIVE' } : campaign,
-        ),
+          campaign.id === campaignId ? { ...campaign, status: 'ACTIVE' } : campaign
+        )
       );
       return { previous };
     },
     onError: (_error, _id, context) =>
       client.setQueryData(queryKeys.campaigns.list(eventId), context?.previous),
-    onSettled: () =>
-      client.invalidateQueries({ queryKey: queryKeys.campaigns.list(eventId) }),
+    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.campaigns.list(eventId) }),
   });
 }
 

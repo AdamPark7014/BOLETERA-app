@@ -3,9 +3,9 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: 'postgresql://postgres:postgres@localhost:5432/boletera?schema=public&sslmode=disable'
-    }
-  }
+      url: 'postgresql://postgres:postgres@localhost:5432/boletera?schema=public&sslmode=disable',
+    },
+  },
 });
 
 (async () => {

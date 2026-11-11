@@ -177,7 +177,9 @@ export const BulkToolsPanel = memo(function BulkToolsPanel() {
               className={styles.input}
               type="number"
               value={drawParams.rake}
-              onChange={(event) => editor().setDrawParams({ rake: Number(event.target.value) || 0 })}
+              onChange={(event) =>
+                editor().setDrawParams({ rake: Number(event.target.value) || 0 })
+              }
             />
           </Field>
         </div>
@@ -199,8 +201,10 @@ export const BulkToolsPanel = memo(function BulkToolsPanel() {
                 yaw: 0,
                 tier: drawParams.tier,
               },
-              activeSectionId,
-            ).then((count) => editor().setStatus(`Bloque: ${count.toLocaleString('es-MX')} asientos`))
+              activeSectionId
+            ).then((count) =>
+              editor().setStatus(`Bloque: ${count.toLocaleString('es-MX')} asientos`)
+            )
           }
         >
           Generar en zona activa

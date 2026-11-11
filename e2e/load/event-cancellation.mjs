@@ -144,7 +144,17 @@ async function seedSoldEvent(tag, ticketPrice, fees) {
       paymentId: payment.id,
       completedAt: new Date(),
       expiresAt: new Date(Date.now() + 86_400_000),
-      items: { create: [{ offerId: offer.id, quantity: 1, unitPrice: ticketPrice, unitFees: fees, subtotal: charged }] },
+      items: {
+        create: [
+          {
+            offerId: offer.id,
+            quantity: 1,
+            unitPrice: ticketPrice,
+            unitFees: fees,
+            subtotal: charged,
+          },
+        ],
+      },
     },
     include: { items: true },
   });
@@ -207,11 +217,17 @@ const previewBody = preview.ok ? await preview.json() : null;
 check(
   'La previsualización proyecta sin mover dinero',
   preview.ok && previewBody?.dryRun === true,
-  previewBody ? `devolución $${previewBody.refundableTotal} + bonificación $${previewBody.compensationTotal}` : await body(preview),
+  previewBody
+    ? `devolución $${previewBody.refundableTotal} + bonificación $${previewBody.compensationTotal}`
+    : await body(preview)
 );
 
 const refundsBeforeExec = await prisma.refund.count({ where: { orderId: a.order.id } });
-check('La previsualización NO asentó ningún reembolso', refundsBeforeExec === 0, `${refundsBeforeExec} asientos`);
+check(
+  'La previsualización NO asentó ningún reembolso',
+  refundsBeforeExec === 0,
+  `${refundsBeforeExec} asientos`
+);
 
 const exec = await fetch(`${API}/payments/events/${a.event.id}/cancel`, {
   method: 'POST',
@@ -219,7 +235,11 @@ const exec = await fetch(`${API}/payments/events/${a.event.id}/cancel`, {
   body: JSON.stringify({ reason: 'El artista canceló la gira', attributable: true, dryRun: false }),
 });
 const execBody = exec.ok ? await exec.json() : null;
-check('La cancelación se ejecuta', exec.ok, execBody ? `${execBody.ordersRefunded}/${execBody.ordersAffected} devueltas` : await body(exec));
+check(
+  'La cancelación se ejecuta',
+  exec.ok,
+  execBody ? `${execBody.ordersRefunded}/${execBody.ordersAffected} devueltas` : await body(exec)
+);
 
 const refunds = await prisma.refund.findMany({ where: { orderId: a.order.id } });
 const refundTotal = refunds.reduce((s, r) => s + Number(r.amount), 0);
@@ -229,14 +249,18 @@ const plainRefund = refunds.find((r) => !(r.notes ?? '').includes('BONIFICACIÓN
 check(
   'Devuelve el cobro COMPLETO, cargos incluidos',
   plainRefund !== undefined && Math.abs(Number(plainRefund.amount) - a.charged) < 0.01,
-  `$${plainRefund ? Number(plainRefund.amount) : 0} de $${a.charged}`,
+  `$${plainRefund ? Number(plainRefund.amount) : 0} de $${a.charged}`
 );
 check(
   'Asienta la bonificación del 20% (art. 92 Bis)',
   compensation !== undefined && Math.abs(Number(compensation.amount) - a.charged * 0.2) < 0.01,
-  `$${compensation ? Number(compensation.amount) : 0}`,
+  `$${compensation ? Number(compensation.amount) : 0}`
 );
-check('El total sale al 120% de lo cobrado', Math.abs(refundTotal - a.charged * 1.2) < 0.01, `$${refundTotal.toFixed(2)}`);
+check(
+  'El total sale al 120% de lo cobrado',
+  Math.abs(refundTotal - a.charged * 1.2) < 0.01,
+  `$${refundTotal.toFixed(2)}`
+);
 
 const eventAfter = await prisma.event.findUnique({ where: { id: a.event.id } });
 const offerAfter = await prisma.offer.findUnique({ where: { id: a.offer.id } });
@@ -264,7 +288,7 @@ const noJustification = await fetch(`${API}/payments/events/${b.event.id}/cancel
 check(
   'Una causa no imputable SIN justificar se rechaza',
   noJustification.status === 400,
-  await body(noJustification),
+  await body(noJustification)
 );
 
 const execB = await fetch(`${API}/payments/events/${b.event.id}/cancel`, {
@@ -284,7 +308,7 @@ const totalB = refundsB.reduce((s, r) => s + Number(r.amount), 0);
 check('Devuelve el cobro completo', Math.abs(totalB - b.charged) < 0.01, `$${totalB.toFixed(2)}`);
 check(
   'NO paga bonificación por causa no imputable',
-  !refundsB.some((r) => (r.notes ?? '').includes('BONIFICACIÓN')),
+  !refundsB.some((r) => (r.notes ?? '').includes('BONIFICACIÓN'))
 );
 
 // ---------------------------------------------------------------------------
@@ -301,7 +325,7 @@ const belowMinimum = await fetch(`${API}/payments/events/${c.event.id}/cancel`, 
 check(
   'Rechaza una bonificación por debajo del 20% legal',
   belowMinimum.status === 400,
-  await body(belowMinimum),
+  await body(belowMinimum)
 );
 
 // --- limpieza ---
@@ -310,7 +334,9 @@ for (const t of [a, b, c]) {
   await prisma.ticket.deleteMany({ where: { eventId: t.event.id } });
   await prisma.orderItem.deleteMany({ where: { orderId: t.order.id } });
   await prisma.order.deleteMany({ where: { eventId: t.event.id } });
-  await prisma.payment.deleteMany({ where: { externalId: `pay-cancel-${t.event.slug.split('-')[1]}-${stamp}` } });
+  await prisma.payment.deleteMany({
+    where: { externalId: `pay-cancel-${t.event.slug.split('-')[1]}-${stamp}` },
+  });
   await prisma.offer.deleteMany({ where: { eventId: t.event.id } });
   await prisma.event.delete({ where: { id: t.event.id } });
 }
@@ -322,6 +348,6 @@ await prisma.$disconnect();
 
 const failed = checks.filter((x) => !x.pass);
 console.log(
-  `\n${failed.length ? `❌ FALLA: ${failed.length} de ${checks.length}` : `✅ Cumplimiento LFPC art. 92 Bis (${checks.length}/${checks.length})`}`,
+  `\n${failed.length ? `❌ FALLA: ${failed.length} de ${checks.length}` : `✅ Cumplimiento LFPC art. 92 Bis (${checks.length}/${checks.length})`}`
 );
 process.exit(failed.length ? 1 : 0);

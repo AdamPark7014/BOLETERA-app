@@ -18,14 +18,7 @@ type Props = {
  * Confirma publicación con el hook real `usePublishEvent(eventId)`.
  * Se monta solo cuando ya existe el id creado.
  */
-export function PublishConfirm({
-  eventId,
-  eventTitle,
-  open,
-  onClose,
-  onPublished,
-  onSkip,
-}: Props) {
+export function PublishConfirm({ eventId, eventTitle, open, onClose, onPublished, onSkip }: Props) {
   const toast = useToast();
   const publish = usePublishEvent(eventId);
 
@@ -38,7 +31,7 @@ export function PublishConfirm({
     try {
       const result = await publish.mutateAsync();
       toast.success(
-        `Publicado: ${result.totalSeats.toLocaleString('es-MX')} asientos · ${result.sections} secciones`,
+        `Publicado: ${result.totalSeats.toLocaleString('es-MX')} asientos · ${result.sections} secciones`
       );
       onPublished();
     } catch (error) {
@@ -55,12 +48,7 @@ export function PublishConfirm({
       dismissible={!publish.isPending}
       footer={
         <>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={publish.isPending}
-            onClick={onSkip}
-          >
+          <Button type="button" variant="ghost" disabled={publish.isPending} onClick={onSkip}>
             Dejar en borrador
           </Button>
           <Button type="button" loading={publish.isPending} onClick={() => void confirm()}>
@@ -70,8 +58,8 @@ export function PublishConfirm({
       }
     >
       <p>
-        ¿Publicar <strong>{eventTitle}</strong>? Esta acción crea asientos y deja el evento
-        visible según las ventanas de venta configuradas.
+        ¿Publicar <strong>{eventTitle}</strong>? Esta acción crea asientos y deja el evento visible
+        según las ventanas de venta configuradas.
       </p>
     </Modal>
   );

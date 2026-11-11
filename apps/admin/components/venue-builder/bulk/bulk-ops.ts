@@ -45,11 +45,11 @@ export function renumberSelection(ctx: TransformContext, options: RenumberOption
   const entries: SeatAttributeEntry[] = [];
   buckets.forEach((bucket, rowIndex) => {
     const ordered = [...bucket.seats].sort((a, b) =>
-      options.direction === 'ltr' ? a.x - b.x : b.x - a.x,
+      options.direction === 'ltr' ? a.x - b.x : b.x - a.x
     );
     const rowLabel = options.relabelRows
       ? `${options.rowPrefix}${rowLabelAt(rowIndex)}`
-      : ordered[0].row ?? rowLabelAt(rowIndex);
+      : (ordered[0].row ?? rowLabelAt(rowIndex));
     ordered.forEach((seat, i) => {
       const number = options.startNumber + i;
       entries.push({
@@ -86,9 +86,7 @@ export function paintSelectionIntoSection(ctx: TransformContext, sectionId: stri
     }
   }
   if (before.length === 0) return;
-  ctx.history.execute(
-    reassignSeatsCommand(`Pintar ${before.length} asientos`, before, sectionId),
-  );
+  ctx.history.execute(reassignSeatsCommand(`Pintar ${before.length} asientos`, before, sectionId));
 }
 
 export type BlockSpec = {
@@ -111,7 +109,7 @@ export type BlockSpec = {
 export async function generateBlockIntoScene(
   ctx: TransformContext,
   spec: BlockSpec,
-  targetSectionId: string | null,
+  targetSectionId: string | null
 ): Promise<number> {
   const store = ctx.editor.getState();
   const blockId = uid('block');
@@ -130,14 +128,13 @@ export async function generateBlockIntoScene(
       yaw: spec.yaw,
       tier: spec.tier,
       idPrefix: blockId,
-    }),
+    })
   );
 
-  const seats = await runChunked(
-    chunksOf(raw, 2000),
-    (chunk) => chunk,
-    { onProgress: (ratio) => ctx.editor.getState().setBusy({ label: 'Generando asientos…', progress: ratio }) },
-  );
+  const seats = await runChunked(chunksOf(raw, 2000), (chunk) => chunk, {
+    onProgress: (ratio) =>
+      ctx.editor.getState().setBusy({ label: 'Generando asientos…', progress: ratio }),
+  });
 
   const state = ctx.editor.getState();
   const block = {
@@ -153,7 +150,7 @@ export async function generateBlockIntoScene(
     tier: spec.tier,
   };
   const target = state.scene.sections.find(
-    (section) => section.id === targetSectionId && !section.locked,
+    (section) => section.id === targetSectionId && !section.locked
   );
   const label = `Generar bloque (${seats.length})`;
   const before = state.scene;
@@ -168,7 +165,7 @@ export async function generateBlockIntoScene(
               seats: [...section.seats, ...seats],
               blocks: [...(section.blocks ?? []), block],
             }
-          : section,
+          : section
       ),
     };
     ctx.history.execute(replaceSceneCommand(label, before, after));
@@ -198,7 +195,7 @@ export async function generateBlockIntoScene(
 export function fillSectionWithSeats(
   ctx: TransformContext,
   sectionId: string,
-  params: { seatPitch: number; rowPitch: number; rake: number; tier: string },
+  params: { seatPitch: number; rowPitch: number; rake: number; tier: string }
 ): number {
   const state = ctx.editor.getState();
   const section = state.scene.sections.find((s) => s.id === sectionId);
@@ -209,7 +206,7 @@ export function fillSectionWithSeats(
     authored && authored.length >= 3
       ? authored
       : convexHull(section.seats.map((seat) => ({ x: seat.x, y: seat.y }))).map(
-          (p) => [p.x, p.y] as [number, number],
+          (p) => [p.x, p.y] as [number, number]
         );
   if (outline.length < 3) return 0;
 
@@ -227,7 +224,7 @@ export function fillSectionWithSeats(
   const after: SeatMapData = {
     ...before,
     sections: before.sections.map((s) =>
-      s.id === sectionId ? { ...s, shape: { points: outline }, seats } : s,
+      s.id === sectionId ? { ...s, shape: { points: outline }, seats } : s
     ),
   };
   ctx.history.execute(replaceSceneCommand(`Rellenar zona (${seats.length})`, before, after));

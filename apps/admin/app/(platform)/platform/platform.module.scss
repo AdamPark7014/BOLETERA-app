@@ -53,9 +53,7 @@
   padding: var(--bl-space-4) var(--bl-space-5);
   border: 1px solid var(--cap-border);
   border-radius: var(--cap-radius);
-  background:
-    linear-gradient(135deg, rgb(37 99 235 / 4%) 0%, transparent 42%),
-    var(--cap-surface);
+  background: linear-gradient(135deg, rgb(37 99 235 / 4%) 0%, transparent 42%), var(--cap-surface);
   box-shadow: var(--bl-shadow-xs, 0 1px 2px rgb(0 0 0 / 3%));
 }
 

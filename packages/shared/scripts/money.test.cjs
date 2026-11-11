@@ -61,7 +61,7 @@ describe('money', () => {
     assert.deepEqual(allocateMinor(100, [0, 0, 0]), [34, 33, 33]);
     assert.equal(
       allocateMinor(999, [1, 2, 3]).reduce((a, b) => a + b, 0),
-      999,
+      999
     );
   });
 

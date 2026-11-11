@@ -41,11 +41,11 @@ export class ReportingController {
   async getRealtimeDashboard(
     @Request() req: ScopedRequest,
     @Param('organizationId') orgId: string,
-    @Query('eventId') eventId?: string,
+    @Query('eventId') eventId?: string
   ) {
     return await this.reportingService.getRealtimeDashboard(
       req.scopedOrganizationId ?? orgId,
-      eventId,
+      eventId
     );
   }
 
@@ -66,11 +66,11 @@ export class ReportingController {
   streamRealtime(
     @Request() req: ScopedRequest,
     @Param('organizationId') orgId: string,
-    @Query('eventId') eventId?: string,
+    @Query('eventId') eventId?: string
   ) {
     return this.reportingService.streamRealtimeDashboard(
       req.scopedOrganizationId ?? orgId,
-      eventId,
+      eventId
     );
   }
 
@@ -80,11 +80,11 @@ export class ReportingController {
   async getSettlement(
     @Request() req: ScopedRequest,
     @Param('organizationId') orgId: string,
-    @Param('period') period: 'DAILY' | 'WEEKLY' | 'MONTHLY',
+    @Param('period') period: 'DAILY' | 'WEEKLY' | 'MONTHLY'
   ) {
     return await this.reportingService.generateSettlementReport(
       req.scopedOrganizationId ?? orgId,
-      period,
+      period
     );
   }
 
@@ -107,7 +107,7 @@ export class ReportingController {
   @ApiOperation({ summary: 'Get channel performance' })
   async getChannelPerformance(
     @Request() req: ScopedRequest,
-    @Param('organizationId') orgId: string,
+    @Param('organizationId') orgId: string
   ) {
     return await this.reportingService.getChannelPerformance(req.scopedOrganizationId ?? orgId);
   }
@@ -117,7 +117,7 @@ export class ReportingController {
   @ApiOperation({ summary: 'Get customer analytics' })
   async getCustomerAnalytics(
     @Request() req: ScopedRequest,
-    @Param('organizationId') orgId: string,
+    @Param('organizationId') orgId: string
   ) {
     return await this.reportingService.getCustomerAnalytics(req.scopedOrganizationId ?? orgId);
   }
@@ -130,12 +130,12 @@ export class ReportingController {
     @Request() req: ScopedRequest,
     @Param('organizationId') orgId: string,
     @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query('to') to?: string
   ) {
     const result = await this.reportingService.exportSalesCsv(
       req.scopedOrganizationId ?? orgId,
       from ? new Date(from) : undefined,
-      to ? new Date(to) : undefined,
+      to ? new Date(to) : undefined
     );
     return result.csv;
   }
@@ -146,11 +146,11 @@ export class ReportingController {
   async getRevenueForecast(
     @Request() req: ScopedRequest,
     @Param('organizationId') orgId: string,
-    @Param('days') days: string,
+    @Param('days') days: string
   ) {
     return await this.reportingService.generateRevenueForecast(
       req.scopedOrganizationId ?? orgId,
-      parseInt(days, 10),
+      parseInt(days, 10)
     );
   }
 }

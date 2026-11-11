@@ -21,7 +21,7 @@ export class WaitlistController {
       lastName?: string;
       quantity?: number;
       offerId?: string;
-    },
+    }
   ) {
     return this.waitlist.join(body);
   }
@@ -54,5 +54,3 @@ export class WaitlistController {
     return this.waitlist.notifyBatch(eventId, limit ? parseInt(limit, 10) : 50);
   }
 }
-
-

@@ -42,7 +42,7 @@ describe('métodos de checkout de la organización', () => {
         transferDeadlineDays: 9,
         SPEI: false,
       },
-      { tarjeta: false },
+      { tarjeta: false }
     );
     expect(next.managerPinHash).toBe('pin');
     expect(next.serviceFeeRate).toBe(0.12);

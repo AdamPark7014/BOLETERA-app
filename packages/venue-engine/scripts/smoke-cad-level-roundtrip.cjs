@@ -131,38 +131,48 @@ assert(/data-to-level-id="plaza"/.test(svg), 'svg stair to');
 assert(/data-role="levels"/.test(svg), 'svg levels meta');
 const svgLevels = parseSvgLevels(svg);
 assert(svgLevels?.length === 2, `svg levels meta count ${svgLevels?.length}`);
-assert(svgLevels.some((l) => l.id === 'balcon'), 'svg balcon level');
+assert(
+  svgLevels.some((l) => l.id === 'balcon'),
+  'svg balcon level'
+);
 
 const svgImport = importSvgToSeatMap(svg, { version: 3, sections: [] }, { mode: 'replace-meta' });
 assert(svgImport.map.venue?.levels?.length === 2, 'svg import levels');
 assert(
   svgImport.map.venue?.aisles?.some((a) => a.levelId === 'plaza'),
-  'svg aisle plaza',
+  'svg aisle plaza'
 );
 assert(
   svgImport.map.venue?.aisles?.some((a) => a.levelId === 'balcon'),
-  'svg aisle balcon',
+  'svg aisle balcon'
 );
 assert(
-  svgImport.map.venue?.stairs?.some(
-    (s) => s.fromLevelId === 'balcon' && s.toLevelId === 'plaza',
-  ),
-  'svg stair levels',
+  svgImport.map.venue?.stairs?.some((s) => s.fromLevelId === 'balcon' && s.toLevelId === 'plaza'),
+  'svg stair levels'
 );
-assert(svgImport.map.venue?.exits?.some((e) => e.levelId === 'plaza'), 'svg exit level');
-assert(svgImport.map.sections.some((s) => s.levelId === 'plaza'), 'svg section plaza');
-assert(svgImport.map.sections.some((s) => s.levelId === 'balcon'), 'svg section balcon');
+assert(
+  svgImport.map.venue?.exits?.some((e) => e.levelId === 'plaza'),
+  'svg exit level'
+);
+assert(
+  svgImport.map.sections.some((s) => s.levelId === 'plaza'),
+  'svg section plaza'
+);
+assert(
+  svgImport.map.sections.some((s) => s.levelId === 'balcon'),
+  'svg section balcon'
+);
 assert(
   svgImport.map.venue?.obstacles?.some((o) => o.levelId === 'balcon'),
-  'svg obstacle balcon',
+  'svg obstacle balcon'
 );
 assert(
   svgImport.map.venue?.furniture?.some((f) => f.type === 'led' && f.levelId === 'plaza'),
-  'svg furniture led plaza',
+  'svg furniture led plaza'
 );
 assert(
   svgImport.map.venue?.furniture?.some((f) => f.type === 'speaker' && f.levelId === 'balcon'),
-  'svg furniture speaker balcon',
+  'svg furniture speaker balcon'
 );
 
 // --- DXF layer encode/decode unit ---
@@ -191,23 +201,27 @@ const dxfImport = importDxfToSeatMap(dxf, { version: 3, sections: [] }, { mode: 
 assert(dxfImport.map.venue?.levels?.length === 2, 'dxf import levels');
 assert(
   dxfImport.map.venue?.aisles?.some((a) => a.levelId === 'plaza'),
-  'dxf aisle plaza',
+  'dxf aisle plaza'
 );
 assert(
-  dxfImport.map.venue?.stairs?.some(
-    (s) => s.fromLevelId === 'balcon' && s.toLevelId === 'plaza',
-  ),
-  'dxf stair levels',
+  dxfImport.map.venue?.stairs?.some((s) => s.fromLevelId === 'balcon' && s.toLevelId === 'plaza'),
+  'dxf stair levels'
 );
-assert(dxfImport.map.venue?.exits?.some((e) => e.levelId === 'plaza'), 'dxf exit level');
-assert(dxfImport.map.sections.some((s) => s.levelId === 'plaza'), 'dxf section plaza');
+assert(
+  dxfImport.map.venue?.exits?.some((e) => e.levelId === 'plaza'),
+  'dxf exit level'
+);
+assert(
+  dxfImport.map.sections.some((s) => s.levelId === 'plaza'),
+  'dxf section plaza'
+);
 assert(
   dxfImport.map.venue?.obstacles?.some((o) => o.levelId === 'balcon'),
-  'dxf obstacle balcon',
+  'dxf obstacle balcon'
 );
 assert(
   dxfImport.map.venue?.furniture?.some((f) => f.levelId === 'plaza'),
-  'dxf furniture plaza',
+  'dxf furniture plaza'
 );
 
 console.log('CAD_LEVEL_ROUNDTRIP_SMOKE_OK');

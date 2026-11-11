@@ -64,12 +64,10 @@ export function useEgressOverview() {
 export function useCreateVenue() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (body: CreateVenueInput) => http<VenueRow>('/admin/venues', { method: 'POST', body }),
+    mutationFn: (body: CreateVenueInput) =>
+      http<VenueRow>('/admin/venues', { method: 'POST', body }),
     onSuccess: (venue) => {
-      client.setQueryData<VenueRow[]>(queryKeys.venues.list(), (venues = []) => [
-        ...venues,
-        venue,
-      ]);
+      client.setQueryData<VenueRow[]>(queryKeys.venues.list(), (venues = []) => [...venues, venue]);
       void client.invalidateQueries({ queryKey: queryKeys.overview.all });
     },
   });
@@ -109,7 +107,7 @@ export function useSuggestLayout(venueId: string) {
     mutationFn: (prompt: string) =>
       http<{ venue: unknown; layout: { mapData: SeatMapData } }>(
         `/venues/${venueId}/layout/suggest`,
-        { method: 'POST', body: { prompt } },
+        { method: 'POST', body: { prompt } }
       ),
   });
 }
@@ -126,10 +124,9 @@ export function useApplyLayoutTemplate(venueId: string) {
     }) =>
       http<{ venue: unknown; layout: { mapData: SeatMapData } }>(
         `/venues/${venueId}/layout/from-template`,
-        { method: 'POST', body: { template, capacity } },
+        { method: 'POST', body: { template, capacity } }
       ),
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: queryKeys.venues.layout(venueId) }),
+    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.venues.layout(venueId) }),
   });
 }
 
@@ -138,14 +135,11 @@ export function useAnalyzeVenueEgress(venueId: string) {
   return useMutation({
     mutationFn: (input: { mapData?: SeatMapData; format?: 'json' | 'csv' | 'pdf' }) => {
       const format = input.format ?? 'json';
-      return http<EgressReportApiJson | string | Blob>(
-        `/venues/${venueId}/layout/egress`,
-        {
-          method: 'POST',
-          body: { mapData: input.mapData, format },
-          responseType: format === 'json' ? 'json' : format === 'csv' ? 'text' : 'blob',
-        },
-      );
+      return http<EgressReportApiJson | string | Blob>(`/venues/${venueId}/layout/egress`, {
+        method: 'POST',
+        body: { mapData: input.mapData, format },
+        responseType: format === 'json' ? 'json' : format === 'csv' ? 'text' : 'blob',
+      });
     },
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: queryKeys.venues.egress(venueId) });
@@ -162,7 +156,6 @@ export function useImportAiLayout(venueId: string) {
         method: 'POST',
         body: { sections },
       }),
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: queryKeys.venues.layout(venueId) }),
+    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.venues.layout(venueId) }),
   });
 }

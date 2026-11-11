@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
   );
 });
 
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE).then((c) => c.put('/', clone));
           return res;
         })
-        .catch(() => caches.match('/').then((cached) => cached || Response.error())),
+        .catch(() => caches.match('/').then((cached) => cached || Response.error()))
     );
     return;
   }
@@ -71,8 +71,8 @@ self.addEventListener('fetch', (event) => {
               caches.open(CACHE).then((c) => c.put(request, clone));
             }
             return res;
-          }),
-      ),
+          })
+      )
     );
   }
 });

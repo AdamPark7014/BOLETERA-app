@@ -3,10 +3,12 @@
 ## Estado Actual
 
 ✅ **Contenedores levantados:**
+
 - PostgreSQL 16 en puerto 5432
 - Redis 7 en puerto 6379
 
 ❌ **Problemas encontrados:**
+
 1. TypeScript strict mode incompatible con monorepo references en Dockerfile
 2. Networking: Docker → Host connectivity issues en Windows/WSL2
 3. Compilation: Turbo/Nest build requires complex tsconfig management
@@ -66,6 +68,7 @@ docker-compose logs -f api
 ```
 
 **Problemas conocidos:**
+
 - TypeScript compilation en Docker falla por referencias de monorepo
 - Solución: Simplificar tsconfig.json o usar pre-built images
 - Status: **TODO - 80% completo**
@@ -88,6 +91,7 @@ docker-compose logs -f api
 ## Próximos Pasos
 
 ### Inmediato (5-10 min):
+
 ```bash
 # Asegurarse que NODE_ENV=development en .env
 # Luego ejecutar:
@@ -95,6 +99,7 @@ pnpm run dev
 ```
 
 ### Para producción con Docker:
+
 ```bash
 # Arreglar tsconfig.json para build en Docker
 # Luego:
@@ -107,6 +112,7 @@ docker-compose up -d
 ## 🔧 Troubleshooting
 
 ### Si no conecta a PostgreSQL:
+
 ```bash
 # Verificar que postgres está corriendo
 docker-compose ps
@@ -119,6 +125,7 @@ docker exec boletera-postgres pg_isready -U postgres
 ```
 
 ### Si falla Prisma migrate:
+
 ```bash
 # Verificar DATABASE_URL
 echo $DATABASE_URL
@@ -131,6 +138,7 @@ pnpm run db:migrate:deploy
 ```
 
 ### Si pnpm dev falla:
+
 ```bash
 # Verificar instancia:
 pnpm install
@@ -179,4 +187,3 @@ pnpm run build
 **Setup Status:** ⚠️ PARTIAL (DB running, App ready for dev)  
 **Docker Status:** 🔧 IN PROGRESS (80% complete)  
 **Next Action:** `pnpm run dev` (development server)
-

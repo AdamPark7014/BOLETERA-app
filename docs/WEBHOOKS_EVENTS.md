@@ -1,7 +1,7 @@
 # BOLETERA Webhooks & Event System
 
 > **MEGA Heavy Webhooks & Events Documentation**
-> 
+>
 > **Version:** 2.0  
 > **Status:** Complete  
 > **Total Event Types:** 25+  
@@ -23,12 +23,12 @@ Every webhook includes:
   timestamp: ISO8601;      // When event occurred
   eventId: string;         // Reference ID (orderId, eventId, etc)
   organizationId: string;  // For multi-tenancy
-  
+
   // Event-specific data
   data: {
     [key: string]: any;
   };
-  
+
   // Security
   signature: string;       // HMAC SHA-256 signature
   signatureVersion: string; // "v1"
@@ -44,10 +44,7 @@ const timestamp = webhook.timestamp;
 const secret = process.env.WEBHOOK_SECRET;
 
 const signedContent = `${timestamp}.${payload}`;
-const signature = crypto
-  .createHmac('sha256', secret)
-  .update(signedContent)
-  .digest('hex');
+const signature = crypto.createHmac('sha256', secret).update(signedContent).digest('hex');
 
 // Verify
 if (signature !== webhook.signature) {
@@ -78,6 +75,7 @@ if (signature !== webhook.signature) {
 ### ORDER LIFECYCLE EVENTS
 
 #### 1. `order.created`
+
 **Triggered:** When customer places order (before payment)
 
 ```json
@@ -91,15 +89,16 @@ if (signature !== webhook.signature) {
     "eventTitle": "Taylor Swift Concert",
     "channel": "WEB",
     "quantity": 2,
-    "totalAmount": 504.00,
+    "totalAmount": 504.0,
     "status": "PROCESSING",
     "createdAt": "2026-05-17T14:32:45Z",
-    "expiresAt": "2026-05-17T14:47:45Z"  // 15 min hold
+    "expiresAt": "2026-05-17T14:47:45Z" // 15 min hold
   }
 }
 ```
 
 #### 2. `order.completed`
+
 **Triggered:** When payment successfully processed
 
 ```json
@@ -109,7 +108,7 @@ if (signature !== webhook.signature) {
   "data": {
     "orderId": "ORD-20260517-0042",
     "paymentId": "pay_xyz123",
-    "totalAmount": 504.00,
+    "totalAmount": 504.0,
     "status": "COMPLETED",
     "tickets": [
       {
@@ -131,6 +130,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 3. `order.cancelled`
+
 **Triggered:** When customer or system cancels order
 
 ```json
@@ -139,15 +139,16 @@ if (signature !== webhook.signature) {
   "eventId": "ORD-20260517-0042",
   "data": {
     "orderId": "ORD-20260517-0042",
-    "reason": "CUSTOMER_REQUEST",  // CUSTOMER_REQUEST, HOLD_EXPIRED, SYSTEM_ERROR
-    "refundAmount": 504.00,
-    "refundStatus": "PROCESSING",  // PROCESSING, COMPLETED, FAILED
+    "reason": "CUSTOMER_REQUEST", // CUSTOMER_REQUEST, HOLD_EXPIRED, SYSTEM_ERROR
+    "refundAmount": 504.0,
+    "refundStatus": "PROCESSING", // PROCESSING, COMPLETED, FAILED
     "cancelledAt": "2026-05-17T14:45:00Z"
   }
 }
 ```
 
 #### 4. `order.refunded`
+
 **Triggered:** When refund completed
 
 ```json
@@ -157,7 +158,7 @@ if (signature !== webhook.signature) {
   "data": {
     "orderId": "ORD-20260517-0042",
     "refundId": "ref_xyz123",
-    "amount": 504.00,
+    "amount": 504.0,
     "method": "ORIGINAL_PAYMENT",
     "status": "COMPLETED",
     "refundedAt": "2026-05-17T14:45:30Z"
@@ -166,6 +167,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 5. `order.failed`
+
 **Triggered:** When payment fails
 
 ```json
@@ -175,7 +177,7 @@ if (signature !== webhook.signature) {
   "data": {
     "orderId": "ORD-20260517-0042",
     "paymentId": "pay_xyz123",
-    "reason": "CARD_DECLINED",  // CARD_DECLINED, INSUFFICIENT_FUNDS, EXPIRED_CARD, etc
+    "reason": "CARD_DECLINED", // CARD_DECLINED, INSUFFICIENT_FUNDS, EXPIRED_CARD, etc
     "errorCode": "card_declined",
     "errorMessage": "Your card was declined",
     "retryable": true,
@@ -185,6 +187,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 6. `order.hold_expiring`
+
 **Triggered:** 1 minute before hold expires
 
 ```json
@@ -194,7 +197,7 @@ if (signature !== webhook.signature) {
   "data": {
     "orderId": "ORD-20260517-0042",
     "seatsOnHold": 2,
-    "expiresIn": 60,  // seconds
+    "expiresIn": 60, // seconds
     "expiresAt": "2026-05-17T14:47:45Z"
   }
 }
@@ -205,6 +208,7 @@ if (signature !== webhook.signature) {
 ### EVENT LIFECYCLE EVENTS
 
 #### 7. `event.published`
+
 **Triggered:** When event goes live
 
 ```json
@@ -217,13 +221,14 @@ if (signature !== webhook.signature) {
     "venueId": "venue_madison_square",
     "capacity": 20000,
     "startDate": "2026-05-20T20:00:00Z",
-    "basePrice": 150.00,
+    "basePrice": 150.0,
     "publishedAt": "2026-05-17T14:32:45Z"
   }
 }
 ```
 
 #### 8. `event.sold_out`
+
 **Triggered:** When occupancy reaches 100%
 
 ```json
@@ -247,6 +252,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 9. `event.trending`
+
 **Triggered:** When occupancy crosses 70%
 
 ```json
@@ -269,6 +275,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 10. `event.approaching`
+
 **Triggered:** When event starts in < 24 hours
 
 ```json
@@ -287,6 +294,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 11. `event.completed`
+
 **Triggered:** When event ends
 
 ```json
@@ -298,7 +306,7 @@ if (signature !== webhook.signature) {
     "title": "Taylor Swift Concert",
     "completedAt": "2026-05-20T23:00:00Z",
     "finalOccupancy": 95.5,
-    "finalRevenue": 2850000.00,
+    "finalRevenue": 2850000.0,
     "totalOrders": 19100,
     "avgOrderValue": 149.21
   }
@@ -310,6 +318,7 @@ if (signature !== webhook.signature) {
 ### CAMPAIGN EVENTS
 
 #### 12. `campaign.published`
+
 **Triggered:** When campaign goes live
 
 ```json
@@ -329,6 +338,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 13. `campaign.code_redeemed`
+
 **Triggered:** When presale code used
 
 ```json
@@ -348,6 +358,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 14. `campaign.sold_out`
+
 **Triggered:** When campaign allocation exhausted
 
 ```json
@@ -359,8 +370,8 @@ if (signature !== webhook.signature) {
     "name": "Early Bird - 20% Off",
     "allocation": 1000,
     "redeemed": 1000,
-    "revenue": 150000.00,
-    "avgOrderValue": 150.00,
+    "revenue": 150000.0,
+    "avgOrderValue": 150.0,
     "soldOutAt": "2026-05-15T08:23:15Z",
     "timeToSoldOut": {
       "days": 5,
@@ -372,6 +383,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 15. `campaign.ended`
+
 **Triggered:** When campaign reaches end date
 
 ```json
@@ -386,7 +398,7 @@ if (signature !== webhook.signature) {
       "allocation": 1000,
       "redeemed": 750,
       "remaining": 250,
-      "revenue": 112500.00
+      "revenue": 112500.0
     }
   }
 }
@@ -397,6 +409,7 @@ if (signature !== webhook.signature) {
 ### CHANNEL EVENTS
 
 #### 16. `channel.reallocated`
+
 **Triggered:** When inventory reallocated between channels
 
 ```json
@@ -408,7 +421,7 @@ if (signature !== webhook.signature) {
     "from": "WEB",
     "to": "TAQUILLA",
     "quantity": 50,
-    "reason": "DEMAND_BASED",  // DEMAND_BASED, MANUAL, FAILOVER
+    "reason": "DEMAND_BASED", // DEMAND_BASED, MANUAL, FAILOVER
     "newAllocation": {
       "WEB": 1950,
       "TAQUILLA": 1550,
@@ -421,6 +434,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 17. `channel.health_changed`
+
 **Triggered:** When channel health status changes
 
 ```json
@@ -434,9 +448,9 @@ if (signature !== webhook.signature) {
     "currentStatus": "degraded",
     "reason": "QUEUE_BACKLOG",
     "metrics": {
-      "responseTime": 2000,  // ms
-      "errorRate": 5.2,      // %
-      "syncLag": 10          // seconds
+      "responseTime": 2000, // ms
+      "errorRate": 5.2, // %
+      "syncLag": 10 // seconds
     },
     "changedAt": "2026-05-17T14:32:45Z"
   }
@@ -444,6 +458,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 18. `channel.offline`
+
 **Triggered:** When channel goes offline
 
 ```json
@@ -465,6 +480,7 @@ if (signature !== webhook.signature) {
 ### TERMINAL / TAQUILLA EVENTS
 
 #### 19. `terminal.offline`
+
 **Triggered:** When POS terminal goes offline
 
 ```json
@@ -482,6 +498,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 20. `terminal.online`
+
 **Triggered:** When terminal reconnects
 
 ```json
@@ -492,7 +509,7 @@ if (signature !== webhook.signature) {
     "terminalId": "term_main_1",
     "location": "Main Box Office",
     "mode": "ONLINE",
-    "offlineFor": 300,  // seconds
+    "offlineFor": 300, // seconds
     "syncedTransactions": 12,
     "wentOnlineAt": "2026-05-17T14:35:45Z"
   }
@@ -500,6 +517,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 21. `terminal.sync_error`
+
 **Triggered:** When sync between terminal and server fails
 
 ```json
@@ -524,6 +542,7 @@ if (signature !== webhook.signature) {
 ### PAYMENT EVENTS
 
 #### 22. `payment.initiated`
+
 **Triggered:** When payment processing starts
 
 ```json
@@ -534,7 +553,7 @@ if (signature !== webhook.signature) {
     "paymentId": "pay_xyz123",
     "orderId": "ORD-20260517-0042",
     "gateway": "STRIPE",
-    "amount": 504.00,
+    "amount": 504.0,
     "currency": "USD",
     "initiatedAt": "2026-05-17T14:32:45Z"
   }
@@ -542,6 +561,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 23. `payment.succeeded`
+
 **Triggered:** When payment succeeds
 
 ```json
@@ -552,7 +572,7 @@ if (signature !== webhook.signature) {
     "paymentId": "pay_xyz123",
     "orderId": "ORD-20260517-0042",
     "gateway": "STRIPE",
-    "amount": 504.00,
+    "amount": 504.0,
     "method": "CARD",
     "cardBrand": "VISA",
     "cardLast4": "4242",
@@ -562,6 +582,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 24. `payment.failed`
+
 **Triggered:** When payment fails
 
 ```json
@@ -572,12 +593,12 @@ if (signature !== webhook.signature) {
     "paymentId": "pay_xyz123",
     "orderId": "ORD-20260517-0042",
     "gateway": "STRIPE",
-    "amount": 504.00,
+    "amount": 504.0,
     "reason": "CARD_DECLINED",
     "code": "card_declined",
     "failedAt": "2026-05-17T14:32:50Z",
     "retryable": true,
-    "retryAfter": 300  // seconds
+    "retryAfter": 300 // seconds
   }
 }
 ```
@@ -587,6 +608,7 @@ if (signature !== webhook.signature) {
 ### LOYALTY & FRAUD EVENTS
 
 #### 25. `loyalty.points_awarded`
+
 **Triggered:** When loyalty points credited
 
 ```json
@@ -605,6 +627,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 26. `fraud.score_calculated`
+
 **Triggered:** When fraud ML model scores transaction
 
 ```json
@@ -613,8 +636,8 @@ if (signature !== webhook.signature) {
   "eventId": "ORD-20260517-0042",
   "data": {
     "orderId": "ORD-20260517-0042",
-    "fraudScore": 8,  // 0-100, higher = more suspicious
-    "riskLevel": "LOW",  // LOW, MEDIUM, HIGH
+    "fraudScore": 8, // 0-100, higher = more suspicious
+    "riskLevel": "LOW", // LOW, MEDIUM, HIGH
     "factors": {
       "velocity_check": 2,
       "card_country_mismatch": 0,
@@ -628,6 +651,7 @@ if (signature !== webhook.signature) {
 ```
 
 #### 27. `fraud.alert`
+
 **Triggered:** When fraud score exceeds threshold
 
 ```json
@@ -638,7 +662,7 @@ if (signature !== webhook.signature) {
     "orderId": "ORD-20260517-0042",
     "fraudScore": 85,
     "riskLevel": "HIGH",
-    "action": "MANUAL_REVIEW",  // MANUAL_REVIEW, AUTO_BLOCK
+    "action": "MANUAL_REVIEW", // MANUAL_REVIEW, AUTO_BLOCK
     "alertedAt": "2026-05-17T14:32:52Z"
   }
 }

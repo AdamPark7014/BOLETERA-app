@@ -45,7 +45,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     required,
     ...rest
   },
-  ref,
+  ref
 ) {
   const generatedId = useId();
   const inputId = id ?? `${generatedId}-input`;
@@ -73,7 +73,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           styles.field,
           styles[inputSize],
           invalid && styles.invalid,
-          disabled && styles.disabled,
+          disabled && styles.disabled
         )}
       >
         {leading ? (

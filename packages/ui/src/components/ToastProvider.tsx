@@ -95,12 +95,12 @@ export function ToastProvider({
       if (duration > 0) {
         timers.current.set(
           id,
-          setTimeout(() => dismiss(id), duration),
+          setTimeout(() => dismiss(id), duration)
         );
       }
       return id;
     },
-    [max, defaultDuration, dismiss],
+    [max, defaultDuration, dismiss]
   );
 
   useEffect(() => {
@@ -111,7 +111,10 @@ export function ToastProvider({
     };
   }, []);
 
-  const api = useMemo<ToastApi>(() => ({ toast, dismiss, dismissAll }), [toast, dismiss, dismissAll]);
+  const api = useMemo<ToastApi>(
+    () => ({ toast, dismiss, dismissAll }),
+    [toast, dismiss, dismissAll]
+  );
 
   const urgent = toasts.filter((item) => item.tone === 'danger');
   const polite = toasts.filter((item) => item.tone !== 'danger');

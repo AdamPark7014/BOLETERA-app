@@ -52,7 +52,7 @@ export class BanorteProvider implements PaymentProvider {
   async createIntent(ctx: PaymentContext): Promise<PaymentIntentResult> {
     if (ctx.idempotencyKey) {
       const { value } = await banorteIntentIdempotency.getOrCreate(ctx.idempotencyKey, () =>
-        this.createIntentOnce(ctx),
+        this.createIntentOnce(ctx)
       );
       return value;
     }
@@ -71,7 +71,7 @@ export class BanorteProvider implements PaymentProvider {
         throw new PaymentError(
           'NOT_CONFIGURED',
           'Banorte no está configurado: define BANORTE_MERCHANT_ID y credenciales Payworks. El modo demo no está permitido en producción.',
-          { retryable: false },
+          { retryable: false }
         );
       }
       return this.createDemoIntent(intentId, method, publicId);
@@ -79,11 +79,9 @@ export class BanorteProvider implements PaymentProvider {
 
     if (method === 'SPEI') {
       if (!cfg.accountClabe) {
-        throw new PaymentError(
-          'NOT_CONFIGURED',
-          'BANORTE_ACCOUNT_CLABE required for SPEI',
-          { retryable: false },
-        );
+        throw new PaymentError('NOT_CONFIGURED', 'BANORTE_ACCOUNT_CLABE required for SPEI', {
+          retryable: false,
+        });
       }
       const spei = buildSpeiReference(publicId, cfg.accountClabe);
       return {
@@ -152,7 +150,7 @@ export class BanorteProvider implements PaymentProvider {
   private createDemoIntent(
     intentId: string,
     method: string,
-    publicId: string,
+    publicId: string
   ): PaymentIntentResult {
     const cfg = getBanorteConfig();
     if (method === 'SPEI') {

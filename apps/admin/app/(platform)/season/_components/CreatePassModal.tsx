@@ -115,12 +115,7 @@ export function CreatePassModal({ open, busy, onClose, onSubmit }: CreatePassMod
           <Button type="button" variant="ghost" disabled={busy} onClick={handleClose}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            form="create-season-pass"
-            loading={busy}
-            loadingLabel="Publicando…"
-          >
+          <Button type="submit" form="create-season-pass" loading={busy} loadingLabel="Publicando…">
             Publicar abono
           </Button>
         </div>

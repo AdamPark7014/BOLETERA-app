@@ -263,7 +263,7 @@ export function useKeyboardShortcuts(onSave: () => void): void {
           renderer.camera.zoomAtScreen(
             { x: renderer.camera.width / 2, y: renderer.camera.height / 2 },
             1.25,
-            true,
+            true
           );
           return;
         }
@@ -271,7 +271,7 @@ export function useKeyboardShortcuts(onSave: () => void): void {
           renderer.camera.zoomAtScreen(
             { x: renderer.camera.width / 2, y: renderer.camera.height / 2 },
             1 / 1.25,
-            true,
+            true
           );
           return;
         }

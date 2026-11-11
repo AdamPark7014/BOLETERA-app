@@ -125,8 +125,7 @@ export function useIntegrationCatalog() {
 export function useBanorteConfig(enabled = true) {
   return useQuery({
     queryKey: queryKeys.integrations.banorteConfig(),
-    queryFn: ({ signal }) =>
-      http<BanorteConfig>('/payments/config', { signal, auth: false }),
+    queryFn: ({ signal }) => http<BanorteConfig>('/payments/config', { signal, auth: false }),
     enabled,
     staleTime: 60_000,
   });
@@ -162,10 +161,7 @@ export function useWebhookHealth(enabled = true) {
   const banorte = useBanorteConfig(enabled);
 
   return useQuery({
-    queryKey: [
-      ...queryKeys.integrations.webhookHealth(),
-      banorte.dataUpdatedAt,
-    ],
+    queryKey: [...queryKeys.integrations.webhookHealth(), banorte.dataUpdatedAt],
     queryFn: (): WebhookHealthSnapshot => {
       const cfg = banorte.data;
       const now = new Date().toISOString();

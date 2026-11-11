@@ -105,6 +105,6 @@ export type DenominationCount = Record<string, number>;
 
 export function countedTotal(counts: DenominationCount): number {
   return round2(
-    MXN_DENOMINATIONS.reduce((sum, value) => sum + value * (Number(counts[String(value)]) || 0), 0),
+    MXN_DENOMINATIONS.reduce((sum, value) => sum + value * (Number(counts[String(value)]) || 0), 0)
   );
 }

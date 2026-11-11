@@ -60,7 +60,7 @@ export function BarChart({
     const totals =
       layout === 'stacked'
         ? labels.map((_unused, index) =>
-            series.reduce((total, item) => total + (item.data[index]?.value ?? 0), 0),
+            series.reduce((total, item) => total + (item.data[index]?.value ?? 0), 0)
           )
         : series.flatMap((item) => item.data.map((datum) => datum.value));
     const [min, max] = extent(totals);
@@ -104,7 +104,7 @@ export function BarChart({
         const categories = bandScale(
           Math.max(1, labels.length),
           [margin.left, margin.left + innerWidth],
-          0.26,
+          0.26
         );
         const groupWidth =
           layout === 'stacked'
@@ -146,7 +146,12 @@ export function BarChart({
                   />
                 )}
                 {hideYAxis ? null : (
-                  <text className={styles.axisLabel} x={margin.left - 8} y={y(value)} textAnchor="end">
+                  <text
+                    className={styles.axisLabel}
+                    x={margin.left - 8}
+                    y={y(value)}
+                    textAnchor="end"
+                  >
                     {formatAxis(value)}
                   </text>
                 )}
@@ -156,7 +161,10 @@ export function BarChart({
             {labels.map((text, index) => {
               let stackTop = zero;
               return (
-                <g key={`${text}-${index}`} opacity={hovered === null || hovered === index ? 1 : 0.45}>
+                <g
+                  key={`${text}-${index}`}
+                  opacity={hovered === null || hovered === index ? 1 : 0.45}
+                >
                   {series.map((item, seriesIndex) => {
                     const value = item.data[index]?.value ?? 0;
                     const top = y(value);
@@ -168,7 +176,13 @@ export function BarChart({
                         <path
                           key={item.id}
                           className={styles.bar}
-                          d={barPath(categories(index), stackTop, groupWidth, barHeight, cornerRadius)}
+                          d={barPath(
+                            categories(index),
+                            stackTop,
+                            groupWidth,
+                            barHeight,
+                            cornerRadius
+                          )}
                           fill={colors[seriesIndex]}
                         />
                       );
@@ -183,7 +197,7 @@ export function BarChart({
                           Math.min(top, zero),
                           Math.max(1, groupWidth - 2),
                           Math.abs(zero - top),
-                          cornerRadius,
+                          cornerRadius
                         )}
                         fill={colors[seriesIndex]}
                       />
@@ -193,7 +207,13 @@ export function BarChart({
               );
             })}
 
-            <line className={styles.axis} x1={margin.left} x2={margin.left + innerWidth} y1={zero} y2={zero} />
+            <line
+              className={styles.axis}
+              x1={margin.left}
+              x2={margin.left + innerWidth}
+              y1={zero}
+              y2={zero}
+            />
 
             {hideXAxis
               ? null
@@ -208,7 +228,7 @@ export function BarChart({
                     >
                       {text}
                     </text>
-                  ) : null,
+                  ) : null
                 )}
 
             <rect

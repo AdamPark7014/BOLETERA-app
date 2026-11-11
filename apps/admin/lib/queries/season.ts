@@ -28,8 +28,7 @@ export type CreateSeasonPassInput = {
 export function useSeasonPasses(organizationId: string | null) {
   return useQuery({
     queryKey: queryKeys.season.list(organizationId ?? ''),
-    queryFn: ({ signal }) =>
-      http<SeasonPass[]>(`/season/org/${organizationId}`, { signal }),
+    queryFn: ({ signal }) => http<SeasonPass[]>(`/season/org/${organizationId}`, { signal }),
     enabled: Boolean(organizationId),
   });
 }
@@ -40,9 +39,9 @@ export function useCreateSeasonPass(organizationId: string) {
     mutationFn: (body: CreateSeasonPassInput) =>
       http<SeasonPass>(`/season/org/${organizationId}`, { method: 'POST', body }),
     onSuccess: (seasonPass) =>
-      client.setQueryData<SeasonPass[]>(
-        queryKeys.season.list(organizationId),
-        (current = []) => [...current, seasonPass],
-      ),
+      client.setQueryData<SeasonPass[]>(queryKeys.season.list(organizationId), (current = []) => [
+        ...current,
+        seasonPass,
+      ]),
   });
 }

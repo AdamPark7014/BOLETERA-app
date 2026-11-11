@@ -29,7 +29,7 @@ export class PaymentError extends Error {
   constructor(
     code: PaymentErrorCode,
     message: string,
-    options?: { retryable?: boolean; details?: Record<string, unknown>; cause?: unknown },
+    options?: { retryable?: boolean; details?: Record<string, unknown>; cause?: unknown }
   ) {
     super(message, options?.cause !== undefined ? { cause: options.cause } : undefined);
     this.name = 'PaymentError';
@@ -96,7 +96,7 @@ function defaultIsRetryable(error: unknown): boolean {
  */
 export async function withSafeRetry<T>(
   fn: () => Promise<T>,
-  options: SafeRetryOptions,
+  options: SafeRetryOptions
 ): Promise<T> {
   const {
     maxAttempts = 3,
@@ -112,7 +112,7 @@ export async function withSafeRetry<T>(
     throw new PaymentError(
       'MISSING_IDEMPOTENCY_KEY',
       'createIntent retries require an idempotencyKey — refusing to risk a double charge',
-      { retryable: false },
+      { retryable: false }
     );
   }
 
@@ -120,7 +120,7 @@ export async function withSafeRetry<T>(
     throw new PaymentError(
       'RETRY_NOT_SAFE',
       `Operation not eligible for safe retry: ${String(operation)}`,
-      { retryable: false },
+      { retryable: false }
     );
   }
 

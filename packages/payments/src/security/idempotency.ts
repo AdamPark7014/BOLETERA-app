@@ -35,7 +35,7 @@ export type IdempotencyStore = {
   tryLock(
     key: string,
     token: string,
-    ttlSeconds: number,
+    ttlSeconds: number
   ): Promise<'acquired' | 'taken' | 'unavailable'>;
   unlock(key: string, token: string): Promise<void>;
 };
@@ -59,7 +59,11 @@ export type RedisIdempotencyClient = {
   /** SET key value EX ttlSeconds. Return false if Redis is down. */
   setEx(key: string, value: string, ttlSeconds: number): Promise<boolean>;
   /** SET key value NX EX ttlSeconds. */
-  setNxEx(key: string, value: string, ttlSeconds: number): Promise<'acquired' | 'taken' | 'unavailable'>;
+  setNxEx(
+    key: string,
+    value: string,
+    ttlSeconds: number
+  ): Promise<'acquired' | 'taken' | 'unavailable'>;
   /**
    * Delete key only if value matches token (compare-and-del).
    * If omitted, unlock is best-effort DEL.
@@ -89,7 +93,7 @@ export function resetPaymentIdempotencyStoreForTests(): void {
 }
 
 export function createMemoryIdempotencyStore(
-  options: { maxEntries?: number } = {},
+  options: { maxEntries?: number } = {}
 ): IdempotencyStore {
   const maxEntries = options.maxEntries ?? DEFAULT_MAX_ENTRIES;
   const data = new Map<string, { value: string; expiresAt: number }>();
@@ -147,7 +151,7 @@ export function createMemoryIdempotencyStore(
  */
 export function createRedisIdempotencyStore(
   client: RedisIdempotencyClient,
-  keyPrefix = 'payments:idemp:',
+  keyPrefix = 'payments:idemp:'
 ): IdempotencyStore {
   const valueKey = (key: string) => `${keyPrefix}v:${key}`;
   const lockKey = (key: string) => `${keyPrefix}lock:${key}`;
@@ -157,21 +161,13 @@ export function createRedisIdempotencyStore(
       return client.get(valueKey(key));
     },
     async set(key, value, ttlSeconds) {
-      const ok = await client.setEx(
-        valueKey(key),
-        value,
-        Math.max(1, Math.ceil(ttlSeconds)),
-      );
+      const ok = await client.setEx(valueKey(key), value, Math.max(1, Math.ceil(ttlSeconds)));
       if (!ok) {
         throw new IdempotencyStoreUnavailableError('Redis SET failed for idempotency value');
       }
     },
     async tryLock(key, token, ttlSeconds) {
-      return client.setNxEx(
-        lockKey(key),
-        token,
-        Math.max(1, Math.ceil(ttlSeconds)),
-      );
+      return client.setNxEx(lockKey(key), token, Math.max(1, Math.ceil(ttlSeconds)));
     },
     async unlock(key, token) {
       if (client.compareAndDel) {
@@ -252,7 +248,7 @@ export class IdempotencyGuard<T> {
    */
   async getOrCreate(
     key: string,
-    factory: () => Promise<T>,
+    factory: () => Promise<T>
   ): Promise<{ value: T; reused: boolean }> {
     const cached = await this.get(key);
     if (cached !== undefined) {
@@ -280,7 +276,7 @@ export class IdempotencyGuard<T> {
 
   private async createWithLock(
     key: string,
-    factory: () => Promise<T>,
+    factory: () => Promise<T>
   ): Promise<{ value: T; reused: boolean }> {
     const store = this.store();
     const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -295,7 +291,7 @@ export class IdempotencyGuard<T> {
       const lock = await store.tryLock(key, token, this.lockTtlSeconds);
       if (lock === 'unavailable') {
         throw new IdempotencyStoreUnavailableError(
-          'Idempotency lock unavailable — refusing to create payment intent without cluster coordination',
+          'Idempotency lock unavailable — refusing to create payment intent without cluster coordination'
         );
       }
 
@@ -318,7 +314,7 @@ export class IdempotencyGuard<T> {
     }
 
     throw new IdempotencyStoreUnavailableError(
-      `Timed out waiting for idempotent result for key ${key}`,
+      `Timed out waiting for idempotent result for key ${key}`
     );
   }
 }

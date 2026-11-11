@@ -126,7 +126,13 @@ function PagosBody() {
     );
   }
   if (error) {
-    return <ApiErrorView error={error} context="abrir pagos" onRetry={() => setNonce((current) => current + 1)} />;
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir pagos"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
   if (loading || !config || !flags) return <p className={styles.quiet}>Cargando pagos.</p>;
 
@@ -153,7 +159,7 @@ function PagosBody() {
         await adminApi<unknown>('/payments/methods', token, {
           method: 'PATCH',
           body: JSON.stringify(body),
-        }),
+        })
       );
       setFlags(updated);
       setTarjeta(updated.tarjeta);
@@ -161,7 +167,9 @@ function PagosBody() {
       setOxxo(updated.OXXO);
       setNotice(changes.join(' · '));
     } catch (cause) {
-      setSaveError(cause instanceof ApiError ? cause.userMessage : 'No se guardó. Revisa la conexión.');
+      setSaveError(
+        cause instanceof ApiError ? cause.userMessage : 'No se guardó. Revisa la conexión.'
+      );
     } finally {
       setSaving(false);
     }
@@ -172,7 +180,8 @@ function PagosBody() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Pagos</h1>
         <p className={styles.quiet}>
-          Tarjeta, SPEI y OXXO. Si la clave no está, el método sigue activo. Las credenciales no entran a la ficha.
+          Tarjeta, SPEI y OXXO. Si la clave no está, el método sigue activo. Las credenciales no
+          entran a la ficha.
         </p>
       </header>
       <div className={styles.stack}>
@@ -217,7 +226,9 @@ function PagosBody() {
           <ParameterCard
             name="SPEI"
             value={yesNo(spei)}
-            effect={speiDirty ? methodEffect(true, spei) : methodEffect(flags.speiSaved, flags.SPEI)}
+            effect={
+              speiDirty ? methodEffect(true, spei) : methodEffect(flags.speiSaved, flags.SPEI)
+            }
           >
             <Switch
               label="SPEI"
@@ -233,7 +244,9 @@ function PagosBody() {
           <ParameterCard
             name="OXXO"
             value={yesNo(oxxo)}
-            effect={oxxoDirty ? methodEffect(true, oxxo) : methodEffect(flags.oxxoSaved, flags.OXXO)}
+            effect={
+              oxxoDirty ? methodEffect(true, oxxo) : methodEffect(flags.oxxoSaved, flags.OXXO)
+            }
           >
             <Switch
               label="OXXO"
@@ -253,7 +266,9 @@ function PagosBody() {
       ) : null}
       <div className={styles.saveBar}>
         <p className={styles.quiet} aria-live="polite">
-          {dirty ? 'Sin guardar' : (notice ?? 'Efectivo se cobra en taquilla y no está en esta pasarela.')}
+          {dirty
+            ? 'Sin guardar'
+            : (notice ?? 'Efectivo se cobra en taquilla y no está en esta pasarela.')}
         </p>
         <TicketButton disabled={!dirty || saving} onClick={() => void save()}>
           Guardar sección

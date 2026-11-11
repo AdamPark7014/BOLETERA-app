@@ -25,18 +25,9 @@ import {
   type TimelineItem,
 } from '@boletera/ui';
 import { QueryError } from '@/components/QueryStates';
-import {
-  useEvents,
-  useInventoryMetrics,
-  useOrders,
-  useOrdersMetrics,
-} from '@/lib/queries';
+import { useEvents, useInventoryMetrics, useOrders, useOrdersMetrics } from '@/lib/queries';
 import { useSession } from '@/lib/use-session';
-import {
-  buildReservationRows,
-  conversionFunnel,
-  reservationKpis,
-} from './derive';
+import { buildReservationRows, conversionFunnel, reservationKpis } from './derive';
 import {
   daysAgoIso,
   formatCount,
@@ -105,7 +96,7 @@ export function ReservationsModule() {
       from: daysAgoIso(Number(range)),
       to: new Date().toISOString(),
     }),
-    [organizationId, range],
+    [organizationId, range]
   );
 
   const ordersQuery = useOrders();
@@ -115,16 +106,13 @@ export function ReservationsModule() {
 
   const rows = useMemo(
     () => buildReservationRows(ordersQuery.data ?? [], inventory.data),
-    [inventory.data, ordersQuery.data],
+    [inventory.data, ordersQuery.data]
   );
   const kpis = useMemo(
     () => reservationKpis(rows, inventory.data, ordersQuery.data ?? []),
-    [inventory.data, ordersQuery.data, rows],
+    [inventory.data, ordersQuery.data, rows]
   );
-  const funnel = useMemo(
-    () => conversionFunnel(ordersQuery.data ?? []),
-    [ordersQuery.data],
-  );
+  const funnel = useMemo(() => conversionFunnel(ordersQuery.data ?? []), [ordersQuery.data]);
 
   const kindFilter = filters.kind ?? [];
   const statusFilter = filters.status ?? [];
@@ -143,7 +131,7 @@ export function ReservationsModule() {
 
   const selected = useMemo(
     () => (selectedId ? (rows.find((row) => row.id === selectedId) ?? null) : null),
-    [rows, selectedId],
+    [rows, selectedId]
   );
 
   const filterDefs = useMemo<FilterDefinition[]>(
@@ -167,7 +155,7 @@ export function ReservationsModule() {
         })),
       },
     ],
-    [rows],
+    [rows]
   );
 
   const columns = useMemo<DataTableColumn<ReservationRow>[]>(
@@ -242,7 +230,7 @@ export function ReservationsModule() {
         render: (row) => formatRelative(row.createdAt),
       },
     ],
-    [],
+    []
   );
 
   const activityItems = useMemo<ActivityItem[]>(() => {
@@ -313,10 +301,7 @@ export function ReservationsModule() {
         eyebrow="Operaciones · Reservas"
         title="Reservas y bloqueos"
         description="Holds de checkout, retención por zona, bloqueos operativos y conversión a compra. Derivado de pedidos e inventario en vivo."
-        breadcrumbs={[
-          { label: 'Panel', href: '/dashboard' },
-          { label: 'Reservas' },
-        ]}
+        breadcrumbs={[{ label: 'Panel', href: '/dashboard' }, { label: 'Reservas' }]}
         actions={
           <div className={styles.actions}>
             <SegmentedControl<RangeKey>
@@ -469,9 +454,7 @@ export function ReservationsModule() {
                   maxHeight={480}
                   density="compact"
                   defaultSort={{ key: 'createdAt', direction: 'desc' }}
-                  onRowClick={(row) =>
-                    setSelectedId(row.id === selectedId ? null : row.id)
-                  }
+                  onRowClick={(row) => setSelectedId(row.id === selectedId ? null : row.id)}
                 />
               )}
 
@@ -536,10 +519,7 @@ export function ReservationsModule() {
               </Card>
 
               <Card>
-                <CardHeader
-                  title="Señal de pagos"
-                  description="Contexto del motor de órdenes"
-                />
+                <CardHeader title="Señal de pagos" description="Contexto del motor de órdenes" />
                 <KpiCard
                   label="Tasa de aprobación"
                   value={
@@ -614,8 +594,8 @@ function ReservationDrawerBody({ row }: { row: ReservationRow }) {
       </dl>
       <p className={styles.muted}>{row.meta}</p>
       <p className={styles.muted}>
-        Liberaciones explícitas requieren POST /reservations/holds/:id/release. Esta vista no inventa
-        holds: solo agrega pedidos pendientes e inventario retenido.
+        Liberaciones explícitas requieren POST /reservations/holds/:id/release. Esta vista no
+        inventa holds: solo agrega pedidos pendientes e inventario retenido.
       </p>
     </div>
   );

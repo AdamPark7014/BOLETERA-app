@@ -71,7 +71,7 @@ export function PosSeatMap({
         offers.find(
           (o) =>
             o.zone.toLowerCase() === (section?.slug ?? '').toLowerCase() ||
-            o.zone.toLowerCase() === (section?.name ?? '').toLowerCase(),
+            o.zone.toLowerCase() === (section?.name ?? '').toLowerCase()
         ) ?? null;
       return {
         ...s,
@@ -245,7 +245,8 @@ export function PosSeatMap({
       <div className={styles.toolbar}>
         <ul className={styles.legend}>
           <li>
-            <span className={`${styles.dot} ${styles.dotAvailable}`} /> Libre <em>{counts.available}</em>
+            <span className={`${styles.dot} ${styles.dotAvailable}`} /> Libre{' '}
+            <em>{counts.available}</em>
           </li>
           <li>
             <span className={`${styles.dot} ${styles.dotHeld}`} /> Apartado <em>{counts.held}</em>
@@ -254,7 +255,8 @@ export function PosSeatMap({
             <span className={`${styles.dot} ${styles.dotSold}`} /> Vendido <em>{counts.sold}</em>
           </li>
           <li>
-            <span className={`${styles.dot} ${styles.dotSelected}`} /> Seleccionado <em>{selected.length}</em>
+            <span className={`${styles.dot} ${styles.dotSelected}`} /> Seleccionado{' '}
+            <em>{selected.length}</em>
           </li>
         </ul>
         {levels.length > 0 && (
@@ -304,25 +306,21 @@ export function PosSeatMap({
           aria-pressed={showEgress}
           aria-controls="pos-egress-legend pos-egress-status"
           title="Rutas de salida por sección"
-          disabled={
-            !(projected.aisles.length || projected.exits.length || projected.stairs.length)
-          }
+          disabled={!(projected.aisles.length || projected.exits.length || projected.stairs.length)}
         >
           Salidas
         </button>
-        <span className={live ? styles.liveOn : styles.liveOff}>{live ? 'En vivo' : 'Polling'}</span>
+        <span className={live ? styles.liveOn : styles.liveOff}>
+          {live ? 'En vivo' : 'Polling'}
+        </span>
       </div>
 
       {heatMode === 'price' && priceRange.max > 0 && (
         <div className={styles.priceHeatPanel}>
           <div className={styles.viewHeatBar} aria-hidden>
-            <span>
-              ${priceRange.min.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-            </span>
+            <span>${priceRange.min.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
             <div className={styles.priceHeatScale} />
-            <span>
-              ${priceRange.max.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-            </span>
+            <span>${priceRange.max.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
           </div>
           {priceRange.max > priceRange.min && (
             <label className={styles.priceFilter}>
@@ -415,15 +413,15 @@ export function PosSeatMap({
                 return null;
               }
               return (
-              <polyline
-                key={aisle.id}
-                points={aisle.points.map(([x, y]) => `${x},${y}`).join(' ')}
-                fill="none"
-                stroke="rgba(148,163,184,0.4)"
-                strokeWidth={10}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+                <polyline
+                  key={aisle.id}
+                  points={aisle.points.map(([x, y]) => `${x},${y}`).join(' ')}
+                  fill="none"
+                  stroke="rgba(148,163,184,0.4)"
+                  strokeWidth={10}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               );
             })}
             {projected.obstacles.map((obs) => {
@@ -431,13 +429,13 @@ export function PosSeatMap({
                 return null;
               }
               return (
-              <polygon
-                key={obs.id}
-                points={obs.points.map(([x, y]) => `${x},${y}`).join(' ')}
-                fill="rgba(63,63,70,0.5)"
-                stroke="rgba(161,161,170,0.45)"
-                strokeWidth={1}
-              />
+                <polygon
+                  key={obs.id}
+                  points={obs.points.map(([x, y]) => `${x},${y}`).join(' ')}
+                  fill="rgba(63,63,70,0.5)"
+                  stroke="rgba(161,161,170,0.45)"
+                  strokeWidth={1}
+                />
               );
             })}
             {projected.stairs.map((stair) => {
@@ -451,16 +449,16 @@ export function PosSeatMap({
                 return null;
               }
               return (
-              <polyline
-                key={stair.id}
-                points={stair.points.map(([x, y]) => `${x},${y}`).join(' ')}
-                fill="none"
-                stroke="rgba(251,146,60,0.75)"
-                strokeWidth={12}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeDasharray="8 5"
-              />
+                <polyline
+                  key={stair.id}
+                  points={stair.points.map(([x, y]) => `${x},${y}`).join(' ')}
+                  fill="none"
+                  stroke="rgba(251,146,60,0.75)"
+                  strokeWidth={12}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray="8 5"
+                />
               );
             })}
             {projected.exits.map((ex) => {
@@ -479,8 +477,22 @@ export function PosSeatMap({
                       strokeLinecap="round"
                     />
                   ) : null}
-                  <circle cx={x} cy={y} r={r} fill="rgba(34,197,94,0.9)" stroke="#14532d" strokeWidth={1.5} />
-                  <text x={x} y={y - r - 3} textAnchor="middle" fontSize={8} fontWeight={700} fill="#bbf7d0">
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={r}
+                    fill="rgba(34,197,94,0.9)"
+                    stroke="#14532d"
+                    strokeWidth={1.5}
+                  />
+                  <text
+                    x={x}
+                    y={y - r - 3}
+                    textAnchor="middle"
+                    fontSize={8}
+                    fontWeight={700}
+                    fill="#bbf7d0"
+                  >
                     {ex.label ?? 'Salida'}
                   </text>
                 </g>
@@ -524,9 +536,30 @@ export function PosSeatMap({
               }
               if (item.type === 'led') {
                 return (
-                  <g key={item.id} transform={`translate(${item.x} ${item.y})`} style={{ pointerEvents: 'none' }}>
-                    <rect x={-26} y={-8} width={52} height={16} rx={2} fill="#1a0510" stroke="var(--bl-accent-text)" strokeWidth={1} />
-                    <rect x={-22} y={-5} width={44} height={10} rx={1} fill="var(--bl-accent-text)" opacity={0.55} />
+                  <g
+                    key={item.id}
+                    transform={`translate(${item.x} ${item.y})`}
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    <rect
+                      x={-26}
+                      y={-8}
+                      width={52}
+                      height={16}
+                      rx={2}
+                      fill="#1a0510"
+                      stroke="var(--bl-accent-text)"
+                      strokeWidth={1}
+                    />
+                    <rect
+                      x={-22}
+                      y={-5}
+                      width={44}
+                      height={10}
+                      rx={1}
+                      fill="var(--bl-accent-text)"
+                      opacity={0.55}
+                    />
                     <text y={-12} textAnchor="middle" fontSize={7} fontWeight={700} fill="#fda4af">
                       LED
                     </text>
@@ -535,8 +568,21 @@ export function PosSeatMap({
               }
               if (item.type === 'speaker') {
                 return (
-                  <g key={item.id} transform={`translate(${item.x} ${item.y})`} style={{ pointerEvents: 'none' }}>
-                    <rect x={-7} y={-10} width={14} height={20} rx={2} fill="#0f0f12" stroke="var(--bl-gray-700)" strokeWidth={1} />
+                  <g
+                    key={item.id}
+                    transform={`translate(${item.x} ${item.y})`}
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    <rect
+                      x={-7}
+                      y={-10}
+                      width={14}
+                      height={20}
+                      rx={2}
+                      fill="#0f0f12"
+                      stroke="var(--bl-gray-700)"
+                      strokeWidth={1}
+                    />
                     <circle cx={0} cy={-4} r={3.4} fill="var(--bl-gray-800)" />
                     <circle cx={0} cy={5} r={2.4} fill="var(--bl-gray-800)" />
                   </g>
@@ -544,7 +590,11 @@ export function PosSeatMap({
               }
               if (item.type === 'door') {
                 return (
-                  <g key={item.id} transform={`translate(${item.x} ${item.y})`} style={{ pointerEvents: 'none' }}>
+                  <g
+                    key={item.id}
+                    transform={`translate(${item.x} ${item.y})`}
+                    style={{ pointerEvents: 'none' }}
+                  >
                     <rect
                       x={-10}
                       y={-4}
@@ -567,19 +617,26 @@ export function PosSeatMap({
             {(map.venue?.focusPoints ?? []).map((f) => {
               if (levelFilter !== 'ALL' && f.levelId && f.levelId !== levelFilter) return null;
               return (
-              <g key={f.id} style={{ pointerEvents: 'none' }}>
-                <circle cx={f.x} cy={f.y} r={6} fill="rgba(250,250,250,0.92)" stroke="var(--bl-accent)" strokeWidth={2} />
-                <text
-                  x={f.x}
-                  y={f.y - 10}
-                  textAnchor="middle"
-                  fontSize={8}
-                  fontWeight={700}
-                  fill="#fecdd3"
-                >
-                  {f.label ?? 'Foco'}
-                </text>
-              </g>
+                <g key={f.id} style={{ pointerEvents: 'none' }}>
+                  <circle
+                    cx={f.x}
+                    cy={f.y}
+                    r={6}
+                    fill="rgba(250,250,250,0.92)"
+                    stroke="var(--bl-accent)"
+                    strokeWidth={2}
+                  />
+                  <text
+                    x={f.x}
+                    y={f.y - 10}
+                    textAnchor="middle"
+                    fontSize={8}
+                    fontWeight={700}
+                    fill="#fecdd3"
+                  >
+                    {f.label ?? 'Foco'}
+                  </text>
+                </g>
               );
             })}
 
@@ -613,7 +670,10 @@ export function PosSeatMap({
               const viewScore = sightlineBySeat?.get(s.id);
               const fill = blocked
                 ? '#141416'
-                : heatMode === 'price' && price > 0 && priceRange.max > 0 && !selected.includes(s.id)
+                : heatMode === 'price' &&
+                    price > 0 &&
+                    priceRange.max > 0 &&
+                    !selected.includes(s.id)
                   ? priceHeatColor(price, priceRange.min, priceRange.max)
                   : heatMode === 'view' && viewScore != null && !selected.includes(s.id)
                     ? sightlineHeatColor(viewScore)
@@ -641,7 +701,9 @@ export function PosSeatMap({
                             : '#3A3A3E'
                     }
                     strokeWidth={selected.includes(s.id) ? 1.5 : 1}
-                    strokeDasharray={st === 'held' && !selected.includes(s.id) ? '2 1.5' : undefined}
+                    strokeDasharray={
+                      st === 'held' && !selected.includes(s.id) ? '2 1.5' : undefined
+                    }
                     className={disabled ? styles.seatDisabled : styles.seat}
                     tabIndex={disabled ? -1 : 0}
                     role="button"

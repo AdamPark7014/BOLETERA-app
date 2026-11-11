@@ -137,11 +137,15 @@ export function EventStage({
       {description ? <p className={styles.lead}>{description}</p> : null}
 
       <div className={styles.chips}>
-        <span className={styles.chip}>{refundable === false ? 'No reembolsable' : 'Reembolsable'}</span>
+        <span className={styles.chip}>
+          {refundable === false ? 'No reembolsable' : 'Reembolsable'}
+        </span>
         <span className={styles.chip}>
           {nonTransferable || transferAllowed === false ? 'No transferible' : 'Transferible'}
         </span>
-        <span className={styles.chip}>{allowResale === false ? 'Sin reventa' : 'Reventa oficial'}</span>
+        <span className={styles.chip}>
+          {allowResale === false ? 'Sin reventa' : 'Reventa oficial'}
+        </span>
         <span className={styles.chip}>Apartado · {minutes} min</span>
       </div>
 
@@ -149,7 +153,9 @@ export function EventStage({
         <summary>Ver condiciones</summary>
         {rating ? <p>Clasificación · {rating}</p> : null}
         {genre ? <p>Género · {genre}</p> : null}
-        {venueAddress ? <p>{[venueName, venueAddress, venueCity].filter(Boolean).join(' · ')}</p> : null}
+        {venueAddress ? (
+          <p>{[venueName, venueAddress, venueCity].filter(Boolean).join(' · ')}</p>
+        ) : null}
       </details>
 
       {hasOffer ? (

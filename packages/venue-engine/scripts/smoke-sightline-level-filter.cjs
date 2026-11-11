@@ -61,7 +61,7 @@ const floor = calculateSightlines(scene, { levelId: 'lvl-floor' });
 assert(floor.scores.length === 3, 'floor scores only');
 assert(
   floor.scores.every((s) => s.seatId.startsWith('p')),
-  'floor seat ids',
+  'floor seat ids'
 );
 assert(
   floor.summary.premium +
@@ -70,14 +70,14 @@ assert(
     floor.summary.restricted +
     floor.summary.blocked ===
     3,
-  'floor summary count',
+  'floor summary count'
 );
 
 const balc = calculateSightlines(scene, { levelId: 'lvl-balc' });
 assert(balc.scores.length === 2, 'balc scores only');
 assert(
   balc.scores.every((s) => s.seatId.startsWith('b')),
-  'balc seat ids',
+  'balc seat ids'
 );
 
 const applied = applySightlinesToScene(scene, { levelId: 'lvl-floor' });

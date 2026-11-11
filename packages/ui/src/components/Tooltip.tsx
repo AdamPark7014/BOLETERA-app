@@ -75,7 +75,7 @@ export function Tooltip({
       }
       timerRef.current = setTimeout(() => setOpen(true), delay);
     },
-    [disabled, delay, cancelTimer],
+    [disabled, delay, cancelTimer]
   );
 
   const hide = useCallback(() => {
@@ -92,7 +92,11 @@ export function Tooltip({
     const floating = floatingRef.current;
     if (!trigger || !floating) return;
     setPosition(
-      computePosition(toBox(trigger.getBoundingClientRect()), toBox(floating.getBoundingClientRect()), placement),
+      computePosition(
+        toBox(trigger.getBoundingClientRect()),
+        toBox(floating.getBoundingClientRect()),
+        placement
+      )
     );
   }, [open, placement, content]);
 

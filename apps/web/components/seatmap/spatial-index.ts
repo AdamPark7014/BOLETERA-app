@@ -88,7 +88,7 @@ export function forEachSeatInRect(
   minY: number,
   maxX: number,
   maxY: number,
-  visit: (seatIndex: number) => void,
+  visit: (seatIndex: number) => void
 ): void {
   const c0 = clampInt(Math.floor((minX - grid.minX) / grid.cell), 0, grid.cols - 1);
   const c1 = clampInt(Math.floor((maxX - grid.minX) / grid.cell), 0, grid.cols - 1);
@@ -116,7 +116,7 @@ export function findNearestSeat(
   x: number,
   y: number,
   maxDist: number,
-  accept?: (seatIndex: number) => boolean,
+  accept?: (seatIndex: number) => boolean
 ): number {
   let best = -1;
   let bestDist = maxDist * maxDist;

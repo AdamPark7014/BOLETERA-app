@@ -232,11 +232,7 @@
 
 .swatchRouteActive {
   background: #f472b6;
-  background-image: repeating-linear-gradient(
-    90deg,
-    #f472b6 0 6px,
-    transparent 6px 10px
-  );
+  background-image: repeating-linear-gradient(90deg, #f472b6 0 6px, transparent 6px 10px);
 }
 
 .swatchBottleneck {
@@ -757,4 +753,3 @@
 .generatorPreview {
   pointer-events: none;
 }
-

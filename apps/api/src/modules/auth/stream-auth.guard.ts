@@ -1,9 +1,4 @@
-import {
-  ExecutionContext,
-  Injectable,
-  SetMetadata,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ExecutionContext, Injectable, SetMetadata, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
@@ -34,7 +29,7 @@ export class StreamAuthGuard extends AuthGuard('jwt') {
   constructor(
     private reflector: Reflector,
     private tickets: StreamTicketService,
-    private jwtStrategy: JwtStrategy,
+    private jwtStrategy: JwtStrategy
   ) {
     super();
   }

@@ -88,7 +88,7 @@ export class LayoutManagementController {
   async createLayout(
     @Param('venueId') venueId: string,
     @CurrentUser('organizationId') orgId: string,
-    @Body() data: CreateLayoutDto,
+    @Body() data: CreateLayoutDto
   ) {
     return await this.layoutService.createVenueLayout(venueId, data, orgId);
   }
@@ -98,7 +98,7 @@ export class LayoutManagementController {
   @ApiOperation({ summary: 'Calculate sightline scores' })
   async calculateSightlines(
     @Param('layoutId') layoutId: string,
-    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string }
   ) {
     return await this.layoutService.calculateSightlineScores(layoutId, {
       userId: user.sub,
@@ -113,7 +113,7 @@ export class LayoutManagementController {
   async holdSeats(
     @Param('layoutId') layoutId: string,
     @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
-    @Body() data: HoldSeatsDto,
+    @Body() data: HoldSeatsDto
   ) {
     return await this.layoutService.holdSeats(
       layoutId,
@@ -122,7 +122,7 @@ export class LayoutManagementController {
       { userId: user.sub, organizationId: user.organizationId, role: user.role },
       { reason: data.reason, category: data.category },
       data.sessionId,
-      data.durationMinutes,
+      data.durationMinutes
     );
   }
 
@@ -132,7 +132,7 @@ export class LayoutManagementController {
   async blockSeats(
     @Param('layoutId') layoutId: string,
     @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
-    @Body() data: BlockSeatsDto,
+    @Body() data: BlockSeatsDto
   ) {
     return await this.layoutService.blockSeats(
       layoutId,
@@ -140,7 +140,7 @@ export class LayoutManagementController {
       data.seatIds,
       { userId: user.sub, organizationId: user.organizationId, role: user.role },
       { reason: data.reason, category: data.category },
-      data.label,
+      data.label
     );
   }
 
@@ -150,13 +150,13 @@ export class LayoutManagementController {
   async unblockSeats(
     @Param('layoutId') _layoutId: string,
     @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
-    @Body() data: UnblockSeatsDto,
+    @Body() data: UnblockSeatsDto
   ) {
     return await this.layoutService.unblockSeats(
       data.eventId,
       { seatIds: data.seatIds, blockIds: data.blockIds },
       { userId: user.sub, organizationId: user.organizationId, role: user.role },
-      { reason: data.reason, category: data.category },
+      { reason: data.reason, category: data.category }
     );
   }
 
@@ -165,7 +165,7 @@ export class LayoutManagementController {
   @ApiOperation({ summary: 'Apartados vigentes y plazos efectivos. No escribe.' })
   async listHolds(
     @Param('eventId') eventId: string,
-    @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
+    @CurrentUser() user: { sub: string; organizationId: string | null; role: string }
   ) {
     return await this.layoutService.listHolds(eventId, {
       userId: user.sub,
@@ -180,12 +180,12 @@ export class LayoutManagementController {
   async listBlocks(
     @Param('eventId') eventId: string,
     @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
-    @Query('includeReleased') includeReleased?: string,
+    @Query('includeReleased') includeReleased?: string
   ) {
     return await this.layoutService.listBlocks(
       eventId,
       { userId: user.sub, organizationId: user.organizationId, role: user.role },
-      includeReleased === 'true',
+      includeReleased === 'true'
     );
   }
 
@@ -195,14 +195,12 @@ export class LayoutManagementController {
   async releaseSeats(
     @Param('layoutId') _layoutId: string,
     @CurrentUser() user: { sub: string; organizationId: string | null; role: string },
-    @Body() data: ReleaseSeatsDto,
+    @Body() data: ReleaseSeatsDto
   ) {
     return await this.layoutService.releaseSeats(
       data.seatIds,
       { userId: user.sub, organizationId: user.organizationId, role: user.role },
-      { reason: data.reason, category: data.category },
+      { reason: data.reason, category: data.category }
     );
   }
 }
-
-

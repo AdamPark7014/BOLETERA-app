@@ -32,7 +32,7 @@ export class EventManagementController {
   constructor(
     private eventService: EventManagementService,
     private saleWindow: SaleWindowService,
-    private publishValidation: EventPublishValidationService,
+    private publishValidation: EventPublishValidationService
   ) {}
 
   // ==================== EVENT CREATION ====================
@@ -121,7 +121,7 @@ export class EventManagementController {
   async updateOffer(
     @Param('eventId') eventId: string,
     @Param('offerId') offerId: string,
-    @Body() data: { basePrice?: number; name?: string; isAvailable?: boolean },
+    @Body() data: { basePrice?: number; name?: string; isAvailable?: boolean }
   ) {
     return await this.eventService.updateOffer(eventId, offerId, data);
   }
@@ -193,7 +193,7 @@ export class EventManagementController {
   @ApiOperation({ summary: 'Listar fases de venta del evento y la ventana vigente' })
   async listSalePhases(
     @CurrentUser('organizationId') orgId: string,
-    @Param('eventId') eventId: string,
+    @Param('eventId') eventId: string
   ) {
     return await this.eventService.listSalePhases(eventId, orgId);
   }
@@ -204,7 +204,7 @@ export class EventManagementController {
   async createSalePhase(
     @CurrentUser('organizationId') orgId: string,
     @Param('eventId') eventId: string,
-    @Body() data: SalePhaseInput,
+    @Body() data: SalePhaseInput
   ) {
     return await this.eventService.createSalePhase(eventId, orgId, data);
   }
@@ -216,7 +216,7 @@ export class EventManagementController {
     @CurrentUser('organizationId') orgId: string,
     @Param('eventId') eventId: string,
     @Param('phaseId') phaseId: string,
-    @Body() data: SalePhasePatch,
+    @Body() data: SalePhasePatch
   ) {
     return await this.eventService.updateSalePhase(eventId, phaseId, orgId, data);
   }
@@ -227,7 +227,7 @@ export class EventManagementController {
   async removeSalePhase(
     @CurrentUser('organizationId') orgId: string,
     @Param('eventId') eventId: string,
-    @Param('phaseId') phaseId: string,
+    @Param('phaseId') phaseId: string
   ) {
     return await this.eventService.removeSalePhase(eventId, phaseId, orgId);
   }
@@ -243,7 +243,7 @@ export class EventManagementController {
   async getSaleWindow(
     @Param('eventId') eventId: string,
     @Query('channel') channel?: string,
-    @Query('code') code?: string,
+    @Query('code') code?: string
   ) {
     const normalized = channel?.toUpperCase();
     return await this.saleWindow.checkSaleWindow(eventId, {
@@ -271,9 +271,7 @@ export class EventManagementController {
   @Put('bulk/pricing')
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Bulk update pricing for multiple events' })
-  async bulkUpdatePricing(
-    @Body() data: { eventIds: string[]; priceMultiplier: number }
-  ) {
+  async bulkUpdatePricing(@Body() data: { eventIds: string[]; priceMultiplier: number }) {
     return await this.eventService.bulkUpdatePricing(data.eventIds, data.priceMultiplier);
   }
 
@@ -282,10 +280,7 @@ export class EventManagementController {
   @Get('search')
   @Roles('PROMOTER', 'ADMIN')
   @ApiOperation({ summary: 'Advanced event search with filters' })
-  async searchEvents(
-    @CurrentUser('organizationId') orgId: string,
-    @Query() filters: any
-  ) {
+  async searchEvents(@CurrentUser('organizationId') orgId: string, @Query() filters: any) {
     return await this.eventService.searchEvents(orgId, filters);
   }
 
@@ -295,7 +290,7 @@ export class EventManagementController {
   async updateAnnouncedHold(
     @CurrentUser('organizationId') orgId: string,
     @Param('eventId') eventId: string,
-    @Body() body: { minutes?: number },
+    @Body() body: { minutes?: number }
   ) {
     return await this.eventService.updateAnnouncedHold(orgId, eventId, Number(body?.minutes));
   }
@@ -306,7 +301,7 @@ export class EventManagementController {
   async updateEventMedia(
     @CurrentUser('organizationId') orgId: string,
     @Param('eventId') eventId: string,
-    @Body() data: { imageUrl?: string; bannerImageUrl?: string },
+    @Body() data: { imageUrl?: string; bannerImageUrl?: string }
   ) {
     return await this.eventService.updateEventMedia(orgId, eventId, data);
   }
@@ -316,7 +311,7 @@ export class EventManagementController {
   @ApiOperation({ summary: 'Pre-publish checklist (blockers vs warnings)' })
   async getPublishValidation(
     @CurrentUser('organizationId') orgId: string,
-    @Param('eventId') eventId: string,
+    @Param('eventId') eventId: string
   ) {
     return await this.publishValidation.validateEventForPublish(eventId, orgId);
   }
@@ -326,10 +321,8 @@ export class EventManagementController {
   @ApiOperation({ summary: 'Event command hub (inventory, channels, config)' })
   async getEventHub(
     @CurrentUser('organizationId') orgId: string,
-    @Param('eventId') eventId: string,
+    @Param('eventId') eventId: string
   ) {
     return await this.eventService.getEventHub(eventId, orgId);
   }
 }
-
-

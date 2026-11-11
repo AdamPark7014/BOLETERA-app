@@ -36,7 +36,7 @@ export class ChannelQuotaService {
 
     if ((bucket.available ?? 0) < quantity) {
       throw new BadRequestException(
-        `Channel ${key} quota exhausted (${bucket.available ?? 0} left, need ${quantity})`,
+        `Channel ${key} quota exhausted (${bucket.available ?? 0} left, need ${quantity})`
       );
     }
   }
@@ -86,7 +86,10 @@ export class ChannelQuotaService {
 
     inventory[key] = {
       ...bucket,
-      available: Math.min(bucket.tickets ?? bucket.available + quantity, (bucket.available ?? 0) + quantity),
+      available: Math.min(
+        bucket.tickets ?? bucket.available + quantity,
+        (bucket.available ?? 0) + quantity
+      ),
       sold: Math.max(0, (bucket.sold ?? 0) - quantity),
     };
 

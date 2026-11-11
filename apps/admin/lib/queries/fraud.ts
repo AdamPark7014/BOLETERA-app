@@ -19,7 +19,7 @@ export function useFraudFlags(limit = 50) {
     queryFn: async ({ signal }) => {
       const result = await http<{ data: FraudFlag[] } | FraudFlag[]>(
         `/fraud/flags?limit=${limit}`,
-        { signal },
+        { signal }
       );
       return Array.isArray(result) ? result : result.data;
     },
@@ -39,15 +39,12 @@ export function useResolveFraudFlag(limit = 50) {
       await client.cancelQueries({ queryKey: key });
       const previous = client.getQueryData<FraudFlag[]>(key);
       client.setQueryData<FraudFlag[]>(key, (flags) =>
-        flags?.map((flag) =>
-          flag.id === flagId ? { ...flag, status: 'RESOLVED' } : flag,
-        ),
+        flags?.map((flag) => (flag.id === flagId ? { ...flag, status: 'RESOLVED' } : flag))
       );
       return { previous };
     },
     onError: (_error, _input, context) =>
       client.setQueryData(queryKeys.fraud.flags(limit), context?.previous),
-    onSettled: () =>
-      client.invalidateQueries({ queryKey: queryKeys.fraud.flags(limit) }),
+    onSettled: () => client.invalidateQueries({ queryKey: queryKeys.fraud.flags(limit) }),
   });
 }

@@ -16,7 +16,7 @@ import { PlatformSuperService } from './platform-super.service';
 export class PlatformSuperController {
   constructor(
     private platformSuper: PlatformSuperService,
-    private reconciliation: ReconciliationService,
+    private reconciliation: ReconciliationService
   ) {}
 
   @Get('overview')
@@ -31,9 +31,7 @@ export class PlatformSuperController {
   @Roles('SUPER_ADMIN')
   @ApiOperation({ summary: 'Cross-tenant operational health checks (read-only)' })
   healthChecks(@Query('organizationId') organizationId?: string) {
-    return this.reconciliation.runHealthChecks(
-      organizationId ? { organizationId } : {},
-    );
+    return this.reconciliation.runHealthChecks(organizationId ? { organizationId } : {});
   }
 
   @Get('search')

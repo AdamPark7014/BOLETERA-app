@@ -21,5 +21,3 @@ import { PaymentController } from './payment.controller';
   exports: [EventCancellationService, PaymentService, BanorteReconciliationService],
 })
 export class PaymentModule {}
-
-

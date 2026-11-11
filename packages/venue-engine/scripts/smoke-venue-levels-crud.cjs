@@ -30,8 +30,22 @@ const map = {
       { id: 'balcon', name: 'Balcón', elevation: 120, zIndex: 1 },
     ],
     aisles: [
-      { id: 'a1', levelId: 'plaza', points: [[0, 0], [0, 10]] },
-      { id: 'a2', levelId: 'balcon', points: [[20, 0], [20, 10]] },
+      {
+        id: 'a1',
+        levelId: 'plaza',
+        points: [
+          [0, 0],
+          [0, 10],
+        ],
+      },
+      {
+        id: 'a2',
+        levelId: 'balcon',
+        points: [
+          [20, 0],
+          [20, 10],
+        ],
+      },
     ],
     exits: [{ id: 'e1', levelId: 'balcon', points: [[20, 20]] }],
     obstacles: [
@@ -53,7 +67,10 @@ const map = {
         id: 'st1',
         fromLevelId: 'balcon',
         toLevelId: 'plaza',
-        points: [[10, 5], [10, 15]],
+        points: [
+          [10, 5],
+          [10, 15],
+        ],
       },
     ],
   },

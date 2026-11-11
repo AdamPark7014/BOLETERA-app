@@ -26,13 +26,7 @@ type BarcodeDetectorGlobal = {
 
 type TorchCapabilities = MediaTrackCapabilities & { torch?: boolean };
 
-export type CameraStatus =
-  | 'idle'
-  | 'requesting'
-  | 'running'
-  | 'denied'
-  | 'unsupported'
-  | 'error';
+export type CameraStatus = 'idle' | 'requesting' | 'running' | 'denied' | 'unsupported' | 'error';
 
 export type CameraDevice = { deviceId: string; label: string };
 
@@ -139,7 +133,7 @@ export function useCameraCapture(options: {
             deviceId: device.deviceId,
             label: device.label || `Cámara ${index + 1}`,
           }))
-          .filter((device) => device.deviceId !== ''),
+          .filter((device) => device.deviceId !== '')
       );
     } catch {
       /* enumerar dispositivos es opcional */
@@ -152,7 +146,7 @@ export function useCameraCapture(options: {
       setError(
         typeof window !== 'undefined' && !window.isSecureContext
           ? 'La cámara requiere una conexión segura (HTTPS). Usa el modo manual.'
-          : 'Este navegador no permite acceder a la cámara. Usa el modo manual.',
+          : 'Este navegador no permite acceder a la cámara. Usa el modo manual.'
       );
       return;
     }
@@ -172,9 +166,7 @@ export function useCameraCapture(options: {
   useEffect(() => {
     if (!active) {
       setStatus((current) =>
-        current === 'denied' || current === 'error' || current === 'unsupported'
-          ? current
-          : 'idle',
+        current === 'denied' || current === 'error' || current === 'unsupported' ? current : 'idle'
       );
       return;
     }

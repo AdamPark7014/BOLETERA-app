@@ -43,7 +43,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
     inputMode,
     ...rest
   },
-  ref,
+  ref
 ) {
   const generatedId = useId();
   const inputId = id ?? `${generatedId}-field`;
@@ -66,7 +66,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
           styles[resolved],
           kind === 'money' && styles.money,
           invalid && styles.invalid,
-          disabled && styles.disabled,
+          disabled && styles.disabled
         )}
         data-density={resolved}
       >

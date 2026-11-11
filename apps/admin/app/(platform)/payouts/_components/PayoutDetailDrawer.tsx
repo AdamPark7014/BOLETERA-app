@@ -102,9 +102,7 @@ export function PayoutDetailDrawer({
       open={payout !== null}
       onClose={onClose}
       title={
-        payout
-          ? `${formatDay(payout.periodStart)} – ${formatDay(payout.periodEnd)}`
-          : 'Liquidación'
+        payout ? `${formatDay(payout.periodStart)} – ${formatDay(payout.periodEnd)}` : 'Liquidación'
       }
       description={payout ? `Neto ${formatMoney(payout.netCents)}` : undefined}
       size="md"
@@ -115,12 +113,7 @@ export function PayoutDetailDrawer({
               Cerrar
             </Button>
             {completeAllowed ? (
-              <Button
-                variant="primary"
-                size="sm"
-                loading={busy}
-                onClick={() => onComplete(payout)}
-              >
+              <Button variant="primary" size="sm" loading={busy} onClick={() => onComplete(payout)}>
                 Marcar pagado
               </Button>
             ) : (
@@ -186,9 +179,7 @@ export function PayoutDetailDrawer({
               items={buildTimeline(payout)}
               density="sm"
             />
-            <p className={styles.srOnly}>
-              Estado actual: {meta.label}.
-            </p>
+            <p className={styles.srOnly}>Estado actual: {meta.label}.</p>
           </section>
         </div>
       )}

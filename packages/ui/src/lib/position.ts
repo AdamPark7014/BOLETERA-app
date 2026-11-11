@@ -35,7 +35,13 @@ const OPPOSITE: Record<Placement, Placement> = {
   right: 'left',
 };
 
-function fits(placement: Placement, anchor: Box, floating: Box, gap: number, padding: number): boolean {
+function fits(
+  placement: Placement,
+  anchor: Box,
+  floating: Box,
+  gap: number,
+  padding: number
+): boolean {
   switch (placement) {
     case 'top':
       return anchor.top - floating.height - gap >= padding;
@@ -48,7 +54,12 @@ function fits(placement: Placement, anchor: Box, floating: Box, gap: number, pad
   }
 }
 
-function alignAlong(start: number, anchorSize: number, floatingSize: number, alignment: Alignment): number {
+function alignAlong(
+  start: number,
+  anchorSize: number,
+  floatingSize: number,
+  alignment: Alignment
+): number {
   if (alignment === 'start') return start;
   if (alignment === 'end') return start + anchorSize - floatingSize;
   return start + (anchorSize - floatingSize) / 2;
@@ -67,7 +78,7 @@ export function computePosition(
   placement: Placement,
   alignment: Alignment = 'center',
   gap = 8,
-  padding = 8,
+  padding = 8
 ): Position {
   const resolved =
     fits(placement, anchor, floating, gap, padding) ||

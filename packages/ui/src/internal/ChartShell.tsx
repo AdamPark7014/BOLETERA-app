@@ -65,13 +65,7 @@ export function ChartShell({
 
   return (
     <figure className={cx(styles.shell, className)}>
-      <div
-        ref={ref}
-        className={styles.canvas}
-        style={{ height }}
-        role="img"
-        aria-label={label}
-      >
+      <div ref={ref} className={styles.canvas} style={{ height }} role="img" aria-label={label}>
         {size.width > 0 ? children({ width: size.width, height }) : null}
 
         {tooltip ? (
@@ -119,7 +113,7 @@ export function ChartShell({
                   </th>
                 ) : (
                   <td key={cellIndex}>{cell}</td>
-                ),
+                )
               )}
             </tr>
           ))}

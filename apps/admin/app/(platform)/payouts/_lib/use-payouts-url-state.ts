@@ -37,8 +37,7 @@ export function usePayoutsUrlState() {
     const periodRaw = searchParams.get('period') ?? 'MONTHLY';
     const period: SettlementPeriod = isSettlementPeriod(periodRaw) ? periodRaw : 'MONTHLY';
     const statuses = parseList(searchParams.get('status')).filter(isPayoutStatus);
-    const filterSelection: FilterSelection =
-      statuses.length > 0 ? { status: statuses } : {};
+    const filterSelection: FilterSelection = statuses.length > 0 ? { status: statuses } : {};
     return {
       period,
       statuses,
@@ -58,12 +57,12 @@ export function usePayoutsUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   const setPeriod = useCallback(
     (period: SettlementPeriod) => replaceParams({ period }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setSearch = useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]);
@@ -73,12 +72,12 @@ export function usePayoutsUrlState() {
       const statuses = selection.status ?? [];
       replaceParams({ status: statuses.length ? statuses.join(',') : null });
     },
-    [replaceParams],
+    [replaceParams]
   );
 
   const setSelectedId = useCallback(
     (payoutId: string | null) => replaceParams({ payout: payoutId }),
-    [replaceParams],
+    [replaceParams]
   );
 
   return { ...state, setPeriod, setSearch, setFilterSelection, setSelectedId };

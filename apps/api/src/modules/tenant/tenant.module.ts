@@ -8,5 +8,3 @@ import { TenantController } from './tenant.controller';
   exports: [TenantService],
 })
 export class TenantModule {}
-
-

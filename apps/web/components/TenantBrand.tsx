@@ -22,9 +22,7 @@ export function TenantBrandProvider({
   value: TenantBrand;
   children: ReactNode;
 }) {
-  return (
-    <TenantBrandContext.Provider value={value}>{children}</TenantBrandContext.Provider>
-  );
+  return <TenantBrandContext.Provider value={value}>{children}</TenantBrandContext.Provider>;
 }
 
 export function useTenantBrand(): TenantBrand {

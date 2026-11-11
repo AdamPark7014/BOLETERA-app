@@ -86,7 +86,7 @@ export class ResaleService {
       offer: { basePrice: unknown };
       event: { allowResale: boolean; organization: { resaleCommission: number | null } };
     },
-    data: { askingPrice: number; currency: string; sellerId: string; sellerName: string },
+    data: { askingPrice: number; currency: string; sellerId: string; sellerName: string }
   ) {
     if (ticket.status !== 'SOLD') throw new BadRequestException('Ticket must be in SOLD status');
     if (!ticket.orderItemId) throw new BadRequestException('Ticket must have order history');
@@ -101,7 +101,7 @@ export class ResaleService {
 
     if (data.askingPrice < minPrice || data.askingPrice > maxPrice) {
       throw new BadRequestException(
-        `Price must be between ${minPrice.toFixed(2)} and ${maxPrice.toFixed(2)}`,
+        `Price must be between ${minPrice.toFixed(2)} and ${maxPrice.toFixed(2)}`
       );
     }
 
@@ -228,7 +228,7 @@ export class ResaleService {
       });
 
       this.logger.log(
-        `Resale offer accepted: ${offerId}, ticket transferred to ${offer.buyerEmail}`,
+        `Resale offer accepted: ${offerId}, ticket transferred to ${offer.buyerEmail}`
       );
 
       return { resaleOrder, transferTicket };
@@ -313,7 +313,8 @@ export class ResaleService {
         originalPrice: Number(listing.ticket.offer.basePrice),
         resalePrice: Number(listing.askingPrice),
         markup: (
-          ((Number(listing.askingPrice) / Number(listing.ticket.offer.basePrice)) * 100 - 100)
+          (Number(listing.askingPrice) / Number(listing.ticket.offer.basePrice)) * 100 -
+          100
         ).toFixed(1),
       },
       pendingOffers: listing.offers.length,
@@ -447,5 +448,3 @@ export class ResaleService {
     };
   }
 }
-
-

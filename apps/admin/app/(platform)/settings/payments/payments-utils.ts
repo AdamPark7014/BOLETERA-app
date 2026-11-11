@@ -86,7 +86,7 @@ export function envLabel(cfg: BanorteConfig): string {
 /** Masks env var names as credential slots — never shows secret values. */
 export function buildCredentialRows(
   cfg: BanorteConfig,
-  checklist: BanorteValidation,
+  checklist: BanorteValidation
 ): CredentialRow[] {
   const missing = new Set(checklist.missing);
   const warnings = new Set(checklist.warnings);
@@ -148,11 +148,7 @@ export function parseOrgFees(data: Record<string, unknown> | undefined): OrgFeeS
   if (!data) return null;
   const rateRaw = data.commissionRate;
   const rate =
-    typeof rateRaw === 'number'
-      ? rateRaw
-      : typeof rateRaw === 'string'
-        ? Number(rateRaw)
-        : NaN;
+    typeof rateRaw === 'number' ? rateRaw : typeof rateRaw === 'string' ? Number(rateRaw) : NaN;
   if (Number.isNaN(rate)) return null;
   return {
     commissionRate: rate,
@@ -238,7 +234,7 @@ export function summarizePaymentHealth(orders: OrderRow[] | undefined): PaymentH
 export function methodEnabled(
   method: string,
   cfg: BanorteConfig,
-  checklist: BanorteValidation,
+  checklist: BanorteValidation
 ): { enabled: boolean; reason: string } {
   if (cfg.demo) {
     return { enabled: true, reason: 'Disponible en demo (sin cobro real)' };

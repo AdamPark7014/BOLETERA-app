@@ -141,9 +141,7 @@ const MATRIX: Record<Role, Capability[]> = {
 };
 
 /** Todas las capacidades conocidas (para `SUPER_ADMIN`). */
-export const ALL_CAPABILITIES: Capability[] = [
-  ...new Set(Object.values(MATRIX).flat()),
-];
+export const ALL_CAPABILITIES: Capability[] = [...new Set(Object.values(MATRIX).flat())];
 
 export function isKnownRole(role: string | null | undefined): role is Role {
   return !!role && role in MATRIX;
@@ -204,7 +202,7 @@ export const CAPABILITY_LABELS: Record<Capability, string> = {
  */
 export function rolesWithCapability(cap: Capability): Role[] {
   return (Object.keys(MATRIX) as Role[]).filter(
-    (r) => r !== 'CUSTOMER' && (r === 'SUPER_ADMIN' || MATRIX[r].includes(cap)),
+    (r) => r !== 'CUSTOMER' && (r === 'SUPER_ADMIN' || MATRIX[r].includes(cap))
   );
 }
 

@@ -83,7 +83,7 @@ export function AccessibleSeatPicker({
   const sections = useMemo(() => {
     if (!accessibleOnly) return sectionOrder;
     return sectionOrder.filter((sec) =>
-      (seatIndexesBySection.get(sec.id) ?? []).some((i) => seats[i].accessible),
+      (seatIndexesBySection.get(sec.id) ?? []).some((i) => seats[i].accessible)
     );
   }, [sectionOrder, accessibleOnly, seatIndexesBySection, seats]);
 
@@ -139,7 +139,7 @@ export function AccessibleSeatPicker({
       ].filter(Boolean);
       return parts.join(', ');
     },
-    [seats, selectedSet, statusAt, currency],
+    [seats, selectedSet, statusAt, currency]
   );
 
   const toggle = useCallback(
@@ -151,26 +151,28 @@ export function AccessibleSeatPicker({
         setAnnouncement(
           `Quitada ${seat.row ? `fila ${seat.row}, ` : ''}butaca ${seat.label}. ${
             selectedIds.length - 1
-          } de ${maxSelect} seleccionadas.`,
+          } de ${maxSelect} seleccionadas.`
         );
         return;
       }
       if (status !== 'available') {
         setAnnouncement(
-          `No se puede seleccionar: ${describeSeat(index)}. Elige otra butaca de la lista.`,
+          `No se puede seleccionar: ${describeSeat(index)}. Elige otra butaca de la lista.`
         );
         return;
       }
       if (selectedIds.length >= maxSelect) {
         setAnnouncement(
-          `Ya tienes el máximo de ${maxSelect} butacas. Quita alguna antes de agregar otra.`,
+          `Ya tienes el máximo de ${maxSelect} butacas. Quita alguna antes de agregar otra.`
         );
         return;
       }
       onToggleSeat(seat.id);
-      setAnnouncement(`Agregada ${describeSeat(index)}. ${selectedIds.length + 1} de ${maxSelect}.`);
+      setAnnouncement(
+        `Agregada ${describeSeat(index)}. ${selectedIds.length + 1} de ${maxSelect}.`
+      );
     },
-    [seats, statusAt, selectedSet, selectedIds.length, maxSelect, onToggleSeat, describeSeat],
+    [seats, statusAt, selectedSet, selectedIds.length, maxSelect, onToggleSeat, describeSeat]
   );
 
   return (
@@ -193,7 +195,7 @@ export function AccessibleSeatPicker({
             setAnnouncement(
               e.target.checked
                 ? 'Mostrando solo lugares accesibles.'
-                : 'Mostrando todas las butacas.',
+                : 'Mostrando todas las butacas.'
             );
           }}
         />
@@ -241,7 +243,13 @@ export function AccessibleSeatPicker({
               ariaLabel: describeSeat(index),
               selected: selectedSet.has(seat.id),
               disabled: status !== 'available' && status !== 'selected',
-              badge: seat.accessible ? '♿' : status === 'held' ? '⧗' : status === 'sold' ? '✕' : '',
+              badge: seat.accessible
+                ? '♿'
+                : status === 'held'
+                  ? '⧗'
+                  : status === 'sold'
+                    ? '✕'
+                    : '',
               onFocus: () => onFocusSeat(index),
               onActivate: () => toggle(index),
             };

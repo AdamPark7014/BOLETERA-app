@@ -46,7 +46,9 @@ $danger: var(--bl-danger-text);
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    transform 0.1s;
 
   &:hover {
     background: var(--bl-gray-800);
@@ -68,7 +70,9 @@ $danger: var(--bl-danger-text);
   color: $ink;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 
   &:hover {
     background: $surface-soft;
@@ -89,7 +93,9 @@ $danger: var(--bl-danger-text);
   border-radius: var(--bl-radius-lg);
   padding: var(--bl-space-4) var(--bl-space-5);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 
   &:hover {
     border-color: $border-strong;
@@ -257,7 +263,9 @@ $danger: var(--bl-danger-text);
       font-size: var(--bl-text-md);
       color: $ink;
       background: $surface;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 
       &:focus {
         outline: none;

@@ -109,8 +109,7 @@ function orgBase(organizationId: string): string {
 export function useSponsors(organizationId: string | null) {
   return useQuery({
     queryKey: queryKeys.sponsorships.sponsors(organizationId ?? ''),
-    queryFn: ({ signal }) =>
-      http<Sponsor[]>(`${orgBase(organizationId!)}/sponsors`, { signal }),
+    queryFn: ({ signal }) => http<Sponsor[]>(`${orgBase(organizationId!)}/sponsors`, { signal }),
     enabled: Boolean(organizationId),
     staleTime: STALE_TIME,
     retry: false,
@@ -198,7 +197,7 @@ export function useCreateSponsorshipPackage(organizationId: string) {
     onSuccess: (pkg) =>
       client.setQueryData<SponsorshipPackage[]>(
         queryKeys.sponsorships.packages(organizationId),
-        (current = []) => [...current, pkg],
+        (current = []) => [...current, pkg]
       ),
     onSettled: () => {
       void client.invalidateQueries({

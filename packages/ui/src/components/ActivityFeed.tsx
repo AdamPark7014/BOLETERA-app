@@ -41,7 +41,7 @@ export interface ActivityFeedProps extends Omit<HTMLAttributes<HTMLDivElement>, 
 
 /** Agrupa por dia conservando el orden recibido. */
 function groupEntries(
-  items: readonly ActivityItem[],
+  items: readonly ActivityItem[]
 ): Array<{ key: string; label: string; entries: ActivityItem[] }> {
   const groups = new Map<string, { key: string; label: string; entries: ActivityItem[] }>();
   for (const item of items) {

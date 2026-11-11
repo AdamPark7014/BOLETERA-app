@@ -131,12 +131,7 @@ export type ComplianceVerdict = {
   compliant: boolean;
   /** `false` si el evento no llega al umbral de aforo. */
   applies: boolean;
-  reason:
-    | 'OK'
-    | 'BELOW_THRESHOLD'
-    | 'NOT_PUBLISHED'
-    | 'PUBLISHED_TOO_LATE'
-    | 'NO_SALE_START';
+  reason: 'OK' | 'BELOW_THRESHOLD' | 'NOT_PUBLISHED' | 'PUBLISHED_TOO_LATE' | 'NO_SALE_START';
   message: string;
   publishedAt: Date | null;
   /** Instante a partir del cual la venta puede abrir legalmente. */
@@ -149,7 +144,7 @@ export class ProfecoDisclosureService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    private readonly redis: RedisService
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -269,9 +264,7 @@ export class ProfecoDisclosureService {
       faltantes.push('alguna sección no tiene precio');
 
     if (faltantes.length) {
-      throw new BadRequestException(
-        `No se puede divulgar todavía: ${faltantes.join('; ')}.`,
-      );
+      throw new BadRequestException(`No se puede divulgar todavía: ${faltantes.join('; ')}.`);
     }
 
     const contentHash = hashPayload(payload);
@@ -292,7 +285,7 @@ export class ProfecoDisclosureService {
 
     this.logger.log(
       `Divulgación publicada para ${eventId}: ${payload.sections.length} secciones, ` +
-        `aforo ${payload.capacity}, ${payload.regime.applies ? 'SUJETA' : 'no sujeta'} a los lineamientos`,
+        `aforo ${payload.capacity}, ${payload.regime.applies ? 'SUJETA' : 'no sujeta'} a los lineamientos`
     );
 
     return {
@@ -340,7 +333,11 @@ export class ProfecoDisclosureService {
       orderBy: { publishedAt: 'desc' },
       select: { publishedAt: true },
     });
-    await this.redis.setJson(key, { at: row?.publishedAt.toISOString() ?? null }, FACTS_TTL_SECONDS);
+    await this.redis.setJson(
+      key,
+      { at: row?.publishedAt.toISOString() ?? null },
+      FACTS_TTL_SECONDS
+    );
     return row?.publishedAt ?? null;
   }
 
@@ -374,7 +371,7 @@ export class ProfecoDisclosureService {
   async check(
     eventId: string,
     now: Date = new Date(),
-    known?: EventFacts,
+    known?: EventFacts
   ): Promise<ComplianceVerdict> {
     const event = known ?? (await this.eventFacts(eventId));
     const capacity = event.totalCapacity;
@@ -504,7 +501,14 @@ export class ProfecoDisclosureService {
 
     const byZone = new Map<
       string,
-      { total: number; available: number; held: number; sold: number; base: number; currency: string }
+      {
+        total: number;
+        available: number;
+        held: number;
+        sold: number;
+        base: number;
+        currency: string;
+      }
     >();
     for (const offer of offers) {
       const zone = offer.zone?.trim() || offer.name?.trim() || 'General';
@@ -556,7 +560,7 @@ export class ProfecoDisclosureService {
     if (input.applies && !input.seatMap) {
       out.push(
         'No hay plano de butacas publicado. Para eventos con asiento numerado el ' +
-          'lineamiento pide un plano del recinto con las secciones identificadas.',
+          'lineamiento pide un plano del recinto con las secciones identificadas.'
       );
     }
     return out;

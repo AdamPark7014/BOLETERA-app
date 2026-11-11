@@ -100,7 +100,7 @@ export function buildEgressPdfBuffer(report: EgressReport): Promise<Buffer> {
   } else {
     for (const b of analysis.egress.bottlenecks.slice(0, 8)) {
       doc.text(
-        `• ${b.kind} · ancho ${b.width}u · carga ${b.seatLoad}/${b.capacity} (${Math.round(b.utilization * 100)}%) · ~${fmt(b.clearanceMinutes)} min · flow ${fmt(b.flowPerMinute, 0)} p/min`,
+        `• ${b.kind} · ancho ${b.width}u · carga ${b.seatLoad}/${b.capacity} (${Math.round(b.utilization * 100)}%) · ~${fmt(b.clearanceMinutes)} min · flow ${fmt(b.flowPerMinute, 0)} p/min`
       );
     }
   }
@@ -114,10 +114,13 @@ export function buildEgressPdfBuffer(report: EgressReport): Promise<Buffer> {
   }
 
   doc.moveDown(1);
-  doc.fontSize(8).fillColor('#888').text(
-    'Estimaciones heurísticas (caminata + flujo por ancho). No sustituyen ingeniería de seguridad contra incendios.',
-    { align: 'left' },
-  );
+  doc
+    .fontSize(8)
+    .fillColor('#888')
+    .text(
+      'Estimaciones heurísticas (caminata + flujo por ancho). No sustituyen ingeniería de seguridad contra incendios.',
+      { align: 'left' }
+    );
 
   doc.end();
   return done;

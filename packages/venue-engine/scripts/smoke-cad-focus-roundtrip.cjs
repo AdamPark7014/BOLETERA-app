@@ -50,7 +50,10 @@ assert(/data-name="Centro"/.test(svg), 'svg focus label');
 assert(/data-z="50"/.test(svg), 'svg focus z');
 
 const preview = previewSvgCadImport(svg);
-assert(preview.some((r) => r.role === 'focus' || r.suggestedRole === 'focus'), 'preview focus');
+assert(
+  preview.some((r) => r.role === 'focus' || r.suggestedRole === 'focus'),
+  'preview focus'
+);
 
 const svgImport = importSvgToSeatMap(svg, { version: 3, sections: [] }, { mode: 'replace-meta' });
 assert(svgImport.stats.focuses >= 3, `svg focuses ${svgImport.stats.focuses}`);
@@ -58,7 +61,7 @@ const foci = svgImport.map.venue?.focusPoints ?? [];
 assert(foci.length >= 3, `focus count ${foci.length}`);
 assert(
   foci.some((f) => /centro/i.test(f.label ?? '') && f.z === 50),
-  'centro z=50',
+  'centro z=50'
 );
 
 // --- DXF ---
@@ -71,7 +74,7 @@ assert(dxfImport.stats.focuses >= 1, `dxf focuses ${dxfImport.stats.focuses}`);
 assert((dxfImport.map.venue?.focusPoints?.length ?? 0) >= 1, 'dxf focus points');
 assert(
   dxfImport.map.venue.focusPoints.some((f) => f.z === 50 || f.z === 45),
-  'dxf z preserved',
+  'dxf z preserved'
 );
 
 // Direct apply focus role
@@ -86,7 +89,7 @@ const direct = applyCadPrimitivesToSeatMap(
     },
   ],
   { version: 3, sections: [] },
-  { mode: 'replace-meta' },
+  { mode: 'replace-meta' }
 );
 assert(direct.stats.focuses === 1, 'direct focus');
 assert(direct.map.venue.focusPoints[0].label === 'Proscenio', 'label');

@@ -389,7 +389,7 @@ export function flattenNavItems(role?: string | null): NavItemDef[] {
 /** Hide platform-wide entries from non–super-admins. */
 export function filterNavGroupsForRole(
   groups: readonly NavGroupDef[],
-  role?: string | null,
+  role?: string | null
 ): NavGroupDef[] {
   const isSuperAdmin = role?.toUpperCase() === 'SUPER_ADMIN';
   return groups

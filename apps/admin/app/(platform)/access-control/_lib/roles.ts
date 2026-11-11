@@ -56,9 +56,7 @@ export const ACCESS_ROLES: readonly AccessRoleOption[] = [
   },
 ];
 
-const BY_VALUE = new Map<string, AccessRoleOption>(
-  ACCESS_ROLES.map((role) => [role.value, role]),
-);
+const BY_VALUE = new Map<string, AccessRoleOption>(ACCESS_ROLES.map((role) => [role.value, role]));
 
 export function accessRoleLabel(role: string): string {
   return BY_VALUE.get(role)?.label ?? role;

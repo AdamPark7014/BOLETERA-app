@@ -224,8 +224,13 @@ async function attemptHold(i, ctx, label) {
 async function wave(ctx, label, count) {
   const results = await Promise.all(
     Array.from({ length: count }, (_, i) =>
-      attemptHold(i, ctx, label).catch((e) => ({ ok: false, status: 'error', reason: '', text: String(e).slice(0, 60) })),
-    ),
+      attemptHold(i, ctx, label).catch((e) => ({
+        ok: false,
+        status: 'error',
+        reason: '',
+        text: String(e).slice(0, 60),
+      }))
+    )
   );
   const granted = results.filter((r) => r.ok);
   const exhausted = results.filter((r) => !r.ok && r.reason === 'PHASE_ALLOCATION_EXHAUSTED');
@@ -266,17 +271,25 @@ async function cleanup(ctx) {
 
 const ctx = await seed();
 ctx.cashier = await authenticateCashier(ctx.org.id);
-console.log(`Evento ${ctx.event.slug}: aforo ${CAPACITY}, preventa al ${ALLOCATION}% → tope ${LIMIT}`);
+console.log(
+  `Evento ${ctx.event.slug}: aforo ${CAPACITY}, preventa al ${ALLOCATION}% → tope ${LIMIT}`
+);
 console.log(`Cajero ${ctx.cashier.email} · ${BUYERS} intentos simultáneos\n`);
 
 // ---- 1. El tope aguanta la concurrencia -----------------------------------
 const first = await wave(ctx, 'w1', BUYERS);
 report('1 · TOPE BAJO CONCURRENCIA', [
   `holds concedidos ......... ${first.grantedCount} (tope ${LIMIT}) ${
-    first.grantedCount === LIMIT ? '✅' : first.grantedCount > LIMIT ? `❌ SE COLARON ${first.grantedCount - LIMIT}` : '❌ se concedieron de menos'
+    first.grantedCount === LIMIT
+      ? '✅'
+      : first.grantedCount > LIMIT
+        ? `❌ SE COLARON ${first.grantedCount - LIMIT}`
+        : '❌ se concedieron de menos'
   }`,
   `rechazos por cupo ........ ${first.exhaustedCount}`,
-  ...[...first.breakdown].sort((a, b) => b[1] - a[1]).map(([k, n]) => `  ${String(n).padStart(4)} × ${k}`),
+  ...[...first.breakdown]
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, n]) => `  ${String(n).padStart(4)} × ${k}`),
 ]);
 
 // ---- 2. El cupo vuelve cuando se libera inventario -------------------------
@@ -330,6 +343,6 @@ const failures = [
 ].filter(Boolean);
 
 console.log(
-  `\n${failures.length ? `❌ FALLA: ${failures.join(' · ')}` : '✅ Cupo respetado, devuelto y estado al día'}`,
+  `\n${failures.length ? `❌ FALLA: ${failures.join(' · ')}` : '✅ Cupo respetado, devuelto y estado al día'}`
 );
 process.exit(failures.length ? 1 : 0);

@@ -22,7 +22,7 @@ describe('runSafely', () => {
       job('reconcileBanorteSpei', async () => {
         throw new Error('socket hang up');
       }),
-      logger,
+      logger
     );
 
     assert.deepEqual(logger.errors, ['Worker task reconcileBanorteSpei failed: socket hang up']);
@@ -33,7 +33,7 @@ describe('runSafely', () => {
       job('boom', async () => {
         throw new Error('x');
       }),
-      fakeLogger(),
+      fakeLogger()
     );
     // Llegar aquí ya es la aserción.
     assert.ok(true);
@@ -49,7 +49,7 @@ describe('runTick', () => {
         job('b', async () => void order.push('b')),
         job('c', async () => void order.push('c')),
       ],
-      fakeLogger(),
+      fakeLogger()
     );
 
     assert.deepEqual(order, ['a', 'b', 'c']);
@@ -68,7 +68,7 @@ describe('runTick', () => {
         }),
         job('holds', async () => void order.push('holds')),
       ],
-      logger,
+      logger
     );
 
     assert.deepEqual(order, ['holds']);
@@ -89,7 +89,7 @@ describe('runTick', () => {
         }),
         job('c', async () => void order.push('c')),
       ],
-      logger,
+      logger
     );
 
     assert.equal(logger.errors.length, 2);

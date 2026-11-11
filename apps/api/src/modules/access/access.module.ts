@@ -12,5 +12,3 @@ import { AccessService } from './access.service';
   exports: [AccessService],
 })
 export class AccessModule {}
-
-

@@ -141,11 +141,7 @@ export type AdminApiOptions = RequestInit & {
   noRetry?: boolean;
 };
 
-export async function adminApi<T>(
-  path: string,
-  token: string,
-  init?: AdminApiOptions,
-): Promise<T> {
+export async function adminApi<T>(path: string, token: string, init?: AdminApiOptions): Promise<T> {
   const { silent, noRetry, ...rest } = init ?? {};
 
   async function send(bearer: string): Promise<Response> {
@@ -191,7 +187,7 @@ export async function adminApi<T>(
 export async function adminDownload(
   path: string,
   token: string,
-  fallbackFilename: string,
+  fallbackFilename: string
 ): Promise<void> {
   let res = await fetch(`${API}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -269,7 +265,7 @@ export function clearSession() {
 
 /** Lee el payload del JWT sin validar firma (solo para pintar la interfaz). */
 export function decodeToken(
-  token: string,
+  token: string
 ): { sub?: string; email?: string; role?: string; organizationId?: string; exp?: number } | null {
   try {
     const part = token.split('.')[1];

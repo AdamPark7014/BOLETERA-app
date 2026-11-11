@@ -40,10 +40,7 @@ export class PlatformSuperService {
     return today;
   }
 
-  private textOrIdFilter(
-    q: string,
-    fields: string[],
-  ): { OR: Array<Record<string, unknown>> } {
+  private textOrIdFilter(q: string, fields: string[]): { OR: Array<Record<string, unknown>> } {
     const contains = fields.map((field) => ({
       [field]: { contains: q, mode: 'insensitive' as const },
     }));
@@ -121,7 +118,10 @@ export class PlatformSuperService {
     };
   }
 
-  async search(rawQuery?: string, rawLimit?: number): Promise<{
+  async search(
+    rawQuery?: string,
+    rawLimit?: number
+  ): Promise<{
     query: string;
     limit: number;
     groups: PlatformSuperSearchGroup[];
@@ -132,10 +132,7 @@ export class PlatformSuperService {
       throw new BadRequestException(`La búsqueda requiere al menos ${MIN_QUERY_LENGTH} caracteres`);
     }
 
-    const limit = Math.min(
-      Math.max(rawLimit ?? DEFAULT_SEARCH_LIMIT, 1),
-      MAX_SEARCH_LIMIT,
-    );
+    const limit = Math.min(Math.max(rawLimit ?? DEFAULT_SEARCH_LIMIT, 1), MAX_SEARCH_LIMIT);
 
     const userWhere = this.textOrIdFilter(query, ['email', 'firstName', 'lastName', 'phone']);
     const eventWhere = this.textOrIdFilter(query, ['title', 'slug', 'externalId']);

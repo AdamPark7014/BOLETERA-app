@@ -39,8 +39,8 @@ export function createPlaceFurnitureTool(): Tool {
         setVenueMetaCommand(
           'Colocar mobiliario',
           { furniture },
-          { furniture: [...furniture, item] },
-        ),
+          { furniture: [...furniture, item] }
+        )
       );
       ctx.editor.getState().setSelection({ furnitureIds: [item.id], seatIds: [], stage: false });
     },
@@ -102,8 +102,8 @@ export function createPlaceStageTool(): Tool {
               y: anchor.y,
               width,
             },
-          },
-        ),
+          }
+        )
       );
       ctx.editor.getState().setSelection({ stage: true, seatIds: [], furnitureIds: [] });
       clear(ctx);

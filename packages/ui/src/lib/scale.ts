@@ -48,7 +48,8 @@ function niceStep(rawStep: number): number {
   if (rawStep <= 0 || !Number.isFinite(rawStep)) return 1;
   const magnitude = 10 ** Math.floor(Math.log10(rawStep));
   const normalized = rawStep / magnitude;
-  const stepped = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
+  const stepped =
+    normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
   return stepped * magnitude;
 }
 
@@ -105,8 +106,7 @@ export function linearScale(domain: Extent, range: Extent): LinearScale {
   const scale = ((value: number): number =>
     span === 0 ? midpoint : r0 + (value - d0) * ratio) as LinearScale;
 
-  scale.invert = (position: number): number =>
-    ratio === 0 ? d0 : d0 + (position - r0) / ratio;
+  scale.invert = (position: number): number => (ratio === 0 ? d0 : d0 + (position - r0) / ratio);
   scale.domain = domain;
   scale.range = range;
   return scale;

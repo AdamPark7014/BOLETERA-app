@@ -31,7 +31,7 @@ export function Card({
         styles[variant],
         styles[`padding-${padding}`],
         interactive && styles.interactive,
-        className,
+        className
       )}
       {...rest}
     >

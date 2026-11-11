@@ -24,7 +24,13 @@ export function CapabilityGroupCard({ group, canManage }: CapabilityGroupCardPro
   const ratio = ratioOf(group.activeCount, total);
 
   return (
-    <Card variant="outline" padding="md" className={styles.groupCard} role="group" aria-label={group.label}>
+    <Card
+      variant="outline"
+      padding="md"
+      className={styles.groupCard}
+      role="group"
+      aria-label={group.label}
+    >
       <CardHeader
         as="h3"
         title={group.label}

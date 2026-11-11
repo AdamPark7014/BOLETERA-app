@@ -56,7 +56,7 @@
   --warning-600: var(--bl-warning);
   --warning-50: var(--bl-warning-subtle);
 
-/*
+  /*
  * IMPORTANTE — usar SIEMPRE pasos crudos (--bl-gray-*), nunca roles de tema.
  *
  * La tienda es de tema claro unicamente: no tiene paleta oscura. Los roles del
@@ -224,8 +224,7 @@
   --shadow-lg: 0 16px 40px rgba(10, 10, 10, 0.08);
   --shadow-poster: 0 18px 40px rgba(10, 10, 10, 0.12);
   --shadow-elevated:
-    0 1px 2px rgba(24, 18, 14, 0.04),
-    0 8px 24px rgba(24, 18, 14, 0.08),
+    0 1px 2px rgba(24, 18, 14, 0.04), 0 8px 24px rgba(24, 18, 14, 0.08),
     0 20px 48px rgba(24, 18, 14, 0.06);
   --shadow-accent: 0 4px 14px rgba(190, 18, 60, 0.2);
 

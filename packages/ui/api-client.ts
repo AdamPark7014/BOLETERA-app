@@ -30,7 +30,7 @@ class ApiClient {
           }
         }
         return Promise.reject(error);
-      },
+      }
     );
   }
 
@@ -88,7 +88,7 @@ class ApiClient {
     eventId: string,
     seatIds: string[],
     sessionId?: string,
-    durationMinutes = 10,
+    durationMinutes = 10
   ) {
     return this.instance.post(`/layouts/${layoutId}/seats/hold`, {
       eventId,

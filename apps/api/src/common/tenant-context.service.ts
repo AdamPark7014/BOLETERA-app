@@ -38,9 +38,7 @@ export class TenantContextService {
     if (context.privileged) {
       const organizationId = requested ?? context.organizationId;
       if (!organizationId) {
-        throw new BadRequestException(
-          'organizationId is required for cross-tenant operators',
-        );
+        throw new BadRequestException('organizationId is required for cross-tenant operators');
       }
       return organizationId;
     }
@@ -60,10 +58,7 @@ export class TenantContextService {
    * After an id-based resource load, deny foreign tenants with 403 (not 404).
    * Privileged callers must still match the organization resolved for the request.
    */
-  assertResourceOrganization(
-    resourceOrganizationId: string,
-    resolvedOrganizationId: string,
-  ): void {
+  assertResourceOrganization(resourceOrganizationId: string, resolvedOrganizationId: string): void {
     this.assertOrganization(resourceOrganizationId);
     if (resourceOrganizationId !== resolvedOrganizationId) {
       throw new ForbiddenException('Organization access denied');

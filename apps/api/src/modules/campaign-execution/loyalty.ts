@@ -67,7 +67,7 @@ export function promotionDiscount(
   type: string,
   value: number,
   subtotal: number,
-  maxDiscount?: number | null,
+  maxDiscount?: number | null
 ): number {
   const base = Number.isFinite(subtotal) ? Math.max(0, subtotal) : 0;
   const amount = Number(value);

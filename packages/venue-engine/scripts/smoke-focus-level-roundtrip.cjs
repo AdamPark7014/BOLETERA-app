@@ -34,9 +34,7 @@ const source = {
       slug: 'balcon',
       color: '#c45c6a',
       levelId: 'balcon',
-      seats: [
-        { id: 'b1', label: 'B1', x: 100, y: 50, elevation: 120 },
-      ],
+      seats: [{ id: 'b1', label: 'B1', x: 100, y: 50, elevation: 120 }],
     },
   ],
   venue: {
@@ -60,8 +58,14 @@ assert(/data-level-id="balcon"/.test(svg), 'svg focus balcon level');
 
 const svgImport = importSvgToSeatMap(svg, { version: 3, sections: [] }, { mode: 'replace-meta' });
 const svgFoci = svgImport.map.venue?.focusPoints ?? [];
-assert(svgFoci.some((f) => f.levelId === 'plaza'), 'svg import plaza focus');
-assert(svgFoci.some((f) => f.levelId === 'balcon'), 'svg import balcon focus');
+assert(
+  svgFoci.some((f) => f.levelId === 'plaza'),
+  'svg import plaza focus'
+);
+assert(
+  svgFoci.some((f) => f.levelId === 'balcon'),
+  'svg import balcon focus'
+);
 
 const dxf = exportSeatMapToDxf(source);
 assert(/__L_plaza|L_plaza/i.test(dxf), 'dxf plaza tag');
@@ -69,7 +73,7 @@ const dxfImport = importDxfToSeatMap(dxf, { version: 3, sections: [] }, { mode: 
 const dxfFoci = dxfImport.map.venue?.focusPoints ?? [];
 assert(
   dxfFoci.some((f) => f.levelId === 'plaza' || f.levelId === 'balcon'),
-  'dxf import keeps level',
+  'dxf import keeps level'
 );
 
 const direct = applyCadPrimitivesToSeatMap(
@@ -84,20 +88,20 @@ const direct = applyCadPrimitivesToSeatMap(
     },
   ],
   { version: 3, sections: [], venue: { levels: source.venue.levels } },
-  { mode: 'replace-meta', levels: source.venue.levels },
+  { mode: 'replace-meta', levels: source.venue.levels }
 );
 assert(direct.map.venue.focusPoints[0].levelId === 'plaza', 'direct apply levelId');
 
 const cleared = removeVenueLevel(source, 'balcon');
 assert(
   (cleared.venue?.focusPoints ?? []).find((f) => f.id === 'focus-balc')?.levelId == null,
-  'remove level clears focus levelId',
+  'remove level clears focus levelId'
 );
 
 const projected = projectTo3D(resolveGeometry(source));
 assert(
   projected.focusPoints.every((f) => f.levelId === 'plaza' || f.levelId === 'balcon'),
-  'project3d carries levelId',
+  'project3d carries levelId'
 );
 
 const scene = resolveGeometry(source);

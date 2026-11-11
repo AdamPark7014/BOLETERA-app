@@ -34,7 +34,7 @@ export class BillingController {
       pacMode?: string;
       pacProvider?: string;
       pacApiKey?: string;
-    },
+    }
   ) {
     return this.billing.upsertFiscalProfile(orgId, body);
   }
@@ -49,7 +49,7 @@ export class BillingController {
       receptorRfc: string;
       receptorNombre: string;
       receptorUsoCfdi?: string;
-    },
+    }
   ) {
     return this.billing.stampOrderInvoice(orgId, body);
   }

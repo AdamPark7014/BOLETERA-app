@@ -73,7 +73,7 @@ function item(
   label: string,
   status: PublishCheckStatus,
   message: string,
-  detail?: string,
+  detail?: string
 ): PublishCheckItem {
   return { id, label, status, message, detail };
 }
@@ -94,12 +94,16 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
   // --- Venue ---
   if (!input.venue) {
     checks.push(
-      item('venue', 'Recinto', 'blocker', 'El evento no tiene recinto asignado.', 'Selecciona un venue en la configuración del evento.'),
+      item(
+        'venue',
+        'Recinto',
+        'blocker',
+        'El evento no tiene recinto asignado.',
+        'Selecciona un venue en la configuración del evento.'
+      )
     );
   } else {
-    checks.push(
-      item('venue', 'Recinto', 'ok', `Recinto: ${input.venue.name}.`),
-    );
+    checks.push(item('venue', 'Recinto', 'ok', `Recinto: ${input.venue.name}.`));
   }
 
   // --- Map ---
@@ -110,8 +114,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Mapa de asientos',
         'blocker',
         'No hay mapa con secciones en el recinto.',
-        'Guarda el layout en el editor de mapa antes de publicar.',
-      ),
+        'Guarda el layout en el editor de mapa antes de publicar.'
+      )
     );
   } else if (input.map.seatCount === 0) {
     checks.push(
@@ -120,8 +124,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Mapa de asientos',
         'blocker',
         'El mapa no tiene asientos generados.',
-        'Agrega filas o asientos en el editor de mapa.',
-      ),
+        'Agrega filas o asientos en el editor de mapa.'
+      )
     );
   } else if (input.map.geometryErrors > 0) {
     checks.push(
@@ -130,8 +134,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Mapa de asientos',
         'blocker',
         `${input.map.geometryErrors} error(es) de geometría en el mapa.`,
-        'Corrígelos en el panel Validación del editor de mapa.',
-      ),
+        'Corrígelos en el panel Validación del editor de mapa.'
+      )
     );
   } else if (input.map.geometryWarnings > 0) {
     checks.push(
@@ -142,8 +146,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         `${input.map.seatCount.toLocaleString('es-MX')} asientos · ${input.map.geometryWarnings} aviso(s) de geometría.`,
         input.map.layoutPublishStatus !== 'PUBLISHED'
           ? 'El layout del venue aún no está publicado.'
-          : undefined,
-      ),
+          : undefined
+      )
     );
   } else {
     checks.push(
@@ -154,8 +158,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         `${input.map.sectionCount} sección(es) · ${input.map.seatCount.toLocaleString('es-MX')} asientos.`,
         input.map.layoutPublishStatus && input.map.layoutPublishStatus !== 'PUBLISHED'
           ? `Estado del layout: ${input.map.layoutPublishStatus}.`
-          : undefined,
-      ),
+          : undefined
+      )
     );
   }
 
@@ -167,8 +171,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Ofertas y precios',
         'blocker',
         'No hay precio base ni ofertas con precio.',
-        'Configura minPrice o precios por zona en Precios.',
-      ),
+        'Configura minPrice o precios por zona en Precios.'
+      )
     );
   } else if (input.pricing.unpricedOfferCount > 0) {
     checks.push(
@@ -177,8 +181,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Ofertas y precios',
         'blocker',
         `${input.pricing.unpricedOfferCount} oferta(s) sin precio válido.`,
-        'Todas las ofertas activas deben tener basePrice > 0.',
-      ),
+        'Todas las ofertas activas deben tener basePrice > 0.'
+      )
     );
   } else if (input.pricing.offerCount === 0) {
     checks.push(
@@ -186,8 +190,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'offers',
         'Ofertas y precios',
         'warning',
-        `Precio base ${input.pricing.minPrice.toLocaleString('es-MX')} MXN — las ofertas se generan al publicar.`,
-      ),
+        `Precio base ${input.pricing.minPrice.toLocaleString('es-MX')} MXN — las ofertas se generan al publicar.`
+      )
     );
   } else {
     checks.push(
@@ -195,8 +199,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'offers',
         'Ofertas y precios',
         'ok',
-        `${input.pricing.pricedOfferCount} oferta(s) con precio desde ${input.pricing.minPrice.toLocaleString('es-MX')} MXN.`,
-      ),
+        `${input.pricing.pricedOfferCount} oferta(s) con precio desde ${input.pricing.minPrice.toLocaleString('es-MX')} MXN.`
+      )
     );
   }
 
@@ -210,8 +214,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Banorte no está configurado para cobrar.',
         input.payment.missing.length
           ? `Faltan: ${input.payment.missing.join(', ')}.`
-          : 'Revisa las variables BANORTE_* del servidor.',
-      ),
+          : 'Revisa las variables BANORTE_* del servidor.'
+      )
     );
   } else if (!input.payment.ready || input.payment.demo) {
     checks.push(
@@ -224,12 +228,12 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
           : 'Configuración de pagos incompleta para producción.',
         input.payment.missing.length
           ? `Faltan: ${input.payment.missing.join(', ')}.`
-          : 'Solo apto para desarrollo; configura credenciales antes de venta real.',
-      ),
+          : 'Solo apto para desarrollo; configura credenciales antes de venta real.'
+      )
     );
   } else {
     checks.push(
-      item('payment', 'Configuración de pagos', 'ok', 'Banorte configurado para cobro en línea.'),
+      item('payment', 'Configuración de pagos', 'ok', 'Banorte configurado para cobro en línea.')
     );
   }
 
@@ -243,8 +247,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         input.refund.refundable
           ? 'Reembolsable, pero sin términos documentados en metadata.'
           : 'Sin términos de reembolso documentados.',
-        'Agrega metadata.terms o metadata.refundPolicy para cumplimiento y correos.',
-      ),
+        'Agrega metadata.terms o metadata.refundPolicy para cumplimiento y correos.'
+      )
     );
   } else {
     checks.push(
@@ -252,8 +256,10 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'refund',
         'Política de reembolso',
         'ok',
-        input.refund.refundable ? 'Reembolsable con términos documentados.' : 'No reembolsable — política documentada.',
-      ),
+        input.refund.refundable
+          ? 'Reembolsable con términos documentados.'
+          : 'No reembolsable — política documentada.'
+      )
     );
   }
 
@@ -265,8 +271,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Imágenes',
         'warning',
         'Sin imagen principal ni banner.',
-        'Sube event.image o bannerImage para la vitrina.',
-      ),
+        'Sube event.image o bannerImage para la vitrina.'
+      )
     );
   } else {
     checks.push(
@@ -278,8 +284,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
           ? 'Imagen principal y banner presentes.'
           : input.images.hasImage
             ? 'Imagen principal presente.'
-            : 'Banner presente.',
-      ),
+            : 'Banner presente.'
+      )
     );
   }
 
@@ -291,8 +297,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Canales de venta',
         'blocker',
         'Canales no configurados.',
-        'Asigna el 100% entre web, taquilla y API en la pestaña Canales.',
-      ),
+        'Asigna el 100% entre web, taquilla y API en la pestaña Canales.'
+      )
     );
   } else if (input.channels.allocationTotal !== 100) {
     checks.push(
@@ -300,17 +306,12 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'channels',
         'Canales de venta',
         'blocker',
-        `Asignación de canales: ${input.channels.allocationTotal ?? 0}% (debe ser 100%).`,
-      ),
+        `Asignación de canales: ${input.channels.allocationTotal ?? 0}% (debe ser 100%).`
+      )
     );
   } else if (input.channels.enabledCount === 0) {
     checks.push(
-      item(
-        'channels',
-        'Canales de venta',
-        'blocker',
-        'Ningún canal de venta está habilitado.',
-      ),
+      item('channels', 'Canales de venta', 'blocker', 'Ningún canal de venta está habilitado.')
     );
   } else {
     checks.push(
@@ -318,8 +319,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'channels',
         'Canales de venta',
         'ok',
-        `${input.channels.enabledCount} canal(es) activos · 100% asignado.`,
-      ),
+        `${input.channels.enabledCount} canal(es) activos · 100% asignado.`
+      )
     );
   }
 
@@ -332,8 +333,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
           'Inventario',
           'blocker',
           'El evento fue publicado pero no tiene boletos.',
-          'Republica inventario desde el mapa del recinto.',
-        ),
+          'Republica inventario desde el mapa del recinto.'
+        )
       );
     } else if (
       input.inventory.layoutSeatCount > 0 &&
@@ -345,8 +346,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
           'Inventario',
           'warning',
           `${input.inventory.ticketCount.toLocaleString('es-MX')} boletos · el mapa tiene ${input.inventory.layoutSeatCount.toLocaleString('es-MX')} asientos.`,
-          'Puede haber butacas sin boleto; considera republicar.',
-        ),
+          'Puede haber butacas sin boleto; considera republicar.'
+        )
       );
     } else {
       checks.push(
@@ -354,8 +355,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
           'inventory',
           'Inventario',
           'ok',
-          `${input.inventory.ticketCount.toLocaleString('es-MX')} boletos publicados.`,
-        ),
+          `${input.inventory.ticketCount.toLocaleString('es-MX')} boletos publicados.`
+        )
       );
     }
   } else if (input.inventory.layoutSeatCount > 0) {
@@ -365,8 +366,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'Inventario',
         'ok',
         `Listo para generar ~${input.inventory.layoutSeatCount.toLocaleString('es-MX')} boletos al publicar.`,
-        `Aforo declarado: ${input.inventory.totalCapacity.toLocaleString('es-MX')}.`,
-      ),
+        `Aforo declarado: ${input.inventory.totalCapacity.toLocaleString('es-MX')}.`
+      )
     );
   } else {
     checks.push(
@@ -374,8 +375,8 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
         'inventory',
         'Inventario',
         'blocker',
-        'No hay asientos en el mapa para generar inventario.',
-      ),
+        'No hay asientos en el mapa para generar inventario.'
+      )
     );
   }
 
@@ -397,9 +398,11 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
   };
 }
 
-export function channelConfigFromMetadata(
-  metadata: Record<string, unknown> | null,
-): { configured: boolean; allocationTotal: number | null; enabledCount: number } {
+export function channelConfigFromMetadata(metadata: Record<string, unknown> | null): {
+  configured: boolean;
+  allocationTotal: number | null;
+  enabledCount: number;
+} {
   const config = readChannelConfig(metadata);
   if (!config) {
     return { configured: false, allocationTotal: null, enabledCount: 0 };
@@ -420,7 +423,10 @@ export function hasDocumentedRefundTerms(metadata: Record<string, unknown> | nul
   if (!metadata) return false;
   if (typeof metadata.terms === 'string' && metadata.terms.trim().length >= 20) return true;
   if (metadata.refundPolicy && typeof metadata.refundPolicy === 'object') return true;
-  if (typeof metadata.cancellationPolicy === 'string' && metadata.cancellationPolicy.trim().length >= 20) {
+  if (
+    typeof metadata.cancellationPolicy === 'string' &&
+    metadata.cancellationPolicy.trim().length >= 20
+  ) {
     return true;
   }
   return false;

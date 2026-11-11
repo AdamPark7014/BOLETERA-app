@@ -54,7 +54,10 @@ function word(value: string): string {
   return STATUS[value] ?? value;
 }
 
-function transition(from: string, to: string): 'submit-review' | 'revert-draft' | 'publish-map' | 'archive' | null {
+function transition(
+  from: string,
+  to: string
+): 'submit-review' | 'revert-draft' | 'publish-map' | 'archive' | null {
   if (to === 'IN_REVIEW' && from === 'DRAFT') return 'submit-review';
   if (to === 'DRAFT' && from === 'IN_REVIEW') return 'revert-draft';
   if (to === 'PUBLISHED' && (from === 'DRAFT' || from === 'IN_REVIEW')) return 'publish-map';
@@ -177,7 +180,9 @@ function MapaBody() {
           return venue ? [venue] : [];
         });
         setVenues(next);
-        setVenueId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+        setVenueId((current) =>
+          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+        );
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -249,7 +254,13 @@ function MapaBody() {
     );
   }
   if (error) {
-    return <ApiErrorView error={error} context="abrir mapas" onRetry={() => setNonce((current) => current + 1)} />;
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir mapas"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando mapas.</p>;
 
@@ -290,7 +301,10 @@ function MapaBody() {
           {layoutError}
         </p>
       ) : null}
-      {venueId && venues.find((item) => item.id === venueId)?.hasLayout && !layout && !layoutError ? (
+      {venueId &&
+      venues.find((item) => item.id === venueId)?.hasLayout &&
+      !layout &&
+      !layoutError ? (
         <p className={styles.quiet}>Cargando plano.</p>
       ) : null}
       {venueId && venues.find((item) => item.id === venueId)?.hasLayout === false ? (
@@ -346,7 +360,11 @@ function MapaBody() {
             </ParameterCard>
           </Param>
           <Param name="Estado del plano">
-            <ParameterCard name="Estado del plano" value={word(status)} effect="Borrador, en revisión, publicado o archivo.">
+            <ParameterCard
+              name="Estado del plano"
+              value={word(status)}
+              effect="Borrador, en revisión, publicado o archivo."
+            >
               {canEdit ? (
                 <Segment
                   label="Estado del plano"
@@ -385,10 +403,19 @@ function MapaBody() {
                 {open ? (
                   <div className={styles.stack}>
                     <Param name="Nombre de la sección">
-                      <ParameterCard name="Nombre de la sección" value={section.name} effect="La zona del plano se nombra." />
+                      <ParameterCard
+                        name="Nombre de la sección"
+                        value={section.name}
+                        effect="La zona del plano se nombra."
+                      />
                     </Param>
                     <Param name="Slug de la sección">
-                      <ParameterCard name="Slug de la sección" value={section.slug} valueStyle="mono" effect="Único en el plano." />
+                      <ParameterCard
+                        name="Slug de la sección"
+                        value={section.slug}
+                        valueStyle="mono"
+                        effect="Único en el plano."
+                      />
                     </Param>
                     <Param name="Color de la sección">
                       <ParameterCard
@@ -428,7 +455,11 @@ function MapaBody() {
           })}
           {layout.snapshots.length === 0 ? (
             <Param name="Etiqueta del snapshot">
-              <ParameterCard name="Etiqueta del snapshot" value="Ninguna" effect="Aún no hay una instantánea." />
+              <ParameterCard
+                name="Etiqueta del snapshot"
+                value="Ninguna"
+                effect="Aún no hay una instantánea."
+              />
             </Param>
           ) : (
             layout.snapshots.map((snapshot) => (

@@ -86,9 +86,7 @@ export type CadApplyPrimitive = {
 };
 
 /** Map CAD review roles → SeatMapCadLocks keys. */
-export function cadLockKeyForRole(
-  role: CadEntityRole,
-): keyof SeatMapCadLocks | null {
+export function cadLockKeyForRole(role: CadEntityRole): keyof SeatMapCadLocks | null {
   switch (role) {
     case 'aisle':
       return 'aisles';
@@ -109,10 +107,7 @@ export function cadLockKeyForRole(
   }
 }
 
-export function isCadRoleLocked(
-  role: CadEntityRole,
-  locks?: SeatMapCadLocks | null,
-): boolean {
+export function isCadRoleLocked(role: CadEntityRole, locks?: SeatMapCadLocks | null): boolean {
   const key = cadLockKeyForRole(role);
   return Boolean(key && locks?.[key]);
 }
@@ -120,7 +115,7 @@ export function isCadRoleLocked(
 /** Force-skip review rows whose role (or suggested role) is CAD-locked. */
 export function enforceCadLocksOnReview(
   rows: CadReviewPrimitive[],
-  locks?: SeatMapCadLocks | null,
+  locks?: SeatMapCadLocks | null
 ): { rows: CadReviewPrimitive[]; lockedCount: number } {
   if (!locks) return { rows, lockedCount: 0 };
   let lockedCount = 0;
@@ -154,14 +149,22 @@ function mergeLockedLayer<T>(
   mode: 'merge' | 'replace-meta',
   locked: boolean,
   base: T[] | undefined,
-  incoming: T[],
+  incoming: T[]
 ): T[] {
   if (locked) return base ?? [];
   if (mode === 'replace-meta') return incoming;
   return [...(base ?? []), ...incoming];
 }
 
-const SECTION_COLORS = ['#5b9fd4', '#c45c6a', '#c4a35a', '#5a9e78', '#7a8fd4', '#b87a9a', '#8b9aab'];
+const SECTION_COLORS = [
+  '#5b9fd4',
+  '#c45c6a',
+  '#c4a35a',
+  '#5a9e78',
+  '#7a8fd4',
+  '#b87a9a',
+  '#8b9aab',
+];
 
 function slugify(s: string) {
   return (
@@ -226,7 +229,7 @@ export function toCadReviewPrimitive(p: {
 function mergeLevels(
   base: SeatMapLevel[] | undefined,
   imported: SeatMapLevel[] | undefined,
-  mode: 'merge' | 'replace-meta',
+  mode: 'merge' | 'replace-meta'
 ): SeatMapLevel[] | undefined {
   if (!imported?.length) return base;
   if (mode === 'replace-meta' || !base?.length) return imported;
@@ -246,7 +249,7 @@ function mergeLevels(
 export function applyCadPrimitivesToSeatMap(
   primitives: CadApplyPrimitive[],
   base?: SeatMapData | null,
-  opts?: CadApplyOptions,
+  opts?: CadApplyOptions
 ): { map: SeatMapData; stats: CadImportStats } {
   const mode = opts?.mode ?? 'merge';
   const sectionLabel = opts?.sectionLabel ?? 'Zona';
@@ -444,19 +447,9 @@ export function applyCadPrimitivesToSeatMap(
       obstacles: mergeLockedLayer(mode, obstacleLocked, baseMap.venue?.obstacles, obstacles),
       stairs: mergeLockedLayer(mode, stairLocked, baseMap.venue?.stairs, stairs),
       exits: mergeLockedLayer(mode, exitLocked, baseMap.venue?.exits, exits),
-      furniture: mergeLockedLayer(
-        mode,
-        furnitureLocked,
-        baseMap.venue?.furniture,
-        furnitureItems,
-      ),
+      furniture: mergeLockedLayer(mode, furnitureLocked, baseMap.venue?.furniture, furnitureItems),
       focusPoints: (() => {
-        const merged = mergeLockedLayer(
-          mode,
-          focusLocked,
-          baseMap.venue?.focusPoints,
-          focusItems,
-        );
+        const merged = mergeLockedLayer(mode, focusLocked, baseMap.venue?.focusPoints, focusItems);
         return merged.length ? merged : undefined;
       })(),
       units: baseMap.venue?.units ?? 'map',
@@ -496,7 +489,7 @@ export function applyCadPrimitivesToSeatMap(
 export function commitCadImportReview(
   reviewed: CadReviewPrimitive[],
   base?: SeatMapData | null,
-  opts?: CadApplyOptions,
+  opts?: CadApplyOptions
 ): { map: SeatMapData; stats: CadImportStats } {
   return applyCadPrimitivesToSeatMap(
     reviewed.map((r) => ({
@@ -512,7 +505,7 @@ export function commitCadImportReview(
       toLevelId: r.toLevelId,
     })),
     base,
-    opts,
+    opts
   );
 }
 

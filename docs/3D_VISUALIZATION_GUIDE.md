@@ -259,8 +259,8 @@ export function calculateOccupancyHeatmap(
 ) {
   const heatmap = sections.map((section) => {
     const totalSeats = section.seats.length;
-    const soldSeats = section.seats.filter(s => s.status === 'sold').length;
-    const heldSeats = section.seats.filter(s => s.status === 'held').length;
+    const soldSeats = section.seats.filter((s) => s.status === 'sold').length;
+    const heldSeats = section.seats.filter((s) => s.status === 'held').length;
 
     const occupancyPercentage = ((soldSeats + heldSeats) / totalSeats) * 100;
 
@@ -279,9 +279,9 @@ export function calculateOccupancyHeatmap(
       totalSeats,
       availableSeats: totalSeats - soldSeats - heldSeats,
       color: {
-        cold: 0x10b981,     // Green
-        warm: 0xf59e0b,     // Yellow
-        hot: 0xef4444,      // Red
+        cold: 0x10b981, // Green
+        warm: 0xf59e0b, // Yellow
+        hot: 0xef4444, // Red
         critical: 0x7c2d12, // Dark Red
       }[zone],
     };
@@ -305,8 +305,7 @@ export function calculateSightlineScore(
 ): number {
   // Distance from seat to stage center
   const distanceFromStage = Math.sqrt(
-    Math.pow(seat.x - stageCenter.x, 2) +
-    Math.pow(seat.z - stageCenter.z, 2)
+    Math.pow(seat.x - stageCenter.x, 2) + Math.pow(seat.z - stageCenter.z, 2)
   );
 
   // Normalize distance (0-100, where 100 is best)
@@ -355,6 +354,7 @@ function updateLOD(camera: THREE.PerspectiveCamera, seats: THREE.Mesh[]) {
 ## 🎯 INTERACTIVE FEATURES
 
 ### **Seat Tooltips**
+
 ```typescript
 // Show sightline score, price, and accessibility on hover
 {
@@ -368,6 +368,7 @@ function updateLOD(camera: THREE.PerspectiveCamera, seats: THREE.Mesh[]) {
 ```
 
 ### **Seat Filtering**
+
 ```typescript
 // Filter seats by criteria
 const filterSeats = (

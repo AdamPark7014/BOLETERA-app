@@ -8,11 +8,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, SalesChannel } from '@prisma/client';
 import type { SeatMapData } from '@boletera/shared';
-import {
-  calculateSightlines,
-  normalizeSeatMap,
-  resolveGeometry,
-} from '@boletera/venue-engine';
+import { calculateSightlines, normalizeSeatMap, resolveGeometry } from '@boletera/venue-engine';
 import { PrismaService } from '../prisma/prisma.service';
 import { VenueLayoutService } from '../venue-layout/venue-layout.service';
 import { InventoryService } from '../inventory/inventory.service';
@@ -49,7 +45,7 @@ export class LayoutManagementService {
     private prisma: PrismaService,
     private venueLayout: VenueLayoutService,
     private inventory: InventoryService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   /**
@@ -60,7 +56,7 @@ export class LayoutManagementService {
     const reason = action?.reason?.trim();
     if (!reason || reason.length < MIN_REASON_LENGTH) {
       throw new BadRequestException(
-        `El motivo es obligatorio y debe tener al menos ${MIN_REASON_LENGTH} caracteres.`,
+        `El motivo es obligatorio y debe tener al menos ${MIN_REASON_LENGTH} caracteres.`
       );
     }
     return { reason, category: action?.category ?? 'OTRO' };
@@ -111,7 +107,7 @@ export class LayoutManagementService {
         seatsPerRow?: number;
       }>;
     },
-    organizationId: string,
+    organizationId: string
   ) {
     const mapData: SeatMapData = {
       viewport: { width: 800, height: 500 },
@@ -129,7 +125,12 @@ export class LayoutManagementService {
               row: String.fromCharCode(65 + r),
               x: 40 + s * 34,
               y: 80 + r * 32 + si * 120,
-              tier: sec.type === 'vip' ? 'premium' : sec.type === 'accessible' ? 'standard' : 'standard',
+              tier:
+                sec.type === 'vip'
+                  ? 'premium'
+                  : sec.type === 'accessible'
+                    ? 'standard'
+                    : 'standard',
             });
             count++;
           }
@@ -242,7 +243,7 @@ export class LayoutManagementService {
     operator: OperatorContext,
     action: ReasonedAction,
     sessionId?: string,
-    durationMinutes?: number,
+    durationMinutes?: number
   ) {
     const reasoned = this.assertReason(action);
     const event = await this.assertEventInOrg(eventId, operator);
@@ -256,7 +257,7 @@ export class LayoutManagementService {
       }
       if (durationMinutes > MAX_HOLD_MINUTES) {
         throw new BadRequestException(
-          `durationMinutes no puede pasar de ${MAX_HOLD_MINUTES} (un día). Para retener inventario sin caducidad usa /seats/block.`,
+          `durationMinutes no puede pasar de ${MAX_HOLD_MINUTES} (un día). Para retener inventario sin caducidad usa /seats/block.`
         );
       }
     }
@@ -302,7 +303,7 @@ export class LayoutManagementService {
     });
 
     this.logger.log(
-      `Admin hold: ${seatIds.length} butacas en ${eventId} por ${operator.userId} — ${reasoned.category}`,
+      `Admin hold: ${seatIds.length} butacas en ${eventId} por ${operator.userId} — ${reasoned.category}`
     );
     return { ...hold, expiresAt, reason: reasoned.reason, category: reasoned.category };
   }
@@ -325,7 +326,7 @@ export class LayoutManagementService {
     seatIds: string[],
     operator: OperatorContext,
     action: ReasonedAction,
-    label?: string,
+    label?: string
   ) {
     const reasoned = this.assertReason(action);
     await this.assertLayoutInOrg(layoutId, operator);
@@ -358,7 +359,7 @@ export class LayoutManagementService {
 
         if (!claimed.length) {
           throw new ConflictException(
-            `La butaca ${seatId} no está disponible (vendida, reservada o ya bloqueada).`,
+            `La butaca ${seatId} no está disponible (vendida, reservada o ya bloqueada).`
           );
         }
 
@@ -373,7 +374,7 @@ export class LayoutManagementService {
               label: label?.trim() || null,
               blockedBy: operator.userId,
             },
-          }),
+          })
         );
       }
       return created;
@@ -397,9 +398,15 @@ export class LayoutManagementService {
     });
 
     this.logger.log(
-      `Inventory block: ${unique.length} butacas en ${eventId} por ${operator.userId} — ${reasoned.category}`,
+      `Inventory block: ${unique.length} butacas en ${eventId} por ${operator.userId} — ${reasoned.category}`
     );
-    return { eventId, blocked: blocks.length, blocks, reason: reasoned.reason, category: reasoned.category };
+    return {
+      eventId,
+      blocked: blocks.length,
+      blocks,
+      reason: reasoned.reason,
+      category: reasoned.category,
+    };
   }
 
   /**
@@ -410,7 +417,7 @@ export class LayoutManagementService {
     eventId: string,
     selector: { seatIds?: string[]; blockIds?: string[] },
     operator: OperatorContext,
-    action: ReasonedAction,
+    action: ReasonedAction
   ) {
     const reasoned = this.assertReason(action);
     const event = await this.assertEventInOrg(eventId, operator);
@@ -474,7 +481,7 @@ export class LayoutManagementService {
     });
 
     this.logger.log(
-      `Inventory unblock: ${targets.length - mismatched.length}/${targets.length} butacas en ${eventId} por ${operator.userId}`,
+      `Inventory unblock: ${targets.length - mismatched.length}/${targets.length} butacas en ${eventId} por ${operator.userId}`
     );
 
     return {
@@ -596,7 +603,7 @@ export class LayoutManagementService {
     });
 
     this.logger.log(
-      `Admin release: ${released}/${seatIds.length} butacas por ${operator.userId} — ${reasoned.category}`,
+      `Admin release: ${released}/${seatIds.length} butacas por ${operator.userId} — ${reasoned.category}`
     );
 
     return {
@@ -610,5 +617,3 @@ export class LayoutManagementService {
     };
   }
 }
-
-

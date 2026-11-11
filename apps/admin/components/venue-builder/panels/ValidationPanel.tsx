@@ -24,7 +24,9 @@ async function runValidation(scene: SeatMapData): Promise<ValidationState> {
   const geometry = await runIdle(() => validateGeometry(resolved));
   const sightlines = await runIdle(() => calculateSightlines(resolved));
   const egress = await runIdle(() => buildEgressReport(scene));
-  const pathOverlay = await runIdle(() => buildEgressPathOverlays(resolved, { analysis: egress.analysis }));
+  const pathOverlay = await runIdle(() =>
+    buildEgressPathOverlays(resolved, { analysis: egress.analysis })
+  );
 
   const sightlineBySeatId: Record<string, number> = {};
   for (const score of sightlines.scores) sightlineBySeatId[score.seatId] = score.score;
@@ -93,7 +95,7 @@ export const ValidationPanel = memo(function ValidationPanel({
       editor.setColorMode('sightline');
       editor.setLayerFlag('analysis', 'visible', true);
       editor.setStatus(
-        `${result.issues.length} hallazgos · visión ${Object.values(result.sightlineSummary ?? {}).reduce((a, b) => a + b, 0)} asientos`,
+        `${result.issues.length} hallazgos · visión ${Object.values(result.sightlineSummary ?? {}).reduce((a, b) => a + b, 0)} asientos`
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falló la validación');
@@ -105,7 +107,11 @@ export const ValidationPanel = memo(function ValidationPanel({
   const exportCsv = () => {
     const scene = stores.editor.getState().scene;
     const report = buildEgressReport(scene, { venueName: scene.sections[0]?.name });
-    downloadText(egressReportFilename(report.venueName), exportEgressReportToCsv(report), 'text/csv');
+    downloadText(
+      egressReportFilename(report.venueName),
+      exportEgressReportToCsv(report),
+      'text/csv'
+    );
   };
 
   const downloadServer = async (kind: 'csv' | 'pdf' | 'pdf-draft') => {
@@ -130,7 +136,7 @@ export const ValidationPanel = memo(function ValidationPanel({
           downloadText(
             egressReportFilename(stores.editor.getState().scene.sections[0]?.name ?? venueId),
             typeof csv === 'string' ? csv : String(csv),
-            'text/csv',
+            'text/csv'
           );
         }
       } else if (kind === 'pdf') {
@@ -193,11 +199,7 @@ export const ValidationPanel = memo(function ValidationPanel({
 
       {validation && (
         <>
-          <PanelSection
-            title="Hallazgos"
-            badge={String(validation.issues.length)}
-            defaultOpen
-          >
+          <PanelSection title="Hallazgos" badge={String(validation.issues.length)} defaultOpen>
             {validation.issues.length === 0 ? (
               <p className={styles.emptyHint}>Sin hallazgos. La geometría está limpia.</p>
             ) : (

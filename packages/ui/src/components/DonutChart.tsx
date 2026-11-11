@@ -68,7 +68,7 @@ export function DonutChart({
 
   const usable = useMemo(
     () => slices.filter((slice) => Number.isFinite(slice.value) && slice.value > 0),
-    [slices],
+    [slices]
   );
   const total = useMemo(() => sum(usable.map((slice) => slice.value)), [usable]);
 
@@ -81,7 +81,7 @@ export function DonutChart({
         total > 0 ? formatPercent(slice.value / total) : '0 %',
       ]),
     }),
-    [usable, total, formatValue],
+    [usable, total, formatValue]
   );
 
   return (
@@ -126,7 +126,14 @@ export function DonutChart({
                     <path
                       key={slice.id}
                       className={cx(styles.slice, isDimmed && styles.dimmed)}
-                      d={arcPath(cx0, cy0, outer, inner, start + GAP, Math.max(start + GAP, end - GAP))}
+                      d={arcPath(
+                        cx0,
+                        cy0,
+                        outer,
+                        inner,
+                        start + GAP,
+                        Math.max(start + GAP, end - GAP)
+                      )}
                       fill={color}
                       onMouseEnter={() => {
                         setHovered(slice.id);
@@ -166,7 +173,7 @@ export function DonutChart({
                     key={slice.id}
                     className={cx(
                       styles.legendItem,
-                      hovered !== null && hovered !== slice.id && styles.dimmed,
+                      hovered !== null && hovered !== slice.id && styles.dimmed
                     )}
                     onMouseEnter={() => setHovered(slice.id)}
                     onMouseLeave={() => setHovered(null)}

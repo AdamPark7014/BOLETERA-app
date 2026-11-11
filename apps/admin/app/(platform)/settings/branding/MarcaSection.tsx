@@ -70,14 +70,18 @@ function readCard(raw: unknown): Card | null {
 
 function readContent(payload: unknown): Content {
   const row = asRecord(payload);
-  const slides = Array.isArray(row.heroSlides) ? row.heroSlides.flatMap((item) => {
-    const slide = readSlide(item);
-    return slide ? [slide] : [];
-  }) : [];
-  const cards = Array.isArray(row.curatedCards) ? row.curatedCards.flatMap((item) => {
-    const card = readCard(item);
-    return card ? [card] : [];
-  }) : [];
+  const slides = Array.isArray(row.heroSlides)
+    ? row.heroSlides.flatMap((item) => {
+        const slide = readSlide(item);
+        return slide ? [slide] : [];
+      })
+    : [];
+  const cards = Array.isArray(row.curatedCards)
+    ? row.curatedCards.flatMap((item) => {
+        const card = readCard(item);
+        return card ? [card] : [];
+      })
+    : [];
   const cities = asRecord(row.cityImages);
   return {
     heroSlides: slides,
@@ -207,7 +211,11 @@ export function MarcaBody() {
   }
   if (error) {
     return (
-      <ApiErrorView error={error} context="abrir marca" onRetry={() => setNonce((current) => current + 1)} />
+      <ApiErrorView
+        error={error}
+        context="abrir marca"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
     );
   }
   if (loading || !theme || !content) return <p className={styles.quiet}>Cargando marca.</p>;
@@ -218,14 +226,26 @@ export function MarcaBody() {
         <h1 className={styles.sectionTitle}>Marca y contenido</h1>
         <p className={styles.quiet}>
           Estos colores no pintan Black Ticket. Se guardan color primario, logo, subdominio y el
-          contenido que el API ya acepta. Si no había contenido, lo que se ve es la reserva de la web.
-          Lo demás se lee.
+          contenido que el API ya acepta. Si no había contenido, lo que se ve es la reserva de la
+          web. Lo demás se lee.
         </p>
       </header>
       <div className={styles.stack}>
         <Param name="Color primario">
-          <ParameterCard name="Color primario" value={color || '—'} valueStyle="mono" effect="Columna de marca. No pinta el producto.">
-            <Field label="Color primario" value={color} onChange={(event) => { setColor(event.target.value); setNotice(null); }} />
+          <ParameterCard
+            name="Color primario"
+            value={color || '—'}
+            valueStyle="mono"
+            effect="Columna de marca. No pinta el producto."
+          >
+            <Field
+              label="Color primario"
+              value={color}
+              onChange={(event) => {
+                setColor(event.target.value);
+                setNotice(null);
+              }}
+            />
           </ParameterCard>
         </Param>
         <Param name="Color secundario">
@@ -237,36 +257,79 @@ export function MarcaBody() {
           />
         </Param>
         <Param name="Logo">
-          <ParameterCard name="Logo" value={logo || 'Sin imagen'} effect="Dirección que usa la cartelera. No es un archivo.">
-            <Field label="Logo" value={logo} onChange={(event) => { setLogo(event.target.value); setNotice(null); }} />
+          <ParameterCard
+            name="Logo"
+            value={logo || 'Sin imagen'}
+            effect="Dirección que usa la cartelera. No es un archivo."
+          >
+            <Field
+              label="Logo"
+              value={logo}
+              onChange={(event) => {
+                setLogo(event.target.value);
+                setNotice(null);
+              }}
+            />
           </ParameterCard>
         </Param>
         <Param name="Favicon">
-          <ParameterCard name="Favicon" value={text(theme.faviconUrl)} effect="Esta ruta no lo guarda." />
+          <ParameterCard
+            name="Favicon"
+            value={text(theme.faviconUrl)}
+            effect="Esta ruta no lo guarda."
+          />
         </Param>
         <Param name="Dominio propio">
-          <ParameterCard name="Dominio propio" value={text(theme.customDomain)} effect="Esta ruta no lo guarda." />
+          <ParameterCard
+            name="Dominio propio"
+            value={text(theme.customDomain)}
+            effect="Esta ruta no lo guarda."
+          />
         </Param>
         <Param name="Subdominio">
-          <ParameterCard name="Subdominio" value={subdomain || '—'} valueStyle="mono" effect="Subdominio de la cartelera.">
-            <Field label="Subdominio" value={subdomain} onChange={(event) => { setSubdomain(event.target.value); setNotice(null); }} />
+          <ParameterCard
+            name="Subdominio"
+            value={subdomain || '—'}
+            valueStyle="mono"
+            effect="Subdominio de la cartelera."
+          >
+            <Field
+              label="Subdominio"
+              value={subdomain}
+              onChange={(event) => {
+                setSubdomain(event.target.value);
+                setNotice(null);
+              }}
+            />
           </ParameterCard>
         </Param>
         <Param name="Titular">
-          <ParameterCard name="Titular" value={content.heroHeadline || '—'} effect="Titular del home.">
+          <ParameterCard
+            name="Titular"
+            value={content.heroHeadline || '—'}
+            effect="Titular del home."
+          >
             <Field
               label="Titular"
               value={content.heroHeadline}
-              onChange={(event) => setContent((current) => current && { ...current, heroHeadline: event.target.value })}
+              onChange={(event) =>
+                setContent((current) => current && { ...current, heroHeadline: event.target.value })
+              }
             />
           </ParameterCard>
         </Param>
         <Param name="Subtítulo">
-          <ParameterCard name="Subtítulo" value={content.heroSubcopy || '—'} effect="Bajada del home.">
+          <ParameterCard
+            name="Subtítulo"
+            value={content.heroSubcopy || '—'}
+            effect="Bajada del home."
+          >
             <Field
               label="Subtítulo"
               value={content.heroSubcopy}
-              onChange={(event) => setContent((current) => current && { ...current, heroSubcopy: event.target.value })}
+              onChange={(event) =>
+                setContent((current) => current && { ...current, heroSubcopy: event.target.value })
+              }
             />
           </ParameterCard>
         </Param>
@@ -310,7 +373,7 @@ export function MarcaBody() {
                     return {
                       ...current,
                       cityImages: current.cityImages.map((item) =>
-                        item.city === city.city ? { ...item, url: event.target.value } : item,
+                        item.city === city.city ? { ...item, url: event.target.value } : item
                       ),
                     };
                   })
@@ -341,18 +404,42 @@ function HeroFields({ slide, onChange }: { slide: Slide; onChange: (next: Slide)
   return (
     <>
       <Param name="Hero, URL">
-        <ParameterCard name="Hero, URL" value={slide.url || '—'} effect="Dirección de la diapositiva.">
-          <Field label="Hero, URL" value={slide.url} onChange={(event) => onChange({ ...slide, url: event.target.value })} />
+        <ParameterCard
+          name="Hero, URL"
+          value={slide.url || '—'}
+          effect="Dirección de la diapositiva."
+        >
+          <Field
+            label="Hero, URL"
+            value={slide.url}
+            onChange={(event) => onChange({ ...slide, url: event.target.value })}
+          />
         </ParameterCard>
       </Param>
       <Param name="Hero, etiqueta">
-        <ParameterCard name="Hero, etiqueta" value={slide.label || '—'} effect="Etiqueta de la diapositiva.">
-          <Field label="Hero, etiqueta" value={slide.label} onChange={(event) => onChange({ ...slide, label: event.target.value })} />
+        <ParameterCard
+          name="Hero, etiqueta"
+          value={slide.label || '—'}
+          effect="Etiqueta de la diapositiva."
+        >
+          <Field
+            label="Hero, etiqueta"
+            value={slide.label}
+            onChange={(event) => onChange({ ...slide, label: event.target.value })}
+          />
         </ParameterCard>
       </Param>
       <Param name="Hero, texto alterno">
-        <ParameterCard name="Hero, texto alterno" value={slide.alt || '—'} effect="Texto alterno de la diapositiva.">
-          <Field label="Hero, texto alterno" value={slide.alt} onChange={(event) => onChange({ ...slide, alt: event.target.value })} />
+        <ParameterCard
+          name="Hero, texto alterno"
+          value={slide.alt || '—'}
+          effect="Texto alterno de la diapositiva."
+        >
+          <Field
+            label="Hero, texto alterno"
+            value={slide.alt}
+            onChange={(event) => onChange({ ...slide, alt: event.target.value })}
+          />
         </ParameterCard>
       </Param>
     </>
@@ -364,22 +451,50 @@ function CardFields({ card, onChange }: { card: Card; onChange: (next: Card) => 
     <>
       <Param name="Tarjeta, título">
         <ParameterCard name="Tarjeta, título" value={card.title || '—'} effect="Tarjeta curada.">
-          <Field label="Tarjeta, título" value={card.title} onChange={(event) => onChange({ ...card, title: event.target.value })} />
+          <Field
+            label="Tarjeta, título"
+            value={card.title}
+            onChange={(event) => onChange({ ...card, title: event.target.value })}
+          />
         </ParameterCard>
       </Param>
       <Param name="Tarjeta, subtítulo">
-        <ParameterCard name="Tarjeta, subtítulo" value={card.subtitle || '—'} effect="Tarjeta curada.">
-          <Field label="Tarjeta, subtítulo" value={card.subtitle} onChange={(event) => onChange({ ...card, subtitle: event.target.value })} />
+        <ParameterCard
+          name="Tarjeta, subtítulo"
+          value={card.subtitle || '—'}
+          effect="Tarjeta curada."
+        >
+          <Field
+            label="Tarjeta, subtítulo"
+            value={card.subtitle}
+            onChange={(event) => onChange({ ...card, subtitle: event.target.value })}
+          />
         </ParameterCard>
       </Param>
       <Param name="Tarjeta, enlace">
-        <ParameterCard name="Tarjeta, enlace" value={card.href || '—'} effect="Enlace de la tarjeta.">
-          <Field label="Tarjeta, enlace" value={card.href} onChange={(event) => onChange({ ...card, href: event.target.value })} />
+        <ParameterCard
+          name="Tarjeta, enlace"
+          value={card.href || '—'}
+          effect="Enlace de la tarjeta."
+        >
+          <Field
+            label="Tarjeta, enlace"
+            value={card.href}
+            onChange={(event) => onChange({ ...card, href: event.target.value })}
+          />
         </ParameterCard>
       </Param>
       <Param name="Tarjeta, imagen">
-        <ParameterCard name="Tarjeta, imagen" value={card.image || 'Sin imagen'} effect="Dirección de la imagen.">
-          <Field label="Tarjeta, imagen" value={card.image} onChange={(event) => onChange({ ...card, image: event.target.value })} />
+        <ParameterCard
+          name="Tarjeta, imagen"
+          value={card.image || 'Sin imagen'}
+          effect="Dirección de la imagen."
+        >
+          <Field
+            label="Tarjeta, imagen"
+            value={card.image}
+            onChange={(event) => onChange({ ...card, image: event.target.value })}
+          />
         </ParameterCard>
       </Param>
     </>

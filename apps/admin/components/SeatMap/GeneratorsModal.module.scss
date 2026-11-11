@@ -82,7 +82,10 @@
   background: var(--bl-gray-900);
   color: var(--bl-text-disabled);
   cursor: pointer;
-  transition: border-color 0.12s, color 0.12s, background 0.12s;
+  transition:
+    border-color 0.12s,
+    color 0.12s,
+    background 0.12s;
 
   &:hover {
     border-color: var(--bl-gray-500);

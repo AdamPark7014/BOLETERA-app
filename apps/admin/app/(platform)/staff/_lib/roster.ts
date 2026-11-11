@@ -44,7 +44,7 @@ export type MemberStatusFilter = 'all' | 'active' | 'inactive' | 'pending';
 
 export function matchesMember(
   member: TeamMember,
-  options: { query: string; status: MemberStatusFilter; role: string },
+  options: { query: string; status: MemberStatusFilter; role: string }
 ): boolean {
   const term = options.query.trim().toLowerCase();
   const matchesQuery =
@@ -69,7 +69,7 @@ export function matchesMember(
 
 export function filterTeam(
   team: readonly TeamMember[],
-  options: { query: string; status: MemberStatusFilter; role: string },
+  options: { query: string; status: MemberStatusFilter; role: string }
 ): TeamMember[] {
   return team.filter((member) => matchesMember(member, options));
 }

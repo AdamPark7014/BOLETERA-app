@@ -55,7 +55,14 @@ function toggle(current: readonly string[], option: string, multiple: boolean): 
  * rapida. Mantiene el estado fuera del componente para que la pantalla pueda
  * sincronizarlo con la URL.
  */
-export function FilterBar({ filters, value, onChange, search, children, className }: FilterBarProps) {
+export function FilterBar({
+  filters,
+  value,
+  onChange,
+  search,
+  children,
+  className,
+}: FilterBarProps) {
   const activeCount = filters.reduce((total, filter) => total + (value[filter.id]?.length ?? 0), 0);
 
   const setFilter = useCallback(
@@ -68,7 +75,7 @@ export function FilterBar({ filters, value, onChange, search, children, classNam
       }
       onChange(draft);
     },
-    [value, onChange],
+    [value, onChange]
   );
 
   const clearAll = useCallback(() => onChange({}), [onChange]);
@@ -102,7 +109,7 @@ export function FilterBar({ filters, value, onChange, search, children, classNam
                   className={cx(
                     styles.trigger,
                     selected.length > 0 && styles.triggerActive,
-                    open && styles.triggerOpen,
+                    open && styles.triggerOpen
                   )}
                 >
                   <span>{filter.label}</span>
@@ -125,7 +132,9 @@ export function FilterBar({ filters, value, onChange, search, children, classNam
                           type={multiple ? 'checkbox' : 'radio'}
                           name={filter.id}
                           checked={checked}
-                          onChange={() => setFilter(filter.id, toggle(selected, option.value, multiple))}
+                          onChange={() =>
+                            setFilter(filter.id, toggle(selected, option.value, multiple))
+                          }
                         />
                         <span className={styles.optionLabel}>{option.label}</span>
                         {option.count === undefined ? null : (
@@ -160,7 +169,7 @@ export function FilterBar({ filters, value, onChange, search, children, classNam
                     onClick={() =>
                       setFilter(
                         filter.id,
-                        (value[filter.id] ?? []).filter((item) => item !== selectedValue),
+                        (value[filter.id] ?? []).filter((item) => item !== selectedValue)
                       )
                     }
                   >
@@ -170,7 +179,7 @@ export function FilterBar({ filters, value, onChange, search, children, classNam
                   </button>
                 </span>
               );
-            }),
+            })
           )}
           <button type="button" className={styles.clear} onClick={clearAll}>
             Limpiar todo

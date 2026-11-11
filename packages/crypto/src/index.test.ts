@@ -60,10 +60,7 @@ describe('signTicketPayload / verifyTicketSignature', () => {
     // `timingSafeEqual` exige búferes de la misma longitud: si el caso no se
     // tratara aparte, esto lanzaría una excepción en la puerta del recinto.
     assert.equal(verifyTicketSignature(TICKET, EVENTO, 'v2.corta', SECRET), false);
-    assert.equal(
-      verifyTicketSignature(TICKET, EVENTO, `v2.${'f'.repeat(64)}`, SECRET),
-      false,
-    );
+    assert.equal(verifyTicketSignature(TICKET, EVENTO, `v2.${'f'.repeat(64)}`, SECRET), false);
   });
 
   it('con otro secreto maestro no verifica', () => {
@@ -94,7 +91,7 @@ describe('rotación del QR', () => {
     const sig = conRelojEn(T0, () => signTicketPayload(TICKET, EVENTO, SECRET));
 
     const ok = conRelojEn(T0 + VENTANA_MS, () =>
-      verifyTicketSignature(TICKET, EVENTO, sig, SECRET),
+      verifyTicketSignature(TICKET, EVENTO, sig, SECRET)
     );
 
     assert.equal(ok, true);
@@ -105,7 +102,7 @@ describe('rotación del QR', () => {
     const sig = conRelojEn(T0, () => signTicketPayload(TICKET, EVENTO, SECRET));
 
     const ok = conRelojEn(T0 + 2 * VENTANA_MS, () =>
-      verifyTicketSignature(TICKET, EVENTO, sig, SECRET),
+      verifyTicketSignature(TICKET, EVENTO, sig, SECRET)
     );
 
     assert.equal(ok, false);
@@ -226,7 +223,7 @@ describe('ticketManifestDigest — manifiesto offline (F2-15)', () => {
   it('cambia con el boleto', () => {
     assert.notEqual(
       ticketManifestDigest(TICKET, EVENTO, 'SOLD', SECRET),
-      ticketManifestDigest(OTRO_TICKET, EVENTO, 'SOLD', SECRET),
+      ticketManifestDigest(OTRO_TICKET, EVENTO, 'SOLD', SECRET)
     );
   });
 });
@@ -242,7 +239,7 @@ describe('signEventManifest', () => {
   it('es determinista para la misma página', () => {
     assert.equal(
       signEventManifest(EVENTO, issuedAt, entradas, SECRET),
-      signEventManifest(EVENTO, issuedAt, entradas, SECRET),
+      signEventManifest(EVENTO, issuedAt, entradas, SECRET)
     );
   });
 
@@ -251,14 +248,14 @@ describe('signEventManifest', () => {
 
     assert.notEqual(
       signEventManifest(EVENTO, issuedAt, entradas, SECRET),
-      signEventManifest(EVENTO, issuedAt, reordenadas, SECRET),
+      signEventManifest(EVENTO, issuedAt, reordenadas, SECRET)
     );
   });
 
   it('recortar la lista invalida la firma', () => {
     assert.notEqual(
       signEventManifest(EVENTO, issuedAt, entradas, SECRET),
-      signEventManifest(EVENTO, issuedAt, entradas.slice(0, 2), SECRET),
+      signEventManifest(EVENTO, issuedAt, entradas.slice(0, 2), SECRET)
     );
   });
 
@@ -268,7 +265,7 @@ describe('signEventManifest', () => {
 
     assert.notEqual(
       signEventManifest(EVENTO, issuedAt, entradas, SECRET),
-      signEventManifest(EVENTO, issuedAt, manipuladas, SECRET),
+      signEventManifest(EVENTO, issuedAt, manipuladas, SECRET)
     );
   });
 
@@ -276,10 +273,7 @@ describe('signEventManifest', () => {
     const base = signEventManifest(EVENTO, issuedAt, entradas, SECRET);
 
     assert.notEqual(base, signEventManifest(OTRO_EVENTO, issuedAt, entradas, SECRET));
-    assert.notEqual(
-      base,
-      signEventManifest(EVENTO, '2026-08-27T11:00:00.000Z', entradas, SECRET),
-    );
+    assert.notEqual(base, signEventManifest(EVENTO, '2026-08-27T11:00:00.000Z', entradas, SECRET));
   });
 });
 

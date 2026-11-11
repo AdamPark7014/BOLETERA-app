@@ -12,8 +12,10 @@ import {
 import { cx } from '../lib/cx';
 import styles from './SearchInput.module.scss';
 
-export interface SearchInputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size' | 'value' | 'type'> {
+export interface SearchInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'size' | 'value' | 'type'
+> {
   /** Texto actual. El componente es siempre controlado. */
   value: string;
   /**
@@ -61,7 +63,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
     onKeyDown,
     ...rest
   },
-  forwardedRef,
+  forwardedRef
 ) {
   const generatedId = useId();
   const inputId = id ?? `${generatedId}-search`;
@@ -73,7 +75,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
       if (typeof forwardedRef === 'function') forwardedRef(node);
       else if (forwardedRef) forwardedRef.current = node;
     },
-    [forwardedRef],
+    [forwardedRef]
   );
 
   const handleChange = useCallback(
@@ -81,7 +83,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
       onChange?.(event);
       onValueChange?.(event.target.value);
     },
-    [onChange, onValueChange],
+    [onChange, onValueChange]
   );
 
   const clear = useCallback(() => {
@@ -106,7 +108,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
       }
       onKeyDown?.(event);
     },
-    [value, clear, onKeyDown],
+    [value, clear, onKeyDown]
   );
 
   return (

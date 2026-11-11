@@ -56,7 +56,7 @@ function gradeFromScore(
   score: number,
   occluded: boolean,
   rowBlocked: boolean,
-  blockedFlag?: boolean,
+  blockedFlag?: boolean
 ): SightlineGrade {
   if (blockedFlag) return 'blocked';
   if (occluded || rowBlocked || score < 0.28) return 'restricted';
@@ -87,7 +87,7 @@ function segmentHitsAabb(
   minX: number,
   minY: number,
   maxX: number,
-  maxY: number,
+  maxY: number
 ): boolean {
   let t0 = 0;
   let t1 = 1;
@@ -124,7 +124,7 @@ function obstacleBlocks3d(
   stageY: number,
   stageZ: number,
   eyeZ: number,
-  obstacles: ResolvedVenueScene['obstacles'],
+  obstacles: ResolvedVenueScene['obstacles']
 ): boolean {
   for (const obs of obstacles) {
     if (!obs.points?.length) continue;
@@ -143,7 +143,7 @@ function obstacleBlocks3d(
       minX + pad,
       minY + pad,
       maxX - pad,
-      maxY - pad,
+      maxY - pad
     );
     if (!hit) continue;
 
@@ -179,7 +179,7 @@ function rowOcclusion(
   stageX: number,
   stageY: number,
   stageZ: number,
-  opts: SightlineSolveOpts,
+  opts: SightlineSolveOpts
 ): FrontHit | null {
   const eyeZ = (seat.elevation ?? seat.position.y ?? 0) + opts.eyeHeight;
   const toStageX = stageX - seat.x;
@@ -200,8 +200,7 @@ function rowOcclusion(
     if (other.id === seat.id) continue;
     // Prefer same section / level; still allow nearby cross-section blockers
     const sameBand =
-      other.sectionId === seat.sectionId ||
-      (other.levelId && other.levelId === seat.levelId);
+      other.sectionId === seat.sectionId || (other.levelId && other.levelId === seat.levelId);
     if (!sameBand && Math.hypot(other.x - seat.x, other.y - seat.y) > opts.corridorHalfWidth * 4) {
       continue;
     }
@@ -271,7 +270,7 @@ function scoreSeatVsFocus(
   focus: FocusTarget,
   maxDist: number,
   opts: SightlineSolveOpts,
-  obstacles: ResolvedVenueScene['obstacles'],
+  obstacles: ResolvedVenueScene['obstacles']
 ): Omit<SightlineScore, 'seatId' | 'visibility' | 'grade'> {
   const distance = Math.hypot(seat.x - focus.x, seat.y - focus.y);
   const distScore = 1 - distance / maxDist;
@@ -292,14 +291,10 @@ function scoreSeatVsFocus(
   const occluded = obstacleBlocks3d(seat, focus.x, focus.y, focus.z, eyeZ, obstacles);
   const front = rowOcclusion(seat, seats, focus.x, focus.y, focus.z, opts);
   const rowBlocked = Boolean(front?.blocked);
-  const cPenalty = front
-    ? front.blocked
-      ? -0.4
-      : clamp01(front.cValue / 20) * 0.08
-    : 0;
+  const cPenalty = front ? (front.blocked ? -0.4 : clamp01(front.cValue / 20) * 0.08) : 0;
 
   let score = clamp01(
-    distScore * 0.4 + facingScore * 0.35 + elevationBonus + (occluded ? -0.4 : 0) + cPenalty,
+    distScore * 0.4 + facingScore * 0.35 + elevationBonus + (occluded ? -0.4 : 0) + cPenalty
   );
   if (seat.visibility?.blocked) score = 0;
 
@@ -322,7 +317,7 @@ function scoreSeatVsFocus(
  */
 export function calculateSightlines(
   scene: ResolvedVenueScene,
-  options?: SightlineOptions,
+  options?: SightlineOptions
 ): SightlineResult {
   const opts = {
     eyeHeight: options?.eyeHeight ?? 12,
@@ -341,7 +336,7 @@ export function calculateSightlines(
 
   const maxDist = Math.max(
     1,
-    ...seats.flatMap((s) => focuses.map((f) => Math.hypot(s.x - f.x, s.y - f.y))),
+    ...seats.flatMap((s) => focuses.map((f) => Math.hypot(s.x - f.x, s.y - f.y)))
   );
 
   const scores: SightlineScore[] = seats.map((seat) => {
@@ -380,7 +375,7 @@ export function calculateSightlines(
 /** Merge sightline visibility into a resolved scene's seats (non-destructive copy). */
 export function applySightlinesToScene(
   scene: ResolvedVenueScene,
-  options?: SightlineOptions,
+  options?: SightlineOptions
 ): {
   scene: ResolvedVenueScene;
   result: SightlineResult;

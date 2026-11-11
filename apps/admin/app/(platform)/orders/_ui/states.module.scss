@@ -108,7 +108,12 @@
 .skelRow {
   height: 38px;
   border-radius: var(--bl-radius-md);
-  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, #ececee 37%, var(--bl-gray-100) 63%);
+  background: linear-gradient(
+    90deg,
+    var(--bl-surface-sunken) 25%,
+    #ececee 37%,
+    var(--bl-gray-100) 63%
+  );
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }

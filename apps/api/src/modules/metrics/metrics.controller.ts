@@ -35,7 +35,7 @@ export class MetricsController {
     return this.metrics.resolveOrganizationId(
       req.scopedOrganizationId,
       req.user.organizationId,
-      query.organizationId,
+      query.organizationId
     );
   }
 
@@ -147,7 +147,7 @@ export class MetricsController {
   @ApiOperation({ summary: 'Time-bucketed metric series' })
   timeseries(
     @Request() req: ScopedRequest,
-    @Query() query: MetricsQuery & { granularity?: MetricsGranularity; metric?: string },
+    @Query() query: MetricsQuery & { granularity?: MetricsGranularity; metric?: string }
   ) {
     const metric = (query.metric ?? 'revenue') as
       | 'revenue'

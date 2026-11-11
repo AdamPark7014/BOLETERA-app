@@ -387,7 +387,9 @@
   justify-content: space-between;
   gap: var(--bl-space-3);
   padding: var(--bl-space-3) var(--bl-space-4);
-  transition: background 180ms var(--brand-ease), color 180ms var(--brand-ease);
+  transition:
+    background 180ms var(--brand-ease),
+    color 180ms var(--brand-ease);
 }
 
 .previewBrand {
@@ -445,7 +447,9 @@
   padding: var(--bl-space-1-5) var(--bl-space-3);
   font-size: var(--bl-text-xs);
   font-weight: 650;
-  transition: background 180ms var(--brand-ease), color 180ms var(--brand-ease);
+  transition:
+    background 180ms var(--brand-ease),
+    color 180ms var(--brand-ease);
 }
 
 .previewBody {

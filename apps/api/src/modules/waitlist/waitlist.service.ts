@@ -8,7 +8,7 @@ export class WaitlistService {
   constructor(
     private prisma: PrismaService,
     private audit: AuditService,
-    private notifications: NotificationService,
+    private notifications: NotificationService
   ) {}
 
   async join(data: {
@@ -131,5 +131,3 @@ export class WaitlistService {
     return { total, byStatus: grouped };
   }
 }
-
-

@@ -5,10 +5,7 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { AffiliateRefCapture } from '@/components/AffiliateRefCapture';
 import { EventStage } from './EventStage';
 import { api } from '@/lib/api';
-import {
-  buildEventJsonLd,
-  localPosterFallback,
-} from '@/lib/seo/event-jsonld';
+import { buildEventJsonLd, localPosterFallback } from '@/lib/seo/event-jsonld';
 import { absUrlWithOrigin, getSiteOrigin } from '@/lib/site-url';
 import { fetchTenantCurrent } from '@/lib/tenant';
 
@@ -35,7 +32,14 @@ type EventDetail = {
   nonTransferable?: boolean;
   holdExpiration?: number;
   seatMap: { snapshotData: unknown } | null;
-  offers: { id: string; zone: string; name?: string; basePrice: string; remainingQuantity?: number; isAvailable?: boolean }[];
+  offers: {
+    id: string;
+    zone: string;
+    name?: string;
+    basePrice: string;
+    remainingQuantity?: number;
+    isAvailable?: boolean;
+  }[];
   venue?: {
     name: string;
     city: string;
@@ -54,9 +58,7 @@ type EventDetail = {
  * salían dos viajes al API por visita. `cache()` los colapsa en uno dentro de
  * la misma petición.
  */
-const loadEvent = cache(async (slug: string) =>
-  api<EventDetail>(`/discovery/events/${slug}`),
-);
+const loadEvent = cache(async (slug: string) => api<EventDetail>(`/discovery/events/${slug}`));
 
 export async function generateMetadata({
   params,

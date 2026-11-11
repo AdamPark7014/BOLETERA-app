@@ -47,12 +47,8 @@ export class DiscoveryService {
         },
       ],
       ...(params.orgId ? { organizationId: params.orgId } : {}),
-      ...(params.city
-        ? { venue: { city: { equals: params.city, mode: 'insensitive' } } }
-        : {}),
-      ...(params.venueSlug
-        ? { venue: { slug: params.venueSlug } }
-        : {}),
+      ...(params.city ? { venue: { city: { equals: params.city, mode: 'insensitive' } } } : {}),
+      ...(params.venueSlug ? { venue: { slug: params.venueSlug } } : {}),
       ...(params.category && CATEGORIES.has(params.category as EventCategory)
         ? { category: params.category as EventCategory }
         : {}),
@@ -120,9 +116,7 @@ export class DiscoveryService {
         description: e.description,
         image: e.image,
         bannerImage: e.bannerImage,
-        posterAspect:
-          ((e.metadata as { posterAspect?: string } | null)?.posterAspect) ??
-          undefined,
+        posterAspect: (e.metadata as { posterAspect?: string } | null)?.posterAspect ?? undefined,
         startsAt: e.startsAt,
         endsAt: e.endsAt,
         status: e.status,
@@ -171,7 +165,7 @@ export class DiscoveryService {
       throw new NotFoundException('Event not found');
     }
     const posterAspect =
-      ((event.metadata as { posterAspect?: string } | null)?.posterAspect) ?? undefined;
+      (event.metadata as { posterAspect?: string } | null)?.posterAspect ?? undefined;
 
     // El precio anunciado tiene que ser el que se cobra: `basePrice` deja fuera
     // cargos e IVA, que con las tarifas actuales son un 26% más.
@@ -278,9 +272,7 @@ export class DiscoveryService {
     const venues = await this.prisma.venue.findMany({
       where: {
         ...(params.orgId ? { organizationId: params.orgId } : {}),
-        ...(params.city
-          ? { city: { equals: params.city, mode: 'insensitive' } }
-          : {}),
+        ...(params.city ? { city: { equals: params.city, mode: 'insensitive' } } : {}),
         events: {
           some: {
             AND: [

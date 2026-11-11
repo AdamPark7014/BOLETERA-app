@@ -44,21 +44,20 @@ export default function AyudaPage() {
 
         <h2 id="comprar">Comprar boletos</h2>
         <p>
-          Elige un evento, selecciona asientos o zona y completa el pago con Banorte
-          (tarjeta, SPEI u OXXO, según lo que habilite el evento). Al confirmar verás la
-          orden y podrás descargar el PDF con el código QR.
+          Elige un evento, selecciona asientos o zona y completa el pago con Banorte (tarjeta, SPEI
+          u OXXO, según lo que habilite el evento). Al confirmar verás la orden y podrás descargar
+          el PDF con el código QR.
         </p>
         <p>
-          Los asientos se reservan solo unos minutos mientras pagas. Si se agota el tiempo,
-          vuelven a quedar disponibles para otras personas y tendrás que elegirlos de
-          nuevo.
+          Los asientos se reservan solo unos minutos mientras pagas. Si se agota el tiempo, vuelven
+          a quedar disponibles para otras personas y tendrás que elegirlos de nuevo.
         </p>
 
         <h2 id="acceso">Entrar al evento</h2>
         <p>
-          Presenta el código QR desde el celular o impreso desde el PDF. El personal del
-          recinto lo escanea en la entrada. Cada código sirve una sola vez; todavía no hay
-          aplicación móvil nativa.
+          Presenta el código QR desde el celular o impreso desde el PDF. El personal del recinto lo
+          escanea en la entrada. Cada código sirve una sola vez; todavía no hay aplicación móvil
+          nativa.
         </p>
 
         <h2 id="cuenta">Mi cuenta y sesión</h2>
@@ -74,16 +73,16 @@ export default function AyudaPage() {
           </li>
         </ul>
         <p>
-          Por seguridad la sesión caduca sola tras un rato de inactividad y cuando cambian
-          los datos de tu cuenta. Si te pasa, solo vuelve a entrar: los boletos que ya
-          compraste siguen en tu cuenta y en tu correo.
+          Por seguridad la sesión caduca sola tras un rato de inactividad y cuando cambian los datos
+          de tu cuenta. Si te pasa, solo vuelve a entrar: los boletos que ya compraste siguen en tu
+          cuenta y en tu correo.
         </p>
 
         <h2 id="reembolsos">Reembolsos y cambios</h2>
         <p>
-          Si el evento se cancela, el reembolso es del 100 % y se hace por el mismo medio
-          de pago, sin que tengas que pedirlo. Si se reprograma, tu boleto sigue siendo
-          válido y puedes pedir la devolución dentro del plazo publicado.
+          Si el evento se cancela, el reembolso es del 100 % y se hace por el mismo medio de pago,
+          sin que tengas que pedirlo. Si se reprograma, tu boleto sigue siendo válido y puedes pedir
+          la devolución dentro del plazo publicado.
         </p>
         <p>
           Las condiciones completas, con plazos y el procedimiento paso a paso, están en la{' '}

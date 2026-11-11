@@ -26,7 +26,10 @@ function isBoundary(text: string, index: number): boolean {
 
 /** Normaliza para que "sesion" encuentre "sesión" y viceversa. */
 function normalize(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 }
 
 /**
@@ -70,7 +73,7 @@ export function fuzzyMatch(text: string, query: string): FuzzyMatch | null {
 export function bestMatch(
   primary: string,
   keywords: readonly string[],
-  query: string,
+  query: string
 ): FuzzyMatch | null {
   const direct = fuzzyMatch(primary, query);
   let best = direct;
@@ -88,7 +91,7 @@ export function bestMatch(
 /** Divide `text` en tramos coincidentes y no coincidentes, para resaltarlos. */
 export function highlightSegments(
   text: string,
-  indices: readonly number[],
+  indices: readonly number[]
 ): Array<{ text: string; matched: boolean }> {
   if (indices.length === 0) return [{ text, matched: false }];
 

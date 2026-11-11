@@ -56,14 +56,14 @@ export function usePartnersUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   const setSearch = useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]);
 
   const setHealth = useCallback(
     (health: HealthFilter) => replaceParams({ health: health === 'all' ? null : health }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setFilterSelection = useCallback(
@@ -73,18 +73,15 @@ export function usePartnersUrlState() {
         health: next && isKeyHealth(next) ? next : null,
       });
     },
-    [replaceParams],
+    [replaceParams]
   );
 
   const setSelectedId = useCallback(
     (keyId: string | null) => replaceParams({ key: keyId }),
-    [replaceParams],
+    [replaceParams]
   );
 
-  const clearFilters = useCallback(
-    () => replaceParams({ q: null, health: null }),
-    [replaceParams],
-  );
+  const clearFilters = useCallback(() => replaceParams({ q: null, health: null }), [replaceParams]);
 
   return { ...state, setSearch, setHealth, setFilterSelection, setSelectedId, clearFilters };
 }

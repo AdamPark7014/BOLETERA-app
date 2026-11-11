@@ -42,11 +42,14 @@ export class EventManagementService {
   constructor(
     private prisma: PrismaService,
     private saleWindow: SaleWindowService,
-    private phaseQuota: SalePhaseQuotaService,
+    private phaseQuota: SalePhaseQuotaService
   ) {}
 
   private slugify(text: string) {
-    return `${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
+    return `${text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
   }
 
   private async mergeMetadata(eventId: string, patch: EventMetadata) {
@@ -82,7 +85,7 @@ export class EventManagementService {
        */
       salesStartAt?: Date | string;
       salesEndAt?: Date | string;
-    },
+    }
   ) {
     const salesStartAt = data.salesStartAt ? new Date(data.salesStartAt) : null;
     const salesEndAt = data.salesEndAt ? new Date(data.salesEndAt) : null;
@@ -101,7 +104,7 @@ export class EventManagementService {
     // que se modela con una fase DOOR, no con la ventana suelta del evento.
     if (salesEndAt && salesEndAt > startsAt) {
       throw new BadRequestException(
-        'La venta no puede cerrar después de que empiece el evento; usa una fase de venta en puerta',
+        'La venta no puede cerrar después de que empiece el evento; usa una fase de venta en puerta'
       );
     }
 
@@ -195,7 +198,7 @@ export class EventManagementService {
   async updateEventMedia(
     orgId: string,
     eventId: string,
-    data: { imageUrl?: string; bannerImageUrl?: string },
+    data: { imageUrl?: string; bannerImageUrl?: string }
   ) {
     const event = await this.prisma.event.findFirst({
       where: { id: eventId, organizationId: orgId },
@@ -232,7 +235,7 @@ export class EventManagementService {
       recurrence?: unknown;
       /** Plantilla de cada fecha (aforo, precio…). Se guarda para extender. */
       template?: unknown;
-    },
+    }
   ) {
     if (!orgId) throw new BadRequestException('Tu usuario no tiene organización');
     if (!data.seriesName?.trim()) throw new BadRequestException('Falta el nombre de la serie');
@@ -267,7 +270,9 @@ export class EventManagementService {
             // Las fechas nacen SCHEDULED, así que la serie ya está activa.
             status: EventSeriesStatus.ACTIVE,
             timezone,
-            recurrence: rule ? (JSON.parse(JSON.stringify(rule)) as Prisma.InputJsonValue) : Prisma.DbNull,
+            recurrence: rule
+              ? (JSON.parse(JSON.stringify(rule)) as Prisma.InputJsonValue)
+              : Prisma.DbNull,
             template: JSON.parse(JSON.stringify(savedTemplate)) as Prisma.InputJsonValue,
           },
         });
@@ -302,7 +307,7 @@ export class EventManagementService {
         }
         return { series, occurrences };
       },
-      { timeout: 60_000 },
+      { timeout: 60_000 }
     );
 
     this.logger.log(`Event series created: ${data.seriesName} (${occurrences.length})`);
@@ -325,7 +330,7 @@ export class EventManagementService {
       capacity: number;
       basePrice: number;
       exceptions?: Date[];
-    },
+    }
   ) {
     if (!orgId) throw new BadRequestException('Tu usuario no tiene organización');
     const events = [];
@@ -381,12 +386,20 @@ export class EventManagementService {
       created++;
 
       if (data.frequency === 'daily') currentDate = new Date(currentDate.getTime() + dayInMs);
-      else if (data.frequency === 'weekly') currentDate = new Date(currentDate.getTime() + 7 * dayInMs);
-      else if (data.frequency === 'biweekly') currentDate = new Date(currentDate.getTime() + 14 * dayInMs);
+      else if (data.frequency === 'weekly')
+        currentDate = new Date(currentDate.getTime() + 7 * dayInMs);
+      else if (data.frequency === 'biweekly')
+        currentDate = new Date(currentDate.getTime() + 14 * dayInMs);
       else currentDate.setMonth(currentDate.getMonth() + 1);
     }
 
-    return { seriesId: series.id, name: data.name, frequency: data.frequency, events, totalEvents: events.length };
+    return {
+      seriesId: series.id,
+      name: data.name,
+      frequency: data.frequency,
+      events,
+      totalEvents: events.length,
+    };
   }
 
   async setPricingRules(
@@ -398,7 +411,7 @@ export class EventManagementService {
       timeBasedRules?: Array<{ daysUntilEvent: number; multiplier: number }>;
       segmentPricing?: Record<string, number>;
       customZonePricing?: Record<string, number>;
-    },
+    }
   ) {
     const event = await this.mergeMetadata(eventId, {
       pricingRules: data,
@@ -426,7 +439,7 @@ export class EventManagementService {
   async updateOffer(
     eventId: string,
     offerId: string,
-    data: { basePrice?: number; name?: string; isAvailable?: boolean },
+    data: { basePrice?: number; name?: string; isAvailable?: boolean }
   ) {
     const offer = await this.prisma.offer.findFirst({ where: { id: offerId, eventId } });
     if (!offer) throw new BadRequestException('Offer not found');
@@ -463,7 +476,7 @@ export class EventManagementService {
       taquilla: { enabled: boolean; allocation: number; locations?: string[] };
       api: { enabled: boolean; allocation: number; partners?: string[] };
       phone?: { enabled: boolean; allocation: number };
-    },
+    }
   ) {
     const total =
       (data.web?.allocation || 0) +
@@ -493,13 +506,15 @@ export class EventManagementService {
       discountValue: number;
       quantityPerUser?: number;
       requiresApproval?: boolean;
-    },
+    }
   ) {
     const event = await this.prisma.event.findUnique({ where: { id: eventId } });
     if (!event) throw new BadRequestException('Event not found');
 
     const presaleCode =
-      data.type === 'presale' ? data.code || `PRESALE${Math.random().toString(36).substring(2, 8).toUpperCase()}` : data.code;
+      data.type === 'presale'
+        ? data.code || `PRESALE${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+        : data.code;
 
     const campaigns = ((event.metadata as EventMetadata)?.campaigns as unknown[]) ?? [];
     const campaign = {
@@ -547,7 +562,10 @@ export class EventManagementService {
       calendar[dateKey].push({
         id: event.id,
         title: event.title,
-        startTime: event.startsAt.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+        startTime: event.startsAt.toLocaleTimeString('es-MX', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
         venue: event.venue.name,
         capacity: event.totalCapacity,
         status: event.status,
@@ -587,7 +605,7 @@ export class EventManagementService {
       status?: string;
       minCapacity?: number;
       maxCapacity?: number;
-    },
+    }
   ) {
     const whereClause: Prisma.EventWhereInput = {
       organizationId: orgId,
@@ -610,9 +628,7 @@ export class EventManagementService {
     });
 
     if (filters.type) {
-      return events.filter(
-        (e) => (e.metadata as EventMetadata)?.eventKind === filters.type,
-      );
+      return events.filter((e) => (e.metadata as EventMetadata)?.eventKind === filters.type);
     }
     return events;
   }
@@ -645,7 +661,10 @@ export class EventManagementService {
    */
   private normalizeSalePhase(
     input: SalePhasePatch,
-    context: { eventStartsAt: Date; current?: { startsAt: Date; endsAt: Date; kind: SalePhaseKind } },
+    context: {
+      eventStartsAt: Date;
+      current?: { startsAt: Date; endsAt: Date; kind: SalePhaseKind };
+    }
   ) {
     const startsAt = input.startsAt ? new Date(input.startsAt) : context.current?.startsAt;
     const endsAt = input.endsAt ? new Date(input.endsAt) : context.current?.endsAt;
@@ -662,7 +681,7 @@ export class EventManagementService {
     }
     if (kind !== SalePhaseKind.DOOR && endsAt > context.eventStartsAt) {
       throw new BadRequestException(
-        'La venta no puede cerrar después de que empiece el evento (solo la fase DOOR puede).',
+        'La venta no puede cerrar después de que empiece el evento (solo la fase DOOR puede).'
       );
     }
     if (
@@ -695,7 +714,7 @@ export class EventManagementService {
   private async assertAllocationFits(
     eventId: string,
     allocationPercent: number | null | undefined,
-    excludePhaseId?: string,
+    excludePhaseId?: string
   ) {
     if (allocationPercent == null) return;
     const others = await this.prisma.salePhase.aggregate({
@@ -709,7 +728,7 @@ export class EventManagementService {
     const total = (others._sum.allocationPercent ?? 0) + allocationPercent;
     if (total > 100) {
       throw new BadRequestException(
-        `La suma de cupos por fase no puede pasar de 100% (quedaría en ${total}%).`,
+        `La suma de cupos por fase no puede pasar de 100% (quedaría en ${total}%).`
       );
     }
   }
@@ -726,7 +745,9 @@ export class EventManagementService {
     // camino caliente— pero lo que se devuelve se deriva igualmente del reloj:
     // si la escritura fallara, el operador seguiría viendo el estado correcto.
     await this.saleWindow.syncPhaseStatuses(eventId, rows, at).catch((error: Error) => {
-      this.logger.warn(`No se pudo persistir el estado de las fases de ${eventId}: ${error.message}`);
+      this.logger.warn(
+        `No se pudo persistir el estado de las fases de ${eventId}: ${error.message}`
+      );
     });
 
     const phases = await Promise.all(
@@ -735,7 +756,7 @@ export class EventManagementService {
         // Cuánto lleva consumido el cupo: sin esto `allocationPercent` es una
         // promesa que el operador no puede vigilar hasta que ya se agotó.
         quota: await this.phaseQuotaUsage(eventId, phase, event.totalCapacity),
-      })),
+      }))
     );
 
     // La decisión vigente viaja con la lista: es lo que el panel necesita para
@@ -746,8 +767,14 @@ export class EventManagementService {
 
   private async phaseQuotaUsage(
     eventId: string,
-    phase: { id: string; name: string; startsAt: Date; endsAt: Date; allocationPercent: number | null },
-    capacity: number,
+    phase: {
+      id: string;
+      name: string;
+      startsAt: Date;
+      endsAt: Date;
+      allocationPercent: number | null;
+    },
+    capacity: number
   ): Promise<PhaseQuotaUsage | null> {
     if (phase.allocationPercent == null) return null;
     return this.phaseQuota.getUsage(
@@ -759,7 +786,7 @@ export class EventManagementService {
         endsAt: phase.endsAt,
         allocationPercent: phase.allocationPercent,
       },
-      capacity,
+      capacity
     );
   }
 
@@ -797,22 +824,14 @@ export class EventManagementService {
       this.logger.log(`Sale phase creada en ${eventId}: ${phase.name} (${phase.kind})`);
       return phase;
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException('Ya existe una fase con ese nombre en el evento.');
       }
       throw error;
     }
   }
 
-  async updateSalePhase(
-    eventId: string,
-    phaseId: string,
-    orgId: string,
-    patch: SalePhasePatch,
-  ) {
+  async updateSalePhase(eventId: string, phaseId: string, orgId: string, patch: SalePhasePatch) {
     const event = await this.assertEventInOrg(eventId, orgId);
     const current = await this.prisma.salePhase.findFirst({ where: { id: phaseId, eventId } });
     if (!current) throw new NotFoundException('Sale phase not found');
@@ -927,9 +946,7 @@ export class EventManagementService {
         /** Retirado de la venta por bloqueo operativo (no caduca solo). */
         blocked,
         available: Math.max(0, event.totalCapacity - sold - held - blocked),
-        occupancyPercent: event.totalCapacity
-          ? Math.round((sold / event.totalCapacity) * 100)
-          : 0,
+        occupancyPercent: event.totalCapacity ? Math.round((sold / event.totalCapacity) * 100) : 0,
       },
       channels: channelOrders,
       /** Ventana de venta vigente resuelta con las fases del evento. */
@@ -938,5 +955,3 @@ export class EventManagementService {
     };
   }
 }
-
-

@@ -36,7 +36,7 @@ const def = rowLabelsFor(16);
 eq(
   def,
   ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R'],
-  'latin-no-ambiguous debe saltar I y O',
+  'latin-no-ambiguous debe saltar I y O'
 );
 assert(!def.includes('I') && !def.includes('O'), 'no debe haber I ni O');
 
@@ -49,7 +49,7 @@ const long = rowLabelsFor(30, { rowScheme: 'latin' });
 eq(long.slice(25, 30), ['Z', 'AA', 'AB', 'AC', 'AD'], 'tras la Z debe venir AA');
 assert(
   long.every((l) => /^[A-Z]+$/.test(l)),
-  `etiquetas inválidas: ${long.filter((l) => !/^[A-Z]+$/.test(l))}`,
+  `etiquetas inválidas: ${long.filter((l) => !/^[A-Z]+$/.test(l))}`
 );
 
 // El bug original: String.fromCharCode(65 + index) a partir de 26.
@@ -66,7 +66,7 @@ eq(rowLabelsFor(3, { startRowLabel: 'C' }), ['C', 'D', 'E'], 'fila inicial C');
 eq(
   rowLabelsFor(4, { rowScheme: 'latin-no-ambiguous-q' }).slice(0, 4),
   ['A', 'B', 'C', 'D'],
-  'sin Q',
+  'sin Q'
 );
 console.log('filas:', def.join(' '));
 
@@ -97,7 +97,7 @@ const fromCenter = numberRow(6, 'A', {
 eq(
   fromCenter,
   ['A-3I', 'A-2I', 'A-1I', 'A-1D', 'A-2D', 'A-3D'],
-  'desde el centro con sufijo izquierda/derecha',
+  'desde el centro con sufijo izquierda/derecha'
 );
 
 // Serpentina y continua.
@@ -147,7 +147,7 @@ const withAisle = generateBlock({
 eq(
   withAisle.map((s) => s.label),
   ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6'],
-  'las columnas saltadas son pasillo y no consumen número',
+  'las columnas saltadas son pasillo y no consumen número'
 );
 assert(withAisle.length === 6, 'deben quedar 6 butacas');
 
@@ -166,7 +166,7 @@ const firstRow = parImparAisle.filter((s) => s.row === 'A').map((s) => s.label);
 eq(
   firstRow,
   ['A-10', 'A-8', 'A-6', 'A-4', 'A-2', 'A-1', 'A-3', 'A-5', 'A-7', 'A-9'],
-  'pares e impares con pasillo central',
+  'pares e impares con pasillo central'
 );
 assert(parImparAisle[10].row === 'B', 'la segunda fila debe etiquetarse B');
 
@@ -183,7 +183,7 @@ const rowLabels = [...new Set(tallBlock.map((s) => s.row))];
 assert(rowLabels.length === 30, `esperaba 30 filas distintas, hay ${rowLabels.length}`);
 assert(
   rowLabels.every((l) => /^[A-Z]+$/.test(l)),
-  `filas con caracteres inválidos: ${rowLabels.filter((l) => !/^[A-Z]+$/.test(l))}`,
+  `filas con caracteres inválidos: ${rowLabels.filter((l) => !/^[A-Z]+$/.test(l))}`
 );
 const allIds = tallBlock.map((s) => s.id);
 assert(new Set(allIds).size === allIds.length, 'los ids de butaca deben ser únicos');
@@ -219,7 +219,7 @@ assert(created.wheelchair.length === 3, `esperaba 3 plazas, hay ${created.wheelc
 assert(created.companions.length === 3, 'una butaca de acompañante por plaza');
 assert(
   accessible.seats.length === section.seats.length,
-  'no debe inventar butacas nuevas: el aforo declarado no cambia',
+  'no debe inventar butacas nuevas: el aforo declarado no cambia'
 );
 
 const wheelchairs = accessible.seats.filter(isWheelchairSpace);
@@ -230,7 +230,7 @@ for (const c of companions) {
   const target = companionOf(c);
   assert(
     wheelchairs.some((w) => w.id === target),
-    `el acompañante ${c.id} apunta a una plaza inexistente (${target})`,
+    `el acompañante ${c.id} apunta a una plaza inexistente (${target})`
   );
 }
 
@@ -239,7 +239,7 @@ assert(audit.wheelchairSpaces === 3, 'auditoría: plazas');
 assert(audit.wheelchairWithoutCompanion.length === 0, 'ninguna plaza sin acompañante');
 assert(audit.orphanCompanions.length === 0, 'ningún acompañante huérfano');
 console.log(
-  `accesibilidad: ${audit.wheelchairSpaces} plazas / ${audit.requiredWheelchairSpaces} exigidas, cumple=${audit.compliant}`,
+  `accesibilidad: ${audit.wheelchairSpaces} plazas / ${audit.requiredWheelchairSpaces} exigidas, cumple=${audit.compliant}`
 );
 
 // Sección sin plazas accesibles debe reportarse.
@@ -257,10 +257,7 @@ assert(spreadAudit.wheelchairSpaces >= 3, `reparto proporcional: ${spreadAudit.w
 const stadium = generateStadiumTemplate({ capacity: 45000 });
 const stadiumSeats = countSeats(stadium);
 console.log(`estadio 45.000 → ${stadiumSeats} butacas en ${stadium.sections.length} secciones`);
-assert(
-  stadiumSeats >= 40000,
-  `el estadio debe acercarse al aforo pedido, produjo ${stadiumSeats}`,
-);
+assert(stadiumSeats >= 40000, `el estadio debe acercarse al aforo pedido, produjo ${stadiumSeats}`);
 
 const arena = generateArenaTemplate({ capacity: 20000 });
 const arenaSeats = countSeats(arena);
@@ -275,7 +272,7 @@ assert(new Set(slugs).size === slugs.length, 'los ids de sección deben ser úni
 const stadiumIds = stadium.sections.flatMap((s) => s.seats.map((x) => x.id));
 assert(
   new Set(stadiumIds).size === stadiumIds.length,
-  `ids de butaca duplicados: ${stadiumIds.length - new Set(stadiumIds).size}`,
+  `ids de butaca duplicados: ${stadiumIds.length - new Set(stadiumIds).size}`
 );
 
 console.log('NUMBERING_SMOKE_OK');

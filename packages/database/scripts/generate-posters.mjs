@@ -6,18 +6,114 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dir = path.join(__dirname, '../../../apps/web/public/posters');
 
 const posters = [
-  { slug: 'concierto-demo-2026', title: ['CONCIERTO', 'DEMO 2026'], sub: 'MUSICA', a: '#4c0519', b: '#e11d48', c: '#0a0a0a', motif: 'rings' },
-  { slug: 'noche-indie-cdmx', title: ['NOCHE', 'INDIE'], sub: 'CDMX', a: '#1c1917', b: '#a16207', c: '#0a0a0a', motif: 'bars' },
-  { slug: 'stand-up-gdl', title: ['STAND-UP', 'GDL'], sub: 'COMEDIA', a: '#431407', b: '#c2410c', c: '#0a0a0a', motif: 'mic' },
-  { slug: 'obra-clasica-gdl', title: ['OBRA', 'CLASICA'], sub: 'TEATRO', a: '#1c1917', b: '#78716c', c: '#0a0a0a', motif: 'curtain' },
-  { slug: 'clasico-regio', title: ['CLASICO', 'REGIO'], sub: 'DEPORTES', a: '#0c4a6e', b: '#0284c7', c: '#0a0a0a', motif: 'pitch' },
-  { slug: 'festival-verano-mty', title: ['FESTIVAL', 'VERANO'], sub: 'MTY', a: '#4c0519', b: '#be123c', c: '#0a0a0a', motif: 'burst' },
-  { slug: 'electro-night-cdmx', title: ['ELECTRO', 'NIGHT'], sub: 'CDMX', a: '#18181b', b: '#e11d48', c: '#0a0a0a', motif: 'wave' },
-  { slug: 'ballet-gdl', title: ['BALLET', 'GDL'], sub: 'ARTES', a: '#1c1917', b: '#a8a29e', c: '#0a0a0a', motif: 'arc' },
-  { slug: 'final-regional-mty', title: ['FINAL', 'REGIONAL'], sub: 'MTY', a: '#14532d', b: '#22c55e', c: '#0a0a0a', motif: 'pitch' },
-  { slug: 'comedia-abierta-cdmx', title: ['COMEDIA', 'ABIERTA'], sub: 'CDMX', a: '#7c2d12', b: '#fb923c', c: '#0a0a0a', motif: 'mic' },
-  { slug: 'jazz-al-atardecer', title: ['JAZZ AL', 'ATARDECER'], sub: 'LIVE', a: '#422006', b: '#f59e0b', c: '#0a0a0a', motif: 'wave' },
-  { slug: 'open-air-fest-cdmx', title: ['OPEN AIR', 'FEST'], sub: 'CDMX', a: '#831843', b: '#f472b6', c: '#0a0a0a', motif: 'burst' },
+  {
+    slug: 'concierto-demo-2026',
+    title: ['CONCIERTO', 'DEMO 2026'],
+    sub: 'MUSICA',
+    a: '#4c0519',
+    b: '#e11d48',
+    c: '#0a0a0a',
+    motif: 'rings',
+  },
+  {
+    slug: 'noche-indie-cdmx',
+    title: ['NOCHE', 'INDIE'],
+    sub: 'CDMX',
+    a: '#1c1917',
+    b: '#a16207',
+    c: '#0a0a0a',
+    motif: 'bars',
+  },
+  {
+    slug: 'stand-up-gdl',
+    title: ['STAND-UP', 'GDL'],
+    sub: 'COMEDIA',
+    a: '#431407',
+    b: '#c2410c',
+    c: '#0a0a0a',
+    motif: 'mic',
+  },
+  {
+    slug: 'obra-clasica-gdl',
+    title: ['OBRA', 'CLASICA'],
+    sub: 'TEATRO',
+    a: '#1c1917',
+    b: '#78716c',
+    c: '#0a0a0a',
+    motif: 'curtain',
+  },
+  {
+    slug: 'clasico-regio',
+    title: ['CLASICO', 'REGIO'],
+    sub: 'DEPORTES',
+    a: '#0c4a6e',
+    b: '#0284c7',
+    c: '#0a0a0a',
+    motif: 'pitch',
+  },
+  {
+    slug: 'festival-verano-mty',
+    title: ['FESTIVAL', 'VERANO'],
+    sub: 'MTY',
+    a: '#4c0519',
+    b: '#be123c',
+    c: '#0a0a0a',
+    motif: 'burst',
+  },
+  {
+    slug: 'electro-night-cdmx',
+    title: ['ELECTRO', 'NIGHT'],
+    sub: 'CDMX',
+    a: '#18181b',
+    b: '#e11d48',
+    c: '#0a0a0a',
+    motif: 'wave',
+  },
+  {
+    slug: 'ballet-gdl',
+    title: ['BALLET', 'GDL'],
+    sub: 'ARTES',
+    a: '#1c1917',
+    b: '#a8a29e',
+    c: '#0a0a0a',
+    motif: 'arc',
+  },
+  {
+    slug: 'final-regional-mty',
+    title: ['FINAL', 'REGIONAL'],
+    sub: 'MTY',
+    a: '#14532d',
+    b: '#22c55e',
+    c: '#0a0a0a',
+    motif: 'pitch',
+  },
+  {
+    slug: 'comedia-abierta-cdmx',
+    title: ['COMEDIA', 'ABIERTA'],
+    sub: 'CDMX',
+    a: '#7c2d12',
+    b: '#fb923c',
+    c: '#0a0a0a',
+    motif: 'mic',
+  },
+  {
+    slug: 'jazz-al-atardecer',
+    title: ['JAZZ AL', 'ATARDECER'],
+    sub: 'LIVE',
+    a: '#422006',
+    b: '#f59e0b',
+    c: '#0a0a0a',
+    motif: 'wave',
+  },
+  {
+    slug: 'open-air-fest-cdmx',
+    title: ['OPEN AIR', 'FEST'],
+    sub: 'CDMX',
+    a: '#831843',
+    b: '#f472b6',
+    c: '#0a0a0a',
+    motif: 'burst',
+  },
 ];
 
 function motif(kind) {
@@ -82,7 +178,7 @@ function posterSvg(p) {
   const text = p.title
     .map(
       (t, i) =>
-        `<text x="60" y="${780 + i * 54}" fill="#fff" font-family="Arial Black, Arial, sans-serif" font-size="52" font-weight="900" letter-spacing="2">${t}</text>`,
+        `<text x="60" y="${780 + i * 54}" fill="#fff" font-family="Arial Black, Arial, sans-serif" font-size="52" font-weight="900" letter-spacing="2">${t}</text>`
     )
     .join('\n');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" fill="none">

@@ -42,7 +42,7 @@ describe('tasas de la organización', () => {
         refundSettlementBusinessDays: 6,
         transferDeadlineDays: 9,
       },
-      { serviceFeeRate: 0.12 },
+      { serviceFeeRate: 0.12 }
     );
     expect(next.managerPinHash).toBe('pin');
     expect(next.refundSettlementBusinessDays).toBe(6);

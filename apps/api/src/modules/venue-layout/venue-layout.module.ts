@@ -22,5 +22,3 @@ import { VenueLayoutController, EventPublishController } from './venue-layout.co
   exports: [VenueLayoutService],
 })
 export class VenueLayoutModule {}
-
-

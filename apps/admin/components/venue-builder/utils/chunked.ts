@@ -25,7 +25,7 @@ function scheduleIdle(callback: IdleCallback): void {
 export function runChunked<TIn, TOut>(
   items: readonly TIn[],
   produce: (item: TIn, index: number) => TOut[],
-  options?: { onProgress?: (ratio: number) => void; sliceBudgetMs?: number },
+  options?: { onProgress?: (ratio: number) => void; sliceBudgetMs?: number }
 ): Promise<TOut[]> {
   const budget = options?.sliceBudgetMs ?? 8;
   return new Promise((resolve) => {

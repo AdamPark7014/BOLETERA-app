@@ -11,7 +11,7 @@ export const DEFAULT_EGRESS_POLICY: Required<SeatMapEgressPolicy> = {
 };
 
 export function resolveEgressPolicy(
-  policy?: SeatMapEgressPolicy | null,
+  policy?: SeatMapEgressPolicy | null
 ): Required<SeatMapEgressPolicy> {
   return {
     longPathUnits: policy?.longPathUnits ?? DEFAULT_EGRESS_POLICY.longPathUnits,
@@ -19,8 +19,7 @@ export function resolveEgressPolicy(
       policy?.slowClearanceMinutes ?? DEFAULT_EGRESS_POLICY.slowClearanceMinutes,
     bottleneckUtilization:
       policy?.bottleneckUtilization ?? DEFAULT_EGRESS_POLICY.bottleneckUtilization,
-    bottleneckSeatLoad:
-      policy?.bottleneckSeatLoad ?? DEFAULT_EGRESS_POLICY.bottleneckSeatLoad,
+    bottleneckSeatLoad: policy?.bottleneckSeatLoad ?? DEFAULT_EGRESS_POLICY.bottleneckSeatLoad,
   };
 }
 
@@ -61,7 +60,7 @@ export type EgressReport = {
  */
 export function buildEgressReport(
   input: SeatMapData | null | undefined,
-  opts?: { venueName?: string },
+  opts?: { venueName?: string }
 ): EgressReport {
   const map = migrateToV3(input ?? { sections: [], version: 3 });
   const scene = resolveGeometry(map);
@@ -74,9 +73,7 @@ export function buildEgressReport(
 
   const sectionCount = scene.sections.length;
   // When there is no aisle/stair network, egress.sections stays empty — still report map size.
-  const unreachable = analysis.hasNetwork
-    ? analysis.unreachableSections.length
-    : sectionCount;
+  const unreachable = analysis.hasNetwork ? analysis.unreachableSections.length : sectionCount;
 
   return {
     generatedAt: new Date().toISOString(),
@@ -126,7 +123,7 @@ export function exportEgressReportToCsv(report: EgressReport): string {
 
   lines.push('');
   lines.push(
-    'type,sectionId,sectionName,seatCount,pathLength,walkMinutes,queueMinutes,clearanceMinutes,reachable',
+    'type,sectionId,sectionName,seatCount,pathLength,walkMinutes,queueMinutes,clearanceMinutes,reachable'
   );
   for (const s of report.analysis.egress.sections) {
     const reachable = !report.analysis.unreachableSections.includes(s.sectionId);
@@ -141,13 +138,13 @@ export function exportEgressReportToCsv(report: EgressReport): string {
         fmt(s.queueMinutes),
         fmt(s.clearanceMinutes),
         reachable ? 1 : 0,
-      ].join(','),
+      ].join(',')
     );
   }
 
   lines.push('');
   lines.push(
-    'type,edgeId,kind,width,capacity,seatLoad,sectionCount,utilization,flowPerMinute,clearanceMinutes,overCapacity',
+    'type,edgeId,kind,width,capacity,seatLoad,sectionCount,utilization,flowPerMinute,clearanceMinutes,overCapacity'
   );
   for (const b of report.analysis.egress.bottlenecks) {
     lines.push(
@@ -163,7 +160,7 @@ export function exportEgressReportToCsv(report: EgressReport): string {
         fmt(b.flowPerMinute, 1),
         fmt(b.clearanceMinutes),
         b.overCapacity ? 1 : 0,
-      ].join(','),
+      ].join(',')
     );
   }
 
@@ -179,7 +176,7 @@ export function egressReportFilename(venueName = 'venue'): string {
 /** Convenience: map → CSV string */
 export function exportSeatMapEgressCsv(
   input: SeatMapData | null | undefined,
-  opts?: { venueName?: string },
+  opts?: { venueName?: string }
 ): string {
   return exportEgressReportToCsv(buildEgressReport(input, opts));
 }
@@ -221,13 +218,15 @@ export function summarizeEgressReport(report: EgressReport): EgressReportSummary
     statusReason = 'Sin pasillos/escaleras';
   } else if (
     summary.unreachable > 0 ||
-    (summary.clearanceMinutes != null &&
-      summary.clearanceMinutes > policy.slowClearanceMinutes) ||
+    (summary.clearanceMinutes != null && summary.clearanceMinutes > policy.slowClearanceMinutes) ||
     (top?.overCapacity && (top.sectionCount ?? 0) >= 2)
   ) {
     status = 'critical';
     if (summary.unreachable > 0) statusReason = `${summary.unreachable} sección(es) sin acceso`;
-    else if (summary.clearanceMinutes != null && summary.clearanceMinutes > policy.slowClearanceMinutes) {
+    else if (
+      summary.clearanceMinutes != null &&
+      summary.clearanceMinutes > policy.slowClearanceMinutes
+    ) {
       statusReason = `Vaciado ${summary.clearanceMinutes.toFixed(1)} min > ${policy.slowClearanceMinutes}`;
     } else statusReason = 'Bottleneck sobrecargado';
   } else if (
@@ -258,7 +257,7 @@ export function summarizeEgressReport(report: EgressReport): EgressReportSummary
 }
 
 export function exportEgressOverviewCsv(
-  rows: Array<EgressReportSummaryRow & { venueId: string }>,
+  rows: Array<EgressReportSummaryRow & { venueId: string }>
 ): string {
   const header = [
     'venueId',
@@ -290,7 +289,7 @@ export function exportEgressOverviewCsv(
       fmt(r.maxPathLength, 1),
       fmt(r.topBottleneckUtilization),
       csvEscape(r.topBottleneckKind ?? ''),
-    ].join(','),
+    ].join(',')
   );
   return [header, ...body].join('\n') + '\n';
 }

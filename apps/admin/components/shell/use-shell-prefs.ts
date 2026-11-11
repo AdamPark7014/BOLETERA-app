@@ -26,9 +26,7 @@ export type ShellPrefs = {
 function defaultCollapsed(): Set<string> {
   const stored = readCollapsedGroups();
   if (stored.length > 0) return new Set(stored);
-  return new Set(
-    NAV_GROUPS.filter((group) => group.defaultCollapsed).map((group) => group.id),
-  );
+  return new Set(NAV_GROUPS.filter((group) => group.defaultCollapsed).map((group) => group.id));
 }
 
 export function useShellPrefs(): ShellPrefs {
@@ -74,23 +72,18 @@ export function useShellPrefs(): ShellPrefs {
       }
       return collapsed.has(groupId);
     },
-    [collapsed, hydrated],
+    [collapsed, hydrated]
   );
 
   const toggleFavorite = useCallback((href: string) => {
     setFavorites((prev) => {
-      const next = prev.includes(href)
-        ? prev.filter((item) => item !== href)
-        : [...prev, href];
+      const next = prev.includes(href) ? prev.filter((item) => item !== href) : [...prev, href];
       writeFavorites(next);
       return next;
     });
   }, []);
 
-  const isFavorite = useCallback(
-    (href: string) => favorites.includes(href),
-    [favorites],
-  );
+  const isFavorite = useCallback((href: string) => favorites.includes(href), [favorites]);
 
   return useMemo(
     () => ({
@@ -114,6 +107,6 @@ export function useShellPrefs(): ShellPrefs {
       favorites,
       toggleFavorite,
       isFavorite,
-    ],
+    ]
   );
 }

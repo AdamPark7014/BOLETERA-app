@@ -49,7 +49,10 @@ function redactString(value: string, options: RedactOptions): string {
       if (SENSITIVE_QUERY_KEYS.has(lower)) {
         url.searchParams.set(key, REDACTED);
         mutated = true;
-      } else if (options.emails !== false && (lower === 'correo' || lower === 'email' || lower === 'mail')) {
+      } else if (
+        options.emails !== false &&
+        (lower === 'correo' || lower === 'email' || lower === 'mail')
+      ) {
         url.searchParams.set(key, '[EMAIL]');
         mutated = true;
       }
@@ -66,10 +69,7 @@ function redactString(value: string, options: RedactOptions): string {
   if (options.emails !== false) {
     // Match plain and percent-encoded emails (URL query values).
     out = out.replace(EMAIL_RE, '[EMAIL]');
-    out = out.replace(
-      /[a-zA-Z0-9._%+-]+%40[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-      '[EMAIL]',
-    );
+    out = out.replace(/[a-zA-Z0-9._%+-]+%40[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]');
   }
   return out;
 }

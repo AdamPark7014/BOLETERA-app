@@ -39,28 +39,53 @@ const BASE = 1000;
 
 const org = await prisma.organization.create({
   data: {
-    name: `AllIn ${stamp}`, slug: `org-allin-${stamp}`,
-    email: 'allin@test.local', country: 'MX', currency: 'MXN',
+    name: `AllIn ${stamp}`,
+    slug: `org-allin-${stamp}`,
+    email: 'allin@test.local',
+    country: 'MX',
+    currency: 'MXN',
   },
 });
 const venue = await prisma.venue.create({
   data: {
-    organizationId: org.id, name: 'V', slug: `venue-allin-${stamp}`, address: 'x',
-    city: 'CDMX', state: 'CDMX', country: 'MX', timezone: 'America/Mexico_City', totalCapacity: 10,
+    organizationId: org.id,
+    name: 'V',
+    slug: `venue-allin-${stamp}`,
+    address: 'x',
+    city: 'CDMX',
+    state: 'CDMX',
+    country: 'MX',
+    timezone: 'America/Mexico_City',
+    totalCapacity: 10,
   },
 });
 const event = await prisma.event.create({
   data: {
-    slug: `allin-${stamp}`, organizationId: org.id, venueId: venue.id, title: `AllIn ${stamp}`,
-    startsAt: new Date(Date.now() + 86_400_000 * 30), timezone: 'America/Mexico_City',
-    status: 'LIVE', publishedAt: new Date(), currency: 'MXN', totalCapacity: 10,
-    minPrice: BASE, maxPrice: BASE,
+    slug: `allin-${stamp}`,
+    organizationId: org.id,
+    venueId: venue.id,
+    title: `AllIn ${stamp}`,
+    startsAt: new Date(Date.now() + 86_400_000 * 30),
+    timezone: 'America/Mexico_City',
+    status: 'LIVE',
+    publishedAt: new Date(),
+    currency: 'MXN',
+    totalCapacity: 10,
+    minPrice: BASE,
+    maxPrice: BASE,
   },
 });
 const offer = await prisma.offer.create({
   data: {
-    eventId: event.id, name: 'General', zone: 'ga', basePrice: BASE, currency: 'MXN',
-    totalQuantity: 10, remainingQuantity: 10, startDate: new Date(), endDate: event.startsAt,
+    eventId: event.id,
+    name: 'General',
+    zone: 'ga',
+    basePrice: BASE,
+    currency: 'MXN',
+    totalQuantity: 10,
+    remainingQuantity: 10,
+    startDate: new Date(),
+    endDate: event.startsAt,
   },
 });
 
@@ -69,11 +94,15 @@ console.log(`\nPrecio base de la oferta: $${BASE}\n`);
 // 1. La ficha del evento anuncia el precio final.
 const detail = await (await fetch(`${API}/discovery/events/${event.slug}`)).json();
 const announced = Number(detail.minPriceAllIn);
-check('La ficha del evento expone el precio final', Number.isFinite(announced) && announced > 0, `$${announced}`);
+check(
+  'La ficha del evento expone el precio final',
+  Number.isFinite(announced) && announced > 0,
+  `$${announced}`
+);
 check(
   'El precio anunciado NO es el precio base pelado',
   Math.abs(announced - BASE) > 0.01,
-  `$${announced} vs base $${BASE}`,
+  `$${announced} vs base $${BASE}`
 );
 
 // 2. Ese precio coincide con lo que el motor de precios cobra de verdad.
@@ -89,7 +118,7 @@ const charged = Number(quoted.total ?? quoted.data?.total);
 check(
   'LO ANUNCIADO ES LO QUE SE COBRA',
   Number.isFinite(charged) && Math.abs(announced - charged) < 0.01,
-  `anunciado $${announced} · cobrado $${charged}`,
+  `anunciado $${announced} · cobrado $${charged}`
 );
 
 // 3. El desglose cuadra con el total.
@@ -99,9 +128,12 @@ if (breakdown) {
   check(
     'El desglose suma exactamente el total',
     Math.abs(sum - announced) < 0.01,
-    `${breakdown.base} + ${breakdown.fees} + ${breakdown.taxes} = ${sum.toFixed(2)}`,
+    `${breakdown.base} + ${breakdown.fees} + ${breakdown.taxes} = ${sum.toFixed(2)}`
   );
-  check('El desglose nombra el cargo y el impuesto por separado', Number(breakdown.fees) > 0 && Number(breakdown.taxes) > 0);
+  check(
+    'El desglose nombra el cargo y el impuesto por separado',
+    Number(breakdown.fees) > 0 && Number(breakdown.taxes) > 0
+  );
 }
 
 // 4. Cada zona lleva su precio final, no solo la más barata.
@@ -109,7 +141,7 @@ const offerRow = (detail.offers ?? []).find((o) => o.id === offer.id);
 check(
   'Cada zona expone su propio precio final',
   offerRow && Math.abs(Number(offerRow.allInPrice) - announced) < 0.01,
-  offerRow ? `$${offerRow.allInPrice}` : 'sin oferta',
+  offerRow ? `$${offerRow.allInPrice}` : 'sin oferta'
 );
 
 // 5. El catálogo también, no solo la ficha.
@@ -125,7 +157,11 @@ const priced = rows.filter((e) => Number(e.minPrice) > 0);
 check('El catálogo devuelve eventos con precio', priced.length > 0, `${priced.length} filas`);
 
 const missing = priced.filter((e) => !Number.isFinite(Number(e.minPriceAllIn)));
-check('Toda fila del catálogo expone el precio final', missing.length === 0, `${missing.length} sin él`);
+check(
+  'Toda fila del catálogo expone el precio final',
+  missing.length === 0,
+  `${missing.length} sin él`
+);
 
 const inconsistent = priced.filter((e) => {
   const expected = Number(e.minPrice) * (1 + 0.1 + 0.16);
@@ -134,7 +170,9 @@ const inconsistent = priced.filter((e) => {
 check(
   'El precio final del catálogo cuadra con su base',
   inconsistent.length === 0,
-  inconsistent.length ? `${inconsistent[0].slug}: ${inconsistent[0].minPrice} → ${inconsistent[0].minPriceAllIn}` : 'todas cuadran',
+  inconsistent.length
+    ? `${inconsistent[0].slug}: ${inconsistent[0].minPrice} → ${inconsistent[0].minPriceAllIn}`
+    : 'todas cuadran'
 );
 
 const anyRow = priced[0];
@@ -142,7 +180,7 @@ if (anyRow) {
   check(
     'Y es estrictamente mayor que el base (no se anuncia el pelado)',
     Number(anyRow.minPriceAllIn) > Number(anyRow.minPrice),
-    `${anyRow.slug}: $${anyRow.minPrice} → $${anyRow.minPriceAllIn}`,
+    `${anyRow.slug}: $${anyRow.minPrice} → $${anyRow.minPriceAllIn}`
   );
 }
 
@@ -155,6 +193,6 @@ await prisma.$disconnect();
 
 const failed = checks.filter((c) => !c.pass);
 console.log(
-  `\n${failed.length ? `❌ FALLA: ${failed.length} de ${checks.length}` : `✅ Precio total correcto (${checks.length}/${checks.length})`}`,
+  `\n${failed.length ? `❌ FALLA: ${failed.length} de ${checks.length}` : `✅ Precio total correcto (${checks.length}/${checks.length})`}`
 );
 process.exit(failed.length ? 1 : 0);

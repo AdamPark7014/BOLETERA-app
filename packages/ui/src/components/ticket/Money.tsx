@@ -47,7 +47,7 @@ export function Money({
         styles.block,
         direction === 'in' && styles.in,
         direction === 'out' && styles.out,
-        className,
+        className
       )}
     >
       <div className={styles.head}>

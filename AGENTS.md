@@ -37,4 +37,5 @@ de tocar nada.
 
 Reglas completas: `C:\dev\scripts\relevo\PROTOCOLO-RELEVO.md`
 Estado vivo del proyecto: `.ai/RELEVO.md`
+
 <!-- RELEVO:FIN -->

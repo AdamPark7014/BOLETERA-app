@@ -10,7 +10,7 @@ type HomeHeroRootProps = {
 export async function HomeHeroRoot({ initialEventCount }: HomeHeroRootProps) {
   const content = await fetchSiteContent();
   const slides = heroSlidesToSrc(
-    content.heroSlides.length ? content.heroSlides : defaultSiteContent().heroSlides,
+    content.heroSlides.length ? content.heroSlides : defaultSiteContent().heroSlides
   );
 
   preload(slides[0].src, { as: 'image', fetchPriority: 'high' });

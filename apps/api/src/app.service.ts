@@ -6,7 +6,7 @@ import { RedisService } from './common/redis.service';
 export class AppService {
   constructor(
     private prisma: PrismaService,
-    private redis: RedisService,
+    private redis: RedisService
   ) {}
 
   async getHealth() {

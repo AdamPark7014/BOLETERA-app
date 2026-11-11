@@ -14,10 +14,13 @@ import {
 export class EventPublishValidationService {
   constructor(
     private prisma: PrismaService,
-    private venueLayout: VenueLayoutService,
+    private venueLayout: VenueLayoutService
   ) {}
 
-  async validateEventForPublish(eventId: string, organizationId: string): Promise<EventPublishValidation> {
+  async validateEventForPublish(
+    eventId: string,
+    organizationId: string
+  ): Promise<EventPublishValidation> {
     const event = await this.prisma.event.findFirst({
       where: { id: eventId, organizationId },
       include: {
@@ -41,7 +44,10 @@ export class EventPublishValidationService {
 
     if (event.venue) {
       try {
-        const layoutPayload = await this.venueLayout.getActiveLayout(event.venue.id, organizationId);
+        const layoutPayload = await this.venueLayout.getActiveLayout(
+          event.venue.id,
+          organizationId
+        );
         const mapData = layoutPayload.layout.mapData;
         const normalized = normalizeSeatMap(mapData);
         const geometry = validateGeometry(resolveGeometry(normalized), {
@@ -102,7 +108,10 @@ export class EventPublishValidationService {
   }
 
   /** Throws when blockers remain — used by publish endpoint. */
-  async assertReadyForPublish(eventId: string, organizationId: string): Promise<EventPublishValidation> {
+  async assertReadyForPublish(
+    eventId: string,
+    organizationId: string
+  ): Promise<EventPublishValidation> {
     const result = await this.validateEventForPublish(eventId, organizationId);
     if (!result.ready) {
       const blockers = result.checks.filter((c) => c.status === 'blocker');

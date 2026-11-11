@@ -134,11 +134,7 @@ export class CadImportError extends Error {
   }
 }
 
-function buildMessage(
-  source: 'dxf' | 'svg',
-  diag: CadDiagnostics,
-  headline: string,
-): string {
+function buildMessage(source: 'dxf' | 'svg', diag: CadDiagnostics, headline: string): string {
   const lines: string[] = [headline];
 
   if (diag.skippedCount === 0 && diag.typesSeen.size === 0) {
@@ -146,7 +142,7 @@ function buildMessage(
     lines.push(
       source === 'dxf'
         ? 'No se encontró la sección ENTITIES: puede que el archivo sea DXF binario. Vuelve a exportarlo como DXF ASCII.'
-        : 'No se encontró ningún elemento gráfico (path, polyline, rect, circle) dentro del SVG.',
+        : 'No se encontró ningún elemento gráfico (path, polyline, rect, circle) dentro del SVG.'
     );
     return lines.join('\n');
   }
@@ -166,7 +162,7 @@ function buildMessage(
     lines.push(`Descartadas ${diag.skippedCount}:`);
     for (const group of diag.byReason().slice(0, 6)) {
       lines.push(
-        `  • ${group.count}× ${CAD_SKIP_LABELS[group.reason]} — p. ej. ${CadDiagnostics.describe(group.sample)}`,
+        `  • ${group.count}× ${CAD_SKIP_LABELS[group.reason]} — p. ej. ${CadDiagnostics.describe(group.sample)}`
       );
       lines.push(`    ${CAD_SKIP_HINTS[group.reason]}`);
     }

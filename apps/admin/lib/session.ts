@@ -63,8 +63,7 @@ let transientAccessToken: string | null = null;
  * fallback. A new token lives in memory and removes the persisted legacy token.
  */
 export const cookieTokenStorage: TokenStorage = {
-  getToken: () =>
-    transientAccessToken ?? browserStorage()?.getItem(TOKEN_KEY) ?? null,
+  getToken: () => transientAccessToken ?? browserStorage()?.getItem(TOKEN_KEY) ?? null,
   setToken: (token) => {
     transientAccessToken = token;
     browserStorage()?.removeItem(TOKEN_KEY);
@@ -114,9 +113,7 @@ function decodeBase64Url(value: string): string {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
   const binary =
-    typeof atob === 'function'
-      ? atob(padded)
-      : Buffer.from(padded, 'base64').toString('binary');
+    typeof atob === 'function' ? atob(padded) : Buffer.from(padded, 'base64').toString('binary');
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 }
@@ -136,12 +133,10 @@ export function decodeSessionToken(token: string): SessionSnapshot | null {
       stringValue(payload.orgId) ??
       activeTokenStorage.getOrganizationId();
     const expiresAt =
-      typeof payload.exp === 'number' && Number.isFinite(payload.exp)
-        ? payload.exp * 1000
-        : null;
+      typeof payload.exp === 'number' && Number.isFinite(payload.exp) ? payload.exp * 1000 : null;
     const permissions = Array.isArray(payload.permissions)
       ? payload.permissions.filter(
-          (permission): permission is string => typeof permission === 'string',
+          (permission): permission is string => typeof permission === 'string'
         )
       : [];
 

@@ -4,19 +4,14 @@
  *
  * Usage: pnpm --filter @boletera/venue-engine bench:render
  */
-const {
-  generateSyntheticVenue,
-  buildSceneBuffers,
-} = require('../dist/render/index.js');
+const { generateSyntheticVenue, buildSceneBuffers } = require('../dist/render/index.js');
 
 const SEAT_COUNT = 250_000;
 const HIT_SAMPLES = 5_000;
 const CULL_SAMPLES = 200;
 
 function now() {
-  return typeof performance !== 'undefined' && performance.now
-    ? performance.now()
-    : Date.now();
+  return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
 }
 
 function pct(sorted, p) {
@@ -44,10 +39,10 @@ function main() {
   console.log(`  indexBuildMs:  ${scene.indexBuildMs.toFixed(2)} ms (index only)`);
   console.log(`  fullBuildMs:   ${buildMs.toFixed(2)} ms (flatten + colors + LOD + index)`);
   console.log(
-    `  grid:          ${scene.index.gridSize.cols}×${scene.index.gridSize.rows} cells @ ${scene.index.cellSize.toFixed(2)} wu`,
+    `  grid:          ${scene.index.gridSize.cols}×${scene.index.gridSize.rows} cells @ ${scene.index.cellSize.toFixed(2)} wu`
   );
   console.log(
-    `  bounds:        ${scene.bounds.width.toFixed(0)}×${scene.bounds.height.toFixed(0)} wu`,
+    `  bounds:        ${scene.bounds.width.toFixed(0)}×${scene.bounds.height.toFixed(0)} wu`
   );
 
   // --- Hit-testing ---
@@ -66,7 +61,9 @@ function main() {
   hitTimes.sort((a, b) => a - b);
   const hitSum = hitTimes.reduce((a, b) => a + b, 0);
 
-  console.log(`Hit-test (${HIT_SAMPLES} random probes, radius=${(scene.seatRadius * 2).toFixed(1)}):`);
+  console.log(
+    `Hit-test (${HIT_SAMPLES} random probes, radius=${(scene.seatRadius * 2).toFixed(1)}):`
+  );
   console.log(`  hits:          ${hits}/${HIT_SAMPLES}`);
   console.log(`  avg:           ${(hitSum / hitTimes.length).toFixed(4)} ms`);
   console.log(`  p50:           ${pct(hitTimes, 50).toFixed(4)} ms`);
@@ -127,7 +124,7 @@ function main() {
       cullP95Ms: Number(pct(cullTimes, 95).toFixed(5)),
       marqueeMs: Number((tMq1 - tMq0).toFixed(5)),
       marqueeSeats: mqN,
-    }),
+    })
   );
 }
 

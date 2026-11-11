@@ -10,11 +10,34 @@ import { AdminFrame } from '../events/_ticket/AdminFrame';
 import { Param, SheetSelect, Stepper, Switch } from '../events/_ticket/controls';
 import controlStyles from '../events/_ticket/controls.module.scss';
 import styles from '../events/_ticket/frame.module.scss';
-import { asRecord, formatCount, formatWhen, readNumber, readString, yesNo } from '../events/_ticket/read';
+import {
+  asRecord,
+  formatCount,
+  formatWhen,
+  readNumber,
+  readString,
+  yesNo,
+} from '../events/_ticket/read';
 
 const SEE = ['ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'VENUE_MANAGER'];
 const ZONE = 'America/Mexico_City';
-const CURRENCIES = ['MXN', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CNY', 'BRL', 'INR', 'AED', 'CHF', 'SGD', 'HKD', 'NZD'];
+const CURRENCIES = [
+  'MXN',
+  'USD',
+  'EUR',
+  'GBP',
+  'CAD',
+  'AUD',
+  'JPY',
+  'CNY',
+  'BRL',
+  'INR',
+  'AED',
+  'CHF',
+  'SGD',
+  'HKD',
+  'NZD',
+];
 
 type OrgEvent = { id: string; title: string };
 
@@ -177,11 +200,21 @@ function sameIds(left: string[], right: string[]): boolean {
 function eventTitles(ids: string[], catalog: OrgEvent[], fallback: PassEvent[]): string {
   if (ids.length === 0) return 'Ninguno';
   return ids
-    .map((id) => catalog.find((item) => item.id === id)?.title ?? fallback.find((item) => item.id === id)?.title ?? id)
+    .map(
+      (id) =>
+        catalog.find((item) => item.id === id)?.title ??
+        fallback.find((item) => item.id === id)?.title ??
+        id
+    )
     .join(' · ');
 }
 
-function describe(before: PassDraft, after: PassDraft, catalog: OrgEvent[], fallback: PassEvent[]): string {
+function describe(
+  before: PassDraft,
+  after: PassDraft,
+  catalog: OrgEvent[],
+  fallback: PassEvent[]
+): string {
   const lines: string[] = [];
   const pair = (label: string, from: string, to: string) => {
     if (from !== to) lines.push(`${label}: ${from || '—'} → ${to || '—'}`);
@@ -192,16 +225,23 @@ function describe(before: PassDraft, after: PassDraft, catalog: OrgEvent[], fall
   pair('Temporada', before.seasonLabel, after.seasonLabel);
   pair('Abono desde', shownWhen(before.startsAt), shownWhen(after.startsAt));
   pair('Abono hasta', shownWhen(before.endsAt), shownWhen(after.endsAt));
-  pair('Precio del abono', priceLabel(before.price, before.currency), priceLabel(after.price, after.currency));
+  pair(
+    'Precio del abono',
+    priceLabel(before.price, before.currency),
+    priceLabel(after.price, after.currency)
+  );
   pair('Moneda del abono', before.currency, after.currency);
   if (before.maxQuantity !== after.maxQuantity) {
-    lines.push(`Cupo del abono: ${formatCount(before.maxQuantity)} → ${formatCount(after.maxQuantity)}`);
+    lines.push(
+      `Cupo del abono: ${formatCount(before.maxQuantity)} → ${formatCount(after.maxQuantity)}`
+    );
   }
   pair('Beneficios', before.benefits, after.benefits);
-  if (before.active !== after.active) lines.push(`Abono activo: ${yesNo(before.active)} → ${yesNo(after.active)}`);
+  if (before.active !== after.active)
+    lines.push(`Abono activo: ${yesNo(before.active)} → ${yesNo(after.active)}`);
   if (!sameIds(before.eventIds, after.eventIds)) {
     lines.push(
-      `Eventos del abono: ${eventTitles(before.eventIds, catalog, fallback)} → ${eventTitles(after.eventIds, catalog, fallback)}`,
+      `Eventos del abono: ${eventTitles(before.eventIds, catalog, fallback)} → ${eventTitles(after.eventIds, catalog, fallback)}`
     );
   }
   return lines.join(' · ');
@@ -220,7 +260,8 @@ function validate(draft: PassDraft): string | null {
     return 'La fecha del abono no se leyó.';
   }
   const price = Number(draft.price);
-  if (draft.price.trim() === '' || !Number.isFinite(price) || price < 0) return 'El precio del abono no es válido.';
+  if (draft.price.trim() === '' || !Number.isFinite(price) || price < 0)
+    return 'El precio del abono no es válido.';
   if (!draft.currency.trim()) return 'La moneda del abono no puede quedar vacía.';
   const benefits = draft.benefits.trim();
   if (benefits.startsWith('{') || benefits.startsWith('[')) {
@@ -291,7 +332,9 @@ function AbonosBody() {
       setPasses(next);
       setDrafts(base);
       setBaselines(base);
-      setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+      setOpenId((current) =>
+        current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+      );
       if (!canEdit) {
         setEvents(null);
         setEventsNote(null);
@@ -302,10 +345,12 @@ function AbonosBody() {
         setEventsNote('No se cargó la lista de funciones. El resto sí se guarda.');
         return;
       }
-      setEvents(rawEvents.flatMap((item) => {
-        const event = readEvent(item);
-        return event ? [event] : [];
-      }));
+      setEvents(
+        rawEvents.flatMap((item) => {
+          const event = readEvent(item);
+          return event ? [event] : [];
+        })
+      );
       setEventsNote(null);
     }
     void load()
@@ -371,7 +416,10 @@ function AbonosBody() {
         method: 'PATCH',
         body: JSON.stringify(body),
       });
-      setNotice({ id, text: describe(baseline, draft, events ?? [], pass.events) || 'Abono guardado' });
+      setNotice({
+        id,
+        text: describe(baseline, draft, events ?? [], pass.events) || 'Abono guardado',
+      });
       setNonce((current) => current + 1);
     } catch (cause) {
       setActionError(failMessage(cause));
@@ -393,7 +441,13 @@ function AbonosBody() {
     );
   }
   if (error) {
-    return <ApiErrorView error={error} context="abrir abonos" onRetry={() => setNonce((current) => current + 1)} />;
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir abonos"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando abonos.</p>;
 
@@ -423,7 +477,9 @@ function AbonosBody() {
                 onClick={() => setOpenId(open ? null : pass.id)}
               >
                 <span>{draft?.name.trim() || pass.name}</span>
-                <span className={styles.figure}>{priceLabel(draft?.price ?? '', draft?.currency ?? pass.currency ?? 'MXN')}</span>
+                <span className={styles.figure}>
+                  {priceLabel(draft?.price ?? '', draft?.currency ?? pass.currency ?? 'MXN')}
+                </span>
               </button>
               {open && draft ? (
                 <PassCards
@@ -446,7 +502,10 @@ function AbonosBody() {
                     <p className={styles.quiet} aria-live="polite">
                       {dirty ? 'Sin guardar' : notice?.id === pass.id ? notice.text : ''}
                     </p>
-                    <TicketButton disabled={!dirty || savingId === pass.id} onClick={() => void save(pass.id)}>
+                    <TicketButton
+                      disabled={!dirty || savingId === pass.id}
+                      onClick={() => void save(pass.id)}
+                    >
                       Guardar sección
                     </TicketButton>
                   </div>
@@ -483,20 +542,48 @@ function PassCards({
   return (
     <div className={styles.stack}>
       <Card name="Nombre del abono" value={text(draft.name)} effect="Nombre." editing={canEdit}>
-        <Field label="Nombre del abono" value={draft.name} onChange={(event) => set('name', event.target.value)} />
+        <Field
+          label="Nombre del abono"
+          value={draft.name}
+          onChange={(event) => set('name', event.target.value)}
+        />
       </Card>
-      <Card name="Slug del abono" value={text(draft.slug)} style="mono" effect="Único en la organización." editing={canEdit}>
-        <Field label="Slug del abono" value={draft.slug} onChange={(event) => set('slug', event.target.value)} />
+      <Card
+        name="Slug del abono"
+        value={text(draft.slug)}
+        style="mono"
+        effect="Único en la organización."
+        editing={canEdit}
+      >
+        <Field
+          label="Slug del abono"
+          value={draft.slug}
+          onChange={(event) => set('slug', event.target.value)}
+        />
       </Card>
-      <Card name="Descripción del abono" value={text(draft.description)} effect="Texto corto." editing={canEdit}>
+      <Card
+        name="Descripción del abono"
+        value={text(draft.description)}
+        effect="Texto corto."
+        editing={canEdit}
+      >
         <Field
           label="Descripción del abono"
           value={draft.description}
           onChange={(event) => set('description', event.target.value)}
         />
       </Card>
-      <Card name="Temporada" value={text(draft.seasonLabel)} effect="Etiqueta de la temporada." editing={canEdit}>
-        <Field label="Temporada" value={draft.seasonLabel} onChange={(event) => set('seasonLabel', event.target.value)} />
+      <Card
+        name="Temporada"
+        value={text(draft.seasonLabel)}
+        effect="Etiqueta de la temporada."
+        editing={canEdit}
+      >
+        <Field
+          label="Temporada"
+          value={draft.seasonLabel}
+          onChange={(event) => set('seasonLabel', event.target.value)}
+        />
       </Card>
       <Card name="Abono desde" value={shownWhen(draft.startsAt)} effect="Inicio." editing={canEdit}>
         <Field
@@ -529,7 +616,12 @@ function PassCards({
           onChange={(event) => set('price', event.target.value)}
         />
       </Card>
-      <Card name="Moneda del abono" value={text(draft.currency)} effect="Moneda del abono." editing={canEdit}>
+      <Card
+        name="Moneda del abono"
+        value={text(draft.currency)}
+        effect="Moneda del abono."
+        editing={canEdit}
+      >
         <SheetSelect
           label="Moneda del abono"
           value={draft.currency}
@@ -538,7 +630,13 @@ function PassCards({
           onChange={(next) => set('currency', next)}
         />
       </Card>
-      <Card name="Cupo del abono" value={formatCount(draft.maxQuantity)} style="tabular" effect="Cupo del abono." editing={canEdit}>
+      <Card
+        name="Cupo del abono"
+        value={formatCount(draft.maxQuantity)}
+        style="tabular"
+        effect="Cupo del abono."
+        editing={canEdit}
+      >
         <Stepper
           label="Cupo del abono"
           value={draft.maxQuantity}
@@ -553,10 +651,24 @@ function PassCards({
         style="tabular"
         effect="Los cuenta el servicio."
       />
-      <Card name="Beneficios" value={text(draft.benefits)} effect="JSON de beneficios, o una línea." editing={canEdit}>
-        <Field label="Beneficios" value={draft.benefits} onChange={(event) => set('benefits', event.target.value)} />
+      <Card
+        name="Beneficios"
+        value={text(draft.benefits)}
+        effect="JSON de beneficios, o una línea."
+        editing={canEdit}
+      >
+        <Field
+          label="Beneficios"
+          value={draft.benefits}
+          onChange={(event) => set('benefits', event.target.value)}
+        />
       </Card>
-      <Card name="Abono activo" value={yesNo(draft.active)} effect="Apagado, no se vende." editing={canEdit}>
+      <Card
+        name="Abono activo"
+        value={yesNo(draft.active)}
+        effect="Apagado, no se vende."
+        editing={canEdit}
+      >
         <Switch on={draft.active} label="Abono activo" onChange={(next) => set('active', next)} />
       </Card>
       <Card
@@ -572,7 +684,11 @@ function PassCards({
           onChange={(next) => set('eventIds', next)}
         />
       </Card>
-      <Card name="Sección del asiento" value="—" effect="Se pide al comprar. El abono no tiene esa columna." />
+      <Card
+        name="Sección del asiento"
+        value="—"
+        effect="Se pide al comprar. El abono no tiene esa columna."
+      />
     </div>
   );
 }
@@ -592,7 +708,10 @@ function EventSheet({
   const [query, setQuery] = useState('');
   const many = options.length > 12;
   const needle = query.trim().toLowerCase();
-  const shown = many && needle ? options.filter((option) => option.title.toLowerCase().includes(needle)) : options;
+  const shown =
+    many && needle
+      ? options.filter((option) => option.title.toLowerCase().includes(needle))
+      : options;
   const summary = selected.length === 0 ? 'Ninguno' : `${formatCount(selected.length)} incluidas`;
 
   function toggle(id: string) {
@@ -611,9 +730,19 @@ function EventSheet({
         {summary}
       </button>
       {open ? (
-        <div className={controlStyles.sheet} role="listbox" aria-label={label} aria-multiselectable="true">
+        <div
+          className={controlStyles.sheet}
+          role="listbox"
+          aria-label={label}
+          aria-multiselectable="true"
+        >
           {many ? (
-            <Field label="Buscar" kind="search" value={query} onChange={(event) => setQuery(event.target.value)} />
+            <Field
+              label="Buscar"
+              kind="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
           ) : null}
           {shown.length === 0 ? <p>Nada con ese criterio.</p> : null}
           {shown.map((option) => {

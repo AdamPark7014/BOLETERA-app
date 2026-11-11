@@ -61,21 +61,21 @@ export function buildZoneRows(metrics: InventoryMetrics | undefined): InventoryZ
       (a, b) =>
         pressureRank(b.pressure) - pressureRank(a.pressure) ||
         b.holdQuantity - a.holdQuantity ||
-        a.availabilityPercent - b.availabilityPercent,
+        a.availabilityPercent - b.availabilityPercent
     );
 }
 
 export function buildEventOptions(
   rows: readonly InventoryZoneTableRow[],
   events: readonly EventRow[] | undefined,
-  venues: readonly VenueRow[] | undefined,
+  venues: readonly VenueRow[] | undefined
 ): InventoryEventOption[] {
   const venueById = new Map((venues ?? []).map((venue) => [venue.id, venue.name]));
   const eventVenue = new Map(
     (events ?? []).map((event) => [
       event.id,
-      event.venue?.name ?? (event.venueId ? venueById.get(event.venueId) ?? null : null),
-    ]),
+      event.venue?.name ?? (event.venueId ? (venueById.get(event.venueId) ?? null) : null),
+    ])
   );
 
   const map = new Map<string, InventoryEventOption>();
@@ -120,7 +120,7 @@ export function zoneBarSeries(rows: readonly InventoryZoneTableRow[]) {
       label: shortenLabel(row.zone, row.eventTitle),
       value: Math.max(
         0,
-        row.totalQuantity - row.remainingQuantity - row.holdQuantity - row.soldQuantity,
+        row.totalQuantity - row.remainingQuantity - row.holdQuantity - row.soldQuantity
       ),
     })),
   };
@@ -133,7 +133,7 @@ export function buildSelloutRisks(rows: readonly InventoryZoneTableRow[]): Sello
         row.daysToSellOut != null &&
         row.daysToSellOut <= 14 &&
         row.remainingQuantity > 0 &&
-        row.sellThroughVelocity > 0,
+        row.sellThroughVelocity > 0
     )
     .map((row) => ({
       id: row.id,
@@ -151,7 +151,7 @@ export function buildSelloutRisks(rows: readonly InventoryZoneTableRow[]): Sello
 
 export function statusCountValue(
   counts: Record<string, number> | undefined,
-  keys: readonly string[],
+  keys: readonly string[]
 ): number {
   if (!counts) return 0;
   return keys.reduce((sum, key) => sum + (counts[key] ?? 0), 0);

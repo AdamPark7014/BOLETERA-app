@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Card,
-  CardHeader,
-  EmptyState,
-  KpiCard,
-  AreaChart,
-} from '@boletera/ui';
+import { Card, CardHeader, EmptyState, KpiCard, AreaChart } from '@boletera/ui';
 import type { ChartSeries } from '@boletera/ui';
 import { formatNumber, formatPercent } from '@boletera/ui';
 import type { AccessAttendanceMetrics } from '@boletera/shared';
@@ -73,11 +67,7 @@ export function AccessPanel({ access, loading, error }: Props) {
             />
             <KpiCard
               label="Tasa no-show"
-              value={
-                access
-                  ? formatPercentPoints(access.noShowRate * 100)
-                  : '—'
-              }
+              value={access ? formatPercentPoints(access.noShowRate * 100) : '—'}
               loading={loading && !access}
               hint={access ? formatPercent(access.noShowRate) : undefined}
             />

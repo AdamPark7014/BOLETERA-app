@@ -134,17 +134,13 @@ export function getTimezoneOffsetMinutes(date: Date, timeZone: string): number {
     parts.day,
     parts.hour,
     parts.minute,
-    parts.second,
+    parts.second
   );
   const whole = date.getTime() - date.getMilliseconds();
   return Math.round((asIfUtc - whole) / 60_000);
 }
 
-function partsMatch(
-  actual: Required<DateParts>,
-  expected: DateParts,
-  second: number,
-): boolean {
+function partsMatch(actual: Required<DateParts>, expected: DateParts, second: number): boolean {
   return (
     actual.year === expected.year &&
     actual.month === expected.month &&
@@ -170,14 +166,7 @@ function partsMatch(
  */
 export function zonedTimeToUtc(parts: DateParts, timeZone: string): Date {
   const second = parts.second ?? 0;
-  const naive = Date.UTC(
-    parts.year,
-    parts.month - 1,
-    parts.day,
-    parts.hour,
-    parts.minute,
-    second,
-  );
+  const naive = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, second);
 
   let offset = getTimezoneOffsetMinutes(new Date(naive), timeZone);
   let instant = naive - offset * 60_000;
@@ -220,7 +209,7 @@ export function zoneObservesDstOnDate(date: Date, timeZone: string): boolean {
       minute: 0,
       second: 0,
     },
-    timeZone,
+    timeZone
   );
   const before = new Date(noon.getTime() - 12 * 3_600_000);
   const after = new Date(noon.getTime() + 12 * 3_600_000);
@@ -278,7 +267,12 @@ function startOfCivilWeek(date: Date): Date {
   return addCivilDays(date, -back);
 }
 
-function nthWeekdayOfMonth(year: number, month: number, weekday: Weekday, nth: number): Date | null {
+function nthWeekdayOfMonth(
+  year: number,
+  month: number,
+  weekday: Weekday,
+  nth: number
+): Date | null {
   if (nth === -1) {
     const last = civilDate(year, month, daysInMonth(year, month));
     const delta = (last.getUTCDay() - weekday + 7) % 7;
@@ -302,7 +296,10 @@ export interface ExpandOptions {
  * Dates are walked on the civil calendar and only then projected onto UTC with
  * the venue timezone, so a 20:00 show stays at 20:00 local across DST changes.
  */
-export function expandRecurrence(rule: RecurrenceRule, options: ExpandOptions = {}): ScheduleOccurrence[] {
+export function expandRecurrence(
+  rule: RecurrenceRule,
+  options: ExpandOptions = {}
+): ScheduleOccurrence[] {
   if (!isValidTimezone(rule.timezone)) {
     throw new Error(`Unknown timezone: "${rule.timezone}"`);
   }
@@ -315,7 +312,9 @@ export function expandRecurrence(rule: RecurrenceRule, options: ExpandOptions = 
     : Math.min(Math.max(1, Math.floor(rule.count ?? DEFAULT_OCCURRENCE_COUNT)), hardLimit);
 
   const untilKey = rule.untilLocal ? parseLocalDateTime(rule.untilLocal) : null;
-  const untilCivil = untilKey ? civilKey(civilDate(untilKey.year, untilKey.month, untilKey.day)) : null;
+  const untilCivil = untilKey
+    ? civilKey(civilDate(untilKey.year, untilKey.month, untilKey.day))
+    : null;
   const skip = new Set((rule.exceptions ?? []).map((value) => value.slice(0, 10)));
 
   const startCivil = civilDate(start.year, start.month, start.day);
@@ -337,10 +336,12 @@ export function expandRecurrence(rule: RecurrenceRule, options: ExpandOptions = 
       cursor = addCivilDays(cursor, interval);
     }
   } else if (rule.frequency === 'WEEKLY') {
-    const weekdays = (rule.byWeekday?.length ? [...rule.byWeekday] : [startCivil.getUTCDay() as Weekday])
+    const weekdays = (
+      rule.byWeekday?.length ? [...rule.byWeekday] : [startCivil.getUTCDay() as Weekday]
+    )
       .filter((d, i, arr) => arr.indexOf(d) === i)
       // Monday-first ordering so the preview reads like a calendar week.
-      .sort((a, b) => ((a === 0 ? 7 : a) - (b === 0 ? 7 : b)));
+      .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
     let weekStart = startOfCivilWeek(startCivil);
     let guard = 0;
     outer: while (collected.length < count && guard++ < MAX_OCCURRENCES * 4) {
@@ -410,7 +411,7 @@ function buildOccurrence(
   parts: DateParts,
   timeZone: string,
   source: ScheduleOccurrence['source'],
-  clamped?: boolean,
+  clamped?: boolean
 ): ScheduleOccurrence {
   const instant = zonedTimeToUtc(parts, timeZone);
   const local = getZonedParts(instant, timeZone);
@@ -441,7 +442,7 @@ export function describeRecurrence(rule: RecurrenceRule): string {
       : [civilDate(start.year, start.month, start.day).getUTCDay() as Weekday];
     const names = weekdays
       .slice()
-      .sort((a, b) => ((a === 0 ? 7 : a) - (b === 0 ? 7 : b)))
+      .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))
       .map((d) => WEEKDAY_LABELS[d]);
     const list =
       names.length > 1 ? `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}` : names[0];
@@ -515,12 +516,7 @@ export interface SaleStatus {
   state: SaleState;
   canPurchase: boolean;
   /** Machine-readable reason when `canPurchase` is false. */
-  reason?:
-    | 'DRAFT'
-    | 'NOT_YET_ON_SALE'
-    | 'SALES_CLOSED'
-    | 'EVENT_CANCELLED'
-    | 'EVENT_FINISHED';
+  reason?: 'DRAFT' | 'NOT_YET_ON_SALE' | 'SALES_CLOSED' | 'EVENT_CANCELLED' | 'EVENT_FINISHED';
   activePhase?: SalePhaseWindow;
   /** Next scheduled state change, useful for countdowns. */
   nextChangeAt?: string;
@@ -543,7 +539,8 @@ function toDate(value: string | Date | null | undefined): Date | null {
  */
 export function resolveSaleStatus(input: SaleWindowInput, now: Date = new Date()): SaleStatus {
   const startsAt = toDate(input.startsAt);
-  const endsAt = toDate(input.endsAt) ?? (startsAt ? new Date(startsAt.getTime() + 6 * 3_600_000) : null);
+  const endsAt =
+    toDate(input.endsAt) ?? (startsAt ? new Date(startsAt.getTime() + 6 * 3_600_000) : null);
   const announceAt = toDate(input.announceAt);
   const publishAt = toDate(input.publishAt);
   const salesStartAt = toDate(input.salesStartAt);
@@ -568,7 +565,13 @@ export function resolveSaleStatus(input: SaleWindowInput, now: Date = new Date()
   const gatedPhases = openPhases.filter((phase) => !!phase.code);
   const openPublicPhase = openPhases.find((phase) => !phase.code);
 
-  const upcoming = [publishAt, announceAt, salesStartAt, salesEndAt, ...phases.flatMap((p) => [toDate(p.startsAt), toDate(p.endsAt)])]
+  const upcoming = [
+    publishAt,
+    announceAt,
+    salesStartAt,
+    salesEndAt,
+    ...phases.flatMap((p) => [toDate(p.startsAt), toDate(p.endsAt)]),
+  ]
     .filter((date): date is Date => !!date && date.getTime() > now.getTime())
     .sort((a, b) => a.getTime() - b.getTime())[0];
   const nextChangeAt = upcoming ? upcoming.toISOString() : undefined;
@@ -584,7 +587,13 @@ export function resolveSaleStatus(input: SaleWindowInput, now: Date = new Date()
   }
 
   if (salesEndAt && salesEndAt.getTime() <= now.getTime()) {
-    return { state: 'CLOSED', canPurchase: false, reason: 'SALES_CLOSED', nextChangeAt, gatedPhases: [] };
+    return {
+      state: 'CLOSED',
+      canPurchase: false,
+      reason: 'SALES_CLOSED',
+      nextChangeAt,
+      gatedPhases: [],
+    };
   }
 
   if (openPublicPhase) {
@@ -613,7 +622,13 @@ export function resolveSaleStatus(input: SaleWindowInput, now: Date = new Date()
     };
   }
 
-  return { state: 'ANNOUNCED', canPurchase: false, reason: 'NOT_YET_ON_SALE', nextChangeAt, gatedPhases };
+  return {
+    state: 'ANNOUNCED',
+    canPurchase: false,
+    reason: 'NOT_YET_ON_SALE',
+    nextChangeAt,
+    gatedPhases,
+  };
 }
 
 export const SALE_STATE_LABELS: Record<SaleState, string> = {
@@ -672,7 +687,7 @@ function slotWindow(slot: ScheduleSlot, defaultDurationMinutes: number) {
 export function detectScheduleConflicts(
   candidates: ScheduleSlot[],
   booked: ScheduleSlot[],
-  options: ConflictOptions = {},
+  options: ConflictOptions = {}
 ): Map<number, ScheduleConflict[]> {
   const turnaround = Math.max(0, options.turnaroundMinutes ?? DEFAULT_TURNAROUND_MINUTES);
   const duration = options.defaultDurationMinutes ?? DEFAULT_EVENT_DURATION_MINUTES;

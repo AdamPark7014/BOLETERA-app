@@ -73,7 +73,7 @@ function PlataformaBody() {
           list.flatMap((item) => {
             const check = readCheck(item);
             return check ? [check] : [];
-          }),
+          })
         );
         setGeneratedAt(readString(row.generatedAt));
       })
@@ -108,8 +108,8 @@ function PlataformaBody() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Plataforma</h1>
         <p className={styles.quiet}>
-          Límite, ráfaga y SSO los fija el entorno. El API no los lee ni los escribe. No hay nada que
-          guardar.
+          Límite, ráfaga y SSO los fija el entorno. El API no los lee ni los escribe. No hay nada
+          que guardar.
         </p>
       </header>
       <div className={styles.stack}>
@@ -145,13 +145,19 @@ function PlataformaBody() {
         {healthError ? (
           <p className={styles.danger} role="alert">
             {healthError}{' '}
-            <button type="button" className={styles.link} onClick={() => setNonce((current) => current + 1)}>
+            <button
+              type="button"
+              className={styles.link}
+              onClick={() => setNonce((current) => current + 1)}
+            >
               Reintentar
             </button>
           </p>
         ) : null}
       </header>
-      {checks.length === 0 && !healthError ? <p className={styles.quiet}>Nada que reconciliar.</p> : null}
+      {checks.length === 0 && !healthError ? (
+        <p className={styles.quiet}>Nada que reconciliar.</p>
+      ) : null}
       <div className={styles.stack}>
         {checks.map((check) => (
           <Param key={check.id} name={check.label}>

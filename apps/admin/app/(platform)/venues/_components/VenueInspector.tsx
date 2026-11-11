@@ -1,13 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  Badge,
-  Button,
-  EmptyState,
-  Skeleton,
-  formatNumber,
-} from '@boletera/ui';
+import { Badge, Button, EmptyState, Skeleton, formatNumber } from '@boletera/ui';
 import { QueryError } from '@/components/QueryStates';
 import { useVenueEgress, useVenueLayout } from '@/lib/queries/venues';
 import {
@@ -59,7 +53,13 @@ export function VenueInspector({ row, onClose }: VenueInspectorProps) {
             {row.city} · <code>{row.slug}</code>
           </p>
         </div>
-        <Button type="button" variant="ghost" size="sm" onClick={onClose} aria-label="Cerrar detalle">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          aria-label="Cerrar detalle"
+        >
           Cerrar
         </Button>
       </div>
@@ -122,9 +122,7 @@ export function VenueInspector({ row, onClose }: VenueInspectorProps) {
             <li>
               <span>Viewport</span>
               <strong>
-                {mapData.viewport
-                  ? `${mapData.viewport.width}×${mapData.viewport.height}`
-                  : '—'}
+                {mapData.viewport ? `${mapData.viewport.width}×${mapData.viewport.height}` : '—'}
               </strong>
             </li>
           </ul>
@@ -167,7 +165,8 @@ export function VenueInspector({ row, onClose }: VenueInspectorProps) {
       </section>
 
       <p className={styles.occupancyNote}>
-        Ocupación histórica: no hay serie temporal disponible en los endpoints actuales del portafolio.
+        Ocupación histórica: no hay serie temporal disponible en los endpoints actuales del
+        portafolio.
       </p>
 
       <div className={styles.inspectorActions}>

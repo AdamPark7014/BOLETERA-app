@@ -113,14 +113,16 @@ if (existsSync(BASELINE)) {
   if (literales > base.literales) {
     console.log(
       `\n❌ Han aparecido ${literales - base.literales} literales nuevos ` +
-        `(línea base: ${base.literales}).`,
+        `(línea base: ${base.literales}).`
     );
     console.log('   Usa un token del sistema: var(--bl-gray-500), var(--bl-danger)…');
     console.log('   Si el literal es inevitable (marca de un tercero, canvas),');
     console.log('   documenta por qué y vuelve a sellar con --sellar.');
     fallo = true;
   } else if (literales < base.literales) {
-    console.log(`\n✅ ${base.literales - literales} literales menos que la línea base. Sella con --sellar.`);
+    console.log(
+      `\n✅ ${base.literales - literales} literales menos que la línea base. Sella con --sellar.`
+    );
   } else {
     console.log('\n✅ Sin literales nuevos.');
   }

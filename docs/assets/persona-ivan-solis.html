@@ -1,316 +1,707 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<title>User Persona &amp; Empathy Map — Iván Solís · Boletera</title>
-<link rel="stylesheet" href="fonts/local.css" />
-<style>
-:root{
-  --paper:#F7F4EF;
-  --panel:#FFFFFF;
-  --ink:#1A1A1A;
-  --charcoal:#2C2A26;
-  --muted:#6F6A63;
-  --faint:#9C968D;
-  --line:rgba(44,42,38,.14);
-  --line-soft:rgba(44,42,38,.08);
-  --ember:#C45C26;
-  --ember-deep:#96421A;
-  --tint:#F0E2D6;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-@page{size:13.333in 7.5in;margin:0}
-html,body{
-  font-family:"Instrument Sans",system-ui,-apple-system,Segoe UI,sans-serif;
-  background:#8B877F;color:var(--ink);
-  -webkit-print-color-adjust:exact;print-color-adjust:exact;
-  -webkit-font-smoothing:antialiased;
-  font-feature-settings:"kern" 1,"liga" 1;
-}
-.slide{width:1280px;height:720px;position:relative;overflow:hidden;
-  background:var(--paper);page-break-after:always}
-.slide:last-child{page-break-after:auto}
+  <head>
+    <meta charset="utf-8" />
+    <title>User Persona &amp; Empathy Map — Iván Solís · Boletera</title>
+    <link rel="stylesheet" href="fonts/local.css" />
+    <style>
+      :root {
+        --paper: #f7f4ef;
+        --panel: #ffffff;
+        --ink: #1a1a1a;
+        --charcoal: #2c2a26;
+        --muted: #6f6a63;
+        --faint: #9c968d;
+        --line: rgba(44, 42, 38, 0.14);
+        --line-soft: rgba(44, 42, 38, 0.08);
+        --ember: #c45c26;
+        --ember-deep: #96421a;
+        --tint: #f0e2d6;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      @page {
+        size: 13.333in 7.5in;
+        margin: 0;
+      }
+      html,
+      body {
+        font-family:
+          'Instrument Sans',
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+        background: #8b877f;
+        color: var(--ink);
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings:
+          'kern' 1,
+          'liga' 1;
+      }
+      .slide {
+        width: 1280px;
+        height: 720px;
+        position: relative;
+        overflow: hidden;
+        background: var(--paper);
+        page-break-after: always;
+      }
+      .slide:last-child {
+        page-break-after: auto;
+      }
 
-.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.19em;
-  text-transform:uppercase;color:var(--ember)}
-.mark{font-size:10.5px;font-weight:700;letter-spacing:.22em;
-  text-transform:uppercase;color:var(--ember)}
-.folio{font-size:10.5px;font-weight:600;letter-spacing:.1em;color:var(--faint)}
-.foot{display:flex;justify-content:space-between;align-items:center;flex:0 0 auto;
-  border-top:1px solid var(--line-soft);padding-top:9px;margin-top:14px;
-  font-size:10px;letter-spacing:.05em;color:var(--faint);font-weight:500}
+      .eyebrow {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.19em;
+        text-transform: uppercase;
+        color: var(--ember);
+      }
+      .mark {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ember);
+      }
+      .folio {
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        color: var(--faint);
+      }
+      .foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex: 0 0 auto;
+        border-top: 1px solid var(--line-soft);
+        padding-top: 9px;
+        margin-top: 14px;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        color: var(--faint);
+        font-weight: 500;
+      }
 
-/* ═══════════ 01 · USER PERSONA ═══════════ */
-.s1{display:grid;grid-template-columns:442px 1fr;height:100%}
+      /* ═══════════ 01 · USER PERSONA ═══════════ */
+      .s1 {
+        display: grid;
+        grid-template-columns: 442px 1fr;
+        height: 100%;
+      }
 
-.photo{position:relative;overflow:hidden;background:#CFC8BE}
-.photo img{width:100%;height:100%;object-fit:cover;object-position:52% 14%;
-  display:block;filter:saturate(.74) contrast(1.05)}
-.photo::after{content:"";position:absolute;inset:0;
-  background:
-    linear-gradient(to top,rgba(22,17,13,.82) 0%,rgba(22,17,13,.18) 32%,transparent 52%),
-    linear-gradient(to right,rgba(150,66,26,.14),rgba(150,66,26,0) 55%)}
-.photo-cap{position:absolute;left:30px;right:26px;bottom:28px;z-index:2;color:#fff}
-.photo-cap .role{font-size:10.5px;font-weight:700;letter-spacing:.18em;
-  text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:13px}
-.chips{display:flex;flex-wrap:wrap;gap:7px}
-.chips span{font-size:11px;font-weight:500;padding:6px 11px;border-radius:999px;
-  border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.1);color:#fff}
+      .photo {
+        position: relative;
+        overflow: hidden;
+        background: #cfc8be;
+      }
+      .photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 52% 14%;
+        display: block;
+        filter: saturate(0.74) contrast(1.05);
+      }
+      .photo::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(
+            to top,
+            rgba(22, 17, 13, 0.82) 0%,
+            rgba(22, 17, 13, 0.18) 32%,
+            transparent 52%
+          ),
+          linear-gradient(to right, rgba(150, 66, 26, 0.14), rgba(150, 66, 26, 0) 55%);
+      }
+      .photo-cap {
+        position: absolute;
+        left: 30px;
+        right: 26px;
+        bottom: 28px;
+        z-index: 2;
+        color: #fff;
+      }
+      .photo-cap .role {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.72);
+        margin-bottom: 13px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .chips span {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 6px 11px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
 
-.copy{padding:40px 46px 30px 44px;display:flex;flex-direction:column;
-  background:radial-gradient(ellipse 76% 52% at 100% 0%,rgba(196,92,38,.075),transparent 58%),var(--paper)}
-.top{display:flex;justify-content:space-between;align-items:baseline;flex:0 0 auto}
+      .copy {
+        padding: 40px 46px 30px 44px;
+        display: flex;
+        flex-direction: column;
+        background:
+          radial-gradient(ellipse 76% 52% at 100% 0%, rgba(196, 92, 38, 0.075), transparent 58%),
+          var(--paper);
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        flex: 0 0 auto;
+      }
 
-.intro{margin-top:22px;flex:0 0 auto}
-.intro h1{font-family:"Instrument Serif",Georgia,serif;font-size:56px;font-weight:400;
-  letter-spacing:-.022em;line-height:.98;color:var(--ink);margin-top:13px}
-.intro .tag{font-size:18px;font-weight:500;color:var(--muted);margin-top:12px}
+      .intro {
+        margin-top: 22px;
+        flex: 0 0 auto;
+      }
+      .intro h1 {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 56px;
+        font-weight: 400;
+        letter-spacing: -0.022em;
+        line-height: 0.98;
+        color: var(--ink);
+        margin-top: 13px;
+      }
+      .intro .tag {
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--muted);
+        margin-top: 12px;
+      }
 
-.quote{margin-top:24px;flex:0 0 auto;font-family:"Instrument Serif",Georgia,serif;
-  font-size:24px;font-style:italic;line-height:1.35;color:var(--charcoal)}
-.quote::before{content:"";display:block;width:38px;height:3px;background:var(--ember);margin-bottom:14px}
+      .quote {
+        margin-top: 24px;
+        flex: 0 0 auto;
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 24px;
+        font-style: italic;
+        line-height: 1.35;
+        color: var(--charcoal);
+      }
+      .quote::before {
+        content: '';
+        display: block;
+        width: 38px;
+        height: 3px;
+        background: var(--ember);
+        margin-bottom: 14px;
+      }
 
-.two{display:grid;grid-template-columns:1fr 1fr;gap:34px;margin-top:24px;padding-bottom:10px;flex:0 0 auto}
-.two h3{font-size:10.5px;font-weight:700;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--ember);margin-bottom:13px}
-.two ul{list-style:none;display:flex;flex-direction:column;gap:9px}
-.two li{font-size:13.5px;line-height:1.4;color:var(--charcoal);font-weight:500;
-  padding-left:15px;position:relative}
-.two li::before{content:"";position:absolute;left:0;top:.52em;width:5px;height:5px;
-  border-radius:50%;background:var(--ember)}
-.two .burn li::before{background:transparent;border:1.5px solid var(--ember);
-  width:6px;height:6px;top:.46em}
+      .two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 34px;
+        margin-top: 24px;
+        padding-bottom: 10px;
+        flex: 0 0 auto;
+      }
+      .two h3 {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ember);
+        margin-bottom: 13px;
+      }
+      .two ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .two li {
+        font-size: 13.5px;
+        line-height: 1.4;
+        color: var(--charcoal);
+        font-weight: 500;
+        padding-left: 15px;
+        position: relative;
+      }
+      .two li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.52em;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--ember);
+      }
+      .two .burn li::before {
+        background: transparent;
+        border: 1.5px solid var(--ember);
+        width: 6px;
+        height: 6px;
+        top: 0.46em;
+      }
 
-.axes{margin-top:auto;padding-top:20px;border-top:1px solid var(--line);flex:0 0 auto}
-.axes .lbl{font-size:9.5px;font-weight:700;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--faint);margin-bottom:11px}
-.axrow{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
-.ax .an{font-size:10.5px;color:var(--muted);font-weight:500;line-height:1.25}
-.ax .meter{display:flex;gap:3px;margin-top:7px}
-.ax .meter i{flex:1;height:6px;background:var(--line);display:block}
-.ax .meter i.on{background:var(--ember)}
-.ax .av{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--charcoal);margin-top:6px}
+      .axes {
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        flex: 0 0 auto;
+      }
+      .axes .lbl {
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin-bottom: 11px;
+      }
+      .axrow {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+      }
+      .ax .an {
+        font-size: 10.5px;
+        color: var(--muted);
+        font-weight: 500;
+        line-height: 1.25;
+      }
+      .ax .meter {
+        display: flex;
+        gap: 3px;
+        margin-top: 7px;
+      }
+      .ax .meter i {
+        flex: 1;
+        height: 6px;
+        background: var(--line);
+        display: block;
+      }
+      .ax .meter i.on {
+        background: var(--ember);
+      }
+      .ax .av {
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--charcoal);
+        margin-top: 6px;
+      }
 
-.scene{flex:0 0 auto;background:var(--charcoal);color:#F3EFE9;padding:16px 21px;margin-top:20px}
-.scene b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.17em;
-  text-transform:uppercase;color:rgba(243,239,233,.55);margin-bottom:7px}
-.scene p{font-size:13.5px;line-height:1.5;font-weight:500}
+      .scene {
+        flex: 0 0 auto;
+        background: var(--charcoal);
+        color: #f3efe9;
+        padding: 16px 21px;
+        margin-top: 20px;
+      }
+      .scene b {
+        display: block;
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        color: rgba(243, 239, 233, 0.55);
+        margin-bottom: 7px;
+      }
+      .scene p {
+        font-size: 13.5px;
+        line-height: 1.5;
+        font-weight: 500;
+      }
 
-/* ═══════════ 02 · EMPATHY MAP ═══════════ */
-.s2{height:100%;padding:36px 46px 28px;display:flex;flex-direction:column;
-  background:radial-gradient(ellipse 52% 44% at 0% 0%,rgba(196,92,38,.06),transparent 55%),var(--paper)}
-.head{display:flex;align-items:flex-end;justify-content:space-between;
-  padding-bottom:14px;border-bottom:1px solid var(--line);flex:0 0 auto}
-.head h2{font-family:"Instrument Serif",Georgia,serif;font-size:38px;font-weight:400;
-  letter-spacing:-.015em;line-height:1;color:var(--ink);margin-top:8px}
-.head .sub{font-size:13.5px;color:var(--muted);font-weight:500;margin-top:9px}
-.head-right{text-align:right;line-height:1.9;white-space:nowrap;padding-left:24px}
+      /* ═══════════ 02 · EMPATHY MAP ═══════════ */
+      .s2 {
+        height: 100%;
+        padding: 36px 46px 28px;
+        display: flex;
+        flex-direction: column;
+        background:
+          radial-gradient(ellipse 52% 44% at 0% 0%, rgba(196, 92, 38, 0.06), transparent 55%),
+          var(--paper);
+      }
+      .head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--line);
+        flex: 0 0 auto;
+      }
+      .head h2 {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 38px;
+        font-weight: 400;
+        letter-spacing: -0.015em;
+        line-height: 1;
+        color: var(--ink);
+        margin-top: 8px;
+      }
+      .head .sub {
+        font-size: 13.5px;
+        color: var(--muted);
+        font-weight: 500;
+        margin-top: 9px;
+      }
+      .head-right {
+        text-align: right;
+        line-height: 1.9;
+        white-space: nowrap;
+        padding-left: 24px;
+      }
 
-.emap{position:relative;flex:1;min-height:0;display:grid;
-  grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:11px;margin-top:22px}
-.cell{background:var(--panel);border:1px solid var(--line);padding:19px 22px;
-  position:relative;overflow:hidden;display:flex;flex-direction:column}
-.cell::after{content:attr(data-n);position:absolute;top:5px;right:16px;
-  font-family:"Instrument Serif",Georgia,serif;font-size:44px;line-height:1;
-  color:rgba(196,92,38,.11)}
-.cell.bl::after{top:auto;bottom:6px}
-.cell h3{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
-  color:var(--ember);margin-bottom:13px;position:relative;z-index:1;flex:0 0 auto}
-.cell ul{list-style:none;display:flex;flex-direction:column;gap:10px;
-  position:relative;z-index:1;margin:auto 0}
-.cell li{font-size:13.5px;line-height:1.4;color:var(--charcoal);font-weight:500;
-  padding-left:14px;position:relative}
-.cell li::before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;
-  border-radius:50%;background:rgba(196,92,38,.55)}
-.cell.tl,.cell.bl{padding-right:82px}
-.cell.tr,.cell.br{padding-left:82px}
+      .emap {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 11px;
+        margin-top: 22px;
+      }
+      .cell {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 19px 22px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .cell::after {
+        content: attr(data-n);
+        position: absolute;
+        top: 5px;
+        right: 16px;
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 44px;
+        line-height: 1;
+        color: rgba(196, 92, 38, 0.11);
+      }
+      .cell.bl::after {
+        top: auto;
+        bottom: 6px;
+      }
+      .cell h3 {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        color: var(--ember);
+        margin-bottom: 13px;
+        position: relative;
+        z-index: 1;
+        flex: 0 0 auto;
+      }
+      .cell ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        position: relative;
+        z-index: 1;
+        margin: auto 0;
+      }
+      .cell li {
+        font-size: 13.5px;
+        line-height: 1.4;
+        color: var(--charcoal);
+        font-weight: 500;
+        padding-left: 14px;
+        position: relative;
+      }
+      .cell li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.55em;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgba(196, 92, 38, 0.55);
+      }
+      .cell.tl,
+      .cell.bl {
+        padding-right: 82px;
+      }
+      .cell.tr,
+      .cell.br {
+        padding-left: 82px;
+      }
 
-.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;
-  width:118px;height:118px;border-radius:50%;overflow:hidden;
-  border:6px solid var(--paper);box-shadow:0 4px 18px rgba(26,20,16,.16)}
-.hub img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;
-  display:block;filter:saturate(.76) contrast(1.05)}
+      .hub {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+        width: 118px;
+        height: 118px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 6px solid var(--paper);
+        box-shadow: 0 4px 18px rgba(26, 20, 16, 0.16);
+      }
+      .hub img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 50% 20%;
+        display: block;
+        filter: saturate(0.76) contrast(1.05);
+      }
 
-.pg{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:11px}
-.pg > div{padding:17px 22px}
-.pains{background:var(--tint)}
-.gains{background:var(--charcoal)}
-.pg h3{font-size:10px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;margin-bottom:11px}
-.pains h3{color:var(--ember-deep)}
-.gains h3{color:rgba(243,239,233,.55)}
-.pg ul{list-style:none;display:flex;flex-direction:column;gap:7px}
-.pg li{font-size:13px;line-height:1.4;font-weight:500}
-.pains li{color:var(--charcoal)}
-.gains li{color:#F3EFE9}
-</style>
-</head>
-<body>
+      .pg {
+        flex: 0 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 11px;
+        margin-top: 11px;
+      }
+      .pg > div {
+        padding: 17px 22px;
+      }
+      .pains {
+        background: var(--tint);
+      }
+      .gains {
+        background: var(--charcoal);
+      }
+      .pg h3 {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        margin-bottom: 11px;
+      }
+      .pains h3 {
+        color: var(--ember-deep);
+      }
+      .gains h3 {
+        color: rgba(243, 239, 233, 0.55);
+      }
+      .pg ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .pg li {
+        font-size: 13px;
+        line-height: 1.4;
+        font-weight: 500;
+      }
+      .pains li {
+        color: var(--charcoal);
+      }
+      .gains li {
+        color: #f3efe9;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ═══════════ 01 · USER PERSONA ═══════════ -->
+    <section class="slide">
+      <div class="s1">
+        <div class="photo">
+          <img src="ivan-retrato.png" alt="Iván Solís" />
+          <div class="photo-cap">
+            <div class="role">The last-minute buyer</div>
+            <div class="chips">
+              <span>23 · Monterrey</span>
+              <span>First job</span>
+              <span>Android · limited data</span>
+              <span>Debit or OXXO</span>
+              <span>Buys 2–3 tickets</span>
+            </div>
+          </div>
+        </div>
 
-<!-- ═══════════ 01 · USER PERSONA ═══════════ -->
-<section class="slide">
-  <div class="s1">
+        <div class="copy">
+          <div class="top">
+            <span class="mark">Boletera</span>
+            <span class="folio">01 / 02</span>
+          </div>
 
-    <div class="photo">
-      <img src="ivan-retrato.png" alt="Iván Solís" />
-      <div class="photo-cap">
-        <div class="role">The last-minute buyer</div>
-        <div class="chips">
-          <span>23 · Monterrey</span>
-          <span>First job</span>
-          <span>Android · limited data</span>
-          <span>Debit or OXXO</span>
-          <span>Buys 2–3 tickets</span>
+          <div class="intro">
+            <div class="eyebrow">User Persona</div>
+            <h1>Iván Solís</h1>
+            <p class="tag">He decides with his friends, on the bus, the night before.</p>
+          </div>
+
+          <blockquote class="quote">
+            “We’re going, right? Just let me check there are still seats together — and that it
+            doesn’t get crazy with the service fee.”
+          </blockquote>
+
+          <div class="two">
+            <div>
+              <h3>What he wants</h3>
+              <ul>
+                <li>To walk in with his friends, seated together</li>
+                <li>The final price <em>before</em> he picks a seat</li>
+                <li>Proof that the ticket is real</li>
+              </ul>
+            </div>
+            <div class="burn">
+              <h3>What burns him</h3>
+              <ul>
+                <li>The service fee showing up only at the end</li>
+                <li>A seat map he can’t work with one thumb</li>
+                <li>The hold timer running while the group decides</li>
+                <li>Paying at OXXO with no idea if it went through</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="axes">
+            <div class="lbl">Behavioural profile</div>
+            <div class="axrow">
+              <div class="ax">
+                <div class="an">Time pressure</div>
+                <div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+                <div class="av">High</div>
+              </div>
+              <div class="ax">
+                <div class="an">Usage frequency</div>
+                <div class="meter"><i class="on"></i><i></i><i></i></div>
+                <div class="av">Low</div>
+              </div>
+              <div class="ax">
+                <div class="an">Cash handling</div>
+                <div class="meter"><i class="on"></i><i class="on"></i><i></i></div>
+                <div class="av">Medium</div>
+              </div>
+              <div class="ax">
+                <div class="an">Money at risk</div>
+                <div class="meter"><i class="on"></i><i></i><i></i></div>
+                <div class="av">Low</div>
+              </div>
+              <div class="ax">
+                <div class="an">Physical conditions</div>
+                <div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+                <div class="av">Harsh</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="scene">
+            <b>The moment that matters</b>
+            <p>
+              Friday, 7:40 pm. On the bus, one bar of signal. The show is tomorrow and the group is
+              already asking. If the flow breaks once, he types “couldn’t get them” — and the night
+              is over for five people, not one.
+            </p>
+          </div>
+
+          <div class="foot">
+            <span>Adam Del Pozo Ontiveros · Human-Computer Interaction · September 2026</span>
+            <span>Boletera — event ticketing, Mexico</span>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="copy">
-      <div class="top">
-        <span class="mark">Boletera</span>
-        <span class="folio">01 / 02</span>
-      </div>
+    <!-- ═══════════ 02 · EMPATHY MAP ═══════════ -->
+    <section class="slide">
+      <div class="s2">
+        <header class="head">
+          <div>
+            <div class="eyebrow">Empathy Map</div>
+            <h2>Inside Iván’s head</h2>
+            <p class="sub">
+              Friday, 7:40 pm · on the bus · one bar of signal · the show is tomorrow
+            </p>
+          </div>
+          <div class="head-right">
+            <span class="mark">Boletera</span><br />
+            <span class="folio">02 / 02</span>
+          </div>
+        </header>
 
-      <div class="intro">
-        <div class="eyebrow">User Persona</div>
-        <h1>Iván Solís</h1>
-        <p class="tag">He decides with his friends, on the bus, the night before.</p>
-      </div>
+        <div class="emap">
+          <article class="cell tl" data-n="01">
+            <h3>Thinks &amp; feels</h3>
+            <ul>
+              <li>“Are they trying to rip me off?”</li>
+              <li>Afraid of missing out and of overpaying, at the same time</li>
+              <li>That the seats together will be gone while the group argues</li>
+            </ul>
+          </article>
 
-      <blockquote class="quote">
-        “We’re going, right? Just let me check there are still seats together —
-        and that it doesn’t get crazy with the service fee.”
-      </blockquote>
+          <article class="cell tr" data-n="02">
+            <h3>Sees</h3>
+            <ul>
+              <li>One bar of signal and a half-loaded map</li>
+              <li>A “Total” that isn’t the total</li>
+              <li>WhatsApp notifications on top of the checkout</li>
+            </ul>
+          </article>
 
-      <div class="two">
-        <div>
-          <h3>What he wants</h3>
-          <ul>
-            <li>To walk in with his friends, seated together</li>
-            <li>The final price <em>before</em> he picks a seat</li>
-            <li>Proof that the ticket is real</li>
-          </ul>
+          <article class="cell bl" data-n="03">
+            <h3>Hears</h3>
+            <ul>
+              <li>“Did you buy them yet?”</li>
+              <li>“Together, or let’s not bother”</li>
+              <li>“You get them, we’ll pay you back”</li>
+            </ul>
+          </article>
+
+          <article class="cell br" data-n="04">
+            <h3>Says &amp; does</h3>
+            <ul>
+              <li>Screenshots the screen and sends it to the group</li>
+              <li>Asks “yes or no?” before paying</li>
+              <li>If the price jumps, closes the tab and types “couldn’t get them”</li>
+            </ul>
+          </article>
+
+          <div class="hub"><img src="ivan-avatar.png" alt="Iván Solís" /></div>
         </div>
-        <div class="burn">
-          <h3>What burns him</h3>
-          <ul>
-            <li>The service fee showing up only at the end</li>
-            <li>A seat map he can’t work with one thumb</li>
-            <li>The hold timer running while the group decides</li>
-            <li>Paying at OXXO with no idea if it went through</li>
-          </ul>
+
+        <div class="pg">
+          <div class="pains">
+            <h3>Pains</h3>
+            <ul>
+              <li>Losing the seats together because the hold expired</li>
+              <li>A total that wasn’t the total, on a tight budget</li>
+              <li>Bad signal jamming the map — or the QR at the door</li>
+            </ul>
+          </div>
+          <div class="gains">
+            <h3>Gains</h3>
+            <ul>
+              <li>Seeing the real price from the first tap</li>
+              <li>Clear confirmation that the payment went through</li>
+              <li>Walking in with his friends — no drama at the door</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="foot">
+          <span
+            >Hypothesis-based persona — built from system data, not yet validated with user
+            interviews.</span
+          >
+          <span>Boletera — event ticketing, Mexico</span>
         </div>
       </div>
-
-      <div class="axes">
-        <div class="lbl">Behavioural profile</div>
-        <div class="axrow">
-          <div class="ax"><div class="an">Time pressure</div><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i></div><div class="av">High</div></div>
-          <div class="ax"><div class="an">Usage frequency</div><div class="meter"><i class="on"></i><i></i><i></i></div><div class="av">Low</div></div>
-          <div class="ax"><div class="an">Cash handling</div><div class="meter"><i class="on"></i><i class="on"></i><i></i></div><div class="av">Medium</div></div>
-          <div class="ax"><div class="an">Money at risk</div><div class="meter"><i class="on"></i><i></i><i></i></div><div class="av">Low</div></div>
-          <div class="ax"><div class="an">Physical conditions</div><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i></div><div class="av">Harsh</div></div>
-        </div>
-      </div>
-
-      <div class="scene">
-        <b>The moment that matters</b>
-        <p>
-          Friday, 7:40 pm. On the bus, one bar of signal. The show is tomorrow and the
-          group is already asking. If the flow breaks once, he types “couldn’t get
-          them” — and the night is over for five people, not one.
-        </p>
-      </div>
-
-      <div class="foot">
-        <span>Adam Del Pozo Ontiveros · Human-Computer Interaction · September 2026</span>
-        <span>Boletera — event ticketing, Mexico</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════ 02 · EMPATHY MAP ═══════════ -->
-<section class="slide">
-  <div class="s2">
-
-    <header class="head">
-      <div>
-        <div class="eyebrow">Empathy Map</div>
-        <h2>Inside Iván’s head</h2>
-        <p class="sub">Friday, 7:40 pm · on the bus · one bar of signal · the show is tomorrow</p>
-      </div>
-      <div class="head-right">
-        <span class="mark">Boletera</span><br />
-        <span class="folio">02 / 02</span>
-      </div>
-    </header>
-
-    <div class="emap">
-      <article class="cell tl" data-n="01">
-        <h3>Thinks &amp; feels</h3>
-        <ul>
-          <li>“Are they trying to rip me off?”</li>
-          <li>Afraid of missing out and of overpaying, at the same time</li>
-          <li>That the seats together will be gone while the group argues</li>
-        </ul>
-      </article>
-
-      <article class="cell tr" data-n="02">
-        <h3>Sees</h3>
-        <ul>
-          <li>One bar of signal and a half-loaded map</li>
-          <li>A “Total” that isn’t the total</li>
-          <li>WhatsApp notifications on top of the checkout</li>
-        </ul>
-      </article>
-
-      <article class="cell bl" data-n="03">
-        <h3>Hears</h3>
-        <ul>
-          <li>“Did you buy them yet?”</li>
-          <li>“Together, or let’s not bother”</li>
-          <li>“You get them, we’ll pay you back”</li>
-        </ul>
-      </article>
-
-      <article class="cell br" data-n="04">
-        <h3>Says &amp; does</h3>
-        <ul>
-          <li>Screenshots the screen and sends it to the group</li>
-          <li>Asks “yes or no?” before paying</li>
-          <li>If the price jumps, closes the tab and types “couldn’t get them”</li>
-        </ul>
-      </article>
-
-      <div class="hub"><img src="ivan-avatar.png" alt="Iván Solís" /></div>
-    </div>
-
-    <div class="pg">
-      <div class="pains">
-        <h3>Pains</h3>
-        <ul>
-          <li>Losing the seats together because the hold expired</li>
-          <li>A total that wasn’t the total, on a tight budget</li>
-          <li>Bad signal jamming the map — or the QR at the door</li>
-        </ul>
-      </div>
-      <div class="gains">
-        <h3>Gains</h3>
-        <ul>
-          <li>Seeing the real price from the first tap</li>
-          <li>Clear confirmation that the payment went through</li>
-          <li>Walking in with his friends — no drama at the door</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="foot">
-      <span>Hypothesis-based persona — built from system data, not yet validated with user interviews.</span>
-      <span>Boletera — event ticketing, Mexico</span>
-    </div>
-  </div>
-</section>
-
-</body>
+    </section>
+  </body>
 </html>

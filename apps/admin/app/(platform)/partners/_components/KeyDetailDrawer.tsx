@@ -1,19 +1,8 @@
 'use client';
 
-import {
-  Badge,
-  Button,
-  Drawer,
-  Sparkline,
-  StatusDot,
-  formatDateTime,
-} from '@boletera/ui';
+import { Badge, Button, Drawer, Sparkline, StatusDot, formatDateTime } from '@boletera/ui';
 import type { ApiKey } from '@/lib/queries/partners';
-import {
-  activitySparkline,
-  classifyKey,
-  keyHealthMeta,
-} from '../_lib/keys';
+import { activitySparkline, classifyKey, keyHealthMeta } from '../_lib/keys';
 import { daysUntil, formatCount, formatDay, relativeFuture, relativePast } from '../_lib/format';
 import { isWriteScope, scopeLabel } from '../_lib/scopes';
 import styles from '../partners.module.scss';
@@ -96,11 +85,7 @@ export function KeyDetailDrawer({
           </div>
           <div>
             <dt>Último uso</dt>
-            <dd>
-              {keyRow.lastUsedAt
-                ? formatDateTime(keyRow.lastUsedAt)
-                : 'Nunca'}
-            </dd>
+            <dd>{keyRow.lastUsedAt ? formatDateTime(keyRow.lastUsedAt) : 'Nunca'}</dd>
           </div>
           <div>
             <dt>Caducidad</dt>
@@ -125,7 +110,13 @@ export function KeyDetailDrawer({
             label={`Actividad estimada de ${keyRow.name}`}
             width={220}
             height={36}
-            tone={health.tone === 'success' ? 'success' : health.tone === 'danger' ? 'danger' : 'neutral'}
+            tone={
+              health.tone === 'success'
+                ? 'success'
+                : health.tone === 'danger'
+                  ? 'danger'
+                  : 'neutral'
+            }
           />
           <p className={styles.muted}>
             Derivada del último uso y del rate limit — no es telemetría de gateway.

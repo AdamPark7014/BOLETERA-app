@@ -15,9 +15,10 @@ export function useResaleListings(limit = 30) {
   return useQuery({
     queryKey: queryKeys.resale.listings(limit),
     queryFn: async ({ signal }) => {
-      const result = await http<
-        { listings?: ResaleListing[] } | ResaleListing[]
-      >(`/resale/listings?limit=${limit}`, { signal, auth: false });
+      const result = await http<{ listings?: ResaleListing[] } | ResaleListing[]>(
+        `/resale/listings?limit=${limit}`,
+        { signal, auth: false }
+      );
       return Array.isArray(result) ? result : (result.listings ?? []);
     },
   });

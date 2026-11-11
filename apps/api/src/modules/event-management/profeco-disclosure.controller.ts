@@ -78,10 +78,7 @@ export class ProfecoDisclosureAdminController {
   @Post()
   @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
   @ApiOperation({ summary: 'Publicar la divulgación (arranca el reloj de 24 h)' })
-  async publish(
-    @Param('eventId') eventId: string,
-    @CurrentUser('id') userId: string,
-  ) {
+  async publish(@Param('eventId') eventId: string, @CurrentUser('id') userId: string) {
     const record = await this.disclosure.publish(eventId, userId);
     return {
       id: record.id,
@@ -90,7 +87,7 @@ export class ProfecoDisclosureAdminController {
       capacity: record.capacity,
       applies: record.payload.regime.applies,
       earliestSaleAt: new Date(
-        record.publishedAt.getTime() + record.payload.regime.leadHours * 3_600_000,
+        record.publishedAt.getTime() + record.payload.regime.leadHours * 3_600_000
       ).toISOString(),
     };
   }

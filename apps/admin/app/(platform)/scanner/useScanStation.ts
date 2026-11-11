@@ -56,9 +56,7 @@ function median(values: readonly number[]): number | null {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? Math.round((sorted[mid - 1]! + sorted[mid]!) / 2)
-    : sorted[mid]!;
+  return sorted.length % 2 === 0 ? Math.round((sorted[mid - 1]! + sorted[mid]!) / 2) : sorted[mid]!;
 }
 
 function computeStats(log: readonly ScanRecord[], queuedCount: number): ScanStats {
@@ -234,7 +232,7 @@ export function useScanStation(): UseScanStationResult {
       setLastResult(feedbackFrom(record));
       playTone(record.verdict, soundRef.current);
     },
-    [persistLog],
+    [persistLog]
   );
 
   const flushQueue = useCallback(async () => {
@@ -402,7 +400,7 @@ export function useScanStation(): UseScanStationResult {
         setBusy(false);
       }
     },
-    [persistQueue, pushRecord],
+    [persistQueue, pushRecord]
   );
 
   const setStation = useCallback((value: string) => {

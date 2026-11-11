@@ -111,7 +111,7 @@ export class SalePhaseQuotaService {
 
   constructor(
     private prisma: PrismaService,
-    private redis: RedisService,
+    private redis: RedisService
   ) {}
 
   /**
@@ -125,7 +125,7 @@ export class SalePhaseQuotaService {
   async reserve(
     target: PhaseQuotaTarget,
     capacity: number,
-    quantity: number,
+    quantity: number
   ): Promise<PhaseQuotaHandle | null> {
     const limit = this.limitFor(target, capacity);
     if (limit === null) return null;
@@ -183,7 +183,7 @@ export class SalePhaseQuotaService {
     target: PhaseQuotaTarget,
     limit: number,
     quantity: number,
-    at: Date,
+    at: Date
   ): Promise<null> {
     await this.prisma.$transaction(async (tx) => {
       // El lock vive lo que la transacción; no puede quedarse colgado.
@@ -281,7 +281,7 @@ export class SalePhaseQuotaService {
       // Sembrar mal no debe tumbar la compra: sin siembra el contador arranca en
       // cero y la reconciliación lo sube al valor real en la siguiente pasada.
       this.logger.warn(
-        `No se pudo sembrar el cupo de la fase ${target.id}: ${(error as Error).message}`,
+        `No se pudo sembrar el cupo de la fase ${target.id}: ${(error as Error).message}`
       );
     }
   }
@@ -304,7 +304,7 @@ export class SalePhaseQuotaService {
     const acquired = await this.redis.acquireLock(
       reconcileKey(target.id),
       randomUUID(),
-      RECONCILE_INTERVAL_SECONDS,
+      RECONCILE_INTERVAL_SECONDS
     );
     if (acquired !== 'ACQUIRED') return;
 
@@ -324,7 +324,7 @@ export class SalePhaseQuotaService {
       await this.redis.incrementWithTtl(key, -drift, ttl);
     }
     this.logger.log(
-      `Cupo de la fase ${target.id} reconciliado: contador ${counted} → base ${actual}.`,
+      `Cupo de la fase ${target.id} reconciliado: contador ${counted} → base ${actual}.`
     );
   }
 
@@ -349,7 +349,7 @@ export class SalePhaseQuotaService {
     target: PhaseQuotaTarget,
     at: Date,
     /** Cliente de la transacción cuando la cuenta va dentro del lock consultivo. */
-    tx?: Pick<PrismaService, 'seatHold'>,
+    tx?: Pick<PrismaService, 'seatHold'>
   ): Promise<number> {
     const windowEnd = target.endsAt < at ? target.endsAt : at;
     if (windowEnd <= target.startsAt) return 0;

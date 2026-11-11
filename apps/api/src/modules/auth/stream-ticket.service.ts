@@ -63,7 +63,7 @@ export class StreamTicketService {
     const ticket = this.jwt.sign(
       { sub: user.sub, email: user.email, purpose: STREAM_TICKET_PURPOSE },
       // Anula el `expiresIn` global (2 h) del JwtModule.
-      { expiresIn: STREAM_TICKET_TTL_SECONDS },
+      { expiresIn: STREAM_TICKET_TTL_SECONDS }
     );
     return { ticket, expiresIn: STREAM_TICKET_TTL_SECONDS };
   }

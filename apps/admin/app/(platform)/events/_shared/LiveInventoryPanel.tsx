@@ -108,8 +108,13 @@ export function LiveInventoryPanel({
               const zone = seat.section ?? 'Sin zona';
               statusById.set(seat.id, seat.status);
               zoneById.set(seat.id, zone);
-              const row =
-                tally.get(zone) ?? { section: zone, total: 0, available: 0, held: 0, sold: 0 };
+              const row = tally.get(zone) ?? {
+                section: zone,
+                total: 0,
+                available: 0,
+                held: 0,
+                sold: 0,
+              };
               row.total++;
               if (seat.status === 'AVAILABLE') row.available++;
               else if (seat.status === 'HELD') row.held++;
@@ -239,7 +244,7 @@ export function LiveInventoryPanel({
 
   const live: AvailabilitySnapshot | null = useMemo(
     () => (snapshot ? { ...snapshot, totals } : null),
-    [snapshot, totals],
+    [snapshot, totals]
   );
 
   const available = countOf(live, 'AVAILABLE');

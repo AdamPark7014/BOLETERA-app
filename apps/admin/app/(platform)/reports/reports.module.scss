@@ -21,7 +21,9 @@
   background: var(--bl-elevated);
   border: 1px solid var(--bl-border);
   border-radius: var(--bl-radius-lg);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 
   &:hover,
   &:focus-visible {

@@ -49,7 +49,7 @@ export function parseSalesChannel(raw?: string | null): SalesChannel | undefined
 
 /** Sum allocation percentages from channel config metadata. */
 export function sumChannelAllocations(
-  channels: Record<string, { allocation?: number } | undefined>,
+  channels: Record<string, { allocation?: number } | undefined>
 ): number {
   return Object.values(channels).reduce((sum, slot) => sum + (slot?.allocation ?? 0), 0);
 }

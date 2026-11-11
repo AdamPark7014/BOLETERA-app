@@ -133,13 +133,13 @@ export function ComplianceSection({
         await adminApi<unknown>(`/events/manage/${eventId}/disclosure`, token, {
           method: 'POST',
           body: '{}',
-        }),
+        })
       );
       const capacity = readNumber(result.capacity);
       setNotice(
         capacity == null
           ? 'Divulgación publicada. Republicar crea otra fila.'
-          : `Divulgación publicada · aforo ${formatCount(capacity)}`,
+          : `Divulgación publicada · aforo ${formatCount(capacity)}`
       );
       setNonce((current) => current + 1);
     } catch (cause) {
@@ -177,7 +177,8 @@ export function ComplianceSection({
   if (loading || !published) return <p className={styles.quiet}>Cargando cumplimiento.</p>;
 
   const capacity = published.published ? published.capacity : previewCapacity;
-  const sections = published.published && published.sections.length > 0 ? published.sections : previewSections;
+  const sections =
+    published.published && published.sections.length > 0 ? published.sections : previewSections;
   const capacityEffect = published.published
     ? previewCapacity != null && previewCapacity !== published.capacity
       ? `El vivo ahora es ${formatCount(previewCapacity)}. Republicar crea otra fila. No se teclea.`
@@ -208,7 +209,9 @@ export function ComplianceSection({
         <Param name="Payload">
           <ParameterCard
             name="Payload"
-            value={published.published ? `${formatCount(sections.length)} secciones` : 'Sin publicar'}
+            value={
+              published.published ? `${formatCount(sections.length)} secciones` : 'Sin publicar'
+            }
             valueStyle="tabular"
             effect="Lo que se sirvió. Inmutable."
           />

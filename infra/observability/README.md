@@ -19,11 +19,11 @@ docker compose -f infra/observability/docker-compose.observability.yml down
 
 ## Ports (loopback)
 
-| Service        | URL                                      |
-| -------------- | ---------------------------------------- |
-| Prometheus UI  | http://127.0.0.1:9090                    |
-| Grafana        | http://127.0.0.1:3100 (admin / admin)    |
-| Redis exporter | http://127.0.0.1:9121/metrics            |
+| Service        | URL                                             |
+| -------------- | ----------------------------------------------- |
+| Prometheus UI  | http://127.0.0.1:9090                           |
+| Grafana        | http://127.0.0.1:3100 (admin / admin)           |
+| Redis exporter | http://127.0.0.1:9121/metrics                   |
 | API scrape     | http://127.0.0.1:4000/api/v1/metrics/prometheus |
 
 Override Grafana credentials with `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD`
@@ -58,12 +58,12 @@ If Redis is not on host `:6379`, set `REDIS_EXPORTER_ADDR` (e.g.
 
 ## Degradación cuando Redis falla
 
-| Pieza | Sin Redis / Redis caído | Producción |
-| ----- | ----------------------- | ---------- |
-| Rate limit (`Throttler`) | Fail-open a memoria del proceso (límites por réplica, no globales) | Exige `REDIS_URL` |
-| Idempotencia payment intents | Memoria del proceso (no cluster-safe) | Wiring Redis al boot si hay `REDIS_URL` |
-| Holds / inventario | Con `INVENTORY_REQUIRE_REDIS=true` (implícito en prod) falla duro; en local puede degradar | Redis obligatorio |
-| `/ready` | Puede marcar Redis opcional en local | Mirar `boletera_redis_ready` en Prometheus |
+| Pieza                        | Sin Redis / Redis caído                                                                    | Producción                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| Rate limit (`Throttler`)     | Fail-open a memoria del proceso (límites por réplica, no globales)                         | Exige `REDIS_URL`                          |
+| Idempotencia payment intents | Memoria del proceso (no cluster-safe)                                                      | Wiring Redis al boot si hay `REDIS_URL`    |
+| Holds / inventario           | Con `INVENTORY_REQUIRE_REDIS=true` (implícito en prod) falla duro; en local puede degradar | Redis obligatorio                          |
+| `/ready`                     | Puede marcar Redis opcional en local                                                       | Mirar `boletera_redis_ready` en Prometheus |
 
 No inventes “estamos bien” si `boletera_redis_ready` es 0 en un onsale.
 

@@ -43,7 +43,10 @@ assert(p3.focusPoints.length === 2, `3d focus ${p3.focusPoints.length}`);
 
 for (const f of p3.furniture) {
   assert(Array.isArray(f.position) && f.position.length === 3, `xyz ${f.id}`);
-  assert(f.position.every((n) => Number.isFinite(n)), `finite ${f.id}`);
+  assert(
+    f.position.every((n) => Number.isFinite(n)),
+    `finite ${f.id}`
+  );
   assert(typeof f.type === 'string', `type ${f.id}`);
 }
 
@@ -55,7 +58,10 @@ assert(spk && spk.position[1] > door.position[1], 'speaker higher than door');
 
 for (const fp of p3.focusPoints) {
   assert(Array.isArray(fp.position) && fp.position.length === 3, `focus xyz ${fp.id}`);
-  assert(fp.position.every((n) => Number.isFinite(n)), `focus finite ${fp.id}`);
+  assert(
+    fp.position.every((n) => Number.isFinite(n)),
+    `focus finite ${fp.id}`
+  );
 }
 
 const fpAuthored = p3.focusPoints.find((f) => f.id === 'fp1');

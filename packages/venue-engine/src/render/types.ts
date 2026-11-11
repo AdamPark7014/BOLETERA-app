@@ -70,7 +70,9 @@ export type SeatPatch = {
 
 export type ColorModeContext = {
   /** Inventory / hold map keyed by seat id. */
-  statusBySeatId?: ReadonlyMap<string, SeatRenderStatus> | Readonly<Record<string, SeatRenderStatus>>;
+  statusBySeatId?:
+    | ReadonlyMap<string, SeatRenderStatus>
+    | Readonly<Record<string, SeatRenderStatus>>;
   /** Absolute price per seat (or per-section fallback via offers). */
   priceBySeatId?: ReadonlyMap<string, number> | Readonly<Record<string, number>>;
   /** Sightline quality 0..1 from calculateSightlines. */
@@ -154,7 +156,7 @@ export type SceneSnapshot = {
 /** Lookup helper that accepts Map or plain object without allocating. */
 export function lookupRecord<T>(
   source: ReadonlyMap<string, T> | Readonly<Record<string, T>> | undefined,
-  key: string,
+  key: string
 ): T | undefined {
   if (!source) return undefined;
   if (source instanceof Map) return source.get(key);

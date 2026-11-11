@@ -82,7 +82,7 @@ export class NotificationService implements OnModuleInit {
   constructor(
     @InjectQueue(NOTIFICATION_QUEUE) private readonly queue: Queue,
     private readonly configService: ConfigService,
-    private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService
   ) {}
 
   /**
@@ -104,7 +104,7 @@ export class NotificationService implements OnModuleInit {
       this.lastQueueError = message;
       this.logger.error(
         `Cola de notificaciones no disponible (${message}). ` +
-          'Las compras siguen funcionando; los avisos quedan sin enviar.',
+          'Las compras siguen funcionando; los avisos quedan sin enviar.'
       );
     });
   }
@@ -127,7 +127,7 @@ export class NotificationService implements OnModuleInit {
     orderId: string,
     email: string,
     buyerName: string,
-    options?: { accessToken?: string },
+    options?: { accessToken?: string }
   ) {
     await this.queue.add(
       'dispatch',
@@ -138,18 +138,23 @@ export class NotificationService implements OnModuleInit {
         buyerName,
         accessToken: options?.accessToken,
       } satisfies NotificationJob,
-      jobOptions(),
+      jobOptions()
     );
     this.logger.log(
-      `Queued order confirmation for ${orderId}${options?.accessToken ? ' (con credencial de acceso)' : ''}`,
+      `Queued order confirmation for ${orderId}${options?.accessToken ? ' (con credencial de acceso)' : ''}`
     );
   }
 
   async enqueueTicketPDF(orderId: string, email: string, options?: { accessToken?: string }) {
     await this.queue.add(
       'dispatch',
-      { type: 'ticket.pdf', orderId, email, accessToken: options?.accessToken } satisfies NotificationJob,
-      jobOptions({ delay: 5000 }),
+      {
+        type: 'ticket.pdf',
+        orderId,
+        email,
+        accessToken: options?.accessToken,
+      } satisfies NotificationJob,
+      jobOptions({ delay: 5000 })
     );
     this.logger.log(`Queued ticket PDF generation for ${orderId}`);
   }
@@ -161,11 +166,7 @@ export class NotificationService implements OnModuleInit {
    * que quien dispara esto solo necesita el id de la orden. Falta el disparador
    * en el flujo de creación de órdenes diferidas (ver entrega).
    */
-  async enqueuePaymentPending(
-    orderId: string,
-    email?: string,
-    options?: { accessToken?: string },
-  ) {
+  async enqueuePaymentPending(orderId: string, email?: string, options?: { accessToken?: string }) {
     await this.queue.add(
       'dispatch',
       {
@@ -174,17 +175,26 @@ export class NotificationService implements OnModuleInit {
         email,
         accessToken: options?.accessToken,
       } satisfies NotificationJob,
-      jobOptions(),
+      jobOptions()
     );
     this.logger.log(`Queued pending-payment notice for ${orderId}`);
   }
 
   /** Acuse de pago recibido. */
-  async enqueuePaymentReceived(orderId: string, email?: string, options?: { accessToken?: string }) {
+  async enqueuePaymentReceived(
+    orderId: string,
+    email?: string,
+    options?: { accessToken?: string }
+  ) {
     await this.queue.add(
       'dispatch',
-      { type: 'payment.received', orderId, email, accessToken: options?.accessToken } satisfies NotificationJob,
-      jobOptions(),
+      {
+        type: 'payment.received',
+        orderId,
+        email,
+        accessToken: options?.accessToken,
+      } satisfies NotificationJob,
+      jobOptions()
     );
     this.logger.log(`Queued payment-received notice for ${orderId}`);
   }
@@ -195,7 +205,7 @@ export class NotificationService implements OnModuleInit {
     await this.queue.add(
       'dispatch',
       { type: 'fraud.alert', orderId, score, severity } satisfies NotificationJob,
-      jobOptions({ priority: 1 }),
+      jobOptions({ priority: 1 })
     );
     this.logger.warn(`Queued fraud alert for ${orderId} (score: ${score}, severity: ${severity})`);
   }
@@ -206,7 +216,7 @@ export class NotificationService implements OnModuleInit {
     orderId: string,
     email: string,
     amount: number,
-    options?: { reason?: string; partial?: boolean },
+    options?: { reason?: string; partial?: boolean }
   ) {
     await this.queue.add(
       'dispatch',
@@ -218,7 +228,7 @@ export class NotificationService implements OnModuleInit {
         reason: options?.reason,
         partial: options?.partial,
       } satisfies NotificationJob,
-      jobOptions(),
+      jobOptions()
     );
     this.logger.log(`Queued refund notification for ${orderId}`);
   }
@@ -236,7 +246,7 @@ export class NotificationService implements OnModuleInit {
     await this.queue.add(
       'dispatch',
       { type: 'event.cancelled', eventId, reason } satisfies NotificationJob,
-      jobOptions({ attempts: 3 }),
+      jobOptions({ attempts: 3 })
     );
     this.logger.warn(`Queued cancellation broadcast for event ${eventId}`);
   }
@@ -247,7 +257,7 @@ export class NotificationService implements OnModuleInit {
     await this.queue.add(
       'dispatch',
       { type: 'resale.alert', listingId, buyerEmail, eventTitle } satisfies NotificationJob,
-      jobOptions(),
+      jobOptions()
     );
     this.logger.log(`Queued resale alert for ${listingId}`);
   }
@@ -258,7 +268,7 @@ export class NotificationService implements OnModuleInit {
     await this.queue.add(
       'dispatch',
       { type: 'payout.ready', organizationId, amount, email } satisfies NotificationJob,
-      jobOptions(),
+      jobOptions()
     );
     this.logger.log(`Queued payout notification for org ${organizationId}`);
   }
@@ -269,7 +279,7 @@ export class NotificationService implements OnModuleInit {
     await this.queue.add(
       'dispatch',
       { type: 'event.reminder', eventId, userId, email, eventTitle } satisfies NotificationJob,
-      jobOptions({ delay: 24 * 60 * 60 * 1000, attempts: 3 }), // 24 h antes
+      jobOptions({ delay: 24 * 60 * 60 * 1000, attempts: 3 }) // 24 h antes
     );
     this.logger.log(`Queued event reminder for ${eventId}`);
   }
@@ -289,7 +299,7 @@ export class NotificationService implements OnModuleInit {
         template: payload.template,
         data: payload.data,
       } satisfies NotificationJob,
-      jobOptions(),
+      jobOptions()
     );
     this.logger.log(`Queued generic email to ${payload.to} (${payload.template})`);
   }
@@ -323,7 +333,7 @@ export class NotificationService implements OnModuleInit {
         retried++;
       } catch (error) {
         this.logger.warn(
-          `No se pudo reintentar el job ${job.id}: ${error instanceof Error ? error.message : String(error)}`,
+          `No se pudo reintentar el job ${job.id}: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     }

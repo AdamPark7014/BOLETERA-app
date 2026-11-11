@@ -24,7 +24,10 @@ $accent: var(--bl-accent);
   cursor: pointer;
   font: inherit;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
 
   strong {
     display: block;

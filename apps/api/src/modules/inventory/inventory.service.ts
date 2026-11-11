@@ -36,7 +36,7 @@ const MAX_TICKETS_PER_HOLD_STAFF = 100;
  * invariante: si Redis no está, el CAS en BD sigue impidiendo la sobreventa.
  */
 const MAX_ACTIVE_TICKETS_PER_SESSION = Number(
-  process.env.INVENTORY_MAX_ACTIVE_TICKETS_PER_SESSION ?? 10,
+  process.env.INVENTORY_MAX_ACTIVE_TICKETS_PER_SESSION ?? 10
 );
 
 /** Transacciones interactivas: con contención de asientos 5s por defecto se queda corto. */
@@ -112,7 +112,10 @@ const sessionBudgetKey = (eventId: string, sessionId: string) =>
   `hold:budget:${eventId}:${sessionId}`;
 const holdIdempotencyKey = (eventId: string, key: string) => `hold:idemp:${eventId}:${key}`;
 
-type HoldCreateResult = { holds: Awaited<ReturnType<PrismaService['seatHold']['create']>>[]; expiresAt: Date };
+type HoldCreateResult = {
+  holds: Awaited<ReturnType<PrismaService['seatHold']['create']>>[];
+  expiresAt: Date;
+};
 
 type StoredHoldIdempotency = {
   fingerprint: string;
@@ -147,7 +150,7 @@ export class InventoryService {
     private redis: RedisService,
     private quotas: ChannelQuotaService,
     private waitlist: WaitlistService,
-    private saleWindow: SaleWindowService,
+    private saleWindow: SaleWindowService
   ) {}
 
   /** Plazo del canal cuando `holdExpiration` está vacío. */
@@ -286,7 +289,7 @@ export class InventoryService {
    */
   async getSeatPage(
     eventId: string,
-    opts: { cursor?: string; limit?: number; status?: TicketStatus } = {},
+    opts: { cursor?: string; limit?: number; status?: TicketStatus } = {}
   ) {
     const limit = Math.min(Math.max(opts.limit ?? SEAT_PAGE_DEFAULT, 1), SEAT_PAGE_MAX);
     const rows = await this.prisma.ticket.findMany({
@@ -341,7 +344,7 @@ export class InventoryService {
         if (this.streams.get(eventId) === stream) this.streams.delete(eventId);
         this.streamCursors.delete(eventId);
       }),
-      shareReplay({ bufferSize: 1, refCount: true }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     this.streams.set(eventId, stream);
@@ -379,7 +382,7 @@ export class InventoryService {
         const newest = rows[rows.length - 1].updatedAt;
         state.since = newest;
         state.boundaryIds = new Set(
-          rows.filter((row) => row.updatedAt.getTime() === newest.getTime()).map((row) => row.id),
+          rows.filter((row) => row.updatedAt.getTime() === newest.getTime()).map((row) => row.id)
         );
         if (state.boundaryIds.size > STREAM_MAX_BOUNDARY_IDS) {
           // Carga masiva en el mismo milisegundo: preferimos avanzar (y quizá
@@ -472,7 +475,7 @@ export class InventoryService {
       cashierId?: string;
       skipSessionLimit?: boolean;
     },
-    idempotencyKey: string | undefined,
+    idempotencyKey: string | undefined
   ): Promise<HoldCreateResult> {
     const channel = dto.channel ?? SalesChannel.WEB;
     // Duplicar un asiento en la petición se auto-bloquearía contra el índice único.
@@ -519,7 +522,14 @@ export class InventoryService {
       await this.quotas.assertAvailable(dto.eventId, channel, quantity);
       const result = seatIds?.length
         ? await this.createReservedSeatHold(dto, seatIds, channel, ttl, expiresAt)
-        : await this.createGeneralAdmissionHold(dto, dto.offerId!, quantity, channel, ttl, expiresAt);
+        : await this.createGeneralAdmissionHold(
+            dto,
+            dto.offerId!,
+            quantity,
+            channel,
+            ttl,
+            expiresAt
+          );
       if (idempotencyKey) {
         await this.persistIdempotentHold(dto, idempotencyKey, result, ttl);
       }
@@ -550,7 +560,7 @@ export class InventoryService {
     seatIds: string[],
     channel: SalesChannel,
     ttl: number,
-    expiresAt: Date,
+    expiresAt: Date
   ) {
     // Indexado por seatId, no por posición: si Redis está caído y degradamos,
     // el array quedaría desalineado respecto a los holds creados.
@@ -570,7 +580,7 @@ export class InventoryService {
         // UNAVAILABLE — decisión explícita, ya no un `if` silencioso.
         if (this.requireRedis()) {
           throw new ServiceUnavailableException(
-            'Seat locking unavailable (Redis down). Retry in a few seconds.',
+            'Seat locking unavailable (Redis down). Retry in a few seconds.'
           );
         }
       }
@@ -615,12 +625,12 @@ export class InventoryService {
                   quantity: 1,
                   expiresAt,
                 },
-              }),
+              })
             );
           }
           return created;
         },
-        { timeout: TX_TIMEOUT_MS, maxWait: TX_MAX_WAIT_MS },
+        { timeout: TX_TIMEOUT_MS, maxWait: TX_MAX_WAIT_MS }
       );
 
       // Ficha lateral: guarda el token para poder liberar el candado siendo su
@@ -630,12 +640,8 @@ export class InventoryService {
           const lock = locks.get(hold.seatId);
           if (!lock) return Promise.resolve(false); // degradado sin Redis
           const meta: HoldMeta = { lockKey: lock.key, lockToken: lock.token };
-          return this.redis.setJson(
-            holdMetaKey(hold.id),
-            meta,
-            ttl + HOLD_META_TTL_MARGIN_SECONDS,
-          );
-        }),
+          return this.redis.setJson(holdMetaKey(hold.id), meta, ttl + HOLD_META_TTL_MARGIN_SECONDS);
+        })
       );
 
       return { holds, expiresAt };
@@ -662,7 +668,7 @@ export class InventoryService {
     quantity: number,
     channel: SalesChannel,
     ttl: number,
-    expiresAt: Date,
+    expiresAt: Date
   ) {
     const { holds, ticketsByHold } = await this.prisma.$transaction(
       async (tx) => {
@@ -684,7 +690,7 @@ export class InventoryService {
           // Lanzar aborta la transacción: los boletos reclamados vuelven solos a
           // AVAILABLE por rollback, sin UPDATE compensatorio que pueda fallar.
           throw new ConflictException(
-            `Only ${claimed.length} of ${quantity} tickets available for this offer`,
+            `Only ${claimed.length} of ${quantity} tickets available for this offer`
           );
         }
 
@@ -711,7 +717,7 @@ export class InventoryService {
         }
         return { holds: created, ticketsByHold };
       },
-      { timeout: TX_TIMEOUT_MS, maxWait: TX_MAX_WAIT_MS },
+      { timeout: TX_TIMEOUT_MS, maxWait: TX_MAX_WAIT_MS }
     );
 
     // F1-11: correlación hold → boleto concreto. `SeatHold` no tiene columna
@@ -722,9 +728,9 @@ export class InventoryService {
         this.redis.setJson(
           holdMetaKey(entry.holdId),
           { ticketIds: [entry.ticketId] } satisfies HoldMeta,
-          ttl + HOLD_META_TTL_MARGIN_SECONDS,
-        ),
-      ),
+          ttl + HOLD_META_TTL_MARGIN_SECONDS
+        )
+      )
     );
 
     return { holds, expiresAt };
@@ -826,7 +832,7 @@ export class InventoryService {
     }
     for (const row of groups.values()) {
       const sorted = [...row].sort(
-        (a, b) => this.seatNum(a.seatNumber) - this.seatNum(b.seatNumber),
+        (a, b) => this.seatNum(a.seatNumber) - this.seatNum(b.seatNumber)
       );
       for (let i = 0; i <= sorted.length - quantity; i++) {
         const slice = sorted.slice(i, i + quantity);
@@ -864,7 +870,7 @@ export class InventoryService {
       staff?: boolean;
       staffRole?: string;
       staffOrganizationId?: string | null;
-    },
+    }
   ) {
     const hold = await this.prisma.seatHold.findUnique({ where: { id: holdId } });
     if (!hold) throw new NotFoundException('Hold not found');
@@ -928,7 +934,7 @@ export class InventoryService {
    */
   private async releaseGeneralAdmissionTickets(
     hold: { eventId: string; offerId: string | null; quantity: number },
-    meta: HoldMeta | null,
+    meta: HoldMeta | null
   ) {
     if (meta?.ticketIds?.length) {
       await this.prisma.ticket.updateMany({
@@ -962,7 +968,7 @@ export class InventoryService {
    */
   private async assertStaffOwnsEvent(
     eventId: string,
-    requester: { staffRole?: string; staffOrganizationId?: string | null },
+    requester: { staffRole?: string; staffOrganizationId?: string | null }
   ) {
     if (requester.staffRole === 'SUPER_ADMIN') return;
 
@@ -979,7 +985,7 @@ export class InventoryService {
 
   private assertHoldOwnership(
     hold: { sessionId: string | null; userId: string | null },
-    requester: { sessionId?: string; userId?: string; staff?: boolean },
+    requester: { sessionId?: string; userId?: string; staff?: boolean }
   ) {
     if (requester.staff) return;
     if (requester.userId && hold.userId && hold.userId === requester.userId) return;
@@ -994,7 +1000,7 @@ export class InventoryService {
 
   private async releaseLocks(locks: Map<string, { key: string; token: string }>) {
     await Promise.all(
-      [...locks.values()].map((lock) => this.redis.releaseLock(lock.key, lock.token)),
+      [...locks.values()].map((lock) => this.redis.releaseLock(lock.key, lock.token))
     );
   }
 
@@ -1014,7 +1020,7 @@ export class InventoryService {
     dto: { eventId: string; sessionId?: string; skipSessionLimit?: boolean },
     channel: SalesChannel,
     quantity: number,
-    ttl: number,
+    ttl: number
   ) {
     if (dto.skipSessionLimit || !isWebLikeChannel(channel) || !dto.sessionId) return;
     const key = sessionBudgetKey(dto.eventId, dto.sessionId);
@@ -1024,7 +1030,7 @@ export class InventoryService {
       await this.redis.decrement(key, quantity);
       throw new ConflictException(
         `Session hold limit reached: máximo ${MAX_ACTIVE_TICKETS_PER_SESSION} boletos ` +
-          'apartados a la vez. Completa o libera los actuales antes de apartar más.',
+          'apartados a la vez. Completa o libera los actuales antes de apartar más.'
       );
     }
   }
@@ -1032,18 +1038,14 @@ export class InventoryService {
   private async refundSessionBudget(
     dto: { eventId: string; sessionId?: string; skipSessionLimit?: boolean },
     channel: SalesChannel,
-    quantity: number,
+    quantity: number
   ) {
     if (dto.skipSessionLimit || !isWebLikeChannel(channel) || !dto.sessionId) return;
     await this.redis.decrement(sessionBudgetKey(dto.eventId, dto.sessionId), quantity);
   }
 
   /** Huella estable del cuerpo de la reserva para detectar reutilización indebida de la clave. */
-  private holdRequestFingerprint(dto: {
-    seatIds?: string[];
-    offerId?: string;
-    quantity?: number;
-  }) {
+  private holdRequestFingerprint(dto: { seatIds?: string[]; offerId?: string; quantity?: number }) {
     const seatIds = dto.seatIds?.length ? [...new Set(dto.seatIds)].sort() : [];
     return JSON.stringify({
       seatIds,
@@ -1060,18 +1062,16 @@ export class InventoryService {
       offerId?: string;
       quantity?: number;
     },
-    idempotencyKey: string,
+    idempotencyKey: string
   ): Promise<HoldCreateResult | null> {
     const cached = await this.redis.getJson<StoredHoldIdempotency>(
-      holdIdempotencyKey(dto.eventId, idempotencyKey),
+      holdIdempotencyKey(dto.eventId, idempotencyKey)
     );
     if (!cached) return null;
 
     const fingerprint = this.holdRequestFingerprint(dto);
     if (cached.fingerprint !== fingerprint) {
-      throw new ConflictException(
-        'Idempotency-Key reused with a different hold request',
-      );
+      throw new ConflictException('Idempotency-Key reused with a different hold request');
     }
 
     const now = new Date();
@@ -1092,7 +1092,7 @@ export class InventoryService {
     dto: { eventId: string; seatIds?: string[]; offerId?: string; quantity?: number },
     idempotencyKey: string,
     result: HoldCreateResult,
-    ttlSeconds: number,
+    ttlSeconds: number
   ) {
     const payload: StoredHoldIdempotency = {
       fingerprint: this.holdRequestFingerprint(dto),
@@ -1102,7 +1102,7 @@ export class InventoryService {
     await this.redis.setJson(
       holdIdempotencyKey(dto.eventId, idempotencyKey),
       payload,
-      ttlSeconds + HOLD_META_TTL_MARGIN_SECONDS,
+      ttlSeconds + HOLD_META_TTL_MARGIN_SECONDS
     );
   }
 }

@@ -40,7 +40,9 @@
   @include type('md', $weight-medium);
   cursor: pointer;
   white-space: nowrap;
-  transition: color $duration-fast $ease-standard, background-color $duration-fast $ease-standard;
+  transition:
+    color $duration-fast $ease-standard,
+    background-color $duration-fast $ease-standard;
 
   &:hover:not(:disabled) {
     color: $c-text-primary;

@@ -1,8 +1,4 @@
-import {
-  SEAT_STATUS_COLORS,
-  resolveOfferForSection,
-  type OfferLike,
-} from '../seatmap-canvas';
+import { SEAT_STATUS_COLORS, resolveOfferForSection, type OfferLike } from '../seatmap-canvas';
 import type { ColorMode, ColorModeContext, SeatRenderStatus } from './types';
 import { lookupRecord } from './types';
 
@@ -38,7 +34,7 @@ function lerpStopsInto(
   stops: readonly RgbStop[],
   out: Float32Array,
   offset: number,
-  alpha = 1,
+  alpha = 1
 ): void {
   let a = stops[0];
   let b = stops[1] ?? stops[0];
@@ -62,7 +58,7 @@ export function priceHeatRgba(
   min: number,
   max: number,
   out: Float32Array,
-  offset: number,
+  offset: number
 ): void {
   if (!Number.isFinite(price) || max <= min) {
     parseCssColor(SEAT_STATUS_COLORS.available, out, offset);
@@ -102,7 +98,7 @@ export function parseCssColor(css: string, out: Float32Array, offset: number, al
     }
   }
   const m = /^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+))?\s*\)$/i.exec(
-    s,
+    s
   );
   if (m) {
     out[offset] = Number(m[1]) / 255;
@@ -121,9 +117,7 @@ export function statusColorRgba(status: SeatRenderStatus, out: Float32Array, off
   parseCssColor(SEAT_STATUS_COLORS[status] ?? SEAT_STATUS_COLORS.available, out, offset);
 }
 
-function toSelectedSet(
-  selected?: ColorModeContext['selectedIds'],
-): ReadonlySet<string> | null {
+function toSelectedSet(selected?: ColorModeContext['selectedIds']): ReadonlySet<string> | null {
   if (!selected) return null;
   if (selected instanceof Set) return selected;
   return new Set(selected);
@@ -146,7 +140,10 @@ export type ColorBakeInput = {
  * Bake RGBA colors for every seat into a packed Float32Array (N×4).
  * Hot path for setColorMode / setScene — avoids per-seat object colors.
  */
-export function bakeSeatColors(input: ColorBakeInput, out: Float32Array): { minPrice: number; maxPrice: number } {
+export function bakeSeatColors(
+  input: ColorBakeInput,
+  out: Float32Array
+): { minPrice: number; maxPrice: number } {
   const n = input.seatIds.length;
   const selected = toSelectedSet(input.context.selectedIds);
   let minPrice = input.context.priceRange?.min ?? Infinity;
@@ -226,7 +223,11 @@ function resolvePrice(input: ColorBakeInput, i: number): number | undefined {
   const offers = input.context.offers as OfferLike[] | undefined;
   if (!offers?.length) return undefined;
   const si = input.seatSectionIndex[i];
-  const offer = resolveOfferForSection(offers, input.sectionSlugs[si] ?? '', input.sectionNames[si]);
+  const offer = resolveOfferForSection(
+    offers,
+    input.sectionSlugs[si] ?? '',
+    input.sectionNames[si]
+  );
   if (!offer) return undefined;
   const v = typeof offer.basePrice === 'number' ? offer.basePrice : Number(offer.basePrice);
   return Number.isFinite(v) ? v : undefined;

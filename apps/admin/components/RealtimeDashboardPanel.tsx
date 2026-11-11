@@ -24,11 +24,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { KpiCard, Section } from '@boletera/ui';
 import { getEventHub, getRealtimeDashboard, type RealtimeDashboard } from '@/lib/platform-api';
-import {
-  LoadingBlock,
-  Notice,
-  ResourceView,
-} from '@/app/(platform)/orders/_ui/States';
+import { LoadingBlock, Notice, ResourceView } from '@/app/(platform)/orders/_ui/States';
 import { useAdminSession, useResource } from '@/app/(platform)/orders/_ui/useResource';
 import {
   formatMoney,
@@ -50,7 +46,14 @@ const API_BASE = () => process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhos
 type TicketChange = { id: string; seatId: string | null; offerId: string; status: string };
 
 type StreamPayload =
-  | { type: 'delta'; eventId: string; since: string; until: string; truncated: boolean; changes: TicketChange[] }
+  | {
+      type: 'delta';
+      eventId: string;
+      since: string;
+      until: string;
+      truncated: boolean;
+      changes: TicketChange[];
+    }
   | { type: 'heartbeat'; eventId: string; at: string };
 
 type Availability = {
@@ -118,9 +121,9 @@ function OrgMetrics({ eventId }: { eventId?: string }) {
         setFetchedAt(new Date());
         return data;
       },
-      [eventId],
+      [eventId]
     ),
-    { deps: [eventId, tick] },
+    { deps: [eventId, tick] }
   );
 
   return (
@@ -208,7 +211,9 @@ function LiveInventory({ eventId }: { eventId: string }) {
     if (now - lastFetch.current < AVAILABILITY_MIN_REFETCH_MS) return;
     lastFetch.current = now;
     try {
-      const res = await fetch(`${API_BASE()}/inventory/${encodeURIComponent(eventId)}/availability`);
+      const res = await fetch(
+        `${API_BASE()}/inventory/${encodeURIComponent(eventId)}/availability`
+      );
       if (!res.ok) throw new Error(String(res.status));
       setSnapshot((await res.json()) as Availability);
       setError(null);
@@ -235,7 +240,8 @@ function LiveInventory({ eventId }: { eventId: string }) {
       .then((hub) => {
         if (cancelled) return;
         const map: Record<string, OfferMeta> = {};
-        for (const o of hub.event.offers ?? []) map[o.id] = { id: o.id, name: o.name, zone: o.zone };
+        for (const o of hub.event.offers ?? [])
+          map[o.id] = { id: o.id, name: o.name, zone: o.zone };
         setOffers(map);
       })
       .catch(() => {
@@ -308,7 +314,9 @@ function LiveInventory({ eventId }: { eventId: string }) {
     const out: { tone: 'warn' | 'danger' | 'info'; title: string; body: string }[] = [];
     if (!snapshot) return out;
     const soldOut = zones.filter((z) => z.available === 0 && z.total > 0);
-    const almost = zones.filter((z) => z.available > 0 && z.total > 0 && z.available / z.total <= 0.1);
+    const almost = zones.filter(
+      (z) => z.available > 0 && z.total > 0 && z.available / z.total <= 0.1
+    );
     if (soldOut.length) {
       out.push({
         tone: 'danger',
@@ -397,7 +405,9 @@ function LiveInventory({ eventId }: { eventId: string }) {
 
       <p className={styles.scopeNote}>
         {connected ? (
-          <>Inventario <strong>en vivo</strong> (deltas por SSE)</>
+          <>
+            Inventario <strong>en vivo</strong> (deltas por SSE)
+          </>
         ) : (
           <>
             Inventario <strong>sin conexión en vivo</strong> — actualizando cada 20 s

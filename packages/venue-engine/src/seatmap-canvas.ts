@@ -43,7 +43,7 @@ export function sightlineHeatColor(score: number): string {
 
 function lerpStops(
   t: number,
-  stops: Array<{ t: number; r: number; g: number; b: number }>,
+  stops: Array<{ t: number; r: number; g: number; b: number }>
 ): string {
   let a = stops[0];
   let b = stops[1] ?? stops[0];
@@ -66,7 +66,7 @@ export type OfferLike = { id: string; zone: string; name?: string; basePrice: st
 export function resolveOfferForSection(
   offers: OfferLike[],
   sectionSlug: string,
-  sectionName?: string,
+  sectionName?: string
 ): OfferLike | undefined {
   if (!offers.length) return undefined;
   const byZone = new Map(offers.map((o) => [o.zone.toLowerCase(), o]));

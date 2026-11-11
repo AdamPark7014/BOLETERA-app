@@ -9,14 +9,14 @@ import { pickTenantHost } from '../tenant/tenant-host';
 export class DiscoveryController {
   constructor(
     private discovery: DiscoveryService,
-    private tenant: TenantService,
+    private tenant: TenantService
   ) {}
 
   @Get('suggest')
   async suggest(
     @Headers() headers: Record<string, string>,
     @Query('q') q?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org || !q?.trim()) return [];
@@ -38,7 +38,7 @@ export class DiscoveryController {
   async venues(
     @Headers() headers: Record<string, string>,
     @Query('limit') limit?: string,
-    @Query('city') city?: string,
+    @Query('city') city?: string
   ) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return [];
@@ -50,10 +50,7 @@ export class DiscoveryController {
   }
 
   @Get('venues/:slug')
-  async venueBySlug(
-    @Headers() headers: Record<string, string>,
-    @Param('slug') slug: string,
-  ) {
+  async venueBySlug(@Headers() headers: Record<string, string>, @Param('slug') slug: string) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return null;
     return this.discovery.getVenueBySlug(slug, org.id);
@@ -70,7 +67,7 @@ export class DiscoveryController {
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('limit') limit?: string,
-    @Query('cursor') cursor?: string,
+    @Query('cursor') cursor?: string
   ) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return [];

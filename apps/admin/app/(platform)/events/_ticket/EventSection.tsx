@@ -35,7 +35,11 @@ export function EventSection({ event }: { event: unknown }) {
     effect: string;
     valueStyle?: 'text' | 'tabular' | 'mono';
   }[] = [
-    { name: 'Título', value: readString(row.title) ?? '—', effect: 'Nombre en la ficha y en la venta.' },
+    {
+      name: 'Título',
+      value: readString(row.title) ?? '—',
+      effect: 'Nombre en la ficha y en la venta.',
+    },
     {
       name: 'Descripción',
       value: readString(row.description) ?? '—',
@@ -55,10 +59,26 @@ export function EventSection({ event }: { event: unknown }) {
     { name: 'Inicio', value: formatWhen(row.startsAt, zone), effect: 'Hora de la función.' },
     { name: 'Fin', value: formatWhen(row.endsAt, zone), effect: 'Cierre de la función.' },
     { name: 'Zona horaria', value: zone, effect: 'Cómo se leen las horas.', valueStyle: 'mono' },
-    { name: 'Categoría', value: categoryLabel(row.category), effect: 'Clasificación de la función.' },
-    { name: 'Estado', value: statusLabel(row.status), effect: 'Borrador, programado, en vivo, terminado, cancelado o reprogramado.' },
-    { name: 'Publicado', value: formatWhen(row.publishedAt, zone), effect: 'Instante en que quedó publicado.' },
-    { name: 'Cancelado', value: formatWhen(row.cancelledAt, zone), effect: 'Instante de la cancelación.' },
+    {
+      name: 'Categoría',
+      value: categoryLabel(row.category),
+      effect: 'Clasificación de la función.',
+    },
+    {
+      name: 'Estado',
+      value: statusLabel(row.status),
+      effect: 'Borrador, programado, en vivo, terminado, cancelado o reprogramado.',
+    },
+    {
+      name: 'Publicado',
+      value: formatWhen(row.publishedAt, zone),
+      effect: 'Instante en que quedó publicado.',
+    },
+    {
+      name: 'Cancelado',
+      value: formatWhen(row.cancelledAt, zone),
+      effect: 'Instante de la cancelación.',
+    },
     {
       name: 'Motivo de cancelación',
       value: readString(row.cancellationReason) ?? '—',
@@ -79,13 +99,19 @@ export function EventSection({ event }: { event: unknown }) {
     {
       name: 'Precio mínimo',
       value: minPrice == null ? '—' : formatTicketAmount(minPrice),
-      effect: offers.length > 0 ? 'El menor de las ofertas guardadas.' : 'No hay ofertas. El número es el del evento.',
+      effect:
+        offers.length > 0
+          ? 'El menor de las ofertas guardadas.'
+          : 'No hay ofertas. El número es el del evento.',
       valueStyle: 'tabular',
     },
     {
       name: 'Precio máximo',
       value: maxPrice == null ? '—' : formatTicketAmount(maxPrice),
-      effect: offers.length > 0 ? 'El mayor de las ofertas guardadas.' : 'No hay ofertas. El número es el del evento.',
+      effect:
+        offers.length > 0
+          ? 'El mayor de las ofertas guardadas.'
+          : 'No hay ofertas. El número es el del evento.',
       valueStyle: 'tabular',
     },
     { name: 'Moneda', value: readString(row.currency) ?? 'MXN', effect: 'Moneda del evento.' },
@@ -115,7 +141,12 @@ export function EventSection({ event }: { event: unknown }) {
       <div className={styles.stack}>
         {cards.map((card) => (
           <Param key={card.name} name={card.name}>
-            <ParameterCard name={card.name} value={card.value} effect={card.effect} valueStyle={card.valueStyle} />
+            <ParameterCard
+              name={card.name}
+              value={card.value}
+              effect={card.effect}
+              valueStyle={card.valueStyle}
+            />
           </Param>
         ))}
         <Param name="Políticas">
@@ -126,8 +157,8 @@ export function EventSection({ event }: { event: unknown }) {
             closedNote={`Reventa ${yesNo(row.allowResale)} · Transferencia ${yesNo(row.transferAllowed)} · Reembolso ${yesNo(row.refundable)} · No transferible ${yesNo(row.nonTransferable)} · Cupo apartable ${holdable == null ? 'Sin tope' : formatCount(holdable)}`}
             advanced={
               <p className={styles.quiet}>
-                Género {readString(row.genre) ?? '—'} · Clasificación {readString(row.rating) ?? '—'} · Tipo{' '}
-                {readString(meta.eventKind) ?? '—'}
+                Género {readString(row.genre) ?? '—'} · Clasificación{' '}
+                {readString(row.rating) ?? '—'} · Tipo {readString(meta.eventKind) ?? '—'}
               </p>
             }
           />

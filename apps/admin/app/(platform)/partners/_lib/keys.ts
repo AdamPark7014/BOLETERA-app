@@ -7,13 +7,7 @@ const DAY_MS = 24 * HOUR_MS;
 const WEEK_MS = 7 * DAY_MS;
 
 /** Estados operativos derivados; no existen en el backend. */
-export type KeyHealth =
-  | 'active'
-  | 'low'
-  | 'idle'
-  | 'expiring'
-  | 'expired'
-  | 'revoked';
+export type KeyHealth = 'active' | 'low' | 'idle' | 'expiring' | 'expired' | 'revoked';
 
 export type KeyHealthMeta = {
   id: KeyHealth;
@@ -110,11 +104,9 @@ export function buildKeyAlerts(keys: readonly ApiKey[], now: number): KeyAlert[]
   const alerts: KeyAlert[] = [];
   const expired = keys.filter((key) => classifyKey(key, now) === 'expired');
   const expiring = keys.filter((key) => classifyKey(key, now) === 'expiring');
-  const idleActive = keys.filter(
-    (key) => key.active && classifyKey(key, now) === 'idle',
-  );
+  const idleActive = keys.filter((key) => key.active && classifyKey(key, now) === 'idle');
   const writeHeavy = keys.filter(
-    (key) => key.active && countWriteScopes(key.scopes) > 0 && !key.lastUsedAt,
+    (key) => key.active && countWriteScopes(key.scopes) > 0 && !key.lastUsedAt
   );
 
   if (expired.length > 0) {

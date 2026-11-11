@@ -37,7 +37,7 @@ function PuertaBody() {
       to: range.to,
       organizationId: organizationId ?? undefined,
     }),
-    [organizationId, range.from, range.to],
+    [organizationId, range.from, range.to]
   );
   const accessQ = useAccessMetrics(metricsParams);
   const rows = accessQ.data?.trafficByAccessPoint.rows ?? [];
@@ -59,12 +59,7 @@ function PuertaBody() {
       <header className={frame.sectionHead}>
         <h1 className={frame.sectionTitle}>Puerta</h1>
         <p className={frame.quiet}>Nombres que devolvió el acceso en este periodo.</p>
-        <Segment
-          label="Periodo"
-          value={rangeKey}
-          options={RANGE_OPTIONS}
-          onChange={setRangeKey}
-        />
+        <Segment label="Periodo" value={rangeKey} options={RANGE_OPTIONS} onChange={setRangeKey} />
       </header>
 
       {accessQ.error ? (

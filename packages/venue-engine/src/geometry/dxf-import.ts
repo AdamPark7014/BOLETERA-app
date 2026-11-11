@@ -6,7 +6,12 @@ import {
   type CadReviewPrimitive,
 } from './cad-import-apply';
 import { decodeDxfLayer, resolveLevelToken } from './cad-level-tags';
-import { CadDiagnostics, CadImportError, buildCadImportReport, type CadImportReport } from './cad-diagnostics';
+import {
+  CadDiagnostics,
+  CadImportError,
+  buildCadImportReport,
+  type CadImportReport,
+} from './cad-diagnostics';
 
 export type DxfImportRole =
   | 'section'
@@ -94,7 +99,7 @@ function sampleArc(
   r: number,
   startDeg: number,
   endDeg: number,
-  steps = 16,
+  steps = 16
 ): [number, number][] {
   let a0 = startDeg;
   let a1 = endDeg;
@@ -245,7 +250,7 @@ export function parseDxfEntities(text: string, diag?: CadDiagnostics): RawEntity
           entity.cy,
           entity.r,
           entity.startAngle,
-          entity.endAngle,
+          entity.endAngle
         );
       }
 
@@ -344,7 +349,7 @@ export function parseDxfEntities(text: string, diag?: CadDiagnostics): RawEntity
 function fitPrimitives(
   primitives: DxfImportedPrimitive[],
   targetWidth = 900,
-  pad = 48,
+  pad = 48
 ): DxfImportedPrimitive[] {
   const all = primitives.flatMap((p) => p.points);
   if (!all.length) return primitives;
@@ -362,7 +367,7 @@ function fitPrimitives(
         [Math.round((x - minX) * scale + pad), Math.round((y - minY) * scale + pad)] as [
           number,
           number,
-        ],
+        ]
     ),
   }));
 }
@@ -374,10 +379,7 @@ function fitPrimitives(
  * Level tags: AISLE__L_*, EXIT__L_*, STAIRS__F_*__T_* (see cad-level-tags).
  * CAD Y-up is flipped to map Y-down (SVG-like).
  */
-export function parseDxfPrimitives(
-  dxfText: string,
-  diag?: CadDiagnostics,
-): DxfImportedPrimitive[] {
+export function parseDxfPrimitives(dxfText: string, diag?: CadDiagnostics): DxfImportedPrimitive[] {
   const entities = parseDxfEntities(dxfText, diag);
   const levels = parseDxfLevelsFromEntities(entities);
   const primitives: DxfImportedPrimitive[] = [];
@@ -404,8 +406,10 @@ export function parseDxfPrimitives(
         e.closed ||
         e.type === 'CIRCLE' ||
         (points.length >= 4 &&
-          Math.hypot(points[0][0] - points[points.length - 1][0], points[0][1] - points[points.length - 1][1]) <
-            1e-6);
+          Math.hypot(
+            points[0][0] - points[points.length - 1][0],
+            points[0][1] - points[points.length - 1][1]
+          ) < 1e-6);
       if (!closed && points.length >= 2) role = 'aisle';
     }
 
@@ -499,7 +503,7 @@ export type DxfToMapOptions = {
 export function importDxfToSeatMap(
   dxfText: string,
   base?: SeatMapData | null,
-  opts?: DxfToMapOptions,
+  opts?: DxfToMapOptions
 ): DxfImportResult {
   const diag = new CadDiagnostics();
   const primitives = parseDxfPrimitives(dxfText, diag);
@@ -535,6 +539,6 @@ export function previewDxfCadImport(dxfText: string): CadReviewPrimitive[] {
       levelId: p.levelId,
       fromLevelId: p.fromLevelId,
       toLevelId: p.toLevelId,
-    }),
+    })
   );
 }

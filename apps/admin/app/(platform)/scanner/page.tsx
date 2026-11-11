@@ -231,7 +231,7 @@ function ScannerBody() {
     setQueued(remaining.length);
     setSyncReport(
       `Sincronizados ${applied} · ${conflicts} en conflicto · ${rejected} rechazados` +
-        (remaining.length ? ` · ${remaining.length} siguen en cola` : ''),
+        (remaining.length ? ` · ${remaining.length} siguen en cola` : '')
     );
   }, []);
 
@@ -285,7 +285,13 @@ function ScannerBody() {
       try {
         const res = await adminApi<{
           success: boolean;
-          ticket?: { code: string; eventTitle: string; section?: string; row?: string; seatNumber?: string };
+          ticket?: {
+            code: string;
+            eventTitle: string;
+            section?: string;
+            row?: string;
+            seatNumber?: string;
+          };
         }>('/access/scan', token, {
           method: 'POST',
           body: JSON.stringify({
@@ -328,7 +334,7 @@ function ScannerBody() {
         inputRef.current?.focus();
       }
     },
-    [zoneId],
+    [zoneId]
   );
 
   /** Texto plano del veredicto, para que el lector de pantalla lo anuncie. */
@@ -430,10 +436,20 @@ function ScannerBody() {
           </Param>
         ) : null}
         {verdict?.kind === 'granted' && verdict.seat ? (
-          <ParameterCard name="Butaca" value={verdict.seat} valueStyle="mono" effect="Sección, fila y número." />
+          <ParameterCard
+            name="Butaca"
+            value={verdict.seat}
+            valueStyle="mono"
+            effect="Sección, fila y número."
+          />
         ) : null}
         {verdict?.kind === 'granted' && verdict.code ? (
-          <ParameterCard name="Folio" value={verdict.code} valueStyle="mono" effect="Código del boleto." />
+          <ParameterCard
+            name="Folio"
+            value={verdict.code}
+            valueStyle="mono"
+            effect="Código del boleto."
+          />
         ) : null}
         {verdict?.kind === 'queued' ? (
           <Param name="Resultado">
@@ -451,7 +467,11 @@ function ScannerBody() {
         ) : null}
         {rejection?.reason ? (
           <Param name="Motivo del rechazo">
-            <ParameterCard name="Motivo del rechazo" value={rejection.reason} effect="Lo que devolvió el acceso." />
+            <ParameterCard
+              name="Motivo del rechazo"
+              value={rejection.reason}
+              effect="Lo que devolvió el acceso."
+            />
           </Param>
         ) : null}
         {verdict?.kind === 'error' ? (
@@ -493,9 +513,7 @@ function ScannerBody() {
   );
 }
 
-function rejectionCopy(
-  verdict: Verdict | null,
-): { effect: string; reason: string } | null {
+function rejectionCopy(verdict: Verdict | null): { effect: string; reason: string } | null {
   if (!verdict) return null;
   if (verdict.kind === 'duplicate') {
     const when = formatMoment(verdict.firstScanAt);

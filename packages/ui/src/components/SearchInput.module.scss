@@ -72,7 +72,9 @@
   background: $c-surface-sunken;
   color: $c-text-tertiary;
   cursor: pointer;
-  transition: color $duration-fast $ease-standard, background-color $duration-fast $ease-standard;
+  transition:
+    color $duration-fast $ease-standard,
+    background-color $duration-fast $ease-standard;
 
   svg {
     width: 10px;

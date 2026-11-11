@@ -6,7 +6,7 @@ import type { SeatMapData, SeatMapSection, SeatMapVenueMeta } from '@boletera/sh
  */
 export function normalizeAiSuggestResult(
   result: SeatMapData | SeatMapSection[],
-  venueFallback?: SeatMapVenueMeta,
+  venueFallback?: SeatMapVenueMeta
 ): SeatMapData {
   if (Array.isArray(result)) {
     return {

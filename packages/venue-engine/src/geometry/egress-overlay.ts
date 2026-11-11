@@ -1,9 +1,5 @@
 import type { SeatMapData } from '@boletera/shared';
-import {
-  analyzeCirculation,
-  type CirculationAnalysis,
-  type CirculationGraph,
-} from './circulation';
+import { analyzeCirculation, type CirculationAnalysis, type CirculationGraph } from './circulation';
 import { resolveGeometry } from './resolve';
 import {
   getPlanProjectionFrame,
@@ -91,7 +87,7 @@ function nodeMap(graph: CirculationGraph) {
 
 function matchesLevelFilter(
   entityLevelId: string | undefined,
-  filterLevelId: string | undefined,
+  filterLevelId: string | undefined
 ): boolean {
   if (!filterLevelId) return true;
   if (!entityLevelId) return true;
@@ -101,7 +97,7 @@ function matchesLevelFilter(
 function endpointTouchesLevel(
   aLevel: string | undefined,
   bLevel: string | undefined,
-  filterLevelId: string | undefined,
+  filterLevelId: string | undefined
 ): boolean {
   if (!filterLevelId) return true;
   return matchesLevelFilter(aLevel, filterLevelId) || matchesLevelFilter(bLevel, filterLevelId);
@@ -111,10 +107,10 @@ function levelElevY(
   scene: ResolvedVenueScene,
   frame: PlanProjectionFrame,
   levelId: string | undefined,
-  base = 0.1,
+  base = 0.1
 ): number {
   if (!levelId) return base;
-  const levels = scene.levels?.length ? scene.levels : scene.map.venue?.levels ?? [];
+  const levels = scene.levels?.length ? scene.levels : (scene.map.venue?.levels ?? []);
   const lv = levels.find((l) => l.id === levelId);
   if (!lv || !Number.isFinite(lv.elevation)) return base;
   return lv.elevation * frame.elevScale + base;
@@ -123,7 +119,7 @@ function levelElevY(
 /** Resolve polyline points for a section's shortest egress path. */
 export function pathPointsForSection(
   analysis: CirculationAnalysis,
-  sectionId: string,
+  sectionId: string
 ): {
   points: [number, number][];
   pointLevels: (string | undefined)[];
@@ -154,7 +150,7 @@ export function pathPointsForSection(
 function bottleneckPolylines(
   analysis: CirculationAnalysis,
   limit = 3,
-  filterLevelId?: string,
+  filterLevelId?: string
 ): EgressBottleneckOverlay[] {
   const nodes = nodeMap(analysis.graph);
   const edgeById = new Map(analysis.graph.edges.map((e) => [e.id, e]));
@@ -186,7 +182,7 @@ function bottleneckPolylines(
  */
 export function buildEgressPathOverlays(
   input: SeatMapData | ResolvedVenueScene,
-  opts?: EgressOverlayOptions,
+  opts?: EgressOverlayOptions
 ): EgressOverlayScene {
   const scene = isResolvedScene(input) ? input : resolveGeometry(input);
   const analysis = opts?.analysis ?? analyzeCirculation(scene);
@@ -225,7 +221,7 @@ export function buildEgressPathOverlays(
  */
 export function projectEgressOverlaysTo3D(
   input: SeatMapData | ResolvedVenueScene,
-  opts?: ProjectTo3DOptions & EgressOverlayOptions,
+  opts?: ProjectTo3DOptions & EgressOverlayOptions
 ): EgressOverlayScene3D {
   const scene = isResolvedScene(input) ? input : resolveGeometry(input);
   const overlay = buildEgressPathOverlays(scene, opts);
@@ -256,9 +252,7 @@ export function projectEgressOverlaysTo3D(
       pathLength: p.pathLength,
       clearanceMinutes: p.clearanceMinutes,
       reachable: p.reachable,
-      points: p.points.map(([x, y], i) =>
-        toWorld(x, y, p.pointLevels?.[i] ?? p.levelId, 0.1),
-      ),
+      points: p.points.map(([x, y], i) => toWorld(x, y, p.pointLevels?.[i] ?? p.levelId, 0.1)),
     })),
     bottlenecks: overlay.bottlenecks.map((b) => ({
       edgeId: b.edgeId,

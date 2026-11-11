@@ -10,6 +10,7 @@
 ## 📱 FRONTEND STACK
 
 ### **Admin Dashboard** (apps/admin)
+
 - **Framework:** Next.js 14 (App Router)
 - **UI Library:** React 18
 - **Styling:** Tailwind CSS 3.4
@@ -19,6 +20,7 @@
 - **Icons:** Lucide React
 
 ### **Web App** (apps/web)
+
 - **Framework:** Next.js 14 (App Router)
 - **UI Library:** React 18
 - **Styling:** Tailwind CSS 3.4
@@ -28,6 +30,7 @@
 - **Payment:** Stripe Elements (integration)
 
 ### **Shared Libraries** (packages/ui)
+
 - **API Client:** `api-client.ts` - Centralized HTTP client with auth
 - **React Hooks:** `hooks.ts` - 30+ custom hooks for API integration
 - **Components:** Reusable UI components (future)
@@ -117,7 +120,7 @@ import { useCreateEvent } from '@/packages/ui/hooks';
 
 export function EventForm() {
   const createEvent = useCreateEvent();
-  
+
   const handleSubmit = async (data: EventData) => {
     try {
       const { data: event } = await createEvent.mutateAsync({
@@ -128,7 +131,7 @@ export function EventForm() {
         capacity: 5000,
         basePrice: 100
       });
-      
+
       console.log('Event created:', event.id);
       // Redirect or show success
     } catch (error) {
@@ -143,6 +146,7 @@ export function EventForm() {
 ### **API Hooks Available (30+)**
 
 **Events**
+
 - `useCreateEvent()` - POST /events/manage/create
 - `useGetEvent(eventId)` - GET /events/manage/{id}
 - `useListEvents(filters)` - GET /events/manage/list
@@ -151,6 +155,7 @@ export function EventForm() {
 - `useSetPricingRules(eventId)` - POST /events/manage/{id}/pricing
 
 **Campaigns**
+
 - `useCreateCampaign()` - POST /campaigns/create
 - `useListCampaigns(eventId)` - GET /campaigns/list
 - `usePublishCampaign(id)` - POST /campaigns/{id}/publish
@@ -158,6 +163,7 @@ export function EventForm() {
 - `useGetCampaignAnalytics(campaignId)` - GET /campaigns/{id}/analytics
 
 **Reporting**
+
 - `useGetRealtimeDashboard(orgId)` - GET /reporting/dashboard (auto-refetch every 10s)
 - `useGetSettlementReport(orgId, period)` - GET /reporting/settlement
 - `useGetChannelPerformance(orgId)` - GET /reporting/channels
@@ -166,11 +172,13 @@ export function EventForm() {
 - `useGetRevenueForecast(orgId, days)` - GET /reporting/forecast
 
 **Search & Discovery**
+
 - `useSearchEvents(query, filters)` - GET /search/events (AI ranking)
 - `useGetTrendingEvents()` - GET /search/trending
 - `useGetSmartRecommendations()` - GET /search/recommendations
 
 **Seat Selection (canonical `/3d/events/...`)**
+
 - `useGetOccupancyHeatmap(_layoutId, eventId)` - GET /3d/events/{eventId}/heatmap
 - `useGetInteractive3D(eventId)` - GET /3d/events/{eventId}/interactive
 - `useGet3DVisualization(_layoutId, eventId)` - alias → interactive
@@ -178,6 +186,7 @@ export function EventForm() {
 - `useHoldSeats(layoutId, eventId)` - POST /layouts/{id}/seats/hold (15-min hold)
 
 **Auth**
+
 - `useLogin()` - POST /auth/login
 - `useLogout()` - POST /auth/logout
 - `useGetCurrentUser()` - GET /auth/me
@@ -189,15 +198,18 @@ export function EventForm() {
 ### **Admin Components**
 
 #### EventList Component (700 LOC)
+
 **Location:** `apps/admin/components/EventList.tsx`
 
 **Features:**
+
 - List all events with filters
 - Inline event creation form
 - Quick publish/unpublish
 - Links to event details, pricing, campaigns
 
 **Props:**
+
 ```typescript
 interface EventListProps {
   organizationId?: string;
@@ -205,6 +217,7 @@ interface EventListProps {
 ```
 
 **Example Usage:**
+
 ```jsx
 <EventList />
 ```
@@ -212,9 +225,11 @@ interface EventListProps {
 ---
 
 #### RealtimeDashboard Component (450 LOC)
+
 **Location:** `apps/admin/components/RealtimeDashboard.tsx`
 
 **Features:**
+
 - 4 KPI cards: revenue, orders, avg value, occupancy
 - Channel performance bar chart
 - 30-day revenue forecast line chart
@@ -223,6 +238,7 @@ interface EventListProps {
 - Auto-refresh every 10 seconds
 
 **Props:**
+
 ```typescript
 interface DashboardProps {
   organizationId: string;
@@ -231,6 +247,7 @@ interface DashboardProps {
 ```
 
 **Example Usage:**
+
 ```jsx
 <RealtimeDashboard organizationId="org_acme" eventId="evt_taylor" />
 ```
@@ -238,9 +255,11 @@ interface DashboardProps {
 ---
 
 #### CampaignManagement Component (500 LOC)
+
 **Location:** `apps/admin/components/CampaignManagement.tsx`
 
 **Features:**
+
 - List campaigns with status badges
 - Create campaign with discount rules
 - Generate presale codes (batch)
@@ -249,6 +268,7 @@ interface DashboardProps {
 - ROI calculation
 
 **Props:**
+
 ```typescript
 interface CampaignManagementProps {
   eventId: string;
@@ -257,6 +277,7 @@ interface CampaignManagementProps {
 ```
 
 **Example Usage:**
+
 ```jsx
 <CampaignManagement eventId="evt_1" organizationId="org_acme" />
 ```
@@ -266,9 +287,11 @@ interface CampaignManagementProps {
 ### **Web Components**
 
 #### EventDiscovery Component (600 LOC)
+
 **Location:** `apps/web/components/EventDiscovery.tsx`
 
 **Features:**
+
 - Full-text search with AI ranking
 - 4-factor ranking breakdown (content, personalization, demand, business)
 - Trending events view
@@ -278,11 +301,13 @@ interface CampaignManagementProps {
 - Mobile responsive grid layout
 
 **Props:**
+
 ```typescript
 // No props required - uses hooks internally
 ```
 
 **Example Usage:**
+
 ```jsx
 <EventDiscovery />
 ```
@@ -290,9 +315,11 @@ interface CampaignManagementProps {
 ---
 
 #### SeatSelection Component (750 LOC)
+
 **Location:** `apps/web/components/SeatSelection.tsx`
 
 **Features:**
+
 - 2D seating chart with sections
 - 3D visualization placeholder (Three.js ready)
 - Dynamic seat selection (max by quantity)
@@ -303,6 +330,7 @@ interface CampaignManagementProps {
 - Responsive layout
 
 **Props:**
+
 ```typescript
 interface SeatSelectionProps {
   layoutId: string;
@@ -312,20 +340,19 @@ interface SeatSelectionProps {
 ```
 
 **Example Usage:**
+
 ```jsx
-<SeatSelection 
-  layoutId="layout_msg" 
-  eventId="evt_taylor" 
-  basePrice={150} 
-/>
+<SeatSelection layoutId="layout_msg" eventId="evt_taylor" basePrice={150} />
 ```
 
 ---
 
 #### CheckoutFlow Component (600 LOC)
+
 **Location:** `apps/web/components/CheckoutFlow.tsx`
 
 **Features:**
+
 - Presale code validation with discount
 - Multi-method payment (card, Banorte, cash)
 - Secure card form with validation
@@ -335,6 +362,7 @@ interface SeatSelectionProps {
 - Money-back guarantee messaging
 
 **Props:**
+
 ```typescript
 interface CheckoutProps {
   orderTotal: number;
@@ -345,9 +373,10 @@ interface CheckoutProps {
 ```
 
 **Example Usage:**
+
 ```jsx
 <CheckoutFlow
-  orderTotal={450.50}
+  orderTotal={450.5}
   selectedSeats={['A1', 'A2', 'A3']}
   eventName="Taylor Swift - Eras Tour"
   eventDate="June 15, 2026"
@@ -517,14 +546,14 @@ const { data } = useMyNewHook();
 
 ## 📊 PERFORMANCE TARGETS
 
-| Feature | Target | Implementation |
-|---------|--------|-----------------|
-| Page load | < 2s | Next.js static + CDN |
-| Search results | < 300ms | API cached with Redis |
-| Checkout | < 45s | Optimized for POS terminals |
+| Feature          | Target  | Implementation                     |
+| ---------------- | ------- | ---------------------------------- |
+| Page load        | < 2s    | Next.js static + CDN               |
+| Search results   | < 300ms | API cached with Redis              |
+| Checkout         | < 45s   | Optimized for POS terminals        |
 | Dashboard update | < 500ms | Real-time with WebSockets (future) |
-| Seat selection | < 100ms | Client-side filtering |
-| 3D render | < 60fps | Three.js with GPU acceleration |
+| Seat selection   | < 100ms | Client-side filtering              |
+| 3D render        | < 60fps | Three.js with GPU acceleration     |
 
 ---
 

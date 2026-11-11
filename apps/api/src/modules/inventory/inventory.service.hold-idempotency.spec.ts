@@ -71,9 +71,9 @@ describe('InventoryService hold idempotency', () => {
                         !!h &&
                         h.eventId === where.eventId &&
                         h.status === where.status &&
-                        h.expiresAt > now,
+                        h.expiresAt > now
                     );
-                },
+                }
               ),
             },
           },
@@ -179,7 +179,7 @@ describe('InventoryService hold idempotency', () => {
         sessionId: 'sess-1',
         skipSessionLimit: true,
         idempotencyKey: 'key-clash',
-      }),
+      })
     ).rejects.toBeInstanceOf(ConflictException);
 
     expect(coreCalls).toBe(1);
@@ -195,24 +195,26 @@ describe('InventoryService hold idempotency', () => {
       sawFirstCore = r;
     });
 
-    createHoldCore.mockImplementation(async (dto: HoldDto, idempotencyKey?: string): Promise<HoldResult> => {
-      coreCalls += 1;
-      const n = coreCalls;
-      if (n === 1) sawFirstCore();
-      await coreGate;
-      const hold: HoldRow = {
-        id: `hold-concurrent-${n}`,
-        eventId: dto.eventId,
-        status: HoldStatus.ACTIVE,
-        expiresAt: new Date(Date.now() + 900_000),
-      };
-      holdRows.set(hold.id, hold);
-      const result: HoldResult = { holds: [hold], expiresAt: hold.expiresAt };
-      if (idempotencyKey) {
-        await priv().persistIdempotentHold(dto, idempotencyKey, result, 900);
+    createHoldCore.mockImplementation(
+      async (dto: HoldDto, idempotencyKey?: string): Promise<HoldResult> => {
+        coreCalls += 1;
+        const n = coreCalls;
+        if (n === 1) sawFirstCore();
+        await coreGate;
+        const hold: HoldRow = {
+          id: `hold-concurrent-${n}`,
+          eventId: dto.eventId,
+          status: HoldStatus.ACTIVE,
+          expiresAt: new Date(Date.now() + 900_000),
+        };
+        holdRows.set(hold.id, hold);
+        const result: HoldResult = { holds: [hold], expiresAt: hold.expiresAt };
+        if (idempotencyKey) {
+          await priv().persistIdempotentHold(dto, idempotencyKey, result, 900);
+        }
+        return result;
       }
-      return result;
-    });
+    );
 
     const dto = {
       eventId: 'evt-1',

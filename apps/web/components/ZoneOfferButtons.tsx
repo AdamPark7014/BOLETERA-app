@@ -8,7 +8,13 @@ export function ZoneOfferButtons({
   currency,
   activeZone,
 }: {
-  offers: { id: string; zone: string; name?: string; basePrice: string; remainingQuantity?: number }[];
+  offers: {
+    id: string;
+    zone: string;
+    name?: string;
+    basePrice: string;
+    remainingQuantity?: number;
+  }[];
   currency: string;
   activeZone?: string;
 }) {

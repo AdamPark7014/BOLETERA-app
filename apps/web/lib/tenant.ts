@@ -41,9 +41,7 @@ export const fetchTenantCurrent = cache(async (): Promise<TenantCurrent> => {
 });
 
 /** CSS custom properties from TenantTheme (primary → accent, secondary → hover). */
-export function tenantThemeStyle(
-  theme: TenantThemeSnapshot | null | undefined,
-): CSSProperties {
+export function tenantThemeStyle(theme: TenantThemeSnapshot | null | undefined): CSSProperties {
   const style: Record<string, string> = {};
   const primary = theme?.primaryColor?.trim();
   const secondary = theme?.secondaryColor?.trim();

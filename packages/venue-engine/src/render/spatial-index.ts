@@ -29,12 +29,7 @@ export class SpatialIndex {
    * @param bounds - World AABB covering all seats (used to size the grid)
    * @param cellSize - World units per cell
    */
-  constructor(
-    xs: Float32Array,
-    ys: Float32Array,
-    bounds: WorldRect,
-    cellSize: number,
-  ) {
+  constructor(xs: Float32Array, ys: Float32Array, bounds: WorldRect, cellSize: number) {
     this.xs = xs;
     this.ys = ys;
     this.count = xs.length;

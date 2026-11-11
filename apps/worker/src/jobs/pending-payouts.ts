@@ -32,7 +32,7 @@ export async function reportPendingPayouts(deps: PendingPayoutsDeps): Promise<nu
 
   deps.logger.info(
     `Payouts pending (manual settlement required): ${pending.length}` +
-      (deps.autoPayout ? ' — WORKER_AUTO_PAYOUT ignored until bank rail exists' : ''),
+      (deps.autoPayout ? ' — WORKER_AUTO_PAYOUT ignored until bank rail exists' : '')
   );
   return pending.length;
 }

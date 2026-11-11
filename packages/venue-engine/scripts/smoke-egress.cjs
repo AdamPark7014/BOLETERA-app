@@ -43,7 +43,7 @@ assert(analysis.egress, 'egress present');
 assert(analysis.egress.sections.length > 0, 'section egress');
 assert(
   analysis.egress.sections.some((s) => s.pathLength != null && s.pathLength > 0),
-  'some paths have length',
+  'some paths have length'
 );
 assert(analysis.egress.maxPathLength != null, 'max path');
 assert(analysis.egress.avgPathLength != null, 'avg path');
@@ -82,9 +82,6 @@ const farAnalysis = analyzeCirculation(resolveGeometry(farMap));
 assert(farAnalysis.unreachableSections.includes('far-sec'), 'far unreachable');
 
 const validation = validateGeometry(resolveGeometry(map));
-console.log(
-  'validate codes:',
-  [...new Set(validation.issues.map((i) => i.code))],
-);
+console.log('validate codes:', [...new Set(validation.issues.map((i) => i.code))]);
 
 console.log('EGRESS_SMOKE_OK');

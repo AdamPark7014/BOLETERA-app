@@ -56,7 +56,7 @@ export function CargosSection({
       const parsed = readPricingRates(updated);
       if (!parsed) throw new Error('No se leyó la tasa guardada.');
       setNotice(
-        `Cargo por servicio: ${percentLabel(rates.serviceFeeRate)} → ${percentLabel(draftRate)}`,
+        `Cargo por servicio: ${percentLabel(rates.serviceFeeRate)} → ${percentLabel(draftRate)}`
       );
       onSaved(parsed);
     } catch (cause) {

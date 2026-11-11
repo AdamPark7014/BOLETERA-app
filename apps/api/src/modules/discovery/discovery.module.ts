@@ -10,5 +10,3 @@ import { DiscoveryService } from './discovery.service';
   exports: [DiscoveryService],
 })
 export class DiscoveryModule {}
-
-

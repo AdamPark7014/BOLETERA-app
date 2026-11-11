@@ -24,9 +24,7 @@ export const ACCESS_RANGE_OPTIONS: readonly AccessRangeKey[] = ['today', '7d', '
 export function buildAccessRange(key: AccessRangeKey, now = new Date()): AccessRange {
   const meta = META[key];
   const ms =
-    meta.hours != null
-      ? meta.hours * 60 * 60 * 1000
-      : (meta.days ?? 7) * 24 * 60 * 60 * 1000;
+    meta.hours != null ? meta.hours * 60 * 60 * 1000 : (meta.days ?? 7) * 24 * 60 * 60 * 1000;
   const from = new Date(now.getTime() - ms);
   return {
     key,

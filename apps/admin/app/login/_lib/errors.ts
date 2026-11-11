@@ -37,7 +37,7 @@ function translateRawMessage(message: string): string {
 
 export function authErrorMessage(
   error: unknown,
-  fallback = 'No se pudo completar la solicitud. Intenta de nuevo.',
+  fallback = 'No se pudo completar la solicitud. Intenta de nuevo.'
 ): string {
   if (error instanceof RequestAbortedError) {
     return 'La solicitud fue cancelada.';
@@ -49,7 +49,10 @@ export function authErrorMessage(
     return 'No tienes permisos para acceder a este panel.';
   }
   if (error instanceof AuthenticationError) {
-    return translateRawMessage(error.message) || 'Credenciales inválidas. Verifica tu email y contraseña.';
+    return (
+      translateRawMessage(error.message) ||
+      'Credenciales inválidas. Verifica tu email y contraseña.'
+    );
   }
   if (error instanceof ServerError) {
     return 'El servidor no pudo completar la solicitud. Intenta de nuevo en unos minutos.';

@@ -3,25 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { memo, useCallback, useMemo, useState } from 'react';
-import {
-  Badge,
-  EmptyState,
-  Popover,
-  Skeleton,
-} from '@boletera/ui';
+import { Badge, EmptyState, Popover, Skeleton } from '@boletera/ui';
 import type { MetricsAlert, MetricsAlertSeverity } from '@boletera/shared';
 import { ShellIcon } from './icons';
-import {
-  domainLabel,
-  resolveAlertHref,
-  severityLabel,
-} from './alert-routes';
+import { domainLabel, resolveAlertHref, severityLabel } from './alert-routes';
 import { useShellAlerts } from './use-shell-alerts';
 import styles from '@/app/(platform)/shell.module.scss';
 
-function severityTone(
-  severity: MetricsAlertSeverity,
-): 'danger' | 'warning' | 'info' {
+function severityTone(severity: MetricsAlertSeverity): 'danger' | 'warning' | 'info' {
   if (severity === 'critical') return 'danger';
   if (severity === 'warning') return 'warning';
   return 'info';
@@ -60,16 +49,8 @@ type ShellNotificationsProps = {
 
 function ShellNotificationsComponent({ linkProps }: ShellNotificationsProps) {
   const router = useRouter();
-  const {
-    alerts,
-    unreadCount,
-    isPending,
-    isError,
-    refetch,
-    markRead,
-    markAllRead,
-    isRead,
-  } = useShellAlerts();
+  const { alerts, unreadCount, isPending, isError, refetch, markRead, markAllRead, isRead } =
+    useShellAlerts();
   const [open, setOpen] = useState(false);
 
   const grouped = useMemo(() => groupByDomain(alerts), [alerts]);
@@ -80,7 +61,7 @@ function ShellNotificationsComponent({ linkProps }: ShellNotificationsProps) {
       setOpen(false);
       router.push(resolveAlertHref(alert));
     },
-    [markRead, router],
+    [markRead, router]
   );
 
   return (
@@ -96,9 +77,7 @@ function ShellNotificationsComponent({ linkProps }: ShellNotificationsProps) {
           type="button"
           className={styles.iconBtn}
           aria-label={
-            unreadCount > 0
-              ? `Notificaciones, ${unreadCount} sin leer`
-              : 'Notificaciones'
+            unreadCount > 0 ? `Notificaciones, ${unreadCount} sin leer` : 'Notificaciones'
           }
           aria-expanded={isOpen}
           aria-haspopup="dialog"
@@ -187,7 +166,9 @@ function ShellNotificationsComponent({ linkProps }: ShellNotificationsProps) {
                           <Badge tone={severityTone(alert.severity)} variant="soft" size="sm">
                             {severityLabel(alert.severity)}
                           </Badge>
-                          <time dateTime={alert.detectedAt}>{formatRelative(alert.detectedAt)}</time>
+                          <time dateTime={alert.detectedAt}>
+                            {formatRelative(alert.detectedAt)}
+                          </time>
                         </div>
                         <strong>{alert.title}</strong>
                         <span>{alert.explanation}</span>

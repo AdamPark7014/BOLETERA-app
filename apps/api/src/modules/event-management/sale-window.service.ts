@@ -163,7 +163,7 @@ export class SaleWindowService {
     private prisma: PrismaService,
     private quota: SalePhaseQuotaService,
     private redis: RedisService,
-    private profeco: ProfecoDisclosureService,
+    private profeco: ProfecoDisclosureService
   ) {}
 
   /**
@@ -182,10 +182,7 @@ export class SaleWindowService {
    * cuarto camino de salida para abrir un agujero silencioso por el que vender
    * un evento que no cumple.
    */
-  private async resolve(
-    eventId: string,
-    query: SaleWindowQuery = {},
-  ): Promise<ResolvedWindow> {
+  private async resolve(eventId: string, query: SaleWindowQuery = {}): Promise<ResolvedWindow> {
     const resolved = await this.resolveWindow(eventId, query);
 
     // Si la venta ya esta cerrada por otro motivo, no hay nada que anadir.
@@ -206,7 +203,7 @@ export class SaleWindowService {
       this.logger.error(
         `No se pudo comprobar la divulgacion de ${eventId}: ${
           error instanceof Error ? error.message : String(error)
-        }`,
+        }`
       );
       return resolved;
     }
@@ -214,7 +211,7 @@ export class SaleWindowService {
     if (verdict.compliant) return resolved;
 
     this.logger.warn(
-      `PROFECO · evento ${eventId} vendiendo sin cumplir (${verdict.reason}): ${verdict.message}`,
+      `PROFECO · evento ${eventId} vendiendo sin cumplir (${verdict.reason}): ${verdict.message}`
     );
 
     if (ENFORCEMENT === 'block') {
@@ -239,7 +236,7 @@ export class SaleWindowService {
    */
   private async resolveWindow(
     eventId: string,
-    query: SaleWindowQuery = {},
+    query: SaleWindowQuery = {}
   ): Promise<ResolvedWindow> {
     const at = query.at ?? new Date();
 
@@ -366,7 +363,7 @@ export class SaleWindowService {
    */
   async assertSaleWindowOpen(
     eventId: string,
-    query: SaleWindowQuery = {},
+    query: SaleWindowQuery = {}
   ): Promise<SaleWindowDecision> {
     const { decision } = await this.resolve(eventId, query);
     this.assertAllowed(eventId, decision);
@@ -392,7 +389,7 @@ export class SaleWindowService {
    */
   async assertSaleWindowOpenAndReserve(
     eventId: string,
-    query: SaleWindowQuery & { quantity: number },
+    query: SaleWindowQuery & { quantity: number }
   ): Promise<SaleWindowReservation> {
     const { decision, capacity } = await this.resolve(eventId, query);
     this.assertAllowed(eventId, decision);
@@ -450,7 +447,7 @@ export class SaleWindowService {
   async syncPhaseStatuses(
     eventId: string,
     phases: Array<{ status: SalePhaseStatus; startsAt: Date; endsAt: Date }>,
-    at: Date = new Date(),
+    at: Date = new Date()
   ): Promise<void> {
     const needsWork = phases.some((phase) => resolvePhaseStatus(phase, at) !== phase.status);
     if (!needsWork) return;
@@ -459,7 +456,7 @@ export class SaleWindowService {
     const acquired = await this.redis.acquireLock(
       statusSyncKey(eventId),
       randomUUID(),
-      STATUS_SYNC_INTERVAL_SECONDS,
+      STATUS_SYNC_INTERVAL_SECONDS
     );
     // `UNAVAILABLE` (Redis caído) deja pasar: sin limitador es una escritura de
     // más, no una incorrecta. `TAKEN` significa que otro nodo ya la hizo.
@@ -491,7 +488,7 @@ export class SaleWindowService {
    */
   private checkLegacyWindow(
     event: { startsAt: Date; salesStartAt: Date | null; salesEndAt: Date | null },
-    at: Date,
+    at: Date
   ): SaleWindowDecision {
     const { salesStartAt } = event;
     // Sin cierre explícito, cierra cuando arranca el evento: es la regla que el
@@ -535,7 +532,7 @@ export class SaleWindowService {
   private deny(
     reason: SaleWindowReason,
     message: string,
-    extra: { nextOpensAt: Date | null },
+    extra: { nextOpensAt: Date | null }
   ): SaleWindowDecision {
     return {
       allowed: false,

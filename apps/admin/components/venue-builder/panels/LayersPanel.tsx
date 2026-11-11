@@ -3,7 +3,11 @@
 import { memo } from 'react';
 import type { LayerId } from '@boletera/venue-engine/render';
 import { useEditor, useVenueBuilderStores } from '../store/store-context';
-import { setSectionLocked, ungroupSection, type TransformContext } from '../transform/transform-ops';
+import {
+  setSectionLocked,
+  ungroupSection,
+  type TransformContext,
+} from '../transform/transform-ops';
 import { updateSectionCommand } from '../store/commands';
 import { PanelSection } from './Panel';
 import { Legend } from './Legend';
@@ -88,14 +92,16 @@ export const LayersPanel = memo(function LayersPanel() {
                   value={section.color}
                   aria-label={`Color de ${section.name}`}
                   onChange={(event) =>
-                    stores.history.getState().execute(
-                      updateSectionCommand(
-                        'Color de zona',
-                        section.id,
-                        { color: section.color },
-                        { color: event.target.value },
-                      ),
-                    )
+                    stores.history
+                      .getState()
+                      .execute(
+                        updateSectionCommand(
+                          'Color de zona',
+                          section.id,
+                          { color: section.color },
+                          { color: event.target.value }
+                        )
+                      )
                   }
                 />
                 <button

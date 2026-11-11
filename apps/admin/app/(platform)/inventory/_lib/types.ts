@@ -63,9 +63,4 @@ export const RANGE_OPTIONS: ReadonlyArray<{ value: RangeKey; label: string }> = 
   { value: '365', label: '12 meses' },
 ];
 
-export const PRESSURE_VALUES: readonly PressureLevel[] = [
-  'low',
-  'medium',
-  'high',
-  'critical',
-];
+export const PRESSURE_VALUES: readonly PressureLevel[] = ['low', 'medium', 'high', 'critical'];

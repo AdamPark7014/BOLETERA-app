@@ -126,7 +126,7 @@ async function main() {
   check(
     'aforo 500 → no aplica y no bloquea',
     verdict.applies === false && verdict.compliant === true,
-    `${verdict.reason}`,
+    `${verdict.reason}`
   );
 
   // ---------------------------------------------------------------------------
@@ -146,7 +146,7 @@ async function main() {
   check(
     'aforo 45.000 sin divulgar → no cumple',
     verdict.applies === true && verdict.compliant === false && verdict.reason === 'NOT_PUBLISHED',
-    `${verdict.reason}`,
+    `${verdict.reason}`
   );
 
   // ---------------------------------------------------------------------------
@@ -157,14 +157,18 @@ async function main() {
     headers: auth,
   });
   const publicado = await res.json();
-  check('la publicación se asienta', res.status === 201 || res.status === 200, `HTTP ${res.status}`);
+  check(
+    'la publicación se asienta',
+    res.status === 201 || res.status === 200,
+    `HTTP ${res.status}`
+  );
 
   res = await fetch(`${API}/events/manage/${masivo.id}/disclosure/compliance`, { headers: auth });
   verdict = await res.json();
   check(
     'venta en 2 h y divulgación de ahora → PUBLISHED_TOO_LATE',
     verdict.compliant === false && verdict.reason === 'PUBLISHED_TOO_LATE',
-    `${verdict.reason}`,
+    `${verdict.reason}`
   );
 
   // ---------------------------------------------------------------------------
@@ -179,7 +183,7 @@ async function main() {
   check(
     'venta a 30 h de la divulgación → cumple',
     verdict.compliant === true && verdict.reason === 'OK',
-    `${verdict.reason}`,
+    `${verdict.reason}`
   );
 
   // Y el límite exacto: 23 h 59 min NO debe pasar.
@@ -192,7 +196,7 @@ async function main() {
   check(
     'a 23 h 59 min → NO cumple (el límite no se redondea a favor)',
     verdict.compliant === false,
-    `${verdict.reason}`,
+    `${verdict.reason}`
   );
   await prisma.event.update({
     where: { id: masivo.id },
@@ -202,19 +206,20 @@ async function main() {
   // ---------------------------------------------------------------------------
   console.log('\n5. El precio divulgado es el TOTAL, no el base');
   // ---------------------------------------------------------------------------
-  const seccion = publicado && (await (await fetch(`${API}/events/${masivo.id}/disclosure`)).json());
+  const seccion =
+    publicado && (await (await fetch(`${API}/events/${masivo.id}/disclosure`)).json());
   const general = seccion?.sections?.find((s) => s.zone === 'General');
   const esperado = 1000 + 1000 * 0.1 + 1000 * 0.16; // base + cargo + IVA
   check(
     `precio total divulgado = $${esperado} (base $1000)`,
     general?.totalPrice === esperado,
-    `divulgado $${general?.totalPrice}`,
+    `divulgado $${general?.totalPrice}`
   );
   check(
     'el desglose cuadra con el total',
     general &&
       Math.abs(general.basePrice + general.serviceFee + general.taxes - general.totalPrice) < 0.01,
-    `${general?.basePrice} + ${general?.serviceFee} + ${general?.taxes}`,
+    `${general?.basePrice} + ${general?.serviceFee} + ${general?.taxes}`
   );
 
   // ---------------------------------------------------------------------------
@@ -226,12 +231,12 @@ async function main() {
   check(
     'incluye lo que exige el lineamiento',
     Boolean(publico.capacity && publico.sections?.length && publico.terms && publico.venue?.name),
-    `${publico.sections?.length} secciones, aforo ${publico.capacity}`,
+    `${publico.sections?.length} secciones, aforo ${publico.capacity}`
   );
   check(
     'declara el régimen que le aplica',
     publico.regime?.applies === true && publico.regime?.appliesAboveCapacity === 20000,
-    `${publico.regime?.source}`,
+    `${publico.regime?.source}`
   );
 
   // Un evento sin divulgar responde 200 con published:false, no 404.
@@ -240,7 +245,7 @@ async function main() {
   check(
     'sin divulgar → 200 con published:false, no 404',
     res.status === 200 && sinDivulgar.published === false,
-    `HTTP ${res.status}`,
+    `HTTP ${res.status}`
   );
 
   // ---------------------------------------------------------------------------
@@ -259,14 +264,14 @@ async function main() {
   check(
     'alterar el precio cambia el hash',
     hashManipulado !== fila.contentHash,
-    'un cambio de precio no puede pasar inadvertido',
+    'un cambio de precio no puede pasar inadvertido'
   );
 
   // El orden de las claves no debe alterar el hash, o no probaría nada.
   const reordenado = Object.fromEntries(Object.entries(fila.payload).reverse());
   check(
     'reordenar las claves NO cambia el hash',
-    createHash('sha256').update(canonicalize(reordenado)).digest('hex') === fila.contentHash,
+    createHash('sha256').update(canonicalize(reordenado)).digest('hex') === fila.contentHash
   );
 
   // ---------------------------------------------------------------------------
@@ -279,7 +284,7 @@ async function main() {
   check(
     'coincide con el inventario real',
     zona?.total === 45_000 && zona?.available === 45_000,
-    `${zona?.available} de ${zona?.total}`,
+    `${zona?.available} de ${zona?.total}`
   );
 
   // Vender inventario debe reflejarse: si no, la «disponibilidad real» es falsa.
@@ -293,7 +298,7 @@ async function main() {
   check(
     'tras vender 1.000, la disponibilidad baja',
     zonaTras?.available === 44_000 && zonaTras?.sold === 1_000,
-    `${zonaTras?.available} disponibles, ${zonaTras?.sold} vendidos`,
+    `${zonaTras?.available} disponibles, ${zonaTras?.sold} vendidos`
   );
 
   // ---------------------------------------------------------------------------
@@ -307,12 +312,11 @@ async function main() {
     label: 'roto',
   });
   await prisma.offer.updateMany({ where: { eventId: roto.id }, data: { basePrice: 0 } });
-  res = await fetch(`${API}/events/manage/${roto.id}/disclosure`, { method: 'POST', headers: auth });
-  check(
-    'divulgar sin precio se rechaza',
-    res.status === 400,
-    `HTTP ${res.status}`,
-  );
+  res = await fetch(`${API}/events/manage/${roto.id}/disclosure`, {
+    method: 'POST',
+    headers: auth,
+  });
+  check('divulgar sin precio se rechaza', res.status === 400, `HTTP ${res.status}`);
 
   // ---------------------------------------------------------------------------
   console.log('\n10. El modo de aplicación decide si bloquea o solo avisa');
@@ -341,18 +345,18 @@ async function main() {
     check(
       'modo block → la venta se deniega',
       ventana.allowed === false && ventana.reason === 'DISCLOSURE_NOT_PUBLISHED',
-      `${ventana.reason}`,
+      `${ventana.reason}`
     );
   } else {
     check(
       'modo warn → la venta SIGUE abierta',
       ventana.allowed === true,
-      `allowed=${ventana.allowed}, reason=${ventana.reason}`,
+      `allowed=${ventana.allowed}, reason=${ventana.reason}`
     );
     check(
       'modo warn → pero el aviso viaja en la decisión',
       typeof ventana.complianceWarning === 'string' && ventana.complianceWarning.length > 0,
-      ventana.complianceWarning ? ventana.complianceWarning.slice(0, 60) : 'sin aviso',
+      ventana.complianceWarning ? ventana.complianceWarning.slice(0, 60) : 'sin aviso'
     );
   }
 

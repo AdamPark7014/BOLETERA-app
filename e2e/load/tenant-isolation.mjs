@@ -152,7 +152,10 @@ const cashierA = await cashierFor(a.org.id, 'a');
 console.log(`\nOrganización A: ${a.org.slug}\nOrganización B: ${b.org.slug}`);
 console.log(`Cajero autenticado: sólo de A\n`);
 
-const authA = { 'Content-Type': 'application/json', Authorization: `Bearer ${cashierA.accessToken}` };
+const authA = {
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${cashierA.accessToken}`,
+};
 
 // 1. Su propia organización: debe funcionar (si esto falla, el guard es demasiado estricto).
 const own = await fetch(`${API}/inventory/staff/holds`, {
@@ -172,7 +175,7 @@ const cross = await fetch(`${API}/inventory/staff/holds`, {
 check(
   'El cajero de A NO puede apartar en B',
   cross.status === 403,
-  `HTTP ${cross.status} · ${await body(cross)}`,
+  `HTTP ${cross.status} · ${await body(cross)}`
 );
 
 // 3. Mejor disponible en organización ajena: mismo criterio.
@@ -184,7 +187,7 @@ const crossBest = await fetch(`${API}/inventory/staff/holds/best-available`, {
 check(
   'Tampoco por «mejor disponible»',
   crossBest.status === 403,
-  `HTTP ${crossBest.status} · ${await body(crossBest)}`,
+  `HTTP ${crossBest.status} · ${await body(crossBest)}`
 );
 
 // 4. Liberar un hold ajeno: el caso que no comprobaba nada.
@@ -206,7 +209,7 @@ const release = await fetch(`${API}/inventory/staff/holds/${holdInB.id}`, {
 check(
   'El cajero de A NO puede liberar un hold de B',
   release.status === 403,
-  `HTTP ${release.status} · ${await body(release)}`,
+  `HTTP ${release.status} · ${await body(release)}`
 );
 
 // 5. Su propio hold sí se libera (el guard no debe romper la operación normal).
@@ -233,6 +236,6 @@ await prisma.$disconnect();
 
 const failed = checks.filter((c) => !c.pass);
 console.log(
-  `\n${failed.length ? `❌ FALLA: ${failed.length} de ${checks.length} comprobaciones` : `✅ Aislamiento correcto (${checks.length}/${checks.length})`}`,
+  `\n${failed.length ? `❌ FALLA: ${failed.length} de ${checks.length} comprobaciones` : `✅ Aislamiento correcto (${checks.length}/${checks.length})`}`
 );
 process.exit(failed.length ? 1 : 0);

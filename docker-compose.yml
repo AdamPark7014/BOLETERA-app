@@ -23,7 +23,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio (no hay credencial por defecto)}
       POSTGRES_DB: ${POSTGRES_DB:-boletera}
       # scram-sha-256 sustituye a md5 (solo aplica al inicializar un volumen nuevo).
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8 -A scram-sha-256"
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=en_US.UTF-8 -A scram-sha-256'
     # max_connections debe cubrir: réplicas_api * PRISMA_CONNECTION_LIMIT + worker + margen.
     command:
       - postgres
@@ -36,11 +36,11 @@ services:
     ports:
       # Solo loopback: la base nunca debe quedar expuesta a la red del host.
       # Host 5434 porque los servicios nativos de PostgreSQL en Windows ocupan 5432/5433.
-      - "127.0.0.1:${POSTGRES_HOST_PORT:-5434}:5432"
+      - '127.0.0.1:${POSTGRES_HOST_PORT:-5434}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,17 +56,17 @@ services:
     command:
       - redis-server
       - --appendonly
-      - "yes"
+      - 'yes'
       - --maxmemory
       - ${REDIS_MAXMEMORY:-1gb}
       - --maxmemory-policy
       - noeviction
     ports:
-      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+      - '127.0.0.1:${REDIS_HOST_PORT:-6379}:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -80,7 +80,7 @@ services:
     container_name: boletera-api
     restart: unless-stopped
     ports:
-      - "${API_HOST_PORT:-4000}:4000"
+      - '${API_HOST_PORT:-4000}:4000'
     environment:
       NODE_ENV: production
       API_PORT: 4000
@@ -140,7 +140,7 @@ services:
       BANORTE_WEBHOOK_SECRET: ${BANORTE_WEBHOOK_SECRET:?BANORTE_WEBHOOK_SECRET es obligatorio (firma del IPN)}
       # Explícito a false: impide que una variable heredada del shell abra la
       # puerta a webhooks de pago sin firmar.
-      BANORTE_ALLOW_UNSIGNED_WEBHOOK: "false"
+      BANORTE_ALLOW_UNSIGNED_WEBHOOK: 'false'
       BANORTE_PAYWORKS_URL: ${BANORTE_PAYWORKS_URL:-https://eps.banorte.com/secure3d/Solucion3DSecure.htm}
       BANORTE_QUERY_URL: ${BANORTE_QUERY_URL:-https://eps.banorte.com/secure3d/consultaTransaccion.htm}
       BANORTE_RETURN_URL: ${BANORTE_RETURN_URL:?BANORTE_RETURN_URL es obligatorio}
@@ -169,7 +169,8 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/api/v1/health"]
+      test:
+        ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:4000/api/v1/health']
       interval: 30s
       timeout: 5s
       retries: 3
@@ -214,7 +215,7 @@ services:
     container_name: boletera-web
     restart: unless-stopped
     ports:
-      - "${WEB_HOST_PORT:-3000}:3000"
+      - '${WEB_HOST_PORT:-3000}:3000'
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -222,7 +223,7 @@ services:
     depends_on:
       - api
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000']
       interval: 30s
       timeout: 5s
       retries: 3
@@ -239,7 +240,7 @@ services:
     container_name: boletera-admin
     restart: unless-stopped
     ports:
-      - "${ADMIN_HOST_PORT:-3001}:3000"
+      - '${ADMIN_HOST_PORT:-3001}:3000'
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -247,7 +248,7 @@ services:
     depends_on:
       - api
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000']
       interval: 30s
       timeout: 5s
       retries: 3

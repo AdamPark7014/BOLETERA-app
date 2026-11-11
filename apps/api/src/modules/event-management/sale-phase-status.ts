@@ -21,7 +21,10 @@ export type PhaseStatusInput = {
  * Quien quiera revivir una fase terminada debe mover sus fechas: `updateSalePhase`
  * recalcula el estado cuando eso pasa.
  */
-export function resolvePhaseStatus(phase: PhaseStatusInput, at: Date = new Date()): SalePhaseStatus {
+export function resolvePhaseStatus(
+  phase: PhaseStatusInput,
+  at: Date = new Date()
+): SalePhaseStatus {
   if (phase.status === SalePhaseStatus.CANCELLED || phase.status === SalePhaseStatus.ENDED) {
     return phase.status;
   }

@@ -273,11 +273,13 @@ async function buyer(i, ctx, mode) {
 
 async function run(ctx, mode, capacity) {
   const results = await Promise.all(
-    Array.from({ length: BUYERS }, (_, i) => buyer(i, ctx, mode).catch((e) => ({
-      stage: 'error',
-      ok: false,
-      status: String(e).slice(0, 60),
-    }))),
+    Array.from({ length: BUYERS }, (_, i) =>
+      buyer(i, ctx, mode).catch((e) => ({
+        stage: 'error',
+        ok: false,
+        status: String(e).slice(0, 60),
+      }))
+    )
   );
 
   const offerId = mode === 'seated' ? ctx.seatedOffer.id : ctx.gaOffer.id;
@@ -301,10 +303,16 @@ async function run(ctx, mode, capacity) {
 
   console.log(`\n──── ${mode.toUpperCase()} · capacidad ${capacity} · ${BUYERS} compradores ────`);
   console.log(`  órdenes HTTP 2xx ......... ${okOrders}`);
-  console.log(`  boletos SOLD en BD ....... ${sold}   ${sold > capacity ? `❌ SOBREVENTA +${sold - capacity}` : '✅'}`);
+  console.log(
+    `  boletos SOLD en BD ....... ${sold}   ${sold > capacity ? `❌ SOBREVENTA +${sold - capacity}` : '✅'}`
+  );
   console.log(`  offer.soldQuantity ....... ${offer.soldQuantity}`);
-  console.log(`  offer.remainingQuantity .. ${offer.remainingQuantity} ${offer.remainingQuantity < 0 ? '❌ NEGATIVO' : ''}`);
-  console.log(`  suma sold+remaining ...... ${offer.soldQuantity + offer.remainingQuantity} (esperado ${capacity})`);
+  console.log(
+    `  offer.remainingQuantity .. ${offer.remainingQuantity} ${offer.remainingQuantity < 0 ? '❌ NEGATIVO' : ''}`
+  );
+  console.log(
+    `  suma sold+remaining ...... ${offer.soldQuantity + offer.remainingQuantity} (esperado ${capacity})`
+  );
   if (breakdown.size) {
     console.log('  fallos por causa:');
     for (const [reason, count] of [...breakdown].sort((a, b) => b[1] - a[1])) {
@@ -320,7 +328,7 @@ async function run(ctx, mode, capacity) {
   // de F1-02(a), aunque la capa de venta la detenga después.
   const phantom = results.filter((r) => r.stage === 'order' && !r.ok && r.status === 409).length;
   console.log(
-    `  holds fantasma ........... ${phantom} ${phantom ? '❌ la reserva concedió inventario inexistente' : '✅'}`,
+    `  holds fantasma ........... ${phantom} ${phantom ? '❌ la reserva concedió inventario inexistente' : '✅'}`
   );
   return {
     mode,
@@ -373,6 +381,6 @@ console.log(
     failed
       ? `❌ FALLA: ${reasons.join(' · ')}`
       : '✅ Sin sobreventa, sin holds fantasma, y la venta llegó exactamente al aforo'
-  }`,
+  }`
 );
 process.exit(failed ? 1 : 0);

@@ -83,12 +83,12 @@ async function main() {
   check(
     'el boleto viene con su clave de firma',
     typeof boleto.signingKey === 'string' && boleto.signingKey.length === 64,
-    `${boleto.signingKey?.length} caracteres hex`,
+    `${boleto.signingKey?.length} caracteres hex`
   );
   check(
     'la ventana de rotación coincide con la del teléfono',
     wallet.rotationSeconds === ROTATION_SECONDS,
-    `${wallet.rotationSeconds} s`,
+    `${wallet.rotationSeconds} s`
   );
 
   // 3. El TELÉFONO genera el código, sin pedirle nada al servidor
@@ -113,7 +113,7 @@ async function main() {
   check(
     'el torniquete NO rechaza la firma del teléfono',
     !firmaRechazada && !noLlegoAValidar,
-    noLlegoAValidar ? `${mensaje} — NO se validó la firma; la prueba no valdría` : mensaje,
+    noLlegoAValidar ? `${mensaje} — NO se validó la firma; la prueba no valdría` : mensaje
   );
 
   // 5. Contraprueba: un código de la ventana ANTERIOR a la de gracia debe morir
@@ -127,7 +127,7 @@ async function main() {
   check(
     'un código de hace 2 minutos SÍ se rechaza (la rotación sirve de algo)',
     /Invalid or expired QR/i.test(String(vv?.message ?? '')),
-    String(vv?.message ?? '').slice(0, 60),
+    String(vv?.message ?? '').slice(0, 60)
   );
 
   // 6. Contraprueba: una clave ajena no debe firmar este boleto
@@ -142,7 +142,7 @@ async function main() {
   check(
     'una clave inventada NO abre el boleto',
     /Invalid or expired QR/i.test(String(vf?.message ?? '')),
-    String(vf?.message ?? '').slice(0, 60),
+    String(vf?.message ?? '').slice(0, 60)
   );
 
   // El escaneo del paso 4 dejo el boleto en USED. Se restaura para que la

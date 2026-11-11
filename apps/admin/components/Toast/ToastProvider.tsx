@@ -30,7 +30,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       setToasts((prev) => [...prev, { id, kind, message }]);
       window.setTimeout(() => dismiss(id), DURATION_MS);
     },
-    [dismiss],
+    [dismiss]
   );
 
   const api: ToastApi = {

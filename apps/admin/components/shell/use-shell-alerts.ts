@@ -30,17 +30,11 @@ export function useShellAlerts(): AlertsState {
     setReadIds(new Set(readReadAlertIds()));
   }, []);
 
-  const alerts = useMemo(
-    () => sortAlerts(query.data?.alerts ?? []),
-    [query.data?.alerts],
-  );
+  const alerts = useMemo(() => sortAlerts(query.data?.alerts ?? []), [query.data?.alerts]);
 
   const isRead = useCallback((id: string) => readIds.has(id), [readIds]);
 
-  const unread = useMemo(
-    () => alerts.filter((alert) => !readIds.has(alert.id)),
-    [alerts, readIds],
-  );
+  const unread = useMemo(() => alerts.filter((alert) => !readIds.has(alert.id)), [alerts, readIds]);
 
   const markRead = useCallback((id: string) => {
     setReadIds((prev) => {

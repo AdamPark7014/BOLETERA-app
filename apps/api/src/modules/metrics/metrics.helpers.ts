@@ -48,11 +48,13 @@ export function buildKpi(
   label: string,
   value: number,
   previousValue: number,
-  unit: MetricsKpi['unit'] = 'count',
+  unit: MetricsKpi['unit'] = 'count'
 ): MetricsKpi {
   const delta = value - previousValue;
   const deltaPercent =
-    previousValue !== 0 ? Number((((value - previousValue) / previousValue) * 100).toFixed(2)) : null;
+    previousValue !== 0
+      ? Number((((value - previousValue) / previousValue) * 100).toFixed(2))
+      : null;
   return {
     key,
     label,
@@ -68,7 +70,7 @@ export function buildKpi(
 export function buildBreakdown(
   dimension: string,
   label: string,
-  rows: { key: string; label: string; value: number; secondaryValue?: number }[],
+  rows: { key: string; label: string; value: number; secondaryValue?: number }[]
 ): MetricsBreakdown {
   const total = rows.reduce((sum, row) => sum + row.value, 0);
   return {
@@ -112,7 +114,7 @@ export function aggregateTimeSeries(
   granularity: MetricsGranularity,
   key: string,
   label: string,
-  unit: MetricsTimeSeries['unit'] = 'count',
+  unit: MetricsTimeSeries['unit'] = 'count'
 ): MetricsTimeSeries {
   const map = new Map<string, number>();
   for (const entry of entries) {
@@ -126,7 +128,7 @@ export function aggregateTimeSeries(
 }
 
 export function sumOrderRevenue(
-  orders: { totalAmount: unknown; items?: { quantity: number }[] }[],
+  orders: { totalAmount: unknown; items?: { quantity: number }[] }[]
 ): { revenue: number; tickets: number } {
   let revenue = 0;
   let tickets = 0;

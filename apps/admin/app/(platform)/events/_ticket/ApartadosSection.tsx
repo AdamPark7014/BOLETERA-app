@@ -162,9 +162,7 @@ function DurationEditor({
         { method: 'PATCH', body: JSON.stringify({ minutes }) }
       );
       const fromLabel = hasSaved ? `${stored.toLocaleString('es-MX')} min` : 'sin duración';
-      setNotice(
-        `Duración del apartado: ${fromLabel} → ${minutes.toLocaleString('es-MX')} min`
-      );
+      setNotice(`Duración del apartado: ${fromLabel} → ${minutes.toLocaleString('es-MX')} min`);
       onSaved(updated.holdExpiration);
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.userMessage : 'No se guardó. Revisa la conexión.');

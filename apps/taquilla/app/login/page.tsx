@@ -28,7 +28,7 @@ export default function TaquillaLoginPage() {
     setAlreadyOpen(open);
     const user = getTaquillaUser();
     setCashierLabel(
-      user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email : '',
+      user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email : ''
     );
   }, []);
 
@@ -89,7 +89,8 @@ export default function TaquillaLoginPage() {
     }
   }
 
-  const ready = alreadyOpen || (terminalId.trim().length > 0 && email.trim().length > 0 && password.length > 0);
+  const ready =
+    alreadyOpen || (terminalId.trim().length > 0 && email.trim().length > 0 && password.length > 0);
 
   return (
     <main className={styles.page}>
@@ -105,9 +106,7 @@ export default function TaquillaLoginPage() {
       <form className={styles.column} onSubmit={(e) => void submit(e)}>
         <h1>{alreadyOpen ? 'Turno abierto' : 'Abrir turno'}</h1>
         {alreadyOpen ? (
-          <p className={styles.read}>
-            {cashierLabel || 'Cajero'} · fondo en esta terminal
-          </p>
+          <p className={styles.read}>{cashierLabel || 'Cajero'} · fondo en esta terminal</p>
         ) : (
           <>
             <Field

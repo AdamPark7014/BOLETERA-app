@@ -12,7 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
  * lugar de mostrarse a todos, que era el comportamiento anterior.
  */
 function organizationScopeFilter(
-  organizationId: string | null | undefined,
+  organizationId: string | null | undefined
 ): Prisma.FraudFlagWhereInput {
   if (!organizationId) return {};
   return {
@@ -123,10 +123,7 @@ export class FraudService {
 
     // 5. Device fingerprint analysis
     if (ctx.deviceFingerprint) {
-      const deviceScore = await this.analyzeDeviceFingerprint(
-        ctx.userId,
-        ctx.deviceFingerprint,
-      );
+      const deviceScore = await this.analyzeDeviceFingerprint(ctx.userId, ctx.deviceFingerprint);
       if (deviceScore > 0) {
         flags.push({
           type: FraudType.SUSPICIOUS_ACTIVITY,
@@ -200,24 +197,25 @@ export class FraudService {
 
   // ==================== FLAG CREATION ====================
 
-  async createFlag(data: {
-    type: FraudType;
-    severity: FraudSeverity;
-    score: number;
-    reason: string;
-    orderId?: string;
-    userId?: string;
-    eventId?: string;
-    ipAddress?: string;
-    deviceFingerprint?: string;
-    metadata?: Record<string, any>;
-  },
-  /**
-   * Tenant del solicitante cuando el flag llega por HTTP. El motor de checkout
-   * (orders.service) llama sin este argumento: ya opera sobre un pedido cuyo
-   * tenant validó antes, y no hay usuario al que acotar.
-   */
-  scopedOrganizationId?: string | null,
+  async createFlag(
+    data: {
+      type: FraudType;
+      severity: FraudSeverity;
+      score: number;
+      reason: string;
+      orderId?: string;
+      userId?: string;
+      eventId?: string;
+      ipAddress?: string;
+      deviceFingerprint?: string;
+      metadata?: Record<string, any>;
+    },
+    /**
+     * Tenant del solicitante cuando el flag llega por HTTP. El motor de checkout
+     * (orders.service) llama sin este argumento: ya opera sobre un pedido cuyo
+     * tenant validó antes, y no hay usuario al que acotar.
+     */
+    scopedOrganizationId?: string | null
   ) {
     if (scopedOrganizationId) {
       await this.assertSubjectBelongsToOrg(scopedOrganizationId, {
@@ -345,7 +343,7 @@ export class FraudService {
     flagId: string,
     resolution: string,
     resolvedBy: string,
-    scopedOrganizationId?: string | null,
+    scopedOrganizationId?: string | null
   ) {
     // Comprobación de pertenencia ANTES del update: `update({where:{id}})` sin
     // filtro de tenant deja que el ADMIN de un promotor cierre (y firme) las
@@ -380,7 +378,7 @@ export class FraudService {
    */
   private async assertSubjectBelongsToOrg(
     organizationId: string,
-    subject: { eventId?: string; orderId?: string },
+    subject: { eventId?: string; orderId?: string }
   ) {
     if (subject.eventId) {
       const event = await this.prisma.event.findUnique({
@@ -436,7 +434,7 @@ export class FraudService {
       documentNumber: string;
       documentType: string;
     },
-    scopedOrganizationId?: string | null,
+    scopedOrganizationId?: string | null
   ) {
     // Un comprador no pertenece a ninguna organización (`user.organizationId`
     // es nulo para CUSTOMER): la relación con el promotor es haberle comprado.
@@ -474,10 +472,13 @@ export class FraudService {
 
   // ==================== AML CHECK ====================
 
-  async performAMLCheck(organizationId: string, data: {
-    name: string;
-    country: string;
-  }) {
+  async performAMLCheck(
+    organizationId: string,
+    data: {
+      name: string;
+      country: string;
+    }
+  ) {
     this.logger.log(`Performing AML check for organization: ${organizationId}`);
 
     // In production, integrate with AML services:
@@ -489,5 +490,3 @@ export class FraudService {
     return { status: 'cleared', isWatchlisted: false };
   }
 }
-
-

@@ -4,10 +4,10 @@ Motor de mapas de venue: geometría (SVG/DXF, validación, sightlines, egress) y
 
 ## Subpaths
 
-| Import | Uso |
-|--------|-----|
-| `@boletera/venue-engine` | Geometría + helpers (Node/API-safe, sin DOM) |
-| `@boletera/venue-engine/render` | `SeatMapRenderer` y APIs de canvas |
+| Import                          | Uso                                          |
+| ------------------------------- | -------------------------------------------- |
+| `@boletera/venue-engine`        | Geometría + helpers (Node/API-safe, sin DOM) |
+| `@boletera/venue-engine/render` | `SeatMapRenderer` y APIs de canvas           |
 
 Definido en el campo `exports` de este `package.json`.
 

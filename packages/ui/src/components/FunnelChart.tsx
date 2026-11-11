@@ -58,10 +58,7 @@ export function FunnelChart({
   const [hovered, setHovered] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
 
-  const usable = useMemo(
-    () => stages.filter((stage) => Number.isFinite(stage.value)),
-    [stages],
-  );
+  const usable = useMemo(() => stages.filter((stage) => Number.isFinite(stage.value)), [stages]);
   const top = usable[0]?.value ?? 0;
 
   const table = useMemo(
@@ -77,7 +74,7 @@ export function FunnelChart({
         ];
       }),
     }),
-    [usable, top, formatValue],
+    [usable, top, formatValue]
   );
 
   const height = Math.max(1, usable.length) * stageHeight;
@@ -142,15 +139,25 @@ export function FunnelChart({
                       y0,
                       y1,
                       widthAt(stage.value),
-                      widthAt(next?.value ?? stage.value),
+                      widthAt(next?.value ?? stage.value)
                     )}
                     fill={color}
                     className={styles.segment}
                   />
-                  <text className={styles.stageLabel} x={labelWidth - 12} y={(y0 + y1) / 2} textAnchor="end">
+                  <text
+                    className={styles.stageLabel}
+                    x={labelWidth - 12}
+                    y={(y0 + y1) / 2}
+                    textAnchor="end"
+                  >
                     {stage.label}
                   </text>
-                  <text className={styles.stageValue} x={centerX} y={(y0 + y1) / 2} textAnchor="middle">
+                  <text
+                    className={styles.stageValue}
+                    x={centerX}
+                    y={(y0 + y1) / 2}
+                    textAnchor="middle"
+                  >
                     {formatValue(stage.value)}
                   </text>
                   {index > 0 ? (

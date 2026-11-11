@@ -132,7 +132,12 @@ export function EventPublishValidationPanel({
         ))}
       </ul>
 
-      <button type="button" className={styles.retryBtn} onClick={() => void refresh()} disabled={loading}>
+      <button
+        type="button"
+        className={styles.retryBtn}
+        onClick={() => void refresh()}
+        disabled={loading}
+      >
         {loading ? 'Actualizando…' : 'Actualizar checklist'}
       </button>
     </section>

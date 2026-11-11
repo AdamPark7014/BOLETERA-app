@@ -39,8 +39,7 @@ test.describe('Checkout Banorte (demo)', () => {
     const avail = (await availRes.json()) as {
       tickets?: { seatId: string | null; status: string }[];
     };
-    const seatId =
-      avail.tickets?.find((t) => t.status === 'AVAILABLE' && t.seatId)?.seatId ?? null;
+    const seatId = avail.tickets?.find((t) => t.status === 'AVAILABLE' && t.seatId)?.seatId ?? null;
     test.skip(!seatId, 'Sin asientos disponibles');
 
     const holdRes = await request.post(`${API}/inventory/holds`, {

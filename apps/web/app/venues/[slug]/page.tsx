@@ -63,11 +63,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function VenuePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function VenuePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let venue: VenueDetail | null = null;
   try {
@@ -82,7 +78,7 @@ export default async function VenuePage({
     venue.latitude != null && venue.longitude != null
       ? `https://www.google.com/maps/search/?api=1&query=${venue.latitude},${venue.longitude}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          `${venue.name} ${venue.address} ${venue.city}`,
+          `${venue.name} ${venue.address} ${venue.city}`
         )}`;
 
   return (

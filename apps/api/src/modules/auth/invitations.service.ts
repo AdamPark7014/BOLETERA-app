@@ -120,17 +120,12 @@ export class InvitationsService {
     }
 
     if (!INVITABLE_ROLES.includes(input.role)) {
-      throw new BadRequestException(
-        `role must be one of: ${INVITABLE_ROLES.join(', ')}`,
-      );
+      throw new BadRequestException(`role must be one of: ${INVITABLE_ROLES.join(', ')}`);
     }
 
     // Defensa en profundidad: OrgAccessGuard ya compara el organizationId del
     // cuerpo con el del token, pero el servicio no confía en el guard.
-    if (
-      input.inviterRole !== 'SUPER_ADMIN' &&
-      input.inviterOrganizationId !== organizationId
-    ) {
+    if (input.inviterRole !== 'SUPER_ADMIN' && input.inviterOrganizationId !== organizationId) {
       throw new ForbiddenException('Cannot invite into another organization');
     }
 
@@ -159,7 +154,7 @@ export class InvitationsService {
 
     if (existing?.acceptedAt) {
       throw new BadRequestException(
-        'That email already accepted an invitation for this organization',
+        'That email already accepted an invitation for this organization'
       );
     }
 

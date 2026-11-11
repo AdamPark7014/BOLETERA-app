@@ -22,7 +22,7 @@ const TEAM_ROLES: UserRole[] = [
 export class OrganizationService {
   constructor(
     private prisma: PrismaService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   async getOrganization(orgId: string) {
@@ -50,7 +50,7 @@ export class OrganizationService {
       feesInclusive: boolean;
       resaleCommission: number;
     }>,
-    actorId?: string,
+    actorId?: string
   ) {
     this.assertRate('commissionRate', data.commissionRate);
     this.assertRate('resaleCommission', data.resaleCommission);
@@ -104,7 +104,7 @@ export class OrganizationService {
       role: UserRole;
       password: string;
     },
-    actorId?: string,
+    actorId?: string
   ) {
     if (!TEAM_ROLES.includes(data.role)) {
       throw new BadRequestException('Invalid team role');
@@ -151,7 +151,7 @@ export class OrganizationService {
     orgId: string,
     userId: string,
     data: { role?: UserRole; active?: boolean },
-    actorId?: string,
+    actorId?: string
   ) {
     const role = assertCatalogRole(data.role);
     const user = await this.prisma.user.findFirst({
@@ -197,20 +197,19 @@ export class OrganizationService {
   }
 
   async getSaasCapabilities(orgId: string) {
-    const [org, events, terminals, apiKeys, waitlist, transfers, payouts] =
-      await Promise.all([
-        this.getOrganization(orgId),
-        this.prisma.event.count({ where: { organizationId: orgId } }),
-        this.prisma.posTerminal.count({ where: { organizationId: orgId } }),
-        this.prisma.apiKey.count({ where: { organizationId: orgId, active: true } }),
-        this.prisma.waitlistEntry.count({
-          where: { event: { organizationId: orgId }, status: 'PENDING' },
-        }),
-        this.prisma.ticketTransfer.count({
-          where: { ticket: { event: { organizationId: orgId } } },
-        }),
-        this.prisma.promoterPayout.count({ where: { organizationId: orgId } }),
-      ]);
+    const [org, events, terminals, apiKeys, waitlist, transfers, payouts] = await Promise.all([
+      this.getOrganization(orgId),
+      this.prisma.event.count({ where: { organizationId: orgId } }),
+      this.prisma.posTerminal.count({ where: { organizationId: orgId } }),
+      this.prisma.apiKey.count({ where: { organizationId: orgId, active: true } }),
+      this.prisma.waitlistEntry.count({
+        where: { event: { organizationId: orgId }, status: 'PENDING' },
+      }),
+      this.prisma.ticketTransfer.count({
+        where: { ticket: { event: { organizationId: orgId } } },
+      }),
+      this.prisma.promoterPayout.count({ where: { organizationId: orgId } }),
+    ]);
 
     return {
       organization: { id: org.id, name: org.name, slug: org.slug, verified: org.verified },
@@ -243,16 +242,49 @@ export class OrganizationService {
         partnerApiKeys: true,
       },
       roadmap: [
-        { id: 'cfdi', label: 'Facturación CFDI 4.0', status: 'partial', priority: 'high', note: 'Sandbox stamp live; PAC production pending' },
-        { id: 'sso', label: 'SSO Google / Microsoft', status: 'partial', priority: 'high', note: 'OAuth wired; set GOOGLE_* / MICROSOFT_* env' },
-        { id: 'season', label: 'Abonos y temporadas', status: 'partial', priority: 'medium', note: 'CRUD + purchase demo' },
-        { id: 'mobile', label: 'Scanner PWA offline', status: 'partial', priority: 'medium', note: 'Admin scanner queues offline scans' },
-        { id: 'banorte-prod', label: 'Banorte Payworks producción + refunds API', status: 'partial', priority: 'high' },
-        { id: 'settlements', label: 'Liquidaciones SPEI a promotor', status: 'partial', priority: 'high', note: 'PromoterPayout list + mark paid; bank rail pending' },
+        {
+          id: 'cfdi',
+          label: 'Facturación CFDI 4.0',
+          status: 'partial',
+          priority: 'high',
+          note: 'Sandbox stamp live; PAC production pending',
+        },
+        {
+          id: 'sso',
+          label: 'SSO Google / Microsoft',
+          status: 'partial',
+          priority: 'high',
+          note: 'OAuth wired; set GOOGLE_* / MICROSOFT_* env',
+        },
+        {
+          id: 'season',
+          label: 'Abonos y temporadas',
+          status: 'partial',
+          priority: 'medium',
+          note: 'CRUD + purchase demo',
+        },
+        {
+          id: 'mobile',
+          label: 'Scanner PWA offline',
+          status: 'partial',
+          priority: 'medium',
+          note: 'Admin scanner queues offline scans',
+        },
+        {
+          id: 'banorte-prod',
+          label: 'Banorte Payworks producción + refunds API',
+          status: 'partial',
+          priority: 'high',
+        },
+        {
+          id: 'settlements',
+          label: 'Liquidaciones SPEI a promotor',
+          status: 'partial',
+          priority: 'high',
+          note: 'PromoterPayout list + mark paid; bank rail pending',
+        },
         { id: 'channels', label: 'Cuotas de canal enforced', status: 'done', priority: 'high' },
       ],
     };
   }
 }
-
-

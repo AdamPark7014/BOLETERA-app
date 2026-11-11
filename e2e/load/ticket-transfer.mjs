@@ -38,15 +38,21 @@ const check = (n, ok, d = '') => {
 /** Lo mismo que hace el teléfono. */
 const qrDe = (keyHex, ticketId, eventId, nowMs = Date.now()) =>
   JSON.stringify({
-    v: 2, t: ticketId, e: eventId,
-    s: 'v2.' + createHmac('sha256', Buffer.from(keyHex, 'hex'))
-      .update(`v2:${ticketId}:${eventId}:${Math.floor(nowMs / 15000)}`)
-      .digest('hex').slice(0, 32),
+    v: 2,
+    t: ticketId,
+    e: eventId,
+    s:
+      'v2.' +
+      createHmac('sha256', Buffer.from(keyHex, 'hex'))
+        .update(`v2:${ticketId}:${eventId}:${Math.floor(nowMs / 15000)}`)
+        .digest('hex')
+        .slice(0, 32),
   });
 
 async function login(email, password = 'Admin123!') {
   const r = await fetch(`${API}/auth/login`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
   const j = await r.json();
@@ -86,17 +92,19 @@ async function main() {
       i.tickets.map((t) => ({
         ...t,
         orderItem: { order: { userId: o.userId, publicId: o.publicId } },
-      })),
-    ),
+      }))
+    )
   );
   // El boleto tiene que seguir EN MANOS del dueño de la orden: uno transferido
   // en una corrida anterior ya no aparece en su cartera (correctamente) y la
   // prueba se caería por falta de clave, no por un defecto.
   const duenos = new Map(
-    (await prisma.user.findMany({
-      where: { id: { in: candidatos.map((t) => t.orderItem?.order?.userId).filter(Boolean) } },
-      select: { id: true, email: true },
-    })).map((u) => [u.id, u.email.toLowerCase()]),
+    (
+      await prisma.user.findMany({
+        where: { id: { in: candidatos.map((t) => t.orderItem?.order?.userId).filter(Boolean) } },
+        select: { id: true, email: true },
+      })
+    ).map((u) => [u.id, u.email.toLowerCase()])
   );
   const ticket = candidatos.find((t) => {
     const uid = t.orderItem?.order?.userId;
@@ -143,16 +151,22 @@ async function main() {
   console.log('\n1. Quien NO es dueño no puede transferirlo');
   // ---------------------------------------------------------------------------
   let r = await fetch(`${API}/tickets/transfer`, {
-    method: 'POST', headers: auth(tokenDest),
+    method: 'POST',
+    headers: auth(tokenDest),
     body: JSON.stringify({ ticketId: ticket.id, toEmail: 'cualquiera@demo.mx' }),
   });
-  check('un tercero no puede regalar tu boleto', r.status === 401 || r.status === 403, `HTTP ${r.status}`);
+  check(
+    'un tercero no puede regalar tu boleto',
+    r.status === 401 || r.status === 403,
+    `HTTP ${r.status}`
+  );
 
   // ---------------------------------------------------------------------------
   console.log('\n2. El dueño inicia la transferencia');
   // ---------------------------------------------------------------------------
   r = await fetch(`${API}/tickets/transfer`, {
-    method: 'POST', headers: auth(tokenDueño),
+    method: 'POST',
+    headers: auth(tokenDueño),
     body: JSON.stringify({ ticketId: ticket.id, toEmail: destinatario.email }),
   });
   const transfer = await r.json();
@@ -168,21 +182,25 @@ async function main() {
     },
   });
   r = await fetch(`${API}/tickets/transfer`, {
-    method: 'POST', headers: auth(tokenDueño),
+    method: 'POST',
+    headers: auth(tokenDueño),
     body: JSON.stringify({ ticketId: ticket.id, toEmail: otro?.email ?? 'tercero@demo.mx' }),
   });
   const segunda = await r.json();
   check(
     'una segunda transferencia simultánea se rechaza',
     !r.ok,
-    r.ok ? `SE CREÓ OTRA (${segunda.transferCode}) — dos personas pueden reclamar el mismo boleto` : `HTTP ${r.status}`,
+    r.ok
+      ? `SE CREÓ OTRA (${segunda.transferCode}) — dos personas pueden reclamar el mismo boleto`
+      : `HTTP ${r.status}`
   );
 
   // ---------------------------------------------------------------------------
   console.log('\n4. El destinatario acepta');
   // ---------------------------------------------------------------------------
   r = await fetch(`${API}/tickets/transfer/accept`, {
-    method: 'POST', headers: auth(tokenDest),
+    method: 'POST',
+    headers: auth(tokenDest),
     body: JSON.stringify({ transferCode: transfer.transferCode }),
   });
   const aceptada = await r.json();
@@ -192,7 +210,7 @@ async function main() {
   check(
     'el boleto queda a nombre del destinatario',
     trasAceptar?.buyerEmail?.toLowerCase() === destinatario.email.toLowerCase(),
-    `${trasAceptar?.buyerEmail}`,
+    `${trasAceptar?.buyerEmail}`
   );
 
   // ---------------------------------------------------------------------------
@@ -201,20 +219,20 @@ async function main() {
   // Su teléfono conserva la clave que descargó ANTES de regalarlo. Si con ella
   // sigue abriendo la puerta, dos personas entran con el mismo boleto y la
   // segunda se queda fuera sin entender por qué.
-  const cambioDeDueño =
-    trasAceptar?.buyerEmail?.toLowerCase() === destinatario.email.toLowerCase();
+  const cambioDeDueño = trasAceptar?.buyerEmail?.toLowerCase() === destinatario.email.toLowerCase();
   if (!cambioDeDueño) {
     check(
       'el código del que regaló YA NO abre la puerta',
       false,
-      'NO SE PUEDE JUZGAR: la transferencia no llegó a completarse',
+      'NO SE PUEDE JUZGAR: la transferencia no llegó a completarse'
     );
     return resumen();
   }
 
   const qrViejo = qrDe(claveDelQueRegala, ticket.id, ticket.event.id);
   r = await fetch(`${API}/access/scan`, {
-    method: 'POST', headers: auth(tokenStaff),
+    method: 'POST',
+    headers: auth(tokenStaff),
     body: JSON.stringify({ qrPayload: qrViejo }),
   });
   const veredicto = await r.json().catch(() => null);
@@ -224,7 +242,7 @@ async function main() {
     !entro,
     entro
       ? 'ENTRÓ — el mismo boleto sirve a dos personas'
-      : String(veredicto?.message ?? `HTTP ${r.status}`).slice(0, 70),
+      : String(veredicto?.message ?? `HTTP ${r.status}`).slice(0, 70)
   );
 
   // ---------------------------------------------------------------------------
@@ -233,28 +251,31 @@ async function main() {
   // Invalidar al viejo no vale nada si de paso se dejó fuera al nuevo. Se firma
   // con la época que quedó en la base tras aceptar — que es exactamente la
   // clave que la cartera del destinatario descargará.
-  const epoca = (await prisma.ticket.findUnique({
-    where: { id: ticket.id },
-    select: { keyEpoch: true },
-  }))?.keyEpoch ?? 0;
+  const epoca =
+    (
+      await prisma.ticket.findUnique({
+        where: { id: ticket.id },
+        select: { keyEpoch: true },
+      })
+    )?.keyEpoch ?? 0;
   const secreto = process.env.TICKET_QR_SECRET;
   if (!secreto) {
     check('la clave de la época vigente SÍ abre la puerta', false, 'sin TICKET_QR_SECRET');
   } else {
-    const material = epoca > 0
-      ? `${ticket.id}:${ticket.event.id}:${epoca}`
-      : `${ticket.id}:${ticket.event.id}`;
+    const material =
+      epoca > 0 ? `${ticket.id}:${ticket.event.id}:${epoca}` : `${ticket.id}:${ticket.event.id}`;
     const claveVigente = createHmac('sha256', secreto).update(material).digest('hex');
     const qrNuevo = qrDe(claveVigente, ticket.id, ticket.event.id);
     const rNuevo = await fetch(`${API}/access/scan`, {
-      method: 'POST', headers: auth(tokenStaff),
+      method: 'POST',
+      headers: auth(tokenStaff),
       body: JSON.stringify({ qrPayload: qrNuevo }),
     });
     const vNuevo = await rNuevo.json().catch(() => null);
     check(
       'la clave de la época vigente SÍ abre la puerta',
       rNuevo.ok && vNuevo?.success === true,
-      String(vNuevo?.message ?? vNuevo?.ticket?.code ?? `HTTP ${rNuevo.status}`).slice(0, 60),
+      String(vNuevo?.message ?? vNuevo?.ticket?.code ?? `HTTP ${rNuevo.status}`).slice(0, 60)
     );
     // El boleto se deja sin usar para que la prueba sea repetible.
     await prisma.ticket.update({
@@ -277,5 +298,8 @@ function resumen() {
 }
 
 main()
-  .catch((e) => { console.error('\n❌', e.message); process.exitCode = 1; })
+  .catch((e) => {
+    console.error('\n❌', e.message);
+    process.exitCode = 1;
+  })
   .finally(() => prisma.$disconnect());

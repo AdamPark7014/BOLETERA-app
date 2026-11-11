@@ -9,10 +9,7 @@ export function useHubTab(): [HubTab, (next: HubTab) => void] {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const tab = useMemo(
-    () => parseHubTab(searchParams.get('tab')),
-    [searchParams],
-  );
+  const tab = useMemo(() => parseHubTab(searchParams.get('tab')), [searchParams]);
 
   const setTab = useCallback(
     (next: HubTab) => {
@@ -25,7 +22,7 @@ export function useHubTab(): [HubTab, (next: HubTab) => void] {
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   return [tab, setTab];

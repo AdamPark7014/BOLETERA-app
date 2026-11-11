@@ -11,5 +11,3 @@ import { ChannelQuotaService } from './channel-quota.service';
   exports: [ChannelManagementService, ChannelQuotaService],
 })
 export class ChannelManagementModule {}
-
-

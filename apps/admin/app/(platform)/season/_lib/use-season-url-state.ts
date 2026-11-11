@@ -2,12 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  SORT_OPTIONS,
-  STATUS_FILTER_OPTIONS,
-  type SortKey,
-  type StatusFilter,
-} from './passes';
+import { SORT_OPTIONS, STATUS_FILTER_OPTIONS, type SortKey, type StatusFilter } from './passes';
 
 export type SeasonUrlState = {
   q: string;
@@ -54,29 +49,29 @@ export function useSeasonUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   const setSearch = useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]);
 
   const setSeason = useCallback(
     (season: string) => replaceParams({ season: season === 'all' ? null : season }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setStatus = useCallback(
     (status: StatusFilter) => replaceParams({ status: status === 'all' ? null : status }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setSort = useCallback(
     (sort: SortKey) => replaceParams({ sort: sort === 'adoption' ? null : sort }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const clearFilters = useCallback(
     () => replaceParams({ q: null, season: null, status: null, sort: null }),
-    [replaceParams],
+    [replaceParams]
   );
 
   return { ...state, setSearch, setSeason, setStatus, setSort, clearFilters };

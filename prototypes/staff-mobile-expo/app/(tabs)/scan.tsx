@@ -1,12 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  TextInput,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Screen } from '@/components/Screen';
 import { useAuth } from '@/lib/auth-context';
@@ -42,7 +35,7 @@ export default function ScanTab() {
         }, 1500);
       }
     },
-    [session?.token],
+    [session?.token]
   );
 
   if (!permission) {
@@ -57,7 +50,9 @@ export default function ScanTab() {
     return (
       <Screen>
         <Text style={styles.title}>Cámara requerida</Text>
-        <Text style={styles.sub}>Necesitamos acceso a la cámara para leer códigos QR en puerta.</Text>
+        <Text style={styles.sub}>
+          Necesitamos acceso a la cámara para leer códigos QR en puerta.
+        </Text>
         <Pressable style={styles.cta} onPress={requestPermission}>
           <Text style={styles.ctaText}>Permitir cámara</Text>
         </Pressable>

@@ -51,9 +51,7 @@ export const TEAM_ROLES: readonly RoleOption[] = [
   },
 ];
 
-const ROLE_BY_VALUE = new Map<string, RoleOption>(
-  TEAM_ROLES.map((role) => [role.value, role]),
-);
+const ROLE_BY_VALUE = new Map<string, RoleOption>(TEAM_ROLES.map((role) => [role.value, role]));
 
 export function isTeamRole(value: string): value is TeamRole {
   return ROLE_BY_VALUE.has(value);

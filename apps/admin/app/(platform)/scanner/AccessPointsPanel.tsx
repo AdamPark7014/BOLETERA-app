@@ -66,8 +66,7 @@ export function AccessPointsPanel({ rows, total, loading, available }: Props) {
         <ul className={styles.doorList} aria-label="Puntos de acceso">
           {rows.map((row) => {
             const percent =
-              row.percentOfTotal ??
-              (total > 0 ? Math.round((row.value / total) * 1000) / 10 : 0);
+              row.percentOfTotal ?? (total > 0 ? Math.round((row.value / total) * 1000) / 10 : 0);
             return (
               <li key={row.key} className={styles.doorRow}>
                 <div className={styles.doorMeta}>

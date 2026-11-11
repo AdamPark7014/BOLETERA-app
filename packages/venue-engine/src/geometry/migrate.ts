@@ -90,7 +90,10 @@ function parseBlock(raw: unknown, i: number): SeatMapBlock | null {
   };
 }
 
-function hydrateSeat(raw: Partial<SeatMapSeat> & Record<string, unknown>, fallbackId: string): SeatMapSeat {
+function hydrateSeat(
+  raw: Partial<SeatMapSeat> & Record<string, unknown>,
+  fallbackId: string
+): SeatMapSeat {
   const coord3d = parseCoord3d(raw.coord3d);
   let position = parsePosition(raw.position);
   if (!position && coord3d) {
@@ -129,7 +132,7 @@ function hydrateSeat(raw: Partial<SeatMapSeat> & Record<string, unknown>, fallba
 
 function hydrateSection(
   raw: Partial<SeatMapSection> & Record<string, unknown>,
-  index: number,
+  index: number
 ): SeatMapSection {
   const seatsRaw = Array.isArray(raw.seats) ? raw.seats : [];
   const blocks = Array.isArray(raw.blocks)
@@ -141,7 +144,10 @@ function hydrateSection(
     name: String(raw.name || `Sección ${index + 1}`),
     slug: String(raw.slug || `sec-${index}`),
     color: String(raw.color || '#486581'),
-    shape: raw.shape && typeof raw.shape === 'object' ? (raw.shape as SeatMapSection['shape']) : undefined,
+    shape:
+      raw.shape && typeof raw.shape === 'object'
+        ? (raw.shape as SeatMapSection['shape'])
+        : undefined,
     blocks: blocks?.length ? blocks : undefined,
     rake: raw.rake != null && Number.isFinite(Number(raw.rake)) ? Number(raw.rake) : undefined,
     seatPitch:
@@ -149,7 +155,9 @@ function hydrateSection(
         ? Number(raw.seatPitch)
         : undefined,
     rowPitch:
-      raw.rowPitch != null && Number.isFinite(Number(raw.rowPitch)) ? Number(raw.rowPitch) : undefined,
+      raw.rowPitch != null && Number.isFinite(Number(raw.rowPitch))
+        ? Number(raw.rowPitch)
+        : undefined,
     curvature:
       raw.curvature != null && Number.isFinite(Number(raw.curvature))
         ? Number(raw.curvature)
@@ -157,7 +165,7 @@ function hydrateSection(
     levelId: raw.levelId != null ? String(raw.levelId) : undefined,
     locked: raw.locked === true ? true : undefined,
     seats: seatsRaw.map((s, j) =>
-      hydrateSeat((s ?? {}) as Partial<SeatMapSeat> & Record<string, unknown>, `seat-${index}-${j}`),
+      hydrateSeat((s ?? {}) as Partial<SeatMapSeat> & Record<string, unknown>, `seat-${index}-${j}`)
     ),
   };
 }
@@ -247,10 +255,14 @@ function hydrateVenue(raw: unknown): SeatMapVenueMeta | undefined {
         if (ptsRaw?.length) {
           points = ptsRaw
             .map((p) => {
-              if (Array.isArray(p) && p.length >= 2) return [Number(p[0]), Number(p[1])] as [number, number];
+              if (Array.isArray(p) && p.length >= 2)
+                return [Number(p[0]), Number(p[1])] as [number, number];
               return null;
             })
-            .filter((p): p is [number, number] => p != null && Number.isFinite(p[0]) && Number.isFinite(p[1]));
+            .filter(
+              (p): p is [number, number] =>
+                p != null && Number.isFinite(p[0]) && Number.isFinite(p[1])
+            );
         } else if (Number.isFinite(Number(ex.x)) && Number.isFinite(Number(ex.y))) {
           points = [[Number(ex.x), Number(ex.y)]];
         }
@@ -259,7 +271,8 @@ function hydrateVenue(raw: unknown): SeatMapVenueMeta | undefined {
           id: String(ex.id ?? `exit-${i}`),
           points,
           label: ex.label != null ? String(ex.label) : undefined,
-          width: ex.width != null && Number.isFinite(Number(ex.width)) ? Number(ex.width) : undefined,
+          width:
+            ex.width != null && Number.isFinite(Number(ex.width)) ? Number(ex.width) : undefined,
           levelId: ex.levelId != null ? String(ex.levelId) : undefined,
         };
       })
@@ -267,7 +280,8 @@ function hydrateVenue(raw: unknown): SeatMapVenueMeta | undefined {
   }
   if (o.units === 'map' || o.units === 'meters') venue.units = o.units;
   if (o.scale != null && Number.isFinite(Number(o.scale))) venue.scale = Number(o.scale);
-  if (o.snapPitch != null && Number.isFinite(Number(o.snapPitch))) venue.snapPitch = Number(o.snapPitch);
+  if (o.snapPitch != null && Number.isFinite(Number(o.snapPitch)))
+    venue.snapPitch = Number(o.snapPitch);
   if (o.cadLocks && typeof o.cadLocks === 'object') {
     const c = o.cadLocks as Record<string, unknown>;
     venue.cadLocks = {
@@ -315,7 +329,7 @@ export function migrateToV3(raw: unknown): SeatMapData {
   const input = asRecord(raw) ?? {};
   const sectionsIn = Array.isArray(input.sections) ? input.sections : [];
   const sections = sectionsIn.map((sec, i) =>
-    hydrateSection((sec ?? {}) as Partial<SeatMapSection> & Record<string, unknown>, i),
+    hydrateSection((sec ?? {}) as Partial<SeatMapSection> & Record<string, unknown>, i)
   );
 
   const viewportIn = asRecord(input.viewport);

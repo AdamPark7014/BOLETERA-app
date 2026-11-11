@@ -28,9 +28,7 @@ export function LiveKpis({
   loading,
   degraded,
 }: Props) {
-  const platformHint = degraded
-    ? 'Datos de plataforma no disponibles'
-    : 'Agregado de plataforma';
+  const platformHint = degraded ? 'Datos de plataforma no disponibles' : 'Agregado de plataforma';
 
   return (
     <section className={styles.kpiGrid} aria-label="Indicadores en vivo">
@@ -66,11 +64,7 @@ export function LiveKpis({
       />
       <KpiCard
         label="No-show"
-        value={
-          noShowRate === null
-            ? '—'
-            : formatPercentPoints(noShowRate)
-        }
+        value={noShowRate === null ? '—' : formatPercentPoints(noShowRate)}
         tone={
           noShowRate === null
             ? 'neutral'

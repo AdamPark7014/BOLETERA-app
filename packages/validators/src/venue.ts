@@ -17,9 +17,9 @@ export const venueLayoutSchema = z.object({
             y: z.number(),
             row: z.string().optional(),
             tier: z.string().optional(),
-          }),
+          })
         ),
-      }),
+      })
     ),
   }),
 });

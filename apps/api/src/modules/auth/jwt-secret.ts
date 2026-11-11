@@ -22,7 +22,7 @@ const KNOWN_WEAK_SECRETS = new Set(
     'test',
     'ci-test-secret',
     'ci-internal-secret',
-  ].map((s) => s.toLowerCase()),
+  ].map((s) => s.toLowerCase())
 );
 
 const MIN_SECRET_LENGTH = 32;
@@ -31,19 +31,17 @@ function assertStrongSecret(name: string, value: string | undefined): string {
   if (!value) {
     throw new Error(
       `${name} no está definido. El proceso no arranca sin él: un secreto ausente ` +
-        `o débil permite falsificar credenciales de administrador.`,
+        `o débil permite falsificar credenciales de administrador.`
     );
   }
   if (KNOWN_WEAK_SECRETS.has(value.trim().toLowerCase())) {
     throw new Error(
       `${name} tiene un valor de ejemplo público ("${value.slice(0, 12)}…"). ` +
-        `Genera uno con: node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`,
+        `Genera uno con: node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
     );
   }
   if (value.length < MIN_SECRET_LENGTH) {
-    throw new Error(
-      `${name} mide ${value.length} caracteres; el mínimo es ${MIN_SECRET_LENGTH}.`,
-    );
+    throw new Error(`${name} mide ${value.length} caracteres; el mínimo es ${MIN_SECRET_LENGTH}.`);
   }
   return value;
 }
@@ -71,7 +69,7 @@ export function requireTicketQrSecret(): string {
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
       'TICKET_QR_SECRET es obligatorio en producción: la firma de los boletos no ' +
-        'debe compartir clave con las sesiones (rotar una invalidaría la otra).',
+        'debe compartir clave con las sesiones (rotar una invalidaría la otra).'
     );
   }
   return assertStrongSecret('JWT_SECRET (fallback de TICKET_QR_SECRET)', process.env.JWT_SECRET);
@@ -81,6 +79,6 @@ export function requireTicketQrSecret(): string {
 export function requireInternalApiSecret(): string {
   return assertStrongSecret(
     'INTERNAL_API_SECRET',
-    process.env.INTERNAL_API_SECRET ?? process.env.JWT_SECRET,
+    process.env.INTERNAL_API_SECRET ?? process.env.JWT_SECRET
   );
 }

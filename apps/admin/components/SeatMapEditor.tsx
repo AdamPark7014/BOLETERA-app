@@ -117,7 +117,7 @@ const ISSUE_CODE_LABELS: Partial<Record<GeometryIssueCode, string>> = {
 
 function buildActionableIssues(
   geometryIssues: ReturnType<typeof validateGeometry>['issues'],
-  access: ReturnType<typeof auditAccessibility>,
+  access: ReturnType<typeof auditAccessibility>
 ): ValidationRow[] {
   const rows: ValidationRow[] = geometryIssues.map((i) => ({
     severity: i.severity === 'error' ? 'error' : 'warning',
@@ -181,7 +181,9 @@ type CadReviewState = {
 type Props = {
   initial: SeatMapData;
   onSave: (map: SeatMapData) => Promise<void>;
-  onApplyTemplate?: (template: 'arena' | 'theater' | 'stadium' | 'festival') => Promise<SeatMapData>;
+  onApplyTemplate?: (
+    template: 'arena' | 'theater' | 'stadium' | 'festival'
+  ) => Promise<SeatMapData>;
   onAiSuggest?: (description: string) => Promise<SeatMapData | SeatMapSection[]>;
   /** Enables server egress report (GET saved / POST draft) */
   venueId?: string;
@@ -332,7 +334,11 @@ function FurnitureGlyph({
 }) {
   if (item.type === 'led') {
     return (
-      <g transform={`translate(${item.x} ${item.y})`} onPointerDown={onPointerDown} style={{ cursor: 'move' }}>
+      <g
+        transform={`translate(${item.x} ${item.y})`}
+        onPointerDown={onPointerDown}
+        style={{ cursor: 'move' }}
+      >
         <rect
           x={-26}
           y={-8}
@@ -343,13 +349,25 @@ function FurnitureGlyph({
           stroke={selected ? '#fff' : '#be123c'}
           strokeWidth={selected ? 2 : 1}
         />
-        <rect x={-22} y={-5} width={44} height={10} rx={1} fill="var(--bl-accent-text)" opacity={0.55} />
+        <rect
+          x={-22}
+          y={-5}
+          width={44}
+          height={10}
+          rx={1}
+          fill="var(--bl-accent-text)"
+          opacity={0.55}
+        />
       </g>
     );
   }
   if (item.type === 'speaker') {
     return (
-      <g transform={`translate(${item.x} ${item.y})`} onPointerDown={onPointerDown} style={{ cursor: 'move' }}>
+      <g
+        transform={`translate(${item.x} ${item.y})`}
+        onPointerDown={onPointerDown}
+        style={{ cursor: 'move' }}
+      >
         <rect
           x={-7}
           y={-10}
@@ -366,7 +384,11 @@ function FurnitureGlyph({
     );
   }
   return (
-    <g transform={`translate(${item.x} ${item.y})`} onPointerDown={onPointerDown} style={{ cursor: 'move' }}>
+    <g
+      transform={`translate(${item.x} ${item.y})`}
+      onPointerDown={onPointerDown}
+      style={{ cursor: 'move' }}
+    >
       <rect
         x={-9}
         y={-13}
@@ -400,7 +422,7 @@ export function SeatMapEditor({
   const [selected, setSelected] = useState<ReadonlySet<string>>(EMPTY_SELECTION);
   const [selectedFurnitureId, setSelectedFurnitureId] = useState<string | null>(null);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(
-    initial.sections[0]?.id ?? null,
+    initial.sections[0]?.id ?? null
   );
   const [saving, setSaving] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Arena 400 asientos, 4 secciones, escenario al norte');
@@ -481,14 +503,11 @@ export function SeatMapEditor({
    * Cambio estructural: se guarda instantánea completa porque no hay inverso
    * compacto (plantillas, importación CAD, regeneración de bloques).
    */
-  const pushHistory = useCallback(
-    (next: SeatMapData, label = 'Cambio de estructura') => {
-      const before = mapRef.current;
-      setHistory((h) => pushCommand(h, { kind: 'snapshot', label, before, after: next }));
-      setMap(next);
-    },
-    [],
-  );
+  const pushHistory = useCallback((next: SeatMapData, label = 'Cambio de estructura') => {
+    const before = mapRef.current;
+    setHistory((h) => pushCommand(h, { kind: 'snapshot', label, before, after: next }));
+    setMap(next);
+  }, []);
 
   function undo() {
     const result = undoCommand(mapRef.current, history);
@@ -558,9 +577,9 @@ export function SeatMapEditor({
       isLargeVenue
         ? []
         : map.sections.flatMap((sec) =>
-            sec.seats.map((s) => ({ ...s, sectionId: sec.id, sectionColor: sec.color })),
+            sec.seats.map((s) => ({ ...s, sectionId: sec.id, sectionColor: sec.color }))
           ),
-    [map.sections, isLargeVenue],
+    [map.sections, isLargeVenue]
   );
 
   /** Selección traducida a índices internos: comparación O(1) en el canvas. */
@@ -633,7 +652,7 @@ export function SeatMapEditor({
         y: bounds.minY - 36,
         width: bounds.width * 0.44,
       },
-    [map.venue, bounds],
+    [map.venue, bounds]
   );
   const furniture = map.venue?.furniture ?? [];
   const aisles = map.venue?.aisles ?? [];
@@ -678,7 +697,7 @@ export function SeatMapEditor({
       validateGeometry(resolvedScene, {
         levelId: levelFilter === 'ALL' ? undefined : levelFilter,
       }),
-    [resolvedScene, levelFilter],
+    [resolvedScene, levelFilter]
   );
   const overlapSeatIds = useMemo(() => {
     const ids = new Set<string>();
@@ -728,11 +747,7 @@ export function SeatMapEditor({
 
   const activeEgressPath = useMemo(() => {
     if (!circulation || !activeSection) return null;
-    if (
-      levelFilter !== 'ALL' &&
-      activeSection.levelId &&
-      activeSection.levelId !== levelFilter
-    ) {
+    if (levelFilter !== 'ALL' && activeSection.levelId && activeSection.levelId !== levelFilter) {
       return null;
     }
     const resolved = pathPointsForSection(circulation, activeSection.id);
@@ -755,7 +770,7 @@ export function SeatMapEditor({
     if (!circulation) return null;
     return filterCirculationGraph(
       circulation.graph,
-      levelFilter === 'ALL' ? undefined : levelFilter,
+      levelFilter === 'ALL' ? undefined : levelFilter
     );
   }, [circulation, levelFilter]);
 
@@ -812,9 +827,11 @@ export function SeatMapEditor({
         setSelected(EMPTY_SELECTION);
       }
 
-      const firstSection = sectionIds?.[0] ?? (targetSeats.length
-        ? idx.sections[idx.sectionIdx[idx.idToIdx.get(targetSeats[0])!]]?.id
-        : undefined);
+      const firstSection =
+        sectionIds?.[0] ??
+        (targetSeats.length
+          ? idx.sections[idx.sectionIdx[idx.idToIdx.get(targetSeats[0])!]]?.id
+          : undefined);
       if (firstSection) setActiveSectionId(firstSection);
 
       if (!Number.isFinite(minX)) return;
@@ -823,14 +840,17 @@ export function SeatMapEditor({
       const pad = Math.max(idx.pitch * 6, 60);
       const w = maxX - minX + pad * 2;
       const h = maxY - minY + pad * 2;
-      const next = Math.max(0.15, Math.min(6, Math.min(viewportSize.width / w, viewportSize.height / h)));
+      const next = Math.max(
+        0.15,
+        Math.min(6, Math.min(viewportSize.width / w, viewportSize.height / h))
+      );
       const cx = (minX + maxX) / 2;
       const cy = (minY + maxY) / 2;
       setScale(next);
       setTx(viewportSize.width / 2 - cx * next);
       setTy(viewportSize.height / 2 - cy * next);
     },
-    [seatIndex, map.sections, viewportSize],
+    [seatIndex, map.sections, viewportSize]
   );
 
   /**
@@ -840,7 +860,7 @@ export function SeatMapEditor({
    */
   const publishIssues = useMemo(
     () => buildActionableIssues(fullValidation.issues, accessibility),
-    [fullValidation.issues, accessibility],
+    [fullValidation.issues, accessibility]
   );
 
   const displayIssues = useMemo(
@@ -848,7 +868,7 @@ export function SeatMapEditor({
       levelFilter === 'ALL'
         ? publishIssues
         : buildActionableIssues(validation.issues, accessibility),
-    [levelFilter, publishIssues, validation.issues, accessibility],
+    [levelFilter, publishIssues, validation.issues, accessibility]
   );
 
   const errorCount = publishIssues.filter((i) => i.severity === 'error').length;
@@ -1002,9 +1022,8 @@ export function SeatMapEditor({
       return;
     }
     try {
-      const { downloadVenueEgressPdf, downloadVenueEgressPdfDraft } = await import(
-        '@/lib/platform-api'
-      );
+      const { downloadVenueEgressPdf, downloadVenueEgressPdfDraft } =
+        await import('@/lib/platform-api');
       if (mode === 'saved') await downloadVenueEgressPdf(token, venueId);
       else await downloadVenueEgressPdfDraft(token, venueId, map);
     } catch (e) {
@@ -1013,9 +1032,7 @@ export function SeatMapEditor({
     }
   }
 
-  function patchEgressPolicy(
-    patch: Partial<NonNullable<SeatMapData['venue']>['egressPolicy']>,
-  ) {
+  function patchEgressPolicy(patch: Partial<NonNullable<SeatMapData['venue']>['egressPolicy']>) {
     const current = resolveEgressPolicy(map.venue?.egressPolicy);
     updateVenueMeta({
       egressPolicy: { ...current, ...patch },
@@ -1117,7 +1134,7 @@ export function SeatMapEditor({
     if (cadLocks.focusPoints) return;
     updateVenueMeta({
       focusPoints: (map.venue?.focusPoints ?? []).map((f) =>
-        f.id === id ? { ...f, ...patch } : f,
+        f.id === id ? { ...f, ...patch } : f
       ),
     });
   }
@@ -1247,11 +1264,12 @@ export function SeatMapEditor({
       warnLocked('La sección activa está bloqueada.');
       return;
     }
-    const rowLabel = String.fromCharCode(65 + Math.floor(activeSection.seats.length / Math.max(cols, 1)));
+    const rowLabel = String.fromCharCode(
+      65 + Math.floor(activeSection.seats.length / Math.max(cols, 1))
+    );
     const startY =
-      (activeSection.seats.length
-        ? Math.max(...activeSection.seats.map((s) => s.y))
-        : 120) + (activeSection.rowPitch ?? blockParams.rowPitch);
+      (activeSection.seats.length ? Math.max(...activeSection.seats.map((s) => s.y)) : 120) +
+      (activeSection.rowPitch ?? blockParams.rowPitch);
     const startX = activeSection.seats.length
       ? Math.min(...activeSection.seats.map((s) => s.x)) +
         ((cols - 1) * (activeSection.seatPitch ?? blockParams.seatPitch)) / 2
@@ -1281,8 +1299,8 @@ export function SeatMapEditor({
               rake: s.rake ?? blockParams.rake,
               seats: [...s.seats, ...newSeats],
             }
-          : s,
-      ),
+          : s
+      )
     );
   }
 
@@ -1297,10 +1315,9 @@ export function SeatMapEditor({
     const baseX = 80 + ((cols - 1) * blockParams.seatPitch) / 2;
     const skip = parseSkipColumns(blockParams.skipColumns || 'every:8', cols);
     const blockId = `tmp-block-${Date.now()}`;
-    const elevation =
-      activeSection.seats.length
-        ? Math.max(...activeSection.seats.map((s) => s.elevation ?? 0)) + blockParams.rake
-        : 0;
+    const elevation = activeSection.seats.length
+      ? Math.max(...activeSection.seats.map((s) => s.elevation ?? 0)) + blockParams.rake
+      : 0;
     const block = {
       id: blockId,
       label: `Bloque ${rows}×${cols}`,
@@ -1329,8 +1346,8 @@ export function SeatMapEditor({
               blocks: [...(s.blocks ?? []), block],
               seats: [...s.seats, ...newSeats],
             }
-          : s,
-      ),
+          : s
+      )
     );
   }
 
@@ -1403,7 +1420,7 @@ export function SeatMapEditor({
     e: React.PointerEvent,
     sectionId: string,
     blockId: string,
-    origin: Point,
+    origin: Point
   ) {
     if (tool !== 'select') return;
     if (sectionLocked(sectionId)) {
@@ -1488,8 +1505,8 @@ export function SeatMapEditor({
               seatPitch: s.seatPitch ?? blockParams.seatPitch,
               seats: [...s.seats, ...newSeats],
             }
-          : s,
-      ),
+          : s
+      )
     );
   }
 
@@ -1513,7 +1530,7 @@ export function SeatMapEditor({
             },
           };
         }),
-      })),
+      }))
     );
   }
 
@@ -1533,7 +1550,7 @@ export function SeatMapEditor({
             visibility: { ...seat.visibility, ...patch },
           };
         }),
-      })),
+      }))
     );
   }
 
@@ -1585,7 +1602,8 @@ export function SeatMapEditor({
       if (fromLevelId && levels.length) {
         const sorted = [...levels].sort((a, b) => a.zIndex - b.zIndex);
         const i = sorted.findIndex((l) => l.id === fromLevelId);
-        toLevelId = (sorted[i + 1] ?? sorted[i - 1] ?? sorted.find((l) => l.id !== fromLevelId))?.id;
+        toLevelId = (sorted[i + 1] ?? sorted[i - 1] ?? sorted.find((l) => l.id !== fromLevelId))
+          ?.id;
       }
       updateVenueMeta({
         stairs: [
@@ -1655,7 +1673,7 @@ export function SeatMapEditor({
 
   function updateLevel(
     levelId: string,
-    patch: Partial<{ name: string; elevation: number; zIndex: number }>,
+    patch: Partial<{ name: string; elevation: number; zIndex: number }>
   ) {
     pushHistory(patchVenueLevel(map, levelId, patch));
   }
@@ -1664,7 +1682,7 @@ export function SeatMapEditor({
     const lv = (map.venue?.levels ?? []).find((l) => l.id === levelId);
     if (!lv) return;
     const ok = window.confirm(
-      `¿Eliminar nivel «${lv.name}»?\nSe quitará de secciones, pasillos, salidas y escaleras.`,
+      `¿Eliminar nivel «${lv.name}»?\nSe quitará de secciones, pasillos, salidas y escaleras.`
     );
     if (!ok) return;
     const next = removeVenueLevel(map, levelId);
@@ -1674,9 +1692,7 @@ export function SeatMapEditor({
 
   function assignSectionLevel(levelId: string | undefined) {
     if (!activeSection) return;
-    updateSections(
-      map.sections.map((s) => (s.id === activeSection.id ? { ...s, levelId } : s)),
-    );
+    updateSections(map.sections.map((s) => (s.id === activeSection.id ? { ...s, levelId } : s)));
   }
 
   const handleGeneratorPreviewChange = useCallback(
@@ -1684,7 +1700,7 @@ export function SeatMapEditor({
       setGeneratorPreviewSeats(seats);
       setGeneratorPreviewGa(gaShape ?? null);
     },
-    [],
+    []
   );
 
   function handleGeneratorApply(payload: GeneratorApplyPayload) {
@@ -1783,8 +1799,8 @@ export function SeatMapEditor({
               rake: s.rake ?? blockParams.rake,
               seats: [...s.seats, ...filled],
             }
-          : s,
-      ),
+          : s
+      )
     );
   }
 
@@ -1821,7 +1837,7 @@ export function SeatMapEditor({
         if (enforced.lockedCount > 0) {
           const labels = activeCadLockLabels(locks).join(', ');
           window.alert(
-            `${enforced.lockedCount} entidad(es) omitidas por CAD lock (${labels || 'capas bloqueadas'}).`,
+            `${enforced.lockedCount} entidad(es) omitidas por CAD lock (${labels || 'capas bloqueadas'}).`
           );
         }
       } catch (err) {
@@ -1849,7 +1865,7 @@ export function SeatMapEditor({
         if (enforced.lockedCount > 0) {
           const labels = activeCadLockLabels(locks).join(', ');
           window.alert(
-            `${enforced.lockedCount} entidad(es) omitidas por CAD lock (${labels || 'capas bloqueadas'}).`,
+            `${enforced.lockedCount} entidad(es) omitidas por CAD lock (${labels || 'capas bloqueadas'}).`
           );
         }
       } catch (err) {
@@ -1865,9 +1881,7 @@ export function SeatMapEditor({
       return;
     }
     setCadReview((prev) =>
-      prev
-        ? { ...prev, rows: prev.rows.map((r) => (r.id === id ? { ...r, role } : r)) }
-        : prev,
+      prev ? { ...prev, rows: prev.rows.map((r) => (r.id === id ? { ...r, role } : r)) } : prev
     );
   }
 
@@ -1909,7 +1923,7 @@ export function SeatMapEditor({
           `Focos: ${stats.focuses}\n` +
           `Omitidos: ${stats.skipped}` +
           (stats.lockedSkipped ? ` (locks: ${stats.lockedSkipped})` : '') +
-          `\nEscenario: ${stats.stage ? 'sí' : 'no'}`,
+          `\nEscenario: ${stats.stage ? 'sí' : 'no'}`
       );
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'No se pudo aplicar el import');
@@ -1986,7 +2000,7 @@ export function SeatMapEditor({
           ...s,
           seats: s.seats.filter((seat) => !selected.has(seat.id)),
         };
-      }),
+      })
     );
     setSelected(EMPTY_SELECTION);
   }
@@ -2063,7 +2077,7 @@ export function SeatMapEditor({
     if (!activeSection) return;
     const missing = Math.max(
       0,
-      accessibility.requiredWheelchairSpaces - accessibility.wheelchairSpaces,
+      accessibility.requiredWheelchairSpaces - accessibility.wheelchairSpaces
     );
     const count = missing || requiredWheelchairSpaces(activeSection.seats.length);
     if (!count) return;
@@ -2075,7 +2089,7 @@ export function SeatMapEditor({
     };
     pushHistory(
       next,
-      `Generar ${created.wheelchair.length} plaza(s) accesible(s) en ${activeSection.name}`,
+      `Generar ${created.wheelchair.length} plaza(s) accesible(s) en ${activeSection.name}`
     );
     setSelected(new Set([...created.wheelchair, ...created.companions]));
   }
@@ -2090,18 +2104,16 @@ export function SeatMapEditor({
           seats: s.seats.map((seat) =>
             selected.has(seat.id)
               ? { ...seat, rotation: ((seat.rotation ?? 0) + delta) % 360 }
-              : seat,
+              : seat
           ),
         };
-      }),
+      })
     );
   }
 
   function setSectionColor(color: string) {
     if (!activeSection) return;
-    updateSections(
-      map.sections.map((s) => (s.id === activeSection.id ? { ...s, color } : s)),
-    );
+    updateSections(map.sections.map((s) => (s.id === activeSection.id ? { ...s, color } : s)));
   }
 
   async function handleSave(): Promise<boolean> {
@@ -2115,7 +2127,7 @@ export function SeatMapEditor({
         `No se puede guardar:\n${errs
           .slice(0, 8)
           .map((i) => `• ${i.message}`)
-          .join('\n')}${errs.length > 8 ? `\n…y ${errs.length - 8} más` : ''}`,
+          .join('\n')}${errs.length > 8 ? `\n…y ${errs.length - 8} más` : ''}`
       );
       return false;
     }
@@ -2133,7 +2145,7 @@ export function SeatMapEditor({
         `Vas a guardar el mapa completo: ${seatCount.toLocaleString('es-MX')} butacas, ` +
           `~${formatBytes(bytes)}.\n\n` +
           'El API reemplaza el documento entero (no hay guardado parcial), así que ' +
-          'cualquier zona que falte se borra.\n\n¿Continuar?',
+          'cualquier zona que falte se borra.\n\n¿Continuar?'
       );
       if (!ok) return false;
     }
@@ -2395,7 +2407,12 @@ export function SeatMapEditor({
                 />
                 <em>{s.seats.length || (s.shape ? 'GA' : 0)}</em>
               </button>
-              <button type="button" className={styles.iconBtn} onClick={() => deleteSection(s.id)} title="Borrar sección">
+              <button
+                type="button"
+                className={styles.iconBtn}
+                onClick={() => deleteSection(s.id)}
+                title="Borrar sección"
+              >
                 ×
               </button>
             </li>
@@ -2422,8 +2439,10 @@ export function SeatMapEditor({
                   onChange={(e) =>
                     updateSections(
                       map.sections.map((s) =>
-                        s.id === activeSection.id ? { ...s, locked: e.target.checked || undefined } : s,
-                      ),
+                        s.id === activeSection.id
+                          ? { ...s, locked: e.target.checked || undefined }
+                          : s
+                      )
                     )
                   }
                 />{' '}
@@ -2510,9 +2529,7 @@ export function SeatMapEditor({
                 type="number"
                 value={lv.elevation}
                 aria-label={`Elevación ${lv.name}`}
-                onChange={(e) =>
-                  updateLevel(lv.id, { elevation: Number(e.target.value) || 0 })
-                }
+                onChange={(e) => updateLevel(lv.id, { elevation: Number(e.target.value) || 0 })}
                 style={{ width: 72 }}
               />
             </label>
@@ -2573,8 +2590,8 @@ export function SeatMapEditor({
           />
         </label>
         <p className={styles.sideHint}>
-          SVG/DXF abren un panel de revisión: reclasifica o omite entidades antes de aplicar.
-          Capas: aisle / obstacle / stage / stairs / exit|salida.
+          SVG/DXF abren un panel de revisión: reclasifica o omite entidades antes de aplicar. Capas:
+          aisle / obstacle / stage / stairs / exit|salida.
         </p>
         <div className={styles.stageTools}>
           <button type="button" onClick={exportDxf}>
@@ -2615,7 +2632,11 @@ export function SeatMapEditor({
             + Speaker
           </button>
           {selectedFurnitureId && (
-            <button type="button" className={styles.dangerBtn} onClick={() => removeFurniture(selectedFurnitureId)}>
+            <button
+              type="button"
+              className={styles.dangerBtn}
+              onClick={() => removeFurniture(selectedFurnitureId)}
+            >
               Quitar seleccionado
             </button>
           )}
@@ -2641,7 +2662,9 @@ export function SeatMapEditor({
             </select>
           </label>
         )}
-        <p className={styles.sideHint}>Arrastra el escenario o el mobiliario directamente en el lienzo.</p>
+        <p className={styles.sideHint}>
+          Arrastra el escenario o el mobiliario directamente en el lienzo.
+        </p>
 
         <h3>Bloque paramétrico</h3>
         <div className={styles.paramGrid}>
@@ -2738,7 +2761,10 @@ export function SeatMapEditor({
         <button type="button" onClick={applyMetricDefaults} title="Pitch ~0.52m / fila ~0.9m">
           Pitches métricos
         </button>
-        <label className={styles.paramField} style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}>
+        <label
+          className={styles.paramField}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
+        >
           <input
             type="checkbox"
             checked={snapEnabled}
@@ -2759,7 +2785,7 @@ export function SeatMapEditor({
             setViewHeat(true);
             // eslint-disable-next-line no-alert
             window.alert(
-              `Vistas calculadas (${levelLabel})\nAsientos: ${result.scores.length}\nFocos: ${result.focuses.length}\nPremium: ${result.summary.premium}\nGood: ${result.summary.good}\nFair: ${result.summary.fair}\nRestricted: ${result.summary.restricted}\nBlocked: ${result.summary.blocked}\nFila delante: ${rowBlocked}\nObstáculo: ${occluded}`,
+              `Vistas calculadas (${levelLabel})\nAsientos: ${result.scores.length}\nFocos: ${result.focuses.length}\nPremium: ${result.summary.premium}\nGood: ${result.summary.good}\nFair: ${result.summary.fair}\nRestricted: ${result.summary.restricted}\nBlocked: ${result.summary.blocked}\nFila delante: ${rowBlocked}\nObstáculo: ${occluded}`
             );
           }}
           disabled={!allSeats.length}
@@ -2771,7 +2797,10 @@ export function SeatMapEditor({
         >
           Calcular vistas
         </button>
-        <label className={styles.paramField} style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}>
+        <label
+          className={styles.paramField}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
+        >
           <input
             type="checkbox"
             checked={viewHeat}
@@ -2780,7 +2809,10 @@ export function SeatMapEditor({
           />
           Heat de vista
         </label>
-        <label className={styles.paramField} style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}>
+        <label
+          className={styles.paramField}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
+        >
           <input
             type="checkbox"
             checked={showCirculation}
@@ -2863,10 +2895,8 @@ export function SeatMapEditor({
             {bottlenecksView[0] && (
               <div>
                 bottleneck: {bottlenecksView[0].kind}{' '}
-                {Math.round(bottlenecksView[0].utilization * 100)}% (
-                {bottlenecksView[0].seatLoad}/
-                {bottlenecksView[0].capacity}, ancho{' '}
-                {bottlenecksView[0].width}u)
+                {Math.round(bottlenecksView[0].utilization * 100)}% ({bottlenecksView[0].seatLoad}/
+                {bottlenecksView[0].capacity}, ancho {bottlenecksView[0].width}u)
               </div>
             )}
             {circulation.egress.clearanceMinutes != null && (
@@ -2883,7 +2913,7 @@ export function SeatMapEditor({
                 {activeEgressPath.length != null ? `${Math.round(activeEgressPath.length)}u` : '—'}
                 {(() => {
                   const secEg = circulation.egress.sections.find(
-                    (s) => s.sectionId === activeSection?.id,
+                    (s) => s.sectionId === activeSection?.id
                   );
                   return secEg?.clearanceMinutes != null
                     ? ` · ~${secEg.clearanceMinutes.toFixed(1)} min`
@@ -2894,7 +2924,9 @@ export function SeatMapEditor({
 
             <div style={{ marginTop: '0.55rem', maxHeight: 160, overflow: 'auto' }}>
               <strong>Secciones</strong>
-              <table style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', marginTop: 4 }}>
+              <table
+                style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', marginTop: 4 }}
+              >
                 <thead>
                   <tr style={{ textAlign: 'left', opacity: 0.75 }}>
                     <th>Zona</th>
@@ -2912,7 +2944,9 @@ export function SeatMapEditor({
                           s.sectionId === activeSection?.id ? 'rgba(251,191,36,0.12)' : undefined,
                       }}
                     >
-                      <td style={{ padding: '1px 2px' }}>{(s.sectionName ?? s.sectionId).slice(0, 14)}</td>
+                      <td style={{ padding: '1px 2px' }}>
+                        {(s.sectionName ?? s.sectionId).slice(0, 14)}
+                      </td>
                       <td style={{ padding: '1px 2px' }}>{s.seatCount}</td>
                       <td style={{ padding: '1px 2px' }}>
                         {s.pathLength != null ? Math.round(s.pathLength) : '—'}
@@ -2983,7 +3017,7 @@ export function SeatMapEditor({
                     patchEgressPolicy({
                       bottleneckUtilization: Math.min(
                         1,
-                        Math.max(0.5, Number(e.target.value) || 0.85),
+                        Math.max(0.5, Number(e.target.value) || 0.85)
                       ),
                     })
                   }
@@ -3077,9 +3111,7 @@ export function SeatMapEditor({
                     <select
                       value={a.levelId ?? ''}
                       disabled={Boolean(cadLocks.aisles)}
-                      onChange={(e) =>
-                        patchAisle(a.id, { levelId: e.target.value || undefined })
-                      }
+                      onChange={(e) => patchAisle(a.id, { levelId: e.target.value || undefined })}
                     >
                       <option value="">— auto / todos —</option>
                       {(map.venue?.levels ?? []).map((lv) => (
@@ -3098,7 +3130,10 @@ export function SeatMapEditor({
           <div style={{ marginTop: '0.35rem' }}>
             <strong className={styles.sideHint}>Escaleras / vomitorios</strong>
             {stairs.map((s) => (
-              <div key={s.id} style={{ marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #e5e5e5' }}>
+              <div
+                key={s.id}
+                style={{ marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #e5e5e5' }}
+              >
                 <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                   <label className={styles.paramField} style={{ flex: 1, margin: 0 }}>
                     {s.id.replace(/^tmp-poly-/, '').slice(0, 14)} · ancho
@@ -3144,9 +3179,7 @@ export function SeatMapEditor({
                   <select
                     value={s.fromLevelId ?? ''}
                     disabled={Boolean(cadLocks.stairs)}
-                    onChange={(e) =>
-                      patchStair(s.id, { fromLevelId: e.target.value || undefined })
-                    }
+                    onChange={(e) => patchStair(s.id, { fromLevelId: e.target.value || undefined })}
                   >
                     <option value="">— auto —</option>
                     {(map.venue?.levels ?? []).map((lv) => (
@@ -3161,9 +3194,7 @@ export function SeatMapEditor({
                   <select
                     value={s.toLevelId ?? ''}
                     disabled={Boolean(cadLocks.stairs)}
-                    onChange={(e) =>
-                      patchStair(s.id, { toLevelId: e.target.value || undefined })
-                    }
+                    onChange={(e) => patchStair(s.id, { toLevelId: e.target.value || undefined })}
                   >
                     <option value="">— auto —</option>
                     {(map.venue?.levels ?? []).map((lv) => (
@@ -3238,7 +3269,9 @@ export function SeatMapEditor({
           </p>
           {exits.map((ex) => (
             <div key={ex.id} style={{ marginBottom: 6 }}>
-              <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: 4 }}>
+              <div
+                style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: 4 }}
+              >
                 <input
                   value={ex.label ?? ''}
                   disabled={Boolean(cadLocks.exits)}
@@ -3275,9 +3308,7 @@ export function SeatMapEditor({
                   <select
                     value={ex.levelId ?? ''}
                     disabled={Boolean(cadLocks.exits)}
-                    onChange={(e) =>
-                      patchExit(ex.id, { levelId: e.target.value || undefined })
-                    }
+                    onChange={(e) => patchExit(ex.id, { levelId: e.target.value || undefined })}
                   >
                     <option value="">— auto / todos —</option>
                     {(map.venue?.levels ?? []).map((lv) => (
@@ -3303,16 +3334,21 @@ export function SeatMapEditor({
           <button
             type="button"
             onClick={clearFocuses}
-            disabled={Boolean(cadLocks.focusPoints) || !(map.venue?.focusPoints?.length)}
+            disabled={Boolean(cadLocks.focusPoints) || !map.venue?.focusPoints?.length}
           >
             Quitar focos
           </button>
         </div>
         {(map.venue?.focusPoints?.length ?? 0) > 0 && (
-          <ul className={styles.sideHint} style={{ listStyle: 'none', padding: 0, margin: '0.35rem 0' }}>
+          <ul
+            className={styles.sideHint}
+            style={{ listStyle: 'none', padding: 0, margin: '0.35rem 0' }}
+          >
             {map.venue!.focusPoints!.map((f) => (
               <li key={f.id} style={{ marginBottom: 6 }}>
-                <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: 4 }}>
+                <div
+                  style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: 4 }}
+                >
                   <input
                     value={f.label ?? ''}
                     onChange={(e) => renameFocus(f.id, e.target.value)}
@@ -3336,9 +3372,7 @@ export function SeatMapEditor({
                     <select
                       value={f.levelId ?? ''}
                       disabled={Boolean(cadLocks.focusPoints)}
-                      onChange={(e) =>
-                        patchFocus(f.id, { levelId: e.target.value || undefined })
-                      }
+                      onChange={(e) => patchFocus(f.id, { levelId: e.target.value || undefined })}
                     >
                       <option value="">— auto / todos —</option>
                       {(map.venue?.levels ?? []).map((lv) => (
@@ -3356,7 +3390,9 @@ export function SeatMapEditor({
         {(map.venue?.focusPoints?.length ?? 0) > 0 && (
           <p className={styles.sideHint}>
             {map.venue!.focusPoints!.length} focos · sightlines toma el mejor por asiento
-            {tool === 'focus' && !cadLocks.focusPoints ? ' · click mapa = nuevo, click foco = borrar' : ''}
+            {tool === 'focus' && !cadLocks.focusPoints
+              ? ' · click mapa = nuevo, click foco = borrar'
+              : ''}
             {cadLocks.focusPoints ? ' · bloqueados (CAD lock)' : ''}
           </p>
         )}
@@ -3504,7 +3540,9 @@ export function SeatMapEditor({
           {errorCount > 0 && (
             <Card variant="outline" padding="sm" className={styles.validationAlert}>
               <p>
-                {errorCount === 1 ? 'Hay 1 error que impide' : `Hay ${errorCount} errores que impiden`}{' '}
+                {errorCount === 1
+                  ? 'Hay 1 error que impide'
+                  : `Hay ${errorCount} errores que impiden`}{' '}
                 guardar y publicar. Corrige los marcados como error antes de continuar.
               </p>
             </Card>
@@ -3570,7 +3608,8 @@ export function SeatMapEditor({
               </ul>
               {displayIssues.length > 12 && (
                 <p className={styles.issueHint}>
-                  …y {displayIssues.length - 12} más. Resuelve los de arriba y la lista se recalcula.
+                  …y {displayIssues.length - 12} más. Resuelve los de arriba y la lista se
+                  recalcula.
                 </p>
               )}
             </>
@@ -3597,10 +3636,18 @@ export function SeatMapEditor({
         )}
         <div className={styles.toolbar}>
           <div className={styles.toolGroup}>
-            <button type="button" className={tool === 'select' ? styles.primary : ''} onClick={() => setTool('select')}>
+            <button
+              type="button"
+              className={tool === 'select' ? styles.primary : ''}
+              onClick={() => setTool('select')}
+            >
               Seleccionar
             </button>
-            <button type="button" className={tool === 'pan' ? styles.primary : ''} onClick={() => setTool('pan')}>
+            <button
+              type="button"
+              className={tool === 'pan' ? styles.primary : ''}
+              onClick={() => setTool('pan')}
+            >
               Pan
             </button>
             <button
@@ -3711,19 +3758,36 @@ export function SeatMapEditor({
             >
               Generadores <kbd className={styles.kbd}>Ctrl+⇧+G</kbd>
             </button>
-            <button type="button" onClick={() => addRow(12)} disabled={!activeSection || destructiveLocked || readOnly}>
+            <button
+              type="button"
+              onClick={() => addRow(12)}
+              disabled={!activeSection || destructiveLocked || readOnly}
+            >
               + Fila
             </button>
-            <button type="button" onClick={() => addGrid(5, 12)} disabled={!activeSection || destructiveLocked || readOnly}>
+            <button
+              type="button"
+              onClick={() => addGrid(5, 12)}
+              disabled={!activeSection || destructiveLocked || readOnly}
+            >
               + Grid 5×12
             </button>
-            <button type="button" onClick={() => addCurvedRow()} disabled={!activeSection || destructiveLocked || readOnly} title="Fila en arco (teatro/arena)">
+            <button
+              type="button"
+              onClick={() => addCurvedRow()}
+              disabled={!activeSection || destructiveLocked || readOnly}
+              title="Fila en arco (teatro/arena)"
+            >
               Fila curva
             </button>
           </div>
 
           <div className={styles.toolGroup}>
-            <button type="button" onClick={deleteSelected} disabled={!selected.size || destructiveLocked || readOnly}>
+            <button
+              type="button"
+              onClick={deleteSelected}
+              disabled={!selected.size || destructiveLocked || readOnly}
+            >
               Eliminar ({selected.size})
             </button>
             {TIERS.map((t) => (
@@ -3838,7 +3902,12 @@ export function SeatMapEditor({
           </div>
 
           {hideSaveButton ? null : (
-            <button type="button" className={styles.primary} onClick={() => void handleSave()} disabled={saving}>
+            <button
+              type="button"
+              className={styles.primary}
+              onClick={() => void handleSave()}
+              disabled={saving}
+            >
               {saving ? 'Guardando…' : 'Guardar mapa'}
             </button>
           )}
@@ -3862,9 +3931,7 @@ export function SeatMapEditor({
           ref={viewportRef}
           className={styles.viewport}
           role="img"
-          aria-label={
-            showCirculation ? 'Mapa del venue con rutas de salida' : 'Mapa del venue'
-          }
+          aria-label={showCirculation ? 'Mapa del venue con rutas de salida' : 'Mapa del venue'}
           aria-describedby={showCirculation ? 'egress-legend egress-status' : undefined}
           onWheel={(e) => {
             e.preventDefault();
@@ -3954,7 +4021,10 @@ export function SeatMapEditor({
           }}
           onDoubleClick={() => {
             if (tool === 'ga' && gaDraft.length >= 3) finishGaZone();
-            if ((tool === 'aisle' || tool === 'obstacle' || tool === 'stairs') && polyDraft.length >= 2)
+            if (
+              (tool === 'aisle' || tool === 'obstacle' || tool === 'stairs') &&
+              polyDraft.length >= 2
+            )
               finishPolyTool();
           }}
           onPointerMove={(e) => {
@@ -4019,12 +4089,14 @@ export function SeatMapEditor({
                     ...sec,
                     seats: sec.seats.map((seat) => {
                       const o = d.origSeats[seat.id];
-                      return o ? { ...seat, x: Math.round(o.x + dx), y: Math.round(o.y + dy) } : seat;
+                      return o
+                        ? { ...seat, x: Math.round(o.x + dx), y: Math.round(o.y + dy) }
+                        : seat;
                     }),
                     shape: d.origShape
                       ? {
                           points: d.origShape.map(
-                            ([x, y]) => [Math.round(x + dx), Math.round(y + dy)] as [number, number],
+                            ([x, y]) => [Math.round(x + dx), Math.round(y + dy)] as [number, number]
                           ),
                         }
                       : sec.shape,
@@ -4056,7 +4128,7 @@ export function SeatMapEditor({
                               y: Math.round(d.origOrigin.y + dy),
                             },
                           }
-                        : b,
+                        : b
                     ),
                   };
                 }),
@@ -4069,7 +4141,12 @@ export function SeatMapEditor({
                 ...prev,
                 venue: {
                   ...prev.venue,
-                  stage: { ...prev.venue?.stage, x: Math.round(d.orig.x + dx), y: Math.round(d.orig.y + dy), width: d.orig.width },
+                  stage: {
+                    ...prev.venue?.stage,
+                    x: Math.round(d.orig.x + dx),
+                    y: Math.round(d.orig.y + dy),
+                    width: d.orig.width,
+                  },
                 },
               }));
               return;
@@ -4081,12 +4158,18 @@ export function SeatMapEditor({
                 if (d.side === 'right') {
                   return {
                     ...prev,
-                    venue: { ...prev.venue, stage: { ...cur, width: Math.max(60, Math.round(d.orig.width + dx)) } },
+                    venue: {
+                      ...prev.venue,
+                      stage: { ...cur, width: Math.max(60, Math.round(d.orig.width + dx)) },
+                    },
                   };
                 }
                 const newWidth = Math.max(60, Math.round(d.orig.width - dx));
                 const newX = Math.round(d.orig.x + (d.orig.width - newWidth));
-                return { ...prev, venue: { ...prev.venue, stage: { ...cur, x: newX, width: newWidth } } };
+                return {
+                  ...prev,
+                  venue: { ...prev.venue, stage: { ...cur, x: newX, width: newWidth } },
+                };
               });
               return;
             }
@@ -4097,7 +4180,9 @@ export function SeatMapEditor({
                 venue: {
                   ...prev.venue,
                   furniture: (prev.venue?.furniture ?? []).map((f) =>
-                    f.id === d.id ? { ...f, x: Math.round(d.orig.x + dx), y: Math.round(d.orig.y + dy) } : f,
+                    f.id === d.id
+                      ? { ...f, x: Math.round(d.orig.x + dx), y: Math.round(d.orig.y + dy) }
+                      : f
                   ),
                 },
               }));
@@ -4113,7 +4198,7 @@ export function SeatMapEditor({
                   focusPoints: (prev.venue?.focusPoints ?? []).map((f) =>
                     f.id === d.id
                       ? { ...f, x: Math.round(d.orig.x + dx), y: Math.round(d.orig.y + dy) }
-                      : f,
+                      : f
                   ),
                 },
               }));
@@ -4286,44 +4371,53 @@ export function SeatMapEditor({
               {(map.venue?.focusPoints ?? []).map((f) => {
                 if (levelFilter !== 'ALL' && f.levelId && f.levelId !== levelFilter) return null;
                 return (
-                <g
-                  key={f.id}
-                  style={{ cursor: tool === 'focus' || tool === 'select' ? 'pointer' : 'default' }}
-                  onPointerDown={(e) => {
-                    if (tool !== 'focus' && tool !== 'select') return;
-                    e.stopPropagation();
-                    if (cadLocks.focusPoints) {
-                      if (tool === 'focus') warnLocked('Los focos están bloqueados (CAD lock).');
-                      return;
-                    }
-                    if (tool === 'focus') {
-                      removeFocus(f.id);
-                      return;
-                    }
-                    const world = clientToWorld(e.clientX, e.clientY);
-                    dragRef.current = {
-                      mode: 'focus',
-                      id: f.id,
-                      startX: world.x,
-                      startY: world.y,
-                      orig: { x: f.x, y: f.y },
-                    };
-                    (viewportRef.current as HTMLElement | null)?.setPointerCapture(e.pointerId);
-                  }}
-                >
-                  <circle cx={f.x} cy={f.y} r={7} fill="rgba(250,250,250,0.9)" stroke="var(--bl-accent)" strokeWidth={2} />
-                  <text
-                    x={f.x}
-                    y={f.y - 12}
-                    textAnchor="middle"
-                    fill="#fecdd3"
-                    fontSize={9}
-                    fontWeight={700}
-                    style={{ pointerEvents: 'none' }}
+                  <g
+                    key={f.id}
+                    style={{
+                      cursor: tool === 'focus' || tool === 'select' ? 'pointer' : 'default',
+                    }}
+                    onPointerDown={(e) => {
+                      if (tool !== 'focus' && tool !== 'select') return;
+                      e.stopPropagation();
+                      if (cadLocks.focusPoints) {
+                        if (tool === 'focus') warnLocked('Los focos están bloqueados (CAD lock).');
+                        return;
+                      }
+                      if (tool === 'focus') {
+                        removeFocus(f.id);
+                        return;
+                      }
+                      const world = clientToWorld(e.clientX, e.clientY);
+                      dragRef.current = {
+                        mode: 'focus',
+                        id: f.id,
+                        startX: world.x,
+                        startY: world.y,
+                        orig: { x: f.x, y: f.y },
+                      };
+                      (viewportRef.current as HTMLElement | null)?.setPointerCapture(e.pointerId);
+                    }}
                   >
-                    {f.label ?? 'Foco'}
-                  </text>
-                </g>
+                    <circle
+                      cx={f.x}
+                      cy={f.y}
+                      r={7}
+                      fill="rgba(250,250,250,0.9)"
+                      stroke="var(--bl-accent)"
+                      strokeWidth={2}
+                    />
+                    <text
+                      x={f.x}
+                      y={f.y - 12}
+                      textAnchor="middle"
+                      fill="#fecdd3"
+                      fontSize={9}
+                      fontWeight={700}
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {f.label ?? 'Foco'}
+                    </text>
+                  </g>
                 );
               })}
               {tool === 'select' && (
@@ -4373,7 +4467,9 @@ export function SeatMapEditor({
                         y2={b.y}
                         stroke={stroke}
                         strokeWidth={isBottleneck ? 5 : e.kind === 'aisle' ? 3 : 2}
-                        strokeDasharray={e.kind === 'link' || e.kind === 'access' ? '4 3' : undefined}
+                        strokeDasharray={
+                          e.kind === 'link' || e.kind === 'access' ? '4 3' : undefined
+                        }
                       />
                     );
                   })}
@@ -4426,7 +4522,7 @@ export function SeatMapEditor({
                       />
                       <title>{`Bloque ${block.label ?? block.id} — arrastra para mover`}</title>
                     </g>
-                  )),
+                  ))
                 )}
 
               {/* Section egress routes (+ bottlenecks) */}
@@ -4484,12 +4580,12 @@ export function SeatMapEditor({
                   return null;
                 }
                 return (
-                <FurnitureGlyph
-                  key={item.id}
-                  item={item}
-                  selected={selectedFurnitureId === item.id}
-                  onPointerDown={(e) => handleFurniturePointerDown(e, item)}
-                />
+                  <FurnitureGlyph
+                    key={item.id}
+                    item={item}
+                    selected={selectedFurnitureId === item.id}
+                    onPointerDown={(e) => handleFurniturePointerDown(e, item)}
+                  />
                 );
               })}
 
@@ -4507,7 +4603,11 @@ export function SeatMapEditor({
                   return null;
                 }
                 return (
-                  <g key={`label-${sec.id}`} transform={`translate(${cx} ${cy})`} style={{ pointerEvents: 'none' }}>
+                  <g
+                    key={`label-${sec.id}`}
+                    transform={`translate(${cx} ${cy})`}
+                    style={{ pointerEvents: 'none' }}
+                  >
                     <rect
                       x={-40}
                       y={-10}
@@ -4535,27 +4635,27 @@ export function SeatMapEditor({
               {aisles.map((a) => {
                 if (levelFilter !== 'ALL' && a.levelId && a.levelId !== levelFilter) return null;
                 return (
-                <polyline
-                  key={a.id}
-                  points={a.points.map(([x, y]) => `${x},${y}`).join(' ')}
-                  fill="none"
-                  stroke="rgba(148,163,184,0.45)"
-                  strokeWidth={a.width ?? 24}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                  <polyline
+                    key={a.id}
+                    points={a.points.map(([x, y]) => `${x},${y}`).join(' ')}
+                    fill="none"
+                    stroke="rgba(148,163,184,0.45)"
+                    strokeWidth={a.width ?? 24}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 );
               })}
               {obstacles.map((o) => {
                 if (levelFilter !== 'ALL' && o.levelId && o.levelId !== levelFilter) return null;
                 return (
-                <polygon
-                  key={o.id}
-                  points={o.points.map(([x, y]) => `${x},${y}`).join(' ')}
-                  fill="rgba(63,63,70,0.55)"
-                  stroke="rgba(161,161,170,0.55)"
-                  strokeWidth={1}
-                />
+                  <polygon
+                    key={o.id}
+                    points={o.points.map(([x, y]) => `${x},${y}`).join(' ')}
+                    fill="rgba(63,63,70,0.55)"
+                    stroke="rgba(161,161,170,0.55)"
+                    strokeWidth={1}
+                  />
                 );
               })}
               {stairs.map((s) => {
@@ -4569,16 +4669,16 @@ export function SeatMapEditor({
                   return null;
                 }
                 return (
-                <polyline
-                  key={s.id}
-                  points={s.points.map(([x, y]) => `${x},${y}`).join(' ')}
-                  fill="none"
-                  stroke="rgba(251,146,60,0.75)"
-                  strokeWidth={s.width ?? 28}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeDasharray="10 6"
-                />
+                  <polyline
+                    key={s.id}
+                    points={s.points.map(([x, y]) => `${x},${y}`).join(' ')}
+                    fill="none"
+                    stroke="rgba(251,146,60,0.75)"
+                    strokeWidth={s.width ?? 28}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray="10 6"
+                  />
                 );
               })}
               {exits.map((ex) => {
@@ -4634,7 +4734,9 @@ export function SeatMapEditor({
                 <g className={styles.generatorPreview} pointerEvents="none" opacity={0.72}>
                   {generatorPreviewGa?.shape?.points?.length ? (
                     <polygon
-                      points={generatorPreviewGa.shape.points.map(([x, y]) => `${x},${y}`).join(' ')}
+                      points={generatorPreviewGa.shape.points
+                        .map(([x, y]) => `${x},${y}`)
+                        .join(' ')}
                       fill="rgba(99,102,241,0.22)"
                       stroke="#818cf8"
                       strokeWidth={2}
@@ -4642,7 +4744,15 @@ export function SeatMapEditor({
                     />
                   ) : null}
                   {generatorPreviewSeats?.map((s, i) => (
-                    <circle key={`gen-prev-${i}`} cx={s.x} cy={s.y} r={5} fill="#a78bfa" stroke="#c4b5fd" strokeWidth={1} />
+                    <circle
+                      key={`gen-prev-${i}`}
+                      cx={s.x}
+                      cy={s.y}
+                      r={5}
+                      fill="#a78bfa"
+                      stroke="#c4b5fd"
+                      strokeWidth={1}
+                    />
                   ))}
                 </g>
               )}
@@ -4663,28 +4773,31 @@ export function SeatMapEditor({
                 </>
               )}
 
-              {(tool === 'aisle' || tool === 'obstacle' || tool === 'stairs') && polyDraft.length > 0 && (
-                <>
-                  <polyline
-                    points={polyDraft.map((p) => `${p.x},${p.y}`).join(' ')}
-                    fill="none"
-                    stroke={
-                      tool === 'aisle' ? '#94a3b8' : tool === 'stairs' ? '#fb923c' : '#a1a1aa'
-                    }
-                    strokeWidth={2}
-                    strokeDasharray="4 3"
-                  />
-                  {polyDraft.map((p, i) => (
-                    <circle
-                      key={i}
-                      cx={p.x}
-                      cy={p.y}
-                      r={4}
-                      fill={tool === 'aisle' ? '#94a3b8' : tool === 'stairs' ? '#fb923c' : '#a1a1aa'}
+              {(tool === 'aisle' || tool === 'obstacle' || tool === 'stairs') &&
+                polyDraft.length > 0 && (
+                  <>
+                    <polyline
+                      points={polyDraft.map((p) => `${p.x},${p.y}`).join(' ')}
+                      fill="none"
+                      stroke={
+                        tool === 'aisle' ? '#94a3b8' : tool === 'stairs' ? '#fb923c' : '#a1a1aa'
+                      }
+                      strokeWidth={2}
+                      strokeDasharray="4 3"
                     />
-                  ))}
-                </>
-              )}
+                    {polyDraft.map((p, i) => (
+                      <circle
+                        key={i}
+                        cx={p.x}
+                        cy={p.y}
+                        r={4}
+                        fill={
+                          tool === 'aisle' ? '#94a3b8' : tool === 'stairs' ? '#fb923c' : '#a1a1aa'
+                        }
+                      />
+                    ))}
+                  </>
+                )}
 
               {/*
                 Las butacas ya no se dibujan en SVG: a 45.000 asientos eran
@@ -4694,9 +4807,9 @@ export function SeatMapEditor({
             </g>
           </svg>
           <p className={styles.hint}>
-            {seatCount.toLocaleString('es-MX')} asientos · {map.sections.length} zonas ·{' '}
-            {lodLabel} · zoom rueda · arrastra en vacío para seleccionar por área ·
-            Delete · Ctrl+Z · Shift multi
+            {seatCount.toLocaleString('es-MX')} asientos · {map.sections.length} zonas · {lodLabel}{' '}
+            · zoom rueda · arrastra en vacío para seleccionar por área · Delete · Ctrl+Z · Shift
+            multi
             {selected.size ? ` · ${selected.size.toLocaleString('es-MX')} sel.` : ''}
             {analyzing ? ' · analizando…' : ''}
             {accessibility.capacity > 0 && (
@@ -4714,13 +4827,20 @@ export function SeatMapEditor({
             )}
             {tool === 'ga' ? ' · click para agregar vértices, doble-click o Enter para cerrar' : ''}
             {tool === 'focus' ? ' · click para colocar foco · click en un foco para borrarlo' : ''}
-            {tool === 'exit' ? ' · click para colocar salida · click en una salida para borrarla' : ''}
+            {tool === 'exit'
+              ? ' · click para colocar salida · click en una salida para borrarla'
+              : ''}
           </p>
         </div>
       </div>
 
       {cadReview && (
-        <div className={styles.cadModalBackdrop} role="dialog" aria-modal="true" aria-label="Revisar import CAD">
+        <div
+          className={styles.cadModalBackdrop}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Revisar import CAD"
+        >
           <div className={styles.cadModal}>
             <header className={styles.cadModalHeader}>
               <div>
@@ -4741,9 +4861,7 @@ export function SeatMapEditor({
                   value={cadReview.mode}
                   onChange={(e) =>
                     setCadReview((prev) =>
-                      prev
-                        ? { ...prev, mode: e.target.value as 'merge' | 'replace-meta' }
-                        : prev,
+                      prev ? { ...prev, mode: e.target.value as 'merge' | 'replace-meta' } : prev
                     )
                   }
                 >
@@ -4760,8 +4878,8 @@ export function SeatMapEditor({
             </div>
             {activeCadLockLabels(map.venue?.cadLocks).length > 0 && (
               <p className={styles.sideHint} style={{ margin: '0 1rem 0.5rem' }}>
-                CAD locks activos: {activeCadLockLabels(map.venue?.cadLocks).join(', ')}. Esas
-                capas no se importan ni se borran en modo reemplazar.
+                CAD locks activos: {activeCadLockLabels(map.venue?.cadLocks).join(', ')}. Esas capas
+                no se importan ni se borran en modo reemplazar.
               </p>
             )}
 
@@ -4778,7 +4896,10 @@ export function SeatMapEditor({
                 </thead>
                 <tbody>
                   {cadReview.rows.map((row) => (
-                    <tr key={row.id} className={row.role === 'skip' ? styles.cadRowSkip : undefined}>
+                    <tr
+                      key={row.id}
+                      className={row.role === 'skip' ? styles.cadRowSkip : undefined}
+                    >
                       <td title={row.id}>{row.name}</td>
                       <td>
                         <code>{row.source ?? '—'}</code>

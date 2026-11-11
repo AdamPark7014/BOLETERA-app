@@ -51,7 +51,7 @@ export class ReportingService {
     const event = eventId
       ? await this.prisma.event.findFirst({
           where: { id: eventId, organizationId },
-          include: { venue: true, organization: true }
+          include: { venue: true, organization: true },
         })
       : null;
 
@@ -65,8 +65,8 @@ export class ReportingService {
         organizationId,
         ...(eventId && { eventId }),
         status: 'COMPLETED',
-        createdAt: { gte: today }
-      }
+        createdAt: { gte: today },
+      },
     });
 
     const todayRevenue = todaySales.reduce((sum, o) => sum + Number(o.totalAmount), 0);
@@ -78,8 +78,8 @@ export class ReportingService {
         organizationId,
         ...(eventId && { eventId }),
         status: 'COMPLETED',
-        createdAt: { gte: weekAgo }
-      }
+        createdAt: { gte: weekAgo },
+      },
     });
 
     const weekRevenue = weekSales.reduce((sum, o) => sum + Number(o.totalAmount), 0);
@@ -91,35 +91,31 @@ export class ReportingService {
         organizationId,
         ...(eventId && { eventId }),
         status: 'COMPLETED',
-        createdAt: { gte: weekAgo }
+        createdAt: { gte: weekAgo },
       },
       _sum: { totalAmount: true },
-      _count: true
+      _count: true,
     });
 
-    const channelData = channelSales.map(cs => ({
+    const channelData = channelSales.map((cs) => ({
       channel: cs.channel,
       orders: cs._count,
       revenue: Number(cs._sum.totalAmount ?? 0),
     }));
 
     // Occupancy
-    const totalTickets = eventId
-      ? await this.prisma.ticket.count({ where: { eventId } })
-      : 0;
+    const totalTickets = eventId ? await this.prisma.ticket.count({ where: { eventId } }) : 0;
 
     const soldTickets = eventId
       ? await this.prisma.ticket.count({
-          where: { eventId, status: { in: ['SOLD', 'HELD'] } }
+          where: { eventId, status: { in: ['SOLD', 'HELD'] } },
         })
       : 0;
 
     const occupancy = totalTickets > 0 ? (soldTickets / totalTickets) * 100 : 0;
 
     // Key metrics
-    const avgOrderValue = todaySales.length > 0 
-      ? todayRevenue / todaySales.length 
-      : 0;
+    const avgOrderValue = todaySales.length > 0 ? todayRevenue / todaySales.length : 0;
 
     const previousWeekRevenue = await this.getPreviousWeekRevenue(organizationId, eventId);
     const growthPct =
@@ -140,7 +136,7 @@ export class ReportingService {
         avgOrderValue: parseFloat(avgOrderValue.toFixed(2)),
         occupancy: parseFloat(occupancy.toFixed(1)),
         soldTickets,
-        totalTickets
+        totalTickets,
       },
       channels: channelData,
       trend: {
@@ -159,7 +155,7 @@ export class ReportingService {
     if (period === 'DAILY') {
       dateFilter = {
         gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-        lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+        lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
       };
     } else if (period === 'WEEKLY') {
       const dayOfWeek = now.getDay();
@@ -167,12 +163,12 @@ export class ReportingService {
       startOfWeek.setDate(now.getDate() - dayOfWeek);
       dateFilter = {
         gte: startOfWeek,
-        lt: new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)
+        lt: new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000),
       };
     } else {
       dateFilter = {
         gte: new Date(now.getFullYear(), now.getMonth(), 1),
-        lt: new Date(now.getFullYear(), now.getMonth() + 1, 1)
+        lt: new Date(now.getFullYear(), now.getMonth() + 1, 1),
       };
     }
 
@@ -181,7 +177,7 @@ export class ReportingService {
       where: {
         organizationId,
         status: 'COMPLETED',
-        createdAt: dateFilter
+        createdAt: dateFilter,
       },
       include: {
         event: true,
@@ -194,7 +190,7 @@ export class ReportingService {
 
     // Commission & fees
     const organization = await this.prisma.organization.findUnique({
-      where: { id: organizationId }
+      where: { id: organizationId },
     });
 
     const commissionRate = organization?.commissionRate || 0.15;
@@ -223,12 +219,11 @@ export class ReportingService {
         commission: parseFloat(commissionAmount.toFixed(2)),
         netRevenue: parseFloat(netRevenue.toFixed(2)),
         totalOrders: orders.length,
-        avgOrderValue: orders.length > 0 
-          ? parseFloat((grossRevenue / orders.length).toFixed(2))
-          : 0
+        avgOrderValue:
+          orders.length > 0 ? parseFloat((grossRevenue / orders.length).toFixed(2)) : 0,
       },
       paymentMethods,
-      generatedAt: now
+      generatedAt: now,
     };
   }
 
@@ -236,7 +231,7 @@ export class ReportingService {
 
   async getOccupancyHeatmap(eventId: string) {
     const event = await this.prisma.event.findUnique({
-      where: { id: eventId }
+      where: { id: eventId },
     });
 
     const tickets = await this.prisma.ticket.findMany({
@@ -260,33 +255,33 @@ export class ReportingService {
 
     // Calculate percentages
     for (const section in heatmap) {
-      heatmap[section].percentage = 
-        (heatmap[section].sold / heatmap[section].total) * 100 || 0;
+      heatmap[section].percentage = (heatmap[section].sold / heatmap[section].total) * 100 || 0;
     }
 
     return {
       eventId,
       eventTitle: event?.title,
       heatmap,
-      generatedAt: new Date()
+      generatedAt: new Date(),
     };
   }
 
   // ==================== PREDICTIVE ANALYTICS ====================
 
-  async predictOccupancy(eventId: string): Promise<{ predictedOccupancy: number; confidence: number; recommendation: string }> {
+  async predictOccupancy(
+    eventId: string
+  ): Promise<{ predictedOccupancy: number; confidence: number; recommendation: string }> {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      include: { _count: { select: { orders: true, tickets: true } } }
+      include: { _count: { select: { orders: true, tickets: true } } },
     });
 
     if (!event) {
       return { predictedOccupancy: 0, confidence: 0, recommendation: 'Event not found' };
     }
 
-    const currentOccupancy = event._count.tickets > 0
-      ? (event._count.orders / event._count.tickets) * 100
-      : 0;
+    const currentOccupancy =
+      event._count.tickets > 0 ? (event._count.orders / event._count.tickets) * 100 : 0;
 
     // Days until event
     const daysUntil = Math.ceil(
@@ -300,15 +295,15 @@ export class ReportingService {
 
     if (daysUntil > 60) {
       // Early stage: predict based on historical similar events
-      predictedOccupancy = currentOccupancy + (daysUntil * 0.5); // 0.5% per day
+      predictedOccupancy = currentOccupancy + daysUntil * 0.5; // 0.5% per day
       confidence = 0.4;
     } else if (daysUntil > 14) {
       // Mid stage: acceleration predicted
-      predictedOccupancy = currentOccupancy + (daysUntil * 1.5);
+      predictedOccupancy = currentOccupancy + daysUntil * 1.5;
       confidence = 0.65;
     } else if (daysUntil > 0) {
       // Final stage: high confidence
-      predictedOccupancy = currentOccupancy + (daysUntil * 3);
+      predictedOccupancy = currentOccupancy + daysUntil * 3;
       confidence = 0.85;
     }
 
@@ -317,19 +312,21 @@ export class ReportingService {
     // Recommendation
     let recommendation = '';
     if (predictedOccupancy > 85) {
-      recommendation = 'Event trending towards SOLD OUT. Consider price increase or demand-based pricing.';
+      recommendation =
+        'Event trending towards SOLD OUT. Consider price increase or demand-based pricing.';
     } else if (predictedOccupancy > 60) {
       recommendation = 'Event on track for strong sales. Monitor and optimize marketing.';
     } else if (predictedOccupancy > 30) {
       recommendation = 'Moderate sales. Consider promotional campaigns or price reductions.';
     } else {
-      recommendation = 'Low occupancy predicted. Urgent action required - evaluate pricing, marketing, or event details.';
+      recommendation =
+        'Low occupancy predicted. Urgent action required - evaluate pricing, marketing, or event details.';
     }
 
     return {
       predictedOccupancy: parseFloat(predictedOccupancy.toFixed(1)),
       confidence: parseFloat(confidence.toFixed(2)),
-      recommendation
+      recommendation,
     };
   }
 
@@ -345,8 +342,8 @@ export class ReportingService {
             organizationId,
             channel,
             ...(eventId && { eventId }),
-            status: 'COMPLETED'
-          }
+            status: 'COMPLETED',
+          },
         });
 
         const revenue = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
@@ -357,7 +354,7 @@ export class ReportingService {
           orders: orders.length,
           revenue: parseFloat(revenue.toFixed(2)),
           avgOrderValue: parseFloat(avgValue.toFixed(2)),
-          percentage: 0 // Will calculate after all channels
+          percentage: 0, // Will calculate after all channels
         };
       })
     );
@@ -365,14 +362,14 @@ export class ReportingService {
     const totalRevenue = performance.reduce((sum, p) => sum + p.revenue, 0);
 
     // Calculate percentages
-    performance.forEach(p => {
+    performance.forEach((p) => {
       p.percentage = totalRevenue > 0 ? (p.revenue / totalRevenue) * 100 : 0;
     });
 
     return {
       channels: performance,
       totalRevenue: parseFloat(totalRevenue.toFixed(2)),
-      generatedAt: new Date()
+      generatedAt: new Date(),
     };
   }
 
@@ -392,21 +389,17 @@ export class ReportingService {
 
     const totalSpent = customerOrders.reduce(
       (sum, co) => sum + Number(co._sum?.totalAmount ?? 0),
-      0,
+      0
     );
-    const avgCustomerValue = customerOrders.length > 0 
-      ? totalSpent / customerOrders.length 
-      : 0;
+    const avgCustomerValue = customerOrders.length > 0 ? totalSpent / customerOrders.length : 0;
 
     return {
       uniqueCustomers: customerOrders.length,
       repeatCustomers,
       newCustomers,
-      repeatRate: customerOrders.length > 0 
-        ? (repeatCustomers / customerOrders.length) * 100 
-        : 0,
+      repeatRate: customerOrders.length > 0 ? (repeatCustomers / customerOrders.length) * 100 : 0,
       totalSpent: parseFloat(totalSpent.toFixed(2)),
-      avgCustomerValue: parseFloat(avgCustomerValue.toFixed(2))
+      avgCustomerValue: parseFloat(avgCustomerValue.toFixed(2)),
     };
   }
 
@@ -429,9 +422,9 @@ export class ReportingService {
           status: 'COMPLETED',
           createdAt: {
             gte: date,
-            lt: new Date(date.getTime() + 24 * 60 * 60 * 1000)
-          }
-        }
+            lt: new Date(date.getTime() + 24 * 60 * 60 * 1000),
+          },
+        },
       });
 
       const actualRevenue = actualOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
@@ -442,7 +435,7 @@ export class ReportingService {
       forecast.push({
         date: date.toISOString().split('T')[0],
         actual: parseFloat(actualRevenue.toFixed(2)),
-        predicted: parseFloat(predictedRevenue.toFixed(2))
+        predicted: parseFloat(predictedRevenue.toFixed(2)),
       });
     }
 
@@ -450,7 +443,7 @@ export class ReportingService {
       organizationId,
       forecastDays: horizon,
       forecast,
-      generatedAt: now
+      generatedAt: now,
     };
   }
 
@@ -459,7 +452,7 @@ export class ReportingService {
   streamRealtimeDashboard(organizationId: string, eventId?: string): Observable<MessageEvent> {
     return timer(0, 10_000).pipe(
       mergeMap(() => from(this.getRealtimeDashboard(organizationId, eventId))),
-      map((data) => ({ data: JSON.stringify(data) } as MessageEvent)),
+      map((data) => ({ data: JSON.stringify(data) }) as MessageEvent)
     );
   }
 
@@ -483,19 +476,21 @@ export class ReportingService {
     });
 
     const header = 'publicId,event,channel,total,currency,createdAt,buyerEmail';
-    const rows = orders.map(
-      (o) =>
-        [
-          csvCell(o.publicId),
-          csvCell(o.event.title),
-          csvCell(o.channel),
-          csvCell(o.totalAmount),
-          csvCell(o.currency),
-          csvCell(o.createdAt.toISOString()),
-          csvCell(o.buyerEmail),
-        ].join(','),
+    const rows = orders.map((o) =>
+      [
+        csvCell(o.publicId),
+        csvCell(o.event.title),
+        csvCell(o.channel),
+        csvCell(o.totalAmount),
+        csvCell(o.currency),
+        csvCell(o.createdAt.toISOString()),
+        csvCell(o.buyerEmail),
+      ].join(',')
     );
-    return { filename: `ventas-${organizationId}-${Date.now()}.csv`, csv: [header, ...rows].join('\n') };
+    return {
+      filename: `ventas-${organizationId}-${Date.now()}.csv`,
+      csv: [header, ...rows].join('\n'),
+    };
   }
 
   private async getPreviousWeekRevenue(organizationId: string, eventId?: string): Promise<number> {
@@ -508,12 +503,10 @@ export class ReportingService {
         organizationId,
         ...(eventId && { eventId }),
         status: 'COMPLETED',
-        createdAt: { gte: twoWeeksAgo, lt: weekAgo }
-      }
+        createdAt: { gte: twoWeeksAgo, lt: weekAgo },
+      },
     });
 
     return previousWeekOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
   }
 }
-
-

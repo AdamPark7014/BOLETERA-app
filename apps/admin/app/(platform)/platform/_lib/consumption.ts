@@ -83,9 +83,7 @@ const ORDER: readonly CapabilityMetricKey[] = [
 ];
 
 /** Traduce `metrics` a filas legibles. No inventa cupos: la API no reporta topes. */
-export function buildConsumptionRows(
-  metrics: SaasCapabilities['metrics'],
-): ConsumptionRow[] {
+export function buildConsumptionRows(metrics: SaasCapabilities['metrics']): ConsumptionRow[] {
   return ORDER.map((key) => {
     const definition = CONSUMPTION[key];
     return {

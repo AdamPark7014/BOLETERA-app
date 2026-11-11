@@ -58,7 +58,7 @@ export function Avatar({
 
   const fallbackStyle: CSSProperties = showImage
     ? {}
-    : { '--avatar-color': vizColor(hashCode(name)) } as CSSProperties;
+    : ({ '--avatar-color': vizColor(hashCode(name)) } as CSSProperties);
 
   return (
     <span

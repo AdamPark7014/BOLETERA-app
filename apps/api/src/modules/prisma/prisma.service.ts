@@ -105,7 +105,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       logger.error(
         `No hay conexión con PostgreSQL: ${detail}. ` +
           'Revisa DATABASE_URL, que la base acepte conexiones y que max_connections ' +
-          'cubra PRISMA_CONNECTION_LIMIT * réplicas.',
+          'cubra PRISMA_CONNECTION_LIMIT * réplicas.'
       );
       // Fallar aquí evita que el balanceador mande tráfico a una réplica muerta.
       throw error;
@@ -114,7 +114,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     logger.log(
       `PostgreSQL conectado (connection_limit=${envInt('PRISMA_CONNECTION_LIMIT', 20)}, ` +
         `pool_timeout=${envInt('PRISMA_POOL_TIMEOUT', 20)}s, ` +
-        `tx_timeout=${envInt('PRISMA_TRANSACTION_TIMEOUT', 10_000)}ms)`,
+        `tx_timeout=${envInt('PRISMA_TRANSACTION_TIMEOUT', 10_000)}ms)`
     );
   }
 

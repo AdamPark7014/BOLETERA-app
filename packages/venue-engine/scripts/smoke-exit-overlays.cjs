@@ -21,7 +21,16 @@ const map = {
   venue: {
     scale: 40,
     stage: { x: 80, y: 20, width: 120, elevation: 40 },
-    aisles: [{ id: 'main', points: [[140, 40], [140, 200]], width: 20 }],
+    aisles: [
+      {
+        id: 'main',
+        points: [
+          [140, 40],
+          [140, 200],
+        ],
+        width: 20,
+      },
+    ],
     exits: [
       { id: 'exit-n', label: 'Norte', points: [[140, 200]], width: 36 },
       {
@@ -41,7 +50,10 @@ const map = {
 const scene = resolveGeometry(map);
 assert(scene.exits.length >= 2, `scene exits ${scene.exits.length}`);
 // furniture door becomes exit when no authored? We have authored so doors stay furniture
-assert(scene.furniture.some((f) => f.type === 'door'), 'door furniture preserved');
+assert(
+  scene.furniture.some((f) => f.type === 'door'),
+  'door furniture preserved'
+);
 
 const p2 = projectTo2D(scene);
 assert(p2.exits.length === scene.exits.length, '2d exits');

@@ -70,7 +70,11 @@ export function seatLabel(ticket: TicketLine): string {
 
 /** Recinto en una línea: nombre, dirección y ciudad. */
 export function venueLine(event: EventContext): string {
-  const parts = [event.venueName, event.venueAddress, [event.venueCity, event.venueState].filter(Boolean).join(', ')]
+  const parts = [
+    event.venueName,
+    event.venueAddress,
+    [event.venueCity, event.venueState].filter(Boolean).join(', '),
+  ]
     .filter(Boolean)
     .map((p) => String(p).trim())
     .filter((p) => p.length > 0);
@@ -132,7 +136,9 @@ export function orderConfirmationEmail(ctx: OrderEmailContext): EmailDocument {
         title: 'Tu compra',
         rows: orderDetailRows(ctx, [
           { label: 'Total pagado', value: formatMoney(ctx.totalAmount, ctx.currency) },
-          ...(ctx.paymentMethod ? [{ label: 'Método de pago', value: paymentMethodLabel(ctx.paymentMethod) }] : []),
+          ...(ctx.paymentMethod
+            ? [{ label: 'Método de pago', value: paymentMethodLabel(ctx.paymentMethod) }]
+            : []),
         ]),
       },
       { kind: 'cta', url: ctx.accessUrl, label: 'Ver mis boletos', helper: accessHelper(ctx) },
@@ -143,7 +149,12 @@ export function orderConfirmationEmail(ctx: OrderEmailContext): EmailDocument {
         title: 'El QR se genera en el momento',
         text: 'Por seguridad no enviamos el código de acceso por correo: se genera al abrir tus boletos y se renueva solo cada pocos segundos. Ábrelos en la puerta, con tiempo y batería.',
       },
-      { kind: 'list', title: 'Qué llevar el día del evento', items: doorInstructions(), ordered: true },
+      {
+        kind: 'list',
+        title: 'Qué llevar el día del evento',
+        items: doorInstructions(),
+        ordered: true,
+      },
       { kind: 'divider' },
       { kind: 'paragraph', muted: true, text: policyLine(ctx.event) },
     ],
@@ -184,7 +195,7 @@ export function paymentPendingEmail(
     /** Vencimiento real del intento de pago, no un plazo inventado. */
     expiresAt?: Date | string | null;
     methodType?: string | null;
-  },
+  }
 ): EmailDocument {
   const isSpei = String(ctx.methodType ?? '').toUpperCase() === 'SPEI';
   const method = isSpei ? 'transferencia SPEI' : 'pago en OXXO';
@@ -194,7 +205,10 @@ export function paymentPendingEmail(
 
   const rows: EmailDetailRow[] = [
     { label: 'Evento', value: ctx.event.title },
-    { label: 'Fecha del evento', value: formatEventDateTime(ctx.event.startsAt, ctx.event.timezone) },
+    {
+      label: 'Fecha del evento',
+      value: formatEventDateTime(ctx.event.startsAt, ctx.event.timezone),
+    },
     { label: 'Orden', value: ctx.publicId },
     { label: 'Importe a pagar', value: formatMoney(ctx.totalAmount, ctx.currency) },
     { label: 'Pagar antes de', value: deadline },
@@ -234,7 +248,12 @@ export function paymentPendingEmail(
         kind: 'paragraph',
         text: 'Cuando el pago se registre (puede tardar hasta 24 h después de pagar) te enviaremos la confirmación con el acceso a tus boletos.',
       },
-      { kind: 'cta', url: ctx.accessUrl, label: 'Ver el estado de mi orden', helper: accessHelper(ctx) },
+      {
+        kind: 'cta',
+        url: ctx.accessUrl,
+        label: 'Ver el estado de mi orden',
+        helper: accessHelper(ctx),
+      },
     ],
     footerNote: `Orden ${ctx.publicId}.`,
   };
@@ -251,9 +270,19 @@ export function paymentReceivedEmail(ctx: OrderEmailContext): EmailDocument {
         kind: 'paragraph',
         text: `Confirmamos el pago de ${formatMoney(ctx.totalAmount, ctx.currency)} de la orden ${ctx.publicId}. Tus boletos para ${ctx.event.title} ya están emitidos.`,
       },
-      { kind: 'details', title: 'Tu compra', rows: orderDetailRows(ctx, [{ label: 'Total pagado', value: formatMoney(ctx.totalAmount, ctx.currency) }]) },
+      {
+        kind: 'details',
+        title: 'Tu compra',
+        rows: orderDetailRows(ctx, [
+          { label: 'Total pagado', value: formatMoney(ctx.totalAmount, ctx.currency) },
+        ]),
+      },
       { kind: 'cta', url: ctx.accessUrl, label: 'Ver mis boletos', helper: accessHelper(ctx) },
-      { kind: 'paragraph', muted: true, text: 'Este correo es tu comprobante de pago. Si necesitas factura, solicítala desde la vista de tu orden.' },
+      {
+        kind: 'paragraph',
+        muted: true,
+        text: 'Este correo es tu comprobante de pago. Si necesitas factura, solicítala desde la vista de tu orden.',
+      },
     ],
     footerNote: `Orden ${ctx.publicId}.`,
   };
@@ -438,7 +467,10 @@ export function eventCancelledEmail(ctx: {
         title: 'Tu compra afectada',
         rows: [
           { label: 'Evento', value: ctx.event.title },
-          { label: 'Fecha programada', value: formatEventDateTime(ctx.event.startsAt, ctx.event.timezone) },
+          {
+            label: 'Fecha programada',
+            value: formatEventDateTime(ctx.event.startsAt, ctx.event.timezone),
+          },
           { label: 'Recinto', value: venueLine(ctx.event) },
           { label: 'Orden', value: ctx.publicId },
           { label: 'Boletos', value: String(ctx.ticketCount) },
@@ -455,7 +487,14 @@ export function eventCancelledEmail(ctx: {
         kind: 'paragraph',
         text: 'El importe pagado se reembolsa íntegro por el mismo medio de pago. Recibirás un correo de confirmación en cuanto se procese; no hace falta que lo solicites.',
       },
-      { kind: 'cta', url: ctx.accessUrl, label: 'Ver el estado de mi orden', helper: ctx.hasAccessToken ? 'Este enlace es personal, no lo compartas.' : 'Inicia sesión con el correo de la compra.' },
+      {
+        kind: 'cta',
+        url: ctx.accessUrl,
+        label: 'Ver el estado de mi orden',
+        helper: ctx.hasAccessToken
+          ? 'Este enlace es personal, no lo compartas.'
+          : 'Inicia sesión con el correo de la compra.',
+      },
     ],
     footerNote: `Orden ${ctx.publicId}.`,
   };
@@ -502,13 +541,19 @@ export function fraudAlertEmail(ctx: {
           { label: 'Severidad', value: ctx.severity },
         ],
       },
-      ...(ctx.adminUrl ? ([{ kind: 'cta' as const, url: ctx.adminUrl, label: 'Revisar en el panel' }] as const) : []),
+      ...(ctx.adminUrl
+        ? ([{ kind: 'cta' as const, url: ctx.adminUrl, label: 'Revisar en el panel' }] as const)
+        : []),
     ],
     footerNote: 'Aviso interno de la plataforma.',
   };
 }
 
-export function payoutReadyEmail(ctx: { amount: unknown; currency: string; organizationName?: string | null }): EmailDocument {
+export function payoutReadyEmail(ctx: {
+  amount: unknown;
+  currency: string;
+  organizationName?: string | null;
+}): EmailDocument {
   return {
     subject: 'Tu liquidación está lista',
     preheader: `Liquidación de ${formatMoney(ctx.amount, ctx.currency)} disponible.`,
@@ -518,7 +563,11 @@ export function payoutReadyEmail(ctx: { amount: unknown; currency: string; organ
         kind: 'paragraph',
         text: `${ctx.organizationName ? `${ctx.organizationName}: ` : ''}ya está disponible una liquidación de ${formatMoney(ctx.amount, ctx.currency)}.`,
       },
-      { kind: 'paragraph', muted: true, text: 'Consulta el desglose de comisiones y la fecha de dispersión en el panel del organizador.' },
+      {
+        kind: 'paragraph',
+        muted: true,
+        text: 'Consulta el desglose de comisiones y la fecha de dispersión en el panel del organizador.',
+      },
     ],
     footerNote: 'Aviso para organizadores.',
   };
@@ -531,7 +580,13 @@ export function resaleAlertEmail(ctx: { listingId: string; eventTitle: string })
     heading: 'Hay movimiento en tu publicación de reventa',
     blocks: [
       { kind: 'paragraph', text: `Tu publicación para ${ctx.eventTitle} registró actividad.` },
-      { kind: 'details', rows: [{ label: 'Publicación', value: ctx.listingId }, { label: 'Evento', value: ctx.eventTitle }] },
+      {
+        kind: 'details',
+        rows: [
+          { label: 'Publicación', value: ctx.listingId },
+          { label: 'Evento', value: ctx.eventTitle },
+        ],
+      },
     ],
     footerNote: 'Aviso de reventa.',
   };
@@ -539,28 +594,49 @@ export function resaleAlertEmail(ctx: { listingId: string; eventTitle: string })
 
 // ==================== GENÉRICOS (otros módulos) ====================
 
-export function waitlistAvailableEmail(ctx: { eventTitle: string; eventUrl: string }): EmailDocument {
+export function waitlistAvailableEmail(ctx: {
+  eventTitle: string;
+  eventUrl: string;
+}): EmailDocument {
   return {
     subject: `¡Hay boletos para ${ctx.eventTitle}!`,
     preheader: 'Se liberaron lugares. Corren rápido.',
     heading: '¡Se liberaron boletos!',
     blocks: [
-      { kind: 'paragraph', text: `El evento ${ctx.eventTitle} tiene disponibilidad otra vez. Los lugares liberados suelen agotarse en minutos.` },
+      {
+        kind: 'paragraph',
+        text: `El evento ${ctx.eventTitle} tiene disponibilidad otra vez. Los lugares liberados suelen agotarse en minutos.`,
+      },
       { kind: 'cta', url: ctx.eventUrl, label: 'Comprar ahora' },
     ],
     footerNote: 'Recibes este aviso porque te apuntaste a la lista de espera.',
   };
 }
 
-export function passwordResetEmail(ctx: { firstName?: string | null; resetUrl: string }): EmailDocument {
+export function passwordResetEmail(ctx: {
+  firstName?: string | null;
+  resetUrl: string;
+}): EmailDocument {
   return {
     subject: 'Restablece tu contraseña',
     preheader: 'El enlace expira en 1 hora.',
     heading: 'Restablece tu contraseña',
     blocks: [
-      { kind: 'paragraph', text: `${ctx.firstName ? `Hola ${ctx.firstName}. ` : ''}Recibimos una solicitud para cambiar la contraseña de tu cuenta.` },
-      { kind: 'cta', url: ctx.resetUrl, label: 'Elegir nueva contraseña', helper: 'El enlace expira en 1 hora y solo puede usarse una vez.' },
-      { kind: 'paragraph', muted: true, text: 'Si no fuiste tú, ignora este correo: tu contraseña actual sigue funcionando.' },
+      {
+        kind: 'paragraph',
+        text: `${ctx.firstName ? `Hola ${ctx.firstName}. ` : ''}Recibimos una solicitud para cambiar la contraseña de tu cuenta.`,
+      },
+      {
+        kind: 'cta',
+        url: ctx.resetUrl,
+        label: 'Elegir nueva contraseña',
+        helper: 'El enlace expira en 1 hora y solo puede usarse una vez.',
+      },
+      {
+        kind: 'paragraph',
+        muted: true,
+        text: 'Si no fuiste tú, ignora este correo: tu contraseña actual sigue funcionando.',
+      },
     ],
     footerNote: 'Correo de seguridad de tu cuenta.',
   };
@@ -577,10 +653,15 @@ export function ticketTransferEmail(ctx: {
     preheader: `Acepta la transferencia con el código ${ctx.transferCode}.`,
     heading: 'Te transfirieron un boleto',
     blocks: [
-      { kind: 'paragraph', text: `Alguien te transfirió un boleto para ${ctx.eventTitle}. Acéptalo para que quede a tu nombre.` },
+      {
+        kind: 'paragraph',
+        text: `Alguien te transfirió un boleto para ${ctx.eventTitle}. Acéptalo para que quede a tu nombre.`,
+      },
       { kind: 'code', label: 'Código de transferencia', value: ctx.transferCode },
       { kind: 'cta', url: ctx.acceptUrl, label: 'Aceptar transferencia' },
-      ...(ctx.message ? ([{ kind: 'paragraph' as const, text: `Mensaje: ${ctx.message}` }] as const) : []),
+      ...(ctx.message
+        ? ([{ kind: 'paragraph' as const, text: `Mensaje: ${ctx.message}` }] as const)
+        : []),
     ],
     footerNote: 'Transferencia de boletos.',
   };
@@ -590,7 +671,10 @@ export function ticketTransferEmail(ctx: {
 
 /** Política del evento en una línea, para el pie de los correos y el PDF. */
 export function policyLine(event: EventContext): string {
-  const transfer = event.transferAllowed === false ? 'Boletos no transferibles.' : 'Boletos transferibles desde tu cuenta.';
+  const transfer =
+    event.transferAllowed === false
+      ? 'Boletos no transferibles.'
+      : 'Boletos transferibles desde tu cuenta.';
   const refund =
     event.refundable === false
       ? 'Venta final: este evento no admite reembolso salvo cancelación.'

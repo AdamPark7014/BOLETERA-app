@@ -1,9 +1,4 @@
-import type {
-  SeatMapData,
-  SeatMapSeat,
-  SeatMapSection,
-  SeatMapVenueMeta,
-} from '@boletera/shared';
+import type { SeatMapData, SeatMapSeat, SeatMapSection, SeatMapVenueMeta } from '@boletera/shared';
 import type { SeatPatch } from '@boletera/venue-engine/render';
 import type { EditorCommand, SceneMutation } from './types';
 
@@ -53,7 +48,7 @@ export type SeatPoseEntry = { id: string; before: SeatPose; after: SeatPose };
  */
 export function transformSeatsCommand(
   label: string,
-  entries: readonly SeatPoseEntry[],
+  entries: readonly SeatPoseEntry[]
 ): EditorCommand {
   const forward = new Map(entries.map((e) => [e.id, e.after] as const));
   const backward = new Map(entries.map((e) => [e.id, e.before] as const));
@@ -75,7 +70,7 @@ export type SeatAttributeEntry = {
 
 function applyAttributes(
   scene: SeatMapData,
-  attributes: Map<string, SeatAttributes>,
+  attributes: Map<string, SeatAttributes>
 ): SceneMutation {
   const patch: SeatPatch[] = [];
   const sections = scene.sections.map((section) => {
@@ -95,7 +90,7 @@ function applyAttributes(
 /** Renumbering, tier assignment and row relabelling all funnel through here. */
 export function setSeatAttributesCommand(
   label: string,
-  entries: readonly SeatAttributeEntry[],
+  entries: readonly SeatAttributeEntry[]
 ): EditorCommand {
   const forward = new Map(entries.map((e) => [e.id, e.after] as const));
   const backward = new Map(entries.map((e) => [e.id, e.before] as const));
@@ -109,7 +104,7 @@ export function setSeatAttributesCommand(
 
 export function addSectionsCommand(
   label: string,
-  sections: readonly SeatMapSection[],
+  sections: readonly SeatMapSection[]
 ): EditorCommand {
   const ids = new Set(sections.map((s) => s.id));
   return {
@@ -124,7 +119,7 @@ export function addSectionsCommand(
 
 export function removeSectionsCommand(
   label: string,
-  removed: readonly SeatMapSection[],
+  removed: readonly SeatMapSection[]
 ): EditorCommand {
   const ids = new Set(removed.map((s) => s.id));
   return {
@@ -142,7 +137,7 @@ export type SectionPatch = Partial<Omit<SeatMapSection, 'id' | 'seats'>>;
 function applySectionPatch(
   scene: SeatMapData,
   sectionId: string,
-  patch: SectionPatch,
+  patch: SectionPatch
 ): SceneMutation {
   return {
     scene: {
@@ -156,7 +151,7 @@ export function updateSectionCommand(
   label: string,
   sectionId: string,
   before: SectionPatch,
-  after: SectionPatch,
+  after: SectionPatch
 ): EditorCommand {
   return {
     id: nextCommandId(),
@@ -169,7 +164,7 @@ export function updateSectionCommand(
 export function addSeatsCommand(
   label: string,
   sectionId: string,
-  seats: readonly SeatMapSeat[],
+  seats: readonly SeatMapSeat[]
 ): EditorCommand {
   const ids = new Set(seats.map((s) => s.id));
   return {
@@ -179,7 +174,7 @@ export function addSeatsCommand(
       scene: {
         ...scene,
         sections: scene.sections.map((s) =>
-          s.id === sectionId ? { ...s, seats: [...s.seats, ...seats] } : s,
+          s.id === sectionId ? { ...s, seats: [...s.seats, ...seats] } : s
         ),
       },
     }),
@@ -187,7 +182,7 @@ export function addSeatsCommand(
       scene: {
         ...scene,
         sections: scene.sections.map((s) =>
-          s.id === sectionId ? { ...s, seats: s.seats.filter((seat) => !ids.has(seat.id)) } : s,
+          s.id === sectionId ? { ...s, seats: s.seats.filter((seat) => !ids.has(seat.id)) } : s
         ),
       },
     }),
@@ -218,7 +213,7 @@ export function addSeatsBatchCommand(label: string, batches: readonly SeatBatch[
         sections: scene.sections.map((section) =>
           bySection.has(section.id)
             ? { ...section, seats: section.seats.filter((seat) => !ids.has(seat.id)) }
-            : section,
+            : section
         ),
       },
     }),
@@ -244,7 +239,7 @@ export function removeSeatsCommand(label: string, removed: readonly RemovedSeat[
         sections: scene.sections.map((section) =>
           bySection.has(section.id)
             ? { ...section, seats: section.seats.filter((seat) => !ids.has(seat.id)) }
-            : section,
+            : section
         ),
       },
     }),
@@ -291,7 +286,7 @@ function applyOwnership(scene: SeatMapData, owners: Map<string, string>): SceneM
 export function reassignSeatsCommand(
   label: string,
   before: readonly SeatOwnership[],
-  targetSectionId: string,
+  targetSectionId: string
 ): EditorCommand {
   const forward = new Map(before.map((entry) => [entry.seatId, targetSectionId] as const));
   const backward = new Map(before.map((entry) => [entry.seatId, entry.sectionId] as const));
@@ -312,7 +307,7 @@ function applyVenuePatch(scene: SeatMapData, patch: VenuePatch): SceneMutation {
 export function setVenueMetaCommand(
   label: string,
   before: VenuePatch,
-  after: VenuePatch,
+  after: VenuePatch
 ): EditorCommand {
   return {
     id: nextCommandId(),
@@ -332,7 +327,7 @@ export function setVenueMetaCommand(
 export function replaceSceneCommand(
   label: string,
   before: SeatMapData,
-  after: SeatMapData,
+  after: SeatMapData
 ): EditorCommand {
   return {
     id: nextCommandId(),

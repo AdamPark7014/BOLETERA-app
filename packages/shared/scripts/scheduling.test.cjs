@@ -16,7 +16,7 @@ describe('zonedTimeToUtc / Mexico City', () => {
   it('maps a 20:00 CDMX show to the correct UTC instant (UTC-6, no DST)', () => {
     const instant = zonedTimeToUtc(
       { year: 2025, month: 7, day: 15, hour: 20, minute: 0, second: 0 },
-      MX,
+      MX
     );
     assert.equal(instant.toISOString(), '2025-07-16T02:00:00.000Z');
     assert.equal(getTimezoneOffsetMinutes(instant, MX), -360);
@@ -43,7 +43,7 @@ describe('zonedTimeToUtc / Mexico City', () => {
     // Clocks jumped 02:00 → 03:00; 02:30 never existed. Resolve past the gap.
     const gap = zonedTimeToUtc(
       { year: 2022, month: 4, day: 3, hour: 2, minute: 30, second: 0 },
-      MX,
+      MX
     );
     const local = formatLocalDateTime(gap, MX);
     assert.notEqual(local, '2022-04-03T02:30');
@@ -54,7 +54,7 @@ describe('zonedTimeToUtc / Mexico City', () => {
   it('prefers the earlier occurrence on a historical fall-back (Oct 2021)', () => {
     const ambiguous = zonedTimeToUtc(
       { year: 2021, month: 10, day: 31, hour: 1, minute: 30, second: 0 },
-      MX,
+      MX
     );
     assert.equal(formatLocalDateTime(ambiguous, MX), '2021-10-31T01:30');
     assert.equal(ambiguous.toISOString(), '2021-10-31T06:30:00.000Z');
@@ -110,7 +110,7 @@ describe('resolveSaleStatus', () => {
           },
         ],
       },
-      new Date('2025-07-12T12:00:00.000Z'),
+      new Date('2025-07-12T12:00:00.000Z')
     );
     assert.equal(status.state, 'PRESALE');
     assert.equal(status.canPurchase, false);
@@ -126,7 +126,7 @@ describe('detectScheduleConflicts', () => {
         { id: 'b', title: 'Show B', startsAt: '2025-07-01T04:00:00.000Z', durationMinutes: 120 },
         { id: 'c', title: 'Show C', startsAt: '2025-07-01T06:00:00.000Z', durationMinutes: 120 },
       ],
-      { turnaroundMinutes: 90 },
+      { turnaroundMinutes: 90 }
     );
     const list = conflicts.get(0) ?? [];
     assert.ok(list.some((c) => c.kind === 'VENUE_OVERLAP'));

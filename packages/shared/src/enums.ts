@@ -94,16 +94,16 @@ export enum PaymentMethod {
 export type PaymentMethodValue = `${PaymentMethod}`;
 
 export const SALES_CHANNEL_VALUES = Object.freeze(
-  Object.values(SalesChannel) as SalesChannelValue[],
+  Object.values(SalesChannel) as SalesChannelValue[]
 );
 export const USER_ROLE_VALUES = Object.freeze(Object.values(UserRole) as UserRoleValue[]);
 export const TICKET_STATUS_VALUES = Object.freeze(
-  Object.values(TicketStatus) as TicketStatusValue[],
+  Object.values(TicketStatus) as TicketStatusValue[]
 );
 export const ORDER_STATUS_VALUES = Object.freeze(Object.values(OrderStatus) as OrderStatusValue[]);
 export const PAYMENT_STATUS_VALUES = Object.freeze(
-  Object.values(PaymentStatus) as PaymentStatusValue[],
+  Object.values(PaymentStatus) as PaymentStatusValue[]
 );
 export const PAYMENT_METHOD_VALUES = Object.freeze(
-  Object.values(PaymentMethod) as PaymentMethodValue[],
+  Object.values(PaymentMethod) as PaymentMethodValue[]
 );

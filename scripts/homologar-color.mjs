@@ -55,7 +55,7 @@ const HEX_A_TOKEN = new Map(
     '#ef4444': 'var(--bl-danger)',
     '#dc2626': 'var(--bl-danger-hover)',
     '#f59e0b': 'var(--bl-warning)',
-  }).map(([k, v]) => [k.toLowerCase(), v]),
+  }).map(([k, v]) => [k.toLowerCase(), v])
 );
 
 const DEFINEN_PALETA = /_variables\.scss$|[/\\]theme\.scss$/;
@@ -84,10 +84,9 @@ const desdeGit = [
   ...listar('"packages/ui/src/**/*.scss"'),
 ];
 
-const desdeDisco = [
-  ...walk(resolve(raiz, 'apps')),
-  ...walk(resolve(raiz, 'packages/ui/src')),
-].map((abs) => abs.replace(/\\/g, '/').replace(`${raiz.replace(/\\/g, '/')}/`, ''));
+const desdeDisco = [...walk(resolve(raiz, 'apps')), ...walk(resolve(raiz, 'packages/ui/src'))].map(
+  (abs) => abs.replace(/\\/g, '/').replace(`${raiz.replace(/\\/g, '/')}/`, '')
+);
 
 let archivos = [...new Set([...desdeGit, ...desdeDisco])].filter((f) => !DEFINEN_PALETA.test(f));
 
@@ -125,7 +124,7 @@ for (const rel of archivos) {
 console.log(
   APPLY
     ? `Aplicados ${reemplazos} reemplazos en ${archivosTocados} archivos SCSS/CSS.`
-    : `[dry-run] Se homologarían ${reemplazos} literales en ${archivosTocados} archivos.`,
+    : `[dry-run] Se homologarían ${reemplazos} literales en ${archivosTocados} archivos.`
 );
 
 const unicos = [...new Set(pendientes.map((p) => p.hex))].sort();

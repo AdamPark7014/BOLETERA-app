@@ -1,18 +1,9 @@
 import type { SeatMapData, SeatMapBounds } from '@boletera/shared';
 import { computeMapBounds } from '../map-utils';
 import { bakeSeatColors } from './colors';
-import {
-  buildLodAggregates,
-  type RowAggregate,
-  type SectionAggregate,
-} from './lod';
+import { buildLodAggregates, type RowAggregate, type SectionAggregate } from './lod';
 import { estimateCellSize, SpatialIndex } from './spatial-index';
-import type {
-  ColorMode,
-  ColorModeContext,
-  SeatPatch,
-  WorldRect,
-} from './types';
+import type { ColorMode, ColorModeContext, SeatPatch, WorldRect } from './types';
 
 export type SceneBuffers = {
   seatCount: number;
@@ -67,7 +58,7 @@ export function buildSceneBuffers(
     colorContext?: ColorModeContext;
     seatRadius?: number;
     cellSize?: number;
-  } = {},
+  } = {}
 ): SceneBuffers {
   const colorMode = opts.colorMode ?? 'zone';
   const colorContext = opts.colorContext ?? {};
@@ -126,12 +117,10 @@ export function buildSceneBuffers(
     maxY: bounds.maxY,
   };
 
-  const t0 =
-    typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const cellSize = estimateCellSize(worldRect, seatCount, opts.cellSize);
   const index = new SpatialIndex(xs, ys, worldRect, cellSize);
-  const t1 =
-    typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now();
 
   bakeSeatColors(
     {
@@ -145,7 +134,7 @@ export function buildSceneBuffers(
       tiers,
       authoredColors,
     },
-    colors,
+    colors
   );
 
   // Heats: derive from baked luminance as a cheap LOD proxy.
@@ -162,7 +151,7 @@ export function buildSceneBuffers(
     xs,
     ys,
     heats,
-    seatSectionIndex,
+    seatSectionIndex
   );
 
   return {
@@ -228,7 +217,7 @@ export function applySeatPatches(scene: SceneBuffers, patches: readonly SeatPatc
         const map = new Map(
           scene.colorContext.statusBySeatId instanceof Map
             ? scene.colorContext.statusBySeatId
-            : Object.entries(scene.colorContext.statusBySeatId ?? {}),
+            : Object.entries(scene.colorContext.statusBySeatId ?? {})
         );
         map.set(p.id, p.status);
         ctx.statusBySeatId = map;
@@ -237,7 +226,7 @@ export function applySeatPatches(scene: SceneBuffers, patches: readonly SeatPatc
         const map = new Map(
           scene.colorContext.priceBySeatId instanceof Map
             ? scene.colorContext.priceBySeatId
-            : Object.entries(scene.colorContext.priceBySeatId ?? {}),
+            : Object.entries(scene.colorContext.priceBySeatId ?? {})
         );
         map.set(p.id, p.price);
         ctx.priceBySeatId = map;
@@ -246,7 +235,7 @@ export function applySeatPatches(scene: SceneBuffers, patches: readonly SeatPatc
         const map = new Map(
           scene.colorContext.sightlineBySeatId instanceof Map
             ? scene.colorContext.sightlineBySeatId
-            : Object.entries(scene.colorContext.sightlineBySeatId ?? {}),
+            : Object.entries(scene.colorContext.sightlineBySeatId ?? {})
         );
         map.set(p.id, p.sightlineScore);
         ctx.sightlineBySeatId = map;
@@ -287,11 +276,12 @@ export function rebakeColors(scene: SceneBuffers): void {
       seatSectionIndex: scene.seatSectionIndex,
       tiers: scene.tiers,
     },
-    scene.colors,
+    scene.colors
   );
   for (let s = 0; s < scene.seatCount; s++) {
     const o = s * 4;
-    scene.heats[s] = scene.colors[o] * 0.3 + scene.colors[o + 1] * 0.59 + scene.colors[o + 2] * 0.11;
+    scene.heats[s] =
+      scene.colors[o] * 0.3 + scene.colors[o + 1] * 0.59 + scene.colors[o + 2] * 0.11;
   }
 }
 

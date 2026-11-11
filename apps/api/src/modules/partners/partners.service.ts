@@ -7,7 +7,7 @@ import { AuditService } from '../../common/audit.service';
 export class PartnersService {
   constructor(
     private prisma: PrismaService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   private hashKey(raw: string) {
@@ -17,7 +17,7 @@ export class PartnersService {
   async createApiKey(
     orgId: string,
     data: { name: string; scopes?: string[]; rateLimit?: number; expiresInDays?: number },
-    createdById?: string,
+    createdById?: string
   ) {
     const raw = `blk_${randomBytes(24).toString('hex')}`;
     const keyPrefix = raw.slice(0, 12);
@@ -116,5 +116,3 @@ export class PartnersService {
     return key;
   }
 }
-
-

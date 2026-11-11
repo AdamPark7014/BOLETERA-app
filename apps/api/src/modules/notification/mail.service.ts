@@ -17,7 +17,7 @@ export class MailTransportNotConfiguredError extends Error {
   constructor(to: string, subject: string) {
     super(
       `SMTP no está configurado (falta SMTP_HOST) y hay que entregar "${subject}" a ${to}. ` +
-        `Configura SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASSWORD.`,
+        `Configura SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASSWORD.`
     );
     this.name = 'MailTransportNotConfiguredError';
   }
@@ -72,8 +72,8 @@ export class MailService implements OnModuleInit {
       .catch((error: unknown) =>
         this.logger.error(
           `SMTP configurado pero inalcanzable: ${error instanceof Error ? error.message : String(error)}. ` +
-            `Los correos fallarán y quedarán en la cola de fallidos.`,
-        ),
+            `Los correos fallarán y quedarán en la cola de fallidos.`
+        )
       );
   }
 
@@ -114,9 +114,16 @@ ${body}
   async sendDocument(
     to: string,
     doc: RenderedEmail,
-    attachments?: { filename: string; content: Buffer; contentType?: string }[],
+    attachments?: { filename: string; content: Buffer; contentType?: string }[]
   ) {
-    return this.send({ to, subject: doc.subject, html: doc.html, text: doc.text, attachments, wrap: false });
+    return this.send({
+      to,
+      subject: doc.subject,
+      html: doc.html,
+      text: doc.text,
+      attachments,
+      wrap: false,
+    });
   }
 
   async send(opts: {
@@ -130,7 +137,8 @@ ${body}
   }) {
     // Un documento completo no se vuelve a envolver aunque no se pase `wrap`.
     const isFullDocument = /^\s*<(!doctype|html)/i.test(opts.html);
-    const html = opts.wrap === false || isFullDocument ? opts.html : this.wrapHtml(opts.html, opts.subject);
+    const html =
+      opts.wrap === false || isFullDocument ? opts.html : this.wrapHtml(opts.html, opts.subject);
     const text = opts.text ?? htmlToText(html);
 
     if (!this.transporter) {
@@ -138,7 +146,7 @@ ${body}
       // asunto y cuerpo en texto) para poder depurar en local, y en producción
       // se convierte en fallo visible del job.
       this.logger.warn(
-        `[MAIL SIN SMTP] No enviado → ${opts.to} · "${opts.subject}"\n${text.slice(0, 1200)}`,
+        `[MAIL SIN SMTP] No enviado → ${opts.to} · "${opts.subject}"\n${text.slice(0, 1200)}`
       );
       if (this.isProduction()) throw new MailTransportNotConfiguredError(opts.to, opts.subject);
       return { sent: false, dev: true };
@@ -160,7 +168,7 @@ ${body}
       // Se registra con contexto y se relanza: quien decide si reintentar es la
       // cola, no este servicio. Tragar el error aquí es perder el aviso.
       this.logger.error(
-        `Fallo SMTP al enviar "${opts.subject}" a ${opts.to}: ${error instanceof Error ? error.message : String(error)}`,
+        `Fallo SMTP al enviar "${opts.subject}" a ${opts.to}: ${error instanceof Error ? error.message : String(error)}`
       );
       throw error;
     }

@@ -5,7 +5,5 @@ export const CurrentUser = createParamDecorator(
     const user = ctx.switchToHttp().getRequest().user as Record<string, unknown> | undefined;
     if (!field) return user;
     return user?.[field];
-  },
+  }
 );
-
-

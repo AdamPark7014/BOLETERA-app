@@ -11,8 +11,6 @@ import { ReportingController } from './reporting.controller';
   imports: [PrismaModule, AuthModule],
   controllers: [ReportingController],
   providers: [ReportingService],
-  exports: [ReportingService]
+  exports: [ReportingService],
 })
 export class ReportingModule {}
-
-

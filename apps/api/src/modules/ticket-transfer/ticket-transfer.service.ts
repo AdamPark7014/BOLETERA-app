@@ -16,7 +16,7 @@ export class TicketTransferService {
   constructor(
     private prisma: PrismaService,
     private audit: AuditService,
-    private notifications: NotificationService,
+    private notifications: NotificationService
   ) {}
 
   private generateCode() {
@@ -68,7 +68,7 @@ export class TicketTransferService {
     if (pendiente) {
       throw new BadRequestException(
         `Este boleto ya está ofrecido a ${pendiente.toEmail}. ` +
-          'Cancela esa transferencia antes de enviarlo a otra persona.',
+          'Cancela esa transferencia antes de enviarlo a otra persona.'
       );
     }
 
@@ -230,6 +230,3 @@ export class TicketTransferService {
     });
   }
 }
-
-
-

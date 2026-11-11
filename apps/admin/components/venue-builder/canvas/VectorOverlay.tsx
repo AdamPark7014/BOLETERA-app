@@ -133,7 +133,7 @@ export const VectorOverlay = memo(function VectorOverlay({ rendererRef, ready }:
                 className={styles.snapGuide}
                 vectorEffect="non-scaling-stroke"
               />
-            ),
+            )
           )}
 
           {measurements.map((measurement) => (

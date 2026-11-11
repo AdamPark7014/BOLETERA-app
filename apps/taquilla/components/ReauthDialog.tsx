@@ -92,8 +92,9 @@ export function ReauthDialog() {
           Vuelve a identificarte
         </h2>
         <p className={styles.lead}>
-          La sesión del API caduca cada 2 horas. <strong>La venta en curso y el turno siguen
-          abiertos</strong>: escribe tu contraseña ({request.email}) y la operación continúa.
+          La sesión del API caduca cada 2 horas.{' '}
+          <strong>La venta en curso y el turno siguen abiertos</strong>: escribe tu contraseña (
+          {request.email}) y la operación continúa.
         </p>
 
         <label className={styles.field}>

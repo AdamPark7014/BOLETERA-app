@@ -125,7 +125,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (session?.expiresAt === null || session?.expiresAt === undefined) return;
     const timer = window.setTimeout(
       () => void refresh().catch(() => undefined),
-      Math.max(0, session.expiresAt - Date.now()) + 50,
+      Math.max(0, session.expiresAt - Date.now()) + 50
     );
     return () => window.clearTimeout(timer);
   }, [refresh, session?.expiresAt]);
@@ -167,10 +167,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (!session) return false;
       if (session.user.role.toUpperCase() === SUPER_ADMIN_ROLE) return true;
       const normalized = normalizePermission(permission);
-      if (
-        session.user.permissions.includes(normalized) ||
-        session.user.permissions.includes('*')
-      ) {
+      if (session.user.permissions.includes(normalized) || session.user.permissions.includes('*')) {
         return true;
       }
       if (isCapability(permission)) {
@@ -178,16 +175,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
       return false;
     },
-    [session],
+    [session]
   );
 
   const value = useMemo<SessionContextValue>(
     () => ({
-      status: !hydrated
-        ? 'loading'
-        : session
-          ? 'authenticated'
-          : 'unauthenticated',
+      status: !hydrated ? 'loading' : session ? 'authenticated' : 'unauthenticated',
       token: session?.token ?? null,
       user: session?.user ?? null,
       organizationId: session?.user.organizationId ?? null,
@@ -198,7 +191,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       revokeAll,
       refresh,
     }),
-    [can, hydrated, refresh, revokeAll, session, setToken, signOut],
+    [can, hydrated, refresh, revokeAll, session, setToken, signOut]
   );
 
   return createElement(SessionContext.Provider, { value }, children);

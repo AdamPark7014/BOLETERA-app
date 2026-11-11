@@ -59,7 +59,7 @@ type ScanContext = {
 export class AccessService {
   constructor(
     private prisma: PrismaService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   /**
@@ -110,12 +110,18 @@ export class AccessService {
         parsed.e,
         parsed.s,
         requireTicketQrSecret(),
-        version?.keyEpoch ?? 0,
+        version?.keyEpoch ?? 0
       );
       if (!valid) {
         // Se registra con el id que venía en el QR: un mismo id apareciendo con
         // firmas inválidas en varias puertas es la señal de un intento de clonado.
-        await this.recordScan(parsed.t, context, false, 'Invalid or expired QR signature', scannedAt);
+        await this.recordScan(
+          parsed.t,
+          context,
+          false,
+          'Invalid or expired QR signature',
+          scannedAt
+        );
         throw new BadRequestException('Invalid or expired QR');
       }
       ticketId = parsed.t;
@@ -195,7 +201,7 @@ export class AccessService {
   async getQrForTicket(
     ticketId: string,
     requester: Requester,
-    opts: { reason?: string; ipAddress?: string } = {},
+    opts: { reason?: string; ipAddress?: string } = {}
   ) {
     if (!requester?.sub) throw new ForbiddenException('Authenticated user required');
 
@@ -262,7 +268,10 @@ export class AccessService {
     });
     if (!event) throw new NotFoundException('Event not found');
 
-    const limit = Math.min(Math.max(Number(opts.limit) || MANIFEST_PAGE_SIZE, 1), MANIFEST_MAX_PAGE_SIZE);
+    const limit = Math.min(
+      Math.max(Number(opts.limit) || MANIFEST_PAGE_SIZE, 1),
+      MANIFEST_MAX_PAGE_SIZE
+    );
 
     // Se pide un elemento de más para saber si hay página siguiente sin contar.
     const rows = await this.prisma.ticket.findMany({
@@ -274,7 +283,7 @@ export class AccessService {
     });
 
     const page = rows.slice(0, limit);
-    const nextCursor = rows.length > limit ? page[page.length - 1]?.id ?? null : null;
+    const nextCursor = rows.length > limit ? (page[page.length - 1]?.id ?? null) : null;
 
     const secret = requireTicketQrSecret();
     const issuedAt = new Date().toISOString();
@@ -370,7 +379,13 @@ export class AccessService {
       }
 
       const failure = await this.describeFailedClaim(ticketId);
-      await this.recordScan(ticketId, context, false, `Offline sync · ${failure.reason}`, scannedAt);
+      await this.recordScan(
+        ticketId,
+        context,
+        false,
+        `Offline sync · ${failure.reason}`,
+        scannedAt
+      );
 
       if (failure.alreadyUsed) {
         conflicts.push({
@@ -521,7 +536,7 @@ export class AccessService {
     params: ScanContext,
     success: boolean,
     reason?: string,
-    scannedAt?: Date,
+    scannedAt?: Date
   ) {
     if (!ticketId) return;
     await this.prisma.ticketScan.create({

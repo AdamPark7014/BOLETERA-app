@@ -8,14 +8,8 @@ import { NotificationProcessor } from './notification.processor';
 import { TicketPdfService } from './ticket-pdf.service';
 
 @Module({
-  imports: [
-    ConfigModule,
-    PrismaModule,
-    BullModule.registerQueue({ name: NOTIFICATION_QUEUE }),
-  ],
+  imports: [ConfigModule, PrismaModule, BullModule.registerQueue({ name: NOTIFICATION_QUEUE })],
   providers: [NotificationService, NotificationProcessor, MailService, TicketPdfService],
   exports: [NotificationService, TicketPdfService],
 })
 export class NotificationModule {}
-
-

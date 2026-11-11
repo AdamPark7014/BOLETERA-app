@@ -38,8 +38,7 @@ export function useFiscalProfile(organizationId: string | null) {
 export function useCfdiInvoices(organizationId: string | null) {
   return useQuery({
     queryKey: queryKeys.billing.invoices(organizationId ?? ''),
-    queryFn: ({ signal }) =>
-      http<CfdiInvoice[]>(`/billing/${organizationId}/cfdi`, { signal }),
+    queryFn: ({ signal }) => http<CfdiInvoice[]>(`/billing/${organizationId}/cfdi`, { signal }),
     enabled: Boolean(organizationId),
   });
 }
@@ -47,11 +46,13 @@ export function useCfdiInvoices(organizationId: string | null) {
 export function useUpsertFiscalProfile(organizationId: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (body: Omit<FiscalProfile, 'id' | 'regimenFiscal' | 'serie' | 'pacMode'> & {
-      regimenFiscal?: string;
-      serie?: string;
-      pacMode?: string;
-    }) =>
+    mutationFn: (
+      body: Omit<FiscalProfile, 'id' | 'regimenFiscal' | 'serie' | 'pacMode'> & {
+        regimenFiscal?: string;
+        serie?: string;
+        pacMode?: string;
+      }
+    ) =>
       http<FiscalProfile>(`/billing/${organizationId}/fiscal-profile`, {
         method: 'POST',
         body,
@@ -69,8 +70,7 @@ export function useStampCfdi(organizationId: string) {
       receptorRfc: string;
       receptorNombre: string;
       receptorUsoCfdi?: string;
-    }) =>
-      http(`/billing/${organizationId}/cfdi/stamp`, { method: 'POST', body }),
+    }) => http(`/billing/${organizationId}/cfdi/stamp`, { method: 'POST', body }),
     onSettled: () =>
       client.invalidateQueries({ queryKey: queryKeys.billing.invoices(organizationId) }),
   });

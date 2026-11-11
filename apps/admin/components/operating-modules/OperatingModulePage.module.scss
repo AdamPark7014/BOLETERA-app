@@ -37,7 +37,7 @@
   color: var(--color-text-secondary, var(--bl-text-secondary));
   font-size: var(--bl-text-2xs);
   font-weight: 700;
-  letter-spacing: .07em;
+  letter-spacing: 0.07em;
 }
 
 .alerts,
@@ -101,7 +101,9 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 140ms ease, transform 140ms ease;
+  transition:
+    background-color 140ms ease,
+    transform 140ms ease;
 }
 
 .record:hover {
@@ -119,7 +121,7 @@
 }
 
 .record small {
-  margin-top: .2rem;
+  margin-top: 0.2rem;
   color: var(--color-text-secondary, var(--bl-text-secondary));
 }
 

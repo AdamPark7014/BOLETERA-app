@@ -117,7 +117,7 @@ export function colorVar(name: SemanticColor): string {
 
 /** Mapa listo para usar de todos los colores semanticos como `var(--bl-*)`. */
 export const color = Object.fromEntries(
-  SEMANTIC_COLORS.map((name) => [name, `var(--bl-${name})`]),
+  SEMANTIC_COLORS.map((name) => [name, `var(--bl-${name})`])
 ) as Record<SemanticColor, string>;
 
 /** Serie categorica para visualizacion de datos, en orden de asignacion. */

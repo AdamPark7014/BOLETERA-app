@@ -1,9 +1,5 @@
 import type { SeatMapSeat, SeatMapSection } from '@boletera/shared';
-import {
-  fillShapeWithSeats,
-  generateCurvedRow,
-  generateStraightRow,
-} from '@boletera/venue-engine';
+import { fillShapeWithSeats, generateCurvedRow, generateStraightRow } from '@boletera/venue-engine';
 import type { WorldPoint } from '@boletera/venue-engine/render';
 import { addSeatsCommand, addSectionsCommand } from '../store/commands';
 import type { EditorStoreApi } from '../store/editor-store';
@@ -35,22 +31,18 @@ function commitSeats(ctx: ToolContext, label: string, seats: SeatMapSeat[]): voi
   if (seats.length === 0) return;
   const state = ctx.editor.getState();
   const target = state.scene.sections.find(
-    (section) => section.id === state.activeSectionId && !section.locked,
+    (section) => section.id === state.activeSectionId && !section.locked
   );
   if (target) {
     ctx.history.execute(addSeatsCommand(label, target.id, seats));
   } else {
-    const section = makeSection(
-      ctx.editor,
-      `Zona ${state.scene.sections.length + 1}`,
-      seats,
-    );
+    const section = makeSection(ctx.editor, `Zona ${state.scene.sections.length + 1}`, seats);
     ctx.history.execute(addSectionsCommand(label, [section]));
     ctx.editor.getState().setActiveSection(section.id);
   }
   ctx.editor.getState().selectSeats(
     seats.map((seat) => seat.id),
-    'replace',
+    'replace'
   );
 }
 
@@ -60,9 +52,13 @@ export function createDrawSectionTool(): Tool {
 
   const paint = (ctx: ToolContext) => {
     const all = preview ? [...points, preview] : points;
-    ctx.editor.getState().setDraft(
-      all.length > 0 ? { kind: 'polygon', points: all, closed: false, label: `${points.length} vértices` } : null,
-    );
+    ctx.editor
+      .getState()
+      .setDraft(
+        all.length > 0
+          ? { kind: 'polygon', points: all, closed: false, label: `${points.length} vértices` }
+          : null
+      );
   };
 
   const clear = (ctx: ToolContext) => {

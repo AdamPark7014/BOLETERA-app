@@ -103,7 +103,7 @@ describe('IdempotencyGuard', () => {
     const guard = new IdempotencyGuard<string>({ store, ttlMs: 60_000, waitMs: 200 });
     await assert.rejects(
       () => guard.getOrCreate('x', async () => 'nope'),
-      (err: unknown) => err instanceof IdempotencyStoreUnavailableError,
+      (err: unknown) => err instanceof IdempotencyStoreUnavailableError
     );
   });
 

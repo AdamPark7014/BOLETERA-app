@@ -55,9 +55,7 @@ const money = (value: number, currency: string) =>
   `$${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 
 const fecha = (iso: string | null) =>
-  iso
-    ? new Date(iso).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })
-    : '—';
+  iso ? new Date(iso).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 export function CompliancePanel({ eventId, canWrite }: { eventId: string; canWrite: boolean }) {
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -137,18 +135,15 @@ export function CompliancePanel({ eventId, canWrite }: { eventId: string; canWri
     return (
       <div {...panel}>
         <Card variant="outline" padding="md">
-          <CardHeader
-            title="No sujeto a los lineamientos"
-            description={verdict.message}
-          />
+          <CardHeader title="No sujeto a los lineamientos" description={verdict.message} />
           <p className={styles.muted}>
             Los lineamientos de PROFECO publicados en el DOF el 19 de febrero de 2026 aplican a
             eventos de más de {preview?.regime.appliesAboveCapacity.toLocaleString('es-MX')}{' '}
             asistentes. Este evento declara {preview?.capacity.toLocaleString('es-MX')}.
           </p>
           <p className={styles.muted}>
-            La transparencia de precio y las reglas de reembolso de la LFPC sí aplican, y el
-            sistema ya las cumple.
+            La transparencia de precio y las reglas de reembolso de la LFPC sí aplican, y el sistema
+            ya las cumple.
           </p>
         </Card>
       </div>
@@ -201,8 +196,8 @@ export function CompliancePanel({ eventId, canWrite }: { eventId: string; canWri
           </div>
         )}
         <p className={styles.muted}>
-          Publicar arranca el reloj de {preview?.regime.leadHours} h y deja constancia fechada de
-          lo divulgado. Cada publicación se guarda entera y no se puede alterar después.
+          Publicar arranca el reloj de {preview?.regime.leadHours} h y deja constancia fechada de lo
+          divulgado. Cada publicación se guarda entera y no se puede alterar después.
         </p>
       </Card>
 

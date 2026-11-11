@@ -47,7 +47,7 @@ export function useReducedMotion(): boolean {
 export function useControllableState<T>(
   controlled: T | undefined,
   defaultValue: T,
-  onChange?: (value: T) => void,
+  onChange?: (value: T) => void
 ): [T, (value: T) => void] {
   const [uncontrolled, setUncontrolled] = useState<T>(defaultValue);
   const isControlled = controlled !== undefined;
@@ -58,7 +58,7 @@ export function useControllableState<T>(
       if (!isControlled) setUncontrolled(next);
       onChange?.(next);
     },
-    [isControlled, onChange],
+    [isControlled, onChange]
   );
 
   return [value, setValue];
@@ -78,7 +78,7 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
 export function useOnClickOutside(
   ref: RefObject<HTMLElement | null>,
   handler: () => void,
-  enabled = true,
+  enabled = true
 ): void {
   const savedHandler = useRef(handler);
   savedHandler.current = handler;
@@ -148,7 +148,7 @@ const FOCUSABLE_SELECTOR = [
 export function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
     (element) =>
-      element.offsetWidth > 0 || element.offsetHeight > 0 || element === document.activeElement,
+      element.offsetWidth > 0 || element.offsetHeight > 0 || element === document.activeElement
   );
 }
 
@@ -209,7 +209,7 @@ export interface ElementSize {
  * @param fallback Tamano usado antes de la primera medicion y en SSR.
  */
 export function useElementSize<T extends HTMLElement>(
-  fallback: ElementSize,
+  fallback: ElementSize
 ): [RefObject<T | null>, ElementSize] {
   const ref = useRef<T>(null);
   const [size, setSize] = useState<ElementSize>(fallback);
@@ -222,7 +222,7 @@ export function useElementSize<T extends HTMLElement>(
       setSize((previous) =>
         Math.abs(previous.width - width) < 0.5 && Math.abs(previous.height - height) < 0.5
           ? previous
-          : { width, height },
+          : { width, height }
       );
     };
 
@@ -248,7 +248,7 @@ export function useElementSize<T extends HTMLElement>(
  */
 export function useRovingIndex(
   count: number,
-  initial = 0,
+  initial = 0
 ): [number, Dispatch<SetStateAction<number>>, (delta: number) => void] {
   const [index, setIndex] = useState(initial);
 
@@ -259,7 +259,7 @@ export function useRovingIndex(
         return (((current + delta) % count) + count) % count;
       });
     },
-    [count],
+    [count]
   );
 
   useEffect(() => {

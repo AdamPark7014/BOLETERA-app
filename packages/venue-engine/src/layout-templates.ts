@@ -23,7 +23,7 @@ export type TemplateOptions = {
  */
 export function gridForCapacity(
   capacity: number,
-  opts: { aspect?: number; maxRows?: number; minCols?: number } = {},
+  opts: { aspect?: number; maxRows?: number; minCols?: number } = {}
 ): { rows: number; cols: number } {
   const aspect = opts.aspect ?? 3.2; // butacas por fila ÷ filas
   const maxRows = opts.maxRows ?? 60;
@@ -50,7 +50,7 @@ function seatId(prefix: string, sec: string, row: string, n: number) {
 
 function viewportFromSections(
   sections: SeatMapSection[],
-  pad = 48,
+  pad = 48
 ): NonNullable<SeatMapData['viewport']> {
   const xs = sections.flatMap((s) => s.seats.map((seat) => seat.x));
   const ys = sections.flatMap((s) => s.seats.map((seat) => seat.y));
@@ -67,7 +67,9 @@ function pack(sections: SeatMapSection[], stageCx?: number): SeatMapData {
   const xs = sections.flatMap((s) => s.seats.map((seat) => seat.x));
   const cx =
     stageCx ??
-    (xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : (viewport.minX ?? 0) + viewport.width / 2);
+    (xs.length
+      ? (Math.min(...xs) + Math.max(...xs)) / 2
+      : (viewport.minX ?? 0) + viewport.width / 2);
   const stageWidth = Math.min(320, Math.max(220, viewport.width * 0.36));
   const stageY = (viewport.minY ?? 0) + 10;
   return {
@@ -87,11 +89,7 @@ function pack(sections: SeatMapSection[], stageCx?: number): SeatMapData {
   };
 }
 
-function withIds(
-  seats: SeatMapSeat[],
-  prefix: string,
-  slug: string,
-): SeatMapSeat[] {
+function withIds(seats: SeatMapSeat[], prefix: string, slug: string): SeatMapSeat[] {
   return seats.map((s, i) => {
     const row = s.row ?? 'A';
     const num = Number(String(s.label).split('-').pop()) || i + 1;
@@ -332,7 +330,7 @@ export function generateStadiumTemplate(opts: TemplateOptions = {}): SeatMapData
     gridForCapacity(Math.round(capacity * share), {
       // Norte/Sur son anchas y poco profundas; Este/Oeste al revés.
       aspect: i < 2 ? 4.5 : 1.4,
-    }),
+    })
   );
 
   const northWidth = grids[0].cols * seatPitch;
@@ -394,9 +392,7 @@ export function generateStadiumTemplate(opts: TemplateOptions = {}): SeatMapData
 
   const sections: SeatMapSection[] = defs.map((d, di) => {
     // Pasillo cada 14 butacas: recorrido máximo razonable hasta salir de la fila.
-    const skip = Array.from({ length: d.cols }, (_, c) => c).filter(
-      (c) => c > 0 && c % 15 === 0,
-    );
+    const skip = Array.from({ length: d.cols }, (_, c) => c).filter((c) => c > 0 && c % 15 === 0);
     const block: SeatMapBlock = {
       id: `${prefix}-${d.slug}`,
       label: d.name,
@@ -465,7 +461,7 @@ export function generateFestivalTemplate(opts: TemplateOptions = {}): SeatMapDat
         tier: 'premium',
       }),
       prefix,
-      'vip',
+      'vip'
     );
     sections.push({
       id: `${prefix}-sec-vip`,
@@ -549,7 +545,7 @@ export function generateFestivalTemplate(opts: TemplateOptions = {}): SeatMapDat
 
 export function generateLayoutTemplate(
   template: LayoutTemplateId,
-  opts: TemplateOptions = {},
+  opts: TemplateOptions = {}
 ): SeatMapData {
   switch (template) {
     case 'theater':

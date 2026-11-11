@@ -95,12 +95,10 @@ export function parseSiteContent(raw: unknown): SiteContent | null {
     : [];
 
   const curatedParsed = parseCuratedCards(o.curatedCards);
-  const curatedCards =
-    curatedParsed !== null ? curatedParsed : defaultSiteContent().curatedCards;
+  const curatedCards = curatedParsed !== null ? curatedParsed : defaultSiteContent().curatedCards;
 
   const cityParsed = parseCityImages(o.cityImages);
-  const cityImages =
-    cityParsed !== null ? cityParsed : defaultSiteContent().cityImages;
+  const cityImages = cityParsed !== null ? cityParsed : defaultSiteContent().cityImages;
 
   if (!heroSlides.length) return null;
 
@@ -124,7 +122,7 @@ export function mergeSiteContent(raw: unknown): SiteContent {
  * Tarjetas de marketing: CMS si hay al menos una; si no, stock compartido.
  */
 export function resolveCuratedCards(
-  content: Pick<SiteContent, 'curatedCards'> | null | undefined,
+  content: Pick<SiteContent, 'curatedCards'> | null | undefined
 ): CuratedMarketingCard[] {
   if (content?.curatedCards?.length) return content.curatedCards;
   return [...CURATED_MARKETING_CARDS];
@@ -136,7 +134,7 @@ export function resolveCuratedCards(
 export function resolveCityImage(
   city: string,
   content: Pick<SiteContent, 'cityImages'> | null | undefined,
-  fallback: string,
+  fallback: string
 ): string {
   const fromCms = content?.cityImages?.[city]?.trim();
   if (fromCms) return fromCms;

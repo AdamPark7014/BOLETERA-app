@@ -89,14 +89,14 @@ export function getEventPublishValidation(token: string, eventId: string) {
 export function getEventCalendar(token: string, month: number, year: number) {
   return adminApi<{ calendar: Record<string, unknown[]>; totalEvents: number }>(
     `/events/manage/calendar/${month}/${year}`,
-    token,
+    token
   );
 }
 
 export function getBranding(token: string) {
   return adminApi<{ primaryColor?: string; subdomain?: string; logoUrl?: string }>(
     '/admin/branding',
-    token,
+    token
   );
 }
 
@@ -107,7 +107,7 @@ export function createEventSeries(
     description: string;
     venueId: string;
     occurrences: Array<{ date: string; title?: string; capacity?: number; basePrice?: number }>;
-  },
+  }
 ) {
   return adminApi<{ seriesName: string; totalEvents: number }>('/events/manage/series', token, {
     method: 'POST',
@@ -128,7 +128,7 @@ export function createResidency(
     occurrenceCount: number;
     capacity: number;
     basePrice: number;
-  },
+  }
 ) {
   return adminApi<{ totalEvents: number }>('/events/manage/residency', token, {
     method: 'POST',
@@ -152,7 +152,7 @@ export function createEvent(
     /** Ventana de venta. El asistente la pedía y se descartaba antes de llegar aquí. */
     salesStartAt?: string;
     salesEndAt?: string;
-  },
+  }
 ) {
   const { startDate, endDate, salesStartAt, salesEndAt, zoneName, ...rest } = body;
   return adminApi<EventRow>('/events/manage', token, {
@@ -198,11 +198,7 @@ export type ChannelConfiguration = Partial<
   >
 >;
 
-export function configureChannels(
-  token: string,
-  eventId: string,
-  config: ChannelConfiguration,
-) {
+export function configureChannels(token: string, eventId: string, config: ChannelConfiguration) {
   return adminApi(`/channels/${eventId}/configure`, token, {
     method: 'POST',
     body: JSON.stringify(config),
@@ -245,7 +241,10 @@ export function getChannelAnalytics(token: string, eventId: string) {
 }
 
 export function listVenues(token: string) {
-  return adminApi<{ id: string; name: string; slug: string; capacity: number }[]>('/admin/venues', token);
+  return adminApi<{ id: string; name: string; slug: string; capacity: number }[]>(
+    '/admin/venues',
+    token
+  );
 }
 
 export function suggestLayout(token: string, venueId: string, planDescription: string) {
@@ -255,7 +254,7 @@ export function suggestLayout(token: string, venueId: string, planDescription: s
     {
       method: 'POST',
       body: JSON.stringify({ prompt: planDescription }),
-    },
+    }
   );
 }
 
@@ -263,7 +262,7 @@ export function applyLayoutTemplate(
   token: string,
   venueId: string,
   template: 'arena' | 'theater' | 'stadium' | 'festival',
-  opts?: { capacity?: number },
+  opts?: { capacity?: number }
 ) {
   return adminApi<{ venue: unknown; layout: { mapData: SeatMapData } }>(
     `/venues/${venueId}/layout/from-template`,
@@ -271,7 +270,7 @@ export function applyLayoutTemplate(
     {
       method: 'POST',
       body: JSON.stringify({ template, capacity: opts?.capacity }),
-    },
+    }
   );
 }
 
@@ -342,11 +341,9 @@ export function archiveVenueLayout(token: string, venueId: string) {
 }
 
 export function rollbackVenueLayout(token: string, venueId: string, snapshotId: string) {
-  return adminApi<VenueLayoutWorkflow>(
-    `/venues/${venueId}/layout/rollback/${snapshotId}`,
-    token,
-    { method: 'POST' },
-  );
+  return adminApi<VenueLayoutWorkflow>(`/venues/${venueId}/layout/rollback/${snapshotId}`, token, {
+    method: 'POST',
+  });
 }
 
 export function saveVenueLayout(token: string, venueId: string, mapData: SeatMapData) {
@@ -449,7 +446,7 @@ export async function downloadEgressOverviewCsv(token: string) {
 export async function analyzeVenueEgress(
   token: string,
   venueId: string,
-  opts?: { mapData?: SeatMapData; format?: 'json' | 'csv' | 'pdf' },
+  opts?: { mapData?: SeatMapData; format?: 'json' | 'csv' | 'pdf' }
 ): Promise<EgressReportApiJson | string | Blob> {
   const format = opts?.format ?? 'json';
   const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
@@ -511,7 +508,7 @@ export async function downloadVenueEgressPdf(token: string, venueId: string) {
 export async function downloadVenueEgressPdfDraft(
   token: string,
   venueId: string,
-  mapData: SeatMapData,
+  mapData: SeatMapData
 ) {
   const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
   const res = await fetch(`${API}/venues/${venueId}/layout/egress`, {
@@ -562,8 +559,7 @@ export type RealtimeDashboard = {
   channels: { channel: string; orders: number; revenue: number }[];
 };
 
-const adminApiBase = () =>
-  process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
+const adminApiBase = () => process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
 
 export function getRealtimeDashboard(token: string, organizationId: string, eventId?: string) {
   const q = eventId ? `?eventId=${eventId}` : '';
@@ -598,7 +594,7 @@ export type SettlementReport = {
 export function getSettlementReport(
   token: string,
   organizationId: string,
-  period: 'DAILY' | 'WEEKLY' | 'MONTHLY',
+  period: 'DAILY' | 'WEEKLY' | 'MONTHLY'
 ) {
   return adminApi<SettlementReport>(`/reports/settlement/${organizationId}/${period}`, token);
 }
@@ -626,7 +622,7 @@ export function createCampaign(
   token: string,
   organizationId: string,
   eventId: string,
-  body: Record<string, unknown>,
+  body: Record<string, unknown>
 ) {
   return adminApi(`/campaigns/create/${organizationId}/${eventId}`, token, {
     method: 'POST',
@@ -641,7 +637,7 @@ export function publishCampaignApi(token: string, campaignId: string) {
 export function searchEventsPublic(query: string, limit = 20) {
   const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
   return fetch(`${API}/search/events?query=${encodeURIComponent(query)}&limit=${limit}`).then((r) =>
-    r.json(),
+    r.json()
   );
 }
 
@@ -654,7 +650,7 @@ export function updateOffer(
   token: string,
   eventId: string,
   offerId: string,
-  body: { basePrice?: number; name?: string; isAvailable?: boolean },
+  body: { basePrice?: number; name?: string; isAvailable?: boolean }
 ) {
   return adminApi(`/events/manage/${eventId}/offers/${offerId}`, token, {
     method: 'PUT',
@@ -669,7 +665,7 @@ export function setEventPricing(
     basePrice: number;
     dynamicPricingEnabled: boolean;
     customZonePricing?: Record<string, number>;
-  },
+  }
 ) {
   return adminApi(`/events/manage/${eventId}/pricing`, token, {
     method: 'PUT',
@@ -686,7 +682,7 @@ export function resolveFraudFlag(token: string, flagId: string, resolution: stri
 
 export function listEventsByVenue(token: string, venueId: string) {
   return listEvents(token).then((events) =>
-    events.filter((e) => (e as EventRow & { venueId?: string }).venueId === venueId),
+    events.filter((e) => (e as EventRow & { venueId?: string }).venueId === venueId)
   );
 }
 
@@ -707,7 +703,7 @@ export type SaasCapabilities = {
 export function getSaasCapabilities(token: string, organizationId: string) {
   return adminApi<SaasCapabilities>(
     `/organization/capabilities?organizationId=${organizationId}`,
-    token,
+    token
   );
 }
 
@@ -830,7 +826,7 @@ export function inviteTeamMember(
     lastName: string;
     role: string;
     password: string;
-  },
+  }
 ) {
   return adminApi(`/organization/${orgId}/team`, token, {
     method: 'POST',
@@ -863,13 +859,13 @@ export type Invitation = {
 export function listInvitations(token: string, organizationId: string) {
   return adminApi<Invitation[]>(
     `/auth/invitations?organizationId=${encodeURIComponent(organizationId)}`,
-    token,
+    token
   );
 }
 
 export function createInvitation(
   token: string,
-  body: { organizationId: string; email: string; role: string; expiresInDays?: number },
+  body: { organizationId: string; email: string; role: string; expiresInDays?: number }
 ) {
   return adminApi<Invitation>('/auth/invitations', token, {
     method: 'POST',
@@ -919,11 +915,9 @@ export function listWaitlistByOrg(token: string, orgId: string) {
 }
 
 export function notifyWaitlistBatch(token: string, eventId: string, limit = 50) {
-  return adminApi<{ notified: number }>(
-    `/waitlist/event/${eventId}/notify?limit=${limit}`,
-    token,
-    { method: 'POST' },
-  );
+  return adminApi<{ notified: number }>(`/waitlist/event/${eventId}/notify?limit=${limit}`, token, {
+    method: 'POST',
+  });
 }
 
 export function listApiKeys(token: string, orgId: string) {
@@ -945,12 +939,12 @@ export function listApiKeys(token: string, orgId: string) {
 export function createApiKey(
   token: string,
   orgId: string,
-  body: { name: string; scopes?: string[]; rateLimit?: number; expiresInDays?: number },
+  body: { name: string; scopes?: string[]; rateLimit?: number; expiresInDays?: number }
 ) {
   return adminApi<{ id: string; secret: string; keyPrefix: string }>(
     `/partners/${orgId}/keys`,
     token,
-    { method: 'POST', body: JSON.stringify(body) },
+    { method: 'POST', body: JSON.stringify(body) }
   );
 }
 
@@ -987,7 +981,7 @@ export function upsertFiscalProfile(
     codigoPostal: string;
     serie?: string;
     pacMode?: string;
-  },
+  }
 ) {
   return adminApi(`/billing/${orgId}/fiscal-profile`, token, {
     method: 'POST',
@@ -1039,12 +1033,12 @@ export function stampCfdi(
     receptorRfc: string;
     receptorNombre: string;
     receptorUsoCfdi?: string;
-  },
+  }
 ) {
   return adminApi<CfdiInvoice & { sandbox: boolean; xml: string }>(
     `/billing/${orgId}/cfdi/stamp`,
     token,
-    { method: 'POST', body: JSON.stringify(body) },
+    { method: 'POST', body: JSON.stringify(body) }
   );
 }
 
@@ -1058,7 +1052,7 @@ export function createVenue(
     address?: string;
     totalCapacity?: number;
     template?: 'arena' | 'theater' | 'stadium' | 'festival' | 'blank';
-  },
+  }
 ) {
   return adminApi<{
     id: string;

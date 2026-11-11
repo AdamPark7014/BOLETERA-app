@@ -107,7 +107,14 @@
   flex: 1;
   height: 0.3rem;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--bl-gray-700), #be4646, #b48c32, #38a078, var(--bl-success));
+  background: linear-gradient(
+    90deg,
+    var(--bl-gray-700),
+    #be4646,
+    #b48c32,
+    #38a078,
+    var(--bl-success)
+  );
 }
 
 .priceHeatScale {
@@ -260,11 +267,7 @@
 }
 
 .swatchRouteActive {
-  background-image: repeating-linear-gradient(
-    90deg,
-    #f472b6 0 6px,
-    transparent 6px 10px
-  );
+  background-image: repeating-linear-gradient(90deg, #f472b6 0 6px, transparent 6px 10px);
 }
 
 .swatchBottleneck {

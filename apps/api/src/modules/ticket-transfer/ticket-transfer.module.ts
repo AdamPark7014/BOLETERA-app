@@ -11,5 +11,3 @@ import { TicketTransferService } from './ticket-transfer.service';
   exports: [TicketTransferService],
 })
 export class TicketTransferModule {}
-
-

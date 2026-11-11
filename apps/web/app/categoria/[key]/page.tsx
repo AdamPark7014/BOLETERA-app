@@ -40,11 +40,7 @@ export async function generateMetadata({
   });
 }
 
-export default async function CategoriaPage({
-  params,
-}: {
-  params: Promise<{ key: string }>;
-}) {
+export default async function CategoriaPage({ params }: { params: Promise<{ key: string }> }) {
   const { key: raw } = await params;
   const key = raw.toUpperCase();
   if (!ALLOWED.has(key)) notFound();
@@ -53,7 +49,7 @@ export default async function CategoriaPage({
   let failed = false;
   try {
     events = await api<EventHit[]>(
-      `/discovery/events?category=${encodeURIComponent(key)}&limit=60`,
+      `/discovery/events?category=${encodeURIComponent(key)}&limit=60`
     );
   } catch {
     failed = true;

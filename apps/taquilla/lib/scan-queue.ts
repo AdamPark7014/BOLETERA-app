@@ -142,7 +142,7 @@ export async function syncScans(zoneFallback?: string): Promise<SyncOutcome> {
     await idbBulkPut<ScanConflict>(STORE_CONFLICTS, [...conflicts, ...rejected]);
     await idbBulkDelete(
       STORE_SCAN_QUEUE,
-      batch.map((s) => s.id),
+      batch.map((s) => s.id)
     );
 
     outcome.sent += batch.length;

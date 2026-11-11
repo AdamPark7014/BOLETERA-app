@@ -110,7 +110,7 @@ export function formatDayLabel(value: Date | string | number): string {
   const date = toDate(value);
   if (!date) return '';
   return dateFormatter({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(
-    date,
+    date
   );
 }
 

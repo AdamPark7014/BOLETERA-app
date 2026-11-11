@@ -12,5 +12,3 @@ import { LayoutManagementController } from './layout-management.controller';
   exports: [LayoutManagementService],
 })
 export class LayoutManagementModule {}
-
-

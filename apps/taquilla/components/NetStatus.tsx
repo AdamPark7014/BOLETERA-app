@@ -53,7 +53,8 @@ export function useOpsStatus(): OpsStatus {
 
 export function NetStatus({ status }: { status: OpsStatus }) {
   const pending = status.pendingSales + status.pendingScans;
-  const warnToken = status.tokenMinutesLeft != null && status.tokenMinutesLeft <= TOKEN_WARN_MINUTES;
+  const warnToken =
+    status.tokenMinutesLeft != null && status.tokenMinutesLeft <= TOKEN_WARN_MINUTES;
 
   return (
     <div className={styles.wrap}>
@@ -61,11 +62,7 @@ export function NetStatus({ status }: { status: OpsStatus }) {
         <span className={status.online ? styles.dotOn : styles.dotOff} aria-hidden="true" />
         {status.online ? 'En línea' : 'Sin red'}
       </span>
-      {pending > 0 ? (
-        <span className={styles.meta}>
-          {pending} en cola
-        </span>
-      ) : null}
+      {pending > 0 ? <span className={styles.meta}>{pending} en cola</span> : null}
       {status.conflicts > 0 ? (
         <span className={styles.meta}>{status.conflicts} conflictos</span>
       ) : null}

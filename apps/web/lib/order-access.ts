@@ -66,10 +66,7 @@ export function forgetOrderAccessToken(publicId: string): void {
  * Token efectivo para esta orden: primero el del enlace (puede ser un
  * dispositivo nuevo), luego el archivado. El del enlace se archiva de paso.
  */
-export function resolveOrderAccessToken(
-  publicId: string,
-  urlToken?: string | null,
-): string | null {
+export function resolveOrderAccessToken(publicId: string, urlToken?: string | null): string | null {
   const fromUrl = urlToken?.trim();
   if (fromUrl) {
     saveOrderAccessToken(publicId, fromUrl);
@@ -88,7 +85,7 @@ export function orderPath(
   publicId: string,
   token?: string | null,
   suffix = '',
-  extraParams?: Record<string, string | undefined>,
+  extraParams?: Record<string, string | undefined>
 ): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(extraParams ?? {})) {
@@ -109,7 +106,7 @@ export function orderApiUrl(
   apiBase: string,
   publicId: string,
   suffix = '',
-  token?: string | null,
+  token?: string | null
 ): string {
   const url = `${apiBase}/orders/${publicId}${suffix}`;
   const trimmed = token?.trim();
@@ -130,7 +127,7 @@ export async function fetchOrderResource<T>(
   publicId: string,
   suffix: string,
   token: string | null | undefined,
-  init?: RequestInit,
+  init?: RequestInit
 ): Promise<OrderFetchResult<T>> {
   try {
     const res = await fetch(orderApiUrl(apiBase, publicId, suffix, token), {

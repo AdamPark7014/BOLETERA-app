@@ -51,12 +51,7 @@ const DEFAULT_HEADLINE = 'Vive la emoción en vivo';
 const DEFAULT_SUBCOPY =
   'Boletos oficiales para conciertos, festivales y deportes en todo México. Precio final con cargos incluidos.';
 
-export function HomeHero({
-  slides,
-  initialEventCount,
-  headline,
-  subcopy,
-}: HomeHeroProps) {
+export function HomeHero({ slides, initialEventCount, headline, subcopy }: HomeHeroProps) {
   const router = useRouter();
   const brand = useTenantBrand();
   const [index, setIndex] = useState(0);
@@ -73,7 +68,7 @@ export function HomeHero({
     (next: number) => {
       setIndex(((next % slideCount) + slideCount) % slideCount);
     },
-    [slideCount],
+    [slideCount]
   );
 
   const goPrev = useCallback(() => goTo(index - 1), [goTo, index]);
@@ -130,10 +125,9 @@ export function HomeHero({
     }
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `${API}/discovery/suggest?q=${encodeURIComponent(q)}&limit=6`,
-          { cache: 'no-store' },
-        );
+        const res = await fetch(`${API}/discovery/suggest?q=${encodeURIComponent(q)}&limit=6`, {
+          cache: 'no-store',
+        });
         if (!res.ok) return;
         const data = (await res.json()) as SuggestHit[];
         setSuggestions(data);
@@ -221,9 +215,7 @@ export function HomeHero({
             <div
               key={slide.url}
               className={
-                i === index
-                  ? `${styles.slideWrap} ${styles.slideActive}`
-                  : styles.slideWrap
+                i === index ? `${styles.slideWrap} ${styles.slideActive}` : styles.slideWrap
               }
             >
               <Image
@@ -277,7 +269,12 @@ export function HomeHero({
             </Button>
           </form>
           {suggestOpen && suggestions.length > 0 && (
-            <ul id="hero-suggest" className={styles.suggest} role="listbox" aria-label="Sugerencias">
+            <ul
+              id="hero-suggest"
+              className={styles.suggest}
+              role="listbox"
+              aria-label="Sugerencias"
+            >
               {suggestions.map((s, i) => (
                 <li
                   key={s.id}

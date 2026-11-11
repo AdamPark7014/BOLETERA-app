@@ -57,7 +57,7 @@ export function Section({
           styles.body,
           styles[`gap-${gap}`],
           columns ? styles.grid : null,
-          columns ? styles[`cols-${columns}`] : null,
+          columns ? styles[`cols-${columns}`] : null
         )}
       >
         {children}

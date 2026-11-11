@@ -29,9 +29,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return;
     }
 
-    this.logger.error(
-      exception instanceof Error ? exception.stack : String(exception),
-    );
+    this.logger.error(exception instanceof Error ? exception.stack : String(exception));
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: 'Internal server error',

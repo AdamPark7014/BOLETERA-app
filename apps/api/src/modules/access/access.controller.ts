@@ -27,7 +27,7 @@ export class AccessController {
       qrPayload?: string;
       zoneId?: string;
       channel?: string;
-    },
+    }
   ) {
     // Los campos se copian uno a uno a propósito. Antes se hacía `...body`, así
     // que el cuerpo podía traer su propio `scannedBy` y la trazabilidad de quién
@@ -47,7 +47,7 @@ export class AccessController {
   qr(
     @Request() req: { user: JwtUser; ip?: string },
     @Param('id') id: string,
-    @Query('reason') reason?: string,
+    @Query('reason') reason?: string
   ) {
     // El servicio decide si es el titular o una reimpresión de ventanilla; el
     // controller solo entrega la identidad del token, nunca datos del cuerpo (F2-04).
@@ -62,7 +62,7 @@ export class AccessController {
   manifest(
     @Param('eventId') eventId: string,
     @Query('cursor') cursor?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.access.getEventManifest(eventId, {
       cursor,
@@ -81,7 +81,7 @@ export class AccessController {
     body: {
       channel?: string;
       scans: { ticketId: string; scannedAt?: string; zoneId?: string }[];
-    },
+    }
   ) {
     return this.access.syncOfflineScans({
       scannedBy: req.user.sub,

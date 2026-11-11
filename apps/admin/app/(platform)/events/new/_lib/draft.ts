@@ -86,8 +86,7 @@ function parseRule(raw: unknown, fallback: RecurrenceRule): RecurrenceRule {
     untilLocal: typeof raw.untilLocal === 'string' ? raw.untilLocal : fallback.untilLocal,
     byWeekday: Array.isArray(raw.byWeekday)
       ? raw.byWeekday.filter(
-          (d): d is Weekday =>
-            typeof d === 'number' && Number.isInteger(d) && d >= 0 && d <= 6,
+          (d): d is Weekday => typeof d === 'number' && Number.isInteger(d) && d >= 0 && d <= 6
         )
       : fallback.byWeekday,
     exceptions: Array.isArray(raw.exceptions)

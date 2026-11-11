@@ -1,4 +1,14 @@
-import { BadRequestException, Body, Controller, Delete, Get, Header, Param, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Header,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { WaitingRoomService } from './waiting-room.service';
@@ -33,9 +43,7 @@ export class WaitingRoomController {
   @ApiOperation({ summary: 'Waiting-room configuration for an event (public)' })
   async config(@Param('eventId') eventId: string) {
     const config = await this.waitingRoom.configFor(eventId);
-    return config
-      ? { enabled: true, opensAt: config.opensAt }
-      : { enabled: false as const };
+    return config ? { enabled: true, opensAt: config.opensAt } : { enabled: false as const };
   }
 
   @Post(':eventId/join')

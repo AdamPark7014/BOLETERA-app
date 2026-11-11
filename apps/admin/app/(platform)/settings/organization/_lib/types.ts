@@ -57,11 +57,7 @@ export const INITIAL_INVITE: InviteForm = {
 export function isOrganizationProfile(value: unknown): value is OrganizationProfile {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
-  return (
-    typeof row.id === 'string' &&
-    typeof row.name === 'string' &&
-    typeof row.slug === 'string'
-  );
+  return typeof row.id === 'string' && typeof row.name === 'string' && typeof row.slug === 'string';
 }
 
 export function profileFromOrg(org: OrganizationProfile): ProfileForm {

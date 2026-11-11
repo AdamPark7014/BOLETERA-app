@@ -77,7 +77,7 @@ export function totalAvailable(snapshot: AvailabilitySnapshot): number {
  */
 export async function loadSeatStatuses(
   eventId: string,
-  signal?: { cancelled: boolean },
+  signal?: { cancelled: boolean }
 ): Promise<Record<string, string>> {
   const statuses: Record<string, string> = {};
   let cursor: string | null = null;
@@ -106,7 +106,7 @@ export function subscribeInventory(
     onDelta: (delta: InventoryDelta) => void;
     onLive?: (live: boolean) => void;
     onTruncated?: () => void;
-  },
+  }
 ): () => void {
   let es: EventSource | null = null;
   try {

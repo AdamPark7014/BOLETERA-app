@@ -12,5 +12,3 @@ import { TaquillaPosController } from './taquilla-pos.controller';
   exports: [TaquillaPosService],
 })
 export class TaquillaPosModule {}
-
-

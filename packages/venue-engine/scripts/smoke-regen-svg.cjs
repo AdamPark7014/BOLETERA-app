@@ -19,7 +19,7 @@ console.log(
     id: s.id,
     seats: s.seats.length,
     skip: s.blocks[0].skipColumns,
-  })),
+  }))
 );
 
 const target = withBlocks[0];
@@ -32,7 +32,7 @@ const mutated = {
   sections: map.sections.map((s) =>
     s.id === target.id
       ? { ...s, seats: s.seats.map((seat, i) => (i === 0 ? { ...seat, x: seat.x + 999 } : seat)) }
-      : s,
+      : s
   ),
 };
 const before = mutated.sections.find((s) => s.id === target.id).seats[0].x;
@@ -46,7 +46,15 @@ const rich = {
   ...regen,
   venue: {
     ...(regen.venue || {}),
-    aisles: [{ id: 'a1', points: [[100, 100], [100, 400]] }],
+    aisles: [
+      {
+        id: 'a1',
+        points: [
+          [100, 100],
+          [100, 400],
+        ],
+      },
+    ],
     obstacles: [
       {
         id: 'o1',
@@ -60,7 +68,16 @@ const rich = {
         height: 120,
       },
     ],
-    stairs: [{ id: 'st1', kind: 'stairs', points: [[200, 200], [200, 280]] }],
+    stairs: [
+      {
+        id: 'st1',
+        kind: 'stairs',
+        points: [
+          [200, 200],
+          [200, 280],
+        ],
+      },
+    ],
   },
   sections: regen.sections.map((s, i) =>
     i === 0
@@ -75,7 +92,7 @@ const rich = {
             ],
           },
         }
-      : s,
+      : s
   ),
 };
 
@@ -87,7 +104,11 @@ assert(svg.includes('data-role="stairs"'), 'svg stairs');
 assert(svg.includes('data-role="section"'), 'svg section');
 console.log('svg export ok', { bytes: svg.length });
 
-const { map: re, stats } = importSvgToSeatMap(svg, { sections: [], version: 3 }, { mode: 'replace-meta' });
+const { map: re, stats } = importSvgToSeatMap(
+  svg,
+  { sections: [], version: 3 },
+  { mode: 'replace-meta' }
+);
 assert(stats.stage, 'reimport stage');
 assert(stats.aisles >= 1, 'reimport aisle');
 assert(stats.obstacles >= 1, 'reimport obstacle');

@@ -79,7 +79,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new QueueError(
       res.status,
       messageOf(payload) || `HTTP ${res.status}`,
-      Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null,
+      Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null
     );
   }
   return (payload ?? {}) as T;
@@ -103,7 +103,7 @@ export function joinQueue(eventId: string, memberId: string): Promise<QueueStatu
 export function fetchQueueStatus(eventId: string, memberId: string): Promise<QueueStatus> {
   return request<QueueStatus>(
     `/waiting-room/${encodeURIComponent(eventId)}/status?memberId=${encodeURIComponent(memberId)}`,
-    { cache: 'no-store' },
+    { cache: 'no-store' }
   );
 }
 
@@ -114,12 +114,12 @@ export function fetchQueueStatus(eventId: string, memberId: string): Promise<Que
 export async function leaveQueue(
   eventId: string,
   memberId: string,
-  options: { keepalive?: boolean } = {},
+  options: { keepalive?: boolean } = {}
 ): Promise<void> {
   try {
     await fetch(
       `${API}/waiting-room/${encodeURIComponent(eventId)}?memberId=${encodeURIComponent(memberId)}`,
-      { method: 'DELETE', keepalive: options.keepalive ?? false },
+      { method: 'DELETE', keepalive: options.keepalive ?? false }
     );
   } catch {
     // Salir es cortesía con los demás, no un requisito: si falla, el TTL de 24 h

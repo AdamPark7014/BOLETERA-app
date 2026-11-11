@@ -99,13 +99,13 @@ function query(params: Record<string, string | number | undefined | null>) {
 export function getAvailability(
   token: string,
   eventId: string,
-  opts?: { since?: string; signal?: AbortSignal; silent?: boolean },
+  opts?: { since?: string; signal?: AbortSignal; silent?: boolean }
 ) {
   const init: AdminApiOptions = { signal: opts?.signal, silent: opts?.silent };
   return adminApi<AvailabilitySnapshot>(
     `/inventory/${encodeURIComponent(eventId)}/availability${query({ since: opts?.since })}`,
     token,
-    init,
+    init
   );
 }
 
@@ -115,7 +115,7 @@ export const SEAT_PAGE_MAX = 2000;
 export function getSeatPage(
   token: string,
   eventId: string,
-  params?: { cursor?: string | null; limit?: number; status?: string; signal?: AbortSignal },
+  params?: { cursor?: string | null; limit?: number; status?: string; signal?: AbortSignal }
 ) {
   return adminApi<SeatPage>(
     `/inventory/${encodeURIComponent(eventId)}/seats${query({
@@ -124,7 +124,7 @@ export function getSeatPage(
       status: params?.status,
     })}`,
     token,
-    { signal: params?.signal },
+    { signal: params?.signal }
   );
 }
 
@@ -143,7 +143,7 @@ export async function loadAllSeats(
     signal?: AbortSignal;
     onPage?: (items: InventorySeat[], loadedTotal: number) => void;
     maxPages?: number;
-  },
+  }
 ): Promise<InventorySeat[]> {
   const all: InventorySeat[] = [];
   let cursor: string | null = null;
@@ -198,7 +198,13 @@ export const STAFF_HOLD_MAX_SEATS = 100;
 
 export function createStaffHold(
   token: string,
-  body: { eventId: string; seatIds?: string[]; offerId?: string; quantity?: number; sessionId?: string },
+  body: {
+    eventId: string;
+    seatIds?: string[];
+    offerId?: string;
+    quantity?: number;
+    sessionId?: string;
+  }
 ) {
   return adminApi<StaffHoldResult>('/inventory/staff/holds', token, {
     method: 'POST',
@@ -211,7 +217,13 @@ export const BEST_AVAILABLE_MAX = 12;
 
 export function createBestAvailableHold(
   token: string,
-  body: { eventId: string; offerId: string; quantity: number; contiguous?: boolean; sessionId?: string },
+  body: {
+    eventId: string;
+    offerId: string;
+    quantity: number;
+    contiguous?: boolean;
+    sessionId?: string;
+  }
 ) {
   return adminApi<BestAvailableResult>('/inventory/staff/holds/best-available', token, {
     method: 'POST',
@@ -223,7 +235,7 @@ export function releaseStaffHold(token: string, holdId: string) {
   return adminApi<{ released: boolean; reason?: string }>(
     `/inventory/staff/holds/${encodeURIComponent(holdId)}`,
     token,
-    { method: 'DELETE' },
+    { method: 'DELETE' }
   );
 }
 
@@ -275,7 +287,7 @@ export function blockSeats(
     reason: string;
     category?: BlockCategory;
     sessionId?: string;
-  },
+  }
 ) {
   return adminApi<AdminBlockResult>(`/layouts/${encodeURIComponent(layoutId)}/seats/hold`, token, {
     method: 'POST',
@@ -295,12 +307,16 @@ export type AdminReleaseResult = {
 export function releaseSeats(
   token: string,
   layoutId: string,
-  body: { seatIds: string[]; reason: string; category?: BlockCategory },
+  body: { seatIds: string[]; reason: string; category?: BlockCategory }
 ) {
-  return adminApi<AdminReleaseResult>(`/layouts/${encodeURIComponent(layoutId)}/seats/release`, token, {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
+  return adminApi<AdminReleaseResult>(
+    `/layouts/${encodeURIComponent(layoutId)}/seats/release`,
+    token,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }
+  );
 }
 
 /* ── Derivados para la interfaz ───────────────────────────────────────────── */
@@ -330,7 +346,7 @@ export function soldCount(snapshot: AvailabilitySnapshot | null): number {
 export function applyDelta(
   totals: Record<string, number>,
   statusById: Map<string, string>,
-  changes: InventoryDelta['changes'],
+  changes: InventoryDelta['changes']
 ): { totals: Record<string, number>; newlySold: number } {
   const next = { ...totals };
   let newlySold = 0;

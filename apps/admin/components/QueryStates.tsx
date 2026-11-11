@@ -3,25 +3,19 @@
 import type { ReactNode } from 'react';
 import { HttpError } from '@/lib/http';
 
-export function QueryLoading({
-  label = 'Cargando información…',
-}: {
-  label?: string;
-}) {
+export function QueryLoading({ label = 'Cargando información…' }: { label?: string }) {
   return (
-    <div role="status" aria-live="polite" style={{ padding: '2rem', color: 'var(--bl-text-tertiary)' }}>
+    <div
+      role="status"
+      aria-live="polite"
+      style={{ padding: '2rem', color: 'var(--bl-text-tertiary)' }}
+    >
       {label}
     </div>
   );
 }
 
-export function QueryError({
-  error,
-  onRetry,
-}: {
-  error: unknown;
-  onRetry?: () => void;
-}) {
+export function QueryError({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const message =
     error instanceof HttpError || error instanceof Error
       ? error.message

@@ -69,7 +69,7 @@ export function loginToActivity(team: readonly TeamMember[], limit = 12): Activi
 export function mergeActivity(
   audit: readonly ActivityItem[],
   logins: readonly ActivityItem[],
-  limit = 20,
+  limit = 20
 ): ActivityItem[] {
   return [...audit, ...logins]
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())

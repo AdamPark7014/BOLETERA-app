@@ -130,8 +130,8 @@ export function SeatCanvasLayer({
     ctx.clearRect(0, 0, width, height);
 
     // Rectángulo visible en coordenadas de mundo.
-    const viewMinX = (-tx) / scale;
-    const viewMinY = (-ty) / scale;
+    const viewMinX = -tx / scale;
+    const viewMinY = -ty / scale;
     const viewMaxX = (width - tx) / scale;
     const viewMaxY = (height - ty) / scale;
 
@@ -159,7 +159,7 @@ export function SeatCanvasLayer({
         sightlines,
         levelIdxFilter,
         showAccessible,
-        scratch.current,
+        scratch.current
       );
     }
 
@@ -230,11 +230,12 @@ function drawSections(
   ctx: CanvasRenderingContext2D,
   index: SeatIndex,
   scale: number,
-  levelIdxFilter: number,
+  levelIdxFilter: number
 ) {
   for (const sec of index.sections) {
     if (!sec.seatCount) continue;
-    if (levelIdxFilter >= 0 && sec.levelId && index.levels[levelIdxFilter] !== sec.levelId) continue;
+    if (levelIdxFilter >= 0 && sec.levelId && index.levels[levelIdxFilter] !== sec.levelId)
+      continue;
 
     ctx.fillStyle = sec.color;
     ctx.globalAlpha = 0.55;
@@ -250,7 +251,7 @@ function drawSections(
         sec.minX - pad,
         sec.minY - pad,
         sec.maxX - sec.minX + pad * 2,
-        sec.maxY - sec.minY + pad * 2,
+        sec.maxY - sec.minY + pad * 2
       );
     }
     ctx.globalAlpha = 1;
@@ -276,7 +277,7 @@ function drawClusters(
   viewMaxX: number,
   viewMaxY: number,
   scale: number,
-  levelIdxFilter: number,
+  levelIdxFilter: number
 ) {
   // Celda de ~18 px en pantalla: suficiente para leer la forma sin saturar.
   const cellWorld = 18 / scale;
@@ -286,7 +287,8 @@ function drawClusters(
   const bySection = new Map<number, typeof clusters>();
   for (const c of clusters) {
     const sec = index.sections[c.sectionIdx];
-    if (levelIdxFilter >= 0 && sec?.levelId && index.levels[levelIdxFilter] !== sec.levelId) continue;
+    if (levelIdxFilter >= 0 && sec?.levelId && index.levels[levelIdxFilter] !== sec.levelId)
+      continue;
     const arr = bySection.get(c.sectionIdx) ?? [];
     arr.push(c);
     bySection.set(c.sectionIdx, arr);
@@ -318,7 +320,7 @@ function drawSeats(
   sightlines: Float32Array | null | undefined,
   levelIdxFilter: number,
   showAccessible: boolean,
-  scratch: number[],
+  scratch: number[]
 ) {
   // Margen de una butaca para que no aparezcan cortadas al borde.
   const margin = index.pitch;
@@ -328,7 +330,7 @@ function drawSeats(
     viewMinY - margin,
     viewMaxX + margin,
     viewMaxY + margin,
-    scratch,
+    scratch
   );
 
   const { x, y, flags, tierIdx, sectionIdx, levelIdx, tiers } = index;

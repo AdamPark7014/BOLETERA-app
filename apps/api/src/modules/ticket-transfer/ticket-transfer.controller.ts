@@ -28,7 +28,7 @@ export class TicketTransferController {
   @ApiBearerAuth()
   initiate(
     @CurrentUser() user: { sub: string },
-    @Body() body: { ticketId: string; toEmail: string; message?: string },
+    @Body() body: { ticketId: string; toEmail: string; message?: string }
   ) {
     return this.transferService.initiate({
       ticketId: body.ticketId,
@@ -71,5 +71,3 @@ export class TicketTransferController {
     return this.transferService.cancel(id, user.sub);
   }
 }
-
-

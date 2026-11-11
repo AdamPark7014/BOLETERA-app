@@ -90,7 +90,7 @@ export function saveTaquillaSession(
     terminalLabel: string;
     user: TaquillaUser;
     cashierId?: string;
-  },
+  }
 ) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(TERMINAL_LABEL_KEY, opts.terminalLabel);
@@ -215,7 +215,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
-    public body?: unknown,
+    public body?: unknown
   ) {
     super(message);
     this.name = 'ApiError';
@@ -242,7 +242,7 @@ function rawFetch(path: string, init: RequestInit): Promise<Response> {
 export async function apiFetch(
   path: string,
   init: RequestInit = {},
-  opts: { reauth?: boolean } = {},
+  opts: { reauth?: boolean } = {}
 ): Promise<Response> {
   const send = () => {
     const headers = new Headers(init.headers);
@@ -271,7 +271,7 @@ export async function apiFetch(
 export async function apiJson<T>(
   path: string,
   init: RequestInit = {},
-  opts: { reauth?: boolean } = {},
+  opts: { reauth?: boolean } = {}
 ): Promise<T> {
   const res = await apiFetch(path, init, opts);
   const text = await res.text();

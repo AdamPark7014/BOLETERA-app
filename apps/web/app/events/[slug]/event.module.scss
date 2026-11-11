@@ -40,7 +40,12 @@ $accent: var(--bl-accent);
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(105deg, rgba(10, 10, 10, 0.92) 0%, rgba(10, 10, 10, 0.55) 45%, rgba(10, 10, 10, 0.2) 75%),
+    linear-gradient(
+      105deg,
+      rgba(10, 10, 10, 0.92) 0%,
+      rgba(10, 10, 10, 0.55) 45%,
+      rgba(10, 10, 10, 0.2) 75%
+    ),
     linear-gradient(0deg, rgba(10, 10, 10, 0.72) 0%, transparent 42%);
   pointer-events: none;
 }
@@ -167,7 +172,9 @@ $accent: var(--bl-accent);
   text-decoration: none;
   white-space: nowrap;
   box-shadow: 0 8px 24px rgba(225, 29, 72, 0.35);
-  transition: background 0.15s, transform 0.15s;
+  transition:
+    background 0.15s,
+    transform 0.15s;
 
   &:disabled {
     opacity: 0.45;
@@ -488,7 +495,10 @@ $accent: var(--bl-accent);
     font-weight: 600;
     letter-spacing: 0.01em;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s;
 
     &:hover:not(:disabled) {
       color: $ink;
@@ -714,12 +724,28 @@ $accent: var(--bl-accent);
 }
 
 /* legacy */
-.back { color: $mute; }
-.heading { font-size: var(--bl-text-3xl); }
-.split { display: block; }
-.selection { color: $mute; }
-.seat { fill: var(--bl-text-inverse); stroke: var(--bl-text-tertiary); cursor: pointer; }
-.seatSelected { fill: var(--bl-text-primary); stroke: var(--bl-text-primary); cursor: pointer; }
+.back {
+  color: $mute;
+}
+.heading {
+  font-size: var(--bl-text-3xl);
+}
+.split {
+  display: block;
+}
+.selection {
+  color: $mute;
+}
+.seat {
+  fill: var(--bl-text-inverse);
+  stroke: var(--bl-text-tertiary);
+  cursor: pointer;
+}
+.seatSelected {
+  fill: var(--bl-text-primary);
+  stroke: var(--bl-text-primary);
+  cursor: pointer;
+}
 .aiBtn {
   margin-left: auto;
   background: var(--bl-surface-sunken) !important;

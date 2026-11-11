@@ -5,7 +5,14 @@ import { linePath, areaPath } from '../lib/path';
 import { bandScale, extent, linearScale, type Point } from '../lib/scale';
 import styles from './Sparkline.module.scss';
 
-export type SparklineTone = 'accent' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'auto';
+export type SparklineTone =
+  | 'accent'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info'
+  | 'neutral'
+  | 'auto';
 
 export interface SparklineProps {
   /** Serie de valores en orden cronologico. */
@@ -59,10 +66,10 @@ export function Sparkline({
   const padding = 2;
   const domain = extent(values);
   const flat = domain[0] === domain[1];
-  const y = linearScale(
-    flat ? [domain[0] - 1, domain[1] + 1] : domain,
-    [height - padding, padding],
-  );
+  const y = linearScale(flat ? [domain[0] - 1, domain[1] + 1] : domain, [
+    height - padding,
+    padding,
+  ]);
   const band = bandScale(values.length, [padding, width - padding], 0);
   const points: Point[] = values.map((value, index) => ({ x: band.center(index), y: y(value) }));
 
@@ -100,9 +107,7 @@ export function Sparkline({
           <circle className={styles.point} cx={lastPoint.x} cy={lastPoint.y} r={2} />
         ) : null}
       </svg>
-      <span className={styles.srOnly}>
-        {values.map((value) => formatValue(value)).join(', ')}
-      </span>
+      <span className={styles.srOnly}>{values.map((value) => formatValue(value)).join(', ')}</span>
     </span>
   );
 }

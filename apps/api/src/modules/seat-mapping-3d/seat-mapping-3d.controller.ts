@@ -31,7 +31,7 @@ export class SeatMapping3DController {
   })
   async getInteractiveSeatView(
     @Param('eventId') eventId: string,
-    @Query('selectedSeat') selectedSeatId?: string,
+    @Query('selectedSeat') selectedSeatId?: string
   ) {
     return await this.seatMappingService.getInteractiveSeatView(eventId, selectedSeatId);
   }
@@ -50,7 +50,7 @@ export class SeatMapping3DController {
       count: number;
       accessible?: boolean;
       viewQuality?: 'best' | 'good' | 'any';
-    },
+    }
   ) {
     return await this.seatMappingService.recommendSeats(eventId, preferences);
   }
@@ -63,5 +63,3 @@ export class SeatMapping3DController {
     return await this.seatMappingService.getOccupancyHeatmap(eventId);
   }
 }
-
-

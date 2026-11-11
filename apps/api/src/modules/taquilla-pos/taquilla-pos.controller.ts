@@ -29,7 +29,15 @@ import type {
 @ApiBearerAuth()
 @Controller('taquilla')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('TAQUILLA', 'TAQUILLA_SUPERVISOR', 'VENUE_MANAGER', 'PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'SCANNER')
+@Roles(
+  'TAQUILLA',
+  'TAQUILLA_SUPERVISOR',
+  'VENUE_MANAGER',
+  'PROMOTER',
+  'ADMIN',
+  'SUPER_ADMIN',
+  'SCANNER'
+)
 export class TaquillaPosController {
   constructor(private posService: TaquillaPosService) {}
 
@@ -45,7 +53,7 @@ export class TaquillaPosController {
     return await this.posService.startCashierSession(
       data.terminalId,
       data.cashierId,
-      data.openingCash ?? 0,
+      data.openingCash ?? 0
     );
   }
 
@@ -78,7 +86,7 @@ export class TaquillaPosController {
       locationName: string;
       terminalName: string;
       hardwareConfig?: Record<string, string>;
-    },
+    }
   ) {
     return await this.posService.initializeTerminal(data);
   }
@@ -93,7 +101,7 @@ export class TaquillaPosController {
   @ApiOperation({ summary: 'Generate receipt' })
   async generateReceipt(
     @Param('orderId') orderId: string,
-    @Query('terminalId') terminalId: string,
+    @Query('terminalId') terminalId: string
   ) {
     return await this.posService.generateReceipt(orderId, terminalId ?? 'terminal');
   }
@@ -105,7 +113,14 @@ export class TaquillaPosController {
   }
 
   @Post('void')
-  @Roles('TAQUILLA', 'TAQUILLA_SUPERVISOR', 'TAQUILLA_ADMIN', 'VENUE_MANAGER', 'ADMIN', 'SUPER_ADMIN')
+  @Roles(
+    'TAQUILLA',
+    'TAQUILLA_SUPERVISOR',
+    'TAQUILLA_ADMIN',
+    'VENUE_MANAGER',
+    'ADMIN',
+    'SUPER_ADMIN'
+  )
   @ApiOperation({ summary: 'Void a taquilla sale (requires manager PIN)' })
   async voidOrder(@Body() data: VoidOrderDto) {
     return await this.posService.voidOrder(data);
@@ -137,7 +152,7 @@ export class TaquillaPosController {
       data.amount,
       data.cashierId,
       data.note,
-      data.managerPin,
+      data.managerPin
     );
   }
 
@@ -182,10 +197,7 @@ export class TaquillaPosController {
 
   @Post('offline/sync/:terminalId')
   @ApiOperation({ summary: 'Sync offline transactions' })
-  async syncOffline(
-    @Param('terminalId') terminalId: string,
-    @Body() data: SyncOfflineDto,
-  ) {
+  async syncOffline(@Param('terminalId') terminalId: string, @Body() data: SyncOfflineDto) {
     return await this.posService.syncOfflineTransactions(terminalId, data.transactions);
   }
 
@@ -196,7 +208,7 @@ export class TaquillaPosController {
       data.sessionId,
       data.cashierId,
       data.closingCashCounted,
-      data.managerPin,
+      data.managerPin
     );
   }
 
@@ -210,7 +222,7 @@ export class TaquillaPosController {
   @ApiOperation({ summary: 'Terminal analytics' })
   async getAnalytics(
     @Param('terminalId') terminalId: string,
-    @Param('period') period: 'TODAY' | 'WEEK' | 'MONTH',
+    @Param('period') period: 'TODAY' | 'WEEK' | 'MONTH'
   ) {
     return await this.posService.getTerminalAnalytics(terminalId, period);
   }

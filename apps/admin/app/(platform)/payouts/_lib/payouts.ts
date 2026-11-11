@@ -134,7 +134,7 @@ function sortByPeriodDesc(a: PayoutRow, b: PayoutRow): number {
  */
 export function normalizePayouts(
   payload: PayoutPayload | undefined,
-  metrics: SettlementsMetrics | undefined,
+  metrics: SettlementsMetrics | undefined
 ): PayoutRow[] {
   const merged = new Map<string, PayoutRow>();
 
@@ -229,7 +229,7 @@ export function buildAging(rows: readonly PayoutRow[], now = new Date()): AgingB
     const bucket =
       buckets.find(
         (candidate) =>
-          age >= candidate.fromDays && (candidate.toDays === null || age <= candidate.toDays),
+          age >= candidate.fromDays && (candidate.toDays === null || age <= candidate.toDays)
       ) ?? buckets[buckets.length - 1];
     bucket.count += 1;
     bucket.amountCents += row.netCents;
@@ -258,7 +258,7 @@ export const WEEKDAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'
 export function buildCalendar(
   rows: readonly PayoutRow[],
   cursor: Date,
-  now = new Date(),
+  now = new Date()
 ): CalendarMonth {
   const byDay = new Map<string, PayoutRow[]>();
   for (const row of rows) {
@@ -274,7 +274,7 @@ export function buildCalendar(
   const gridStart = new Date(
     monthStart.getFullYear(),
     monthStart.getMonth(),
-    1 - monthStart.getDay(),
+    1 - monthStart.getDay()
   );
   const todayKey = dayKey(now);
 
@@ -285,7 +285,7 @@ export function buildCalendar(
       const date = new Date(
         gridStart.getFullYear(),
         gridStart.getMonth(),
-        gridStart.getDate() + week * 7 + weekday,
+        gridStart.getDate() + week * 7 + weekday
       );
       const key = dayKey(date);
       const payouts = byDay.get(key) ?? [];
@@ -329,14 +329,11 @@ function severityFor(expected: Cents | null, actual: Cents | null): Reconciliati
   return delta <= reference * WARNING_RATIO ? 'warning' : 'error';
 }
 
-function check(
-  input: Omit<ReconciliationCheck, 'deltaCents' | 'severity'>,
-): ReconciliationCheck {
+function check(input: Omit<ReconciliationCheck, 'deltaCents' | 'severity'>): ReconciliationCheck {
   const { expectedCents, actualCents } = input;
   return {
     ...input,
-    deltaCents:
-      expectedCents === null || actualCents === null ? null : actualCents - expectedCents,
+    deltaCents: expectedCents === null || actualCents === null ? null : actualCents - expectedCents,
     severity: severityFor(expectedCents, actualCents),
   };
 }
@@ -353,7 +350,7 @@ export function buildReconciliation(
   report: SettlementReport | undefined,
   metrics: SettlementsMetrics | undefined,
   channels: readonly ChannelRow[],
-  periodPayouts: readonly PayoutRow[],
+  periodPayouts: readonly PayoutRow[]
 ): ReconciliationCheck[] {
   const summary = report?.summary;
   const metricsGross = metrics ? toCents(metrics.summary.grossRevenue) : null;
@@ -367,9 +364,7 @@ export function buildReconciliation(
       : metricsGross - metricsRefunds - metricsCommission;
 
   const registeredNet = sumCents(periodPayouts.map((row) => row.netCents));
-  const channelGross = channels.length
-    ? sumCents(channels.map((row) => row.grossCents))
-    : null;
+  const channelGross = channels.length ? sumCents(channels.map((row) => row.grossCents)) : null;
 
   return [
     check({
@@ -411,8 +406,7 @@ export function buildReconciliation(
     check({
       id: 'registered',
       label: 'Liquidaciones registradas',
-      description:
-        'Neto por pagar del periodo contra la suma de las liquidaciones ya generadas.',
+      description: 'Neto por pagar del periodo contra la suma de las liquidaciones ya generadas.',
       expectedLabel: 'Neto por pagar',
       actualLabel: 'Registrado',
       expectedCents: metricsNet,
@@ -421,13 +415,15 @@ export function buildReconciliation(
   ];
 }
 
-export const RECONCILIATION_TONE: Record<ReconciliationSeverity, 'success' | 'warning' | 'danger' | 'neutral'> =
-  {
-    ok: 'success',
-    warning: 'warning',
-    error: 'danger',
-    unknown: 'neutral',
-  };
+export const RECONCILIATION_TONE: Record<
+  ReconciliationSeverity,
+  'success' | 'warning' | 'danger' | 'neutral'
+> = {
+  ok: 'success',
+  warning: 'warning',
+  error: 'danger',
+  unknown: 'neutral',
+};
 
 export const RECONCILIATION_LABEL: Record<ReconciliationSeverity, string> = {
   ok: 'Cuadra',

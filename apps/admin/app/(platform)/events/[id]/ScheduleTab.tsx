@@ -2,13 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  Badge,
-  Button,
-  Card,
-  CardHeader,
-  EmptyState,
-} from '@boletera/ui';
+import { Badge, Button, Card, CardHeader, EmptyState } from '@boletera/ui';
 import {
   SALE_STATE_LABELS,
   formatLocalDateTime,
@@ -99,9 +93,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
         setData(detail);
         setWindows({
           doorsAt: toLocalInput(detail.event.doorsAt, detail.event.timezone),
-          durationMinutes: detail.event.durationMinutes
-            ? String(detail.event.durationMinutes)
-            : '',
+          durationMinutes: detail.event.durationMinutes ? String(detail.event.durationMinutes) : '',
           announceAt: toLocalInput(detail.event.announceAt, detail.event.timezone),
           publishAt: toLocalInput(detail.event.publishAt, detail.event.timezone),
           salesStartAt: toLocalInput(detail.event.salesStartAt, detail.event.timezone),
@@ -207,9 +199,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
         code: phaseDraft.code.trim() ? phaseDraft.code.trim().toUpperCase() : null,
         startsAt: fromLocalInput(phaseDraft.startLocal, timezone)!,
         endsAt: fromLocalInput(phaseDraft.endLocal, timezone)!,
-        discountPercent: phaseDraft.discountPercent
-          ? Number(phaseDraft.discountPercent)
-          : null,
+        discountPercent: phaseDraft.discountPercent ? Number(phaseDraft.discountPercent) : null,
         maxPerOrder: phaseDraft.maxPerOrder ? Number(phaseDraft.maxPerOrder) : null,
       });
       toast.success('Fase guardada');
@@ -376,9 +366,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                   min={30}
                   step={15}
                   value={windows.durationMinutes}
-                  onChange={(e) =>
-                    setWindows({ ...windows, durationMinutes: e.target.value })
-                  }
+                  onChange={(e) => setWindows({ ...windows, durationMinutes: e.target.value })}
                 />
               </label>
               <label>
@@ -448,7 +436,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                     code: '',
                     startLocal: toLocalInput(
                       data.event.salesStartAt ?? data.event.startsAt,
-                      timezone,
+                      timezone
                     ),
                     endLocal: toLocalInput(data.event.startsAt, timezone),
                     discountPercent: '',
@@ -489,13 +477,11 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                   <tr key={phase.id}>
                     <td>{phase.name}</td>
                     <td>
-                      {PHASE_KINDS.find((kind) => kind.value === phase.kind)?.label ??
-                        phase.kind}
+                      {PHASE_KINDS.find((kind) => kind.value === phase.kind)?.label ?? phase.kind}
                     </td>
                     <td>{phase.code ?? '—'}</td>
                     <td>
-                      {formatWhen(phase.startsAt, timezone)} →{' '}
-                      {formatWhen(phase.endsAt, timezone)}
+                      {formatWhen(phase.startsAt, timezone)} → {formatWhen(phase.endsAt, timezone)}
                     </td>
                     <td>
                       <Badge tone={statusTone(phase.status)} variant="soft" size="sm">
@@ -522,9 +508,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                                     ? String(phase.discountPercent)
                                     : '',
                                 maxPerOrder:
-                                  phase.maxPerOrder != null
-                                    ? String(phase.maxPerOrder)
-                                    : '',
+                                  phase.maxPerOrder != null ? String(phase.maxPerOrder) : '',
                               })
                             }
                           >
@@ -590,9 +574,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                 <input
                   type="datetime-local"
                   value={phaseDraft.startLocal}
-                  onChange={(e) =>
-                    setPhaseDraft({ ...phaseDraft, startLocal: e.target.value })
-                  }
+                  onChange={(e) => setPhaseDraft({ ...phaseDraft, startLocal: e.target.value })}
                 />
               </label>
               <label>
@@ -600,9 +582,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                 <input
                   type="datetime-local"
                   value={phaseDraft.endLocal}
-                  onChange={(e) =>
-                    setPhaseDraft({ ...phaseDraft, endLocal: e.target.value })
-                  }
+                  onChange={(e) => setPhaseDraft({ ...phaseDraft, endLocal: e.target.value })}
                 />
               </label>
               <label>
@@ -623,9 +603,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                   type="number"
                   min={1}
                   value={phaseDraft.maxPerOrder}
-                  onChange={(e) =>
-                    setPhaseDraft({ ...phaseDraft, maxPerOrder: e.target.value })
-                  }
+                  onChange={(e) => setPhaseDraft({ ...phaseDraft, maxPerOrder: e.target.value })}
                 />
               </label>
             </div>
@@ -639,12 +617,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
               >
                 Guardar fase
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setPhaseDraft(null)}
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={() => setPhaseDraft(null)}>
                 Cancelar
               </Button>
             </div>
@@ -673,9 +646,7 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                 <input
                   type="datetime-local"
                   value={reschedule.startLocal}
-                  onChange={(e) =>
-                    setReschedule({ ...reschedule, startLocal: e.target.value })
-                  }
+                  onChange={(e) => setReschedule({ ...reschedule, startLocal: e.target.value })}
                 />
               </label>
               <label>
@@ -683,18 +654,14 @@ export function ScheduleTab({ eventId, onChanged, canWrite = true }: Props) {
                 <input
                   value={reschedule.reason}
                   placeholder="Ej. cambio de fecha del artista"
-                  onChange={(e) =>
-                    setReschedule({ ...reschedule, reason: e.target.value })
-                  }
+                  onChange={(e) => setReschedule({ ...reschedule, reason: e.target.value })}
                 />
               </label>
               <label className={styles.inlineCheck}>
                 <input
                   type="checkbox"
                   checked={reschedule.force}
-                  onChange={(e) =>
-                    setReschedule({ ...reschedule, force: e.target.checked })
-                  }
+                  onChange={(e) => setReschedule({ ...reschedule, force: e.target.checked })}
                 />
                 Ignorar conflictos de agenda del recinto
               </label>

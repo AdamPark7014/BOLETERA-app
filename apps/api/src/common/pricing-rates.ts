@@ -107,7 +107,7 @@ export function mergeRateSettings(settings: unknown, patch: RatePatch): Record<s
 /** Desglose completo a partir del precio base. La fórmula es base + cargo + IVA. */
 export function priceBreakdown(
   base: number,
-  rates?: Pick<OrgPricingRates, 'serviceFeeRate' | 'taxRate'>,
+  rates?: Pick<OrgPricingRates, 'serviceFeeRate' | 'taxRate'>
 ): PriceBreakdown {
   const safeBase = Number.isFinite(base) && base > 0 ? base : 0;
   const feeRate = rates?.serviceFeeRate ?? SERVICE_FEE_RATE;
@@ -120,7 +120,7 @@ export function priceBreakdown(
 /** Precio final al comprador. Es el que va en «desde $X». */
 export function allInPrice(
   base: number,
-  rates?: Pick<OrgPricingRates, 'serviceFeeRate' | 'taxRate'>,
+  rates?: Pick<OrgPricingRates, 'serviceFeeRate' | 'taxRate'>
 ): number {
   return priceBreakdown(base, rates).total;
 }

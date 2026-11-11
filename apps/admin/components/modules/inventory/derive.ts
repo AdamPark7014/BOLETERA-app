@@ -1,9 +1,5 @@
 import type { InventoryMetrics, InventoryZoneRow } from '@boletera/shared';
-import type {
-  InventoryEventOption,
-  InventoryZoneTableRow,
-  PressureLevel,
-} from './types';
+import type { InventoryEventOption, InventoryZoneTableRow, PressureLevel } from './types';
 
 export function pressureOf(row: InventoryZoneRow): PressureLevel {
   const holdRatio = row.totalQuantity > 0 ? row.holdQuantity / row.totalQuantity : 0;
@@ -39,7 +35,7 @@ export function buildZoneRows(metrics: InventoryMetrics | undefined): InventoryZ
       (a, b) =>
         pressureRank(b.pressure) - pressureRank(a.pressure) ||
         b.holdQuantity - a.holdQuantity ||
-        a.availabilityPercent - b.availabilityPercent,
+        a.availabilityPercent - b.availabilityPercent
     );
 }
 

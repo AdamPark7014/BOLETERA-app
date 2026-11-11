@@ -7,30 +7,35 @@
 ## Core Capabilities
 
 ### 1. Primary Market Ticketing
+
 - Venta directa de entradas (artista → público)
 - Control de inventario en tiempo real
 - Reservas con expiración (15-60 min)
 - Policies customizables por evento
 
 ### 2. Secondary Market / Resale
+
 - Marketplace peer-to-peer
 - Validación de precios anti-scalping
 - Restricciones de transferencia (no-transfer policies)
 - Comisiones automáticas
 
 ### 3. Dynamic Pricing
+
 - AI-driven demand pricing
 - Surge pricing automático (80%+ vendido)
 - Early bird discounts
 - Time-based pricing (close to event = higher prices)
 
 ### 4. Multi-Organization B2B
+
 - Cada promoter/venue es una organización
 - Comisiones y payouts automáticos
 - KYC/AML verificación
 - Reportes de liquidación
 
 ### 5. Fraud & Compliance
+
 - ML-based fraud scoring (0-100)
 - Detección de duplicados
 - Device fingerprinting
@@ -38,12 +43,14 @@
 - AML watchlist checking
 
 ### 6. Global Payments
+
 - Múltiples gateways: Stripe, PayPal, Adyen, local methods
 - Procesamiento multi-moneda (15+ currencies)
 - Tax cálculo automático por jurisdicción
 - Chargeback protection
 
 ### 7. Advanced Analytics
+
 - Reportes en tiempo real (sales, revenue, trends)
 - Settling reports (cuánto paga cada promoter)
 - Customer LTV, churn analysis
@@ -127,6 +134,7 @@ POST   /api/v1/analytics/reports        - Generar reporte
 ### Customer Marketplace (`apps/web`)
 
 Pages:
+
 - `/` - Homepage con hero + featured events
 - `/events` - Búsqueda avanzada
 - `/events/[id]` - Detalle evento + compra
@@ -135,12 +143,14 @@ Pages:
 - `/resale` - Marketplace segunda mano
 
 Components:
+
 - EventCard (grid/list)
 - SearchFilters (advanced search)
 - CheckoutForm (Stripe integration)
 - CartWidget (preview)
 
 Styling:
+
 - **Neutral Professional Palette** (Ink, Sky, Mint, Coral, Sun)
 - **Fonts**: Bebas Neue (headers) + Space Grotesk (body)
 - SCSS modules + Tailwind CSS
@@ -148,6 +158,7 @@ Styling:
 ### Admin Dashboard (`apps/admin`)
 
 Pages:
+
 - `/dashboard` - KPIs en tiempo real
 - `/events` - CRUD eventos
 - `/orders` - Gestión órdenes
@@ -159,13 +170,13 @@ Pages:
 
 ### Targets
 
-| Metric | Target | Implementation |
-|--------|--------|-----------------|
-| API Response | < 100ms (p95) | Redis caching, DB indexing |
-| Homepage Load | < 2s (LCP) | Next.js CDN, Image optimization |
-| Checkout | < 3 requests, 200ms | Atomic DB transactions |
-| Concurrent Users | 100k+ | Horizontal scaling, load balancing |
-| Transactions/min | 10k+ | Queue-based processing (Bull) |
+| Metric           | Target              | Implementation                     |
+| ---------------- | ------------------- | ---------------------------------- |
+| API Response     | < 100ms (p95)       | Redis caching, DB indexing         |
+| Homepage Load    | < 2s (LCP)          | Next.js CDN, Image optimization    |
+| Checkout         | < 3 requests, 200ms | Atomic DB transactions             |
+| Concurrent Users | 100k+               | Horizontal scaling, load balancing |
+| Transactions/min | 10k+                | Queue-based processing (Bull)      |
 
 ### Caching Strategy
 
@@ -179,6 +190,7 @@ Level 4: DB query optimization (Prisma)
 ### Queue Processing
 
 Events processed asynchronously:
+
 ```
 - Notifications (email, SMS, push)
 - Reporting (analytics, settlement)
@@ -237,6 +249,7 @@ pnpm dev:admin    # :3001
 ### Environment Variables
 
 Ver `.env.example` - requiere:
+
 - DATABASE_URL
 - REDIS_URL
 - JWT_SECRET
@@ -268,16 +281,16 @@ B2B License: Modelo SaaS
 
 ## Competencia vs. Boletera
 
-| Feature | Ticketmaster | StubHub | Boletera |
-|---------|--------------|---------|----------|
-| Primary Market | ✅ | ❌ | ✅ |
-| Resale | ❌ | ✅ | ✅ |
-| Dynamic Pricing | ✅ | ❌ | ✅ |
-| White-Label | ❌ | ❌ | ✅ |
-| Fraud Detection | ✅ | ✅ | ✅ |
-| Multi-Currency | ✅ | Limited | ✅ |
-| Self-Service API | Limited | ❌ | ✅ |
-| Open Marketplace | ❌ | ✅ | ✅ |
+| Feature          | Ticketmaster | StubHub | Boletera |
+| ---------------- | ------------ | ------- | -------- |
+| Primary Market   | ✅           | ❌      | ✅       |
+| Resale           | ❌           | ✅      | ✅       |
+| Dynamic Pricing  | ✅           | ❌      | ✅       |
+| White-Label      | ❌           | ❌      | ✅       |
+| Fraud Detection  | ✅           | ✅      | ✅       |
+| Multi-Currency   | ✅           | Limited | ✅       |
+| Self-Service API | Limited      | ❌      | ✅       |
+| Open Marketplace | ❌           | ✅      | ✅       |
 
 ## Next Steps
 

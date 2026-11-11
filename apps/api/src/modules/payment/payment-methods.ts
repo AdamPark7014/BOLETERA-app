@@ -80,7 +80,10 @@ export function checkoutMethodOffered(settings: unknown, method: string): boolea
 }
 
 /** Conserva el resto del JSON (tasas, plazos, PIN) y escribe solo el booleano que llega. */
-export function mergeMethodSettings(settings: unknown, patch: MethodPatch): Record<string, unknown> {
+export function mergeMethodSettings(
+  settings: unknown,
+  patch: MethodPatch
+): Record<string, unknown> {
   const next = { ...settingsRecord(settings) };
   if (typeof patch.tarjeta === 'boolean') next[METHOD_SETTING_KEYS.CARD] = patch.tarjeta;
   if (typeof patch.SPEI === 'boolean') next[METHOD_SETTING_KEYS.SPEI] = patch.SPEI;

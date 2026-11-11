@@ -56,7 +56,7 @@ export class FraudController {
       currency?: string;
       channel?: string;
       paymentMethod?: string;
-    },
+    }
   ) {
     return await this.fraudService.analyzeFraud(dto);
   }
@@ -81,7 +81,7 @@ export class FraudController {
       ipAddress?: string;
       deviceFingerprint?: string;
       metadata?: Record<string, any>;
-    },
+    }
   ) {
     return await this.fraudService.createFlag(
       {
@@ -90,7 +90,7 @@ export class FraudController {
         severity: dto.severity as any,
         score: 0,
       },
-      req.scopedOrganizationId,
+      req.scopedOrganizationId
     );
   }
 
@@ -106,7 +106,7 @@ export class FraudController {
     @Query('severity') severity?: string,
     @Query('status') status?: string,
     @Query('limit') limit?: number,
-    @Query('offset') offset?: number,
+    @Query('offset') offset?: number
   ) {
     return await this.fraudService.listFlags({
       severity: severity as any,
@@ -129,13 +129,13 @@ export class FraudController {
     @Request() req: ScopedRequest,
     @Param('flagId') flagId: string,
     @Body() body: { resolution: string },
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') userId: string
   ) {
     return await this.fraudService.resolveFlag(
       flagId,
       body.resolution,
       userId,
-      req.scopedOrganizationId,
+      req.scopedOrganizationId
     );
   }
 
@@ -158,7 +158,7 @@ export class FraudController {
       country: string;
       documentNumber: string;
       documentType: string;
-    },
+    }
   ) {
     return await this.fraudService.performKYCCheck(userId, dto, req.scopedOrganizationId);
   }
@@ -172,7 +172,7 @@ export class FraudController {
   @ApiOperation({ summary: 'Perform AML check' })
   async performAML(
     @Param('organizationId') organizationId: string,
-    @Body() dto: { name: string; country: string },
+    @Body() dto: { name: string; country: string }
   ) {
     return await this.fraudService.performAMLCheck(organizationId, dto);
   }

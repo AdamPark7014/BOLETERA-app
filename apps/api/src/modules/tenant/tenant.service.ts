@@ -34,5 +34,3 @@ export class TenantService {
     throw new NotFoundException('Tenant not found');
   }
 }
-
-

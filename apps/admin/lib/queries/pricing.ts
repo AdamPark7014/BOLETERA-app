@@ -178,10 +178,7 @@ export function useRecommendationBundle(eventId: string | null) {
   return useQuery({
     queryKey: pricingKeys.recommendations(eventId ?? ''),
     queryFn: ({ signal }) =>
-      http<RecommendationBundle>(
-        `/pricing/events/${eventId}/recommendations`,
-        { signal },
-      ),
+      http<RecommendationBundle>(`/pricing/events/${eventId}/recommendations`, { signal }),
     enabled: Boolean(eventId),
     staleTime: RECOMMENDATION_STALE_MS,
   });
@@ -191,10 +188,9 @@ export function usePendingRecommendations(eventId: string | null) {
   return useQuery({
     queryKey: pricingKeys.pending(eventId ?? ''),
     queryFn: ({ signal }) =>
-      http<PendingRecommendation[]>(
-        `/pricing/events/${eventId}/recommendations/pending`,
-        { signal },
-      ),
+      http<PendingRecommendation[]>(`/pricing/events/${eventId}/recommendations/pending`, {
+        signal,
+      }),
     enabled: Boolean(eventId),
     staleTime: RECOMMENDATION_STALE_MS,
   });
@@ -204,10 +200,7 @@ export function useRevenueEstimate(eventId: string | null) {
   return useQuery({
     queryKey: pricingKeys.revenue(eventId ?? ''),
     queryFn: ({ signal }) =>
-      http<RevenueEstimate>(
-        `/pricing/events/${eventId}/revenue-estimate`,
-        { signal },
-      ),
+      http<RevenueEstimate>(`/pricing/events/${eventId}/revenue-estimate`, { signal }),
     enabled: Boolean(eventId),
     staleTime: RECOMMENDATION_STALE_MS,
   });
@@ -217,10 +210,7 @@ export function useOfferPriceHistory(offerId: string | null, limit = 20) {
   return useQuery({
     queryKey: pricingKeys.history(offerId ?? '', limit),
     queryFn: ({ signal }) =>
-      http<PriceHistoryEntry[]>(
-        `/pricing/offers/${offerId}/history?limit=${limit}`,
-        { signal },
-      ),
+      http<PriceHistoryEntry[]>(`/pricing/offers/${offerId}/history?limit=${limit}`, { signal }),
     enabled: Boolean(offerId),
   });
 }
@@ -236,8 +226,7 @@ export function useApplyRecommendations(eventId: string) {
           confirmApproval: input.confirmApproval,
         },
       }),
-    onSettled: () =>
-      client.invalidateQueries({ queryKey: pricingKeys.event(eventId) }),
+    onSettled: () => client.invalidateQueries({ queryKey: pricingKeys.event(eventId) }),
   });
 }
 
@@ -245,10 +234,9 @@ export function usePreviewRecommendations(eventId: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: () =>
-      http<RecommendationBundle>(
-        `/pricing/events/${eventId}/recommendations/preview`,
-        { method: 'POST' },
-      ),
+      http<RecommendationBundle>(`/pricing/events/${eventId}/recommendations/preview`, {
+        method: 'POST',
+      }),
     onSuccess: (bundle) => {
       client.setQueryData(pricingKeys.recommendations(eventId), bundle);
     },
@@ -262,8 +250,7 @@ export function useUpdateDynamicPrices(eventId: string) {
       http<UpdateDynamicResult>(`/pricing/events/${eventId}/update-dynamic`, {
         method: 'POST',
       }),
-    onSettled: () =>
-      client.invalidateQueries({ queryKey: pricingKeys.event(eventId) }),
+    onSettled: () => client.invalidateQueries({ queryKey: pricingKeys.event(eventId) }),
   });
 }
 
@@ -275,24 +262,20 @@ export function useReviewRecommendation(eventId: string) {
       decision: 'approve' | 'reject';
       note?: string;
     }) =>
-      http<ReviewResult>(
-        `/pricing/recommendations/${input.recommendationId}/${input.decision}`,
-        {
-          method: 'POST',
-          body:
-            input.decision === 'approve'
-              ? { note: input.note || undefined }
-              : { reason: input.note || undefined },
-        },
-      ),
-    onSettled: () =>
-      client.invalidateQueries({ queryKey: pricingKeys.event(eventId) }),
+      http<ReviewResult>(`/pricing/recommendations/${input.recommendationId}/${input.decision}`, {
+        method: 'POST',
+        body:
+          input.decision === 'approve'
+            ? { note: input.note || undefined }
+            : { reason: input.note || undefined },
+      }),
+    onSettled: () => client.invalidateQueries({ queryKey: pricingKeys.event(eventId) }),
   });
 }
 
 export function invalidateEventPricing(
   client: ReturnType<typeof useQueryClient>,
-  eventId: string,
+  eventId: string
 ): void {
   void client.invalidateQueries({ queryKey: pricingKeys.event(eventId) });
 }

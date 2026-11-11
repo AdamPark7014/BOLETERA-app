@@ -16,7 +16,7 @@ export class SeasonController {
   purchase(
     @Param('seasonPassId') seasonPassId: string,
     @Body()
-    body: { buyerEmail: string; buyerName: string; quantity?: number; seatSection?: string },
+    body: { buyerEmail: string; buyerName: string; quantity?: number; seatSection?: string }
   ) {
     return this.season.purchase(seasonPassId, body);
   }
@@ -40,7 +40,7 @@ export class SeasonController {
       venueId?: string;
       maxQuantity?: number;
       eventIds?: string[];
-    },
+    }
   ) {
     return this.season.create(orgId, body);
   }
@@ -62,7 +62,7 @@ export class SeasonController {
     @Param('orgId') orgId: string,
     @Param('passId') passId: string,
     @Body() body: SeasonPassWrite,
-    @Request() req: { user?: { sub?: string } },
+    @Request() req: { user?: { sub?: string } }
   ) {
     return this.season.update(orgId, passId, body, req.user?.sub);
   }

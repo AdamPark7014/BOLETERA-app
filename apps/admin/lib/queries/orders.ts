@@ -88,10 +88,7 @@ export function useOrder(orderId: string) {
   });
 }
 
-function useOrderAction(
-  action: (orderId: string) => Promise<unknown>,
-  optimisticStatus?: string,
-) {
+function useOrderAction(action: (orderId: string) => Promise<unknown>, optimisticStatus?: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: action,
@@ -101,12 +98,10 @@ function useOrderAction(
         queryKey: queryKeys.orders.all,
       });
       if (optimisticStatus) {
-        client.setQueriesData<OrderRow[]>(
-          { queryKey: queryKeys.orders.all },
-          (orders) =>
-            orders?.map((order) =>
-              order.id === orderId ? { ...order, status: optimisticStatus } : order,
-            ),
+        client.setQueriesData<OrderRow[]>({ queryKey: queryKeys.orders.all }, (orders) =>
+          orders?.map((order) =>
+            order.id === orderId ? { ...order, status: optimisticStatus } : order
+          )
         );
       }
       return { snapshots };
@@ -124,12 +119,12 @@ function useOrderAction(
 export function useCancelOrder() {
   return useOrderAction(
     (orderId) => http(`/admin/orders/${orderId}/cancel`, { method: 'POST' }),
-    'CANCELLED',
+    'CANCELLED'
   );
 }
 
 export function useResendOrderEmail() {
   return useOrderAction((orderId) =>
-    http(`/admin/orders/${orderId}/resend-email`, { method: 'POST' }),
+    http(`/admin/orders/${orderId}/resend-email`, { method: 'POST' })
   );
 }

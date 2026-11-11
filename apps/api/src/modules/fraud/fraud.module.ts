@@ -12,4 +12,3 @@ import { FraudController } from './fraud.controller';
   exports: [FraudService],
 })
 export class FraudModule {}
-

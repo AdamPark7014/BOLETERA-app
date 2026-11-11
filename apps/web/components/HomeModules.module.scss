@@ -243,8 +243,7 @@
 .experienceOverlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(10, 10, 10, 0.05) 0%, rgba(10, 10, 10, 0.82) 100%);
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.05) 0%, rgba(10, 10, 10, 0.82) 100%);
   pointer-events: none;
 }
 
@@ -313,8 +312,7 @@
 .cityOverlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(10, 10, 10, 0.08) 0%, rgba(10, 10, 10, 0.88) 100%);
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.08) 0%, rgba(10, 10, 10, 0.88) 100%);
   pointer-events: none;
 }
 

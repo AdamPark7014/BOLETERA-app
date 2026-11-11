@@ -46,34 +46,28 @@ const map = {
 const scene = resolveGeometry(map);
 const all = validateGeometry(scene);
 const cross = all.issues.filter(
-  (i) => i.code === 'overlap' && i.seatIds.includes('p1') && i.seatIds.includes('b1'),
+  (i) => i.code === 'overlap' && i.seatIds.includes('p1') && i.seatIds.includes('b1')
 );
 assert(cross.length === 0, 'cross-level stack is not an overlap');
 
 const sameLevel = all.issues.filter(
-  (i) => i.code === 'overlap' && i.seatIds.includes('p1') && i.seatIds.includes('p2'),
+  (i) => i.code === 'overlap' && i.seatIds.includes('p1') && i.seatIds.includes('p2')
 );
 assert(sameLevel.length === 1, 'same-level close seats overlap');
 
 const floor = validateGeometry(scene, { levelId: 'lvl-floor' });
 assert(
   floor.issues.some((i) => i.code === 'overlap' && i.seatIds.includes('p1')),
-  'floor still reports own overlaps',
+  'floor still reports own overlaps'
 );
 assert(
   !floor.issues.some((i) => i.seatIds?.includes('b1') || i.seatIds?.includes('b2')),
-  'floor validation ignores balc seats',
+  'floor validation ignores balc seats'
 );
 
 const balc = validateGeometry(scene, { levelId: 'lvl-balc' });
-assert(
-  !balc.issues.some((i) => i.code === 'overlap'),
-  'balc alone has no overlap',
-);
-assert(
-  !balc.issues.some((i) => i.seatIds?.includes('p1')),
-  'balc validation ignores floor seats',
-);
+assert(!balc.issues.some((i) => i.code === 'overlap'), 'balc alone has no overlap');
+assert(!balc.issues.some((i) => i.seatIds?.includes('p1')), 'balc validation ignores floor seats');
 
 console.log('VALIDATE_LEVEL_FILTER_SMOKE_OK', {
   allOverlaps: all.issues.filter((i) => i.code === 'overlap').length,

@@ -272,7 +272,7 @@ function buildGrid(
   minY: number,
   maxX: number,
   maxY: number,
-  cellSize: number,
+  cellSize: number
 ): SpatialGrid {
   const cols = Math.max(1, Math.ceil((maxX - minX) / cellSize) + 1);
   const rows = Math.max(1, Math.ceil((maxY - minY) / cellSize) + 1);
@@ -318,7 +318,7 @@ export function querySeatsInRect(
   rMinY: number,
   rMaxX: number,
   rMaxY: number,
-  out: number[] = [],
+  out: number[] = []
 ): number[] {
   out.length = 0;
   const { grid, x, y } = index;
@@ -430,7 +430,7 @@ export function buildClusters(
   viewMinY: number,
   viewMaxX: number,
   viewMaxY: number,
-  cellWorld: number,
+  cellWorld: number
 ): Cluster[] {
   const { x, y, sectionIdx } = index;
   const cols = Math.max(1, Math.ceil((viewMaxX - viewMinX) / cellWorld));

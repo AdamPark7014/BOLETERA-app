@@ -56,7 +56,7 @@ export const CanvasHost = memo(function CanvasHost() {
         deltaTimeMs: previous ? Math.max(1, now - previous.time) : 16,
       };
     },
-    [handle, runtime],
+    [handle, runtime]
   );
 
   const onPointerDown = useCallback(
@@ -70,7 +70,7 @@ export const CanvasHost = memo(function CanvasHost() {
       event.currentTarget.setPointerCapture(event.pointerId);
       currentTool()?.onPointerDown?.(ctx, toolEvent);
     },
-    [runtime, buildEvent, currentTool],
+    [runtime, buildEvent, currentTool]
   );
 
   const onPointerMove = useCallback(
@@ -81,7 +81,7 @@ export const CanvasHost = memo(function CanvasHost() {
       if (!toolEvent) return;
       currentTool()?.onPointerMove?.(ctx, toolEvent);
     },
-    [runtime, buildEvent, currentTool],
+    [runtime, buildEvent, currentTool]
   );
 
   const onPointerUp = useCallback(
@@ -95,7 +95,7 @@ export const CanvasHost = memo(function CanvasHost() {
       panOverrideRef.current = false;
       lastPointerRef.current = null;
     },
-    [runtime, buildEvent, currentTool],
+    [runtime, buildEvent, currentTool]
   );
 
   const onDoubleClick = useCallback(
@@ -118,7 +118,7 @@ export const CanvasHost = memo(function CanvasHost() {
         deltaTimeMs: 16,
       });
     },
-    [runtime, handle, currentTool],
+    [runtime, handle, currentTool]
   );
 
   // Wheel must be non-passive so the page does not scroll while zooming.
@@ -136,7 +136,7 @@ export const CanvasHost = memo(function CanvasHost() {
       }
       renderer.camera.zoomAtScreen(
         { x: event.clientX - rect.left, y: event.clientY - rect.top },
-        event.deltaY < 0 ? WHEEL_ZOOM_STEP : 1 / WHEEL_ZOOM_STEP,
+        event.deltaY < 0 ? WHEEL_ZOOM_STEP : 1 / WHEEL_ZOOM_STEP
       );
     };
     host.addEventListener('wheel', onWheel, { passive: false });

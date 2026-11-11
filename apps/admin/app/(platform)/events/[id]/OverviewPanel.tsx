@@ -1,18 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  Badge,
-  Card,
-  CardHeader,
-  EmptyState,
-  KpiCard,
-} from '@boletera/ui';
-import type {
-  EventSalesPaceRow,
-  MetricsAlert,
-  MetricsTimePoint,
-} from '@boletera/shared';
+import { Badge, Card, CardHeader, EmptyState, KpiCard } from '@boletera/ui';
+import type { EventSalesPaceRow, MetricsAlert, MetricsTimePoint } from '@boletera/shared';
 import type { EventHub } from '@/lib/platform-api';
 import { SalesCurve } from './SalesCurve';
 import {
@@ -54,13 +44,15 @@ export function OverviewPanel({
   alertsError,
 }: Props) {
   const { inventory, channels } = hub;
-  const channelRevenue = channels.reduce(
-    (sum, row) => sum + Number(row._sum.totalAmount ?? 0),
-    0,
-  );
+  const channelRevenue = channels.reduce((sum, row) => sum + Number(row._sum.totalAmount ?? 0), 0);
 
   return (
-    <div className={styles.tabPanel} role="tabpanel" id="hub-panel-overview" aria-labelledby="hub-tab-overview">
+    <div
+      className={styles.tabPanel}
+      role="tabpanel"
+      id="hub-panel-overview"
+      aria-labelledby="hub-tab-overview"
+    >
       <section className={styles.kpiStrip} aria-label="Indicadores del evento">
         <KpiCard
           label="Ocupación"
@@ -97,11 +89,7 @@ export function OverviewPanel({
         />
         <KpiCard
           label="Delta de ritmo"
-          value={
-            pace
-              ? formatPercentPoints(pace.paceDelta * 100)
-              : '—'
-          }
+          value={pace ? formatPercentPoints(pace.paceDelta * 100) : '—'}
           hint={pace ? riskLabel(pace.riskLevel) : 'No disponible para este evento'}
           tone={pace ? riskTone(pace.riskLevel) : 'neutral'}
           loading={paceLoading}
@@ -204,8 +192,7 @@ export function OverviewPanel({
           </div>
         )}
         <p className={styles.hint}>
-          Detalle de asignación en{' '}
-          <Link href="?tab=channels">Canales</Link>
+          Detalle de asignación en <Link href="?tab=channels">Canales</Link>
           {pace ? (
             <>
               {' '}

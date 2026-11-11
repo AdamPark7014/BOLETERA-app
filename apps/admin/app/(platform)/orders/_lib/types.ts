@@ -116,11 +116,7 @@ export type StatusMeta = {
 
 export type MetricsRangeKey = '7d' | '30d' | '90d';
 
-export type OrderExceptionKind =
-  | 'failed'
-  | 'stale_pending'
-  | 'pending_refund'
-  | 'partial_refund';
+export type OrderExceptionKind = 'failed' | 'stale_pending' | 'pending_refund' | 'partial_refund';
 
 export type OrderException = {
   orderId: string;

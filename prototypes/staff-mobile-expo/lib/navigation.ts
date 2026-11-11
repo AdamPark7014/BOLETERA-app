@@ -60,10 +60,7 @@ const TAQUILLA_ROLES = new Set<UserRoleValue>([
   UserRole.TAQUILLA_ADMIN,
 ]);
 
-const STAFF_ADMIN_ROLES = new Set<UserRoleValue>([
-  UserRole.ADMIN,
-  UserRole.VENUE_MANAGER,
-]);
+const STAFF_ADMIN_ROLES = new Set<UserRoleValue>([UserRole.ADMIN, UserRole.VENUE_MANAGER]);
 
 export function tabsForRole(role: string): TabConfig[] {
   const r = role as UserRoleValue;

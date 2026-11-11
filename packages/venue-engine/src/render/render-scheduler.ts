@@ -1,9 +1,6 @@
 import type { LodLevel, RenderStats } from './types';
 
-export type FrameDrawFn = (frame: {
-  time: number;
-  budgetMs: number;
-}) => void;
+export type FrameDrawFn = (frame: { time: number; budgetMs: number }) => void;
 
 /**
  * Dirty-flag RAF planner.

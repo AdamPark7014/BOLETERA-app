@@ -36,19 +36,19 @@ Suponerlo en cualquiera de los dos sentidos habría sido un error.
 
 **Base adoptada: `enterprise-upgrade`** (`packages/shared`, `packages/payments`).
 
-| Aporta | Por qué gana |
-|---|---|
+| Aporta                                                | Por qué gana                                                                  |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- |
 | Aritmética en centavos (`MoneyAmount`, `amountMinor`) | La mía operaba con `Number` y arrastraba error de redondeo en cada conversión |
-| `security/{idempotency,redact,retry}` con pruebas | No existía equivalente; `redact` evita filtrar FIRMA/CLABE a los logs |
-| DTOs con class-validator, catálogo de errores | Validación real en el borde |
+| `security/{idempotency,redact,retry}` con pruebas     | No existía equivalente; `redact` evita filtrar FIRMA/CLABE a los logs         |
+| DTOs con class-validator, catálogo de errores         | Validación real en el borde                                                   |
 
 **Portado encima (esa rama NO lo tenía):**
 
-| Hallazgo | Qué pasaba |
-|---|---|
-| F1-04 | `includes('aprobada')` casaba con «no aprobada»: un cobro RECHAZADO se conciliaba como completado y emitía boletos gratis |
-| F1-05 | El webhook no devolvía el importe liquidado: no existía ningún punto donde comparar lo cobrado con lo debido |
-| F1-01 | El registry no comprobaba el canal que cada proveedor declara: `CashProvider` era invocable desde web anónima |
+| Hallazgo | Qué pasaba                                                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| F1-04    | `includes('aprobada')` casaba con «no aprobada»: un cobro RECHAZADO se conciliaba como completado y emitía boletos gratis |
+| F1-05    | El webhook no devolvía el importe liquidado: no existía ningún punto donde comparar lo cobrado con lo debido              |
+| F1-01    | El registry no comprobaba el canal que cada proveedor declara: `CashProvider` era invocable desde web anónima             |
 
 **Trampa que casi cuesta cara:** el proveedor importa el clasificador desde
 `payworks.ts`, no desde `webhook.ts`. Se verificó que `payworks` **reexporta**
@@ -78,12 +78,12 @@ Las dos capas son consistentes por construcción: derivan del mismo
 
 ### 3. Inventario — SE CONSERVA ESTA RAMA (verificado)
 
-| Hallazgo | `enterprise-upgrade` | Esta rama |
-|---|---|---|
-| F1-02a reserva GA atómica (`FOR UPDATE SKIP LOCKED`) | ausente | ✅ |
-| F1-02b la venta exige `HELD` | ✅ | ✅ |
-| F1-08 SSE con productor compartido y deltas | ausente | ✅ |
-| F1-10 el worker libera los holds de admisión general | ausente | ✅ |
+| Hallazgo                                             | `enterprise-upgrade` | Esta rama |
+| ---------------------------------------------------- | -------------------- | --------- |
+| F1-02a reserva GA atómica (`FOR UPDATE SKIP LOCKED`) | ausente              | ✅        |
+| F1-02b la venta exige `HELD`                         | ✅                   | ✅        |
+| F1-08 SSE con productor compartido y deltas          | ausente              | ✅        |
+| F1-10 el worker libera los holds de admisión general | ausente              | ✅        |
 
 Es además el único lado con **prueba de concurrencia** que demuestra ausencia de
 sobreventa, validada por contra-prueba.

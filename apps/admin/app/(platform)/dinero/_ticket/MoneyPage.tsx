@@ -66,7 +66,7 @@ function MoneyBody({ section }: { section: MoneySection }) {
         const money = readOrgMoney(rawOrg);
         if (!money) throw new Error('La organización no trae las comisiones.');
         const rawLimits = await adminApi<unknown>('/resale/limits', bearer, { silent: true }).catch(
-          () => null,
+          () => null
         );
         const parsedLimits = rawLimits ? readResaleLimits(rawLimits) : null;
         if (!alive) return;
@@ -75,7 +75,7 @@ function MoneyBody({ section }: { section: MoneySection }) {
         setLimitsNote(
           parsedLimits
             ? null
-            : 'No se leyeron los topes de reventa. La comisión de la organización sí está.',
+            : 'No se leyeron los topes de reventa. La comisión de la organización sí está.'
         );
         return;
       }
@@ -148,13 +148,7 @@ function MoneyBody({ section }: { section: MoneySection }) {
   }
   if (section === 'cargos' && org) {
     return (
-      <CargosSection
-        org={org}
-        rates={rates}
-        token={token}
-        canSave={canSave}
-        onSaved={setRates}
-      />
+      <CargosSection org={org} rates={rates} token={token} canSave={canSave} onSaved={setRates} />
     );
   }
   return <IvaSection rates={rates} token={token} canSave={canSave} onSaved={setRates} />;

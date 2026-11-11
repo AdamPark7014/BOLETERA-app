@@ -31,7 +31,10 @@ function ShellBreadcrumbsComponent({ crumbs, linkProps }: ShellBreadcrumbsProps)
                   {crumb.label}
                 </Link>
               ) : (
-                <span className={isLast ? styles.crumbCurrent : undefined} aria-current={isLast ? 'page' : undefined}>
+                <span
+                  className={isLast ? styles.crumbCurrent : undefined}
+                  aria-current={isLast ? 'page' : undefined}
+                >
                   {crumb.label}
                 </span>
               )}

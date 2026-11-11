@@ -28,7 +28,7 @@ export class AdminService {
     private prisma: PrismaService,
     private payments: PaymentService,
     private notifications: NotificationService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   // ==================== ADMIN DASHBOARD ====================
@@ -158,21 +158,29 @@ export class AdminService {
 
     const data: Prisma.VenueUpdateInput = {};
     if (body.name !== undefined) data.name = requiredText(body.name, 'Nombre del recinto');
-    if (body.description !== undefined) data.description = optionalText(body.description, 'Descripción del recinto');
+    if (body.description !== undefined)
+      data.description = optionalText(body.description, 'Descripción del recinto');
     if (body.address !== undefined) data.address = requiredText(body.address, 'Dirección');
     if (body.city !== undefined) data.city = requiredText(body.city, 'Ciudad del recinto');
     if (body.state !== undefined) data.state = requiredText(body.state, 'Estado del recinto');
     if (body.country !== undefined) data.country = requiredText(body.country, 'País del recinto');
-    if (body.postalCode !== undefined) data.postalCode = optionalText(body.postalCode, 'Código postal del recinto');
-    if (body.latitude !== undefined) data.latitude = optionalCoord(body.latitude, 'Latitud', -90, 90);
-    if (body.longitude !== undefined) data.longitude = optionalCoord(body.longitude, 'Longitud', -180, 180);
-    if (body.timezone !== undefined) data.timezone = requiredText(body.timezone, 'Zona horaria del recinto');
-    if (body.totalCapacity !== undefined) data.totalCapacity = requiredInt(body.totalCapacity, 'Aforo total', 0);
+    if (body.postalCode !== undefined)
+      data.postalCode = optionalText(body.postalCode, 'Código postal del recinto');
+    if (body.latitude !== undefined)
+      data.latitude = optionalCoord(body.latitude, 'Latitud', -90, 90);
+    if (body.longitude !== undefined)
+      data.longitude = optionalCoord(body.longitude, 'Longitud', -180, 180);
+    if (body.timezone !== undefined)
+      data.timezone = requiredText(body.timezone, 'Zona horaria del recinto');
+    if (body.totalCapacity !== undefined)
+      data.totalCapacity = requiredInt(body.totalCapacity, 'Aforo total', 0);
     if (body.accessibilitySeats !== undefined) {
       data.accessibilitySeats = requiredInt(body.accessibilitySeats, 'Butacas accesibles', 0);
     }
-    if (body.premiumSeats !== undefined) data.premiumSeats = requiredInt(body.premiumSeats, 'Butacas premium', 0);
-    if (body.generalSeats !== undefined) data.generalSeats = requiredInt(body.generalSeats, 'Butacas generales', 0);
+    if (body.premiumSeats !== undefined)
+      data.premiumSeats = requiredInt(body.premiumSeats, 'Butacas premium', 0);
+    if (body.generalSeats !== undefined)
+      data.generalSeats = requiredInt(body.generalSeats, 'Butacas generales', 0);
     if (body.phone !== undefined) data.phone = optionalText(body.phone, 'Teléfono del recinto');
     if (body.email !== undefined) data.email = optionalEmail(body.email);
     if (body.website !== undefined) data.website = optionalText(body.website, 'Sitio del recinto');
@@ -233,11 +241,12 @@ export class AdminService {
   }
 
   async getTheme(orgId: string) {
-    const theme =
-      (await this.prisma.tenantTheme.findUnique({ where: { organizationId: orgId } })) ?? {
-        primaryColor: '#171717',
-        subdomain: 'demo',
-      };
+    const theme = (await this.prisma.tenantTheme.findUnique({
+      where: { organizationId: orgId },
+    })) ?? {
+      primaryColor: '#171717',
+      subdomain: 'demo',
+    };
     return theme;
   }
 
@@ -254,7 +263,9 @@ export class AdminService {
     const { parseSiteContent } = await import('@boletera/shared');
     const parsed = parseSiteContent(siteContent);
     if (!parsed) {
-      throw new BadRequestException('siteContent inválido: se requiere al menos una diapositiva del hero con url, label y alt');
+      throw new BadRequestException(
+        'siteContent inválido: se requiere al menos una diapositiva del hero con url, label y alt'
+      );
     }
     return await this.prisma.tenantTheme.upsert({
       where: { organizationId: orgId },
@@ -263,7 +274,10 @@ export class AdminService {
     });
   }
 
-  async updateTheme(orgId: string, data: { primaryColor?: string; logoUrl?: string; subdomain?: string }) {
+  async updateTheme(
+    orgId: string,
+    data: { primaryColor?: string; logoUrl?: string; subdomain?: string }
+  ) {
     return await this.prisma.tenantTheme.upsert({
       where: { organizationId: orgId },
       create: { organizationId: orgId, ...data },
@@ -333,7 +347,7 @@ export class AdminService {
           createdAt.gte = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
           warnings.push(
             'La búsqueda por nombre no tiene índice: se limitó a los últimos 90 días. ' +
-              'Usa ?from= para ampliar el periodo, o busca por folio/correo para una consulta exacta.',
+              'Usa ?from= para ampliar el periodo, o busca por folio/correo para una consulta exacta.'
           );
         }
       }
@@ -439,7 +453,16 @@ export class AdminService {
         refunds: { orderBy: { requestedAt: 'desc' } },
         items: {
           include: {
-            tickets: { select: { id: true, code: true, status: true, section: true, row: true, seatNumber: true } },
+            tickets: {
+              select: {
+                id: true,
+                code: true,
+                status: true,
+                section: true,
+                row: true,
+                seatNumber: true,
+              },
+            },
           },
         },
       },
@@ -451,7 +474,7 @@ export class AdminService {
   async requestRefund(
     orgId: string,
     orderId: string,
-    data: { reason?: string; amount?: number; notes?: string; requestedBy: string },
+    data: { reason?: string; amount?: number; notes?: string; requestedBy: string }
   ) {
     const order = await this.getOrder(orgId, orderId);
     return this.payments.createRefund({
@@ -504,7 +527,7 @@ export class AdminService {
       reason?: string;
       notes?: string;
       requestedBy?: string;
-    } = {},
+    } = {}
   ) {
     // Se resuelve por id o folio y con el tenant cotejado antes de tocar dinero.
     const order = await this.getOrder(orgId, orderId);
@@ -518,7 +541,7 @@ export class AdminService {
     });
     this.logger.log(
       `Reembolso manual en ${result.orderPublicId}: ${result.refund.amount} ${result.currency} ` +
-        `(inventario liberado: ${result.inventoryReleased})`,
+        `(inventario liberado: ${result.inventoryReleased})`
     );
     return result;
   }
@@ -765,5 +788,3 @@ function readBlackouts(value: unknown): {
     return { id, reason, startsAt, endsAt, blocking };
   });
 }
-
-

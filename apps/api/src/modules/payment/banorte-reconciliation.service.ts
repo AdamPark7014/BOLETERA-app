@@ -24,7 +24,7 @@ export class BanorteReconciliationService {
 
   constructor(
     private prisma: PrismaService,
-    private payments: PaymentService,
+    private payments: PaymentService
   ) {}
 
   /** Revisa órdenes WEB pendientes con intent SPEI/OXXO y completa si Banorte confirma pago */
@@ -112,7 +112,7 @@ export class BanorteReconciliationService {
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         this.logger.warn(
-          `Reconcile ${order.publicId}: intento ${attempts + 1}/${maxAttempts} falló — ${message}`,
+          `Reconcile ${order.publicId}: intento ${attempts + 1}/${maxAttempts} falló — ${message}`
         );
         if (intent) {
           await this.prisma.paymentIntent.update({

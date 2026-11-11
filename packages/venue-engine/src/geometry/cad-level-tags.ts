@@ -83,7 +83,7 @@ export function decodeDxfLayer(layer: string): {
  */
 export function resolveLevelToken(
   token: string | undefined,
-  levels: Array<{ id: string }>,
+  levels: Array<{ id: string }>
 ): string | undefined {
   if (!token) return undefined;
   const exact = levels.find((l) => l.id === token);

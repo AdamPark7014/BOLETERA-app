@@ -38,8 +38,7 @@ export type ChannelConfiguration = Partial<
 export function useChannelHealth(eventId: string) {
   return useQuery({
     queryKey: queryKeys.channels.health(eventId),
-    queryFn: ({ signal }) =>
-      http<ChannelHealthMap>(`/channels/${eventId}/health`, { signal }),
+    queryFn: ({ signal }) => http<ChannelHealthMap>(`/channels/${eventId}/health`, { signal }),
     enabled: Boolean(eventId),
   });
 }

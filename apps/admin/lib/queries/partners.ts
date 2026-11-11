@@ -19,8 +19,7 @@ export type ApiKey = {
 export function useApiKeys(organizationId: string | null) {
   return useQuery({
     queryKey: queryKeys.partners.keys(organizationId ?? ''),
-    queryFn: ({ signal }) =>
-      http<ApiKey[]>(`/partners/${organizationId}/keys`, { signal }),
+    queryFn: ({ signal }) => http<ApiKey[]>(`/partners/${organizationId}/keys`, { signal }),
     enabled: Boolean(organizationId),
   });
 }
@@ -34,10 +33,10 @@ export function useCreateApiKey(organizationId: string) {
       rateLimit?: number;
       expiresInDays?: number;
     }) =>
-      http<{ id: string; secret: string; keyPrefix: string }>(
-        `/partners/${organizationId}/keys`,
-        { method: 'POST', body },
-      ),
+      http<{ id: string; secret: string; keyPrefix: string }>(`/partners/${organizationId}/keys`, {
+        method: 'POST',
+        body,
+      }),
     onSettled: () =>
       client.invalidateQueries({ queryKey: queryKeys.partners.keys(organizationId) }),
   });
@@ -53,7 +52,7 @@ export function useRevokeApiKey(organizationId: string) {
       await client.cancelQueries({ queryKey: key });
       const previous = client.getQueryData<ApiKey[]>(key);
       client.setQueryData<ApiKey[]>(key, (keys) =>
-        keys?.map((item) => (item.id === keyId ? { ...item, active: false } : item)),
+        keys?.map((item) => (item.id === keyId ? { ...item, active: false } : item))
       );
       return { previous };
     },

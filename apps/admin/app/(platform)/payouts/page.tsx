@@ -111,7 +111,9 @@ function LiquidacionesBody() {
         const next = readPayouts(payload);
         setPayouts(next);
         setRefs(Object.fromEntries(next.map((item) => [item.id, item.referenceId ?? ''])));
-        setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+        setOpenId((current) =>
+          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+        );
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -139,7 +141,7 @@ function LiquidacionesBody() {
       setNotice(
         action === 'complete'
           ? `Liquidación completa · ${amountLabel(payout.net, payout.currency, payout.ambiguous)} · ${reference}`
-          : 'Liquidación en proceso',
+          : 'Liquidación en proceso'
       );
       setNonce((current) => current + 1);
     } catch (cause) {
@@ -163,7 +165,11 @@ function LiquidacionesBody() {
   }
   if (error) {
     return (
-      <ApiErrorView error={error} context="abrir liquidaciones" onRetry={() => setNonce((current) => current + 1)} />
+      <ApiErrorView
+        error={error}
+        context="abrir liquidaciones"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
     );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando liquidaciones.</p>;
@@ -176,7 +182,9 @@ function LiquidacionesBody() {
         <h1 className={styles.sectionTitle}>Liquidaciones</h1>
         <p className={styles.quiet}>No hay calendario. Completar pide la referencia.</p>
         {ambiguous ? (
-          <p className={styles.tertiary}>Hay varias monedas en las ventas. Los importes no se suman.</p>
+          <p className={styles.tertiary}>
+            Hay varias monedas en las ventas. Los importes no se suman.
+          </p>
         ) : null}
       </header>
       <div className={styles.stack}>
@@ -194,7 +202,8 @@ function LiquidacionesBody() {
           const open = openId === payout.id;
           const status = STATUS[payout.status] ?? payout.status;
           const reference = refs[payout.id] ?? payout.referenceId ?? '';
-          const actionable = canSettle && (payout.status === 'PENDING' || payout.status === 'PROCESSING');
+          const actionable =
+            canSettle && (payout.status === 'PENDING' || payout.status === 'PROCESSING');
           const currency = payout.ambiguous ? 'Sin moneda' : (payout.currency ?? '—');
           return (
             <div key={payout.id} className={styles.stack}>
@@ -207,7 +216,9 @@ function LiquidacionesBody() {
                 <span>
                   {formatWhen(payout.periodStart)} – {formatWhen(payout.periodEnd)}
                 </span>
-                <span className={styles.figure}>{amountLabel(payout.net, payout.currency, payout.ambiguous)}</span>
+                <span className={styles.figure}>
+                  {amountLabel(payout.net, payout.currency, payout.ambiguous)}
+                </span>
               </button>
               {open ? (
                 <>
@@ -296,7 +307,11 @@ function LiquidacionesBody() {
                   {actionable ? (
                     <div className={styles.stack}>
                       {payout.status === 'PENDING' ? (
-                        <TicketButton variant="ghost" disabled={busy === payout.id} onClick={() => void act(payout, 'process')}>
+                        <TicketButton
+                          variant="ghost"
+                          disabled={busy === payout.id}
+                          onClick={() => void act(payout, 'process')}
+                        >
                           Pasar a proceso
                         </TicketButton>
                       ) : null}

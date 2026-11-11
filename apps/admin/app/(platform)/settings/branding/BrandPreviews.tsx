@@ -1,11 +1,7 @@
 'use client';
 
 import { Badge } from '@boletera/ui';
-import {
-  STOREFRONT_FONT,
-  TICKET_DISPLAY_FONT,
-  type DerivedPalette,
-} from './branding-utils';
+import { STOREFRONT_FONT, TICKET_DISPLAY_FONT, type DerivedPalette } from './branding-utils';
 import styles from './branding.module.scss';
 
 export type PreviewSurface = 'storefront' | 'ticket' | 'email';
@@ -116,7 +112,10 @@ export function BrandPreviews({
         style={{ fontFamily: STOREFRONT_FONT }}
         aria-label="Vista previa de correo transaccional"
       >
-        <div className={styles.emailBar} style={{ background: palette.primary, color: palette.onPrimary }}>
+        <div
+          className={styles.emailBar}
+          style={{ background: palette.primary, color: palette.onPrimary }}
+        >
           <BrandMark
             subdomain={subdomain}
             logoUrl={logoUrl}
@@ -151,7 +150,10 @@ export function BrandPreviews({
       style={{ fontFamily: STOREFRONT_FONT }}
       aria-label="Vista previa del storefront"
     >
-      <div className={styles.previewBar} style={{ background: palette.primary, color: palette.onPrimary }}>
+      <div
+        className={styles.previewBar}
+        style={{ background: palette.primary, color: palette.onPrimary }}
+      >
         <div className={styles.previewBrand}>
           <BrandMark
             subdomain={subdomain}
@@ -202,17 +204,29 @@ export function BrandPreviews({
         <div className={styles.tokenGrid} aria-label="Tokens aplicados">
           <div className={styles.token}>
             <span className={styles.tokenLabel}>Primary</span>
-            <span className={styles.tokenSwatch} style={{ background: palette.primary }} aria-hidden="true" />
+            <span
+              className={styles.tokenSwatch}
+              style={{ background: palette.primary }}
+              aria-hidden="true"
+            />
             <span className={styles.tokenValue}>{palette.primary}</span>
           </div>
           <div className={styles.token}>
             <span className={styles.tokenLabel}>On primary</span>
-            <span className={styles.tokenSwatch} style={{ background: palette.onPrimary }} aria-hidden="true" />
+            <span
+              className={styles.tokenSwatch}
+              style={{ background: palette.onPrimary }}
+              aria-hidden="true"
+            />
             <span className={styles.tokenValue}>{palette.onPrimary}</span>
           </div>
           <div className={styles.token}>
             <span className={styles.tokenLabel}>Secundario</span>
-            <span className={styles.tokenSwatch} style={{ background: palette.secondary }} aria-hidden="true" />
+            <span
+              className={styles.tokenSwatch}
+              style={{ background: palette.secondary }}
+              aria-hidden="true"
+            />
             <span className={styles.tokenValue}>{palette.secondary}</span>
           </div>
         </div>

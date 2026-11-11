@@ -85,9 +85,7 @@ function NavLink({
           type="button"
           className={`${styles.favBtn} ${favorite ? styles.favBtnActive : ''}`}
           aria-label={
-            favorite
-              ? `Quitar ${item.label} de favoritos`
-              : `Añadir ${item.label} a favoritos`
+            favorite ? `Quitar ${item.label} de favoritos` : `Añadir ${item.label} a favoritos`
           }
           aria-pressed={favorite}
           onClick={() => onToggleFavorite(item.href)}
@@ -103,7 +101,7 @@ function groupHasActiveRoute(
   pathname: string,
   items: readonly NavItemDef[],
   venues: { id: string }[],
-  showVenues?: boolean,
+  showVenues?: boolean
 ): boolean {
   if (items.some((item) => isNavItemActive(pathname, item))) return true;
   if (!showVenues) return false;
@@ -121,10 +119,7 @@ function ShellSidebarComponent({
 }: ShellSidebarProps) {
   const { role } = useSession();
   const { data: venues = [] } = useVenues();
-  const visibleGroups = useMemo(
-    () => filterNavGroupsForRole(NAV_GROUPS, role),
-    [role],
-  );
+  const visibleGroups = useMemo(() => filterNavGroupsForRole(NAV_GROUPS, role), [role]);
   const itemsByHref = useMemo(() => {
     const map = new Map<string, NavItemDef>();
     for (const item of flattenNavItems(role)) map.set(item.href, item);
@@ -141,12 +136,7 @@ function ShellSidebarComponent({
     if (prefs.compact) return;
     const { isGroupCollapsed, toggleGroup } = prefs;
     for (const group of visibleGroups) {
-      const hasActive = groupHasActiveRoute(
-        pathname,
-        group.items,
-        venues,
-        group.showVenues,
-      );
+      const hasActive = groupHasActiveRoute(pathname, group.items, venues, group.showVenues);
       if (hasActive && isGroupCollapsed(group.id)) {
         toggleGroup(group.id);
       }
@@ -185,23 +175,15 @@ function ShellSidebarComponent({
           ) : null}
         </Link>
         <div className={styles.sidebarTopActions}>
-          <Tooltip
-            content={prefs.compact ? 'Expandir barra' : 'Modo compacto'}
-            placement="bottom"
-          >
+          <Tooltip content={prefs.compact ? 'Expandir barra' : 'Modo compacto'} placement="bottom">
             <button
               type="button"
               className={styles.iconBtnGhost}
-              aria-label={
-                prefs.compact ? 'Expandir barra lateral' : 'Compactar barra lateral'
-              }
+              aria-label={prefs.compact ? 'Expandir barra lateral' : 'Compactar barra lateral'}
               aria-pressed={prefs.compact}
               onClick={prefs.toggleCompact}
             >
-              <ShellIcon
-                name={prefs.compact ? 'panelLeft' : 'panelLeftClose'}
-                size={16}
-              />
+              <ShellIcon name={prefs.compact ? 'panelLeft' : 'panelLeftClose'} size={16} />
             </button>
           </Tooltip>
           <button
@@ -256,12 +238,7 @@ function ShellSidebarComponent({
 
         {visibleGroups.map((group) => {
           const collapsed = prefs.isGroupCollapsed(group.id);
-          const hasActive = groupHasActiveRoute(
-            pathname,
-            group.items,
-            venues,
-            group.showVenues,
-          );
+          const hasActive = groupHasActiveRoute(pathname, group.items, venues, group.showVenues);
           const showItems = prefs.compact || !collapsed;
 
           return (
@@ -311,11 +288,7 @@ function ShellSidebarComponent({
                         const active = pathname.startsWith(`${base}/`);
                         if (prefs.compact) {
                           return (
-                            <Tooltip
-                              key={venue.id}
-                              content={venue.name}
-                              placement="right"
-                            >
+                            <Tooltip key={venue.id} content={venue.name} placement="right">
                               <Link
                                 href={`${base}/3d?studio=1`}
                                 className={navItemClass(active)}
@@ -334,9 +307,7 @@ function ShellSidebarComponent({
                           <div key={venue.id} className={styles.navSubRow}>
                             <Link
                               href={`${base}/3d?studio=1`}
-                              className={
-                                active ? styles.navSubActive : styles.navSubItem
-                              }
+                              className={active ? styles.navSubActive : styles.navSubItem}
                               onClick={onCloseMobile}
                               title={`Estudio 3D — ${venue.name}`}
                               {...linkProps(`${base}/3d?studio=1`)}

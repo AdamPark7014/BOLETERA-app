@@ -29,33 +29,25 @@ export function usePlatformOverview() {
   });
 }
 
-export function usePromoterAnalytics(
-  organizationId: string | null,
-  period: AnalyticsPeriod,
-) {
+export function usePromoterAnalytics(organizationId: string | null, period: AnalyticsPeriod) {
   return useQuery({
     queryKey: queryKeys.analytics.promoter(organizationId ?? '', period),
     queryFn: ({ signal }) =>
-      http<PromoterDashboard>(
-        `/analytics/promoters/${organizationId}/dashboard?period=${period}`,
-        { signal },
-      ),
+      http<PromoterDashboard>(`/analytics/promoters/${organizationId}/dashboard?period=${period}`, {
+        signal,
+      }),
     enabled: Boolean(organizationId),
   });
 }
 
-export function useRealtimeDashboard(
-  organizationId: string | null,
-  eventId?: string,
-) {
+export function useRealtimeDashboard(organizationId: string | null, eventId?: string) {
   return useQuery({
     queryKey: queryKeys.analytics.realtime(organizationId ?? '', eventId),
     queryFn: ({ signal }) => {
       const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
-      return http<RealtimeDashboard>(
-        `/reports/dashboard/realtime/${organizationId}${query}`,
-        { signal },
-      );
+      return http<RealtimeDashboard>(`/reports/dashboard/realtime/${organizationId}${query}`, {
+        signal,
+      });
     },
     enabled: Boolean(organizationId),
     staleTime: 10_000,

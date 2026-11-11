@@ -140,7 +140,7 @@ export async function sweepBatch(db: HoldsDb, batchSize: number): Promise<number
 
       return expired.length;
     },
-    { timeout: 60_000, maxWait: 10_000 },
+    { timeout: 60_000, maxWait: 10_000 }
   );
 }
 

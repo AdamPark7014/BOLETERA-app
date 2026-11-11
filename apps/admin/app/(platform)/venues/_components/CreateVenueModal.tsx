@@ -30,7 +30,10 @@ const INITIAL: FormState = {
   template: 'blank',
 };
 
-const TEMPLATES: ReadonlyArray<{ value: NonNullable<CreateVenueInput['template']>; label: string }> = [
+const TEMPLATES: ReadonlyArray<{
+  value: NonNullable<CreateVenueInput['template']>;
+  label: string;
+}> = [
   { value: 'blank', label: 'En blanco' },
   { value: 'theater', label: 'Teatro' },
   { value: 'arena', label: 'Arena' },

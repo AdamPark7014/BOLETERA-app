@@ -80,7 +80,8 @@ function ReportesBody() {
   const token = session.token;
   const orgId = session.status === 'ready' ? session.orgId : null;
   const canSee = hasCapability(session.role, 'reports.view');
-  const canSales = session.role === 'PROMOTER' || session.role === 'ADMIN' || session.role === 'SUPER_ADMIN';
+  const canSales =
+    session.role === 'PROMOTER' || session.role === 'ADMIN' || session.role === 'SUPER_ADMIN';
 
   useEffect(() => {
     if (!token || !canSee) {
@@ -157,7 +158,13 @@ function ReportesBody() {
     );
   }
   if (error) {
-    return <ApiErrorView error={error} context="abrir reportes" onRetry={() => setNonce((current) => current + 1)} />;
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir reportes"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando reportes.</p>;
 
@@ -211,7 +218,9 @@ function ReportesBody() {
         <p className={styles.rowTitle}>Egress</p>
         {egressNote ? <p className={styles.tertiary}>{egressNote}</p> : null}
       </header>
-      {venues && venues.length === 0 ? <p className={styles.quiet}>Nada con ese criterio.</p> : null}
+      {venues && venues.length === 0 ? (
+        <p className={styles.quiet}>Nada con ese criterio.</p>
+      ) : null}
       {venues && venues.length > 0 ? (
         <div className={styles.rows}>
           {venues.map((venue) => (

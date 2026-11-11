@@ -168,13 +168,11 @@ export class SeatMapRenderer {
   }
 
   /** Hit-test in CSS-pixel canvas coordinates (default) or world space. */
-  hitTest(
-    point: ScreenPoint | WorldPoint,
-    space: 'screen' | 'world' = 'screen',
-  ): HitResult | null {
+  hitTest(point: ScreenPoint | WorldPoint, space: 'screen' | 'world' = 'screen'): HitResult | null {
     if (!this.scene) return null;
     const t0 = performance.now();
-    const world = space === 'world' ? (point as WorldPoint) : this.camera.screenToWorld(point as ScreenPoint);
+    const world =
+      space === 'world' ? (point as WorldPoint) : this.camera.screenToWorld(point as ScreenPoint);
     const radius = this.scene.seatRadius * 1.25;
     const hit = this.scene.index.hitTest(world.x, world.y, radius);
     this.scheduler.lastHitTestMs = performance.now() - t0;
@@ -270,9 +268,7 @@ export class SeatMapRenderer {
     if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
     const dpr =
-      typeof window !== 'undefined' && window.devicePixelRatio
-        ? window.devicePixelRatio
-        : 1;
+      typeof window !== 'undefined' && window.devicePixelRatio ? window.devicePixelRatio : 1;
     const w = rect.width || this.canvas.clientWidth || this.canvas.width || 1;
     const h = rect.height || this.canvas.clientHeight || this.canvas.height || 1;
     this.camera.setViewport(w, h, dpr);
@@ -323,9 +319,7 @@ export class SeatMapRenderer {
     const t0 = performance.now();
     const vp = this.camera.visibleWorldRect(this.scene.seatRadius);
     const visibleCount =
-      this.lod.current === 'seats'
-        ? this.scene.index.cull(vp, this.visibleBuf)
-        : 0;
+      this.lod.current === 'seats' ? this.scene.index.cull(vp, this.visibleBuf) : 0;
     this.scheduler.lastCullMs = performance.now() - t0;
     this.scheduler.seatsDrawn =
       this.lod.current === 'seats' ? visibleCount : this.scene.sectionAggs.length;
@@ -354,7 +348,7 @@ export class SeatMapRenderer {
           this.camera,
           this.visibleBuf,
           visibleCount,
-          this.background,
+          this.background
         );
         drawCalls += 1;
       } else {

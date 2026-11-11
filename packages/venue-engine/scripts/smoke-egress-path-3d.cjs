@@ -46,11 +46,11 @@ assert(overlay3d.paths.length === overlay2d.paths.length, 'same path count');
 assert(overlay3d.paths.length >= 1, 'paths');
 assert(
   overlay3d.paths.every((p) => p.points.length >= 2 && p.points.every((pt) => pt.length === 3)),
-  'xyz polylines',
+  'xyz polylines'
 );
 assert(
   overlay3d.bottlenecks.every((b) => b.points.every((pt) => pt.length === 3)),
-  'bn xyz',
+  'bn xyz'
 );
 
 // Same plan transform as seats: first path point X should match map→world of 2d point

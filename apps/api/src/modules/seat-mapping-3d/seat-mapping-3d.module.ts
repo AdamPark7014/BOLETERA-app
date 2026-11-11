@@ -10,5 +10,3 @@ import { SeatMapping3DController } from './seat-mapping-3d.controller';
   exports: [SeatMapping3DService],
 })
 export class SeatMapping3DModule {}
-
-

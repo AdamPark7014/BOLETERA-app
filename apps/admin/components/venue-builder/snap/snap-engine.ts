@@ -19,7 +19,7 @@ export type SnapOutcome = {
 function alignToSeats(
   renderer: SeatMapRenderer,
   point: WorldPoint,
-  tolerance: number,
+  tolerance: number
 ): { x?: number; y?: number } {
   const scene = renderer.getScene();
   if (!scene || scene.seatCount === 0) return {};
@@ -60,7 +60,7 @@ function alignToSeats(
 export function computeSnap(
   renderer: SeatMapRenderer,
   point: WorldPoint,
-  options: SnapOptions,
+  options: SnapOptions
 ): SnapOutcome {
   if (!options.enabled) return { point, guides: [] };
 
@@ -89,7 +89,7 @@ export function computeSnap(
 /** Grid-only snap for deltas, keeping a dragged cluster rigid. */
 export function snapDelta(
   delta: WorldPoint,
-  options: Pick<SnapOptions, 'enabled' | 'pitch'>,
+  options: Pick<SnapOptions, 'enabled' | 'pitch'>
 ): WorldPoint {
   if (!options.enabled) return delta;
   return { x: snapValue(delta.x, options.pitch), y: snapValue(delta.y, options.pitch) };

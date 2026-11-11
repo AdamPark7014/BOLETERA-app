@@ -113,17 +113,26 @@ const applied = applyCadPrimitivesToSeatMap(
     },
   ],
   base,
-  { mode: 'merge', cadLocks: base.venue.cadLocks },
+  { mode: 'merge', cadLocks: base.venue.cadLocks }
 );
 assert(applied.stats.lockedSkipped === 3, `lockedSkipped ${applied.stats.lockedSkipped}`);
 assert(applied.stats.furniture === 0, 'no new furniture');
 assert(applied.stats.exits === 0, 'no new exits');
 assert(applied.stats.focuses === 0, 'no new focuses');
 assert(applied.stats.sections === 1, 'section ok');
-assert(applied.map.venue.furniture.some((f) => f.id === 'led-keep'), 'kept furniture');
+assert(
+  applied.map.venue.furniture.some((f) => f.id === 'led-keep'),
+  'kept furniture'
+);
 assert(applied.map.venue.furniture.length === 1, 'no furniture append');
-assert(applied.map.venue.exits.some((e) => e.id === 'ex-keep'), 'kept exit');
-assert(applied.map.venue.focusPoints.some((f) => f.id === 'fp-keep'), 'kept focus');
+assert(
+  applied.map.venue.exits.some((e) => e.id === 'ex-keep'),
+  'kept exit'
+);
+assert(
+  applied.map.venue.focusPoints.some((f) => f.id === 'fp-keep'),
+  'kept focus'
+);
 assert(applied.map.venue.focusPoints.length === 1, 'no focus append');
 
 // replace-meta must NOT wipe locked layers
@@ -142,17 +151,23 @@ const replaced = applyCadPrimitivesToSeatMap(
     },
   ],
   base,
-  { mode: 'replace-meta', cadLocks: base.venue.cadLocks },
+  { mode: 'replace-meta', cadLocks: base.venue.cadLocks }
 );
-assert(replaced.map.venue.aisles.some((a) => a.id === 'a-keep'), 'aisles preserved on replace');
-assert(replaced.map.venue.exits.some((e) => e.id === 'ex-keep'), 'exits preserved on replace');
+assert(
+  replaced.map.venue.aisles.some((a) => a.id === 'a-keep'),
+  'aisles preserved on replace'
+);
+assert(
+  replaced.map.venue.exits.some((e) => e.id === 'ex-keep'),
+  'exits preserved on replace'
+);
 assert(
   replaced.map.venue.furniture.some((f) => f.id === 'led-keep'),
-  'furniture preserved on replace',
+  'furniture preserved on replace'
 );
 assert(
   replaced.map.venue.focusPoints.some((f) => f.id === 'fp-keep'),
-  'focus preserved on replace',
+  'focus preserved on replace'
 );
 
 const committed = commitCadImportReview(enforced.rows, base, {

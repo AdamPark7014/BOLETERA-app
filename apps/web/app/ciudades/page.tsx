@@ -57,10 +57,7 @@ export default async function CiudadesPage() {
           <ul className={styles.cityGrid}>
             {cities.map((c) => (
               <li key={c.name}>
-                <Link
-                  href={`/ciudades/${encodeURIComponent(c.name)}`}
-                  className={styles.cityTile}
-                >
+                <Link href={`/ciudades/${encodeURIComponent(c.name)}`} className={styles.cityTile}>
                   <strong>{c.name}</strong>
                   <span>
                     {c.count} evento{c.count === 1 ? '' : 's'}

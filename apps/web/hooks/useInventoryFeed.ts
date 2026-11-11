@@ -247,7 +247,7 @@ export function useInventoryFeed(eventId: string): InventoryFeed {
         setError(
           `No pudimos cargar la disponibilidad del evento. Revisa tu conexión; reintentamos cada ${
             POLL_MS / 1000
-          } segundos.`,
+          } segundos.`
         );
       }
     }

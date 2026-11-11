@@ -40,7 +40,7 @@ function seatFingerprint(seat: SeatMapSeat): string {
 
 function seatsMovedOrChanged(
   before: readonly SeatMapSeat[],
-  after: readonly SeatMapSeat[],
+  after: readonly SeatMapSeat[]
 ): { moved: number; unchanged: number; added: number; removed: number } {
   const beforeById = new Map(before.map((seat) => [seat.id, seat]));
   const afterById = new Map(after.map((seat) => [seat.id, seat]));

@@ -27,7 +27,9 @@ export function AdminFrame({ children }: { children: ReactNode }) {
   const [query, setQuery] = useState('');
   const eventId = eventIdFromPath(pathname);
   const sectionParam = search.get('seccion');
-  const section = eventId ? (sectionParam ?? 'evento') : (activeIndexId(pathname, sectionParam) ?? 'lista');
+  const section = eventId
+    ? (sectionParam ?? 'evento')
+    : (activeIndexId(pathname, sectionParam) ?? 'lista');
   const active = activeIndexId(pathname, sectionParam);
   const groups = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -59,7 +61,9 @@ export function AdminFrame({ children }: { children: ReactNode }) {
     const needle = query.trim().toLowerCase();
     if (!needle) return;
     const nodes = document.querySelectorAll<HTMLElement>('[data-param]');
-    const hit = [...nodes].find((node) => (node.dataset.param ?? '').toLowerCase().includes(needle));
+    const hit = [...nodes].find((node) =>
+      (node.dataset.param ?? '').toLowerCase().includes(needle)
+    );
     hit?.scrollIntoView({ block: 'nearest' });
   }, [query, section]);
 

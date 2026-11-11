@@ -1,20 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  CardHeader,
-  EmptyState,
-} from '@boletera/ui';
+import { Badge, Button, Card, CardHeader, EmptyState } from '@boletera/ui';
 import type { ChannelHealthMap } from '@/lib/platform-api';
-import {
-  channelLabel,
-  formatCount,
-  formatMxn,
-  healthTone,
-} from './format';
+import { channelLabel, formatCount, formatMxn, healthTone } from './format';
 import styles from './event-hub.module.scss';
 
 export type ChannelPct = { web: number; taquilla: number; api: number };

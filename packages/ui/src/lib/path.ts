@@ -122,7 +122,7 @@ export function arcPath(
   outerRadius: number,
   innerRadius: number,
   startAngle: number,
-  endAngle: number,
+  endAngle: number
 ): string {
   const sweep = endAngle - startAngle;
   if (sweep <= 0) return '';
@@ -161,7 +161,13 @@ export function arcPath(
 }
 
 /** Rectangulo con esquinas superiores redondeadas (barras verticales). */
-export function barPath(x: number, y: number, width: number, height: number, radius: number): string {
+export function barPath(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+): string {
   const rr = Math.max(0, Math.min(radius, width / 2, height));
   if (rr === 0) return `M${r(x)},${r(y)}h${r(width)}v${r(height)}h${r(-width)}Z`;
   return [
@@ -181,7 +187,7 @@ export function funnelSegmentPath(
   top: number,
   bottom: number,
   topWidth: number,
-  bottomWidth: number,
+  bottomWidth: number
 ): string {
   const halfTop = topWidth / 2;
   const halfBottom = bottomWidth / 2;

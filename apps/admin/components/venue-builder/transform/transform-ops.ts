@@ -113,7 +113,7 @@ export function distributeSelection(ctx: TransformContext, axis: 'x' | 'y'): voi
   const seats = editableSelection(ctx);
   if (seats.length < 3) return;
   const sorted = [...seats].sort((a, b) =>
-    axis === 'x' ? a.seat.x - b.seat.x : a.seat.y - b.seat.y,
+    axis === 'x' ? a.seat.x - b.seat.x : a.seat.y - b.seat.y
   );
   const first = sorted[0].seat;
   const last = sorted[sorted.length - 1].seat;
@@ -177,7 +177,7 @@ export function deleteSelection(ctx: TransformContext): void {
     const furniture = state.scene.venue?.furniture ?? [];
     const keep = furniture.filter((item) => !selection.furnitureIds.includes(item.id));
     ctx.history.execute(
-      setVenueMetaCommand('Eliminar mobiliario', { furniture }, { furniture: keep }),
+      setVenueMetaCommand('Eliminar mobiliario', { furniture }, { furniture: keep })
     );
     state.clearSelection();
     return;
@@ -191,7 +191,7 @@ export function deleteSelection(ctx: TransformContext): void {
     (section) =>
       !section.locked &&
       section.seats.length > 0 &&
-      section.seats.every((seat) => selected.has(seat.id)),
+      section.seats.every((seat) => selected.has(seat.id))
   );
   const coveredByWholeSections =
     emptiedSections.length > 0 &&
@@ -199,7 +199,7 @@ export function deleteSelection(ctx: TransformContext): void {
 
   if (coveredByWholeSections) {
     ctx.history.execute(
-      removeSectionsCommand(`Eliminar ${emptiedSections.length} zonas`, emptiedSections),
+      removeSectionsCommand(`Eliminar ${emptiedSections.length} zonas`, emptiedSections)
     );
     state.clearSelection();
     return;
@@ -232,9 +232,7 @@ export function groupSelection(ctx: TransformContext): void {
     color: donor.color,
     seats: seats.map(({ seat }) => seat),
     shape:
-      hull.length >= 3
-        ? { points: hull.map((p) => [p.x, p.y] as [number, number]) }
-        : undefined,
+      hull.length >= 3 ? { points: hull.map((p) => [p.x, p.y] as [number, number]) } : undefined,
     seatPitch: donor.seatPitch,
     rowPitch: donor.rowPitch,
     levelId: donor.levelId,
@@ -301,8 +299,8 @@ export function setSectionLocked(ctx: TransformContext, sectionId: string, locke
       locked ? 'Bloquear zona' : 'Desbloquear zona',
       sectionId,
       { locked: section.locked },
-      { locked },
-    ),
+      { locked }
+    )
   );
 }
 

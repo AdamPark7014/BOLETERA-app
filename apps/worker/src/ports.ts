@@ -39,7 +39,7 @@ export type SweepTx = {
 export type HoldsDb = {
   $transaction<T>(
     fn: (tx: SweepTx) => Promise<T>,
-    options?: { timeout?: number; maxWait?: number },
+    options?: { timeout?: number; maxWait?: number }
   ): Promise<T>;
 };
 

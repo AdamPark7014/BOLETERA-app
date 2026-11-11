@@ -16,12 +16,12 @@ SaaS de boletería orientada a **México / LATAM**: promotores, venues, taquilla
 
 ## Stack
 
-| Capa | Tech |
-|------|------|
-| Monorepo | pnpm + Turborepo |
-| API | NestJS 11 · Prisma 6 · PostgreSQL 16 · Redis 7 |
-| Apps | Next.js (web, admin, taquilla) · worker Node |
-| Pagos | Banorte Payworks / SPEI / OXXO (`packages/payments`) — **sin Stripe** |
+| Capa     | Tech                                                                  |
+| -------- | --------------------------------------------------------------------- |
+| Monorepo | pnpm + Turborepo                                                      |
+| API      | NestJS 11 · Prisma 6 · PostgreSQL 16 · Redis 7                        |
+| Apps     | Next.js (web, admin, taquilla) · worker Node                          |
+| Pagos    | Banorte Payworks / SPEI / OXXO (`packages/payments`) — **sin Stripe** |
 
 ## Arranque local
 
@@ -65,13 +65,13 @@ Scopes típicos: `read:events`, `read:inventory`, `write:orders`.
 
 ## Apps
 
-| App | Puerto típico | Rol |
-|-----|---------------|-----|
-| `apps/api` | 4000 | Backend |
-| `apps/web` | 3000 | Comprador |
-| `apps/admin` | 3001 | Promotor / ops |
-| `apps/taquilla` | 3002 | POS |
-| `apps/worker` | — | Expira holds + reconcile SPEI |
+| App             | Puerto típico | Rol                           |
+| --------------- | ------------- | ----------------------------- |
+| `apps/api`      | 4000          | Backend                       |
+| `apps/web`      | 3000          | Comprador                     |
+| `apps/admin`    | 3001          | Promotor / ops                |
+| `apps/taquilla` | 3002          | POS                           |
+| `apps/worker`   | —             | Expira holds + reconcile SPEI |
 
 ## Pruebas
 

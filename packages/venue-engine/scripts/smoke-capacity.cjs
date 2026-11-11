@@ -53,13 +53,15 @@ assert(topWide.width === 80, 'wide width');
 assert(topWide.utilization < top.utilization, 'wider aisle lowers utilization');
 assert(topWide.capacity > top.capacity, 'wider capacity');
 
-const issues = validateGeometry(resolveGeometry({
-  ...map,
-  venue: { ...map.venue, aisles: [{ ...map.venue.aisles[0], width: 8 }] },
-})).issues;
+const issues = validateGeometry(
+  resolveGeometry({
+    ...map,
+    venue: { ...map.venue, aisles: [{ ...map.venue.aisles[0], width: 8 }] },
+  })
+).issues;
 console.log(
   'validate:',
-  issues.filter((i) => i.code === 'egress_bottleneck').map((i) => i.message),
+  issues.filter((i) => i.code === 'egress_bottleneck').map((i) => i.message)
 );
 
 assert(EGRESS_DEFAULTS.aisleWidth === 24, 'defaults');

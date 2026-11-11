@@ -95,7 +95,7 @@ export type SelectedSeatInfo = {
  */
 function readAccessible(
   seat: { tier?: string; metadata?: Record<string, unknown> },
-  sectionIsAccessible: boolean,
+  sectionIsAccessible: boolean
 ): boolean {
   const meta = seat.metadata;
   if (meta) {
@@ -171,7 +171,7 @@ export function SeatMapViewer({
       const offer = resolveOfferForSection(offers, meta?.slug ?? '', meta?.name);
       return offer ? Number(offer.basePrice) : 0;
     },
-    [offers, sectionMeta],
+    [offers, sectionMeta]
   );
 
   const offerIdOf = useCallback(
@@ -179,7 +179,7 @@ export function SeatMapViewer({
       const meta = sectionMeta.get(sectionId);
       return resolveOfferForSection(offers, meta?.slug ?? '', meta?.name)?.id ?? '';
     },
-    [offers, sectionMeta],
+    [offers, sectionMeta]
   );
 
   /**
@@ -204,7 +204,7 @@ export function SeatMapViewer({
         color: '#17171A',
         accessible: readAccessible(
           { tier: p.tier, metadata: full?.metadata },
-          meta?.accessible ?? false,
+          meta?.accessible ?? false
         ),
         blocked: Boolean(p.visibility?.blocked),
         restricted: Boolean(p.visibility?.restrictedView),
@@ -235,7 +235,7 @@ export function SeatMapViewer({
   const grid: SeatGrid = useMemo(() => buildSeatGrid(seats, bounds), [seats, bounds]);
   const sectionShapes = useMemo(
     () => buildSectionShapes(map.sections, seats, seatPitch),
-    [map.sections, seats, seatPitch],
+    [map.sections, seats, seatPitch]
   );
 
   const stage = useMemo(() => {
@@ -263,16 +263,15 @@ export function SeatMapViewer({
   const selectedSet = useMemo(() => new Set(selected), [selected]);
 
   const conflictIndexes = useMemo(
-    () =>
-      (conflictSeatIds ?? [])
-        .map((id) => indexById.get(id) ?? -1)
-        .filter((i) => i >= 0),
-    [conflictSeatIds, indexById],
+    () => (conflictSeatIds ?? []).map((id) => indexById.get(id) ?? -1).filter((i) => i >= 0),
+    [conflictSeatIds, indexById]
   );
   const conflictUntilRef = useRef(0);
 
   const priceRange = useMemo(() => {
-    const prices = map.sections.map((s) => priceOf(s.id)).filter((n) => Number.isFinite(n) && n > 0);
+    const prices = map.sections
+      .map((s) => priceOf(s.id))
+      .filter((n) => Number.isFinite(n) && n > 0);
     if (!prices.length) return { min: 0, max: 0 };
     return { min: Math.min(...prices), max: Math.max(...prices) };
   }, [map.sections, priceOf]);
@@ -331,7 +330,7 @@ export function SeatMapViewer({
         s.slug.toLowerCase() === needle ||
         s.name.toLowerCase() === needle ||
         s.name.toLowerCase().includes(needle) ||
-        s.slug.toLowerCase().includes(needle),
+        s.slug.toLowerCase().includes(needle)
     );
     if (match) setSectionFilter(match.id);
   }, [focusZone, map.sections]);
@@ -346,7 +345,7 @@ export function SeatMapViewer({
       if (seat.blocked) return 'blocked';
       return feed.statusRef.current.get(seat.id) ?? 'unknown';
     },
-    [seats, selectedSet, feed.statusRef],
+    [seats, selectedSet, feed.statusRef]
   );
 
   const dimmedAt = useCallback(
@@ -358,7 +357,7 @@ export function SeatMapViewer({
       if (accessibleOnly && !seat.accessible) return true;
       return false;
     },
-    [seats, levelFilter, sectionFilter, priceCap, accessibleOnly],
+    [seats, levelFilter, sectionFilter, priceCap, accessibleOnly]
   );
 
   const fillAt = useCallback(
@@ -373,7 +372,7 @@ export function SeatMapViewer({
       if (seat.accessible && (status === 'available' || status === 'held')) return '#17171A';
       return '#17171A';
     },
-    [seats, heatMode, priceRange.min, priceRange.max, sightlineBySeat],
+    [seats, heatMode, priceRange.min, priceRange.max, sightlineBySeat]
   );
 
   /**
@@ -396,7 +395,7 @@ export function SeatMapViewer({
         ? 'selected'
         : seat.blocked
           ? 'blocked'
-          : statuses.get(seat.id) ?? 'unknown';
+          : (statuses.get(seat.id) ?? 'unknown');
 
       const stat = bySection.get(seat.sectionId) ?? { free: 0, total: 0 };
       stat.total += 1;
@@ -600,7 +599,7 @@ export function SeatMapViewer({
       setFocusedIndex((prev) => (prev === idx ? prev : idx));
       gestures.requestFrame();
     },
-    [grid, seats, seatPitch, gestures],
+    [grid, seats, seatPitch, gestures]
   );
 
   const selectSection = useCallback(
@@ -613,7 +612,7 @@ export function SeatMapViewer({
       const sec = map.sections.find((s) => s.id === id);
       if (sec) gestures.fitRect(sectionBounds(sec, 28), 28, true);
     },
-    [bounds, map.sections, gestures],
+    [bounds, map.sections, gestures]
   );
 
   const tryToggle = useCallback(
@@ -633,7 +632,7 @@ export function SeatMapViewer({
         setStatusMessage(
           status === 'held'
             ? 'Esa butaca está apartada por otro comprador ahora mismo. Elige otra.'
-            : 'Esa butaca ya no está disponible. Elige otra.',
+            : 'Esa butaca ya no está disponible. Elige otra.'
         );
         return;
       }
@@ -643,10 +642,10 @@ export function SeatMapViewer({
       }
       onToggle(seat.id);
       setStatusMessage(
-        `${seat.row ? `Fila ${seat.row}, ` : ''}butaca ${seat.label}, ${seat.sectionName}, $${seat.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}. Agregada.`,
+        `${seat.row ? `Fila ${seat.row}, ` : ''}butaca ${seat.label}, ${seat.sectionName}, $${seat.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}. Agregada.`
       );
     },
-    [seats, statusAt, selectedSet, selected.length, maxSelect, onToggle, currency],
+    [seats, statusAt, selectedSet, selected.length, maxSelect, onToggle, currency]
   );
 
   const handleTap = useCallback(
@@ -682,7 +681,7 @@ export function SeatMapViewer({
         gestures.zoomBy(1.8, clientX, clientY, true);
       }
     },
-    [grid, seats, seatPitch, dimmedAt, tryToggle, sectionShapes, selectSection, gestures],
+    [grid, seats, seatPitch, dimmedAt, tryToggle, sectionShapes, selectSection, gestures]
   );
 
   handlersRef.current = { tap: handleTap, hover: handleHover };
@@ -728,10 +727,15 @@ export function SeatMapViewer({
     if (!conflictIndexes.length) return;
     conflictUntilRef.current = performance.now() + CONFLICT_PULSE_MS;
     const seat = seats[conflictIndexes[0]];
-    gestures.centerOn(seat.x, seat.y, Math.max(gestures.viewRef.current.scale, maxScale * 0.6), true);
+    gestures.centerOn(
+      seat.x,
+      seat.y,
+      Math.max(gestures.viewRef.current.scale, maxScale * 0.6),
+      true
+    );
     setFocusedIndex(conflictIndexes[0]);
     setStatusMessage(
-      `Otro comprador apartó ${seat.row ? `la fila ${seat.row}, ` : ''}butaca ${seat.label}. La marcamos en el mapa: elige otra.`,
+      `Otro comprador apartó ${seat.row ? `la fila ${seat.row}, ` : ''}butaca ${seat.label}. La marcamos en el mapa: elige otra.`
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conflictIndexes, seats, maxScale]);
@@ -776,7 +780,7 @@ export function SeatMapViewer({
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [bounds],
+    [bounds]
   );
 
   const focusOnSeatIndex = useCallback(
@@ -786,13 +790,13 @@ export function SeatMapViewer({
       if (!seat) return;
       const targetScale = Math.max(
         gestures.viewRef.current.scale,
-        SELECT_SEAT_PX / (seatPitch * 0.86),
+        SELECT_SEAT_PX / (seatPitch * 0.86)
       );
       gestures.centerOn(seat.x, seat.y, Math.min(targetScale, maxScale), true);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [seats, seatPitch, maxScale],
+    [seats, seatPitch, maxScale]
   );
 
   // ---------------------------------------------------------------------------
@@ -844,7 +848,9 @@ export function SeatMapViewer({
           </div>
           <p role="status" aria-live="polite">
             Cargando disponibilidad… {loadPercent}%
-            {totalTickets ? ` (${feed.loadedTickets.toLocaleString('es-MX')} de ${totalTickets.toLocaleString('es-MX')})` : ''}
+            {totalTickets
+              ? ` (${feed.loadedTickets.toLocaleString('es-MX')} de ${totalTickets.toLocaleString('es-MX')})`
+              : ''}
             . Ya puedes explorar y elegir en las zonas cargadas.
           </p>
         </div>
@@ -921,13 +927,25 @@ export function SeatMapViewer({
           >
             Salidas
           </button>
-          <button type="button" onClick={() => gestures.zoomBy(1.25, undefined, undefined, true)} aria-label="Acercar">
+          <button
+            type="button"
+            onClick={() => gestures.zoomBy(1.25, undefined, undefined, true)}
+            aria-label="Acercar"
+          >
             +
           </button>
-          <button type="button" onClick={() => gestures.zoomBy(1 / 1.25, undefined, undefined, true)} aria-label="Alejar">
+          <button
+            type="button"
+            onClick={() => gestures.zoomBy(1 / 1.25, undefined, undefined, true)}
+            aria-label="Alejar"
+          >
             −
           </button>
-          <button type="button" onClick={() => gestures.fitRect(bounds, 28, true)} aria-label="Ajustar al recinto">
+          <button
+            type="button"
+            onClick={() => gestures.fitRect(bounds, 28, true)}
+            aria-label="Ajustar al recinto"
+          >
             Encajar
           </button>
         </div>
@@ -942,7 +960,10 @@ export function SeatMapViewer({
             <span>${priceRange.max.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
           </div>
           <label className={styles.priceFilter}>
-            Máx. ${((priceCap ?? priceRange.max) || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+            Máx. $
+            {((priceCap ?? priceRange.max) || 0).toLocaleString('es-MX', {
+              maximumFractionDigits: 0,
+            })}
             <input
               type="range"
               min={priceRange.min}
@@ -1079,7 +1100,12 @@ export function SeatMapViewer({
         </div>
 
         {/* Capa estructural inferior — pocos nodos, se queda en SVG. */}
-        <svg className={styles.svg} aria-hidden focusable="false" style={{ opacity: ready ? 1 : 0 }}>
+        <svg
+          className={styles.svg}
+          aria-hidden
+          focusable="false"
+          style={{ opacity: ready ? 1 : 0 }}
+        >
           <defs>
             <linearGradient id="stageGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#2a1218" />
@@ -1117,7 +1143,7 @@ export function SeatMapViewer({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-              ),
+              )
             )}
             {projected.obstacles.map((obs) =>
               levelFilter !== 'ALL' && obs.levelId && obs.levelId !== levelFilter ? null : (
@@ -1128,7 +1154,7 @@ export function SeatMapViewer({
                   stroke="rgba(161,161,170,0.5)"
                   strokeWidth={1}
                 />
-              ),
+              )
             )}
             {projected.stairs.map((stair) =>
               levelFilter !== 'ALL' &&
@@ -1146,22 +1172,49 @@ export function SeatMapViewer({
                   strokeLinejoin="round"
                   strokeDasharray="8 5"
                 />
-              ),
+              )
             )}
             {projected.furniture.map((item) => {
-              if (levelFilter !== 'ALL' && item.levelId && item.levelId !== levelFilter) return null;
+              if (levelFilter !== 'ALL' && item.levelId && item.levelId !== levelFilter)
+                return null;
               if (item.type === 'led') {
                 return (
                   <g key={item.id} transform={`translate(${item.x} ${item.y})`}>
-                    <rect x={-26} y={-8} width={52} height={16} rx={2} fill="#1a0510" stroke="#be123c" strokeWidth={1} />
-                    <rect x={-22} y={-5} width={44} height={10} rx={1} fill="#be123c" opacity={0.55} />
+                    <rect
+                      x={-26}
+                      y={-8}
+                      width={52}
+                      height={16}
+                      rx={2}
+                      fill="#1a0510"
+                      stroke="#be123c"
+                      strokeWidth={1}
+                    />
+                    <rect
+                      x={-22}
+                      y={-5}
+                      width={44}
+                      height={10}
+                      rx={1}
+                      fill="#be123c"
+                      opacity={0.55}
+                    />
                   </g>
                 );
               }
               if (item.type === 'speaker') {
                 return (
                   <g key={item.id} transform={`translate(${item.x} ${item.y})`}>
-                    <rect x={-7} y={-10} width={14} height={20} rx={2} fill="#0f0f12" stroke="#404040" strokeWidth={1} />
+                    <rect
+                      x={-7}
+                      y={-10}
+                      width={14}
+                      height={20}
+                      rx={2}
+                      fill="#0f0f12"
+                      stroke="#404040"
+                      strokeWidth={1}
+                    />
                     <circle cx={0} cy={-4} r={3.4} fill="#27272a" />
                     <circle cx={0} cy={5} r={2.4} fill="#27272a" />
                   </g>
@@ -1170,7 +1223,16 @@ export function SeatMapViewer({
               if (item.type === 'door') {
                 return (
                   <g key={item.id} transform={`translate(${item.x} ${item.y})`}>
-                    <rect x={-10} y={-4} width={20} height={8} rx={1} fill="rgba(34,197,94,0.35)" stroke="#22c55e" strokeWidth={1.2} />
+                    <rect
+                      x={-10}
+                      y={-4}
+                      width={20}
+                      height={8}
+                      rx={1}
+                      fill="rgba(34,197,94,0.35)"
+                      stroke="#22c55e"
+                      strokeWidth={1.2}
+                    />
                     <text y={-8} textAnchor="middle" fontSize={7} fill="#86efac" fontWeight={700}>
                       Puerta
                     </text>
@@ -1188,7 +1250,12 @@ export function SeatMapViewer({
         <canvas ref={seatCanvasRef} className={styles.canvas} aria-hidden />
 
         {/* Overlays estructurales por encima de las butacas. */}
-        <svg className={styles.svg} aria-hidden focusable="false" style={{ opacity: ready ? 1 : 0 }}>
+        <svg
+          className={styles.svg}
+          aria-hidden
+          focusable="false"
+          style={{ opacity: ready ? 1 : 0 }}
+        >
           <g ref={svgOverlayGroupRef}>
             {projected.exits.map((ex) => {
               if (levelFilter !== 'ALL' && ex.levelId && ex.levelId !== levelFilter) return null;
@@ -1206,8 +1273,22 @@ export function SeatMapViewer({
                       strokeLinecap="round"
                     />
                   ) : null}
-                  <circle cx={x} cy={y} r={r} fill="rgba(34,197,94,0.85)" stroke="#14532d" strokeWidth={1.5} />
-                  <text x={x} y={y - r - 4} textAnchor="middle" fontSize={9} fontWeight={700} fill="#bbf7d0">
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={r}
+                    fill="rgba(34,197,94,0.85)"
+                    stroke="#14532d"
+                    strokeWidth={1.5}
+                  />
+                  <text
+                    x={x}
+                    y={y - r - 4}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fontWeight={700}
+                    fill="#bbf7d0"
+                  >
                     {ex.label ?? 'Salida'}
                   </text>
                 </g>
@@ -1246,8 +1327,22 @@ export function SeatMapViewer({
               if (levelFilter !== 'ALL' && f.levelId && f.levelId !== levelFilter) return null;
               return (
                 <g key={f.id}>
-                  <circle cx={f.x} cy={f.y} r={6} fill="rgba(250,250,250,0.92)" stroke="#e11d48" strokeWidth={2} />
-                  <text x={f.x} y={f.y - 10} textAnchor="middle" fontSize={8} fontWeight={700} fill="#fecdd3">
+                  <circle
+                    cx={f.x}
+                    cy={f.y}
+                    r={6}
+                    fill="rgba(250,250,250,0.92)"
+                    stroke="#e11d48"
+                    strokeWidth={2}
+                  />
+                  <text
+                    x={f.x}
+                    y={f.y - 10}
+                    textAnchor="middle"
+                    fontSize={8}
+                    fontWeight={700}
+                    fill="#fecdd3"
+                  >
                     {f.label ?? 'Foco'}
                   </text>
                 </g>
@@ -1317,10 +1412,15 @@ export function SeatMapViewer({
                 <div>
                   <strong>{item.label}</strong>
                   <span>
-                    {item.sectionName} · ${item.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                    {item.sectionName} · $
+                    {item.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </span>
                 </div>
-                <button type="button" aria-label={`Quitar ${item.label}`} onClick={() => onToggle(item.seatId)}>
+                <button
+                  type="button"
+                  aria-label={`Quitar ${item.label}`}
+                  onClick={() => onToggle(item.seatId)}
+                >
                   ×
                 </button>
               </li>
@@ -1373,7 +1473,12 @@ function LegendMark({ kind }: { kind: 'available' | 'held' | 'sold' | 'selected'
     <svg {...common} className={styles.legendMark}>
       <rect x={1.5} y={2.5} width={11} height={9} rx={1.5} fill={fill} />
       {kind === 'held' && (
-        <path d="M3.5 10.5 L10.5 3.5" stroke="rgba(9,9,11,0.8)" strokeWidth={1.6} strokeLinecap="round" />
+        <path
+          d="M3.5 10.5 L10.5 3.5"
+          stroke="rgba(9,9,11,0.8)"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+        />
       )}
       {kind === 'sold' && (
         <path
@@ -1384,7 +1489,16 @@ function LegendMark({ kind }: { kind: 'available' | 'held' | 'sold' | 'selected'
         />
       )}
       {kind === 'selected' && (
-        <rect x={0.5} y={1.5} width={13} height={11} rx={2} fill="none" stroke="#fff" strokeWidth={1.2} />
+        <rect
+          x={0.5}
+          y={1.5}
+          width={13}
+          height={11}
+          rx={2}
+          fill="none"
+          stroke="#fff"
+          strokeWidth={1.2}
+        />
       )}
     </svg>
   );

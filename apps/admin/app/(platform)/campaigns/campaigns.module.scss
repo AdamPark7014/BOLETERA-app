@@ -534,7 +534,12 @@
 .skeleton {
   min-height: 6rem;
   border-radius: var(--bl-radius-xl);
-  background: linear-gradient(90deg, var(--bl-surface-sunken) 25%, var(--bl-gray-25) 45%, var(--bl-gray-100) 65%);
+  background: linear-gradient(
+    90deg,
+    var(--bl-surface-sunken) 25%,
+    var(--bl-gray-25) 45%,
+    var(--bl-gray-100) 65%
+  );
   background-size: 220% 100%;
   animation: pulse 1.4s infinite;
 }
@@ -549,7 +554,12 @@
   height: 3rem;
   width: 100%;
   border-radius: var(--bl-radius-md);
-  background: linear-gradient(90deg, var(--bl-surface-sunken) 0%, var(--bl-gray-200) 50%, var(--bl-gray-100) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--bl-surface-sunken) 0%,
+    var(--bl-gray-200) 50%,
+    var(--bl-gray-100) 100%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }

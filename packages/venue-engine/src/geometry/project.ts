@@ -1,4 +1,10 @@
-import type { ResolvedVenueScene, ProjectedScene2D, ProjectedScene3D, ProjectedSeat3D, SectionPlate3D } from './types';
+import type {
+  ResolvedVenueScene,
+  ProjectedScene2D,
+  ProjectedScene3D,
+  ProjectedSeat3D,
+  SectionPlate3D,
+} from './types';
 
 /** Project resolved geometry into SVG/plan drawables (identity in map space). */
 export function projectTo2D(scene: ResolvedVenueScene): ProjectedScene2D {
@@ -50,7 +56,7 @@ export type PlanProjectionFrame = {
 
 export function getPlanProjectionFrame(
   scene: ResolvedVenueScene,
-  opts?: ProjectTo3DOptions,
+  opts?: ProjectTo3DOptions
 ): PlanProjectionFrame | null {
   const max = opts?.maxSeats ?? 1200;
   const worldSpan = opts?.worldSpan ?? 13;
@@ -76,7 +82,7 @@ export function mapPointToWorld3D(
   frame: PlanProjectionFrame,
   x: number,
   y: number,
-  elevY = 0.08,
+  elevY = 0.08
 ): [number, number, number] {
   return [(x - frame.cx) * frame.scale, elevY, (y - frame.cy) * frame.scale];
 }
@@ -87,7 +93,7 @@ export function mapPointToWorld3D(
  */
 export function projectTo3D(
   scene: ResolvedVenueScene,
-  opts?: ProjectTo3DOptions,
+  opts?: ProjectTo3DOptions
 ): ProjectedScene3D {
   const frame = getPlanProjectionFrame(scene, opts);
 
@@ -122,9 +128,7 @@ export function projectTo3D(
     : undefined;
 
   const stageZ = stageWorld?.z ?? (minY - cy) * scale - 1.4;
-  const stageTarget = stageWorld
-    ? { x: stageWorld.x, z: stageWorld.z }
-    : { x: 0, z: stageZ };
+  const stageTarget = stageWorld ? { x: stageWorld.x, z: stageWorld.z } : { x: 0, z: stageZ };
 
   const bySection = new Map<string, typeof list>();
   for (const s of list) {
@@ -198,7 +202,9 @@ export function projectTo3D(
     id: a.id,
     width: a.width,
     levelId: a.levelId,
-    points: a.points.map(([x, y]) => [(x - cx) * scale, 0.02, (y - cy) * scale] as [number, number, number]),
+    points: a.points.map(
+      ([x, y]) => [(x - cx) * scale, 0.02, (y - cy) * scale] as [number, number, number]
+    ),
   }));
 
   const obstacles = scene.obstacles.map((o) => ({
@@ -207,7 +213,7 @@ export function projectTo3D(
     height: o.height ?? 1.2,
     levelId: o.levelId,
     points: o.points.map(
-      ([x, y]) => [(x - cx) * scale, 0.02, (y - cy) * scale] as [number, number, number],
+      ([x, y]) => [(x - cx) * scale, 0.02, (y - cy) * scale] as [number, number, number]
     ),
   }));
 
@@ -218,7 +224,7 @@ export function projectTo3D(
     fromLevelId: s.fromLevelId,
     toLevelId: s.toLevelId,
     points: s.points.map(
-      ([x, y]) => [(x - cx) * scale, 0.04, (y - cy) * scale] as [number, number, number],
+      ([x, y]) => [(x - cx) * scale, 0.04, (y - cy) * scale] as [number, number, number]
     ),
   }));
 
@@ -228,13 +234,12 @@ export function projectTo3D(
     width: e.width,
     levelId: e.levelId,
     points: e.points.map(
-      ([x, y]) => [(x - cx) * scale, 0.05, (y - cy) * scale] as [number, number, number],
+      ([x, y]) => [(x - cx) * scale, 0.05, (y - cy) * scale] as [number, number, number]
     ),
   }));
 
   const furniture = (scene.furniture ?? []).map((f) => {
-    const elev =
-      f.type === 'led' ? 1.4 : f.type === 'speaker' ? 0.9 : 0.55;
+    const elev = f.type === 'led' ? 1.4 : f.type === 'speaker' ? 0.9 : 0.55;
     return {
       id: f.id,
       type: f.type,

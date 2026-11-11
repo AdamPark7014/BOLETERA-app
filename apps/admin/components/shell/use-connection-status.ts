@@ -1,10 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  useRealtimeDashboardUpdates,
-  type RealtimeStatus,
-} from '@/lib/use-realtime';
+import { useRealtimeDashboardUpdates, type RealtimeStatus } from '@/lib/use-realtime';
 
 export type ConnectionTone = 'online' | 'connecting' | 'offline' | 'error';
 
@@ -77,9 +74,7 @@ function mapState(online: boolean, sse: RealtimeStatus): ConnectionState {
  */
 export function useConnectionStatus(): ConnectionState {
   const { status: sseStatus } = useRealtimeDashboardUpdates();
-  const [online, setOnline] = useState(
-    typeof navigator === 'undefined' ? true : navigator.onLine,
-  );
+  const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
 
   useEffect(() => {
     const onOnline = () => setOnline(true);

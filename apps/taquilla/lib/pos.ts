@@ -184,11 +184,7 @@ export function clearSaleDraft() {
 // Turno
 // ---------------------------------------------------------------------------
 
-export async function ensurePosSession(
-  organizationId: string,
-  cashierId: string,
-  openingCash = 0,
-) {
+export async function ensurePosSession(organizationId: string, cashierId: string, openingCash = 0) {
   let terminalId = getTerminalId();
   if (!terminalId) {
     const terminal = await apiJson<{ id: string }>('/taquilla/terminal/init-org', {
@@ -210,7 +206,7 @@ export async function ensurePosSession(
       {
         method: 'POST',
         body: JSON.stringify({ terminalId, cashierId, openingCash }),
-      },
+      }
     );
     sessionId = session.sessionId;
     localStorage.setItem(SESSION_KEY, sessionId);
@@ -302,9 +298,9 @@ export async function releasePosHolds(holdIds: string[]) {
   await Promise.all(
     holdIds.map((id) =>
       apiFetch(`/inventory/staff/holds/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(
-        () => undefined,
-      ),
-    ),
+        () => undefined
+      )
+    )
   );
 }
 
@@ -374,7 +370,7 @@ export async function posCheckout(params: {
 
 export async function fetchReceipt(orderId: string, terminalId: string) {
   const rec = await apiJson<PosReceipt>(
-    `/taquilla/receipt/${encodeURIComponent(orderId)}?terminalId=${encodeURIComponent(terminalId)}`,
+    `/taquilla/receipt/${encodeURIComponent(orderId)}?terminalId=${encodeURIComponent(terminalId)}`
   );
   return { ...rec, orderId };
 }
@@ -414,7 +410,7 @@ export async function printReceipt(receipt: PosReceipt) {
 
 export function fetchSessionSummary(sessionId: string) {
   return apiJson<SessionSummary>(
-    `/taquilla/session/summary?sessionId=${encodeURIComponent(sessionId)}`,
+    `/taquilla/session/summary?sessionId=${encodeURIComponent(sessionId)}`
   );
 }
 
@@ -448,7 +444,7 @@ export function addCashDrop(amount: number, note?: string, managerPin?: string) 
 
 export function listZReports(organizationId: string) {
   return apiJson<unknown[]>(
-    `/taquilla/z-reports?organizationId=${encodeURIComponent(organizationId)}`,
+    `/taquilla/z-reports?organizationId=${encodeURIComponent(organizationId)}`
   ).then((list) => (Array.isArray(list) ? list.map(normalizeZReport) : []));
 }
 
@@ -531,10 +527,10 @@ export function preserveHandoffSession(next: { sessionId: string; openingCash?: 
 export async function verifyManagerPin(pin: string): Promise<boolean> {
   const organizationId = resolveOrgId();
   try {
-    const data = await apiJson<{ valid?: boolean; ok?: boolean }>(
-      '/taquilla/manager-pin/verify',
-      { method: 'POST', body: JSON.stringify({ organizationId, pin }) },
-    );
+    const data = await apiJson<{ valid?: boolean; ok?: boolean }>('/taquilla/manager-pin/verify', {
+      method: 'POST',
+      body: JSON.stringify({ organizationId, pin }),
+    });
     return data.valid !== false && data.ok !== false;
   } catch {
     return false;
@@ -571,7 +567,7 @@ export function exchangeOrder(params: {
         sessionId,
         cashierId: getCashierId(),
       }),
-    }),
+    })
   );
 }
 
@@ -623,7 +619,7 @@ export async function syncOfflineSales(transactions: OfflinePosPayload[]) {
           checkoutData: { ...t.checkoutData, clientSaleId: t.clientSaleId },
         })),
       }),
-    },
+    }
   );
 }
 

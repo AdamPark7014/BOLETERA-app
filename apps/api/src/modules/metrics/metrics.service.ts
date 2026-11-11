@@ -39,7 +39,11 @@ const COMPLETED: OrderStatus = 'COMPLETED';
 export class MetricsService {
   constructor(private prisma: PrismaService) {}
 
-  private orderWhere(orgId: string, range: { from: Date; to: Date }, eventId?: string): Prisma.OrderWhereInput {
+  private orderWhere(
+    orgId: string,
+    range: { from: Date; to: Date },
+    eventId?: string
+  ): Prisma.OrderWhereInput {
     return {
       organizationId: orgId,
       ...(eventId ? { eventId } : {}),
@@ -72,7 +76,12 @@ export class MetricsService {
     const range = parseMetricsRange(params.from, params.to);
     const [current, previous, commissionRate] = await Promise.all([
       this.completedOrders(params.organizationId, range.from, range.to, params.eventId),
-      this.completedOrders(params.organizationId, range.comparisonFrom, range.comparisonTo, params.eventId),
+      this.completedOrders(
+        params.organizationId,
+        range.comparisonFrom,
+        range.comparisonTo,
+        params.eventId
+      ),
       this.orgCommissionRate(params.organizationId),
     ]);
 
@@ -85,19 +94,29 @@ export class MetricsService {
 
     const [completedCur, completedPrev, failedCur] = await Promise.all([
       this.prisma.order.count({
-        where: { ...this.orderWhere(params.organizationId, range, params.eventId), status: COMPLETED },
-      }),
-      this.prisma.order.count({
         where: {
-          ...this.orderWhere(params.organizationId, {
-            from: range.comparisonFrom,
-            to: range.comparisonTo,
-          }, params.eventId),
+          ...this.orderWhere(params.organizationId, range, params.eventId),
           status: COMPLETED,
         },
       }),
       this.prisma.order.count({
-        where: { ...this.orderWhere(params.organizationId, range, params.eventId), status: 'FAILED' },
+        where: {
+          ...this.orderWhere(
+            params.organizationId,
+            {
+              from: range.comparisonFrom,
+              to: range.comparisonTo,
+            },
+            params.eventId
+          ),
+          status: COMPLETED,
+        },
+      }),
+      this.prisma.order.count({
+        where: {
+          ...this.orderWhere(params.organizationId, range, params.eventId),
+          status: 'FAILED',
+        },
       }),
     ]);
     const conversionCur =
@@ -106,7 +125,10 @@ export class MetricsService {
 
     const channelMap = new Map<string, number>();
     for (const order of current) {
-      channelMap.set(order.channel, (channelMap.get(order.channel) ?? 0) + Number(order.totalAmount));
+      channelMap.set(
+        order.channel,
+        (channelMap.get(order.channel) ?? 0) + Number(order.totalAmount)
+      );
     }
 
     const revenueSeries = aggregateTimeSeries(
@@ -117,7 +139,7 @@ export class MetricsService {
       range.daysInPeriod <= 2 ? 'hour' : range.daysInPeriod <= 31 ? 'day' : 'week',
       'revenue',
       'Ingresos',
-      'mxn',
+      'mxn'
     );
 
     const paceFactor = range.daysElapsed / range.daysInPeriod;
@@ -131,21 +153,33 @@ export class MetricsService {
       kpis: {
         grossRevenue: buildKpi('grossRevenue', 'Ingresos brutos', cur.revenue, prev.revenue, 'mxn'),
         netRevenue: buildKpi('netRevenue', 'Ingresos netos', netCur, netPrev, 'mxn'),
-        ticketsSold: buildKpi('ticketsSold', 'Boletos vendidos', cur.tickets, prev.tickets, 'count'),
-        averageTicketPrice: buildKpi('averageTicketPrice', 'Ticket promedio', avgCur, avgPrev, 'mxn'),
+        ticketsSold: buildKpi(
+          'ticketsSold',
+          'Boletos vendidos',
+          cur.tickets,
+          prev.tickets,
+          'count'
+        ),
+        averageTicketPrice: buildKpi(
+          'averageTicketPrice',
+          'Ticket promedio',
+          avgCur,
+          avgPrev,
+          'mxn'
+        ),
         conversionRate: buildKpi(
           'conversionRate',
           'Tasa de conversión',
           Number((conversionCur * 100).toFixed(2)),
           Number((conversionPrev * 100).toFixed(2)),
-          'percent',
+          'percent'
         ),
         ordersCompleted: buildKpi(
           'ordersCompleted',
           'Órdenes completadas',
           completedCur,
           completedPrev,
-          'count',
+          'count'
         ),
       },
       revenueByChannel: buildBreakdown(
@@ -155,7 +189,7 @@ export class MetricsService {
           key,
           label: key,
           value,
-        })),
+        }))
       ),
       projection: {
         projectedGrossRevenue: paceFactor > 0 ? cur.revenue / paceFactor : cur.revenue,
@@ -196,11 +230,11 @@ export class MetricsService {
       const grossRevenue = event.orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
       const daysUntilEvent = Math.max(
         0,
-        Math.ceil((event.startsAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
+        Math.ceil((event.startsAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
       );
       const salesWindowDays = Math.max(
         1,
-        Math.ceil((event.startsAt.getTime() - event.createdAt.getTime()) / (24 * 60 * 60 * 1000)),
+        Math.ceil((event.startsAt.getTime() - event.createdAt.getTime()) / (24 * 60 * 60 * 1000))
       );
       const elapsedDays = Math.max(0, salesWindowDays - daysUntilEvent);
       const actualPace = totalCapacity > 0 ? ticketsSold / totalCapacity : 0;
@@ -268,7 +302,7 @@ export class MetricsService {
       sold += soldQuantity;
       const daysSince = Math.max(
         1,
-        (Date.now() - offer.event.createdAt.getTime()) / (24 * 60 * 60 * 1000),
+        (Date.now() - offer.event.createdAt.getTime()) / (24 * 60 * 60 * 1000)
       );
       const velocity = soldQuantity / daysSince;
       const daysToSellOut =
@@ -330,7 +364,7 @@ export class MetricsService {
     const prevBase = this.orderWhere(
       params.organizationId,
       { from: range.comparisonFrom, to: range.comparisonTo },
-      params.eventId,
+      params.eventId
     );
 
     const [statusGroups, completedCur, completedPrev, refunds, grossCur, grossPrev, paidOrders] =
@@ -353,7 +387,7 @@ export class MetricsService {
           params.organizationId,
           range.comparisonFrom,
           range.comparisonTo,
-          params.eventId,
+          params.eventId
         ),
         this.prisma.order.findMany({
           where: { ...base, status: COMPLETED, paymentId: { not: null } },
@@ -379,7 +413,7 @@ export class MetricsService {
       volumeByStatus: buildBreakdown(
         'status',
         'Órdenes por estado',
-        statusGroups.map((g) => ({ key: g.status, label: g.status, value: g._count })),
+        statusGroups.map((g) => ({ key: g.status, label: g.status, value: g._count }))
       ),
       paymentMethodBreakdown: buildBreakdown(
         'method',
@@ -388,7 +422,7 @@ export class MetricsService {
           key,
           label: key,
           value,
-        })),
+        }))
       ),
       kpis: {
         approvalRate: buildKpi(
@@ -396,17 +430,17 @@ export class MetricsService {
           'Tasa de aprobación',
           Number((approvalRate * 100).toFixed(2)),
           Number((approvalRate * 100).toFixed(2)),
-          'percent',
+          'percent'
         ),
-        refundRate: buildKpi(
-          'refundRate',
-          'Reembolsos',
-          refunds,
-          0,
-          'count',
-        ),
+        refundRate: buildKpi('refundRate', 'Reembolsos', refunds, 0, 'count'),
         chargebackCount: buildKpi('chargebackCount', 'Contracargos', 0, 0, 'count'),
-        completedOrders: buildKpi('completedOrders', 'Completadas', completedCur, completedPrev, 'count'),
+        completedOrders: buildKpi(
+          'completedOrders',
+          'Completadas',
+          completedCur,
+          completedPrev,
+          'count'
+        ),
         grossRevenue: buildKpi('grossRevenue', 'Ingresos', grossCurrent, grossPrevious, 'mxn'),
       },
       generatedAt: new Date().toISOString(),
@@ -447,7 +481,7 @@ export class MetricsService {
       range.daysInPeriod <= 2 ? 'hour' : 'day',
       'checkins',
       'Check-ins',
-      'count',
+      'count'
     );
 
     const zoneMap = new Map<string, number>();
@@ -471,7 +505,7 @@ export class MetricsService {
       trafficByAccessPoint: buildBreakdown(
         'zone',
         'Tráfico por punto de acceso',
-        Array.from(zoneMap.entries()).map(([key, value]) => ({ key, label: key, value })),
+        Array.from(zoneMap.entries()).map(([key, value]) => ({ key, label: key, value }))
       ),
       generatedAt: new Date().toISOString(),
     };
@@ -519,7 +553,7 @@ export class MetricsService {
           'day',
           'gmv',
           'GMV reventa',
-          'mxn',
+          'mxn'
         ),
       ],
       generatedAt: new Date().toISOString(),
@@ -545,8 +579,7 @@ export class MetricsService {
       conversionRate: 0,
     };
     const total = entries.length;
-    summary.conversionRate =
-      total > 0 ? Number(((summary.converted / total) * 100).toFixed(2)) : 0;
+    summary.conversionRate = total > 0 ? Number(((summary.converted / total) * 100).toFixed(2)) : 0;
 
     const eventMap = new Map<string, { label: string; value: number }>();
     for (const entry of entries) {
@@ -568,9 +601,27 @@ export class MetricsService {
         key: 'waitlist',
         label: 'Embudo lista de espera',
         stages: [
-          { key: 'pending', label: 'Pendientes', count: summary.pending, conversionFromPrevious: null, conversionFromTop: 100 },
-          { key: 'notified', label: 'Notificados', count: summary.notified, conversionFromPrevious: summary.pending > 0 ? summary.notified / summary.pending : 0, conversionFromTop: total > 0 ? (summary.notified / total) * 100 : 0 },
-          { key: 'converted', label: 'Convertidos', count: summary.converted, conversionFromPrevious: summary.notified > 0 ? summary.converted / summary.notified : 0, conversionFromTop: total > 0 ? (summary.converted / total) * 100 : 0 },
+          {
+            key: 'pending',
+            label: 'Pendientes',
+            count: summary.pending,
+            conversionFromPrevious: null,
+            conversionFromTop: 100,
+          },
+          {
+            key: 'notified',
+            label: 'Notificados',
+            count: summary.notified,
+            conversionFromPrevious: summary.pending > 0 ? summary.notified / summary.pending : 0,
+            conversionFromTop: total > 0 ? (summary.notified / total) * 100 : 0,
+          },
+          {
+            key: 'converted',
+            label: 'Convertidos',
+            count: summary.converted,
+            conversionFromPrevious: summary.notified > 0 ? summary.converted / summary.notified : 0,
+            conversionFromTop: total > 0 ? (summary.converted / total) * 100 : 0,
+          },
         ],
       },
       generatedAt: new Date().toISOString(),
@@ -626,8 +677,20 @@ export class MetricsService {
         key: 'campaigns',
         label: 'Embudo promocional',
         stages: [
-          { key: 'active', label: 'Promociones activas', count: promotions.length, conversionFromPrevious: null, conversionFromTop: 100 },
-          { key: 'used', label: 'Con uso', count: promotions.filter((p) => p.usageCount > 0).length, conversionFromPrevious: null, conversionFromTop: 0 },
+          {
+            key: 'active',
+            label: 'Promociones activas',
+            count: promotions.length,
+            conversionFromPrevious: null,
+            conversionFromTop: 100,
+          },
+          {
+            key: 'used',
+            label: 'Con uso',
+            count: promotions.filter((p) => p.usageCount > 0).length,
+            conversionFromPrevious: null,
+            conversionFromTop: 0,
+          },
         ],
       },
       generatedAt: new Date().toISOString(),
@@ -660,24 +723,23 @@ export class MetricsService {
       dateRange: range.dateRange,
       summary: {
         totalFlags: flags.length,
-        openFlags: flags.filter((f) => f.status === 'FLAGGED' || f.status === 'INVESTIGATING').length,
+        openFlags: flags.filter((f) => f.status === 'FLAGGED' || f.status === 'INVESTIGATING')
+          .length,
         criticalFlags: flags.filter((f) => f.severity === 'CRITICAL').length,
         averageRiskScore:
-          flags.length > 0
-            ? flags.reduce((s, f) => s + Number(f.score ?? 0), 0) / flags.length
-            : 0,
+          flags.length > 0 ? flags.reduce((s, f) => s + Number(f.score ?? 0), 0) / flags.length : 0,
         resolvedFlags: flags.filter((f) => f.status === 'RESOLVED').length,
         falsePositives: flags.filter((f) => f.status === 'FALSE_POSITIVE').length,
       },
       byType: buildBreakdown(
         'type',
         'Por tipo',
-        Array.from(byType.entries()).map(([key, value]) => ({ key, label: key, value })),
+        Array.from(byType.entries()).map(([key, value]) => ({ key, label: key, value }))
       ),
       bySeverity: buildBreakdown(
         'severity',
         'Por severidad',
-        Array.from(bySeverity.entries()).map(([key, value]) => ({ key, label: key, value })),
+        Array.from(bySeverity.entries()).map(([key, value]) => ({ key, label: key, value }))
       ),
       recentSignals: flags.slice(0, 20).map((f) => ({
         id: f.id,
@@ -723,14 +785,14 @@ export class MetricsService {
 
     const eventMap = new Map<string, number>();
     const orderRows = await this.prisma.order.findMany({
-      where: { ...this.orderWhere(params.organizationId, range, params.eventId), status: COMPLETED },
+      where: {
+        ...this.orderWhere(params.organizationId, range, params.eventId),
+        status: COMPLETED,
+      },
       select: { totalAmount: true, event: { select: { id: true, title: true } } },
     });
     for (const order of orderRows) {
-      eventMap.set(
-        order.event.id,
-        (eventMap.get(order.event.id) ?? 0) + Number(order.totalAmount),
-      );
+      eventMap.set(order.event.id, (eventMap.get(order.event.id) ?? 0) + Number(order.totalAmount));
     }
 
     return {
@@ -763,10 +825,12 @@ export class MetricsService {
     };
   }
 
-  async timeseries(params: RangeParams & {
-    granularity: MetricsGranularity;
-    metric: 'revenue' | 'orders' | 'tickets' | 'refunds' | 'checkins';
-  }): Promise<MetricsTimeSeriesResponse> {
+  async timeseries(
+    params: RangeParams & {
+      granularity: MetricsGranularity;
+      metric: 'revenue' | 'orders' | 'tickets' | 'refunds' | 'checkins';
+    }
+  ): Promise<MetricsTimeSeriesResponse> {
     const range = parseMetricsRange(params.from, params.to);
 
     if (params.metric === 'checkins') {
@@ -789,7 +853,7 @@ export class MetricsService {
             params.granularity,
             'checkins',
             'Check-ins',
-            'count',
+            'count'
           ),
         ],
         generatedAt: new Date().toISOString(),
@@ -815,7 +879,7 @@ export class MetricsService {
             params.granularity,
             'refunds',
             'Reembolsos',
-            'mxn',
+            'mxn'
           ),
         ],
         generatedAt: new Date().toISOString(),
@@ -846,7 +910,7 @@ export class MetricsService {
               Array.from({ length: o.items.reduce((s, i) => s + i.quantity, 0) }, () => ({
                 at: o.completedAt ?? o.createdAt,
                 value: 1,
-              })),
+              }))
             )
           : orders.map((o) => ({ at: o.createdAt, value: 1 }));
 
@@ -863,9 +927,7 @@ export class MetricsService {
       dateRange: range.dateRange,
       granularity: params.granularity,
       metric: params.metric,
-      series: [
-        aggregateTimeSeries(entries, params.granularity, params.metric, label, unit),
-      ],
+      series: [aggregateTimeSeries(entries, params.granularity, params.metric, label, unit)],
       generatedAt: new Date().toISOString(),
     };
   }
@@ -916,7 +978,7 @@ export class MetricsService {
         acc[alert.severity] += 1;
         return acc;
       },
-      { info: 0, warning: 0, critical: 0 },
+      { info: 0, warning: 0, critical: 0 }
     );
 
     return {
@@ -931,7 +993,7 @@ export class MetricsService {
   resolveOrganizationId(
     scopedOrgId: string | null | undefined,
     userOrgId: string | null | undefined,
-    queryOrgId?: string,
+    queryOrgId?: string
   ): string {
     const orgId = scopedOrgId ?? queryOrgId ?? userOrgId;
     if (!orgId) throw new BadRequestException('organizationId is required');

@@ -20,7 +20,7 @@ export type BanorteParsedStatus =
 export function verifyBanorteWebhookSignature(
   body: string,
   signature: string | undefined,
-  secret: string,
+  secret: string
 ): boolean {
   const isProd = process.env.NODE_ENV === 'production';
   if (!secret) {
@@ -90,22 +90,30 @@ export function parseBanorteStatusText(text: string): BanorteParsedStatus {
   const code = /\b(?:codigo respuesta|response code|cod resp)\s+([0-9]{1,3})\b/.exec(normalized);
   if (code) return Number(code[1]) === 0 ? 'completed' : 'declined';
 
-  if (['rechazada', 'rechazado', 'declined', 'denegada', 'denegado', 'failed'].some((t) =>
-    hasAffirmativeToken(normalized, t),
-  )) {
+  if (
+    ['rechazada', 'rechazado', 'declined', 'denegada', 'denegado', 'failed'].some((t) =>
+      hasAffirmativeToken(normalized, t)
+    )
+  ) {
     return 'declined';
   }
-  if (['expirada', 'expirado', 'expired', 'timeout'].some((t) => hasAffirmativeToken(normalized, t))) {
+  if (
+    ['expirada', 'expirado', 'expired', 'timeout'].some((t) => hasAffirmativeToken(normalized, t))
+  ) {
     return 'expired';
   }
-  if (['cancelada', 'cancelado', 'cancelled', 'canceled'].some((t) =>
-    hasAffirmativeToken(normalized, t),
-  )) {
+  if (
+    ['cancelada', 'cancelado', 'cancelled', 'canceled'].some((t) =>
+      hasAffirmativeToken(normalized, t)
+    )
+  ) {
     return 'cancelled';
   }
-  if (['aprobada', 'aprobado', 'approved', 'exitosa', 'exitoso'].some((t) =>
-    hasAffirmativeToken(normalized, t),
-  )) {
+  if (
+    ['aprobada', 'aprobado', 'approved', 'exitosa', 'exitoso'].some((t) =>
+      hasAffirmativeToken(normalized, t)
+    )
+  ) {
     return 'completed';
   }
   return 'pending';
@@ -118,9 +126,10 @@ export function parseBanorteStatusText(text: string): BanorteParsedStatus {
  * lo debido: el `Payment` se guardaba con el total ESPERADO de la orden, así que
  * un descuadre de liquidación era indetectable por construcción.
  */
-export function parseBanorteSettlement(
-  body: Record<string, unknown>,
-): { amount?: number; currency?: string } {
+export function parseBanorteSettlement(body: Record<string, unknown>): {
+  amount?: number;
+  currency?: string;
+} {
   const rawAmount = body.IMPORTE ?? body.importe ?? body.amount ?? body.monto;
   const amount = rawAmount === undefined ? undefined : Number(rawAmount);
 
@@ -139,7 +148,6 @@ export function parseBanorteSettlement(
     currency,
   };
 }
-
 
 /**
  * Comparación de cadenas en tiempo constante.

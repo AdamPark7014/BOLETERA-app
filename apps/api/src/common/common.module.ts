@@ -10,5 +10,3 @@ import { AuditService } from './audit.service';
   exports: [RedisService, AuditService],
 })
 export class CommonModule {}
-
-

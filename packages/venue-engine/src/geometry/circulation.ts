@@ -153,7 +153,7 @@ export function edgeFlowPerMinute(
     mapUnitsPerMeter?: number;
     flowPerMeterLevel?: number;
     flowPerMeterStair?: number;
-  },
+  }
 ): number {
   const scale = Math.max(opts?.mapUnitsPerMeter ?? 40, 1);
   const widthM = widthMap / scale;
@@ -186,7 +186,7 @@ function nearestSectionLevel(
   scene: ResolvedVenueScene,
   x: number,
   y: number,
-  maxDist: number,
+  maxDist: number
 ): string | undefined {
   let best: { id: string; d: number } | null = null;
   for (const sec of scene.sections) {
@@ -214,7 +214,7 @@ function nearestSectionLevel(
  */
 export function buildCirculationGraph(
   scene: ResolvedVenueScene,
-  options?: CirculationOptions,
+  options?: CirculationOptions
 ): CirculationGraph {
   const joinRadius = options?.joinRadius ?? 36;
   const defaultAisleWidth = options?.defaultAisleWidth ?? EGRESS_DEFAULTS.aisleWidth;
@@ -238,7 +238,7 @@ export function buildCirculationGraph(
     to: string,
     kind: CirculationEdge['kind'],
     length: number,
-    meta?: { width?: number; sourceId?: string },
+    meta?: { width?: number; sourceId?: string }
   ) => {
     if (from === to) return;
     const a = from < to ? from : to;
@@ -272,8 +272,7 @@ export function buildCirculationGraph(
     if (pts.length < 2) return;
     const w = aisle.width ?? defaultAisleWidth;
     const aisleLevel =
-      aisle.levelId ??
-      nearestSectionLevel(scene, pts[0][0], pts[0][1], joinRadius * 2.5);
+      aisle.levelId ?? nearestSectionLevel(scene, pts[0][0], pts[0][1], joinRadius * 2.5);
     const nodeIds: string[] = [];
     pts.forEach((p, pi) => {
       const id = `aisle:${aisle.id}:${pi}`;
@@ -286,7 +285,7 @@ export function buildCirculationGraph(
           levelId: aisleLevel,
           label: pi === 0 || pi === pts.length - 1 ? aisle.id : undefined,
         },
-        w,
+        w
       );
       nodeIds.push(id);
     });
@@ -305,8 +304,7 @@ export function buildCirculationGraph(
     if (pts.length < 2) return;
     const w = stair.width ?? defaultStairWidth;
     const inferR = Math.max(joinRadius * 3, 100);
-    const fromLevel =
-      stair.fromLevelId ?? nearestSectionLevel(scene, pts[0][0], pts[0][1], inferR);
+    const fromLevel = stair.fromLevelId ?? nearestSectionLevel(scene, pts[0][0], pts[0][1], inferR);
     const toLevel =
       stair.toLevelId ??
       nearestSectionLevel(scene, pts[pts.length - 1][0], pts[pts.length - 1][1], inferR);
@@ -321,7 +319,7 @@ export function buildCirculationGraph(
         levelId: fromLevel,
         label: stair.kind ?? 'stairs',
       },
-      w,
+      w
     );
     addNode(
       {
@@ -332,7 +330,7 @@ export function buildCirculationGraph(
         levelId: toLevel,
         label: stair.kind ?? 'stairs',
       },
-      w,
+      w
     );
     for (let i = 1; i < pts.length - 1; i++) {
       const midId = `stair:${stair.id}:${i}`;
@@ -346,14 +344,14 @@ export function buildCirculationGraph(
           y: pts[i][1],
           levelId: t < 0.5 ? fromLevel : toLevel,
         },
-        w,
+        w
       );
       addEdge(
         `stair:${stair.id}:${i - 1}`,
         midId,
         'stair',
         dist(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]),
-        { width: w, sourceId: stair.id },
+        { width: w, sourceId: stair.id }
       );
     }
     if (pts.length === 2) {
@@ -367,9 +365,9 @@ export function buildCirculationGraph(
           pts[pts.length - 2][0],
           pts[pts.length - 2][1],
           pts[pts.length - 1][0],
-          pts[pts.length - 1][1],
+          pts[pts.length - 1][1]
         ),
-        { width: w, sourceId: stair.id },
+        { width: w, sourceId: stair.id }
       );
     }
   });
@@ -388,7 +386,7 @@ export function buildCirculationGraph(
           levelId: exit.levelId,
           label: exit.label ?? exit.id,
         },
-        w,
+        w
       );
       return;
     }
@@ -404,7 +402,7 @@ export function buildCirculationGraph(
           levelId: exit.levelId,
           label: pi === 0 ? (exit.label ?? exit.id) : undefined,
         },
-        w,
+        w
       );
       nodeIds.push(id);
     });
@@ -430,8 +428,7 @@ export function buildCirculationGraph(
       if (d <= joinRadius) {
         const wa = nodeWidth.get(a.id);
         const wb = nodeWidth.get(b.id);
-        const w =
-          wa != null && wb != null ? Math.min(wa, wb) : (wa ?? wb ?? defaultAisleWidth);
+        const w = wa != null && wb != null ? Math.min(wa, wb) : (wa ?? wb ?? defaultAisleWidth);
         addEdge(a.id, b.id, 'link', Math.max(d, 0.01), { width: w });
       }
     }
@@ -458,7 +455,7 @@ function buildWeightedAdj(edges: CirculationEdge[]): WeightedAdj {
 /** Dijkstra from seeds; returns distance + predecessor for path reconstruction. */
 function shortestPaths(
   seeds: string[],
-  adj: WeightedAdj,
+  adj: WeightedAdj
 ): {
   dist: Map<string, number>;
   prevNode: Map<string, string>;
@@ -498,7 +495,7 @@ function shortestPaths(
 function reconstructPath(
   target: string,
   prevNode: Map<string, string>,
-  prevEdge: Map<string, string>,
+  prevEdge: Map<string, string>
 ): { nodeIds: string[]; edgeIds: string[] } {
   const nodeIds: string[] = [];
   const edgeIds: string[] = [];
@@ -534,14 +531,13 @@ function emptyEgress(): EgressMetrics {
  */
 export function analyzeCirculation(
   scene: ResolvedVenueScene,
-  options?: CirculationOptions,
+  options?: CirculationOptions
 ): CirculationAnalysis {
   const accessRadius = options?.accessRadius ?? 80;
   const seatsPerWidthUnit = options?.seatsPerWidthUnit ?? EGRESS_DEFAULTS.seatsPerWidthUnit;
   const defaultAisleWidth = options?.defaultAisleWidth ?? EGRESS_DEFAULTS.aisleWidth;
   const mapUnitsPerMeter =
-    options?.mapUnitsPerMeter ??
-    (scene.scale != null && scene.scale > 1 ? scene.scale : 40);
+    options?.mapUnitsPerMeter ?? (scene.scale != null && scene.scale > 1 ? scene.scale : 40);
   const walkSpeedMps = options?.walkSpeedMps ?? EGRESS_DEFAULTS.walkSpeedMps;
   const flowOpts = {
     mapUnitsPerMeter,
@@ -558,7 +554,7 @@ export function analyzeCirculation(
     to: string,
     kind: CirculationEdge['kind'],
     length: number,
-    meta?: { width?: number; sourceId?: string },
+    meta?: { width?: number; sourceId?: string }
   ) => {
     if (from === to) return;
     const a = from < to ? from : to;
@@ -579,7 +575,7 @@ export function analyzeCirculation(
   const network = nodes.filter((n) => n.kind !== 'section');
   const exitNodes = nodes.filter((n) => n.kind === 'exit');
   const hasNetwork = network.some(
-    (n) => n.kind === 'aisle' || n.kind === 'stair' || n.kind === 'exit',
+    (n) => n.kind === 'aisle' || n.kind === 'stair' || n.kind === 'exit'
   );
 
   for (const sec of scene.sections) {
@@ -745,12 +741,14 @@ export function analyzeCirculation(
           clearanceMinutes,
         };
       })
-      .filter((b) => b.kind === 'aisle' || b.kind === 'stair' || b.kind === 'link' || b.kind === 'exit')
+      .filter(
+        (b) => b.kind === 'aisle' || b.kind === 'stair' || b.kind === 'link' || b.kind === 'exit'
+      )
       .sort(
         (a, b) =>
           Number(b.overCapacity) - Number(a.overCapacity) ||
           b.clearanceMinutes - a.clearanceMinutes ||
-          b.utilization - a.utilization,
+          b.utilization - a.utilization
       )
       .slice(0, 8);
 
@@ -761,7 +759,7 @@ export function analyzeCirculation(
         const width = e.width ?? defaultAisleWidth;
         const flow = edgeFlowPerMinute(width, e.kind, flowOpts);
         return [edgeId, load.seats / flow] as const;
-      }),
+      })
     );
 
     let maxWalk: number | null = null;
@@ -823,10 +821,7 @@ export function analyzeCirculation(
 }
 
 /** Untagged nodes stay visible (same rule as 2D level filters). */
-export function circulationNodeTouchesLevel(
-  node: CirculationNode,
-  levelId?: string,
-): boolean {
+export function circulationNodeTouchesLevel(node: CirculationNode, levelId?: string): boolean {
   if (!levelId) return true;
   if (!node.levelId) return true;
   return node.levelId === levelId;
@@ -838,7 +833,7 @@ export function circulationNodeTouchesLevel(
  */
 export function filterCirculationGraph(
   graph: CirculationGraph,
-  levelId?: string,
+  levelId?: string
 ): CirculationGraph {
   if (!levelId) return graph;
   const byId = new Map(graph.nodes.map((n) => [n.id, n]));

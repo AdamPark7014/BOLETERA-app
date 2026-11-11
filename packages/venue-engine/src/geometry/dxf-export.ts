@@ -72,7 +72,7 @@ export function exportSeatMapToDxf(input: SeatMapData | null | undefined): strin
         name: l.name,
         elevation: l.elevation,
         zIndex: l.zIndex,
-      })),
+      }))
     );
     // Chunk if needed — TEXT code 1 is typically one line; keep compact.
     entities.push(text(layerName('BOLETERA_LEVELS'), [0, -40], payload.slice(0, 250), 1));
@@ -94,7 +94,7 @@ export function exportSeatMapToDxf(input: SeatMapData | null | undefined): strin
   for (const aisle of map.venue?.aisles ?? []) {
     if (aisle.points.length >= 2) {
       entities.push(
-        lwpolyline(encodeDxfLayer('AISLE', { levelId: aisle.levelId }), aisle.points, false),
+        lwpolyline(encodeDxfLayer('AISLE', { levelId: aisle.levelId }), aisle.points, false)
       );
     }
   }
@@ -102,7 +102,7 @@ export function exportSeatMapToDxf(input: SeatMapData | null | undefined): strin
   for (const obs of map.venue?.obstacles ?? []) {
     if (obs.points.length >= 2) {
       entities.push(
-        lwpolyline(encodeDxfLayer('OBSTACLE', { levelId: obs.levelId }), obs.points, true),
+        lwpolyline(encodeDxfLayer('OBSTACLE', { levelId: obs.levelId }), obs.points, true)
       );
     }
   }
@@ -122,8 +122,8 @@ export function exportSeatMapToDxf(input: SeatMapData | null | undefined): strin
             toLevelId: stair.toLevelId,
           }),
           stair.points,
-          false,
-        ),
+          false
+        )
       );
     }
   }
@@ -177,20 +177,20 @@ export function exportSeatMapToDxf(input: SeatMapData | null | undefined): strin
     ...((map.venue?.aisles ?? []).map((a) => encodeDxfLayer('AISLE', { levelId: a.levelId })) ??
       []),
     ...((map.venue?.obstacles ?? []).map((o) =>
-      encodeDxfLayer('OBSTACLE', { levelId: o.levelId }),
+      encodeDxfLayer('OBSTACLE', { levelId: o.levelId })
     ) ?? []),
     ...((map.venue?.stairs ?? []).map((s) =>
       encodeDxfLayer(
         s.kind === 'vomitoria' ? 'STAIRS_VOMITOR' : s.kind === 'ramp' ? 'STAIRS_RAMP' : 'STAIRS',
-        { fromLevelId: s.fromLevelId, toLevelId: s.toLevelId },
-      ),
+        { fromLevelId: s.fromLevelId, toLevelId: s.toLevelId }
+      )
     ) ?? []),
     ...((map.venue?.exits ?? []).map((e) => encodeDxfLayer('EXIT', { levelId: e.levelId })) ?? []),
     ...((map.venue?.furniture ?? []).map((f) =>
-      encodeDxfLayer(`FURN_${f.type}`, { levelId: f.levelId }),
+      encodeDxfLayer(`FURN_${f.type}`, { levelId: f.levelId })
     ) ?? []),
     ...((map.venue?.focusPoints ?? []).map((f) =>
-      encodeDxfLayer(f.label ? `FOCUS_${f.label}` : 'FOCUS', { levelId: f.levelId }),
+      encodeDxfLayer(f.label ? `FOCUS_${f.label}` : 'FOCUS', { levelId: f.levelId })
     ) ?? []),
     ...map.sections.flatMap((s) => [
       encodeDxfLayer(`SECTION_${s.slug || s.name || s.id}`, { levelId: s.levelId }),
@@ -200,20 +200,7 @@ export function exportSeatMapToDxf(input: SeatMapData | null | undefined): strin
 
   const tableLayers: string[] = [];
   for (const name of [...new Set(layers)]) {
-    tableLayers.push(
-      pairs([
-        0,
-        'LAYER',
-        2,
-        name,
-        70,
-        0,
-        62,
-        7,
-        6,
-        'CONTINUOUS',
-      ]),
-    );
+    tableLayers.push(pairs([0, 'LAYER', 2, name, 70, 0, 62, 7, 6, 'CONTINUOUS']));
   }
 
   const header = pairs([
@@ -244,9 +231,17 @@ export function exportSeatMapToDxf(input: SeatMapData | null | undefined): strin
   ]);
 
   const tablesEnd = pairs([0, 'ENDTAB', 0, 'ENDSEC']);
-  const ents = ['0', 'SECTION', '2', 'ENTITIES', ...entities.filter(Boolean), '0', 'ENDSEC', '0', 'EOF'].join(
-    '\n',
-  );
+  const ents = [
+    '0',
+    'SECTION',
+    '2',
+    'ENTITIES',
+    ...entities.filter(Boolean),
+    '0',
+    'ENDSEC',
+    '0',
+    'EOF',
+  ].join('\n');
 
   return [header, tableLayers.join('\n'), tablesEnd, ents].filter(Boolean).join('\n');
 }

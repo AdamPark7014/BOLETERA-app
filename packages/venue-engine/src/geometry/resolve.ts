@@ -1,4 +1,11 @@
-import type { SeatMapBounds, SeatMapData, SeatMapExit, SeatMapSeat, SeatMapVenueMeta, SeatVisibility } from '@boletera/shared';
+import type {
+  SeatMapBounds,
+  SeatMapData,
+  SeatMapExit,
+  SeatMapSeat,
+  SeatMapVenueMeta,
+  SeatVisibility,
+} from '@boletera/shared';
 import { generateBlock } from './generators';
 import { migrateToV3 } from './migrate';
 import type { ResolvedSeat, ResolvedSection, ResolvedVenueScene } from './types';
@@ -87,10 +94,16 @@ function resolveSeatPose(
   seat: SeatMapSeat,
   section: { rake?: number; levelId?: string },
   rowIndex: number,
-  levelElevation = 0,
-): Pick<ResolvedSeat, 'position' | 'rotation3d' | 'elevation' | 'x' | 'y' | 'rotation' | 'coord3d'> {
+  levelElevation = 0
+): Pick<
+  ResolvedSeat,
+  'position' | 'rotation3d' | 'elevation' | 'x' | 'y' | 'rotation' | 'coord3d'
+> {
   const yaw = seat.rotation3d?.y ?? seat.rotation ?? 0;
-  const pitch = seat.rotation3d?.x ?? seat.coord3d?.pitch ?? (section.rake ? Math.min(18, section.rake * 2.2) : 0);
+  const pitch =
+    seat.rotation3d?.x ??
+    seat.coord3d?.pitch ??
+    (section.rake ? Math.min(18, section.rake * 2.2) : 0);
   const roll = seat.rotation3d?.z ?? seat.coord3d?.roll ?? 0;
 
   let elevation =
@@ -150,7 +163,7 @@ export function resolveGeometry(raw: unknown): ResolvedVenueScene {
           seatPitch: block.seatPitch || sec.seatPitch || 26,
           rowPitch: block.rowPitch || sec.rowPitch || 28,
           curvature: block.curvature ?? sec.curvature,
-        }),
+        })
       );
     }
     return { ...sec, seats };
@@ -255,13 +268,7 @@ export function sceneToSeatMapData(scene: ResolvedVenueScene): SeatMapData {
     sections: scene.sections.map((sec) => {
       const original = scene.map.sections.find((s) => s.id === sec.id);
       const seats = (bySection.get(sec.id) ?? []).map((s) => {
-        const {
-          sectionId: _a,
-          sectionName: _b,
-          sectionColor: _c,
-          rowIndex: _d,
-          ...rest
-        } = s;
+        const { sectionId: _a, sectionName: _b, sectionColor: _c, rowIndex: _d, ...rest } = s;
         return rest;
       });
       return {

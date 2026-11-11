@@ -18,7 +18,7 @@ export const PermissionKey = {
 export type PermissionKeyValue = (typeof PermissionKey)[keyof typeof PermissionKey];
 
 export const CORE_PERMISSION_KEYS = Object.freeze(
-  Object.values(PermissionKey) as PermissionKeyValue[],
+  Object.values(PermissionKey) as PermissionKeyValue[]
 );
 
 export const PERMISSION_LABELS: Record<PermissionKeyValue, string> = {

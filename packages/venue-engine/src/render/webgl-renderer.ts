@@ -201,7 +201,7 @@ export class WebGlSeatRenderer {
     camera: Camera,
     visible: Uint32Array,
     visibleCount: number,
-    clearCss: string,
+    clearCss: string
   ): void {
     const gl = this.gl;
     const buf = camera.bufferSize();

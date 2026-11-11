@@ -472,28 +472,30 @@ export class HttpExceptionFilter implements ExceptionFilter {
 ## 📋 Deployment Architecture
 
 ### Development (Docker Compose)
+
 ```yaml
 version: '3.8'
 services:
   api:
     build: ./apps/api
-    ports: ["3001:3001"]
+    ports: ['3001:3001']
     environment:
       DATABASE_URL: postgresql://user:pass@postgres:5432/boletera
       REDIS_URL: redis://redis:6379
-  
+
   postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_PASSWORD: password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-  
+
   redis:
     image: redis:7-alpine
 ```
 
 ### Production (Kubernetes)
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -510,21 +512,21 @@ spec:
         app: boletera-api
     spec:
       containers:
-      - name: api
-        image: boletera:v1.0
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-secret
-              key: connection-string
+        - name: api
+          image: boletera:v1.0
+          resources:
+            requests:
+              memory: '512Mi'
+              cpu: '250m'
+            limits:
+              memory: '1Gi'
+              cpu: '500m'
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: connection-string
 ```
 
 ---
@@ -532,12 +534,14 @@ spec:
 ## 📊 Monitoring & Observability
 
 ### Logging Strategy
+
 - **INFO:** User actions, successful operations
 - **WARN:** Unusual patterns, potential fraud
 - **ERROR:** Failed operations, exceptions
 - **DEBUG:** Detailed diagnostics (dev only)
 
 ### Key Metrics to Track
+
 - API response times (p50, p95, p99)
 - Error rates by endpoint
 - Database query times

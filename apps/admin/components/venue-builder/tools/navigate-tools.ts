@@ -74,18 +74,13 @@ export function createZoomTool(): Tool {
     onPointerUp: (ctx, event) => {
       if (!anchor) return;
       const rect = rectFromPoints(anchor, event.world);
-      const spanScreen = Math.max(
-        Math.abs(rect.maxX - rect.minX),
-        Math.abs(rect.maxY - rect.minY),
-      ) * ctx.renderer.camera.zoom;
+      const spanScreen =
+        Math.max(Math.abs(rect.maxX - rect.minX), Math.abs(rect.maxY - rect.minY)) *
+        ctx.renderer.camera.zoom;
       if (spanScreen > 16) {
         ctx.renderer.camera.fitToBounds(rect, 32, true);
       } else {
-        ctx.renderer.camera.zoomAtScreen(
-          event.screen,
-          event.alt ? 1 / ZOOM_STEP : ZOOM_STEP,
-          true,
-        );
+        ctx.renderer.camera.zoomAtScreen(event.screen, event.alt ? 1 / ZOOM_STEP : ZOOM_STEP, true);
       }
       finish(ctx);
     },

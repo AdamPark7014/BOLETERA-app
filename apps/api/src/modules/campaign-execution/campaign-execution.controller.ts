@@ -21,7 +21,7 @@ export class CampaignExecutionController {
   async createCampaign(
     @Param('organizationId') orgId: string,
     @Param('eventId') eventId: string,
-    @Body() data: CreateCampaignDto,
+    @Body() data: CreateCampaignDto
   ) {
     return await this.campaignService.createCampaign(orgId, eventId, assertCreateCampaign(data));
   }
@@ -120,7 +120,7 @@ export class CampaignExecutionController {
   @ApiOperation({ summary: 'Award loyalty points' })
   async awardPoints(
     @Param('userId') userId: string,
-    @Body() data: { eventId: string; points: number },
+    @Body() data: { eventId: string; points: number }
   ) {
     return await this.campaignService.awardLoyaltyPoints(userId, data.eventId, data.points);
   }

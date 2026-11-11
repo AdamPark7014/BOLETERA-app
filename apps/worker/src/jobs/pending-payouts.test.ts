@@ -61,7 +61,7 @@ describe('reportPendingPayouts', () => {
 
     assert.equal(
       logger.infos[0],
-      'Payouts pending (manual settlement required): 1 — WORKER_AUTO_PAYOUT ignored until bank rail exists',
+      'Payouts pending (manual settlement required): 1 — WORKER_AUTO_PAYOUT ignored until bank rail exists'
     );
   });
 

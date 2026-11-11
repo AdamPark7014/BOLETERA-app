@@ -5,13 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { FilterSelection } from '@boletera/ui';
 import type { HealthStatus, MapFilter, ViewMode } from './types';
 
-const HEALTH_VALUES = new Set<HealthStatus>([
-  'ok',
-  'warn',
-  'critical',
-  'no-network',
-  'empty',
-]);
+const HEALTH_VALUES = new Set<HealthStatus>(['ok', 'warn', 'critical', 'no-network', 'empty']);
 
 const MAP_VALUES = new Set<MapFilter>(['with', 'without']);
 
@@ -89,13 +83,10 @@ export function useVenuesUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
-  const setSearch = useCallback(
-    (q: string) => replaceParams({ q: q || null }),
-    [replaceParams],
-  );
+  const setSearch = useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]);
 
   const setFilterSelection = useCallback(
     (selection: FilterSelection) => {
@@ -105,17 +96,17 @@ export function useVenuesUrlState() {
         city: selection.city?.length ? selection.city.join(',') : null,
       });
     },
-    [replaceParams],
+    [replaceParams]
   );
 
   const setView = useCallback(
     (view: ViewMode) => replaceParams({ view: view === 'table' ? null : view }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setSelectedId = useCallback(
     (venueId: string | null) => replaceParams({ venue: venueId }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const clearFilters = useCallback(() => {

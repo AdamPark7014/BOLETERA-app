@@ -149,7 +149,7 @@ export class Camera {
         zoom,
       },
       animate,
-      280,
+      280
     );
   }
 

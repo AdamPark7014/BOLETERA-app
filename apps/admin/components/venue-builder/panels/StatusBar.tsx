@@ -49,7 +49,10 @@ export const StatusBar = memo(function StatusBar() {
       {busy && (
         <span className={styles.statusItem}>
           <span className={styles.busyBar}>
-            <span className={styles.busyFill} style={{ width: `${Math.round(busy.progress * 100)}%` }} />
+            <span
+              className={styles.busyFill}
+              style={{ width: `${Math.round(busy.progress * 100)}%` }}
+            />
           </span>
           {busy.label}
         </span>
@@ -60,11 +63,13 @@ export const StatusBar = memo(function StatusBar() {
       <span className={styles.toolbarSpacer} />
 
       <span className={styles.statusItem} title="Asientos seleccionados">
-        Sel. <strong className={styles.statusStrong}>{selectionCount.toLocaleString('es-MX')}</strong>
+        Sel.{' '}
+        <strong className={styles.statusStrong}>{selectionCount.toLocaleString('es-MX')}</strong>
       </span>
       <span className={styles.statusItem} title="Zonas · asientos totales">
         {sectionCount} zonas ·{' '}
-        <strong className={styles.statusStrong}>{totalSeats.toLocaleString('es-MX')}</strong> asientos
+        <strong className={styles.statusStrong}>{totalSeats.toLocaleString('es-MX')}</strong>{' '}
+        asientos
       </span>
       <span className={styles.statusItem} title="Asientos dibujados / descartados por culling">
         {(stats?.seatsDrawn ?? 0).toLocaleString('es-MX')} vis ·{' '}
@@ -77,7 +82,9 @@ export const StatusBar = memo(function StatusBar() {
       <span className={styles.statusItem} title="Cuadros por segundo del motor">
         <strong className={styles.statusStrong}>{Math.round(stats?.fps ?? 0)}</strong> fps
       </span>
-      <span className={styles.statusItem}>{stats?.backend === 'webgl2' ? 'WebGL2' : 'Canvas2D'}</span>
+      <span className={styles.statusItem}>
+        {stats?.backend === 'webgl2' ? 'WebGL2' : 'Canvas2D'}
+      </span>
     </footer>
   );
 });

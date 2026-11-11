@@ -22,19 +22,13 @@ export async function generateMetadata({
   });
 }
 
-export default async function CiudadPage({
-  params,
-}: {
-  params: Promise<{ city: string }>;
-}) {
+export default async function CiudadPage({ params }: { params: Promise<{ city: string }> }) {
   const { city: raw } = await params;
   const city = decodeURIComponent(raw);
   let events: EventHit[] = [];
   let failed = false;
   try {
-    events = await api<EventHit[]>(
-      `/discovery/events?city=${encodeURIComponent(city)}&limit=60`,
-    );
+    events = await api<EventHit[]>(`/discovery/events?city=${encodeURIComponent(city)}&limit=60`);
   } catch {
     failed = true;
   }

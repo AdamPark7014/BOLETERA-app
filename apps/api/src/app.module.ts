@@ -12,15 +12,15 @@ import {
   PrismaModule,
   CommonModule,
   TenantModule,
-  AuthModule, 
-  DiscoveryModule, 
-  InventoryModule, 
-  PricingModule, 
-  OrdersModule, 
-  PaymentModule, 
-  ResaleModule, 
-  FraudModule, 
-  AnalyticsModule, 
+  AuthModule,
+  DiscoveryModule,
+  InventoryModule,
+  PricingModule,
+  OrdersModule,
+  PaymentModule,
+  ResaleModule,
+  FraudModule,
+  AnalyticsModule,
   AdminModule,
   NotificationModule,
   AccessModule,
@@ -84,20 +84,22 @@ class ResilientThrottlerStorage implements ThrottlerStorage {
     ttl: number,
     limit: number,
     blockDuration: number,
-    throttlerName: string,
+    throttlerName: string
   ) {
     try {
       const record = await this.delegate.increment(key, ttl, limit, blockDuration, throttlerName);
       if (this.degraded) {
         this.degraded = false;
-        throttlerLogger.log('Redis recuperado: el rate limiting vuelve a ser global entre réplicas.');
+        throttlerLogger.log(
+          'Redis recuperado: el rate limiting vuelve a ser global entre réplicas.'
+        );
       }
       return record;
     } catch (error) {
       this.degraded = true;
       this.warnDegraded(
         `Redis no responde al contar peticiones (${(error as Error).message}). ` +
-          'El rate limiting queda ABIERTO mientras dure el fallo.',
+          'El rate limiting queda ABIERTO mientras dure el fallo.'
       );
       return {
         totalHits: 1,
@@ -125,7 +127,7 @@ async function createThrottlerStorage(): Promise<ThrottlerStorage | undefined> {
   if (!url) {
     throttlerLogger.warn(
       'REDIS_URL no está definido — rate limiting DEGRADADO a memoria del proceso. ' +
-        'Con varias réplicas el límite real es N veces el configurado.',
+        'Con varias réplicas el límite real es N veces el configurado.'
     );
     return undefined;
   }
@@ -163,7 +165,7 @@ async function createThrottlerStorage(): Promise<ThrottlerStorage | undefined> {
     throttlerLogger.warn(
       `Redis no disponible para el rate limiting (${(error as Error).message}) — ` +
         'DEGRADANDO a memoria del proceso. El límite deja de ser global entre réplicas ' +
-        'y el límite de login pierde eficacia como defensa de fuerza bruta.',
+        'y el límite de login pierde eficacia como defensa de fuerza bruta.'
     );
     return undefined;
   }
@@ -204,9 +206,13 @@ async function createThrottlerOptions(): Promise<ThrottlerModuleOptions> {
   };
 }
 
-
 /** Descompone REDIS_URL en host/puerto/credenciales para poder añadir opciones. */
-function parseRedisUrl(raw?: string): { host: string; port: number; password?: string; db?: number } {
+function parseRedisUrl(raw?: string): {
+  host: string;
+  port: number;
+  password?: string;
+  db?: number;
+} {
   const fallback = { host: '127.0.0.1', port: 6379 };
   if (!raw) return fallback;
   try {
@@ -228,11 +234,7 @@ function parseRedisUrl(raw?: string): { host: string; port: number; password?: s
     // Config
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        '.env.local',
-        '.env',
-        '../../.env',
-      ],
+      envFilePath: ['.env.local', '.env', '../../.env'],
     }),
     // forRootAsync porque el almacén de Redis se resuelve en el arranque y
     // puede degradar a memoria. Dos niveles: sostenido (120/min, generoso para
@@ -243,7 +245,7 @@ function parseRedisUrl(raw?: string): { host: string; port: number; password?: s
       useFactory: createThrottlerOptions,
     }),
 
-  CommonModule,
+    CommonModule,
     TenantModule,
     PrismaModule,
     /**
@@ -276,7 +278,7 @@ function parseRedisUrl(raw?: string): { host: string; port: number; password?: s
         connectTimeout: 2_000,
       },
     }),
-    
+
     // Core Modules
     AuthModule,
     DiscoveryModule,
@@ -314,5 +316,3 @@ function parseRedisUrl(raw?: string): { host: string; port: number; password?: s
   exports: [AppService],
 })
 export class AppModule {}
-
-

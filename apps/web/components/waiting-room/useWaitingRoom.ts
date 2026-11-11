@@ -124,7 +124,7 @@ export function useWaitingRoom(eventId: string): WaitingRoomState {
       if (typeof document !== 'undefined' && document.hidden) return;
       timerRef.current = setTimeout(() => runTickRef.current(), delayMs);
     },
-    [clearTimer],
+    [clearTimer]
   );
 
   const memberId = useCallback(() => {
@@ -189,10 +189,7 @@ export function useWaitingRoom(eventId: string): WaitingRoomState {
       }
 
       setConnectionIssue('offline');
-      backoffRef.current = Math.min(
-        Math.max(backoffRef.current * 2, POLL_FAR_MS),
-        BACKOFF_MAX_MS,
-      );
+      backoffRef.current = Math.min(Math.max(backoffRef.current * 2, POLL_FAR_MS), BACKOFF_MAX_MS);
       schedule(backoffRef.current);
     }
   }, [clearTimer, eventId, memberId, schedule]);
@@ -293,7 +290,7 @@ export function useWaitingRoom(eventId: string): WaitingRoomState {
     inQueueRef.current = false;
     setPass(null);
     setNotice(
-      'Tu pase de la sala de espera ya no era válido, así que no pudimos apartar esos lugares. Te devolvimos a la fila: en cuanto sea tu turno podrás elegir otra vez.',
+      'Tu pase de la sala de espera ya no era válido, así que no pudimos apartar esos lugares. Te devolvimos a la fila: en cuanto sea tu turno podrás elegir otra vez.'
     );
     setPhase('queued');
     void tick();

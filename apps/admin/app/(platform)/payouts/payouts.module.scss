@@ -140,7 +140,9 @@
   border: none;
   border-radius: var(--bl-radius-sm);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   &:hover {
     color: var(--bl-text-primary);
@@ -499,7 +501,9 @@
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--bl-gray-900);
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px var(--bl-gray-900);
   }
 }
 

@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  SeatMapViewer,
-  type SelectedSeatInfo,
-} from '@/components/SeatMapViewer';
+import { SeatMapViewer, type SelectedSeatInfo } from '@/components/SeatMapViewer';
 import {
   describeInventoryError,
   describeNetworkError,
@@ -13,11 +10,7 @@ import {
 } from '@/components/seatmap/errors';
 import { ensureGuestSession, renewGuestSession } from '@/components/seatmap/session';
 import { HoldErrorNotice } from '@/components/seatmap/HoldErrorNotice';
-import {
-  flatSeats,
-  normalizeSeatMap,
-  resolveOfferForSection,
-} from '@boletera/venue-engine';
+import { flatSeats, normalizeSeatMap, resolveOfferForSection } from '@boletera/venue-engine';
 import type { Venue3DViewerProps } from '@boletera/venue-3d';
 import { Money, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { useCartStore, type CartOfferLine } from '@/lib/cart-store';
@@ -98,7 +91,7 @@ export function EventPurchaseClient({
   const [selected, setSelected] = useState<string[]>([]);
   const [view3d, setView3d] = useState(false);
   const [Venue3DViewer, setVenue3DViewer] = useState<ComponentType<Venue3DViewerProps> | null>(
-    null,
+    null
   );
   const [viewer3dError, setViewer3dError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -121,15 +114,17 @@ export function EventPurchaseClient({
       return (
         offers.find(
           (o) =>
-            o.zone.toLowerCase() === needle ||
-            (o.name && o.name.toLowerCase().includes(needle)),
+            o.zone.toLowerCase() === needle || (o.name && o.name.toLowerCase().includes(needle))
         ) ?? null
       );
     }
     // Prefer an offer that matches published sections (skip stale orphan zones).
     for (const sec of normalized.sections) {
       const match = resolveOfferForSection(offers, sec.slug, sec.name);
-      if (match && (match.zone === sec.slug || match.name === sec.name || match.zone === sec.name)) {
+      if (
+        match &&
+        (match.zone === sec.slug || match.name === sec.name || match.zone === sec.name)
+      ) {
         return match;
       }
       const bySlug = offers.find((o) => o.zone.toLowerCase() === sec.slug.toLowerCase());
@@ -225,10 +220,9 @@ export function EventPurchaseClient({
         color: '#17171A',
         price: offer ? Number(offer.basePrice) : undefined,
         levelId: seat.levelId,
-        status:
-          seat.visibility?.blocked
-            ? ('blocked' as const)
-            : (seats3dStatus[seat.id] as 'available' | 'held' | 'sold' | 'blocked') || 'available',
+        status: seat.visibility?.blocked
+          ? ('blocked' as const)
+          : (seats3dStatus[seat.id] as 'available' | 'held' | 'sold' | 'blocked') || 'available',
       };
     });
   }, [seats2d, normalized.sections, offers, seats3dStatus]);
@@ -265,7 +259,7 @@ export function EventPurchaseClient({
               if (!info.offerId) return map;
               map.set(info.offerId, (map.get(info.offerId) ?? 0) + 1);
               return map;
-            }, new Map<string, number>()),
+            }, new Map<string, number>())
           ).map(([offerId, quantity]) => ({ offerId, quantity }))
         : focusedOffer
           ? [{ offerId: focusedOffer.id, quantity: qty }]
@@ -306,10 +300,7 @@ export function EventPurchaseClient({
     });
   }
 
-  function groupLines(
-    infos: SelectedSeatInfo[],
-    holdBySeat: Map<string, string>,
-  ): CartOfferLine[] {
+  function groupLines(infos: SelectedSeatInfo[], holdBySeat: Map<string, string>): CartOfferLine[] {
     const byOffer = new Map<string, CartOfferLine>();
     for (const info of infos) {
       const holdId = holdBySeat.get(info.seatId);
@@ -397,7 +388,7 @@ export function EventPurchaseClient({
       }
       throw describeInventoryError(500);
     },
-    [getQueuePass, onQueueRejected],
+    [getQueuePass, onQueueRejected]
   );
 
   /** Un 409 no puede dejar al comprador mirando un spinner: se marca y se sigue. */
@@ -466,8 +457,7 @@ export function EventPurchaseClient({
           staleMap: true,
         };
       }
-      const expiresAt =
-        holdData.expiresAt ?? new Date(Date.now() + 900_000).toISOString();
+      const expiresAt = holdData.expiresAt ?? new Date(Date.now() + 900_000).toISOString();
       goCheckout(lines, expiresAt);
     } catch (e) {
       handleHoldFailure(e);
@@ -482,9 +472,7 @@ export function EventPurchaseClient({
     setHoldError(null);
     try {
       const endpoint =
-        buyMode === 'ga'
-          ? `${API}/inventory/holds`
-          : `${API}/inventory/holds/best-available`;
+        buyMode === 'ga' ? `${API}/inventory/holds` : `${API}/inventory/holds/best-available`;
       const body =
         buyMode === 'ga'
           ? { eventId, offerId: focusedOffer.id, quantity: qty }
@@ -495,8 +483,12 @@ export function EventPurchaseClient({
         holdData.seats?.map(
           (s: { label?: string; section?: string; row?: string; seatNumber?: string }) =>
             s.label ||
-            [s.section, s.row ? `Fila ${s.row}` : null, s.seatNumber].filter(Boolean).join(' · '),
-        ) ?? Array.from({ length: holds.length }, (_, i) => `${focusedOffer.name || focusedOffer.zone} · ${i + 1}`);
+            [s.section, s.row ? `Fila ${s.row}` : null, s.seatNumber].filter(Boolean).join(' · ')
+        ) ??
+        Array.from(
+          { length: holds.length },
+          (_, i) => `${focusedOffer.name || focusedOffer.zone} · ${i + 1}`
+        );
       const lines: CartOfferLine[] = [
         {
           offerId: focusedOffer.id,
@@ -507,8 +499,7 @@ export function EventPurchaseClient({
           lineTotal: Number(focusedOffer.basePrice) * holds.length,
         },
       ];
-      const expiresAt =
-        holdData.expiresAt ?? new Date(Date.now() + 900_000).toISOString();
+      const expiresAt = holdData.expiresAt ?? new Date(Date.now() + 900_000).toISOString();
       goCheckout(lines, expiresAt);
     } catch (e) {
       handleHoldFailure(e);
@@ -560,7 +551,11 @@ export function EventPurchaseClient({
           <button type="button" aria-pressed={buyMode === 'map'} onClick={() => setBuyMode('map')}>
             Mapa
           </button>
-          <button type="button" aria-pressed={buyMode === 'best'} onClick={() => setBuyMode('best')}>
+          <button
+            type="button"
+            aria-pressed={buyMode === 'best'}
+            onClick={() => setBuyMode('best')}
+          >
             Mejores
           </button>
           <button type="button" aria-pressed={buyMode === 'ga'} onClick={() => setBuyMode('ga')}>
@@ -589,8 +584,16 @@ export function EventPurchaseClient({
 
       {zoneOverflow ? (
         <div className={purchase.stack}>
-          <button type="button" className={purchase.textButton} onClick={() => setZonePick(zonePick ? null : focusedOffer?.zone ?? offers[0]?.zone ?? null)}>
-            {focusedOffer ? `${focusedOffer.name || focusedOffer.zone} · ${formatTicketAmount(Number(focusedOffer.basePrice))}` : 'Zona'}
+          <button
+            type="button"
+            className={purchase.textButton}
+            onClick={() =>
+              setZonePick(zonePick ? null : (focusedOffer?.zone ?? offers[0]?.zone ?? null))
+            }
+          >
+            {focusedOffer
+              ? `${focusedOffer.name || focusedOffer.zone} · ${formatTicketAmount(Number(focusedOffer.basePrice))}`
+              : 'Zona'}
           </button>
           <div className={purchase.list}>
             {offers.map((offer) => (
@@ -619,11 +622,19 @@ export function EventPurchaseClient({
           </p>
           <p className={purchase.caption}>Mínimo 1 · máximo 8</p>
           <div className={purchase.segment} role="group" aria-label="Cantidad">
-            <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Menos">
+            <button
+              type="button"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              aria-label="Menos"
+            >
               −
             </button>
             <span className={purchase.mono}>{qty}</span>
-            <button type="button" onClick={() => setQty((q) => Math.min(8, q + 1))} aria-label="Más">
+            <button
+              type="button"
+              onClick={() => setQty((q) => Math.min(8, q + 1))}
+              aria-label="Más"
+            >
               +
             </button>
           </div>
@@ -673,7 +684,11 @@ export function EventPurchaseClient({
       ) : null}
 
       {buyMode === 'map' && hasSeatMap ? (
-        <TicketButton type="button" variant="secondary" onClick={() => setView3d((value) => !value)}>
+        <TicketButton
+          type="button"
+          variant="secondary"
+          onClick={() => setView3d((value) => !value)}
+        >
           {view3d ? 'Plano' : 'Vista 3D'}
         </TicketButton>
       ) : null}

@@ -49,7 +49,10 @@ export function validateBanorteProductionConfig(): {
     // Soft-allow missing secret outside production for demos ONLY.
     // Production MUST set BANORTE_WEBHOOK_SECRET — never soft-allow there.
     if (isProd) missing.push('BANORTE_WEBHOOK_SECRET');
-    else warnings.push('BANORTE_WEBHOOK_SECRET (requerido en producción; soft-allow solo en demo/dev)');
+    else
+      warnings.push(
+        'BANORTE_WEBHOOK_SECRET (requerido en producción; soft-allow solo en demo/dev)'
+      );
   }
   if (!cfg.accountClabe) warnings.push('BANORTE_ACCOUNT_CLABE (requerido para SPEI)');
 
@@ -71,8 +74,7 @@ export function getBanorteConfig(): BanorteConfig {
     password: process.env.BANORTE_API_SECRET ?? process.env.BANORTE_PASSWORD ?? '',
     accountClabe: process.env.BANORTE_ACCOUNT_CLABE ?? '',
     payworksUrl:
-      process.env.BANORTE_PAYWORKS_URL ??
-      'https://eps.banorte.com/secure3d/Solucion3DSecure.htm',
+      process.env.BANORTE_PAYWORKS_URL ?? 'https://eps.banorte.com/secure3d/Solucion3DSecure.htm',
     webhookSecret: process.env.BANORTE_WEBHOOK_SECRET ?? '',
     returnUrl: process.env.BANORTE_RETURN_URL ?? 'http://localhost:3000',
     cancelUrl: process.env.BANORTE_CANCEL_URL ?? 'http://localhost:3000',

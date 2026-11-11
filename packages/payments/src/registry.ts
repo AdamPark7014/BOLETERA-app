@@ -17,16 +17,13 @@ export function registerProvider(provider: PaymentProvider): void {
  * `POST /orders {"paymentMethod":"CASH"}` emitía boletos gratis. El canal pasa a
  * formar parte del contrato del registry.
  */
-export function getProvider(
-  id: PaymentProviderId,
-  channel?: SalesChannelType,
-): PaymentProvider {
+export function getProvider(id: PaymentProviderId, channel?: SalesChannelType): PaymentProvider {
   const p = providers.get(id);
   if (!p) throw new Error(`Payment provider not registered: ${id}`);
   if (channel && !p.supportedChannels.includes(channel)) {
     throw new Error(
       `El proveedor "${id}" no opera en el canal ${channel} ` +
-        `(permitidos: ${p.supportedChannels.join(', ')})`,
+        `(permitidos: ${p.supportedChannels.join(', ')})`
     );
   }
   return p;
@@ -54,10 +51,7 @@ export const CHANNEL_PAYMENT_METHODS: Record<SalesChannelType, readonly string[]
 } as const;
 
 /** `true` si ese canal puede cobrar con ese método. */
-export function isMethodAllowedForChannel(
-  channel: SalesChannelType,
-  method: string,
-): boolean {
+export function isMethodAllowedForChannel(channel: SalesChannelType, method: string): boolean {
   return (CHANNEL_PAYMENT_METHODS[channel] ?? []).includes(method.toUpperCase());
 }
 

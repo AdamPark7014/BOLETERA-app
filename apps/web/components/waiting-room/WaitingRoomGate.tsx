@@ -95,7 +95,7 @@ export function WaitingRoomGate({
       setAnnouncement(
         `La venta abre en ${minutes} minuto${minutes === 1 ? '' : 's'}. ` +
           `${numberFormat.format(status.total)} personas esperando. ` +
-          'El orden se sortea al abrir, no depende de quién llegó antes.',
+          'El orden se sortea al abrir, no depende de quién llegó antes.'
       );
       return;
     }
@@ -104,7 +104,7 @@ export function WaitingRoomGate({
         ? 'Entrando a la fila.'
         : `Lugar ${numberFormat.format(status.position)} en la fila. ` +
             `${numberFormat.format(status.ahead)} personas por delante. ` +
-            `Espera estimada: ${formatWait(status.estimatedWaitSeconds).toLowerCase()}.`,
+            `Espera estimada: ${formatWait(status.estimatedWaitSeconds).toLowerCase()}.`
     );
   }, [phase, status, opensAtMs]);
 
@@ -156,9 +156,9 @@ export function WaitingRoomGate({
           <div className={styles.fairness}>
             <h3>Llegar antes no da ventaja</h3>
             <p>
-              Todos los que estamos aquí antes de la apertura entramos a una pre-fila. En el
-              momento de abrir, el orden se <strong>sortea</strong>: no se reparte por orden de
-              llegada. Quedarte en esta pantalla es suficiente, y recargar o volver a entrar{' '}
+              Todos los que estamos aquí antes de la apertura entramos a una pre-fila. En el momento
+              de abrir, el orden se <strong>sortea</strong>: no se reparte por orden de llegada.
+              Quedarte en esta pantalla es suficiente, y recargar o volver a entrar{' '}
               <strong>no cambia tu lugar</strong> ni te penaliza.
             </p>
           </div>
@@ -187,7 +187,10 @@ export function WaitingRoomGate({
           </div>
 
           <div className={styles.progressTrack} aria-hidden="true">
-            <div className={styles.progressFill} style={{ width: `${Math.round(progress * 100)}%` }} />
+            <div
+              className={styles.progressFill}
+              style={{ width: `${Math.round(progress * 100)}%` }}
+            />
           </div>
 
           <p className={styles.lead}>

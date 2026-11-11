@@ -38,8 +38,24 @@ const map = {
       { id: 'lvl-balc', name: 'Balcón', elevation: 120, zIndex: 1 },
     ],
     aisles: [
-      { id: 'a-floor', points: [[140, 40], [140, 200]], width: 20, levelId: 'lvl-floor' },
-      { id: 'a-balc', points: [[60, 40], [60, 80]], width: 18, levelId: 'lvl-balc' },
+      {
+        id: 'a-floor',
+        points: [
+          [140, 40],
+          [140, 200],
+        ],
+        width: 20,
+        levelId: 'lvl-floor',
+      },
+      {
+        id: 'a-balc',
+        points: [
+          [60, 40],
+          [60, 80],
+        ],
+        width: 18,
+        levelId: 'lvl-balc',
+      },
     ],
     exits: [
       { id: 'ex-floor', label: 'Calle', points: [[140, 200]], width: 36, levelId: 'lvl-floor' },
@@ -67,14 +83,32 @@ const map = {
 const scene = resolveGeometry(map);
 const p3 = projectTo3D(scene);
 
-assert(p3.seats.every((s) => typeof s.levelId === 'string'), 'seat levelId');
+assert(
+  p3.seats.every((s) => typeof s.levelId === 'string'),
+  'seat levelId'
+);
 assert(p3.seats.filter((s) => s.levelId === 'lvl-floor').length === 2, 'floor seats');
 assert(p3.seats.filter((s) => s.levelId === 'lvl-balc').length === 2, 'balc seats');
-assert(p3.aisles.every((a) => a.levelId), 'aisle levelId');
-assert(p3.exits.every((e) => e.levelId), 'exit levelId');
-assert(p3.furniture.every((f) => f.levelId), 'furniture levelId');
-assert(p3.stairs[0].fromLevelId === 'lvl-floor' && p3.stairs[0].toLevelId === 'lvl-balc', 'stair levels');
-assert(p3.plates.some((pl) => pl.levelId === 'lvl-floor'), 'plate level');
+assert(
+  p3.aisles.every((a) => a.levelId),
+  'aisle levelId'
+);
+assert(
+  p3.exits.every((e) => e.levelId),
+  'exit levelId'
+);
+assert(
+  p3.furniture.every((f) => f.levelId),
+  'furniture levelId'
+);
+assert(
+  p3.stairs[0].fromLevelId === 'lvl-floor' && p3.stairs[0].toLevelId === 'lvl-balc',
+  'stair levels'
+);
+assert(
+  p3.plates.some((pl) => pl.levelId === 'lvl-floor'),
+  'plate level'
+);
 
 const floorSeats = p3.seats.filter((s) => !s.levelId || s.levelId === 'lvl-floor');
 const balcSeats = p3.seats.filter((s) => !s.levelId || s.levelId === 'lvl-balc');

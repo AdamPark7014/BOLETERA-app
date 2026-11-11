@@ -12,7 +12,7 @@ import { AuditService } from '../../common/audit.service';
 export class SeasonService {
   constructor(
     private prisma: PrismaService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   async create(
@@ -28,7 +28,7 @@ export class SeasonService {
       venueId?: string;
       maxQuantity?: number;
       eventIds?: string[];
-    },
+    }
   ) {
     const pass = await this.prisma.seasonPass.create({
       data: {
@@ -79,11 +79,14 @@ export class SeasonService {
     const data: Prisma.SeasonPassUpdateInput = {};
     if (body.name !== undefined) data.name = requiredText(body.name, 'Nombre del abono');
     if (body.slug !== undefined) data.slug = requiredText(body.slug, 'Slug del abono');
-    if (body.description !== undefined) data.description = optionalText(body.description, 'Descripción del abono');
-    if (body.seasonLabel !== undefined) data.seasonLabel = requiredText(body.seasonLabel, 'Temporada');
+    if (body.description !== undefined)
+      data.description = optionalText(body.description, 'Descripción del abono');
+    if (body.seasonLabel !== undefined)
+      data.seasonLabel = requiredText(body.seasonLabel, 'Temporada');
     if (body.price !== undefined) data.price = readMoney(body.price);
     if (body.currency !== undefined) {
-      if (!isCurrency(body.currency)) throw new BadRequestException('Moneda del abono no reconocida');
+      if (!isCurrency(body.currency))
+        throw new BadRequestException('Moneda del abono no reconocida');
       data.currency = body.currency;
     }
     if (body.maxQuantity !== undefined) {
@@ -94,13 +97,16 @@ export class SeasonService {
       data.maxQuantity = maxQuantity;
     }
     if (body.active !== undefined) {
-      if (typeof body.active !== 'boolean') throw new BadRequestException('Abono activo no es un interruptor');
+      if (typeof body.active !== 'boolean')
+        throw new BadRequestException('Abono activo no es un interruptor');
       data.active = body.active;
     }
     if (body.benefits !== undefined) data.benefits = readBenefits(body.benefits);
     if (body.startsAt !== undefined || body.endsAt !== undefined) {
-      const startsAt = body.startsAt !== undefined ? readInstant(body.startsAt, 'Abono desde') : pass.startsAt;
-      const endsAt = body.endsAt !== undefined ? readInstant(body.endsAt, 'Abono hasta') : pass.endsAt;
+      const startsAt =
+        body.startsAt !== undefined ? readInstant(body.startsAt, 'Abono desde') : pass.startsAt;
+      const endsAt =
+        body.endsAt !== undefined ? readInstant(body.endsAt, 'Abono hasta') : pass.endsAt;
       if (endsAt.getTime() <= startsAt.getTime()) {
         throw new BadRequestException('El abono termina antes de empezar');
       }
@@ -156,7 +162,7 @@ export class SeasonService {
 
   async purchase(
     seasonPassId: string,
-    data: { buyerEmail: string; buyerName: string; quantity?: number; seatSection?: string },
+    data: { buyerEmail: string; buyerName: string; quantity?: number; seatSection?: string }
   ) {
     const pass = await this.prisma.seasonPass.findUnique({ where: { id: seasonPassId } });
     if (!pass?.active) throw new NotFoundException('Season pass not found');
@@ -230,7 +236,12 @@ function requiredInt(value: unknown, field: string, min: number): number {
 }
 
 function readMoney(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 9_999_999_999.99) {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    value < 0 ||
+    value > 9_999_999_999.99
+  ) {
     throw new BadRequestException('Precio del abono no es válido');
   }
   return Math.round(value * 100) / 100;

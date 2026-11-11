@@ -66,7 +66,12 @@ export function useSession(): SessionState & { refresh: () => void } {
         if (!alive) return;
         if (me.organizationId) {
           localStorage.setItem(STORAGE_KEYS.org, me.organizationId);
-          setState({ status: 'ready', token, orgId: me.organizationId, role: me.role ?? role ?? null });
+          setState({
+            status: 'ready',
+            token,
+            orgId: me.organizationId,
+            role: me.role ?? role ?? null,
+          });
         } else {
           setState({ status: 'no-org', token, orgId: null, role: me.role ?? role ?? null });
         }
@@ -103,7 +108,7 @@ export type AsyncState<T> = {
  */
 export function useApiResource<T>(
   loader: ((signal: AbortSignal) => Promise<T>) | null,
-  deps: unknown[],
+  deps: unknown[]
 ): AsyncState<T> {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -188,11 +193,13 @@ export function ApiErrorView({ error, context, onRetry }: ErrorViewProps) {
     tone = 'denied';
   } else if (apiError?.isNotFound) {
     title = 'No se encontró el recurso';
-    hint = 'Puede que se haya eliminado o que el enlace esté mal. Vuelve al listado y entra otra vez.';
+    hint =
+      'Puede que se haya eliminado o que el enlace esté mal. Vuelve al listado y entra otra vez.';
     tone = 'missing';
   } else if (status >= 500) {
     title = 'El servidor tuvo un problema';
-    hint = 'No es culpa de tus datos. Reintenta en unos segundos; si persiste, avisa a soporte con el detalle técnico.';
+    hint =
+      'No es culpa de tus datos. Reintenta en unos segundos; si persiste, avisa a soporte con el detalle técnico.';
     tone = 'fault';
   } else if (apiError) {
     title = apiError.userMessage;
@@ -202,7 +209,9 @@ export function ApiErrorView({ error, context, onRetry }: ErrorViewProps) {
   return (
     <section className={styles.stateView} role="alert" aria-live="assertive" data-tone={tone}>
       <p className={styles.stateBadge}>
-        <span aria-hidden="true">{tone === 'auth' ? '🔑' : tone === 'denied' ? '⛔' : tone === 'missing' ? '🔍' : '⚠'}</span>
+        <span aria-hidden="true">
+          {tone === 'auth' ? '🔑' : tone === 'denied' ? '⛔' : tone === 'missing' ? '🔍' : '⚠'}
+        </span>
         {status ? `Error ${status}` : 'Error'}
       </p>
       <h2 className={styles.stateTitle}>{title}</h2>

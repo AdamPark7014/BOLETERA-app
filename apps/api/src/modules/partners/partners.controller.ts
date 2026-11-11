@@ -24,7 +24,7 @@ export class PartnersController {
   create(
     @Param('orgId') orgId: string,
     @Body()
-    body: { name: string; scopes?: string[]; rateLimit?: number; expiresInDays?: number },
+    body: { name: string; scopes?: string[]; rateLimit?: number; expiresInDays?: number }
   ) {
     return this.partners.createApiKey(orgId, body);
   }
@@ -35,5 +35,3 @@ export class PartnersController {
     return this.partners.revokeApiKey(orgId, keyId);
   }
 }
-
-

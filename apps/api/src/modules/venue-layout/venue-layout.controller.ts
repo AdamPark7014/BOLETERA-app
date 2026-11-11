@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Header, Param, Post, Put, Query, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import type { SeatMapData, SeatMapSection } from '@boletera/shared';
@@ -33,7 +44,7 @@ export class VenueLayoutController {
   @ApiOperation({ summary: 'Org-wide egress health summary (CSV download)' })
   async getEgressOverviewCsv(
     @CurrentUser('organizationId') orgId: string,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     const result = await this.layoutService.exportEgressOverviewCsv(orgId);
     res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
@@ -52,7 +63,7 @@ export class VenueLayoutController {
   @ApiOperation({ summary: 'Egress / circulation report (JSON) for active layout' })
   async getEgressJson(
     @Param('venueId') venueId: string,
-    @CurrentUser('organizationId') orgId: string,
+    @CurrentUser('organizationId') orgId: string
   ) {
     return this.layoutService.getEgressReport(venueId, orgId, { format: 'json' });
   }
@@ -64,7 +75,7 @@ export class VenueLayoutController {
   async getEgressCsv(
     @Param('venueId') venueId: string,
     @CurrentUser('organizationId') orgId: string,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     const result = await this.layoutService.getEgressReport(venueId, orgId, { format: 'csv' });
     if (result.format !== 'csv') {
@@ -81,7 +92,7 @@ export class VenueLayoutController {
   async getEgressPdf(
     @Param('venueId') venueId: string,
     @CurrentUser('organizationId') orgId: string,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     const result = await this.layoutService.getEgressReport(venueId, orgId, { format: 'pdf' });
     if (result.format !== 'pdf') {
@@ -101,7 +112,7 @@ export class VenueLayoutController {
     @CurrentUser('organizationId') orgId: string,
     @Res({ passthrough: true }) res: Response,
     @Body() body: { mapData?: SeatMapData; format?: 'json' | 'csv' | 'pdf' } = {},
-    @Query('format') formatQuery?: 'json' | 'csv' | 'pdf',
+    @Query('format') formatQuery?: 'json' | 'csv' | 'pdf'
   ) {
     const format = body.format ?? formatQuery ?? 'json';
     const result = await this.layoutService.getEgressReport(venueId, orgId, {
@@ -127,7 +138,7 @@ export class VenueLayoutController {
   saveLayout(
     @Param('venueId') venueId: string,
     @CurrentUser('organizationId') orgId: string,
-    @Body() body: SeatMapData & { mapData?: SeatMapData },
+    @Body() body: SeatMapData & { mapData?: SeatMapData }
   ) {
     const mapData = body.mapData ?? body;
     return this.layoutService.saveMap(venueId, orgId, mapData);
@@ -144,7 +155,7 @@ export class VenueLayoutController {
       template: 'arena' | 'theater' | 'stadium' | 'festival';
       capacity?: number;
       sectionCount?: number;
-    },
+    }
   ) {
     return this.layoutService.applyTemplate(venueId, orgId, body.template, {
       capacity: body.capacity,
@@ -158,7 +169,7 @@ export class VenueLayoutController {
   aiImport(
     @Param('venueId') venueId: string,
     @CurrentUser('organizationId') orgId: string,
-    @Body() body: { sections: SeatMapSection[] },
+    @Body() body: { sections: SeatMapSection[] }
   ) {
     return this.layoutService.importAiSections(venueId, orgId, body.sections);
   }
@@ -169,7 +180,7 @@ export class VenueLayoutController {
   suggest(
     @Param('venueId') venueId: string,
     @CurrentUser('organizationId') orgId: string,
-    @Body() body: { prompt: string },
+    @Body() body: { prompt: string }
   ) {
     return this.layoutService.suggestFromPrompt(venueId, orgId, body.prompt || '');
   }
@@ -186,7 +197,7 @@ export class VenueLayoutController {
   @ApiOperation({ summary: 'Submit layout for review (Draft → Review)' })
   submitReview(
     @Param('venueId') venueId: string,
-    @CurrentUser() user: { sub: string; organizationId: string },
+    @CurrentUser() user: { sub: string; organizationId: string }
   ) {
     return this.layoutService.submitForReview(venueId, user.organizationId, user.sub);
   }
@@ -196,7 +207,7 @@ export class VenueLayoutController {
   @ApiOperation({ summary: 'Return layout to draft (Review → Draft)' })
   revertDraft(
     @Param('venueId') venueId: string,
-    @CurrentUser() user: { sub: string; organizationId: string },
+    @CurrentUser() user: { sub: string; organizationId: string }
   ) {
     return this.layoutService.revertToDraft(venueId, user.organizationId, user.sub);
   }
@@ -206,7 +217,7 @@ export class VenueLayoutController {
   @ApiOperation({ summary: 'Publish venue layout after geometry validation' })
   publishMap(
     @Param('venueId') venueId: string,
-    @CurrentUser() user: { sub: string; organizationId: string },
+    @CurrentUser() user: { sub: string; organizationId: string }
   ) {
     return this.layoutService.publishLayout(venueId, user.organizationId, user.sub);
   }
@@ -216,7 +227,7 @@ export class VenueLayoutController {
   @ApiOperation({ summary: 'Archive published layout (Published → Archived)' })
   archiveLayout(
     @Param('venueId') venueId: string,
-    @CurrentUser() user: { sub: string; organizationId: string },
+    @CurrentUser() user: { sub: string; organizationId: string }
   ) {
     return this.layoutService.archiveLayout(venueId, user.organizationId, user.sub);
   }
@@ -227,13 +238,13 @@ export class VenueLayoutController {
   rollbackSnapshot(
     @Param('venueId') venueId: string,
     @Param('snapshotId') snapshotId: string,
-    @CurrentUser() user: { sub: string; organizationId: string },
+    @CurrentUser() user: { sub: string; organizationId: string }
   ) {
     return this.layoutService.rollbackToSnapshot(
       venueId,
       user.organizationId,
       snapshotId,
-      user.sub,
+      user.sub
     );
   }
 }
@@ -245,7 +256,7 @@ export class VenueLayoutController {
 export class EventPublishController {
   constructor(
     private layoutService: VenueLayoutService,
-    private publishValidation: EventPublishValidationService,
+    private publishValidation: EventPublishValidationService
   ) {}
 
   @Post(':eventId/publish')
@@ -257,5 +268,3 @@ export class EventPublishController {
     return this.layoutService.publishToEvent(eventId, orgId);
   }
 }
-
-

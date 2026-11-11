@@ -86,7 +86,7 @@ export function buildLodAggregates(
   xs: Float32Array,
   ys: Float32Array,
   heats: Float32Array,
-  seatSectionIndex: Uint32Array,
+  seatSectionIndex: Uint32Array
 ): { sections: SectionAggregate[]; rows: RowAggregate[] } {
   const secMap = new Map<string, SectionAggregate>();
   const rowMap = new Map<string, { agg: RowAggregate; sumX: number; sumY: number; n: number }>();

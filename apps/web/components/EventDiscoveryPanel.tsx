@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ElementType,
-  type KeyboardEvent,
-} from 'react';
+import { useEffect, useMemo, useRef, useState, type ElementType, type KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CURATED_MARKETING_CARDS, type CuratedMarketingCard } from '@boletera/shared';
@@ -163,10 +156,9 @@ export function EventDiscoveryPanel({
     }
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `${API}/discovery/suggest?q=${encodeURIComponent(q)}&limit=8`,
-          { cache: 'no-store' },
-        );
+        const res = await fetch(`${API}/discovery/suggest?q=${encodeURIComponent(q)}&limit=8`, {
+          cache: 'no-store',
+        });
         if (!res.ok) return;
         const data = (await res.json()) as SuggestHit[];
         setSuggestions(data);
@@ -187,8 +179,7 @@ export function EventDiscoveryPanel({
     if (when !== 'ALL') params.set('when', when);
     params.set('limit', '60');
 
-    const isDefault =
-      !query.trim() && city === 'ALL' && category === 'ALL' && when === 'ALL';
+    const isDefault = !query.trim() && city === 'ALL' && category === 'ALL' && when === 'ALL';
     if (isDefault && !reloadKey) {
       setEvents(initial);
       setFetchFailed(Boolean(initialFailed));
@@ -231,9 +222,9 @@ export function EventDiscoveryPanel({
     });
   }, [events, sort]);
 
-  const isFiltering = Boolean(query.trim()) || city !== 'ALL' || category !== 'ALL' || when !== 'ALL';
-  const featured =
-    !compact && !isFiltering && !suppressFeaturedHero ? filtered[0] : null;
+  const isFiltering =
+    Boolean(query.trim()) || city !== 'ALL' || category !== 'ALL' || when !== 'ALL';
+  const featured = !compact && !isFiltering && !suppressFeaturedHero ? filtered[0] : null;
   const list = featured ? filtered.slice(1) : filtered;
   const showCuratedEmpty =
     !isFiltering && !compact && filtered.length === 0 && !loading && !fetchFailed;
@@ -242,8 +233,7 @@ export function EventDiscoveryPanel({
    * Un único h1 por página. En la home, HomeHero lleva el h1; aquí siempre h2.
    * En otras rutas, el evento destacado o el encabezado de lista asumen el h1.
    */
-  const ListHeading: ElementType =
-    compact || featured || suppressFeaturedHero ? 'h2' : 'h1';
+  const ListHeading: ElementType = compact || featured || suppressFeaturedHero ? 'h2' : 'h1';
 
   function pushParams(next: { q?: string; city?: string; category?: string; when?: string }) {
     const params = new URLSearchParams(searchParams.toString());
@@ -455,11 +445,7 @@ export function EventDiscoveryPanel({
                 }}
               >
                 {c.name}
-                <Badge
-                  tone={city === c.name ? 'accent' : 'neutral'}
-                  variant="solid"
-                  size="sm"
-                >
+                <Badge tone={city === c.name ? 'accent' : 'neutral'} variant="solid" size="sm">
                   {c.count}
                 </Badge>
               </button>
@@ -481,7 +467,9 @@ export function EventDiscoveryPanel({
                   pushParams({ q: query, city, category: c.key, when });
                 }}
               >
-                <span className={styles.catEmoji} aria-hidden="true">{c.emoji}</span>
+                <span className={styles.catEmoji} aria-hidden="true">
+                  {c.emoji}
+                </span>
                 {c.label}
               </button>
             );
@@ -528,7 +516,12 @@ export function EventDiscoveryPanel({
               title="No pudimos cargar la cartelera"
               description="Revisa tu conexión e inténtalo otra vez. Si el problema sigue, vuelve en unos minutos."
               action={
-                <Button type="button" variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReloadKey((k) => k + 1)}
+                >
                   Reintentar
                 </Button>
               }
@@ -550,7 +543,9 @@ export function EventDiscoveryPanel({
                   >
                     <Link
                       href={`/events/${e.slug}`}
-                      className={stock === 'sold-out' ? styles.posterCardSoldOut : styles.posterCard}
+                      className={
+                        stock === 'sold-out' ? styles.posterCardSoldOut : styles.posterCard
+                      }
                     >
                       <div className={styles.posterChrome}>
                         <div className={styles.posterBadges}>
@@ -656,7 +651,9 @@ export function EventDiscoveryPanel({
                         <div className={styles.curatedShade} aria-hidden="true" />
                       </div>
                       <div className={styles.curatedBody}>
-                        <Badge tone="accent" variant="solid" size="sm">Destacado</Badge>
+                        <Badge tone="accent" variant="solid" size="sm">
+                          Destacado
+                        </Badge>
                         <h3>{card.title}</h3>
                         <p>{card.subtitle}</p>
                         <span className={styles.curatedCta}>Explorar →</span>

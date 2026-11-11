@@ -16,7 +16,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
-    public body?: unknown,
+    public body?: unknown
   ) {
     super(message);
     this.name = 'ApiError';
@@ -54,7 +54,7 @@ async function rawFetch(path: string, init?: RequestInit, token?: string): Promi
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
-  opts: FetchOpts = {},
+  opts: FetchOpts = {}
 ): Promise<T> {
   const token = opts.token ?? activeToken ?? undefined;
   const send = () => rawFetch(path, init, token);
@@ -110,7 +110,7 @@ export async function login(email: string, password: string): Promise<AuthSessio
       method: 'POST',
       body: JSON.stringify({ email, password }),
     },
-    { skipReauth: true },
+    { skipReauth: true }
   );
 
   const issuedAt = Date.now();
@@ -160,11 +160,15 @@ export type PromoterDashboard = {
   topEvents: { eventId: string; title: string; revenue: number; ticketsSold: number }[];
 };
 
-export function getPromoterDashboard(orgId: string, token: string, period: 'DAY' | 'WEEK' | 'MONTH' = 'DAY') {
+export function getPromoterDashboard(
+  orgId: string,
+  token: string,
+  period: 'DAY' | 'WEEK' | 'MONTH' = 'DAY'
+) {
   return apiFetch<PromoterDashboard>(
     `/analytics/promoters/${orgId}/dashboard?period=${period}`,
     undefined,
-    { token },
+    { token }
   );
 }
 
@@ -223,7 +227,7 @@ export type HoldResult = {
 
 export function createStaffHold(
   token: string,
-  body: { eventId: string; offerId?: string; quantity?: number; channel?: string },
+  body: { eventId: string; offerId?: string; quantity?: number; channel?: string }
 ) {
   return apiFetch<HoldResult>(
     '/inventory/staff/holds',
@@ -231,7 +235,7 @@ export function createStaffHold(
       method: 'POST',
       body: JSON.stringify({ ...body, channel: body.channel ?? 'TAQUILLA' }),
     },
-    { token },
+    { token }
   );
 }
 
@@ -243,12 +247,12 @@ export function createTaquillaHold(
     eventId: string;
     offerId?: string;
     quantity?: number;
-  },
+  }
 ) {
   return apiFetch<HoldResult>(
     '/taquilla/holds',
     { method: 'POST', body: JSON.stringify(body) },
-    { token },
+    { token }
   );
 }
 
@@ -268,7 +272,7 @@ export function scanTicket(token: string, qrPayload: string, zoneId?: string) {
       method: 'POST',
       body: JSON.stringify({ qrPayload, zoneId, channel: 'TAQUILLA' }),
     },
-    { token },
+    { token }
   );
 }
 

@@ -89,7 +89,7 @@ class SettlementBlockedError extends Error {
   constructor(
     readonly action: SettlementBlockAction,
     message: string,
-    readonly metadata: Record<string, unknown>,
+    readonly metadata: Record<string, unknown>
   ) {
     super(message);
     this.name = 'SettlementBlockedError';
@@ -120,7 +120,7 @@ export class PaymentService {
     private prisma: PrismaService,
     private notifications: NotificationService,
     private campaigns: CampaignExecutionService,
-    private audit: AuditService,
+    private audit: AuditService
   ) {}
 
   /**
@@ -152,9 +152,12 @@ export class PaymentService {
     }
 
     const amount = Number(order.totalAmount);
-    if (data.amount !== undefined && Math.abs(Number(data.amount) - amount) > SETTLEMENT_TOLERANCE) {
+    if (
+      data.amount !== undefined &&
+      Math.abs(Number(data.amount) - amount) > SETTLEMENT_TOLERANCE
+    ) {
       this.logger.warn(
-        `Intent ${order.publicId}: el cliente pidió cobrar ${data.amount} y la orden vale ${amount}; se cobra el total de la orden.`,
+        `Intent ${order.publicId}: el cliente pidió cobrar ${data.amount} y la orden vale ${amount}; se cobra el total de la orden.`
       );
     }
 
@@ -271,14 +274,10 @@ export class PaymentService {
    * completaba órdenes sin cobro. La barrera es ahora NODE_ENV, evaluada ANTES
    * de mirar la configuración del gateway.
    */
-  async confirmBanortePayment(data: {
-    orderId: string;
-    intentId?: string;
-    externalId?: string;
-  }) {
+  async confirmBanortePayment(data: { orderId: string; intentId?: string; externalId?: string }) {
     if (process.env.NODE_ENV === 'production') {
       throw new ForbiddenException(
-        'La confirmación manual está deshabilitada en producción: el pago se confirma por IPN Banorte.',
+        'La confirmación manual está deshabilitada en producción: el pago se confirma por IPN Banorte.'
       );
     }
 
@@ -297,20 +296,18 @@ export class PaymentService {
         order.id,
         data.externalId ?? data.intentId ?? `banorte_demo_${order.id}`,
         // En demo no hay liquidación real: se asume el total de la orden.
-        { amount: Number(order.totalAmount), currency: order.currency, source: 'demo_confirm' },
+        { amount: Number(order.totalAmount), currency: order.currency, source: 'demo_confirm' }
       );
     }
 
-    throw new BadRequestException(
-      'En producción la confirmación llega vía IPN Banorte (webhook).',
-    );
+    throw new BadRequestException('En producción la confirmación llega vía IPN Banorte (webhook).');
   }
 
   /** Descripción del descuadre entre lo cobrado y lo debido, o `null` si cuadra. */
   private describeSettlementMismatch(
     orderCurrency: string,
     expectedAmount: number,
-    settlement: { amount?: number; currency?: string },
+    settlement: { amount?: number; currency?: string }
   ): string | null {
     if (
       settlement.amount !== undefined &&
@@ -334,7 +331,7 @@ export class PaymentService {
   private async markOrderPendingRefund(
     orderId: string,
     externalId: string,
-    blocked: SettlementBlockedError,
+    blocked: SettlementBlockedError
   ) {
     try {
       const order = await this.prisma.order.update({
@@ -360,7 +357,7 @@ export class PaymentService {
     } catch (e) {
       // Nunca tapar el motivo original con un fallo al auditar.
       this.logger.error(
-        `No se pudo marcar PENDING_REFUND la orden ${orderId} tras ${blocked.action}: ${e}`,
+        `No se pudo marcar PENDING_REFUND la orden ${orderId} tras ${blocked.action}: ${e}`
       );
     }
   }
@@ -380,7 +377,7 @@ export class PaymentService {
       currency?: string;
       rawCode?: string;
       source?: string;
-    } = {},
+    } = {}
   ) {
     const result = await this.prisma
       .$transaction(async (tx) => {
@@ -404,7 +401,7 @@ export class PaymentService {
          */
         if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.FAILED) {
           throw new ConflictException(
-            `La orden ${order.publicId} está en estado ${order.status}; un pago posterior requiere devolución, no emisión.`,
+            `La orden ${order.publicId} está en estado ${order.status}; un pago posterior requiere devolución, no emisión.`
           );
         }
 
@@ -413,7 +410,7 @@ export class PaymentService {
         const mismatch = this.describeSettlementMismatch(
           order.currency,
           expectedAmount,
-          settlement,
+          settlement
         );
         if (mismatch) {
           const detail = {
@@ -430,12 +427,12 @@ export class PaymentService {
             throw new SettlementBlockedError(
               'payment.settlement_mismatch',
               `Descuadre de liquidación en ${order.publicId}: ${mismatch}. No se emiten boletos; requiere devolución.`,
-              detail,
+              detail
             );
           }
           // Modo observación: se audita y la venta continúa (ver isStrictSettlementMode).
           this.logger.error(
-            `Descuadre de liquidación (modo observación) en ${order.publicId}: ${mismatch}`,
+            `Descuadre de liquidación (modo observación) en ${order.publicId}: ${mismatch}`
           );
           await tx.auditEvent.create({
             data: {
@@ -497,7 +494,7 @@ export class PaymentService {
               lostHoldIds: holdIds.filter((id) => !alive.has(id)),
               intentExpiresAt: pendingIntent?.expiresAt ?? null,
               settledAmount: settlement.amount ?? null,
-            },
+            }
           );
         }
 
@@ -557,7 +554,7 @@ export class PaymentService {
             throw new SettlementBlockedError(
               'order.insufficient_inventory',
               `No se pudo determinar la oferta de la reserva ${hold.id} en ${order.publicId}. No se emite; el cobro debe devolverse.`,
-              { orderPublicId: order.publicId, holdId: hold.id, seatId: hold.seatId ?? null },
+              { orderPublicId: order.publicId, holdId: hold.id, seatId: hold.seatId ?? null }
             );
           }
           const orderItem = itemByOffer.get(offerId) ?? updatedOrder.items[0];
@@ -591,7 +588,7 @@ export class PaymentService {
                   holdId: hold.id,
                   seatId: hold.seatId,
                   matchedTickets: assigned.count,
-                },
+                }
               );
             }
           } else {
@@ -602,7 +599,7 @@ export class PaymentService {
               throw new SettlementBlockedError(
                 'order.insufficient_inventory',
                 `No queda inventario reservado para la oferta ${offerId} en ${order.publicId}. No se emite; el cobro debe devolverse.`,
-                { orderPublicId: order.publicId, holdId: hold.id, offerId },
+                { orderPublicId: order.publicId, holdId: hold.id, offerId }
               );
             }
             await tx.ticket.update({
@@ -646,7 +643,7 @@ export class PaymentService {
                 offerId: item.offerId,
                 requestedQuantity: item.quantity,
                 issuedQuantity: issued,
-              },
+              }
             );
           }
         }
@@ -678,7 +675,7 @@ export class PaymentService {
     await this.notifications.enqueueOrderConfirmation(
       result.order.id,
       result.order.buyerEmail,
-      result.order.buyerName,
+      result.order.buyerName
     );
     if (result.order.promotionId) {
       const promo = await this.prisma.promotion.findUnique({
@@ -694,7 +691,7 @@ export class PaymentService {
       this.logger.error(
         `Orden ${result.order.publicId} cobrada, pero no se guardó el saldo de lealtad: ${
           error instanceof Error ? error.message : String(error)
-        }`,
+        }`
       );
     }
     return result;
@@ -717,10 +714,7 @@ export class PaymentService {
     if (data.organizationId && order.organizationId !== data.organizationId) {
       throw new ForbiddenException('Organization access denied');
     }
-    if (
-      order.status !== OrderStatus.COMPLETED &&
-      order.status !== OrderStatus.PARTIALLY_REFUNDED
-    ) {
+    if (order.status !== OrderStatus.COMPLETED && order.status !== OrderStatus.PARTIALLY_REFUNDED) {
       throw new BadRequestException('Only completed orders can be refunded');
     }
 
@@ -796,7 +790,7 @@ export class PaymentService {
     refundId: string,
     processedBy: string,
     banorteReference?: string,
-    organizationId?: string | null,
+    organizationId?: string | null
   ) {
     const refund = await this.prisma.refund.findUnique({
       where: { id: refundId },
@@ -826,7 +820,7 @@ export class PaymentService {
       : new Decimal(refund.order.totalAmount);
     const { committed } = this.refundableAmount(
       charged,
-      refund.order.refunds.filter((r) => r.id !== refundId),
+      refund.order.refunds.filter((r) => r.id !== refundId)
     );
     const full = committed
       .plus(refund.amount)
@@ -875,7 +869,7 @@ export class PaymentService {
     orderId: string,
     buyerEmail: string,
     amount: number,
-    options?: { reason?: string; partial?: boolean },
+    options?: { reason?: string; partial?: boolean }
   ) {
     try {
       await this.notifications.enqueueRefundNotification(orderId, buyerEmail, amount, options);
@@ -883,7 +877,7 @@ export class PaymentService {
       this.logger.error(
         `Reembolso ${orderId} procesado pero no se pudo encolar el aviso al comprador: ${
           error instanceof Error ? error.message : String(error)
-        }`,
+        }`
       );
     }
   }
@@ -956,10 +950,7 @@ export class PaymentService {
    * regalando la diferencia. Los reembolsos PENDING también cuentan: están
    * comprometidos aunque el portal Banorte aún no los haya cerrado.
    */
-  private refundableAmount(
-    charged: Decimal,
-    refunds: { amount: Decimal; status: RefundStatus }[],
-  ) {
+  private refundableAmount(charged: Decimal, refunds: { amount: Decimal; status: RefundStatus }[]) {
     const committed = refunds
       .filter((r) => r.status === RefundStatus.COMPLETED || r.status === RefundStatus.PENDING)
       .reduce((sum, r) => sum.plus(r.amount), new Decimal(0));
@@ -1006,7 +997,7 @@ export class PaymentService {
       order.status !== OrderStatus.PENDING_REFUND
     ) {
       throw new BadRequestException(
-        `La orden ${order.publicId} está en estado ${order.status}; solo se reembolsa lo cobrado`,
+        `La orden ${order.publicId} está en estado ${order.status}; solo se reembolsa lo cobrado`
       );
     }
 
@@ -1014,7 +1005,7 @@ export class PaymentService {
     const { committed, remaining } = this.refundableAmount(charged, order.refunds);
     if (remaining.lessThanOrEqualTo(SETTLEMENT_TOLERANCE)) {
       throw new BadRequestException(
-        `La orden ${order.publicId} ya tiene comprometido todo lo cobrado (${committed} de ${charged})`,
+        `La orden ${order.publicId} ya tiene comprometido todo lo cobrado (${committed} de ${charged})`
       );
     }
 
@@ -1025,7 +1016,7 @@ export class PaymentService {
     if (refundAmount.minus(remaining).greaterThan(SETTLEMENT_TOLERANCE)) {
       throw new BadRequestException(
         `El reembolso (${refundAmount}) excede lo pendiente de devolver (${remaining}) ` +
-          `sobre un cobro liquidado de ${charged}`,
+          `sobre un cobro liquidado de ${charged}`
       );
     }
 
@@ -1118,7 +1109,7 @@ export class PaymentService {
 
     if (!order) {
       this.logger.warn(
-        `Banorte webhook: ninguna orden coincide exactamente con la referencia "${reference}"; no se actúa.`,
+        `Banorte webhook: ninguna orden coincide exactamente con la referencia "${reference}"; no se actúa.`
       );
       return { received: true };
     }
@@ -1687,7 +1678,7 @@ export class PaymentService {
     if (body.settlementBusinessDays !== undefined) {
       patch.settlementBusinessDays = requirePolicyDays(
         body.settlementBusinessDays,
-        'Días para cerrar',
+        'Días para cerrar'
       );
     }
     if (body.bankBusinessDays !== undefined) {
@@ -1696,7 +1687,7 @@ export class PaymentService {
     if (body.transferDeadlineDays !== undefined) {
       patch.transferDeadlineDays = requirePolicyDays(
         body.transferDeadlineDays,
-        'Plazo de transferencia',
+        'Plazo de transferencia'
       );
     }
     if (
@@ -1742,5 +1733,3 @@ function requirePolicyDays(value: unknown, label: string): number {
   }
   return value;
 }
-
-

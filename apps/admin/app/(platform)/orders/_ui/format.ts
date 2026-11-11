@@ -38,7 +38,7 @@ export function toNumber(value: string | number | null | undefined): number {
  */
 export function formatMoney(
   value: string | number | null | undefined,
-  currency: string | null | undefined = 'MXN',
+  currency: string | null | undefined = 'MXN'
 ): string {
   const code = (currency || 'MXN').toUpperCase();
   let body: string;
@@ -57,7 +57,7 @@ export function formatMoney(
 /** Igual que `formatMoney` pero con signo explícito (para diferencias). */
 export function formatMoneyDelta(
   value: string | number | null | undefined,
-  currency: string | null | undefined = 'MXN',
+  currency: string | null | undefined = 'MXN'
 ): string {
   const n = toNumber(value);
   const sign = n > 0 ? '+' : '';

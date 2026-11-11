@@ -45,7 +45,7 @@ export type GestureController = {
   fitRect: (
     rect: { minX: number; minY: number; width: number; height: number },
     padding?: number,
-    animate?: boolean,
+    animate?: boolean
   ) => boolean;
   /** Centra un punto de mundo, opcionalmente con una escala destino. */
   centerOn: (worldX: number, worldY: number, scale?: number, animate?: boolean) => void;
@@ -161,7 +161,7 @@ export function useMapGestures(options: GestureOptions): GestureController {
       inertiaRef.current = null;
       requestFrame();
     },
-    [requestFrame],
+    [requestFrame]
   );
 
   const zoomBy = useCallback(
@@ -176,19 +176,16 @@ export function useMapGestures(options: GestureOptions): GestureController {
       // Ancla: el punto bajo el dedo se queda donde está.
       const worldX = (px - view.tx) / view.scale;
       const worldY = (py - view.ty) / view.scale;
-      animateTo(
-        { scale: next, tx: px - worldX * next, ty: py - worldY * next },
-        animate,
-      );
+      animateTo({ scale: next, tx: px - worldX * next, ty: py - worldY * next }, animate);
     },
-    [animateTo, clampScale],
+    [animateTo, clampScale]
   );
 
   const fitRect = useCallback(
     (
       rect: { minX: number; minY: number; width: number; height: number },
       padding = 28,
-      animate = false,
+      animate = false
     ) => {
       const el = containerRef.current;
       if (!el) return false;
@@ -204,11 +201,11 @@ export function useMapGestures(options: GestureOptions): GestureController {
           tx: el.clientWidth / 2 - cx * scale,
           ty: el.clientHeight / 2 - cy * scale,
         },
-        animate,
+        animate
       );
       return true;
     },
-    [animateTo, clampScale],
+    [animateTo, clampScale]
   );
 
   const centerOn = useCallback(
@@ -222,10 +219,10 @@ export function useMapGestures(options: GestureOptions): GestureController {
           tx: el.clientWidth / 2 - worldX * next,
           ty: el.clientHeight / 2 - worldY * next,
         },
-        animate,
+        animate
       );
     },
-    [animateTo, clampScale],
+    [animateTo, clampScale]
   );
 
   const toWorld = useCallback((clientX: number, clientY: number) => {
@@ -412,6 +409,6 @@ export function useMapGestures(options: GestureOptions): GestureController {
   // handlers, y un literal nuevo por render los recrearía todos sin motivo.
   return useMemo(
     () => ({ containerRef, viewRef, requestFrame, zoomBy, fitRect, centerOn, toWorld }),
-    [requestFrame, zoomBy, fitRect, centerOn, toWorld],
+    [requestFrame, zoomBy, fitRect, centerOn, toWorld]
   );
 }

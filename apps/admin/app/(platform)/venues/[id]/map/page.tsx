@@ -113,9 +113,9 @@ function EditorBody() {
     () =>
       Boolean(
         workflow?.salesLocked &&
-          (workflow.publishStatus === 'PUBLISHED' || publishStatus === 'PUBLISHED'),
+        (workflow.publishStatus === 'PUBLISHED' || publishStatus === 'PUBLISHED')
       ),
-    [workflow, publishStatus],
+    [workflow, publishStatus]
   );
 
   const readOnly = publishStatus === 'ARCHIVED';

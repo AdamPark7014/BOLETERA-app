@@ -13,7 +13,7 @@ export class TaquillaPosService {
   constructor(
     private prisma: PrismaService,
     private inventory: InventoryService,
-    private orders: OrdersService,
+    private orders: OrdersService
   ) {}
 
   async initializeTerminal(data: {
@@ -117,7 +117,7 @@ export class TaquillaPosService {
       managerPin?: string;
       clientSaleId?: string;
       holdIds?: string[];
-    },
+    }
   ) {
     const startTime = Date.now();
     const isComp = data.isComp || data.paymentMethod === 'COMP';
@@ -158,12 +158,11 @@ export class TaquillaPosService {
       });
     }
 
-    const buyerName = data.buyerName?.trim() || (isComp ? `Comp · ${data.compReason || 'house'}` : 'Taquilla');
-    const buyerEmail =
-      data.buyerEmail?.trim() || `taquilla+${terminalId}@pos.boletera.local`;
+    const buyerName =
+      data.buyerName?.trim() || (isComp ? `Comp · ${data.compReason || 'house'}` : 'Taquilla');
+    const buyerEmail = data.buyerEmail?.trim() || `taquilla+${terminalId}@pos.boletera.local`;
 
-    const idempotencyKey =
-      data.clientSaleId || `pos-${sessionId}-${data.eventId}-${Date.now()}`;
+    const idempotencyKey = data.clientSaleId || `pos-${sessionId}-${data.eventId}-${Date.now()}`;
 
     const order = await this.orders.createOrder({
       eventId: data.eventId,
@@ -247,7 +246,11 @@ export class TaquillaPosService {
   /** @deprecated Prefer checkout which completes CASH/CARD in one step */
   async processPayment(
     orderId: string,
-    data: { method: 'CASH' | 'CARD' | 'CHECK'; amount: number; cardDetails?: { lastFour: string; brand: string } },
+    data: {
+      method: 'CASH' | 'CARD' | 'CHECK';
+      amount: number;
+      cardDetails?: { lastFour: string; brand: string };
+    }
   ) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new BadRequestException('Order not found');
@@ -287,7 +290,7 @@ export class TaquillaPosService {
         item.tickets.map((t) => ({
           barcode: t.code,
           seatInfo: [t.section, t.row, t.seatNumber].filter(Boolean).join('-') || 'GA',
-        })),
+        }))
       ),
     };
   }
@@ -344,7 +347,7 @@ export class TaquillaPosService {
             code: t.code,
             status: t.status,
             seatInfo: [t.section, t.row, t.seatNumber].filter(Boolean).join('-') || 'GA',
-          })),
+          }))
         ),
       };
     }
@@ -464,7 +467,7 @@ export class TaquillaPosService {
 
   async syncOfflineTransactions(
     terminalId: string,
-    transactions: Array<{ checkoutData: unknown; sessionId: string; clientSaleId?: string }>,
+    transactions: Array<{ checkoutData: unknown; sessionId: string; clientSaleId?: string }>
   ) {
     const terminal = await this.prisma.posTerminal.findUnique({ where: { id: terminalId } });
     if (!terminal) throw new BadRequestException('Terminal not found');
@@ -512,9 +515,10 @@ export class TaquillaPosService {
         // Race: another sync created the same sale between findUnique and create.
         const msg = (e as Error).message || '';
         const clientSaleId =
-          (txn.clientSaleId ||
-            (txn.checkoutData as { clientSaleId?: string } | undefined)?.clientSaleId)?.trim() ||
-          undefined;
+          (
+            txn.clientSaleId ||
+            (txn.checkoutData as { clientSaleId?: string } | undefined)?.clientSaleId
+          )?.trim() || undefined;
         if (clientSaleId && this.isClientSaleConflict(e)) {
           const dup = await this.prisma.order.findUnique({
             where: {
@@ -619,7 +623,7 @@ export class TaquillaPosService {
     sessionId: string,
     cashierId: string,
     closingCashCounted?: number,
-    managerPin?: string,
+    managerPin?: string
   ) {
     const session = await this.prisma.posCashierSession.findUnique({
       where: { id: sessionId },
@@ -704,7 +708,20 @@ export class TaquillaPosService {
       orderBy: { createdAt: 'desc' },
       include: {
         event: { select: { id: true, title: true, startsAt: true } },
-        items: { include: { tickets: { select: { id: true, code: true, status: true, section: true, row: true, seatNumber: true } } } },
+        items: {
+          include: {
+            tickets: {
+              select: {
+                id: true,
+                code: true,
+                status: true,
+                section: true,
+                row: true,
+                seatNumber: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -729,7 +746,7 @@ export class TaquillaPosService {
             code: t.code,
             status: t.status,
             seatInfo: [t.section, t.row, t.seatNumber].filter(Boolean).join('-') || 'GA',
-          })),
+          }))
         ),
       };
     });
@@ -792,7 +809,8 @@ export class TaquillaPosService {
       eventId: old.eventId,
       offerId,
       seatIds: data.newSeatIds,
-      quantity: data.quantity || data.newSeatIds?.length || old.items.reduce((s, i) => s + i.quantity, 0),
+      quantity:
+        data.quantity || data.newSeatIds?.length || old.items.reduce((s, i) => s + i.quantity, 0),
       paymentMethod: data.paymentMethod,
       cashierId: data.cashierId,
       buyerName: old.buyerName,
@@ -814,7 +832,7 @@ export class TaquillaPosService {
     amount: number,
     cashierId: string,
     note?: string,
-    managerPin?: string,
+    managerPin?: string
   ) {
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new BadRequestException('Invalid drop amount');
@@ -883,13 +901,13 @@ export class TaquillaPosService {
       data.sessionId,
       data.fromCashierId,
       data.closingCashCounted,
-      data.managerPin,
+      data.managerPin
     );
 
     const next = await this.startCashierSession(
       session.terminalId,
       data.toCashierId,
-      data.openingCash ?? closed.expectedCash,
+      data.openingCash ?? closed.expectedCash
     );
 
     return { closed, next };
@@ -934,12 +952,13 @@ export class TaquillaPosService {
   private async assertManagerPin(organizationId: string, pin?: string) {
     const org = await this.prisma.organization.findUnique({ where: { id: organizationId } });
     if (!org) throw new BadRequestException('Organization not found');
-    const settings = ((org as { settings?: { managerPinHash?: string } }).settings ||
-      {}) as { managerPinHash?: string };
+    const settings = ((org as { settings?: { managerPinHash?: string } }).settings || {}) as {
+      managerPinHash?: string;
+    };
     const isProd = process.env.NODE_ENV === 'production';
     if (isProd && !settings.managerPinHash) {
       throw new ForbiddenException(
-        'Configura el PIN de gerente en Ajustes antes de autorizar retiros o cierres.',
+        'Configura el PIN de gerente en Ajustes antes de autorizar retiros o cierres.'
       );
     }
     // Demo / first-run only outside production

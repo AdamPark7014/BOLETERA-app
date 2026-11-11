@@ -5,12 +5,7 @@ import type { Cents } from './money';
 export type SettlementPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 
 /** Estados de `PromoterPayout` en la base de datos. */
-export type PayoutStatus =
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED';
+export type PayoutStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export type PayoutStatusMeta = {
   label: string;

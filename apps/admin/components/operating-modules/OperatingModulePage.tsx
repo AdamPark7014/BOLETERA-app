@@ -77,7 +77,9 @@ export function OperatingModulePage({ config }: { config: OperatingModuleConfig 
     const normalized = query.trim().toLocaleLowerCase('es-MX');
     if (!normalized) return records;
     return records.filter((record) =>
-      `${record.name} ${record.meta} ${record.status}`.toLocaleLowerCase('es-MX').includes(normalized),
+      `${record.name} ${record.meta} ${record.status}`
+        .toLocaleLowerCase('es-MX')
+        .includes(normalized)
     );
   }, [query, records]);
   const permitted = can(config.permission);
@@ -87,7 +89,9 @@ export function OperatingModulePage({ config }: { config: OperatingModuleConfig 
       <main className={styles.page} aria-busy="true" aria-label={`Cargando ${config.title}`}>
         <SkeletonCard lines={3} />
         <div className={styles.kpis}>
-          {config.kpis.map((kpi) => <SkeletonCard key={kpi.label} lines={2} />)}
+          {config.kpis.map((kpi) => (
+            <SkeletonCard key={kpi.label} lines={2} />
+          ))}
         </div>
         <SkeletonCard lines={6} />
       </main>
@@ -102,7 +106,10 @@ export function OperatingModulePage({ config }: { config: OperatingModuleConfig 
         description={config.description}
         breadcrumbs={[{ label: 'TicketOS', href: '/dashboard' }, { label: config.title }]}
         actions={
-          <Button disabled={!permitted} title={!permitted ? 'No tienes permiso para realizar esta acción' : undefined}>
+          <Button
+            disabled={!permitted}
+            title={!permitted ? 'No tienes permiso para realizar esta acción' : undefined}
+          >
             {config.actionLabel}
           </Button>
         }
@@ -145,7 +152,10 @@ export function OperatingModulePage({ config }: { config: OperatingModuleConfig 
         </Card>
 
         <Card>
-          <CardHeader title="Recomendaciones y alertas" description="Siguientes acciones priorizadas" />
+          <CardHeader
+            title="Recomendaciones y alertas"
+            description="Siguientes acciones priorizadas"
+          />
           <ul className={styles.alerts}>
             {config.recommendations.map((item) => (
               <li key={item.title} className={styles.alert}>
@@ -153,7 +163,9 @@ export function OperatingModulePage({ config }: { config: OperatingModuleConfig 
                 <div>
                   <strong>{item.title}</strong>
                   <p>{item.description}</p>
-                  <Button variant="link" size="sm" disabled={!permitted}>{item.action}</Button>
+                  <Button variant="link" size="sm" disabled={!permitted}>
+                    {item.action}
+                  </Button>
                 </div>
               </li>
             ))}
@@ -175,15 +187,22 @@ export function OperatingModulePage({ config }: { config: OperatingModuleConfig 
           <EmptyState
             illustration={query ? 'search' : 'inbox'}
             title={query ? 'No hay coincidencias' : config.emptyTitle}
-            description={query ? 'Prueba con otro nombre, estado o identificador.' : config.emptyDescription}
-            action={!query ? <Button disabled={!permitted}>{config.emptyAction}</Button> : undefined}
+            description={
+              query ? 'Prueba con otro nombre, estado o identificador.' : config.emptyDescription
+            }
+            action={
+              !query ? <Button disabled={!permitted}>{config.emptyAction}</Button> : undefined
+            }
           />
         ) : (
           <ul className={styles.records} aria-label={config.listTitle}>
             {visibleRecords.map((record) => (
               <li key={record.id}>
                 <button type="button" className={styles.record} onClick={() => setSelected(record)}>
-                  <span><strong>{record.name}</strong><small>{record.meta}</small></span>
+                  <span>
+                    <strong>{record.name}</strong>
+                    <small>{record.meta}</small>
+                  </span>
                   <span className={styles.recordStatus}>
                     <StatusDot tone={record.statusTone ?? 'neutral'} />
                     {record.status}
@@ -212,9 +231,16 @@ export function OperatingModulePage({ config }: { config: OperatingModuleConfig 
           />
         </Card>
         <Card>
-          <CardHeader title="Conectividad de datos" description="Contratos necesarios para operar con información real" />
+          <CardHeader
+            title="Conectividad de datos"
+            description="Contratos necesarios para operar con información real"
+          />
           <ul className={styles.endpoints}>
-            {config.endpoints.map((endpoint) => <li key={endpoint}><code>{endpoint}</code></li>)}
+            {config.endpoints.map((endpoint) => (
+              <li key={endpoint}>
+                <code>{endpoint}</code>
+              </li>
+            ))}
           </ul>
         </Card>
       </div>
@@ -224,11 +250,18 @@ export function OperatingModulePage({ config }: { config: OperatingModuleConfig 
         onClose={() => setSelected(null)}
         title={selected?.name}
         description={selected?.meta}
-        footer={<Button variant="secondary" onClick={() => setSelected(null)}>Cerrar</Button>}
+        footer={
+          <Button variant="secondary" onClick={() => setSelected(null)}>
+            Cerrar
+          </Button>
+        }
       >
         {selected ? (
           <div className={styles.drawerBody}>
-            <span className={styles.recordStatus}><StatusDot tone={selected.statusTone ?? 'neutral'} />{selected.status}</span>
+            <span className={styles.recordStatus}>
+              <StatusDot tone={selected.statusTone ?? 'neutral'} />
+              {selected.status}
+            </span>
             <p>{selected.detail}</p>
             <EmptyState
               size="sm"

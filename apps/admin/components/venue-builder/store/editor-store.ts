@@ -166,7 +166,7 @@ function createInitialState(initial: SeatMapData): EditorState {
 function mergeSeatSelection(
   current: readonly string[],
   incoming: readonly string[],
-  mode: 'replace' | 'add' | 'toggle',
+  mode: 'replace' | 'add' | 'toggle'
 ): string[] {
   if (mode === 'replace') return [...incoming];
   const set = new Set(current);
@@ -194,8 +194,7 @@ export function createEditorStore(initial: SeatMapData) {
       set((state) => ({
         scene: migrateToV3(next),
         structuralEpoch: state.structuralEpoch + 1,
-        fitRequestEpoch:
-          options?.fit === false ? state.fitRequestEpoch : state.fitRequestEpoch + 1,
+        fitRequestEpoch: options?.fit === false ? state.fitRequestEpoch : state.fitRequestEpoch + 1,
         selection: options?.keepSelection ? state.selection : EMPTY_SELECTION,
         activeSectionId: next.sections[0]?.id ?? null,
         pendingPatch: [],
@@ -229,14 +228,14 @@ export function createEditorStore(initial: SeatMapData) {
       set((state) =>
         state.tool === tool
           ? {}
-          : { tool, toolBeforeTransient: state.toolBeforeTransient ?? state.tool },
+          : { tool, toolBeforeTransient: state.toolBeforeTransient ?? state.tool }
       ),
 
     endTransientTool: () =>
       set((state) =>
         state.toolBeforeTransient
           ? { tool: state.toolBeforeTransient, toolBeforeTransient: null }
-          : {},
+          : {}
       ),
 
     setSelection: (selection) =>
@@ -248,7 +247,13 @@ export function createEditorStore(initial: SeatMapData) {
           ...state.selection,
           seatIds: mergeSeatSelection(state.selection.seatIds, ids, mode),
           ...(mode === 'replace'
-            ? { sectionIds: [], furnitureIds: [], annotationIds: [], measurementIds: [], stage: false }
+            ? {
+                sectionIds: [],
+                furnitureIds: [],
+                annotationIds: [],
+                measurementIds: [],
+                stage: false,
+              }
             : {}),
         },
       })),
@@ -333,8 +338,7 @@ export function createEditorStore(initial: SeatMapData) {
     patchUnderlay: (patch) =>
       set((state) => (state.underlay ? { underlay: { ...state.underlay, ...patch } } : {})),
 
-    setDrawParams: (patch) =>
-      set((state) => ({ drawParams: { ...state.drawParams, ...patch } })),
+    setDrawParams: (patch) => set((state) => ({ drawParams: { ...state.drawParams, ...patch } })),
 
     setValidation: (validation) => set({ validation }),
 

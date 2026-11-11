@@ -6,7 +6,7 @@ export function snapValue(value: number, pitch: number): number {
 
 export function snapPoint(
   point: { x: number; y: number },
-  pitch: number,
+  pitch: number
 ): { x: number; y: number } {
   return { x: snapValue(point.x, pitch), y: snapValue(point.y, pitch) };
 }

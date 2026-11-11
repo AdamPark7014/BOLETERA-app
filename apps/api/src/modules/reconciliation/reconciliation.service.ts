@@ -26,9 +26,7 @@ export class ReconciliationService {
   async runHealthChecks(scope: OrgScope = {}): Promise<ReconciliationReport> {
     const { organizationId } = scope;
     const orderWhere = organizationId ? { organizationId } : {};
-    const eventOrgFilter = organizationId
-      ? { event: { organizationId } }
-      : {};
+    const eventOrgFilter = organizationId ? { event: { organizationId } } : {};
     const now = new Date();
 
     const checks = await Promise.all([
@@ -66,24 +64,20 @@ export class ReconciliationService {
     description: string,
     count: number,
     samples: ReconciliationSample[],
-    severity: 'warn' | 'error',
+    severity: 'warn' | 'error'
   ): ReconciliationCheck {
-    const status: ReconciliationCheckStatus =
-      count === 0 ? 'ok' : severity;
+    const status: ReconciliationCheckStatus = count === 0 ? 'ok' : severity;
     return { id, label, description, status, count, samples };
   }
 
   /** COMPLETED orders missing payment or with non-completed payment. */
   private async checkOrdersWithoutPayment(
-    orderWhere: Prisma.OrderWhereInput,
+    orderWhere: Prisma.OrderWhereInput
   ): Promise<ReconciliationCheck> {
     const where: Prisma.OrderWhereInput = {
       ...orderWhere,
       status: OrderStatus.COMPLETED,
-      OR: [
-        { paymentId: null },
-        { payment: { status: { not: PaymentStatus.COMPLETED } } },
-      ],
+      OR: [{ paymentId: null }, { payment: { status: { not: PaymentStatus.COMPLETED } } }],
     };
 
     const [count, rows] = await Promise.all([
@@ -112,14 +106,12 @@ export class ReconciliationService {
         paymentId: r.paymentId,
         paymentStatus: r.payment?.status ?? null,
       })),
-      'error',
+      'error'
     );
   }
 
   /** COMPLETED payments with no linked orders. */
-  private async checkPaymentWithoutOrder(
-    organizationId?: string,
-  ): Promise<ReconciliationCheck> {
+  private async checkPaymentWithoutOrder(organizationId?: string): Promise<ReconciliationCheck> {
     let where: Prisma.PaymentWhereInput = {
       status: PaymentStatus.COMPLETED,
       orders: { none: {} },
@@ -141,7 +133,7 @@ export class ReconciliationService {
           'Pagos COMPLETED que no están vinculados a ninguna orden.',
           0,
           [],
-          'error',
+          'error'
         );
       }
       where = {
@@ -172,13 +164,13 @@ export class ReconciliationService {
         amount: r.amount.toString(),
         gateway: r.gateway,
       })),
-      'error',
+      'error'
     );
   }
 
   /** Sold/held tickets with no order line, or tied to cancelled/failed orders. */
   private async checkOrphanTickets(
-    ticketWhere: Prisma.TicketWhereInput,
+    ticketWhere: Prisma.TicketWhereInput
   ): Promise<ReconciliationCheck> {
     const where: Prisma.TicketWhereInput = {
       ...ticketWhere,
@@ -225,14 +217,14 @@ export class ReconciliationService {
         orderPublicId: r.orderItem?.order.publicId ?? null,
         orderStatus: r.orderItem?.order.status ?? null,
       })),
-      'error',
+      'error'
     );
   }
 
   /** Seat holds still ACTIVE after expiry. */
   private async checkExpiredActiveHolds(
     holdWhere: Prisma.SeatHoldWhereInput,
-    now: Date,
+    now: Date
   ): Promise<ReconciliationCheck> {
     const where: Prisma.SeatHoldWhereInput = {
       ...holdWhere,
@@ -268,13 +260,13 @@ export class ReconciliationService {
         expiresAt: r.expiresAt.toISOString(),
         sessionId: r.sessionId,
       })),
-      'warn',
+      'warn'
     );
   }
 
   /** SOLD tickets on orders that are not COMPLETED. */
   private async checkSoldTicketsOnOpenOrders(
-    ticketWhere: Prisma.TicketWhereInput,
+    ticketWhere: Prisma.TicketWhereInput
   ): Promise<ReconciliationCheck> {
     const where: Prisma.TicketWhereInput = {
       ...ticketWhere,
@@ -309,13 +301,13 @@ export class ReconciliationService {
         orderPublicId: r.orderItem?.order.publicId ?? null,
         orderStatus: r.orderItem?.order.status ?? null,
       })),
-      'error',
+      'error'
     );
   }
 
   /** AVAILABLE tickets still linked to an order line. */
   private async checkAvailableTicketsWithOrderLink(
-    ticketWhere: Prisma.TicketWhereInput,
+    ticketWhere: Prisma.TicketWhereInput
   ): Promise<ReconciliationCheck> {
     const where: Prisma.TicketWhereInput = {
       ...ticketWhere,
@@ -344,14 +336,14 @@ export class ReconciliationService {
         orderItemId: r.orderItemId,
         eventId: r.eventId,
       })),
-      'warn',
+      'warn'
     );
   }
 
   /** ACTIVE holds on seats already SOLD for the same event. */
   private async checkActiveHoldsOnSoldSeats(
     holdWhere: Prisma.SeatHoldWhereInput,
-    now: Date,
+    now: Date
   ): Promise<ReconciliationCheck> {
     const holds = await this.prisma.seatHold.findMany({
       where: {
@@ -371,7 +363,7 @@ export class ReconciliationService {
         'SeatHold ACTIVE en butacas que ya tienen boleto SOLD.',
         0,
         [],
-        'warn',
+        'warn'
       );
     }
 
@@ -384,13 +376,9 @@ export class ReconciliationService {
       select: { eventId: true, seatId: true },
     });
 
-    const soldSet = new Set(
-      soldTickets.map((t) => `${t.eventId}:${t.seatId}`),
-    );
+    const soldSet = new Set(soldTickets.map((t) => `${t.eventId}:${t.seatId}`));
 
-    const conflicts = holds.filter(
-      (h) => h.seatId && soldSet.has(`${h.eventId}:${h.seatId}`),
-    );
+    const conflicts = holds.filter((h) => h.seatId && soldSet.has(`${h.eventId}:${h.seatId}`));
 
     return this.buildCheck(
       'hold_on_sold_seat',
@@ -403,13 +391,13 @@ export class ReconciliationService {
         seatId: r.seatId,
         sessionId: r.sessionId,
       })),
-      'error',
+      'error'
     );
   }
 
   /** REFUNDED orders with no completed refund records. */
   private async checkRefundedOrdersWithoutRefunds(
-    orderWhere: Prisma.OrderWhereInput,
+    orderWhere: Prisma.OrderWhereInput
   ): Promise<ReconciliationCheck> {
     const where: Prisma.OrderWhereInput = {
       ...orderWhere,
@@ -438,13 +426,13 @@ export class ReconciliationService {
         status: r.status,
         totalAmount: r.totalAmount.toString(),
       })),
-      'error',
+      'error'
     );
   }
 
   /** COMPLETED refunds while order still COMPLETED. */
   private async checkCompletedRefundsOnOpenOrders(
-    orderWhere: Prisma.OrderWhereInput,
+    orderWhere: Prisma.OrderWhereInput
   ): Promise<ReconciliationCheck> {
     const where: Prisma.RefundWhereInput = {
       status: RefundStatus.COMPLETED,
@@ -480,17 +468,19 @@ export class ReconciliationService {
         publicId: r.order.publicId,
         orderStatus: r.order.status,
       })),
-      'warn',
+      'warn'
     );
   }
 
   /** Payment REFUNDED but order not marked refunded. */
   private async checkPaymentRefundedOrderOpen(
-    orderWhere: Prisma.OrderWhereInput,
+    orderWhere: Prisma.OrderWhereInput
   ): Promise<ReconciliationCheck> {
     const where: Prisma.OrderWhereInput = {
       ...orderWhere,
-      status: { notIn: [OrderStatus.REFUNDED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.PENDING_REFUND] },
+      status: {
+        notIn: [OrderStatus.REFUNDED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.PENDING_REFUND],
+      },
       payment: { status: PaymentStatus.REFUNDED },
     };
 
@@ -521,13 +511,13 @@ export class ReconciliationService {
         paymentId: r.payment?.id ?? null,
         paymentStatus: r.payment?.status ?? null,
       })),
-      'error',
+      'error'
     );
   }
 
   /** REFUNDED orders where sum of completed refunds != order total (±0.01). */
   private async checkRefundAmountMismatch(
-    orderWhere: Prisma.OrderWhereInput,
+    orderWhere: Prisma.OrderWhereInput
   ): Promise<ReconciliationCheck> {
     const orders = await this.prisma.order.findMany({
       where: {
@@ -567,7 +557,7 @@ export class ReconciliationService {
           refundedTotal: refunded.toFixed(2),
         };
       }),
-      'warn',
+      'warn'
     );
   }
 }

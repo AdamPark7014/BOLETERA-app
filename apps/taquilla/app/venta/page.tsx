@@ -143,9 +143,7 @@ function VentaFlow() {
     apiJson<EventRow[]>('/discovery/events')
       .then((data) => {
         const now = Date.now();
-        const sorted = [...data].sort(
-          (a, b) => +new Date(a.startsAt) - +new Date(b.startsAt),
-        );
+        const sorted = [...data].sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
         // Primero lo que se vende hoy: un evento de dentro de tres meses no
         // debería robarle la tecla "1" al de esta noche.
         const soon = sorted.filter((e) => +new Date(e.startsAt) >= now - 12 * 3600 * 1000);
@@ -159,12 +157,12 @@ function VentaFlow() {
 
   const offers = useMemo(
     () => (event?.offers ?? []).filter((o) => o.isAvailable !== false),
-    [event],
+    [event]
   );
 
   const offer = useMemo(
     () => offers.find((o) => o.id === offerId) ?? offers[0] ?? null,
-    [offers, offerId],
+    [offers, offerId]
   );
 
   // La zona la fija el catálogo, nunca la URL: el precio no puede venir de un
@@ -195,7 +193,7 @@ function VentaFlow() {
     () => () => {
       if (holdRef.current.length) void releasePosHolds(holdRef.current);
     },
-    [],
+    []
   );
 
   useEffect(() => {
@@ -251,7 +249,7 @@ function VentaFlow() {
             ...(discountUnlocked && promoCode ? { promotionCode: promoCode } : {}),
           }),
         },
-        { reauth: false },
+        { reauth: false }
       )
         .then((raw) => {
           if (cancelled) return;
@@ -330,7 +328,7 @@ function VentaFlow() {
       if (list.length > 1) setStage('ZONE');
       else goTickets();
     },
-    [goTickets, releaseHolds],
+    [goTickets, releaseHolds]
   );
 
   const selectOffer = useCallback(
@@ -340,7 +338,7 @@ function VentaFlow() {
       void releaseHolds();
       goTickets();
     },
-    [goTickets, releaseHolds],
+    [goTickets, releaseHolds]
   );
 
   const back = useCallback(() => {
@@ -381,7 +379,7 @@ function VentaFlow() {
       .filter(
         (e) =>
           e.title.toLowerCase().includes(needle) ||
-          (e.venue?.name ?? '').toLowerCase().includes(needle),
+          (e.venue?.name ?? '').toLowerCase().includes(needle)
       )
       .slice(0, 9);
   }, [events, filter]);
@@ -394,7 +392,7 @@ function VentaFlow() {
       setQty(1);
       setSelectedSeats([]);
       setCashReceived('');
-    setReceipt(null);
+      setReceipt(null);
       setManagerPin('');
       setPromoCode('');
       setDiscountUnlocked(false);
@@ -405,7 +403,7 @@ function VentaFlow() {
       qtyBuffer.current = { value: '', at: 0 };
       queueMicrotask(() => filterRef.current?.focus());
     },
-    [compMode],
+    [compMode]
   );
 
   const sell = useCallback(async () => {
@@ -501,10 +499,7 @@ function VentaFlow() {
           return;
         }
         try {
-          const { terminalId, sessionId } = await ensurePosSession(
-            resolveOrgId(),
-            getCashierId(),
-          );
+          const { terminalId, sessionId } = await ensurePosSession(resolveOrgId(), getCashierId());
           const payload: OfflinePosPayload = {
             type: 'pos',
             terminalId,
@@ -664,7 +659,13 @@ function VentaFlow() {
           match: (e) => e.key === 'Enter',
           run: () => offers[0] && selectOffer(offers[0].id),
         },
-        { keys: 'Esc', label: 'Volver', whileTyping: true, match: (e) => e.key === 'Escape', run: back },
+        {
+          keys: 'Esc',
+          label: 'Volver',
+          whileTyping: true,
+          match: (e) => e.key === 'Escape',
+          run: back,
+        },
       ];
     }
     if (stage === 'TICKETS') {
@@ -713,7 +714,13 @@ function VentaFlow() {
               } satisfies Hotkey,
             ]
           : []),
-        { keys: 'Esc', label: 'Volver', whileTyping: true, match: (e) => e.key === 'Escape', run: back },
+        {
+          keys: 'Esc',
+          label: 'Volver',
+          whileTyping: true,
+          match: (e) => e.key === 'Escape',
+          run: back,
+        },
       ];
     }
     if (stage === 'TENDER') {
@@ -914,7 +921,9 @@ function VentaFlow() {
 
   return (
     <PosShell
-      title={stage === 'ZONE' ? 'Zona' : stage === 'EVENT' || stage === 'DONE' ? 'Función' : 'Venta'}
+      title={
+        stage === 'ZONE' ? 'Zona' : stage === 'EVENT' || stage === 'DONE' ? 'Función' : 'Venta'
+      }
       eyebrow={functionLine && stage !== 'EVENT' && stage !== 'DONE' ? functionLine : undefined}
       backHref="/venta"
       hotkeys={hotkeys}
@@ -962,9 +971,16 @@ function VentaFlow() {
                     const when = new Date(row.startsAt);
                     return (
                       <li key={row.id}>
-                        <button type="button" className={styles.row} onClick={() => selectEvent(row)}>
+                        <button
+                          type="button"
+                          className={styles.row}
+                          onClick={() => selectEvent(row)}
+                        >
                           <span className={styles.when}>
-                            {when.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                            {when.toLocaleTimeString('es-MX', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
                           </span>
                           <span className={styles.rowMain}>
                             <strong>{row.title}</strong>
@@ -999,10 +1015,13 @@ function VentaFlow() {
                       >
                         <span className={styles.rowMain}>
                           <strong>
-                            {o.name || o.zone || 'General'} · {formatTicketAmount(Number(o.basePrice))}
+                            {o.name || o.zone || 'General'} ·{' '}
+                            {formatTicketAmount(Number(o.basePrice))}
                           </strong>
                           <small>
-                            {o.remainingQuantity != null ? `${o.remainingQuantity} libres` : 'En venta'}
+                            {o.remainingQuantity != null
+                              ? `${o.remainingQuantity} libres`
+                              : 'En venta'}
                           </small>
                         </span>
                         <kbd>{i + 1}</kbd>
@@ -1017,7 +1036,9 @@ function VentaFlow() {
           {(stage === 'TICKETS' || stage === 'TENDER') && (
             <section className={styles.sale}>
               <p className={styles.zoneLine}>
-                {offer ? `${offer.name || offer.zone || 'General'} · ${formatTicketAmount(unitPrice)}` : 'Sin zona'}
+                {offer
+                  ? `${offer.name || offer.zone || 'General'} · ${formatTicketAmount(unitPrice)}`
+                  : 'Sin zona'}
                 {offer?.remainingQuantity != null ? ` · ${offer.remainingQuantity} libres` : ''}
               </p>
 
@@ -1025,11 +1046,21 @@ function VentaFlow() {
                 <div className={styles.qty}>
                   <span className={styles.qtyLabel}>Cantidad</span>
                   <div className={styles.qtyRow}>
-                    <button type="button" className={styles.step} onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Menos">
+                    <button
+                      type="button"
+                      className={styles.step}
+                      onClick={() => setQty((q) => Math.max(1, q - 1))}
+                      aria-label="Menos"
+                    >
                       −
                     </button>
                     <strong>{qty}</strong>
-                    <button type="button" className={styles.step} onClick={() => setQty((q) => Math.min(999, q + 1))} aria-label="Más">
+                    <button
+                      type="button"
+                      className={styles.step}
+                      onClick={() => setQty((q) => Math.min(999, q + 1))}
+                      aria-label="Más"
+                    >
                       +
                     </button>
                   </div>
@@ -1048,7 +1079,7 @@ function VentaFlow() {
                     selected={selectedSeats}
                     onToggle={(id) => {
                       setSelectedSeats((prev) =>
-                        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+                        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
                       );
                       void releaseHolds();
                     }}
@@ -1076,24 +1107,46 @@ function VentaFlow() {
                 </button>
               ) : null}
               {hasMap && !pickSeats ? (
-                <button type="button" className={styles.secondary} onClick={() => void holdBestAvailable()}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => void holdBestAvailable()}
+                >
                   Mejor disponible
                 </button>
               ) : null}
               {seatMode && selectedSeats.length > 0 ? (
-                <button type="button" className={styles.secondary} onClick={() => void reserveSelection()}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => void reserveSelection()}
+                >
                   Apartar {selectedSeats.length}
                 </button>
               ) : null}
 
-              <button type="button" className={styles.disclosure} onClick={() => setBuyerOpen((v) => !v)}>
+              <button
+                type="button"
+                className={styles.disclosure}
+                onClick={() => setBuyerOpen((v) => !v)}
+              >
                 Nombre en el boleto
                 {buyerName ? <small>{buyerName}</small> : null}
               </button>
               {buyerOpen ? (
                 <div className={styles.buyer}>
-                  <Field label="Nombre" hint="Nombre en el boleto" value={buyerName} onChange={(e) => setBuyerName(e.target.value)} />
-                  <Field label="Correo" type="email" value={buyerEmail} onChange={(e) => setBuyerEmail(e.target.value)} />
+                  <Field
+                    label="Nombre"
+                    hint="Nombre en el boleto"
+                    value={buyerName}
+                    onChange={(e) => setBuyerName(e.target.value)}
+                  />
+                  <Field
+                    label="Correo"
+                    type="email"
+                    value={buyerEmail}
+                    onChange={(e) => setBuyerEmail(e.target.value)}
+                  />
                   <Field
                     label="Teléfono"
                     inputMode="tel"
@@ -1110,12 +1163,10 @@ function VentaFlow() {
           <div className={styles.chargeBody}>
             {method === 'COMP' ? <p className={styles.note}>Cortesía</p> : null}
             <div className={styles.methods} role="group" aria-label="Método">
-              {(
-                [
-                  { id: 'CASH' as const, label: 'Efectivo', hot: 'E' },
-                  { id: 'CARD' as const, label: 'Tarjeta', hot: 'T' },
-                ]
-              ).map((m) => (
+              {[
+                { id: 'CASH' as const, label: 'Efectivo', hot: 'E' },
+                { id: 'CARD' as const, label: 'Tarjeta', hot: 'T' },
+              ].map((m) => (
                 <button
                   key={m.id}
                   type="button"
@@ -1163,7 +1214,11 @@ function VentaFlow() {
             ) : null}
 
             {method === 'COMP' && inSale ? (
-              <Field label="Motivo" value={compReason} onChange={(e) => setCompReason(e.target.value)} />
+              <Field
+                label="Motivo"
+                value={compReason}
+                onChange={(e) => setCompReason(e.target.value)}
+              />
             ) : null}
 
             {discountUnlocked ? (
@@ -1180,9 +1235,18 @@ function VentaFlow() {
               currency
               defaultOpen
               lines={[
-                { label: 'Precio', amount: inSale ? (quote?.subtotal ?? (method === 'COMP' ? 0 : estimate)) : 0 },
-                { label: feePct != null ? `Cargo · ${feePct}%` : 'Cargo', amount: inSale ? (quote?.fees ?? 0) : 0 },
-                { label: taxPct != null ? `IVA · ${taxPct}%` : 'IVA', amount: inSale ? (quote?.taxes ?? 0) : 0 },
+                {
+                  label: 'Precio',
+                  amount: inSale ? (quote?.subtotal ?? (method === 'COMP' ? 0 : estimate)) : 0,
+                },
+                {
+                  label: feePct != null ? `Cargo · ${feePct}%` : 'Cargo',
+                  amount: inSale ? (quote?.fees ?? 0) : 0,
+                },
+                {
+                  label: taxPct != null ? `IVA · ${taxPct}%` : 'IVA',
+                  amount: inSale ? (quote?.taxes ?? 0) : 0,
+                },
                 { label: 'Descuento', amount: inSale && quote?.discount ? -quote.discount : 0 },
               ]}
             />

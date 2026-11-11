@@ -12,7 +12,7 @@ import {
 
 export function useSightlineAnalysis(
   map: SeatMapData | null,
-  levelId: string | 'ALL',
+  levelId: string | 'ALL'
 ): {
   result: SightlineResult | null;
   bySeat: Map<string, SightlineScore>;

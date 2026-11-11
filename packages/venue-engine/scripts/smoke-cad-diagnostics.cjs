@@ -42,14 +42,8 @@ function dxf(entities) {
   assert(err.source === 'dxf', 'origen dxf');
   assert(/SPLINE/.test(err.message), `el mensaje debe nombrar SPLINE:\n${err.message}`);
   assert(/HATCH/.test(err.message), 'debe nombrar HATCH');
-  assert(
-    /tipo de entidad no soportado/.test(err.message),
-    'debe explicar el motivo del descarte',
-  );
-  assert(
-    /Explota bloques|polil[íi]neas/.test(err.message),
-    'debe decir qué hacer en el CAD',
-  );
+  assert(/tipo de entidad no soportado/.test(err.message), 'debe explicar el motivo del descarte');
+  assert(/Explota bloques|polil[íi]neas/.test(err.message), 'debe decir qué hacer en el CAD');
   assert(/capa "MUROS"/.test(err.message), `debe indicar la capa:\n${err.message}`);
   assert(err.diagnostics.skippedCount === 3, 'tres entidades descartadas');
   console.log('--- DXF no soportado ---');
@@ -119,10 +113,7 @@ function dxf(entities) {
   assert(report.skipped === 2, `descartadas=${report.skipped}`);
   const circleSkip = report.bySkipReason.find((r) => /ruido/.test(r.example));
   assert(circleSkip, 'debe reportar el círculo descartado');
-  assert(
-    /circle/.test(circleSkip.example),
-    `debe identificar el círculo: ${circleSkip.example}`,
-  );
+  assert(/circle/.test(circleSkip.example), `debe identificar el círculo: ${circleSkip.example}`);
   console.log('--- SVG parcial ---');
   console.log(`aceptadas=${report.accepted} descartadas=${report.skipped}`);
   for (const r of report.bySkipReason) console.log(`  ${r.count}× ${r.label} — ${r.example}`);

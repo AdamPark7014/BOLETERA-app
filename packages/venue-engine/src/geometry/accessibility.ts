@@ -78,7 +78,7 @@ export function companionSeatIds(seat: SeatMapSeat): string[] {
 export function markAccessible(
   seat: SeatMapSeat,
   kind: AccessibleKind,
-  opts?: { companionOf?: string; companionSeatIds?: string[]; note?: string },
+  opts?: { companionOf?: string; companionSeatIds?: string[]; note?: string }
 ): SeatMapSeat {
   const metadata: Record<string, unknown> = {
     ...(seat.metadata ?? {}),
@@ -111,13 +111,13 @@ export function clearAccessible(seat: SeatMapSeat): SeatMapSeat {
  */
 export function linkCompanions(
   wheelchairSeat: SeatMapSeat,
-  companions: SeatMapSeat[],
+  companions: SeatMapSeat[]
 ): { wheelchair: SeatMapSeat; companions: SeatMapSeat[] } {
   const ids = companions.map((c) => c.id);
   return {
     wheelchair: markAccessible(wheelchairSeat, 'wheelchair', { companionSeatIds: ids }),
     companions: companions.map((c) =>
-      markAccessible(c, 'companion', { companionOf: wheelchairSeat.id }),
+      markAccessible(c, 'companion', { companionOf: wheelchairSeat.id })
     ),
   };
 }
@@ -229,7 +229,7 @@ export type GenerateAccessibleOptions = {
  */
 export function generateAccessibleSpaces(
   section: SeatMapSection,
-  opts: GenerateAccessibleOptions = {},
+  opts: GenerateAccessibleOptions = {}
 ): { section: SeatMapSection; created: { wheelchair: string[]; companions: string[] } } {
   const companionsPerSpace = Math.max(0, opts.companionsPerSpace ?? 1);
   const count = Math.max(0, opts.count ?? requiredWheelchairSpaces(section.seats.length));
@@ -308,11 +308,10 @@ export function generateAccessibleSpaces(
 /** Aplica `generateAccessibleSpaces` a todas las secciones del mapa. */
 export function ensureAccessibleSpaces(
   map: SeatMapData,
-  opts: GenerateAccessibleOptions = {},
+  opts: GenerateAccessibleOptions = {}
 ): SeatMapData {
-  const totalRequired = opts.count ?? requiredWheelchairSpaces(
-    map.sections.reduce((n, s) => n + s.seats.length, 0),
-  );
+  const totalRequired =
+    opts.count ?? requiredWheelchairSpaces(map.sections.reduce((n, s) => n + s.seats.length, 0));
   const totalSeats = map.sections.reduce((n, s) => n + s.seats.length, 0) || 1;
 
   return {

@@ -27,7 +27,14 @@ import styles from './live-inventory.module.scss';
 
 /** Acepta comas, espacios y saltos de línea: se pega desde hoja de cálculo o del mapa. */
 function parseSeatIds(raw: string): string[] {
-  return [...new Set(raw.split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      raw
+        .split(/[\s,;]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    ),
+  ];
 }
 
 export function InventoryBlocksPanel({
@@ -71,7 +78,7 @@ export function InventoryBlocksPanel({
         setResult(
           `Bloqueadas ${res.holds?.length ?? seatIds.length} butacas · motivo «${res.reason}» (${
             BLOCK_CATEGORY_LABEL[res.category as BlockCategory] ?? res.category
-          }) · vence ${new Date(res.expiresAt).toLocaleString('es-MX')}.`,
+          }) · vence ${new Date(res.expiresAt).toLocaleString('es-MX')}.`
         );
       } else {
         const res: AdminReleaseResult = await releaseSeats(token, layoutId, {
@@ -81,7 +88,7 @@ export function InventoryBlocksPanel({
         });
         const failed = res.failed?.length ? ` · ${res.failed.length} fallaron` : '';
         setResult(
-          `Liberadas ${res.released} de ${res.requested} butacas · ${res.notActive} ya no estaban bloqueadas${failed}.`,
+          `Liberadas ${res.released} de ${res.requested} butacas · ${res.notActive} ya no estaban bloqueadas${failed}.`
         );
       }
     } catch (err) {
@@ -90,7 +97,7 @@ export function InventoryBlocksPanel({
           ? `${err.userMessage} (${err.status})`
           : err instanceof Error
             ? err.message
-            : 'No se pudo completar la operación.',
+            : 'No se pudo completar la operación.'
       );
     } finally {
       setBusy(null);
@@ -147,8 +154,8 @@ export function InventoryBlocksPanel({
           aria-invalid={touchedReason && reasonProblem ? true : undefined}
         />
         <span id="block-reason-hint" className={styles.fieldHint}>
-          Mínimo {MIN_REASON_LENGTH} caracteres. Se guarda tal cual en la auditoría: escribe algo que
-          se entienda dentro de seis meses ({reason.trim().length}/{MIN_REASON_LENGTH}).
+          Mínimo {MIN_REASON_LENGTH} caracteres. Se guarda tal cual en la auditoría: escribe algo
+          que se entienda dentro de seis meses ({reason.trim().length}/{MIN_REASON_LENGTH}).
         </span>
       </label>
       {touchedReason && reasonProblem && (

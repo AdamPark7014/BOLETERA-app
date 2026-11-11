@@ -18,7 +18,7 @@ export type SearchEventsQuery = {
 export class SearchController {
   constructor(
     private searchService: SearchService,
-    private tenant: TenantService,
+    private tenant: TenantService
   ) {}
 
   private async resolveOrgId(headers: Record<string, string>): Promise<string | null> {
@@ -34,7 +34,7 @@ export class SearchController {
   })
   async searchEvents(
     @Headers() headers: Record<string, string>,
-    @Query() filters: SearchEventsQuery,
+    @Query() filters: SearchEventsQuery
   ) {
     const orgId = await this.resolveOrgId(headers);
     if (!orgId) return [];
@@ -49,10 +49,7 @@ export class SearchController {
 
   @Get('facets')
   @ApiOperation({ summary: 'Get SQL facet counts for filtering (city, category)' })
-  async getFacets(
-    @Headers() headers: Record<string, string>,
-    @Query() filters: SearchEventsQuery,
-  ) {
+  async getFacets(@Headers() headers: Record<string, string>, @Query() filters: SearchEventsQuery) {
     const orgId = await this.resolveOrgId(headers);
     if (!orgId) return { cities: [], categories: [], priceRange: { min: 0, max: 0 } };
     return await this.searchService.getSearchFacets({
@@ -65,10 +62,7 @@ export class SearchController {
 
   @Get('autocomplete')
   @ApiOperation({ summary: 'Autocomplete suggestions from event titles (SQL ILIKE)' })
-  async getAutocomplete(
-    @Headers() headers: Record<string, string>,
-    @Query('q') query: string,
-  ) {
+  async getAutocomplete(@Headers() headers: Record<string, string>, @Query('q') query: string) {
     const orgId = await this.resolveOrgId(headers);
     if (!orgId) return [];
     return await this.searchService.getAutocomplete(query, orgId);
@@ -76,10 +70,7 @@ export class SearchController {
 
   @Get('trending')
   @ApiOperation({ summary: 'Events ordered by recent order volume' })
-  async getTrending(
-    @Headers() headers: Record<string, string>,
-    @Query('limit') limit?: number,
-  ) {
+  async getTrending(@Headers() headers: Record<string, string>, @Query('limit') limit?: number) {
     const orgId = await this.resolveOrgId(headers);
     if (!orgId) return [];
     return await this.searchService.getTrendingEvents(limit || 10, orgId);
@@ -92,7 +83,7 @@ export class SearchController {
   })
   async getRecommendations(
     @Headers() headers: Record<string, string>,
-    @Query('userId') userId?: string,
+    @Query('userId') userId?: string
   ) {
     const orgId = await this.resolveOrgId(headers);
     if (!orgId) return [];

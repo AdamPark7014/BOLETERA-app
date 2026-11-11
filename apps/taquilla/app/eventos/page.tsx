@@ -3,14 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { stockImageForCategory } from '@boletera/shared';
-import {
-  Badge,
-  Button,
-  Card,
-  EmptyState,
-  SearchInput,
-  SkeletonCard,
-} from '@boletera/ui';
+import { Badge, Button, Card, EmptyState, SearchInput, SkeletonCard } from '@boletera/ui';
 import { apiJson, getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import { digitPressed, type Hotkey } from '@/lib/hotkeys';
@@ -61,7 +54,7 @@ export default function EventosTaquillaPage() {
     if (!q) return events;
     const needle = q.toLowerCase();
     return events.filter(
-      (e) => e.title.toLowerCase().includes(needle) || e.venue?.name?.toLowerCase().includes(needle),
+      (e) => e.title.toLowerCase().includes(needle) || e.venue?.name?.toLowerCase().includes(needle)
     );
   }, [events, q]);
 
@@ -84,7 +77,7 @@ export default function EventosTaquillaPage() {
         router.push(
           offer
             ? ventaUrl(row.id, offer)
-            : `/venta?${new URLSearchParams({ eventId: row.id }).toString()}`,
+            : `/venta?${new URLSearchParams({ eventId: row.id }).toString()}`
         );
       },
     },
@@ -94,7 +87,13 @@ export default function EventosTaquillaPage() {
       whileTyping: true,
       run: () => document.getElementById('event-search')?.focus(),
     },
-    { keys: 'Esc', label: 'Volver', whileTyping: true, match: (e) => e.key === 'Escape', run: () => router.push('/') },
+    {
+      keys: 'Esc',
+      label: 'Volver',
+      whileTyping: true,
+      match: (e) => e.key === 'Escape',
+      run: () => router.push('/'),
+    },
   ];
 
   return (
@@ -117,7 +116,9 @@ export default function EventosTaquillaPage() {
           shortcut="F2"
         />
         <p className={styles.searchHint}>
-          <Badge tone="neutral" variant="outline" size="sm">1–9</Badge>
+          <Badge tone="neutral" variant="outline" size="sm">
+            1–9
+          </Badge>
           <span>Venta rápida al evento en la lista</span>
         </p>
       </Card>
@@ -164,7 +165,9 @@ export default function EventosTaquillaPage() {
                     />
                     <div className={styles.cardDate}>
                       <strong>{date.toLocaleDateString('es-MX', { day: '2-digit' })}</strong>
-                      <span>{date.toLocaleDateString('es-MX', { month: 'short' }).toUpperCase()}</span>
+                      <span>
+                        {date.toLocaleDateString('es-MX', { month: 'short' }).toUpperCase()}
+                      </span>
                     </div>
                     <div className={styles.cardInfo}>
                       <strong>{e.title}</strong>
@@ -179,7 +182,9 @@ export default function EventosTaquillaPage() {
                           {offers.length} zona{offers.length === 1 ? '' : 's'}
                         </Badge>
                       ) : (
-                        <Badge tone="warning" variant="soft" size="sm">Sin ofertas</Badge>
+                        <Badge tone="warning" variant="soft" size="sm">
+                          Sin ofertas
+                        </Badge>
                       )}
                       <span className={open ? styles.ctaSecondary : styles.cta}>
                         {open ? 'Cerrar' : 'Zonas'}
@@ -216,7 +221,9 @@ export default function EventosTaquillaPage() {
                                         {lowStock ? 'Poco stock' : 'Disponible'}
                                       </Badge>
                                     )}
-                                    <strong className={styles.offerPrice}>{money(Number(o.basePrice))}</strong>
+                                    <strong className={styles.offerPrice}>
+                                      {money(Number(o.basePrice))}
+                                    </strong>
                                     <Button
                                       variant="primary"
                                       size="sm"

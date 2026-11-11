@@ -45,11 +45,7 @@ export function Timeline({
   ...rest
 }: TimelineProps) {
   return (
-    <ol
-      className={cx(styles.timeline, styles[density], className)}
-      aria-label={label}
-      {...rest}
-    >
+    <ol className={cx(styles.timeline, styles[density], className)} aria-label={label} {...rest}>
       {items.map((item) => (
         <li key={item.id} className={styles.item}>
           <div className={styles.rail} aria-hidden="true">
@@ -58,7 +54,7 @@ export function Timeline({
                 styles.marker,
                 styles[item.tone ?? 'neutral'],
                 item.current && styles.current,
-                item.icon ? styles.hasIcon : null,
+                item.icon ? styles.hasIcon : null
               )}
             >
               {item.icon}

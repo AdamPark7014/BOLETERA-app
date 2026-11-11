@@ -89,12 +89,18 @@ const midX = (b.minX + b.maxX) / 2;
 const midY = (b.minY + b.maxY) / 2;
 
 const scratch = [];
-const [tRectSmall] = ms(() => querySeatsInRect(index, midX - 300, midY - 300, midX + 300, midY + 300, scratch));
-console.log(`querySeatsInRect (ventana chica): ${tRectSmall.toFixed(2)} ms → ${scratch.length} butacas`);
+const [tRectSmall] = ms(() =>
+  querySeatsInRect(index, midX - 300, midY - 300, midX + 300, midY + 300, scratch)
+);
+console.log(
+  `querySeatsInRect (ventana chica): ${tRectSmall.toFixed(2)} ms → ${scratch.length} butacas`
+);
 assert(tRectSmall < 20, `consulta por rectángulo lenta: ${tRectSmall} ms`);
 
 const [tRectAll, allHit] = ms(() => querySeatsInRect(index, b.minX, b.minY, b.maxX, b.maxY, []));
-console.log(`querySeatsInRect (todo el recinto): ${tRectAll.toFixed(1)} ms → ${allHit.length} butacas`);
+console.log(
+  `querySeatsInRect (todo el recinto): ${tRectAll.toFixed(1)} ms → ${allHit.length} butacas`
+);
 assert(allHit.length === total, `selección total ${allHit.length} != ${total}`);
 
 // Comparación honesta: el barrido lineal que hacía el editor antes.
@@ -127,12 +133,15 @@ assert(lodModeFor(0.1) === 'sections', 'zoom lejano → secciones');
 assert(lodModeFor(0.35) === 'clusters', 'zoom medio → clusters');
 assert(lodModeFor(1.2) === 'seats', 'zoom cercano → butacas');
 
-const [tClusters, clusters] = ms(() =>
-  buildClusters(index, b.minX, b.minY, b.maxX, b.maxY, 120),
-);
+const [tClusters, clusters] = ms(() => buildClusters(index, b.minX, b.minY, b.maxX, b.maxY, 120));
 const clustered = clusters.reduce((n, c) => n + c.count, 0);
-console.log(`buildClusters: ${tClusters.toFixed(1)} ms → ${clusters.length} celdas (${clustered} butacas)`);
-assert(clustered === total, `los clusters deben cubrir todas las butacas: ${clustered} != ${total}`);
+console.log(
+  `buildClusters: ${tClusters.toFixed(1)} ms → ${clusters.length} celdas (${clustered} butacas)`
+);
+assert(
+  clustered === total,
+  `los clusters deben cubrir todas las butacas: ${clustered} != ${total}`
+);
 assert(clusters.length < total / 10, 'los clusters deben reducir mucho el número de dibujos');
 console.log(`  reducción de dibujos: ${(total / clusters.length).toFixed(1)}×`);
 
@@ -148,12 +157,15 @@ const [tUndo, restored] = ms(() => restoreSeatProps(bulk.map, bulk.before));
 console.log(`restoreSeatProps (deshacer): ${tUndo.toFixed(1)} ms`);
 assert(
   restored.sections[0].seats[0].tier === map.sections[0].seats[0].tier,
-  'deshacer debe devolver la tarifa original',
+  'deshacer debe devolver la tarifa original'
 );
 
 // Reutilización por referencia: una edición parcial no debe tocar otras secciones.
 const partial = applySeatProps(map, new Set([index.ids[0]]), { tier: 'economy' });
-assert(partial.map.sections[1] === map.sections[1], 'las secciones intactas deben conservar identidad');
+assert(
+  partial.map.sections[1] === map.sections[1],
+  'las secciones intactas deben conservar identidad'
+);
 assert(partial.map.sections[0] !== map.sections[0], 'la sección editada debe ser nueva');
 console.log('structural sharing: secciones no tocadas conservan identidad ✓');
 
@@ -173,14 +185,17 @@ hist = pushCommand(hist, {
   dy: 20,
 });
 working = move;
-assert(working.sections[0].seats[0].x === Math.round(index.x[0] + 10), 'el movimiento debe aplicarse');
+assert(
+  working.sections[0].seats[0].x === Math.round(index.x[0] + 10),
+  'el movimiento debe aplicarse'
+);
 
 const undone = undo(working, hist);
 assert(undone.map.sections[0].seats[0].x === index.x[0], 'deshacer debe restaurar la posición');
 const redone = redo(undone.map, undone.history);
 assert(
   redone.map.sections[0].seats[0].x === Math.round(index.x[0] + 10),
-  'rehacer debe reaplicar el movimiento',
+  'rehacer debe reaplicar el movimiento'
 );
 console.log('deshacer/rehacer sobre comandos ✓');
 

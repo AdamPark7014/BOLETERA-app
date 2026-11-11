@@ -45,7 +45,7 @@ export type AiForecastParams = Pick<AiRangeParams, 'from' | 'to' | 'organization
 const AI_STALE_TIME = 30_000;
 
 function toQueryString(
-  params: Record<string, string | number | boolean | undefined | null>,
+  params: Record<string, string | number | boolean | undefined | null>
 ): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -58,16 +58,13 @@ function toQueryString(
 
 function aiUrl(
   path: string,
-  params: Record<string, string | number | boolean | undefined | null> = {},
+  params: Record<string, string | number | boolean | undefined | null> = {}
 ): string {
   return `/ai/${path}${toQueryString(params)}`;
 }
 
 /** GET /ai/forecast/events/:eventId — sales & occupancy projection. */
-export function useAiSalesForecast(
-  eventId: string | null,
-  params: AiForecastParams = {},
-) {
+export function useAiSalesForecast(eventId: string | null, params: AiForecastParams = {}) {
   return useQuery({
     queryKey: queryKeys.ai.forecast(eventId ?? '', params),
     queryFn: ({ signal }) =>
@@ -77,7 +74,7 @@ export function useAiSalesForecast(
           to: params.to,
           organizationId: params.organizationId,
         }),
-        { signal },
+        { signal }
       ),
     enabled: Boolean(eventId),
     staleTime: AI_STALE_TIME,
@@ -99,7 +96,7 @@ export function useAiAnomalies(params: AiAnomaliesParams = {}) {
           metric: params.metric,
           zThreshold: params.zThreshold,
         }),
-        { signal },
+        { signal }
       ),
     staleTime: AI_STALE_TIME,
     retry: false,
@@ -119,7 +116,7 @@ export function useAiFraudRisk(params: AiFraudRiskParams = {}) {
           organizationId: params.organizationId,
           limit: params.limit,
         }),
-        { signal },
+        { signal }
       ),
     staleTime: AI_STALE_TIME,
     retry: false,
@@ -129,7 +126,7 @@ export function useAiFraudRisk(params: AiFraudRiskParams = {}) {
 /** GET /ai/fraud/risk/orders/:orderId — single-order fraud score. */
 export function useAiFraudRiskOrder(
   orderId: string | null,
-  params: Pick<AiRangeParams, 'organizationId'> = {},
+  params: Pick<AiRangeParams, 'organizationId'> = {}
 ) {
   return useQuery({
     queryKey: queryKeys.ai.fraudOrder(orderId ?? '', params),
@@ -138,7 +135,7 @@ export function useAiFraudRiskOrder(
         aiUrl(`fraud/risk/orders/${encodeURIComponent(orderId ?? '')}`, {
           organizationId: params.organizationId,
         }),
-        { signal },
+        { signal }
       ),
     enabled: Boolean(orderId),
     staleTime: AI_STALE_TIME,
@@ -159,7 +156,7 @@ export function useAiRecommendations(params: AiRecommendationsParams = {}) {
           organizationId: params.organizationId,
           limit: params.limit,
         }),
-        { signal },
+        { signal }
       ),
     staleTime: AI_STALE_TIME,
     retry: false,
@@ -178,7 +175,7 @@ export function useAiExecutiveSummary(params: AiRangeParams = {}) {
           eventId: params.eventId,
           organizationId: params.organizationId,
         }),
-        { signal },
+        { signal }
       ),
     staleTime: AI_STALE_TIME,
     retry: false,
@@ -203,7 +200,7 @@ export function useAiCustomerSegmentation(params: AiSegmentationParams = {}) {
           organizationId: params.organizationId,
           limit: params.limit,
         }),
-        { signal },
+        { signal }
       ),
     staleTime: AI_STALE_TIME,
     retry: false,

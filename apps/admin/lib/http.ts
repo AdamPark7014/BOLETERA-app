@@ -1,8 +1,7 @@
 import { clearSession, getTokenStorage } from './session';
 import { addCsrfHeader } from './auth-cookies';
 
-const API_URL =
-  process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
 
 type BackendErrorBody = {
   message?: unknown;
@@ -15,7 +14,7 @@ export class HttpError extends Error {
     message: string,
     public readonly status: number | null,
     public readonly code: string,
-    public readonly details?: unknown,
+    public readonly details?: unknown
   ) {
     super(message);
     this.name = 'HttpError';
@@ -37,7 +36,11 @@ export class PermissionError extends HttpError {
 }
 
 export class ServerError extends HttpError {
-  constructor(status: number, message = 'El servidor no pudo completar la solicitud.', details?: unknown) {
+  constructor(
+    status: number,
+    message = 'El servidor no pudo completar la solicitud.',
+    details?: unknown
+  ) {
     super(message, status, 'SERVER_ERROR', details);
     this.name = 'ServerError';
   }
@@ -70,9 +73,7 @@ function messageFromBody(body: unknown, status: number): string {
   if (body && typeof body === 'object') {
     const candidate = body as BackendErrorBody;
     if (Array.isArray(candidate.message)) {
-      const messages = candidate.message.filter(
-        (item): item is string => typeof item === 'string',
-      );
+      const messages = candidate.message.filter((item): item is string => typeof item === 'string');
       if (messages.length) return messages.join('. ');
     }
     if (typeof candidate.message === 'string') return candidate.message;
@@ -98,10 +99,7 @@ function redirectToLogin(): void {
   window.location.replace('/login');
 }
 
-function requestBody(
-  body: HttpOptions['body'],
-  headers: Headers,
-): BodyInit | null | undefined {
+function requestBody(body: HttpOptions['body'], headers: Headers): BodyInit | null | undefined {
   if (
     body === undefined ||
     body === null ||
@@ -118,14 +116,12 @@ function requestBody(
 }
 
 function isStateChanging(method: string | undefined): boolean {
-  return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(
-    (method ?? 'GET').toUpperCase(),
-  );
+  return ['POST', 'PUT', 'PATCH', 'DELETE'].includes((method ?? 'GET').toUpperCase());
 }
 
 function responseValue<T>(
   response: Response,
-  responseType: HttpOptions['responseType'],
+  responseType: HttpOptions['responseType']
 ): Promise<T> {
   if (response.status === 204) return Promise.resolve(undefined as T);
   if (responseType === 'text') return response.text() as Promise<T>;
@@ -173,10 +169,7 @@ async function performRefresh(): Promise<void> {
       throw new AuthenticationError('Sesión no iniciada', null);
     }
     const details = await errorBody(response);
-    throw new AuthenticationError(
-      messageFromBody(details, response.status),
-      details,
-    );
+    throw new AuthenticationError(messageFromBody(details, response.status), details);
   }
 
   const result = (await response.json()) as RefreshResult;
@@ -199,7 +192,7 @@ async function executeRequest<T>(
   path: string,
   options: HttpOptions,
   retried: boolean,
-  requestGeneration: number,
+  requestGeneration: number
 ): Promise<T> {
   const {
     body,

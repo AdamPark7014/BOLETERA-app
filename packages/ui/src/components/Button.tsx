@@ -48,7 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     children,
     ...rest
   },
-  ref,
+  ref
 ) {
   const isDisabled = disabled || loading;
 
@@ -63,7 +63,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         fullWidth && styles.fullWidth,
         iconOnly && styles.iconOnly,
         loading && styles.loading,
-        className,
+        className
       )}
       disabled={isDisabled}
       aria-busy={loading || undefined}

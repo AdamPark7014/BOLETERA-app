@@ -54,11 +54,11 @@ export const options = {
     },
   },
   thresholds: {
-    'seatmap_latency': ['p(95)<800'],
+    seatmap_latency: ['p(95)<800'],
     'http_req_duration{name:hold}': ['p(95)<1500'],
     'http_req_duration{name:order}': ['p(95)<3000'],
-    'http_req_failed': ['rate<0.01'],
-    'order_5xx': ['count==0'],
+    http_req_failed: ['rate<0.01'],
+    order_5xx: ['count==0'],
   },
 };
 
@@ -86,7 +86,7 @@ export function purchase() {
   const holdRes = http.post(
     `${API}/inventory/holds`,
     JSON.stringify({ eventId: EVENT_ID, offerId: OFFER_ID, quantity: 2, sessionId }),
-    { headers: { 'Content-Type': 'application/json' }, tags: { name: 'hold' } },
+    { headers: { 'Content-Type': 'application/json' }, tags: { name: 'hold' } }
   );
 
   if (holdRes.status === 409) {
@@ -120,7 +120,7 @@ export function purchase() {
     {
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': sessionId },
       tags: { name: 'order' },
-    },
+    }
   );
 
   if (orderRes.status >= 500) orderErrors.add(1);

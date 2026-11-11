@@ -23,7 +23,11 @@ export type PricingRates = {
 };
 
 /** Misma fórmula que el API: base + cargo + IVA, redondeada a centavos. */
-export function exampleFromRates(base: number, serviceFeeRate: number, taxRate: number): PriceExample {
+export function exampleFromRates(
+  base: number,
+  serviceFeeRate: number,
+  taxRate: number
+): PriceExample {
   const safeBase = Number.isFinite(base) && base > 0 ? base : 0;
   const round2 = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
   const fees = round2(safeBase * serviceFeeRate);

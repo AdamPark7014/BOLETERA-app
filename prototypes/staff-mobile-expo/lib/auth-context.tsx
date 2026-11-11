@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!ok) await signOut();
       return ok;
     },
-    [refreshSession, signOut],
+    [refreshSession, signOut]
   );
 
   const cancelReauth = useCallback(async () => {
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       expiringSoon: session ? sessionExpiringSoon(session) : false,
       timeLeftMs: session ? tokenTimeLeftMs(session) : null,
     }),
-    [session, ready, signIn, signOut, refreshSession],
+    [session, ready, signIn, signOut, refreshSession]
   );
 
   return (

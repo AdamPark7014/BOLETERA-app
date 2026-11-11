@@ -12,15 +12,15 @@ Dejan de valer en cuanto haya entrevistas que las contradigan — esa es su func
 
 ## Método (los 5 pasos y dónde vamos)
 
-| Paso | Qué pide | Qué se hizo | Estado |
-|---|---|---|---|
-| 01 | Recolectar datos amplios de usuarios objetivo | Inventario de roles, canales, métodos de pago y decisiones de operación ya tomadas | Hecho con datos internos |
-| 02 | Determinar cualidades y diferencias | Seis ejes de comportamiento + matriz | Hecho |
-| 03 | Formular hipótesis desde la investigación | Cinco hipótesis falsables con su prueba | Hecho |
-| 04 | Acuerdo de stakeholders sobre la hipótesis | Quién firma, qué está en disputa, cómo se cierra | **Pendiente: falta la sesión** |
-| 05 | Cuántas personas, con foco en una | 1 primaria + 4 secundarias + 1 antipersona | Propuesto |
+| Paso | Qué pide                                      | Qué se hizo                                                                        | Estado                         |
+| ---- | --------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------ |
+| 01   | Recolectar datos amplios de usuarios objetivo | Inventario de roles, canales, métodos de pago y decisiones de operación ya tomadas | Hecho con datos internos       |
+| 02   | Determinar cualidades y diferencias           | Seis ejes de comportamiento + matriz                                               | Hecho                          |
+| 03   | Formular hipótesis desde la investigación     | Cinco hipótesis falsables con su prueba                                            | Hecho                          |
+| 04   | Acuerdo de stakeholders sobre la hipótesis    | Quién firma, qué está en disputa, cómo se cierra                                   | **Pendiente: falta la sesión** |
+| 05   | Cuántas personas, con foco en una             | 1 primaria + 4 secundarias + 1 antipersona                                         | Propuesto                      |
 
-**Regla de foco:** a la primaria se le satisface *por completo*; a las demás basta con
+**Regla de foco:** a la primaria se le satisface _por completo_; a las demás basta con
 no dejarlas insatisfechas. Si una decisión obliga a elegir, gana la primaria.
 
 ---
@@ -28,6 +28,7 @@ no dejarlas insatisfechas. Si una decisión obliga a elegir, gana la primaria.
 ## 01 · Datos
 
 **Ya tenemos (interno, verificable en el repo):**
+
 - 15 roles en `UserRole`: `CUSTOMER`, `PROMOTER`, `VENUE_MANAGER`, `TAQUILLA`,
   `TAQUILLA_SUPERVISOR`, `SCANNER`, `FINANCE`, `AUDITOR`, etc.
 - 13 canales en `SalesChannel` (WEB, TAQUILLA, COURTESY, CORPORATE, PHONE, AFFILIATE,
@@ -38,6 +39,7 @@ no dejarlas insatisfechas. Si una decisión obliga a elegir, gana la primaria.
 - `docs/RUNBOOK_ONSALE.md`: lo que se teme el día del on-sale.
 
 **Falta (nadie lo ha hecho todavía):**
+
 - 8 entrevistas: 3 promotores, 2 jefes de taquilla, 1 operador de recinto, 2 contadoras.
 - 2 noches de campo detrás de la ventanilla, con cronómetro.
 - Embudo de compra móvil: dónde se cae la gente entre mapa y pago.
@@ -51,25 +53,25 @@ no dejarlas insatisfechas. Si una decisión obliga a elegir, gana la primaria.
 Presión de tiempo · Frecuencia de uso · Manejo de efectivo · Dinero en riesgo ·
 Condiciones físicas · Ante quién responde.
 
-| Persona | Presión | Frecuencia | Efectivo | Dinero en riesgo | Condiciones | Responde ante |
-|---|---|---|---|---|---|---|
-| La promotora | media | media | media | **alta** | baja | artista, socio, banco |
-| El comprador | **alta** | baja | media | baja | **alta** | sus amigos |
-| La taquillera | **alta** | **alta** | **alta** | media | **alta** | jefe de taquilla |
-| El operador del recinto | **alta** | media | baja | media | **alta** | Protección Civil |
-| La contadora | baja | media | media | **alta** | baja | SAT y promotor |
+| Persona                 | Presión  | Frecuencia | Efectivo | Dinero en riesgo | Condiciones | Responde ante         |
+| ----------------------- | -------- | ---------- | -------- | ---------------- | ----------- | --------------------- |
+| La promotora            | media    | media      | media    | **alta**         | baja        | artista, socio, banco |
+| El comprador            | **alta** | baja       | media    | baja             | **alta**    | sus amigos            |
+| La taquillera           | **alta** | **alta**   | **alta** | media            | **alta**    | jefe de taquilla      |
+| El operador del recinto | **alta** | media      | baja     | media            | **alta**    | Protección Civil      |
+| La contadora            | baja     | media      | media    | **alta**         | baja        | SAT y promotor        |
 
 ---
 
 ## 03 · Hipótesis falsables
 
-| # | Hipótesis | Cómo se comprueba | Qué la tira |
-|---|---|---|---|
-| H1 | La venta se concentra al final: buena parte del aforo se decide en las últimas 72 h y una porción relevante se vende en puerta el mismo día | Curva de venta por hora de los últimos 20 eventos, por canal | Que taquilla sea marginal → el POS deja de ser diferenciador |
-| H2 | El comprador abandona por la *sorpresa* del cargo por servicio, no por el monto | Embudo móvil + A/B con precio total desde la primera pantalla | Que el abandono no se mueva → el problema es el mapa, no el precio |
-| H3 | La promotora elige boletera por velocidad de pago y comisión, no por features | 8 entrevistas sobre el último cambio de proveedor | Que mencionen primero mapas/marketing → otro argumento de venta |
-| H4 | En taquilla, PIN corto + botones grandes valen más que cualquier función avanzada | 2 noches de campo: segundos por venta, errores por turno | Que el cuello de botella sea la terminal bancaria |
-| H5 | El QR estático se reenvía por WhatsApp y genera duplicados en puerta | Conteo de escaneos repetidos por evento y puerta | Que casi no haya duplicados → QR vivo es complejidad sin retorno |
+| #   | Hipótesis                                                                                                                                   | Cómo se comprueba                                             | Qué la tira                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------ |
+| H1  | La venta se concentra al final: buena parte del aforo se decide en las últimas 72 h y una porción relevante se vende en puerta el mismo día | Curva de venta por hora de los últimos 20 eventos, por canal  | Que taquilla sea marginal → el POS deja de ser diferenciador       |
+| H2  | El comprador abandona por la _sorpresa_ del cargo por servicio, no por el monto                                                             | Embudo móvil + A/B con precio total desde la primera pantalla | Que el abandono no se mueva → el problema es el mapa, no el precio |
+| H3  | La promotora elige boletera por velocidad de pago y comisión, no por features                                                               | 8 entrevistas sobre el último cambio de proveedor             | Que mencionen primero mapas/marketing → otro argumento de venta    |
+| H4  | En taquilla, PIN corto + botones grandes valen más que cualquier función avanzada                                                           | 2 noches de campo: segundos por venta, errores por turno      | Que el cuello de botella sea la terminal bancaria                  |
+| H5  | El QR estático se reenvía por WhatsApp y genera duplicados en puerta                                                                        | Conteo de escaneos repetidos por evento y puerta              | Que casi no haya duplicados → QR vivo es complejidad sin retorno   |
 
 ---
 
@@ -79,6 +81,7 @@ Condiciones físicas · Ante quién responde.
 la contadora de ese promotor · ingeniería (para poner precio a cada compromiso).
 
 **En disputa:**
+
 1. **Quién es la primaria.** Comercial dirá que el comprador (es el volumen). La
    propuesta es la promotora: ella firma el contrato y, si se va, se lleva a sus
    compradores.
@@ -87,24 +90,25 @@ la contadora de ese promotor · ingeniería (para poner precio a cada compromiso
 3. **Reventa: ¿combatir o administrar?** Tener módulo de reventa oficial ya es postura.
 
 **Cómo se cierra:** sesión de 90 min con las fichas impresas; cada quien marca su
-primaria *antes* de discutir; se decide con H1 y H3 sobre la mesa; lo acordado se
+primaria _antes_ de discutir; se decide con H1 y H3 sobre la mesa; lo acordado se
 fecha y se versiona aquí.
 
 ---
 
 ## 05 · Las personas
 
-| Quién | Rango | Rol | Dónde vive | Lo que no puede fallar |
-|---|---|---|---|---|
-| La promotora | **Primaria** | `PROMOTER` | `apps/admin` | Saber cuánto lleva vendido y cuándo le pagan |
-| El comprador de último minuto | Secundaria | `CUSTOMER` | `apps/web` | Comprar en móvil con prisa y creerle al boleto |
-| La taquillera | Secundaria | `TAQUILLA` | `apps/taquilla` | Cobrar rápido y que el corte cuadre |
-| El operador del recinto | Secundaria | `VENUE_MANAGER` | acceso + mapas | Que nadie entre dos veces y el aforo sea real |
-| La contadora del promotor | Secundaria | `FINANCE` | reportes/payouts/billing | Cuadrar el evento y timbrar sin rechazos |
-| El revendedor | **Antipersona** | — | on-sale + resale | Que no se salga con la suya |
+| Quién                         | Rango           | Rol             | Dónde vive               | Lo que no puede fallar                         |
+| ----------------------------- | --------------- | --------------- | ------------------------ | ---------------------------------------------- |
+| La promotora                  | **Primaria**    | `PROMOTER`      | `apps/admin`             | Saber cuánto lleva vendido y cuándo le pagan   |
+| El comprador de último minuto | Secundaria      | `CUSTOMER`      | `apps/web`               | Comprar en móvil con prisa y creerle al boleto |
+| La taquillera                 | Secundaria      | `TAQUILLA`      | `apps/taquilla`          | Cobrar rápido y que el corte cuadre            |
+| El operador del recinto       | Secundaria      | `VENUE_MANAGER` | acceso + mapas           | Que nadie entre dos veces y el aforo sea real  |
+| La contadora del promotor     | Secundaria      | `FINANCE`       | reportes/payouts/billing | Cuadrar el evento y timbrar sin rechazos       |
+| El revendedor                 | **Antipersona** | —               | on-sale + resale         | Que no se salga con la suya                    |
 
 ### La promotora — PRIMARIA
-*Contrata la plataforma y responde por el evento.*
+
+_Contrata la plataforma y responde por el evento._
 34 años, Guadalajara, 14 eventos/año en foros de 400–1,200. Ella, un socio y dos
 personas por evento. WhatsApp para todo, Instagram, hoja de cálculo de cortesías.
 Laptop de cinco años.
@@ -125,7 +129,8 @@ Laptop de cinco años.
   montados sin ayuda.
 
 ### El comprador de último minuto — secundaria
-*Decide con sus amigos, en el camión, la noche anterior.*
+
+_Decide con sus amigos, en el camión, la noche anterior._
 23 años, Monterrey, primer empleo. Android de gama media, datos limitados. Compra 2–3
 boletos decididos en un grupo de WhatsApp. Débito u OXXO.
 
@@ -146,7 +151,8 @@ boletos decididos en un grupo de WhatsApp. Débito u OXXO.
   y no me llegó".
 
 ### La taquillera — secundaria
-*Cobra en efectivo, en la ventanilla, contratada por evento.*
+
+_Cobra en efectivo, en la ventanilla, contratada por evento._
 41 años, 3–4 noches al mes. Ventanilla, poca luz, ruido, fila de 60. Terminal +
 impresora térmica + terminal bancaria aparte. Capacitación: 10 minutos.
 
@@ -164,7 +170,8 @@ impresora térmica + terminal bancaria aparte. Capacitación: 10 minutos.
 - **Métrica:** segundos por venta · diferencia de caja en el corte · ventas caídas por red.
 
 ### El operador del recinto — secundaria
-*Responde por el aforo ante Protección Civil.*
+
+_Responde por el aforo ante Protección Civil._
 47 años, foro de 1,400 con tres puertas, seis escaneadores con celulares prestados.
 El Wi-Fi no llega al lobby.
 
@@ -182,7 +189,8 @@ El Wi-Fi no llega al lobby.
 - **Métrica:** duplicados por evento · segundos de escaneo · aforo del sistema vs conteo físico.
 
 ### La contadora del promotor — secundaria
-*Cuadra el evento el lunes siguiente.*
+
+_Cuadra el evento el lunes siguiente._
 38 años, lleva la contabilidad de tres promotores. Su herramienta real es la hoja de
 cálculo.
 
@@ -203,6 +211,7 @@ cálculo.
   facturas rechazadas.
 
 ### El revendedor — ANTIPERSONA
+
 Guiones automatizados, varias cuentas, objetivo: vaciar la zona cara en el minuto uno.
 El daño se lo hace al comprador, a la promotora y al artista.
 
@@ -216,6 +225,7 @@ transferible) es también una facilidad para él.
 - **Regla:** ninguna medida contra él puede costarle al comprador más de un paso extra.
 
 ### Fuera de alcance a propósito
+
 Operador internacional multimoneda · artista con panel propio · patrocinador con
 reporte de activaciones. Reales en el mercado, no en este producto en esta etapa.
 Escribirlos ahora solo justificaría funciones que nadie ha pedido.
@@ -224,8 +234,8 @@ Escribirlos ahora solo justificaría funciones que nadie ha pedido.
 
 ## 06 · Plan de validación (3 semanas)
 
-| Semana | Qué se hace | Qué queda |
-|---|---|---|
-| 1 | Datos que ya existen: curva de venta por hora y canal (20 eventos), embudo móvil, tickets de soporte clasificados | H1, H2 y H5 resueltas sin hablar con nadie |
-| 2 | 8 entrevistas de 45 min + 2 noches de campo en taquilla con cronómetro | H3 y H4 resueltas; citas textuales sustituyen a las frases inventadas |
-| 3 | Sesión de acuerdo con fichas corregidas; se firma la primaria y el orden | Versión 1.0 fechada aquí + lista de decisiones de producto que cambian |
+| Semana | Qué se hace                                                                                                       | Qué queda                                                              |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 1      | Datos que ya existen: curva de venta por hora y canal (20 eventos), embudo móvil, tickets de soporte clasificados | H1, H2 y H5 resueltas sin hablar con nadie                             |
+| 2      | 8 entrevistas de 45 min + 2 noches de campo en taquilla con cronómetro                                            | H3 y H4 resueltas; citas textuales sustituyen a las frases inventadas  |
+| 3      | Sesión de acuerdo con fichas corregidas; se firma la primaria y el orden                                          | Versión 1.0 fechada aquí + lista de decisiones de producto que cambian |

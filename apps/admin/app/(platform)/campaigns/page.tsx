@@ -66,7 +66,9 @@ function positiveRule(value: number | null): number | null {
 }
 
 /** Misma lectura que el cobro: puntos, o si no vienen, el descuento. Cero no cuenta. */
-function loyaltyRule(campaign: Campaign): { value: number; discountType: 'percentage' | 'fixed' } | null {
+function loyaltyRule(
+  campaign: Campaign
+): { value: number; discountType: 'percentage' | 'fixed' } | null {
   if (campaign.type !== 'loyalty') return null;
   const points = positiveRule(campaign.points);
   const discount = positiveRule(campaign.discountValue);
@@ -218,7 +220,9 @@ function DescuentosBody() {
           return event ? [event] : [];
         });
         setEvents(next);
-        setEventId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+        setEventId((current) =>
+          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+        );
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -245,7 +249,9 @@ function DescuentosBody() {
         });
         setCampaigns(next);
         setPaused(Object.fromEntries(next.map((item) => [item.id, item.status === 'PAUSED'])));
-        setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+        setOpenId((current) =>
+          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+        );
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -256,7 +262,9 @@ function DescuentosBody() {
     };
   }, [token, eventId, canWrite, nonce]);
 
-  const pauseChanges = campaigns.filter((item) => (paused[item.id] ?? false) !== (item.status === 'PAUSED'));
+  const pauseChanges = campaigns.filter(
+    (item) => (paused[item.id] ?? false) !== (item.status === 'PAUSED')
+  );
   const creating = draft.name.trim().length > 0;
   const dirty = pauseChanges.length > 0 || creating;
 
@@ -325,7 +333,11 @@ function DescuentosBody() {
   }
   if (error) {
     return (
-      <ApiErrorView error={error} context="abrir descuentos" onRetry={() => setNonce((current) => current + 1)} />
+      <ApiErrorView
+        error={error}
+        context="abrir descuentos"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
     );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando descuentos.</p>;
@@ -450,7 +462,11 @@ function DescuentosBody() {
                     />
                   </Param>
                   <Param name="Descuento hasta">
-                    <ParameterCard name="Descuento hasta" value={formatWhen(item.endsAt)} effect="Fin ya guardado." />
+                    <ParameterCard
+                      name="Descuento hasta"
+                      value={formatWhen(item.endsAt)}
+                      effect="Fin ya guardado."
+                    />
                   </Param>
                   <Param name="Estado">
                     <ParameterCard
@@ -551,7 +567,9 @@ function DescuentosBody() {
                   label="Valor del descuento"
                   kind="money"
                   value={draft.discountValue}
-                  onChange={(input) => setDraft((current) => ({ ...current, discountValue: input.target.value }))}
+                  onChange={(input) =>
+                    setDraft((current) => ({ ...current, discountValue: input.target.value }))
+                  }
                 />
               ) : (
                 <Stepper
@@ -560,7 +578,9 @@ function DescuentosBody() {
                   min={0}
                   max={100}
                   unit="%"
-                  onChange={(next) => setDraft((current) => ({ ...current, discountValue: String(next) }))}
+                  onChange={(next) =>
+                    setDraft((current) => ({ ...current, discountValue: String(next) }))
+                  }
                 />
               )}
             </ParameterCard>
@@ -598,22 +618,34 @@ function DescuentosBody() {
             </ParameterCard>
           </Param>
           <Param name="Descuento desde">
-            <ParameterCard name="Descuento desde" value={formatWhen(draft.startsAt)} effect="Inicio de la campaña.">
+            <ParameterCard
+              name="Descuento desde"
+              value={formatWhen(draft.startsAt)}
+              effect="Inicio de la campaña."
+            >
               <Field
                 label="Descuento desde"
                 type="datetime-local"
                 value={draft.startsAt}
-                onChange={(input) => setDraft((current) => ({ ...current, startsAt: input.target.value }))}
+                onChange={(input) =>
+                  setDraft((current) => ({ ...current, startsAt: input.target.value }))
+                }
               />
             </ParameterCard>
           </Param>
           <Param name="Descuento hasta">
-            <ParameterCard name="Descuento hasta" value={formatWhen(draft.endsAt)} effect="Fin de la campaña.">
+            <ParameterCard
+              name="Descuento hasta"
+              value={formatWhen(draft.endsAt)}
+              effect="Fin de la campaña."
+            >
               <Field
                 label="Descuento hasta"
                 type="datetime-local"
                 value={draft.endsAt}
-                onChange={(input) => setDraft((current) => ({ ...current, endsAt: input.target.value }))}
+                onChange={(input) =>
+                  setDraft((current) => ({ ...current, endsAt: input.target.value }))
+                }
               />
             </ParameterCard>
           </Param>

@@ -43,11 +43,13 @@ export type SvgImportResult = {
 };
 
 function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 40) || 'zone';
+  return (
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'zone'
+  );
 }
 
 function parseNumbers(raw: string): number[] {
@@ -75,7 +77,7 @@ function sampleCubic(
   y2: number,
   x3: number,
   y3: number,
-  steps = 6,
+  steps = 6
 ): [number, number][] {
   const out: [number, number][] = [];
   for (let i = 1; i <= steps; i++) {
@@ -269,7 +271,7 @@ function pointsFromElement(tag: string, el: string): [number, number][] {
 function fitPrimitives(
   primitives: SvgImportedPrimitive[],
   targetWidth = 900,
-  pad = 48,
+  pad = 48
 ): SvgImportedPrimitive[] {
   const all = primitives.flatMap((p) => p.points);
   if (!all.length) return primitives;
@@ -287,7 +289,7 @@ function fitPrimitives(
         [Math.round((x - minX) * scale + pad), Math.round((y - minY) * scale + pad)] as [
           number,
           number,
-        ],
+        ]
     ),
     width: p.width != null ? Math.max(4, Math.round(p.width * scale)) : undefined,
     // Keep elevation z unscaled (map units already authored)
@@ -300,10 +302,7 @@ function fitPrimitives(
  * Heuristics: id/class/data-role containing aisle|obstacle|stage; otherwise section shapes (GA).
  * Level tags: data-level-id / data-from-level-id / data-to-level-id (+ data-levels JSON).
  */
-export function parseSvgPrimitives(
-  svgText: string,
-  diag?: CadDiagnostics,
-): SvgImportedPrimitive[] {
+export function parseSvgPrimitives(svgText: string, diag?: CadDiagnostics): SvgImportedPrimitive[] {
   const svg = svgText.replace(/\n+/g, ' ');
   const primitives: SvgImportedPrimitive[] = [];
   let idx = 0;
@@ -326,9 +325,10 @@ export function parseSvgPrimitives(
       if (!points.length) {
         // Antes esto era un `continue` mudo: el elemento desaparecía sin rastro.
         diag?.skip({
-          reason: tag === 'path' || tag === 'polygon' || tag === 'polyline'
-            ? 'unparsable-attribute'
-            : 'degenerate',
+          reason:
+            tag === 'path' || tag === 'polygon' || tag === 'polyline'
+              ? 'unparsable-attribute'
+              : 'degenerate',
           entityType: tag,
           layer: attr(el, 'class') || undefined,
           ref: elementId,
@@ -417,7 +417,7 @@ export type SvgToMapOptions = {
 export function importSvgToSeatMap(
   svgText: string,
   base?: SeatMapData | null,
-  opts?: SvgToMapOptions,
+  opts?: SvgToMapOptions
 ): SvgImportResult {
   const diag = new CadDiagnostics();
   const primitives = parseSvgPrimitives(svgText, diag);
@@ -462,6 +462,6 @@ export function previewSvgCadImport(svgText: string): CadReviewPrimitive[] {
       levelId: p.levelId,
       fromLevelId: p.fromLevelId,
       toLevelId: p.toLevelId,
-    }),
+    })
   );
 }

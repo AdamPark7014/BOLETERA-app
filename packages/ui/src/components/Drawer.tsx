@@ -88,7 +88,12 @@ export function Drawer({
               </p>
             ) : null}
           </div>
-          <button type="button" className={styles.close} onClick={onClose} aria-label="Cerrar panel">
+          <button
+            type="button"
+            className={styles.close}
+            onClick={onClose}
+            aria-label="Cerrar panel"
+          >
             <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
               <path d="M4 4l8 8M12 4l-8 8" />
             </svg>

@@ -36,7 +36,10 @@ export function computeGridSpec(camera: Camera, scale = 40): GridSpec {
 export type GridLine = { a: number; major: boolean };
 
 /** Collect vertical (x=const) and horizontal (y=const) line positions in world units. */
-export function collectGridLines(viewport: WorldRect, spec: GridSpec): {
+export function collectGridLines(
+  viewport: WorldRect,
+  spec: GridSpec
+): {
   vertical: GridLine[];
   horizontal: GridLine[];
 } {

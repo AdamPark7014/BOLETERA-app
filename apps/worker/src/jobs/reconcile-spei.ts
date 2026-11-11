@@ -20,7 +20,7 @@ export type SpeiReconcileResult = {
 /** `fetch` inyectable: en test no se abre un socket. */
 export type FetchLike = (
   url: string,
-  init?: { method?: string; headers?: Record<string, string> },
+  init?: { method?: string; headers?: Record<string, string> }
 ) => Promise<{
   ok: boolean;
   status?: number;
@@ -44,9 +44,7 @@ export const SPEI_RECONCILE_PATH = '/payments/reconcile/spei';
  * todavía no responde. Un error por tick en ese caso sólo entrena a operaciones
  * a ignorar el log.
  */
-export async function reconcileSpei(
-  deps: ReconcileSpeiDeps,
-): Promise<SpeiReconcileResult | null> {
+export async function reconcileSpei(deps: ReconcileSpeiDeps): Promise<SpeiReconcileResult | null> {
   const fetchFn = deps.fetchFn ?? (globalThis.fetch as unknown as FetchLike);
   const url = `${deps.apiInternalUrl}${SPEI_RECONCILE_PATH}`;
 

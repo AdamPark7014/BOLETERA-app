@@ -38,7 +38,11 @@ type FormState = {
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string; hint: string }> = [
   { value: 'presale', label: 'Preventa', hint: 'Genera códigos únicos por lugar asignado.' },
-  { value: 'early_bird', label: 'Early bird', hint: 'Descuento por compra anticipada, sin códigos.' },
+  {
+    value: 'early_bird',
+    label: 'Early bird',
+    hint: 'Descuento por compra anticipada, sin códigos.',
+  },
   { value: 'vip', label: 'VIP', hint: 'Acceso preferente para audiencias seleccionadas.' },
   { value: 'group', label: 'Grupal', hint: 'Pensada para compras de varios boletos.' },
 ];
@@ -229,9 +233,7 @@ export function CampaignComposer({
             value={form.discountValue}
             onChange={(event) => update('discountValue', event.target.value)}
             aria-invalid={fieldError('discountValue') ? true : undefined}
-            aria-describedby={
-              fieldError('discountValue') ? `${formId}-discount-error` : undefined
-            }
+            aria-describedby={fieldError('discountValue') ? `${formId}-discount-error` : undefined}
           />
           {fieldError('discountValue') ? (
             <span className={styles.fieldError} id={`${formId}-discount-error`}>

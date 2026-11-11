@@ -172,7 +172,9 @@ function FacturacionBody() {
       setKey('');
       setInvoices(rows);
       setInvoiceNote(note);
-      setOpenId((current) => (current && rows.some((item) => item.id === current) ? current : (rows[0]?.id ?? null)));
+      setOpenId((current) =>
+        current && rows.some((item) => item.id === current) ? current : (rows[0]?.id ?? null)
+      );
     }
     void load()
       .catch((cause: unknown) => {
@@ -191,8 +193,10 @@ function FacturacionBody() {
   const dirty =
     !sameProfile(draft, baseline) ||
     key.trim() !== '' ||
-    (saved == null && (draft.rfc.trim() !== '' || draft.legalName.trim() !== '' || draft.cp.trim() !== ''));
-  const ready = dirty && draft.rfc.trim() !== '' && draft.legalName.trim() !== '' && draft.cp.trim() !== '';
+    (saved == null &&
+      (draft.rfc.trim() !== '' || draft.legalName.trim() !== '' || draft.cp.trim() !== ''));
+  const ready =
+    dirty && draft.rfc.trim() !== '' && draft.legalName.trim() !== '' && draft.cp.trim() !== '';
 
   function patch(partial: Partial<Profile>) {
     setDraft((current) => ({ ...current, ...partial }));
@@ -215,14 +219,18 @@ function FacturacionBody() {
     };
     if (key.trim()) body.pacApiKey = key.trim();
     const lines = [
-      draft.rfc.trim() !== baseline.rfc ? `RFC: ${baseline.rfc || '—'} → ${draft.rfc.trim()}` : null,
+      draft.rfc.trim() !== baseline.rfc
+        ? `RFC: ${baseline.rfc || '—'} → ${draft.rfc.trim()}`
+        : null,
       draft.legalName.trim() !== baseline.legalName
         ? `Razón social: ${baseline.legalName || '—'} → ${draft.legalName.trim()}`
         : null,
       (draft.regimen.trim() || '601') !== (baseline.regimen || '601')
         ? `Régimen: ${baseline.regimen || '601'} → ${draft.regimen.trim() || '601'}`
         : null,
-      draft.cp.trim() !== baseline.cp ? `CP fiscal: ${baseline.cp || '—'} → ${draft.cp.trim()}` : null,
+      draft.cp.trim() !== baseline.cp
+        ? `CP fiscal: ${baseline.cp || '—'} → ${draft.cp.trim()}`
+        : null,
       (draft.serie.trim() || 'A') !== (baseline.serie || 'A')
         ? `Serie: ${baseline.serie || 'A'} → ${draft.serie.trim() || 'A'}`
         : null,
@@ -261,7 +269,11 @@ function FacturacionBody() {
   }
   if (error) {
     return (
-      <ApiErrorView error={error} context="abrir facturación" onRetry={() => setNonce((current) => current + 1)} />
+      <ApiErrorView
+        error={error}
+        context="abrir facturación"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
     );
   }
   if (loading || !token || !orgId) return <p className={styles.quiet}>Cargando facturación.</p>;
@@ -278,12 +290,25 @@ function FacturacionBody() {
       </header>
       <div className={styles.stack}>
         <Param name="RFC">
-          <ParameterCard name="RFC" value={draft.rfc.trim() || '—'} valueStyle="mono" effect="Del perfil, no el RFC suelto de la organización.">
-            <Field label="RFC" value={draft.rfc} onChange={(event) => patch({ rfc: event.target.value })} />
+          <ParameterCard
+            name="RFC"
+            value={draft.rfc.trim() || '—'}
+            valueStyle="mono"
+            effect="Del perfil, no el RFC suelto de la organización."
+          >
+            <Field
+              label="RFC"
+              value={draft.rfc}
+              onChange={(event) => patch({ rfc: event.target.value })}
+            />
           </ParameterCard>
         </Param>
         <Param name="Razón social">
-          <ParameterCard name="Razón social" value={draft.legalName.trim() || '—'} effect="Nombre legal del emisor.">
+          <ParameterCard
+            name="Razón social"
+            value={draft.legalName.trim() || '—'}
+            effect="Nombre legal del emisor."
+          >
             <Field
               label="Razón social"
               value={draft.legalName}
@@ -292,18 +317,45 @@ function FacturacionBody() {
           </ParameterCard>
         </Param>
         <Param name="Régimen">
-          <ParameterCard name="Régimen" value={draft.regimen.trim() || '601'} valueStyle="mono" effect="Régimen fiscal del perfil.">
-            <Field label="Régimen" value={draft.regimen} onChange={(event) => patch({ regimen: event.target.value })} />
+          <ParameterCard
+            name="Régimen"
+            value={draft.regimen.trim() || '601'}
+            valueStyle="mono"
+            effect="Régimen fiscal del perfil."
+          >
+            <Field
+              label="Régimen"
+              value={draft.regimen}
+              onChange={(event) => patch({ regimen: event.target.value })}
+            />
           </ParameterCard>
         </Param>
         <Param name="CP fiscal">
-          <ParameterCard name="CP fiscal" value={draft.cp.trim() || '—'} valueStyle="mono" effect="Código postal del domicilio fiscal.">
-            <Field label="CP fiscal" value={draft.cp} onChange={(event) => patch({ cp: event.target.value })} />
+          <ParameterCard
+            name="CP fiscal"
+            value={draft.cp.trim() || '—'}
+            valueStyle="mono"
+            effect="Código postal del domicilio fiscal."
+          >
+            <Field
+              label="CP fiscal"
+              value={draft.cp}
+              onChange={(event) => patch({ cp: event.target.value })}
+            />
           </ParameterCard>
         </Param>
         <Param name="Serie">
-          <ParameterCard name="Serie" value={draft.serie.trim() || 'A'} valueStyle="mono" effect="Serie del folio.">
-            <Field label="Serie" value={draft.serie} onChange={(event) => patch({ serie: event.target.value })} />
+          <ParameterCard
+            name="Serie"
+            value={draft.serie.trim() || 'A'}
+            valueStyle="mono"
+            effect="Serie del folio."
+          >
+            <Field
+              label="Serie"
+              value={draft.serie}
+              onChange={(event) => patch({ serie: event.target.value })}
+            />
           </ParameterCard>
         </Param>
         <Param name="Siguiente folio">
@@ -332,7 +384,11 @@ function FacturacionBody() {
           </ParameterCard>
         </Param>
         <Param name="Proveedor PAC">
-          <ParameterCard name="Proveedor PAC" value={draft.provider.trim() || '—'} effect="Nombre del PAC.">
+          <ParameterCard
+            name="Proveedor PAC"
+            value={draft.provider.trim() || '—'}
+            effect="Nombre del PAC."
+          >
             <Field
               label="Proveedor PAC"
               value={draft.provider}
@@ -363,7 +419,11 @@ function FacturacionBody() {
       ) : null}
       <div className={styles.saveBar}>
         <p className={styles.quiet} aria-live="polite">
-          {dirty && !ready ? 'Faltan RFC, razón social o CP fiscal.' : dirty ? 'Sin guardar' : (notice ?? '')}
+          {dirty && !ready
+            ? 'Faltan RFC, razón social o CP fiscal.'
+            : dirty
+              ? 'Sin guardar'
+              : (notice ?? '')}
         </p>
         <TicketButton disabled={!ready || saving} onClick={() => void save()}>
           Guardar sección
@@ -373,7 +433,9 @@ function FacturacionBody() {
         <p className={styles.rowTitle}>Comprobantes</p>
         {invoiceNote ? <p className={styles.tertiary}>{invoiceNote}</p> : null}
       </header>
-      {invoices.length === 0 && !invoiceNote ? <p className={styles.quiet}>No hay comprobantes.</p> : null}
+      {invoices.length === 0 && !invoiceNote ? (
+        <p className={styles.quiet}>No hay comprobantes.</p>
+      ) : null}
       <div className={styles.stack}>
         {invoices.map((invoice) => {
           const open = openId === invoice.id;
@@ -394,10 +456,19 @@ function FacturacionBody() {
                 <>
                   {invoice.uuid ? <p className={styles.mono}>{invoice.uuid}</p> : null}
                   <Param name="Tipo de CFDI">
-                    <ParameterCard name="Tipo de CFDI" value={tipoLabel(invoice.tipo)} effect="I ingreso, E egreso." />
+                    <ParameterCard
+                      name="Tipo de CFDI"
+                      value={tipoLabel(invoice.tipo)}
+                      effect="I ingreso, E egreso."
+                    />
                   </Param>
                   <Param name="Uso CFDI">
-                    <ParameterCard name="Uso CFDI" value={invoice.uso} valueStyle="mono" effect="Uso del receptor." />
+                    <ParameterCard
+                      name="Uso CFDI"
+                      value={invoice.uso}
+                      valueStyle="mono"
+                      effect="Uso del receptor."
+                    />
                   </Param>
                   <Param name="Subtotal">
                     <ParameterCard
@@ -422,11 +493,19 @@ function FacturacionBody() {
                       valueStyle="tabular"
                       effect="Total del comprobante."
                     >
-                      <Money label="Total" amount={invoice.total} currency={invoice.currency === 'MXN'} />
+                      <Money
+                        label="Total"
+                        amount={invoice.total}
+                        currency={invoice.currency === 'MXN'}
+                      />
                     </ParameterCard>
                   </Param>
                   <Param name="Moneda del CFDI">
-                    <ParameterCard name="Moneda del CFDI" value={invoice.currency} effect="Moneda del comprobante." />
+                    <ParameterCard
+                      name="Moneda del CFDI"
+                      value={invoice.currency}
+                      effect="Moneda del comprobante."
+                    />
                   </Param>
                 </>
               ) : null}

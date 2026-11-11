@@ -44,7 +44,9 @@ export function formatLatency(ms: number | null): string {
 export function formatBucketLabel(iso: string, granularity: 'hour' | 'day'): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return granularity === 'day' ? dayHourFmt.format(date).split(',')[0] ?? iso : timeFmt.format(date);
+  return granularity === 'day'
+    ? (dayHourFmt.format(date).split(',')[0] ?? iso)
+    : timeFmt.format(date);
 }
 
 export function formatRelative(iso: string, now = Date.now()): string {

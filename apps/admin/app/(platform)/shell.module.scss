@@ -58,8 +58,17 @@
   width: 264px;
   flex-shrink: 0;
   background:
-    radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--shell-accent) 6%, transparent), transparent 55%),
-    linear-gradient(180deg, var(--shell-sidebar-elevated) 0%, var(--shell-sidebar-bg) 38%, var(--shell-sidebar-bg) 100%);
+    radial-gradient(
+      120% 80% at 0% 0%,
+      color-mix(in srgb, var(--shell-accent) 6%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      180deg,
+      var(--shell-sidebar-elevated) 0%,
+      var(--shell-sidebar-bg) 38%,
+      var(--shell-sidebar-bg) 100%
+    );
   color: var(--shell-sidebar-text);
   padding: var(--bl-space-3) var(--bl-space-2-5);
   display: flex;
@@ -499,13 +508,12 @@
 
 .navItemActive,
 .active {
-  background:
-    linear-gradient(
-      90deg,
-      var(--shell-accent-softer) 0%,
-      var(--shell-accent-soft) 48%,
-      color-mix(in srgb, var(--shell-accent-soft) 65%, transparent) 100%
-    );
+  background: linear-gradient(
+    90deg,
+    var(--shell-accent-softer) 0%,
+    var(--shell-accent-soft) 48%,
+    color-mix(in srgb, var(--shell-accent-soft) 65%, transparent) 100%
+  );
   color: var(--bl-text-inverse);
   border-color: color-mix(in srgb, var(--shell-accent) 28%, transparent);
   font-weight: 600;
@@ -1063,7 +1071,9 @@
   border: 1px solid var(--bl-border, var(--bl-border));
   border-radius: var(--bl-radius-md);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 
   &:hover {
     background: var(--bl-elevated-hover, var(--bl-surface));

@@ -19,8 +19,7 @@ export function AgendaSection({ event }: { event: unknown }) {
   const zone = readString(row.timezone) ?? 'America/Mexico_City';
   const duration = readNumber(row.durationMinutes);
   const note = readString(row.scheduleNote);
-  const blank =
-    FIELDS.every(([key]) => !readString(row[key])) && duration == null && !note;
+  const blank = FIELDS.every(([key]) => !readString(row[key])) && duration == null && !note;
 
   return (
     <section>

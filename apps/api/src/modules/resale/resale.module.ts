@@ -10,4 +10,3 @@ import { ResaleController } from './resale.controller';
   exports: [ResaleService],
 })
 export class ResaleModule {}
-

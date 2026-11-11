@@ -129,12 +129,12 @@ async function main() {
   check(
     'la ruta de emisión responde',
     Boolean(emitida?.sessionId),
-    emitida?.sessionId ? `${emitida.sessionId.slice(0, 24)}…` : `error ${emitida?.error}`,
+    emitida?.sessionId ? `${emitida.sessionId.slice(0, 24)}…` : `error ${emitida?.error}`
   );
   check(
     'la identidad va firmada (v2.id.emitido.firma)',
     typeof emitida?.sessionId === 'string' && emitida.sessionId.split('.').length === 4,
-    `${emitida?.sessionId?.split('.').length} partes`,
+    `${emitida?.sessionId?.split('.').length} partes`
   );
 
   // ---------------------------------------------------------------------------
@@ -145,7 +145,7 @@ async function main() {
   check(
     'identidad con formato correcto pero firma falsa → rechazada',
     r.status === 400,
-    `HTTP ${r.status}`,
+    `HTTP ${r.status}`
   );
 
   // ---------------------------------------------------------------------------
@@ -155,11 +155,7 @@ async function main() {
   // Se sube el reloj para intentar alargar la vida del token.
   const manipulada = `${partes[0]}.${partes[1]}.${Date.now() + 86_400_000}.${partes[3]}`;
   r = await apartar(manipulada, event.id, offer.id);
-  check(
-    'cambiar la fecha invalida la firma → rechazada',
-    r.status === 400,
-    `HTTP ${r.status}`,
-  );
+  check('cambiar la fecha invalida la firma → rechazada', r.status === 400, `HTTP ${r.status}`);
 
   // ---------------------------------------------------------------------------
   console.log('\n4. Con identidad válida, el tope por comprador se respeta');
@@ -187,7 +183,7 @@ async function main() {
   check(
     'un comprador topa en su límite por comprador (409), no por IP',
     topeAlcanzado,
-    `apartó ${apartadosHonesto} · ${detalle}${ultimoMensaje ? ` · «${ultimoMensaje}»` : ''}`,
+    `apartó ${apartadosHonesto} · ${detalle}${ultimoMensaje ? ` · «${ultimoMensaje}»` : ''}`
   );
 
   // ---------------------------------------------------------------------------
@@ -204,7 +200,7 @@ async function main() {
     check(
       'identidades sin firma → 0 apartados (modo estricto)',
       acaparadosAntiguo === 0,
-      `acaparó ${acaparadosAntiguo}`,
+      `acaparó ${acaparadosAntiguo}`
     );
   } else {
     // Sin modo estricto se aceptan por compatibilidad: se documenta el hueco en
@@ -212,7 +208,7 @@ async function main() {
     check(
       'sin modo estricto las identidades viejas aún pasan (hueco conocido)',
       acaparadosAntiguo > 0,
-      `acaparó ${acaparadosAntiguo} · GUEST_SESSION_STRICT=true lo cierra`,
+      `acaparó ${acaparadosAntiguo} · GUEST_SESSION_STRICT=true lo cierra`
     );
   }
 
@@ -227,7 +223,7 @@ async function main() {
   check(
     'pedir identidades en masa se limita por IP',
     limitadas > 0,
-    `${emitidas} emitidas, ${limitadas} rechazadas con 429`,
+    `${emitidas} emitidas, ${limitadas} rechazadas con 429`
   );
 
   // --- limpieza --------------------------------------------------------------

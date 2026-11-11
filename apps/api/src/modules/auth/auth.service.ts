@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -22,7 +27,7 @@ export class AuthService {
     private jwt: JwtService,
     private notifications: NotificationService,
     private invitations: InvitationsService,
-    private permissions: PermissionsService,
+    private permissions: PermissionsService
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -70,12 +75,7 @@ export class AuthService {
     };
   }
 
-  async register(data: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  }) {
+  async register(data: { email: string; password: string; firstName: string; lastName: string }) {
     const exists = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (exists) throw new ConflictException('Email already registered');
     const hash = await bcrypt.hash(data.password, 10);
@@ -153,7 +153,7 @@ export class AuthService {
     }
     if (MICROSOFT_MULTI_TENANT_ALIASES.includes(tenant.toLowerCase())) {
       throw new UnauthorizedException(
-        'MICROSOFT_TENANT_ID must be a specific tenant id, not a multi-tenant alias',
+        'MICROSOFT_TENANT_ID must be a specific tenant id, not a multi-tenant alias'
       );
     }
     return tenant;
@@ -168,11 +168,7 @@ export class AuthService {
    * Ahora toda cuenta nueva nace CUSTOMER sin organización, y la única vía de
    * elevación es una `OrgInvitation` viva para ese correo.
    */
-  async loginWithOauth(
-    provider: 'google' | 'microsoft',
-    code: string,
-    redirectUri: string,
-  ) {
+  async loginWithOauth(provider: 'google' | 'microsoft', code: string, redirectUri: string) {
     const profile =
       provider === 'google'
         ? await this.exchangeGoogle(code, redirectUri)
@@ -273,20 +269,17 @@ export class AuthService {
     // También aquí: el intercambio de código no puede caer en 'common' aunque
     // alguien llame al callback sin haber pasado por getOauthStartUrl().
     const tenant = this.requireMicrosoftTenant();
-    const tokenRes = await fetch(
-      `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          code,
-          client_id: clientId,
-          client_secret: clientSecret,
-          redirect_uri: redirectUri,
-          grant_type: 'authorization_code',
-        }),
-      },
-    );
+    const tokenRes = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+      }),
+    });
     if (!tokenRes.ok) throw new UnauthorizedException('Microsoft token exchange failed');
     const tokens = (await tokenRes.json()) as { access_token: string };
     const profileRes = await fetch('https://graph.microsoft.com/v1.0/me', {
@@ -372,5 +365,3 @@ export class AuthService {
     return { ok: true, message: 'Contraseña actualizada. Ya puedes iniciar sesión.' };
   }
 }
-
-

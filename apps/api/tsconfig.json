@@ -13,9 +13,7 @@
     "paths": {
       "@/*": ["src/*"],
       "@prisma/client": ["../../packages/database/generated/client"],
-      "@prisma/client/runtime/library": [
-        "../../packages/database/generated/client/runtime/library"
-      ]
+      "@prisma/client/runtime/library": ["../../packages/database/generated/client/runtime/library"]
     },
     "strict": false,
     "noImplicitAny": false,

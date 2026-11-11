@@ -79,9 +79,7 @@ export function ReconciliationPanel({
                 <div>
                   <dt>Diferencia</dt>
                   <dd
-                    className={
-                      entry.severity === 'error' ? styles.deltaBad : styles.deltaNeutral
-                    }
+                    className={entry.severity === 'error' ? styles.deltaBad : styles.deltaNeutral}
                   >
                     {entry.deltaCents === null ? '—' : formatSignedMoney(entry.deltaCents)}
                   </dd>

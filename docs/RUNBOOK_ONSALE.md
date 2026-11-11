@@ -102,18 +102,18 @@ psql "$DATABASE_URL" -c 'SELECT count(*) AS abiertas FROM pg_stat_activity;'
 
 ## 2. Durante el pico — qué vigilar
 
-| Señal | Dónde | Umbral de alarma |
-| --- | --- | --- |
-| Conexiones a Postgres | `SELECT count(*) FROM pg_stat_activity` | > 80 % de `max_connections` |
-| Errores de pool | logs del API | cualquier `Timed out fetching a connection` |
-| Consultas lentas | logs del API con `PRISMA_LOG_SLOW_QUERIES=true` | `Consulta lenta` recurrente sobre la misma tabla |
-| Redis | `redis-cli info stats` | `evicted_keys > 0` (**sobreventa en curso**) o `rejected_connections > 0` |
-| Rate limiting | logs del API | `Redis no responde al contar peticiones` → el límite está ABIERTO |
-| Holds | `SELECT status, count(*) FROM "SeatHold" GROUP BY status` | `ACTIVE` con `expiresAt` pasado y creciendo → worker caído |
-| Pagos | `SELECT status, count(*) FROM "Order" GROUP BY status` | `PENDING` creciendo sin `PAID` → gateway o IPN caídos |
-| 429 | métricas del balanceador (si hay) / logs del API | subida brusca → revisa `TRUST_PROXY` antes de subir límites |
-| 5xx | métricas del balanceador (si hay) / logs del API | cualquier racha sostenida |
-| DB / Redis ready | `curl "$API/api/v1/metrics/prometheus"` o Grafana :3100 | `boletera_db_ready` o `boletera_redis_ready` en 0 |
+| Señal                 | Dónde                                                     | Umbral de alarma                                                          |
+| --------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Conexiones a Postgres | `SELECT count(*) FROM pg_stat_activity`                   | > 80 % de `max_connections`                                               |
+| Errores de pool       | logs del API                                              | cualquier `Timed out fetching a connection`                               |
+| Consultas lentas      | logs del API con `PRISMA_LOG_SLOW_QUERIES=true`           | `Consulta lenta` recurrente sobre la misma tabla                          |
+| Redis                 | `redis-cli info stats`                                    | `evicted_keys > 0` (**sobreventa en curso**) o `rejected_connections > 0` |
+| Rate limiting         | logs del API                                              | `Redis no responde al contar peticiones` → el límite está ABIERTO         |
+| Holds                 | `SELECT status, count(*) FROM "SeatHold" GROUP BY status` | `ACTIVE` con `expiresAt` pasado y creciendo → worker caído                |
+| Pagos                 | `SELECT status, count(*) FROM "Order" GROUP BY status`    | `PENDING` creciendo sin `PAID` → gateway o IPN caídos                     |
+| 429                   | métricas del balanceador (si hay) / logs del API          | subida brusca → revisa `TRUST_PROXY` antes de subir límites               |
+| 5xx                   | métricas del balanceador (si hay) / logs del API          | cualquier racha sostenida                                                 |
+| DB / Redis ready      | `curl "$API/api/v1/metrics/prometheus"` o Grafana :3100   | `boletera_db_ready` o `boletera_redis_ready` en 0                         |
 
 Consultas rápidas:
 
@@ -133,17 +133,17 @@ FROM pg_stat_activity WHERE state <> 'idle' ORDER BY query_start LIMIT 20;
 Todos son variables de entorno: cambiar y reiniciar el servicio afectado.
 Reiniciar el API **no** cierra sesiones; rotar `JWT_SECRET` sí.
 
-| Síntoma | Interruptor | Efecto |
-| --- | --- | --- |
-| Postgres saturado (conexiones al tope) | Bajar `PRISMA_CONNECTION_LIMIT` y quitar réplicas | Menos concurrencia, pero deja de tumbar la base |
-| Errores `Timed out fetching a connection` | Subir `PRISMA_POOL_TIMEOUT` a 30 | Las peticiones esperan más en vez de fallar |
-| Transacciones abortadas a media compra | Subir `PRISMA_TRANSACTION_TIMEOUT` | Cuidado: transacciones largas mantienen bloqueos de fila |
-| Bots o scraping | Bajar `THROTTLE_BURST_LIMIT` (10 → 5) y `THROTTLE_LIMIT` | Corta ráfagas; afecta también a usuarios legítimos rápidos |
-| Falsos 429 masivos | Revisar `TRUST_PROXY` **antes** de subir límites | Casi siempre el problema es que se ve una sola IP |
-| No sé qué consulta está matando la base | `PRISMA_LOG_SLOW_QUERIES=true` | Registra todo lo que pase de `PRISMA_SLOW_QUERY_MS` |
-| Alguien pide "ver la documentación" | Dejar `ENABLE_API_DOCS=false` | Nunca se abre Swagger durante un onsale |
-| Redis caído | No hay interruptor: los holds caen a solo-BD y el rate limiting se abre | Prioridad máxima: levantar Redis |
-| Worker caído | Reiniciar `worker` | Sin él los asientos retenidos no vuelven a inventario |
+| Síntoma                                   | Interruptor                                                             | Efecto                                                     |
+| ----------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Postgres saturado (conexiones al tope)    | Bajar `PRISMA_CONNECTION_LIMIT` y quitar réplicas                       | Menos concurrencia, pero deja de tumbar la base            |
+| Errores `Timed out fetching a connection` | Subir `PRISMA_POOL_TIMEOUT` a 30                                        | Las peticiones esperan más en vez de fallar                |
+| Transacciones abortadas a media compra    | Subir `PRISMA_TRANSACTION_TIMEOUT`                                      | Cuidado: transacciones largas mantienen bloqueos de fila   |
+| Bots o scraping                           | Bajar `THROTTLE_BURST_LIMIT` (10 → 5) y `THROTTLE_LIMIT`                | Corta ráfagas; afecta también a usuarios legítimos rápidos |
+| Falsos 429 masivos                        | Revisar `TRUST_PROXY` **antes** de subir límites                        | Casi siempre el problema es que se ve una sola IP          |
+| No sé qué consulta está matando la base   | `PRISMA_LOG_SLOW_QUERIES=true`                                          | Registra todo lo que pase de `PRISMA_SLOW_QUERY_MS`        |
+| Alguien pide "ver la documentación"       | Dejar `ENABLE_API_DOCS=false`                                           | Nunca se abre Swagger durante un onsale                    |
+| Redis caído                               | No hay interruptor: los holds caen a solo-BD y el rate limiting se abre | Prioridad máxima: levantar Redis                           |
+| Worker caído                              | Reiniciar `worker`                                                      | Sin él los asientos retenidos no vuelven a inventario      |
 
 Reinicio de un servicio suelto:
 

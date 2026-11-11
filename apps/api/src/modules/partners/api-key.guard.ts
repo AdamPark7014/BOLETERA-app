@@ -10,14 +10,13 @@ import { Reflector } from '@nestjs/core';
 import { PartnersService } from './partners.service';
 
 export const API_KEY_SCOPES_KEY = 'apiKeyScopes';
-export const RequireApiScopes = (...scopes: string[]) =>
-  SetMetadata(API_KEY_SCOPES_KEY, scopes);
+export const RequireApiScopes = (...scopes: string[]) => SetMetadata(API_KEY_SCOPES_KEY, scopes);
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
   constructor(
     private partners: PartnersService,
-    private reflector: Reflector,
+    private reflector: Reflector
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

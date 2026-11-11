@@ -67,7 +67,7 @@ export class EventCancellationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly payments: PaymentService,
-    private readonly notifications: NotificationService,
+    private readonly notifications: NotificationService
   ) {}
 
   async cancelEvent(input: CancelEventInput) {
@@ -82,7 +82,7 @@ export class EventCancellationService {
     if (!input.attributable && !input.justification?.trim()) {
       throw new BadRequestException(
         'Una causa no imputable debe justificarse (respaldo de autoridad competente): ' +
-          'de ella depende que no se pague la bonificación del 20%.',
+          'de ella depende que no se pague la bonificación del 20%.'
       );
     }
 
@@ -157,8 +157,8 @@ export class EventCancellationService {
         this.logger.error(
           `Cancelación ${event.id} asentada pero sin aviso a compradores: ${
             error instanceof Error ? error.message : String(error)
-          }`,
-        ),
+          }`
+        )
       );
 
     await this.prisma.auditEvent.create({
@@ -185,7 +185,7 @@ export class EventCancellationService {
 
     this.logger.log(
       `Evento ${event.id} cancelado: ${refunded.length}/${orders.length} órdenes devueltas ` +
-        `(${refundedTotal.toFixed(2)} + ${compensationTotal.toFixed(2)} de bonificación)`,
+        `(${refundedTotal.toFixed(2)} + ${compensationTotal.toFixed(2)} de bonificación)`
     );
 
     return {
@@ -239,7 +239,7 @@ export class EventCancellationService {
       .enqueueEventCancelled(
         event.id,
         `${input.reason} — Nueva fecha: ${input.newStartsAt.toISOString()}. ` +
-          'Puedes conservar tu boleto para la nueva fecha o solicitar el reembolso completo.',
+          'Puedes conservar tu boleto para la nueva fecha o solicitar el reembolso completo.'
       )
       .catch(() => undefined);
 
@@ -314,7 +314,7 @@ export class EventCancellationService {
     if (requested < MINIMUM_COMPENSATION_RATE) {
       throw new BadRequestException(
         `La bonificación no puede bajar del ${MINIMUM_COMPENSATION_RATE * 100}% ` +
-          'cuando la cancelación es imputable (LFPC art. 92 Bis)',
+          'cuando la cancelación es imputable (LFPC art. 92 Bis)'
       );
     }
     if (requested > 1) {
@@ -357,7 +357,7 @@ export class EventCancellationService {
     order: { id: string; publicId: string; payment: { amount: Decimal } | null },
     rate: number,
     input: CancelEventInput,
-    eventTitle: string,
+    eventTitle: string
   ): Promise<Decimal | null> {
     const charged = new Decimal(order.payment?.amount ?? 0);
     const amount = charged.mul(rate);

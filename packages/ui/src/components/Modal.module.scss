@@ -92,7 +92,9 @@
   background: transparent;
   color: $c-text-tertiary;
   cursor: pointer;
-  transition: background-color $duration-fast $ease-standard, color $duration-fast $ease-standard;
+  transition:
+    background-color $duration-fast $ease-standard,
+    color $duration-fast $ease-standard;
 
   svg {
     width: 15px;

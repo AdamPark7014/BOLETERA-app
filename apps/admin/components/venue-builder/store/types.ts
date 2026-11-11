@@ -24,12 +24,7 @@ export type RowMode = 'straight' | 'curved';
 
 export type FurnitureKind = 'led' | 'speaker' | 'door';
 
-export type RightPanelId =
-  | 'properties'
-  | 'templates'
-  | 'bulk'
-  | 'validation'
-  | 'io';
+export type RightPanelId = 'properties' | 'templates' | 'bulk' | 'validation' | 'io';
 
 /** Everything the user can have selected at once. */
 export type EditorSelection = {
@@ -54,9 +49,7 @@ export type Annotation = {
 };
 
 /** Magnetic guide drawn by the SVG overlay while a tool snaps. */
-export type SnapGuide =
-  | { axis: 'x'; value: number }
-  | { axis: 'y'; value: number };
+export type SnapGuide = { axis: 'x'; value: number } | { axis: 'y'; value: number };
 
 /** Live preview geometry produced by draw tools before they commit. */
 export type ToolDraft =

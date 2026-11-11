@@ -79,7 +79,7 @@ export function toMinorUnits(amount: number, currency: CurrencyCode = DEFAULT_CU
 
 export function fromMinorUnits(
   amountMinor: number,
-  currency: CurrencyCode = DEFAULT_CURRENCY,
+  currency: CurrencyCode = DEFAULT_CURRENCY
 ): number {
   return amountMinor / minorFactor(currency);
 }
@@ -90,7 +90,7 @@ export function money(amount: number, currency: CurrencyCode = DEFAULT_CURRENCY)
 
 export function moneyFromMinor(
   amountMinor: number,
-  currency: CurrencyCode = DEFAULT_CURRENCY,
+  currency: CurrencyCode = DEFAULT_CURRENCY
 ): MoneyAmount {
   if (!isValidMinorAmount(amountMinor)) {
     throw new RangeError(`Centavos inválidos: ${String(amountMinor)}`);
@@ -116,11 +116,11 @@ export function subtractMoney(a: MoneyAmount, b: MoneyAmount): MoneyAmount {
 
 export function sumMoney(
   amounts: readonly MoneyAmount[],
-  currency: CurrencyCode = DEFAULT_CURRENCY,
+  currency: CurrencyCode = DEFAULT_CURRENCY
 ): MoneyAmount {
   return amounts.reduce<MoneyAmount>(
     (acc, item) => addMoney(acc, item),
-    moneyFromMinor(0, currency),
+    moneyFromMinor(0, currency)
   );
 }
 
@@ -148,12 +148,9 @@ export function addVat(net: MoneyAmount, rate: number = MEXICO_VAT_RATE): MoneyA
 /** Split a VAT-inclusive amount into net and tax without losing a centavo. */
 export function splitVatInclusive(
   gross: MoneyAmount,
-  rate: number = MEXICO_VAT_RATE,
+  rate: number = MEXICO_VAT_RATE
 ): { net: MoneyAmount; tax: MoneyAmount } {
-  const net = moneyFromMinor(
-    roundHalfAwayFromZero(gross.amountMinor / (1 + rate)),
-    gross.currency,
-  );
+  const net = moneyFromMinor(roundHalfAwayFromZero(gross.amountMinor / (1 + rate)), gross.currency);
   return { net, tax: subtractMoney(gross, net) };
 }
 
@@ -218,7 +215,7 @@ const currencyFormatters = new Map<string, Intl.NumberFormat>();
 function currencyFormatter(
   currency: CurrencyCode,
   locale: string,
-  fractionDigits: number,
+  fractionDigits: number
 ): Intl.NumberFormat {
   const key = `${locale}|${currency}|${fractionDigits}`;
   let formatter = currencyFormatters.get(key);
@@ -244,7 +241,7 @@ export interface FormatMoneyOptions {
 export function formatMoney(amount: MoneyAmount, options: FormatMoneyOptions = {}): string {
   const digits = options.compact ? 0 : CURRENCY_MINOR_DIGITS[amount.currency];
   return currencyFormatter(amount.currency, options.locale ?? DEFAULT_LOCALE, digits).format(
-    fromMinorUnits(amount.amountMinor, amount.currency),
+    fromMinorUnits(amount.amountMinor, amount.currency)
   );
 }
 
@@ -252,7 +249,7 @@ export function formatMoney(amount: MoneyAmount, options: FormatMoneyOptions = {
 export function formatMoneyMajor(
   amount: number,
   currency: CurrencyCode = DEFAULT_CURRENCY,
-  options: FormatMoneyOptions = {},
+  options: FormatMoneyOptions = {}
 ): string {
   return formatMoney(money(amount, currency), options);
 }
@@ -260,6 +257,6 @@ export function formatMoneyMajor(
 /** Fixed-decimal string a gateway expects (`"1234.50"`). Never localized. */
 export function toGatewayAmountString(amount: MoneyAmount): string {
   return fromMinorUnits(amount.amountMinor, amount.currency).toFixed(
-    CURRENCY_MINOR_DIGITS[amount.currency],
+    CURRENCY_MINOR_DIGITS[amount.currency]
   );
 }

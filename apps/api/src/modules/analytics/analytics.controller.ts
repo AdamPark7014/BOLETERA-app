@@ -42,7 +42,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get promoter dashboard' })
   async getPromoterDashboard(
     @Param('organizationId') organizationId: string,
-    @Query('period') period?: 'DAY' | 'WEEK' | 'MONTH',
+    @Query('period') period?: 'DAY' | 'WEEK' | 'MONTH'
   ) {
     return await this.analyticsService.getPromoterDashboard(organizationId, period);
   }
@@ -54,9 +54,13 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Generate settlement report' })
   async generateSettlement(
     @Param('organizationId') organizationId: string,
-    @Body() body: { month: number; year: number },
+    @Body() body: { month: number; year: number }
   ) {
-    return await this.analyticsService.generateSettlementReport(organizationId, body.month, body.year);
+    return await this.analyticsService.generateSettlementReport(
+      organizationId,
+      body.month,
+      body.year
+    );
   }
 
   // ==================== CUSTOMER ANALYTICS ====================

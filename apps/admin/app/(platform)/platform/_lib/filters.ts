@@ -42,7 +42,7 @@ export interface CapabilityFilters {
  */
 export function filterCapabilityGroups(
   groups: readonly CapabilityGroup[],
-  filters: CapabilityFilters,
+  filters: CapabilityFilters
 ): CapabilityGroup[] {
   const needle = normalize(filters.query.trim());
   const wanted = filters.state === 'todas' ? null : STATE_BY_FILTER[filters.state];

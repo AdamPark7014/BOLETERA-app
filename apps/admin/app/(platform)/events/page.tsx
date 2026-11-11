@@ -87,7 +87,8 @@ function EventsBody() {
             <div className={styles.rowMain}>
               <p className={styles.rowTitle}>{event.title}</p>
               <p className={styles.rowMeta}>
-                {statusLabel(event.status)} · {formatWhen(event.startsAt)} · {event.venue?.name ?? 'Sin recinto'}
+                {statusLabel(event.status)} · {formatWhen(event.startsAt)} ·{' '}
+                {event.venue?.name ?? 'Sin recinto'}
               </p>
             </div>
             <p className={styles.figure}>
@@ -101,7 +102,9 @@ function EventsBody() {
       </ul>
       {canCreate ? (
         <div className={styles.saveBar}>
-          <p className={styles.quiet}>{events.length === 0 ? '' : `${formatNumber(events.length)} en la lista`}</p>
+          <p className={styles.quiet}>
+            {events.length === 0 ? '' : `${formatNumber(events.length)} en la lista`}
+          </p>
           <TicketButton onClick={() => router.push('/events/new')}>Crear evento</TicketButton>
         </div>
       ) : null}

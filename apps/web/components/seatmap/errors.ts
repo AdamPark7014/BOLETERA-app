@@ -97,7 +97,8 @@ export function describeInventoryError(status: number, body?: unknown): Inventor
   if (status === 429) {
     return {
       kind: 'throttled',
-      message: 'Hiciste demasiados intentos seguidos. Espera unos 30 segundos y vuelve a intentarlo.',
+      message:
+        'Hiciste demasiados intentos seguidos. Espera unos 30 segundos y vuelve a intentarlo.',
       selfHealing: false,
       staleMap: false,
     };
@@ -125,7 +126,8 @@ export function describeInventoryError(status: number, body?: unknown): Inventor
   if (status === 503) {
     return {
       kind: 'unavailable',
-      message: 'El sistema de apartado está saturado en este momento. Espera unos segundos y reintenta.',
+      message:
+        'El sistema de apartado está saturado en este momento. Espera unos segundos y reintenta.',
       selfHealing: false,
       staleMap: false,
     };

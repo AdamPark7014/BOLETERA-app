@@ -24,7 +24,7 @@ export function printEscPos(text: string) {
   const w = window.open('', '_blank', 'width=320,height=480');
   if (!w) return;
   w.document.write(
-    `<pre style="font-family:monospace;font-size:12px">${text.replace(/[\x00-\x1f]/g, '')}</pre>`,
+    `<pre style="font-family:monospace;font-size:12px">${text.replace(/[\x00-\x1f]/g, '')}</pre>`
   );
   w.print();
   w.close();

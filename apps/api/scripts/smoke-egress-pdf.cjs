@@ -26,7 +26,10 @@ async function main() {
         transpileOnly: true,
         compilerOptions: { module: 'commonjs', esModuleInterop: true },
       });
-      ({ buildEgressPdfBuffer, egressPdfFilename } = require('../src/modules/venue-layout/egress-pdf.ts'));
+      ({
+        buildEgressPdfBuffer,
+        egressPdfFilename,
+      } = require('../src/modules/venue-layout/egress-pdf.ts'));
     } catch (e) {
       console.error('Cannot load egress-pdf (build api or install ts-node)', e.message);
       process.exit(1);
@@ -39,7 +42,16 @@ async function main() {
   map.venue = {
     ...map.venue,
     scale: 40,
-    aisles: [{ id: 'main', width: 20, points: [[cx, stage.y + 30], [cx, 380]] }],
+    aisles: [
+      {
+        id: 'main',
+        width: 20,
+        points: [
+          [cx, stage.y + 30],
+          [cx, 380],
+        ],
+      },
+    ],
   };
 
   const report = engine.buildEgressReport(map, { venueName: 'PDF Venue' });

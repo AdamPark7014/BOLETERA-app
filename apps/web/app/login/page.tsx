@@ -34,9 +34,7 @@ export default function LoginPage() {
     try {
       const path = mode === 'login' ? '/auth/login' : '/auth/register';
       const body =
-        mode === 'login'
-          ? { email, password }
-          : { email, password, firstName, lastName };
+        mode === 'login' ? { email, password } : { email, password, firstName, lastName };
       const res = await fetch(`${API}${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,7 +45,7 @@ export default function LoginPage() {
         throw new Error(
           res.status === 401
             ? 'Correo o contraseña incorrectos.'
-            : data.message ?? 'No se guardó. Revisa la conexión.',
+            : (data.message ?? 'No se guardó. Revisa la conexión.')
         );
       }
       saveSession(data.accessToken, data.user);
@@ -67,8 +65,20 @@ export default function LoginPage() {
         <form onSubmit={submit} className={purchase.stack}>
           {mode === 'register' ? (
             <>
-              <Field label="Nombre" value={firstName} autoComplete="given-name" onChange={(e) => setFirstName(e.target.value)} required />
-              <Field label="Apellido" value={lastName} autoComplete="family-name" onChange={(e) => setLastName(e.target.value)} required />
+              <Field
+                label="Nombre"
+                value={firstName}
+                autoComplete="given-name"
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+              <Field
+                label="Apellido"
+                value={lastName}
+                autoComplete="family-name"
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
             </>
           ) : null}
           <Field

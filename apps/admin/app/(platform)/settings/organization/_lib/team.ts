@@ -40,7 +40,7 @@ export type MemberStatusFilter = 'all' | 'active' | 'inactive';
 
 export function matchesMember(
   member: TeamMember,
-  options: { query: string; status: MemberStatusFilter; role: string },
+  options: { query: string; status: MemberStatusFilter; role: string }
 ): boolean {
   const term = options.query.trim().toLowerCase();
   const matchesQuery =
@@ -51,8 +51,7 @@ export function matchesMember(
     roleLabel(member.role).toLowerCase().includes(term);
 
   const matchesStatus =
-    options.status === 'all' ||
-    (options.status === 'active' ? member.active : !member.active);
+    options.status === 'all' || (options.status === 'active' ? member.active : !member.active);
 
   const matchesRole = options.role === 'all' || member.role === options.role;
 
@@ -61,7 +60,7 @@ export function matchesMember(
 
 export function filterTeam(
   team: readonly TeamMember[],
-  options: { query: string; status: MemberStatusFilter; role: string },
+  options: { query: string; status: MemberStatusFilter; role: string }
 ): TeamMember[] {
   return team.filter((member) => matchesMember(member, options));
 }

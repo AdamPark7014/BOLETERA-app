@@ -60,12 +60,7 @@ export function InviteMemberModal({ open, busy, onClose, onSubmit }: InviteMembe
           <Button type="button" variant="ghost" disabled={busy} onClick={handleClose}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            form="invite-member"
-            loading={busy}
-            loadingLabel="Invitando…"
-          >
+          <Button type="submit" form="invite-member" loading={busy} loadingLabel="Invitando…">
             Invitar
           </Button>
         </div>
@@ -103,9 +98,7 @@ export function InviteMemberModal({ open, busy, onClose, onSubmit }: InviteMembe
             <select
               className={styles.roleSelect}
               value={form.role}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, role: e.target.value as TeamRole }))
-              }
+              onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value as TeamRole }))}
             >
               {TEAM_ROLES.map((role) => (
                 <option key={role.value} value={role.value}>

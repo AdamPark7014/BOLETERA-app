@@ -17,7 +17,7 @@ export interface QueuedSale {
 }
 
 export async function enqueueSale(
-  payload: OfflinePosPayload | Record<string, unknown>,
+  payload: OfflinePosPayload | Record<string, unknown>
 ): Promise<void> {
   if (!idbAvailable()) return;
   const id =
@@ -50,7 +50,7 @@ export async function getQueueSize(): Promise<number> {
  * Lo que falla se apunta en `failedSync` y se reintenta en la siguiente vuelta.
  */
 export async function flushQueue(
-  send: (payload: QueuedSale['payload']) => Promise<void>,
+  send: (payload: QueuedSale['payload']) => Promise<void>
 ): Promise<number> {
   if (!idbAvailable()) return 0;
   const all = await idbGetAll<QueuedSale>(STORE_SALES).catch(() => [] as QueuedSale[]);

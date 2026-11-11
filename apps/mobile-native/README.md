@@ -31,11 +31,11 @@ la boletera.
 
 ## Requisitos
 
-| | |
-|---|---|
-| JDK | 17 |
-| Android SDK | compileSdk 36 · minSdk 24 |
-| Gradle | 9.0 (incluido en el wrapper) |
+|             |                              |
+| ----------- | ---------------------------- |
+| JDK         | 17                           |
+| Android SDK | compileSdk 36 · minSdk 24    |
+| Gradle      | 9.0 (incluido en el wrapper) |
 
 `local.properties` con la ruta del SDK (no se versiona):
 

@@ -59,13 +59,17 @@ function parseRetryAfter(res: Response): number | undefined {
 
 export function formatWaitHint(seconds?: number): string {
   if (!seconds || seconds <= 0) return 'Espera un minuto e inténtalo de nuevo.';
-  if (seconds < 60) return `Espera ${seconds} segundo${seconds === 1 ? '' : 's'} e inténtalo de nuevo.`;
+  if (seconds < 60)
+    return `Espera ${seconds} segundo${seconds === 1 ? '' : 's'} e inténtalo de nuevo.`;
   const minutes = Math.ceil(seconds / 60);
   return `Espera ${minutes} minuto${minutes === 1 ? '' : 's'} e inténtalo de nuevo.`;
 }
 
 /** Lee el cuerpo de una respuesta fallida y decide qué contarle al comprador. */
-export async function readApiError(res: Response, fallback = 'No se pudo completar la operación'): Promise<ApiErrorInfo> {
+export async function readApiError(
+  res: Response,
+  fallback = 'No se pudo completar la operación'
+): Promise<ApiErrorInfo> {
   let raw = '';
   try {
     const body = (await res.json()) as { message?: unknown; error?: unknown };
@@ -106,7 +110,8 @@ export async function readApiError(res: Response, fallback = 'No se pudo complet
         status: res.status,
         kind: 'credential',
         raw,
-        message: 'Ese método de pago no está disponible en la venta en línea. Elige tarjeta, SPEI u OXXO.',
+        message:
+          'Ese método de pago no está disponible en la venta en línea. Elige tarjeta, SPEI u OXXO.',
       };
     }
     if (/fraud/i.test(raw)) {
@@ -143,7 +148,8 @@ export async function readApiError(res: Response, fallback = 'No se pudo complet
       status: res.status,
       kind: 'server',
       raw,
-      message: 'Tuvimos un problema de nuestro lado. Vuelve a intentarlo; si se repite, no se te habrá cobrado.',
+      message:
+        'Tuvimos un problema de nuestro lado. Vuelve a intentarlo; si se repite, no se te habrá cobrado.',
     };
   }
 

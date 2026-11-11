@@ -100,7 +100,9 @@ function PartnersBody() {
         });
         setKeys(next);
         setRevoke({});
-        setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+        setOpenId((current) =>
+          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+        );
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -140,7 +142,7 @@ function PartnersBody() {
           await adminApi(`/partners/${session.orgId}/keys`, token, {
             method: 'POST',
             body: JSON.stringify({ name: name.trim(), scopes }),
-          }),
+          })
         );
         const once = readString(created.secret);
         setSecret(once);
@@ -169,7 +171,13 @@ function PartnersBody() {
     );
   }
   if (error) {
-    return <ApiErrorView error={error} context="abrir partners" onRetry={() => setNonce((current) => current + 1)} />;
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir partners"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando claves.</p>;
 
@@ -247,7 +255,11 @@ function PartnersBody() {
           );
         })}
         <Param name="Nombre de la clave">
-          <ParameterCard name="Nombre de la clave" value={name.trim() || '—'} effect="Vacío: Guardar no crea clave.">
+          <ParameterCard
+            name="Nombre de la clave"
+            value={name.trim() || '—'}
+            effect="Vacío: Guardar no crea clave."
+          >
             <Field
               label="Nombre de la clave"
               value={name}
@@ -262,13 +274,17 @@ function PartnersBody() {
           const on = scopes.includes(scope.id);
           return (
             <Param key={scope.id} name={scope.label}>
-              <ParameterCard name={scope.label} value={on ? 'Sí' : 'No'} effect="Scope de la clave nueva.">
+              <ParameterCard
+                name={scope.label}
+                value={on ? 'Sí' : 'No'}
+                effect="Scope de la clave nueva."
+              >
                 <Switch
                   label={scope.label}
                   on={on}
                   onChange={(next) => {
                     setScopes((current) =>
-                      next ? [...current, scope.id] : current.filter((item) => item !== scope.id),
+                      next ? [...current, scope.id] : current.filter((item) => item !== scope.id)
                     );
                     setNotice(null);
                   }}

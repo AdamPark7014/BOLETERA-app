@@ -102,7 +102,7 @@ export function categoryLabels(series: readonly ChartSeries[]): string[] {
 /** Tabla accesible de un conjunto de series cartesianas. */
 export function seriesToTable(
   series: readonly ChartSeries[],
-  format: ValueFormatter,
+  format: ValueFormatter
 ): { columns: string[]; rows: (string | number)[][] } {
   const labels = categoryLabels(series);
   return {

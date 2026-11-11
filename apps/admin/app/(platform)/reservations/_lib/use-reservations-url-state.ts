@@ -71,15 +71,12 @@ export function useReservationsUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   return {
     ...state,
-    setRange: useCallback(
-      (range: RangeKey) => replaceParams({ range }),
-      [replaceParams],
-    ),
+    setRange: useCallback((range: RangeKey) => replaceParams({ range }), [replaceParams]),
     setSearch: useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]),
     setFilterSelection: useCallback(
       (selection: FilterSelection) => {
@@ -90,15 +87,15 @@ export function useReservationsUrlState() {
           status: statuses.length ? statuses.join(',') : null,
         });
       },
-      [replaceParams],
+      [replaceParams]
     ),
     setSelectedId: useCallback(
       (holdId: string | null) => replaceParams({ hold: holdId }),
-      [replaceParams],
+      [replaceParams]
     ),
     clearFilters: useCallback(
       () => replaceParams({ q: null, kind: null, status: null }),
-      [replaceParams],
+      [replaceParams]
     ),
   };
 }

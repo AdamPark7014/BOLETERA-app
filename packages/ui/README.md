@@ -17,7 +17,7 @@ Guía larga con inventario y firmas de props: [`docs/guias/design-system.md`](..
 El paquete apunta `main`/`types` a `./src/index.ts` (fuente, sin build). En Next:
 
 ```ts
-transpilePackages: ['@boletera/ui', /* ... */]
+transpilePackages: ['@boletera/ui' /* ... */];
 ```
 
 Importa el tema **una vez** en el layout/globals de la app:
@@ -30,7 +30,7 @@ Importa el tema **una vez** en el layout/globals de la app:
 ```tsx
 import { Button, KpiCard, formatCurrency } from '@boletera/ui';
 
-<KpiCard label="Ingreso bruto" value={formatCurrency(1284500)} delta={0.124} />
+<KpiCard label="Ingreso bruto" value={formatCurrency(1284500)} delta={0.124} />;
 ```
 
 ## Scripts

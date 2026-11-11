@@ -3,12 +3,7 @@
  * (`PATCH /organization/:orgId` y equipo). Con cualquier otro rol la vista
  * sigue siendo de solo lectura.
  */
-const MANAGE_ROLES: ReadonlySet<string> = new Set([
-  'ADMIN',
-  'SUPER_ADMIN',
-  'OWNER',
-  'PROMOTER',
-]);
+const MANAGE_ROLES: ReadonlySet<string> = new Set(['ADMIN', 'SUPER_ADMIN', 'OWNER', 'PROMOTER']);
 
 export function canManagePlan(role: string | null): boolean {
   if (!role) return false;

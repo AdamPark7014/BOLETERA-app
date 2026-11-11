@@ -80,10 +80,7 @@ describe('sweepBatch', () => {
     await sweepBatch(db, 250);
 
     assert.ok(queries[1].sql.includes('"SeatHold"'));
-    assert.ok(
-      queries[1].values.includes(250),
-      'el LIMIT debe venir parametrizado, no interpolado',
-    );
+    assert.ok(queries[1].values.includes(250), 'el LIMIT debe venir parametrizado, no interpolado');
   });
 
   it('marca los holds como EXPIRED sólo si siguen ACTIVE', async () => {
@@ -132,9 +129,12 @@ describe('sweepBatch', () => {
     assert.deepEqual(executed[0].values, ['e1', 'o1', 5], 'debe soltar 2+3 boletos');
     assert.ok(
       executed[0].sql.includes('"updatedAt" = now()'),
-      'sin refrescar updatedAt el SSE de disponibilidad no ve la liberación',
+      'sin refrescar updatedAt el SSE de disponibilidad no ve la liberación'
     );
-    assert.ok(executed[0].sql.includes('ORDER BY "updatedAt" ASC'), 'suelta primero los más viejos');
+    assert.ok(
+      executed[0].sql.includes('ORDER BY "updatedAt" ASC'),
+      'suelta primero los más viejos'
+    );
   });
 
   it('un hold de admisión general no deja boletos HELD colgados (F1-10)', async () => {

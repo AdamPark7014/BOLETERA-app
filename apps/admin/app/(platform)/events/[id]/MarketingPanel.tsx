@@ -1,20 +1,9 @@
 'use client';
 
-import {
-  Badge,
-  Card,
-  CardHeader,
-  EmptyState,
-  FunnelChart,
-} from '@boletera/ui';
+import { Badge, Card, CardHeader, EmptyState, FunnelChart } from '@boletera/ui';
 import type { CampaignFunnelMetrics } from '@boletera/shared';
 import type { Campaign } from '@/lib/queries/campaigns';
-import {
-  formatCount,
-  formatMxn,
-  formatPercentPoints,
-  statusTone,
-} from './format';
+import { formatCount, formatMxn, formatPercentPoints, statusTone } from './format';
 import styles from './event-hub.module.scss';
 
 type Props = {
@@ -51,10 +40,7 @@ export function MarketingPanel({
       aria-labelledby="hub-tab-marketing"
     >
       <Card variant="outline" padding="md">
-        <CardHeader
-          title="Campañas del evento"
-          description="Listado real desde /campaigns"
-        />
+        <CardHeader title="Campañas del evento" description="Listado real desde /campaigns" />
         {campaignsError ? (
           <EmptyState
             title="No se pudieron cargar campañas"
@@ -140,10 +126,7 @@ export function MarketingPanel({
               size="sm"
             />
           ) : (
-            <FunnelChart
-              label="Embudo de marketing del evento"
-              stages={funnelStages}
-            />
+            <FunnelChart label="Embudo de marketing del evento" stages={funnelStages} />
           )}
         </Card>
 

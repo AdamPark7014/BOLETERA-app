@@ -7,8 +7,6 @@ import { CampaignExecutionController } from './campaign-execution.controller';
   imports: [PrismaModule],
   controllers: [CampaignExecutionController],
   providers: [CampaignExecutionService],
-  exports: [CampaignExecutionService]
+  exports: [CampaignExecutionService],
 })
 export class CampaignExecutionModule {}
-
-

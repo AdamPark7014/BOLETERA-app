@@ -66,17 +66,13 @@ export const useCartStore = create<CartState>()(
       items: [],
       addItem: (item) =>
         set((s) => ({
-          items: [
-            ...s.items.filter((i) => i.eventId !== item.eventId),
-            normalizeCartItem(item),
-          ],
+          items: [...s.items.filter((i) => i.eventId !== item.eventId), normalizeCartItem(item)],
         })),
-      removeAt: (index) =>
-        set((s) => ({ items: s.items.filter((_, i) => i !== index) })),
+      removeAt: (index) => set((s) => ({ items: s.items.filter((_, i) => i !== index) })),
       clear: () => set({ items: [] }),
     }),
-    { name: 'boletera-cart' },
-  ),
+    { name: 'boletera-cart' }
+  )
 );
 
 // Una sola implementación del reloj: `lib/payment-window` la comparte con el

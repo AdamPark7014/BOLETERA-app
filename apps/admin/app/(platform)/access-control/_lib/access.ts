@@ -64,10 +64,7 @@ function deviceStatus(share: number): string {
   return 'Residual';
 }
 
-export function buildDevices(
-  rows: readonly MetricsDimensionRow[],
-  total: number,
-): DeviceRow[] {
+export function buildDevices(rows: readonly MetricsDimensionRow[], total: number): DeviceRow[] {
   return rows.map((row) => {
     const share =
       row.percentOfTotal ?? (total > 0 ? Math.round((row.value / total) * 1000) / 10 : 0);
@@ -92,7 +89,7 @@ export function privilegeSlices(team: readonly TeamMember[]): DonutSlice[] {
 
 export function checkInSeries(
   points: readonly MetricsTimePoint[],
-  granularity: MetricsGranularity,
+  granularity: MetricsGranularity
 ): ChartSeries[] {
   if (points.length === 0) return [];
   return [
@@ -140,10 +137,7 @@ export type DoorRow = {
   zoneHint: string;
 };
 
-export function buildDoors(
-  rows: readonly MetricsDimensionRow[],
-  total: number,
-): DoorRow[] {
+export function buildDoors(rows: readonly MetricsDimensionRow[], total: number): DoorRow[] {
   return rows.map((row) => {
     const share =
       row.percentOfTotal ?? (total > 0 ? Math.round((row.value / total) * 1000) / 10 : 0);

@@ -63,7 +63,7 @@ export type EditCommand =
 export function applySeatProps(
   map: SeatMapData,
   seatIds: ReadonlySet<string>,
-  props: Partial<SeatMapSeat>,
+  props: Partial<SeatMapSeat>
 ): { map: SeatMapData; before: SeatSnapshot[] } {
   if (!seatIds.size) return { map, before: [] };
   const before: SeatSnapshot[] = [];
@@ -111,7 +111,7 @@ export function applySeatMove(
   seatIds: ReadonlySet<string>,
   dx: number,
   dy: number,
-  opts?: { round?: boolean },
+  opts?: { round?: boolean }
 ): SeatMapData {
   if (!seatIds.size || (dx === 0 && dy === 0)) return map;
   const round = opts?.round ?? true;
@@ -149,7 +149,7 @@ export function applySeatMove(
 /** Coloca butacas en posiciones absolutas (inverso exacto de un arrastre). */
 export function restoreSeatPositions(
   map: SeatMapData,
-  before: { id: string; x: number; y: number }[],
+  before: { id: string; x: number; y: number }[]
 ): SeatMapData {
   if (!before.length) return map;
   const byId = new Map(before.map((b) => [b.id, b]));
@@ -182,7 +182,7 @@ export function restoreSeatPositions(
 export function applySeatSection(
   map: SeatMapData,
   seatIds: ReadonlySet<string>,
-  toSectionId: string,
+  toSectionId: string
 ): { map: SeatMapData; before: { id: string; sectionId: string }[] } {
   if (!seatIds.size) return { map, before: [] };
   const target = map.sections.find((s) => s.id === toSectionId);
@@ -210,7 +210,7 @@ export function applySeatSection(
   if (!moved.length) return { map, before: [] };
 
   const sections = stripped.map((sec) =>
-    sec.id === toSectionId ? { ...sec, seats: [...sec.seats, ...moved] } : sec,
+    sec.id === toSectionId ? { ...sec, seats: [...sec.seats, ...moved] } : sec
   );
 
   return { map: { ...map, sections }, before };
@@ -219,7 +219,7 @@ export function applySeatSection(
 /** Devuelve butacas a su sección original. */
 export function restoreSeatSections(
   map: SeatMapData,
-  before: { id: string; sectionId: string }[],
+  before: { id: string; sectionId: string }[]
 ): SeatMapData {
   if (!before.length) return map;
   const homeById = new Map(before.map((b) => [b.id, b.sectionId]));
@@ -345,7 +345,7 @@ export function reapplyCommand(map: SeatMapData, command: EditCommand): SeatMapD
 
 export function undo(
   map: SeatMapData,
-  history: HistoryState,
+  history: HistoryState
 ): { map: SeatMapData; history: HistoryState } {
   if (!canUndo(history)) return { map, history };
   const command = history.commands[history.cursor];
@@ -357,7 +357,7 @@ export function undo(
 
 export function redo(
   map: SeatMapData,
-  history: HistoryState,
+  history: HistoryState
 ): { map: SeatMapData; history: HistoryState } {
   if (!canRedo(history)) return { map, history };
   const command = history.commands[history.cursor + 1];
@@ -408,7 +408,7 @@ export async function runChunked<T>(
   items: readonly T[],
   chunkSize: number,
   work: (item: T, index: number) => void,
-  onProgress?: (done: number, total: number) => void,
+  onProgress?: (done: number, total: number) => void
 ): Promise<void> {
   const total = items.length;
   for (let i = 0; i < total; i += chunkSize) {
@@ -432,12 +432,12 @@ export async function runChunked<T>(
 export function replaceSectionSeats(
   map: SeatMapData,
   sectionId: string,
-  seats: SeatMapSeat[],
+  seats: SeatMapSeat[]
 ): SeatMapData {
   return {
     ...map,
     sections: map.sections.map((sec: SeatMapSection) =>
-      sec.id === sectionId ? { ...sec, seats } : sec,
+      sec.id === sectionId ? { ...sec, seats } : sec
     ),
   };
 }

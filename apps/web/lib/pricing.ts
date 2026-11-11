@@ -61,7 +61,7 @@ export function sameTotal(a: number, b: number): boolean {
 export async function fetchCartPricing(
   apiBase: string,
   body: CartPricingRequest,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<CartPricing | null> {
   if (!body.eventId || !body.items.length) return null;
   try {

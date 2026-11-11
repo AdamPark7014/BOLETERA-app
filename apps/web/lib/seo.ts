@@ -18,9 +18,7 @@ export type HubMetaInput = {
 /** Shared OG/Twitter/canonical metadata for hub and leaf pages. */
 export async function buildHubMetadata(input: HubMetaInput): Promise<Metadata> {
   const [tenant, origin] = await Promise.all([fetchTenantCurrent(), getSiteOrigin()]);
-  const title = input.title.includes(tenant.name)
-    ? input.title
-    : `${input.title} | ${tenant.name}`;
+  const title = input.title.includes(tenant.name) ? input.title : `${input.title} | ${tenant.name}`;
   const url = await absoluteUrl(input.path);
   const imagePath = input.image?.trim() || DEFAULT_OG_IMAGE;
   const image = /^https?:\/\//i.test(imagePath)

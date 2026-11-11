@@ -80,7 +80,9 @@ async function comprobarSintaxis(nombres) {
   for (const nombre of nombres) {
     const ruta = resolve(loadDir, `${nombre}.mjs`);
     const code = await new Promise((r) => {
-      const hijo = spawn(process.execPath, ['--check', ruta], { stdio: ['ignore', 'ignore', 'pipe'] });
+      const hijo = spawn(process.execPath, ['--check', ruta], {
+        stdio: ['ignore', 'ignore', 'pipe'],
+      });
       let err = '';
       hijo.stderr.on('data', (d) => (err += d));
       hijo.on('close', (c) => {
@@ -123,7 +125,7 @@ if (!arriba) {
   console.error('  THROTTLE_LIMIT=100000 THROTTLE_BURST_LIMIT=100000 pnpm dev:api\n');
   console.error(
     'El throttle alto no es opcional: varios escenarios lanzan cientos de\n' +
-      'compradores simultáneos y chocarían con el límite por IP antes de competir.\n',
+      'compradores simultáneos y chocarían con el límite por IP antes de competir.\n'
   );
   process.exit(1);
 }

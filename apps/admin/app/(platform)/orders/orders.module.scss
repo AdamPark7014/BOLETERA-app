@@ -48,7 +48,9 @@
   border: none;
   border-radius: var(--bl-radius-sm);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   &:hover {
     color: var(--bl-text-primary);
@@ -570,4 +572,3 @@
   font-size: var(--bl-text-2xs);
   font-weight: 600;
 }
-

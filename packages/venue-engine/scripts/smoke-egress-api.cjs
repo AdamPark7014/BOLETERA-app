@@ -19,7 +19,16 @@ const cx = stage.x + stage.width / 2;
 map.venue = {
   ...map.venue,
   scale: 40,
-  aisles: [{ id: 'main', width: 20, points: [[cx, stage.y + 30], [cx, 380]] }],
+  aisles: [
+    {
+      id: 'main',
+      width: 20,
+      points: [
+        [cx, stage.y + 30],
+        [cx, 380],
+      ],
+    },
+  ],
 };
 
 const report = buildEgressReport(map, { venueName: 'API Venue' });

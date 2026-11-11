@@ -19,14 +19,7 @@ export type BlockParams = {
   skipColumns: string;
 };
 
-export type GeneratorTab =
-  | 'section'
-  | 'row'
-  | 'curved'
-  | 'tables'
-  | 'ga'
-  | 'template'
-  | 'renumber';
+export type GeneratorTab = 'section' | 'row' | 'curved' | 'tables' | 'ga' | 'template' | 'renumber';
 
 export type SectionGeneratorParams = {
   rows: number;
@@ -159,15 +152,17 @@ export function parseSkipColumns(raw: string, cols: number): number[] {
 }
 
 /** Origin below active section seats or in front of the stage. */
-export function generatorPlacement(ctx: PlacementContext): { x: number; y: number; elevation: number } {
+export function generatorPlacement(ctx: PlacementContext): {
+  x: number;
+  y: number;
+  elevation: number;
+} {
   const { activeSection, map, blockParams } = ctx;
   if (activeSection?.seats.length) {
     const cols = blockParams.cols;
     const pitch = activeSection.seatPitch ?? blockParams.seatPitch;
     return {
-      x:
-        Math.min(...activeSection.seats.map((s) => s.x)) +
-        ((cols - 1) * pitch) / 2,
+      x: Math.min(...activeSection.seats.map((s) => s.x)) + ((cols - 1) * pitch) / 2,
       y:
         Math.max(...activeSection.seats.map((s) => s.y)) +
         (activeSection.rowPitch ?? blockParams.rowPitch),
@@ -189,7 +184,7 @@ function stampSeatIds(seats: SeatMapSeat[], prefix: string): SeatMapSeat[] {
 
 export function previewSectionBlock(
   ctx: PlacementContext,
-  params: SectionGeneratorParams,
+  params: SectionGeneratorParams
 ): GeneratorPreviewResult {
   const origin = generatorPlacement(ctx);
   const skip = parseSkipColumns(params.skipColumns, params.cols);
@@ -216,7 +211,7 @@ export function previewSectionBlock(
   return {
     stats: previewStats(
       seats,
-      `Sección ${params.rows} filas × ${params.cols} butacas (${occupied.toLocaleString('es-MX')} asientos, ${skip.length ? 'con pasillos' : 'sin pasillos'})`,
+      `Sección ${params.rows} filas × ${params.cols} butacas (${occupied.toLocaleString('es-MX')} asientos, ${skip.length ? 'con pasillos' : 'sin pasillos'})`
     ),
     seats,
     block,
@@ -225,7 +220,7 @@ export function previewSectionBlock(
 
 export function previewStraightRow(
   ctx: PlacementContext,
-  params: RowGeneratorParams,
+  params: RowGeneratorParams
 ): GeneratorPreviewResult {
   const origin = generatorPlacement(ctx);
   const raw = generateStraightRow({
@@ -249,7 +244,7 @@ export function previewStraightRow(
 
 export function previewCurvedRow(
   ctx: PlacementContext,
-  params: CurvedGeneratorParams,
+  params: CurvedGeneratorParams
 ): GeneratorPreviewResult {
   const origin = generatorPlacement(ctx);
   const cx = origin.x;
@@ -273,7 +268,7 @@ export function previewCurvedRow(
   return {
     stats: previewStats(
       seats,
-      `Fila curva · ${params.count} butacas · radio ${params.radius} · arco ${params.spanDeg}°`,
+      `Fila curva · ${params.count} butacas · radio ${params.radius} · arco ${params.spanDeg}°`
     ),
     seats,
   };
@@ -281,14 +276,15 @@ export function previewCurvedRow(
 
 export function previewTables(
   ctx: PlacementContext,
-  params: TablesGeneratorParams,
+  params: TablesGeneratorParams
 ): GeneratorPreviewResult {
   const origin = generatorPlacement(ctx);
   const seats: SeatMapSeat[] = [];
   for (let t = 0; t < params.tableCount; t++) {
     const row = Math.floor(t / params.tablesPerRow);
     const col = t % params.tablesPerRow;
-    const cx = origin.x + col * params.tablePitch - ((params.tablesPerRow - 1) * params.tablePitch) / 2;
+    const cx =
+      origin.x + col * params.tablePitch - ((params.tablesPerRow - 1) * params.tablePitch) / 2;
     const cy = origin.y + row * params.tablePitch;
     const radius = Math.max(28, (params.seatsPerTable * params.seatPitch) / (2 * Math.PI)) * 1.15;
     const tableSeats = generateCurvedRow({
@@ -307,13 +303,16 @@ export function previewTables(
   return {
     stats: previewStats(
       stamped,
-      `${params.tableCount} mesas × ${params.seatsPerTable} butacas (${stamped.length.toLocaleString('es-MX')} asientos)`,
+      `${params.tableCount} mesas × ${params.seatsPerTable} butacas (${stamped.length.toLocaleString('es-MX')} asientos)`
     ),
     seats: stamped,
   };
 }
 
-export function previewGaZone(ctx: PlacementContext, params: GaGeneratorParams): GeneratorPreviewResult {
+export function previewGaZone(
+  ctx: PlacementContext,
+  params: GaGeneratorParams
+): GeneratorPreviewResult {
   const origin = generatorPlacement(ctx);
   const points: [number, number][] = [
     [origin.x - params.width / 2, origin.y],
@@ -354,7 +353,7 @@ export function previewTemplate(params: TemplateGeneratorParams): GeneratorPrevi
   return {
     stats: previewStats(
       seats,
-      `Plantilla ${params.template} · ${seats.length.toLocaleString('es-MX')} asientos · ${templateMap.sections.length} zonas (${names})`,
+      `Plantilla ${params.template} · ${seats.length.toLocaleString('es-MX')} asientos · ${templateMap.sections.length} zonas (${names})`
     ),
     seats,
     templateMap,
@@ -364,7 +363,7 @@ export function previewTemplate(params: TemplateGeneratorParams): GeneratorPrevi
 export function previewRenumber(
   map: SeatMapData,
   selectedIds: ReadonlySet<string>,
-  params: RenumberParams,
+  params: RenumberParams
 ): GeneratorPreviewResult {
   const selected = map.sections
     .flatMap((sec) => sec.seats.map((seat) => ({ seat, sectionId: sec.id })))
@@ -392,11 +391,11 @@ export function previewRenumber(
   const updates: Array<{ id: string; label: string; row: string }> = [];
   buckets.forEach((bucket, rowIndex) => {
     const ordered = [...bucket.seats].sort((a, b) =>
-      params.direction === 'ltr' ? a.x - b.x : b.x - a.x,
+      params.direction === 'ltr' ? a.x - b.x : b.x - a.x
     );
     const rowLabel = params.relabelRows
       ? `${params.rowPrefix}${rowLabelAt(rowIndex)}`
-      : ordered[0].row ?? rowLabelAt(rowIndex);
+      : (ordered[0].row ?? rowLabelAt(rowIndex));
     ordered.forEach((seat, i) => {
       const number = params.startNumber + i;
       updates.push({ id: seat.id, label: `${rowLabel}-${number}`, row: rowLabel });

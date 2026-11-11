@@ -41,7 +41,7 @@ assert(stageSeeded.seedMode === 'stage', `expected stage seed got ${stageSeeded.
 assert(stageSeeded.exitCount === 0, 'no exits yet');
 assert(
   validateGeometry(resolveGeometry(withAisles)).issues.some((i) => i.code === 'no_exits'),
-  'no_exits warning',
+  'no_exits warning'
 );
 
 // Authored exits at corridor ends → true egress seeds
@@ -62,7 +62,7 @@ assert(exitSeeded.exitCount === 2, `exitCount ${exitSeeded.exitCount}`);
 assert(exitSeeded.hasNetwork, 'network with exits');
 assert(
   !validateGeometry(resolveGeometry(withExits)).issues.some((i) => i.code === 'no_exits'),
-  'no_exits cleared',
+  'no_exits cleared'
 );
 
 const report = buildEgressReport(withExits, { venueName: 'Con salidas' });

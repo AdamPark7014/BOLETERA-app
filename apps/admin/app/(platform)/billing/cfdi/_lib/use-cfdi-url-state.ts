@@ -27,8 +27,7 @@ export function useCfdiUrlState() {
     const raw = searchParams.get('status') ?? 'ALL';
     const filter: InvoiceFilter =
       raw === 'ALL' || isInvoiceFilter(raw) ? (raw as InvoiceFilter) : 'ALL';
-    const filterSelection: FilterSelection =
-      filter === 'ALL' ? {} : { status: [filter] };
+    const filterSelection: FilterSelection = filter === 'ALL' ? {} : { status: [filter] };
     return {
       filter,
       q: searchParams.get('q') ?? '',
@@ -46,13 +45,10 @@ export function useCfdiUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
-  const setSearch = useCallback(
-    (q: string) => replaceParams({ q: q || null }),
-    [replaceParams],
-  );
+  const setSearch = useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]);
 
   const setFilterSelection = useCallback(
     (selection: FilterSelection) => {
@@ -62,7 +58,7 @@ export function useCfdiUrlState() {
         status: next && isInvoiceFilter(next) ? next : null,
       });
     },
-    [replaceParams],
+    [replaceParams]
   );
 
   return { ...state, setSearch, setFilterSelection };

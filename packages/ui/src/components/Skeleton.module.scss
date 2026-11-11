@@ -13,12 +13,7 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      $c-skeleton-shine 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg, transparent 0%, $c-skeleton-shine 50%, transparent 100%);
   }
 }
 

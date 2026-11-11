@@ -32,7 +32,10 @@ const scene = resolveGeometry(map);
 const analysis = analyzeCirculation(scene);
 assert(analysis.egress.clearanceMinutes != null, 'venue clearance');
 assert(analysis.egress.maxWalkMinutes != null, 'max walk');
-assert(analysis.egress.sections.some((s) => s.clearanceMinutes != null), 'section clearance');
+assert(
+  analysis.egress.sections.some((s) => s.clearanceMinutes != null),
+  'section clearance'
+);
 assert(analysis.egress.bottlenecks[0].flowPerMinute > 0, 'flow');
 assert(analysis.egress.bottlenecks[0].clearanceMinutes > 0, 'bn clearance');
 
@@ -54,10 +57,7 @@ assert(projected.aisles[0].width === 12, '3d aisle width');
 assert(projected.aisles[0].points[0].length === 3, '3d points');
 
 const issues = validateGeometry(scene).issues;
-console.log(
-  'codes:',
-  [...new Set(issues.map((i) => i.code))],
-);
+console.log('codes:', [...new Set(issues.map((i) => i.code))]);
 
 assert(EGRESS_DEFAULTS.flowPerMeterLevel === 66, 'defaults');
 console.log('CLEARANCE_SMOKE_OK');

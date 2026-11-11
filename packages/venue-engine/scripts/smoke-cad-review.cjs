@@ -22,9 +22,18 @@ const svg = `
 
 const preview = previewSvgCadImport(svg);
 assert(preview.length >= 4, `preview rows ${preview.length}`);
-assert(preview.some((r) => r.suggestedRole === 'stage'), 'stage suggested');
-assert(preview.some((r) => r.suggestedRole === 'aisle'), 'aisle suggested');
-assert(preview.some((r) => r.suggestedRole === 'exit'), 'exit suggested');
+assert(
+  preview.some((r) => r.suggestedRole === 'stage'),
+  'stage suggested'
+);
+assert(
+  preview.some((r) => r.suggestedRole === 'aisle'),
+  'aisle suggested'
+);
+assert(
+  preview.some((r) => r.suggestedRole === 'exit'),
+  'exit suggested'
+);
 assert(CAD_ENTITY_ROLES.includes('skip'), 'skip role');
 
 const reviewed = preview.map((r) =>
@@ -33,16 +42,26 @@ const reviewed = preview.map((r) =>
     : r.suggestedRole === 'section' && r.name === 'Platea'
       ? r
       : r.role === 'section' && !/platea/i.test(r.name)
-        ? { ...r, role: r.id.includes('noise') || r.name.toLowerCase().includes('decoration') ? 'skip' : r.role }
-        : r,
+        ? {
+            ...r,
+            role:
+              r.id.includes('noise') || r.name.toLowerCase().includes('decoration')
+                ? 'skip'
+                : r.role,
+          }
+        : r
 );
 
 // Force-skip the decoration polygon explicitly
 const forced = reviewed.map((r) =>
-  /noise|decoration/i.test(r.id + r.name) ? { ...r, role: 'skip' } : r,
+  /noise|decoration/i.test(r.id + r.name) ? { ...r, role: 'skip' } : r
 );
 
-const { map, stats } = commitCadImportReview(forced, { version: 3, sections: [] }, { mode: 'replace-meta' });
+const { map, stats } = commitCadImportReview(
+  forced,
+  { version: 3, sections: [] },
+  { mode: 'replace-meta' }
+);
 assert(stats.sections >= 1, `sections ${stats.sections}`);
 assert(stats.aisles >= 1, 'aisles');
 assert(stats.exits >= 1, 'exits');
@@ -62,10 +81,19 @@ const flipped = applyCadPrimitivesToSeatMap(
         [20, 10],
       ],
     },
-    { id: 'p2', role: 'skip', name: 'x', points: [[0, 0], [1, 0], [1, 1]] },
+    {
+      id: 'p2',
+      role: 'skip',
+      name: 'x',
+      points: [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+      ],
+    },
   ],
   { version: 3, sections: [] },
-  { mode: 'replace-meta' },
+  { mode: 'replace-meta' }
 );
 assert(flipped.stats.exits === 1, 'override exit');
 assert(flipped.stats.skipped === 1, 'skip counted');
@@ -111,8 +139,14 @@ ENDSEC
 EOF
 `;
 const dxfPreview = previewDxfCadImport(dxf);
-assert(dxfPreview.some((r) => r.suggestedRole === 'aisle'), 'dxf aisle');
-assert(dxfPreview.some((r) => r.suggestedRole === 'exit'), 'dxf exit');
+assert(
+  dxfPreview.some((r) => r.suggestedRole === 'aisle'),
+  'dxf aisle'
+);
+assert(
+  dxfPreview.some((r) => r.suggestedRole === 'exit'),
+  'dxf exit'
+);
 
 console.log('CAD_IMPORT_REVIEW_SMOKE_OK', {
   svgRows: preview.length,

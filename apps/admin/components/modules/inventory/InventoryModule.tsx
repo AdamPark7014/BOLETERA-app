@@ -24,19 +24,9 @@ import {
   type FilterSelection,
 } from '@boletera/ui';
 import { QueryError } from '@/components/QueryStates';
-import {
-  useEventSalesPace,
-  useEvents,
-  useInventoryMetrics,
-  useMetricsAlerts,
-} from '@/lib/queries';
+import { useEventSalesPace, useEvents, useInventoryMetrics, useMetricsAlerts } from '@/lib/queries';
 import { useSession } from '@/lib/use-session';
-import {
-  buildEventOptions,
-  buildZoneRows,
-  pressureRank,
-  zoneBarSeries,
-} from './derive';
+import { buildEventOptions, buildZoneRows, pressureRank, zoneBarSeries } from './derive';
 import {
   daysAgoIso,
   formatAvailability,
@@ -80,7 +70,7 @@ export function InventoryModule() {
       to: new Date().toISOString(),
       eventId: eventId ?? undefined,
     }),
-    [eventId, organizationId, range],
+    [eventId, organizationId, range]
   );
 
   const inventory = useInventoryMetrics(params);
@@ -106,12 +96,11 @@ export function InventoryModule() {
 
   const selected = useMemo(
     () => (selectedId ? (zoneRows.find((row) => row.id === selectedId) ?? null) : null),
-    [selectedId, zoneRows],
+    [selectedId, zoneRows]
   );
 
   const summary = inventory.data?.summary;
-  const occupancy =
-    summary && summary.totalCapacity > 0 ? summary.sold / summary.totalCapacity : 0;
+  const occupancy = summary && summary.totalCapacity > 0 ? summary.sold / summary.totalCapacity : 0;
 
   const donutSlices = useMemo<DonutSlice[]>(() => {
     const breakdown = inventory.data?.statusBreakdown;
@@ -136,9 +125,9 @@ export function InventoryModule() {
   const inventoryAlerts = useMemo(
     () =>
       (alerts.data?.alerts ?? []).filter(
-        (alert) => alert.domain === 'inventory' || alert.domain === 'events',
+        (alert) => alert.domain === 'inventory' || alert.domain === 'events'
       ),
-    [alerts.data],
+    [alerts.data]
   );
 
   const atRiskEvents = pace.data?.atRisk ?? [];
@@ -155,7 +144,7 @@ export function InventoryModule() {
         })),
       },
     ],
-    [zoneRows],
+    [zoneRows]
   );
 
   const columns = useMemo<DataTableColumn<InventoryZoneTableRow>[]>(
@@ -234,7 +223,7 @@ export function InventoryModule() {
         ),
       },
     ],
-    [],
+    []
   );
 
   const loading = inventory.isPending;
@@ -258,10 +247,7 @@ export function InventoryModule() {
         eyebrow="Operaciones · Inventario"
         title="Inventario de boletos"
         description="Disponibilidad, holds, sell-through y presión de demanda por zona y evento. Datos en vivo desde /metrics/inventory."
-        breadcrumbs={[
-          { label: 'Panel', href: '/dashboard' },
-          { label: 'Inventario' },
-        ]}
+        breadcrumbs={[{ label: 'Panel', href: '/dashboard' }, { label: 'Inventario' }]}
         actions={
           <div className={styles.actions}>
             <SegmentedControl<RangeKey>
@@ -405,9 +391,7 @@ export function InventoryModule() {
                   maxHeight={480}
                   density="compact"
                   defaultSort={{ key: 'pressure', direction: 'desc' }}
-                  onRowClick={(row) =>
-                    setSelectedId(row.id === selectedId ? null : row.id)
-                  }
+                  onRowClick={(row) => setSelectedId(row.id === selectedId ? null : row.id)}
                 />
               )}
 

@@ -62,7 +62,7 @@ export class NotificationProcessor {
     private mail: MailService,
     private ticketPdf: TicketPdfService,
     private config: ConfigService,
-    @InjectQueue(NOTIFICATION_QUEUE) private readonly queue: Queue,
+    @InjectQueue(NOTIFICATION_QUEUE) private readonly queue: Queue
   ) {}
 
   @Process('dispatch')
@@ -118,7 +118,9 @@ export class NotificationProcessor {
       `Aviso ${data?.type ?? 'desconocido'} → ${target} falló (intento ${job.attemptsMade}` +
       `/${job.opts?.attempts ?? 1}${data?.orderId ? `, orden ${data.orderId}` : ''}): ${error?.message ?? error}`;
     if (final) {
-      this.logger.error(`${message} — SIN ENTREGAR. Queda en la cola de fallidos para reintento manual.`);
+      this.logger.error(
+        `${message} — SIN ENTREGAR. Queda en la cola de fallidos para reintento manual.`
+      );
     } else {
       this.logger.warn(message);
     }
@@ -142,11 +144,17 @@ export class NotificationProcessor {
     const markerKey = `notif:sent:${key}`;
     let acquired = true;
     try {
-      const result = await this.queue.client.set(markerKey, String(Date.now()), 'PX', SENT_MARKER_TTL_MS, 'NX');
+      const result = await this.queue.client.set(
+        markerKey,
+        String(Date.now()),
+        'PX',
+        SENT_MARKER_TTL_MS,
+        'NX'
+      );
       acquired = result === 'OK';
     } catch (error) {
       this.logger.warn(
-        `Sin marca de idempotencia para ${key} (Redis: ${error instanceof Error ? error.message : String(error)}). Se envía igualmente.`,
+        `Sin marca de idempotencia para ${key} (Redis: ${error instanceof Error ? error.message : String(error)}). Se envía igualmente.`
       );
     }
 
@@ -171,7 +179,9 @@ export class NotificationProcessor {
   // ==================== CONTEXTO DE ÓRDENES ====================
 
   private webUrl(): string {
-    return String(this.config.get('WEB_URL') ?? process.env.WEB_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    return String(
+      this.config.get('WEB_URL') ?? process.env.WEB_URL ?? 'http://localhost:3000'
+    ).replace(/\/$/, '');
   }
 
   private hashToken(token: string): string {
@@ -210,7 +220,7 @@ export class NotificationProcessor {
       // Sin credencial el correo sigue saliendo: el enlace servirá a quien
       // tenga sesión, y los datos de la compra están en el propio mensaje.
       this.logger.warn(
-        `No se pudo emitir credencial de acceso para ${orderId}: ${error instanceof Error ? error.message : String(error)}`,
+        `No se pudo emitir credencial de acceso para ${orderId}: ${error instanceof Error ? error.message : String(error)}`
       );
       return null;
     }
@@ -242,7 +252,9 @@ export class NotificationProcessor {
     });
   }
 
-  private eventContext(order: Awaited<ReturnType<NotificationProcessor['loadOrder']>>): EventContext {
+  private eventContext(
+    order: Awaited<ReturnType<NotificationProcessor['loadOrder']>>
+  ): EventContext {
     const event = order?.event;
     return {
       title: event?.title ?? 'Evento',
@@ -261,7 +273,7 @@ export class NotificationProcessor {
   /** Aplana la orden en lo que necesitan las plantillas. */
   private orderContext(
     order: Awaited<ReturnType<NotificationProcessor['loadOrder']>>,
-    accessToken?: string | null,
+    accessToken?: string | null
   ): OrderEmailContext {
     const tickets = (order?.items ?? []).flatMap((item) =>
       (item.tickets ?? []).map((t) => ({
@@ -270,7 +282,7 @@ export class NotificationProcessor {
         row: t.row,
         seatNumber: t.seatNumber,
         offerName: item.offer?.name ?? null,
-      })),
+      }))
     );
     return {
       publicId: order.publicId,
@@ -287,7 +299,9 @@ export class NotificationProcessor {
 
   // ==================== COMPRADOR ====================
 
-  private async sendOrderConfirmation(payload: Extract<NotificationJob, { type: 'order.confirmation' }>) {
+  private async sendOrderConfirmation(
+    payload: Extract<NotificationJob, { type: 'order.confirmation' }>
+  ) {
     const order = await this.loadOrder(payload.orderId);
     if (!order) {
       this.logger.warn(`Confirmación cancelada: no existe la orden ${payload.orderId}`);
@@ -309,7 +323,7 @@ export class NotificationProcessor {
       accessToken = accessToken ?? (await this.mintAccessToken(order.id));
       await this.mail.sendDocument(
         payload.email,
-        renderEmailDocument(orderConfirmationEmail(this.orderContext(order, accessToken))),
+        renderEmailDocument(orderConfirmationEmail(this.orderContext(order, accessToken)))
       );
     });
 
@@ -334,7 +348,7 @@ export class NotificationProcessor {
           backoff: { type: 'exponential', delay: 15_000 },
           removeOnComplete: 200,
           removeOnFail: false,
-        },
+        }
       );
     });
   }
@@ -355,7 +369,7 @@ export class NotificationProcessor {
         row: t.row,
         seatNumber: t.seatNumber,
         offerName: item.offer?.name ?? null,
-      })),
+      }))
     );
 
     await this.sendOnce(`ticket.pdf:${order.id}:${payload.email}`, async () => {
@@ -416,13 +430,15 @@ export class NotificationProcessor {
             concept: (metadata.concept as string) ?? null,
             expiresAt: intent?.expiresAt ?? order.expiresAt ?? null,
             methodType: (metadata.type as string) ?? order.paymentMethod ?? null,
-          }),
-        ),
+          })
+        )
       );
     });
   }
 
-  private async sendPaymentReceived(payload: Extract<NotificationJob, { type: 'payment.received' }>) {
+  private async sendPaymentReceived(
+    payload: Extract<NotificationJob, { type: 'payment.received' }>
+  ) {
     const order = await this.loadOrder(payload.orderId);
     if (!order) {
       this.logger.warn(`Acuse de pago cancelado: no existe la orden ${payload.orderId}`);
@@ -435,7 +451,7 @@ export class NotificationProcessor {
       const accessToken = payload.accessToken ?? (await this.mintAccessToken(order.id));
       await this.mail.sendDocument(
         email,
-        renderEmailDocument(paymentReceivedEmail(this.orderContext(order, accessToken))),
+        renderEmailDocument(paymentReceivedEmail(this.orderContext(order, accessToken)))
       );
     });
   }
@@ -488,43 +504,45 @@ export class NotificationProcessor {
     const isFull =
       order != null && Math.abs(Number(payload.amount) - Number(order.totalAmount)) < 0.01;
 
-    await this.sendOnce(`refund:${payload.orderId}:${payload.email}:${payload.amount}`, async () => {
-      const accessToken = order ? await this.mintAccessToken(order.id) : null;
-      await this.mail.sendDocument(
-        payload.email,
-        renderEmailDocument(
-          refundEmail({
-            publicId: order?.publicId ?? payload.orderId,
-            buyerName: order?.buyerName ?? null,
-            amount: payload.amount,
-            currency: String(order?.currency ?? 'MXN'),
-            eventTitle: order?.event?.title ?? 'tu evento',
-            reason:
-              payload.reason ?? (eventCancelled ? 'Cancelación del evento' : null),
-            partial: payload.partial ?? !isFull,
-            breakdown:
-              isFull && order
-                ? {
-                    tickets: order.subtotal,
-                    fees: order.fees,
-                    tax: order.taxAmount,
-                    discount: order.discountAmount,
-                  }
-                : null,
-            compensation: compensationTotal > 0 ? compensationTotal : null,
-            compensationNote: compensationTotal > 0 ? COMPENSATION_LEGAL_NOTE : null,
-            statusHeadline: copy.headline,
-            statusDetail: copy.detail,
-            methodLabel,
-            sentBy,
-            visibleBy,
-            eventCancelled,
-            needsBankAccount: refundNeedsBankAccount(order?.paymentMethod),
-            accessUrl: order ? this.orderUrl(order.publicId, accessToken) : null,
-          }),
-        ),
-      );
-    });
+    await this.sendOnce(
+      `refund:${payload.orderId}:${payload.email}:${payload.amount}`,
+      async () => {
+        const accessToken = order ? await this.mintAccessToken(order.id) : null;
+        await this.mail.sendDocument(
+          payload.email,
+          renderEmailDocument(
+            refundEmail({
+              publicId: order?.publicId ?? payload.orderId,
+              buyerName: order?.buyerName ?? null,
+              amount: payload.amount,
+              currency: String(order?.currency ?? 'MXN'),
+              eventTitle: order?.event?.title ?? 'tu evento',
+              reason: payload.reason ?? (eventCancelled ? 'Cancelación del evento' : null),
+              partial: payload.partial ?? !isFull,
+              breakdown:
+                isFull && order
+                  ? {
+                      tickets: order.subtotal,
+                      fees: order.fees,
+                      tax: order.taxAmount,
+                      discount: order.discountAmount,
+                    }
+                  : null,
+              compensation: compensationTotal > 0 ? compensationTotal : null,
+              compensationNote: compensationTotal > 0 ? COMPENSATION_LEGAL_NOTE : null,
+              statusHeadline: copy.headline,
+              statusDetail: copy.detail,
+              methodLabel,
+              sentBy,
+              visibleBy,
+              eventCancelled,
+              needsBankAccount: refundNeedsBankAccount(order?.paymentMethod),
+              accessUrl: order ? this.orderUrl(order.publicId, accessToken) : null,
+            })
+          )
+        );
+      }
+    );
   }
 
   // ==================== CANCELACIÓN DE EVENTO ====================
@@ -536,7 +554,9 @@ export class NotificationProcessor {
    * un fallo de SMTP en el asistente 800 no obligue a reenviar a los 799
    * anteriores. Cada orden reintenta por su cuenta.
    */
-  private async broadcastEventCancelled(payload: Extract<NotificationJob, { type: 'event.cancelled' }>) {
+  private async broadcastEventCancelled(
+    payload: Extract<NotificationJob, { type: 'event.cancelled' }>
+  ) {
     const orders = await this.prisma.order.findMany({
       where: {
         eventId: payload.eventId,
@@ -548,15 +568,28 @@ export class NotificationProcessor {
     for (const order of orders) {
       await this.queue.add(
         'dispatch',
-        { type: 'order.event_cancelled', orderId: order.id, reason: payload.reason } satisfies NotificationJob,
-        { attempts: 5, backoff: { type: 'exponential', delay: 15_000 }, removeOnComplete: 200, removeOnFail: false },
+        {
+          type: 'order.event_cancelled',
+          orderId: order.id,
+          reason: payload.reason,
+        } satisfies NotificationJob,
+        {
+          attempts: 5,
+          backoff: { type: 'exponential', delay: 15_000 },
+          removeOnComplete: 200,
+          removeOnFail: false,
+        }
       );
     }
-    this.logger.warn(`Cancelación del evento ${payload.eventId}: ${orders.length} avisos encolados`);
+    this.logger.warn(
+      `Cancelación del evento ${payload.eventId}: ${orders.length} avisos encolados`
+    );
     return { notified: orders.length };
   }
 
-  private async sendOrderEventCancelled(payload: Extract<NotificationJob, { type: 'order.event_cancelled' }>) {
+  private async sendOrderEventCancelled(
+    payload: Extract<NotificationJob, { type: 'order.event_cancelled' }>
+  ) {
     const order = await this.loadOrder(payload.orderId);
     if (!order) return;
 
@@ -576,8 +609,8 @@ export class NotificationProcessor {
             reason: payload.reason ?? null,
             accessUrl: ctx.accessUrl,
             hasAccessToken: ctx.hasAccessToken,
-          }),
-        ),
+          })
+        )
       );
     });
   }
@@ -595,7 +628,7 @@ export class NotificationProcessor {
     if (!adminEmail) {
       this.logger.warn(
         `Alerta de fraude ${payload.orderId} (score ${payload.score}, ${payload.severity}) SIN destinatario: ` +
-          `define FRAUD_ALERT_EMAIL o el correo de la organización.`,
+          `define FRAUD_ALERT_EMAIL o el correo de la organización.`
       );
       return;
     }
@@ -610,9 +643,11 @@ export class NotificationProcessor {
             severity: payload.severity,
             eventTitle: order?.event?.title ?? null,
             buyerEmail: order?.buyerEmail ?? null,
-            adminUrl: adminUrl ? `${adminUrl.replace(/\/$/, '')}/orders/${order?.publicId ?? ''}` : null,
-          }),
-        ),
+            adminUrl: adminUrl
+              ? `${adminUrl.replace(/\/$/, '')}/orders/${order?.publicId ?? ''}`
+              : null,
+          })
+        )
       );
     });
   }
@@ -621,7 +656,9 @@ export class NotificationProcessor {
     await this.sendOnce(`resale:${payload.listingId}:${payload.buyerEmail}`, async () => {
       await this.mail.sendDocument(
         payload.buyerEmail,
-        renderEmailDocument(resaleAlertEmail({ listingId: payload.listingId, eventTitle: payload.eventTitle })),
+        renderEmailDocument(
+          resaleAlertEmail({ listingId: payload.listingId, eventTitle: payload.eventTitle })
+        )
       );
     });
   }
@@ -634,7 +671,9 @@ export class NotificationProcessor {
     await this.sendOnce(`payout:${payload.organizationId}:${payload.amount}`, async () => {
       await this.mail.sendDocument(
         payload.email,
-        renderEmailDocument(payoutReadyEmail({ amount: payload.amount, currency: 'MXN', organizationName: org?.name })),
+        renderEmailDocument(
+          payoutReadyEmail({ amount: payload.amount, currency: 'MXN', organizationName: org?.name })
+        )
       );
     });
   }
@@ -707,7 +746,11 @@ export class NotificationProcessor {
       // previo) y se registra, porque casi siempre es una plantilla nueva que
       // alguien olvidó dar de alta aquí.
       this.logger.warn(`Plantilla de correo desconocida "${payload.template}" para ${payload.to}`);
-      await this.mail.send({ to: payload.to, subject: payload.subject, html: `<p>${payload.subject}</p>` });
+      await this.mail.send({
+        to: payload.to,
+        subject: payload.subject,
+        html: `<p>${payload.subject}</p>`,
+      });
       return;
     }
 

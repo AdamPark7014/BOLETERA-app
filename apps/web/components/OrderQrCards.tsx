@@ -84,7 +84,9 @@ export function OrderQrCards({
       <h2>Códigos QR de acceso</h2>
       <p className={styles.event}>{data.eventTitle}</p>
       <p className={styles.hint} role="status">
-        {refreshing ? 'Actualizando códigos…' : 'Los códigos se renuevan solos cada pocos segundos.'}{' '}
+        {refreshing
+          ? 'Actualizando códigos…'
+          : 'Los códigos se renuevan solos cada pocos segundos.'}{' '}
         No uses una captura estática como acceso en puerta.
       </p>
       <ul className={styles.grid}>
@@ -93,7 +95,12 @@ export function OrderQrCards({
             <article className={styles.card}>
               {t.qrDataUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={t.qrDataUrl} alt={`Código QR del boleto ${t.code}`} width={180} height={180} />
+                <img
+                  src={t.qrDataUrl}
+                  alt={`Código QR del boleto ${t.code}`}
+                  width={180}
+                  height={180}
+                />
               )}
               <code>{t.code}</code>
             </article>

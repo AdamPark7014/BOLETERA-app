@@ -37,7 +37,7 @@ export type InventoryAvailability = {
 const STALE_TIME = 20_000;
 
 function toQueryString(
-  params: Record<string, string | number | boolean | undefined | null>,
+  params: Record<string, string | number | boolean | undefined | null>
 ): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -61,8 +61,7 @@ function metricsUrl(path: string, params: InventoryRangeParams = {}): string {
 export function useInventoryMetrics(params: InventoryRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.inventory.metrics(params),
-    queryFn: ({ signal }) =>
-      http<InventoryMetrics>(metricsUrl('inventory', params), { signal }),
+    queryFn: ({ signal }) => http<InventoryMetrics>(metricsUrl('inventory', params), { signal }),
     staleTime: STALE_TIME,
   });
 }
@@ -83,8 +82,7 @@ export function useInventorySalesPace(params: InventoryRangeParams = {}) {
 export function useInventoryAlerts(params: InventoryRangeParams = {}) {
   return useQuery({
     queryKey: queryKeys.inventory.alerts(params),
-    queryFn: ({ signal }) =>
-      http<MetricsAlertsResponse>(metricsUrl('alerts', params), { signal }),
+    queryFn: ({ signal }) => http<MetricsAlertsResponse>(metricsUrl('alerts', params), { signal }),
     staleTime: STALE_TIME,
   });
 }

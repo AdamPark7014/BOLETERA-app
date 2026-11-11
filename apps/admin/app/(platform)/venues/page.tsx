@@ -9,7 +9,14 @@ import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_s
 import { AdminFrame } from '../events/_ticket/AdminFrame';
 import { Param, SheetSelect, Stepper, Switch } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
-import { asRecord, formatCount, formatWhen, readNumber, readString, yesNo } from '../events/_ticket/read';
+import {
+  asRecord,
+  formatCount,
+  formatWhen,
+  readNumber,
+  readString,
+  yesNo,
+} from '../events/_ticket/read';
 
 const ZONES = [
   'America/Mexico_City',
@@ -240,7 +247,9 @@ function venueDraft(venue: Venue): VenueDraft {
 }
 
 function keptBlackouts(draft: VenueDraft): BlackoutDraft[] {
-  return draft.blackouts.filter((item) => item.id || item.reason.trim() || item.startsAt || item.endsAt);
+  return draft.blackouts.filter(
+    (item) => item.id || item.reason.trim() || item.startsAt || item.endsAt
+  );
 }
 
 function comparable(draft: VenueDraft): string {
@@ -302,7 +311,11 @@ function describe(before: VenueDraft, after: VenueDraft): string {
   pair('Código postal del recinto', before.postalCode, after.postalCode);
   pair('Latitud', before.latitude, after.latitude);
   pair('Longitud', before.longitude, after.longitude);
-  pair('Zona horaria del recinto', ZONE_LABEL[before.timezone] ?? before.timezone, ZONE_LABEL[after.timezone] ?? after.timezone);
+  pair(
+    'Zona horaria del recinto',
+    ZONE_LABEL[before.timezone] ?? before.timezone,
+    ZONE_LABEL[after.timezone] ?? after.timezone
+  );
   count('Aforo total', before.totalCapacity, after.totalCapacity);
   count('Butacas accesibles', before.accessibilitySeats, after.accessibilitySeats);
   count('Butacas premium', before.premiumSeats, after.premiumSeats);
@@ -316,8 +329,16 @@ function describe(before: VenueDraft, after: VenueDraft): string {
     const next = afterById.get(row.id);
     if (!next) continue;
     pair('Motivo del blackout', row.reason, next.reason);
-    pair('Blackout desde', shownWhen(row.startsAt, zoneOf(before)), shownWhen(next.startsAt, zoneOf(after)));
-    pair('Blackout hasta', shownWhen(row.endsAt, zoneOf(before)), shownWhen(next.endsAt, zoneOf(after)));
+    pair(
+      'Blackout desde',
+      shownWhen(row.startsAt, zoneOf(before)),
+      shownWhen(next.startsAt, zoneOf(after))
+    );
+    pair(
+      'Blackout hasta',
+      shownWhen(row.endsAt, zoneOf(before)),
+      shownWhen(next.endsAt, zoneOf(after))
+    );
     if (row.blocking !== next.blocking) {
       lines.push(`Blackout bloquea: ${yesNo(row.blocking)} → ${yesNo(next.blocking)}`);
     }
@@ -340,14 +361,18 @@ function validate(draft: VenueDraft): string | null {
   const longitude = parseCoord(draft.longitude, -180, 180);
   if (longitude === 'invalid') return 'La longitud está fuera de rango.';
   const email = draft.email.trim();
-  if (email && (!email.includes('@') || /\s/.test(email))) return 'El correo del recinto no es válido.';
+  if (email && (!email.includes('@') || /\s/.test(email)))
+    return 'El correo del recinto no es válido.';
   for (const item of draft.blackouts) {
     if (blankBlackout(item)) continue;
     if (!item.reason.trim() || !item.startsAt || !item.endsAt) {
       return 'El blackout necesita motivo, inicio y fin.';
     }
     try {
-      if (Date.parse(toIso(item.endsAt, zoneOf(draft))) <= Date.parse(toIso(item.startsAt, zoneOf(draft)))) {
+      if (
+        Date.parse(toIso(item.endsAt, zoneOf(draft))) <=
+        Date.parse(toIso(item.startsAt, zoneOf(draft)))
+      ) {
         return 'El blackout termina antes de empezar.';
       }
     } catch {
@@ -357,7 +382,9 @@ function validate(draft: VenueDraft): string | null {
   return null;
 }
 
-function payloadBlackouts(draft: VenueDraft): { id?: string; reason: string; startsAt: string; endsAt: string; blocking: boolean }[] {
+function payloadBlackouts(
+  draft: VenueDraft
+): { id?: string; reason: string; startsAt: string; endsAt: string; blocking: boolean }[] {
   return keptBlackouts(draft).map((item) => ({
     ...(item.id ? { id: item.id } : {}),
     reason: item.reason.trim(),
@@ -417,7 +444,9 @@ function RecintoBody() {
         setVenues(next);
         setDrafts(base);
         setBaselines(base);
-        setOpenId((current) => (current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)));
+        setOpenId((current) =>
+          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+        );
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -508,7 +537,13 @@ function RecintoBody() {
     );
   }
   if (error) {
-    return <ApiErrorView error={error} context="abrir recintos" onRetry={() => setNonce((current) => current + 1)} />;
+    return (
+      <ApiErrorView
+        error={error}
+        context="abrir recintos"
+        onRetry={() => setNonce((current) => current + 1)}
+      />
+    );
   }
   if (loading || !token) return <p className={styles.quiet}>Cargando recintos.</p>;
 
@@ -517,7 +552,9 @@ function RecintoBody() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Recinto</h1>
         <p className={styles.quiet}>
-          {canEdit ? 'Se guarda la sala y el blackout. El slug quedó al crear.' : 'Se lee. La guarda quien edita el mapa.'}
+          {canEdit
+            ? 'Se guarda la sala y el blackout. El slug quedó al crear.'
+            : 'Se lee. La guarda quien edita el mapa.'}
         </p>
       </header>
       {venues.length === 0 ? <p className={styles.quiet}>No hay recintos.</p> : null}
@@ -536,7 +573,9 @@ function RecintoBody() {
                 onClick={() => setOpenId(open ? null : venue.id)}
               >
                 <span>{draft?.name.trim() || venue.name}</span>
-                <span className={styles.figure}>{formatCount(draft?.totalCapacity ?? venue.totalCapacity)}</span>
+                <span className={styles.figure}>
+                  {formatCount(draft?.totalCapacity ?? venue.totalCapacity)}
+                </span>
               </button>
               {open && draft ? (
                 <VenueCards
@@ -563,7 +602,10 @@ function RecintoBody() {
                     <p className={styles.quiet} aria-live="polite">
                       {dirty ? 'Sin guardar' : notice?.id === venue.id ? notice.text : ''}
                     </p>
-                    <TicketButton disabled={!dirty || savingId === venue.id} onClick={() => void save(venue.id)}>
+                    <TicketButton
+                      disabled={!dirty || savingId === venue.id}
+                      onClick={() => void save(venue.id)}
+                    >
                       Guardar sección
                     </TicketButton>
                   </div>
@@ -598,11 +640,30 @@ function VenueCards({
 
   return (
     <div className={styles.stack}>
-      <Card name="Nombre del recinto" value={text(draft.name)} effect="Nombre de la sala." editing={canEdit}>
-        <Field label="Nombre del recinto" value={draft.name} onChange={(event) => set('name', event.target.value)} />
+      <Card
+        name="Nombre del recinto"
+        value={text(draft.name)}
+        effect="Nombre de la sala."
+        editing={canEdit}
+      >
+        <Field
+          label="Nombre del recinto"
+          value={draft.name}
+          onChange={(event) => set('name', event.target.value)}
+        />
       </Card>
-      <Card name="Slug del recinto" value={text(venue.slug)} style="mono" effect="Quedó al crear. Aquí se lee." />
-      <Card name="Descripción del recinto" value={text(draft.description)} effect="Texto corto." editing={canEdit}>
+      <Card
+        name="Slug del recinto"
+        value={text(venue.slug)}
+        style="mono"
+        effect="Quedó al crear. Aquí se lee."
+      />
+      <Card
+        name="Descripción del recinto"
+        value={text(draft.description)}
+        effect="Texto corto."
+        editing={canEdit}
+      >
         <Field
           label="Descripción del recinto"
           value={draft.description}
@@ -610,25 +671,57 @@ function VenueCards({
         />
       </Card>
       <Card name="Dirección" value={text(draft.address)} effect="Calle y número." editing={canEdit}>
-        <Field label="Dirección" value={draft.address} onChange={(event) => set('address', event.target.value)} />
+        <Field
+          label="Dirección"
+          value={draft.address}
+          onChange={(event) => set('address', event.target.value)}
+        />
       </Card>
-      <Card name="Ciudad del recinto" value={text(draft.city)} effect="Ciudad de la sala." editing={canEdit}>
-        <Field label="Ciudad del recinto" value={draft.city} onChange={(event) => set('city', event.target.value)} />
+      <Card
+        name="Ciudad del recinto"
+        value={text(draft.city)}
+        effect="Ciudad de la sala."
+        editing={canEdit}
+      >
+        <Field
+          label="Ciudad del recinto"
+          value={draft.city}
+          onChange={(event) => set('city', event.target.value)}
+        />
       </Card>
       <Card name="Estado del recinto" value={text(draft.state)} effect="Entidad." editing={canEdit}>
-        <Field label="Estado del recinto" value={draft.state} onChange={(event) => set('state', event.target.value)} />
+        <Field
+          label="Estado del recinto"
+          value={draft.state}
+          onChange={(event) => set('state', event.target.value)}
+        />
       </Card>
       <Card name="País del recinto" value={text(draft.country)} effect="País." editing={canEdit}>
-        <Field label="País del recinto" value={draft.country} onChange={(event) => set('country', event.target.value)} />
+        <Field
+          label="País del recinto"
+          value={draft.country}
+          onChange={(event) => set('country', event.target.value)}
+        />
       </Card>
-      <Card name="Código postal del recinto" value={text(draft.postalCode)} effect="CP." editing={canEdit}>
+      <Card
+        name="Código postal del recinto"
+        value={text(draft.postalCode)}
+        effect="CP."
+        editing={canEdit}
+      >
         <Field
           label="Código postal del recinto"
           value={draft.postalCode}
           onChange={(event) => set('postalCode', event.target.value)}
         />
       </Card>
-      <Card name="Latitud" value={coordLabel(draft.latitude)} style="tabular" effect="Coordenada de la sala." editing={canEdit}>
+      <Card
+        name="Latitud"
+        value={coordLabel(draft.latitude)}
+        style="tabular"
+        effect="Coordenada de la sala."
+        editing={canEdit}
+      >
         <Field
           label="Latitud"
           inputMode="decimal"
@@ -636,7 +729,13 @@ function VenueCards({
           onChange={(event) => set('latitude', event.target.value)}
         />
       </Card>
-      <Card name="Longitud" value={coordLabel(draft.longitude)} style="tabular" effect="Par de la latitud." editing={canEdit}>
+      <Card
+        name="Longitud"
+        value={coordLabel(draft.longitude)}
+        style="tabular"
+        effect="Par de la latitud."
+        editing={canEdit}
+      >
         <Field
           label="Longitud"
           inputMode="decimal"
@@ -658,7 +757,13 @@ function VenueCards({
           onChange={(next) => set('timezone', next)}
         />
       </Card>
-      <Card name="Aforo total" value={formatCount(draft.totalCapacity)} style="tabular" effect="Cupo del recinto." editing={canEdit}>
+      <Card
+        name="Aforo total"
+        value={formatCount(draft.totalCapacity)}
+        style="tabular"
+        effect="Cupo del recinto."
+        editing={canEdit}
+      >
         <Stepper
           label="Aforo total"
           value={draft.totalCapacity}
@@ -712,14 +817,36 @@ function VenueCards({
           onChange={(next) => set('generalSeats', next)}
         />
       </Card>
-      <Card name="Teléfono del recinto" value={text(draft.phone)} effect="Contacto." editing={canEdit}>
-        <Field label="Teléfono del recinto" value={draft.phone} onChange={(event) => set('phone', event.target.value)} />
+      <Card
+        name="Teléfono del recinto"
+        value={text(draft.phone)}
+        effect="Contacto."
+        editing={canEdit}
+      >
+        <Field
+          label="Teléfono del recinto"
+          value={draft.phone}
+          onChange={(event) => set('phone', event.target.value)}
+        />
       </Card>
-      <Card name="Correo del recinto" value={text(draft.email)} effect="Contacto." editing={canEdit}>
-        <Field label="Correo del recinto" value={draft.email} onChange={(event) => set('email', event.target.value)} />
+      <Card
+        name="Correo del recinto"
+        value={text(draft.email)}
+        effect="Contacto."
+        editing={canEdit}
+      >
+        <Field
+          label="Correo del recinto"
+          value={draft.email}
+          onChange={(event) => set('email', event.target.value)}
+        />
       </Card>
       <Card name="Sitio del recinto" value={text(draft.website)} effect="Web." editing={canEdit}>
-        <Field label="Sitio del recinto" value={draft.website} onChange={(event) => set('website', event.target.value)} />
+        <Field
+          label="Sitio del recinto"
+          value={draft.website}
+          onChange={(event) => set('website', event.target.value)}
+        />
       </Card>
       <Card
         name="Imagen del recinto"
@@ -727,7 +854,11 @@ function VenueCards({
         effect="Dirección de la foto."
         editing={canEdit}
       >
-        <Field label="Imagen del recinto" value={draft.image} onChange={(event) => set('image', event.target.value)} />
+        <Field
+          label="Imagen del recinto"
+          value={draft.image}
+          onChange={(event) => set('image', event.target.value)}
+        />
       </Card>
       {draft.blackouts.map((item, index) => (
         <BlackoutCards
@@ -740,7 +871,9 @@ function VenueCards({
           onChange={(patch) =>
             onChange((current) => ({
               ...current,
-              blackouts: current.blackouts.map((row) => (row.key === item.key ? { ...row, ...patch } : row)),
+              blackouts: current.blackouts.map((row) =>
+                row.key === item.key ? { ...row, ...patch } : row
+              ),
             }))
           }
         />
@@ -775,17 +908,45 @@ function BlackoutCards({
   const blocking = blackoutLabel('Blackout bloquea', index, total);
   return (
     <>
-      <Card name={reason} value={text(item.reason)} effect="Por qué la sala no recibe función." editing={canEdit}>
-        <Field label={reason} value={item.reason} onChange={(event) => onChange({ reason: event.target.value })} />
+      <Card
+        name={reason}
+        value={text(item.reason)}
+        effect="Por qué la sala no recibe función."
+        editing={canEdit}
+      >
+        <Field
+          label={reason}
+          value={item.reason}
+          onChange={(event) => onChange({ reason: event.target.value })}
+        />
       </Card>
       <Card name={from} value={shownWhen(item.startsAt, zone)} effect="Inicio." editing={canEdit}>
-        <Field label={from} type="datetime-local" value={item.startsAt} onChange={(event) => onChange({ startsAt: event.target.value })} />
+        <Field
+          label={from}
+          type="datetime-local"
+          value={item.startsAt}
+          onChange={(event) => onChange({ startsAt: event.target.value })}
+        />
       </Card>
       <Card name={until} value={shownWhen(item.endsAt, zone)} effect="Fin." editing={canEdit}>
-        <Field label={until} type="datetime-local" value={item.endsAt} onChange={(event) => onChange({ endsAt: event.target.value })} />
+        <Field
+          label={until}
+          type="datetime-local"
+          value={item.endsAt}
+          onChange={(event) => onChange({ endsAt: event.target.value })}
+        />
       </Card>
-      <Card name={blocking} value={yesNo(item.blocking)} effect="Encendido impide programar. Apagado advierte." editing={canEdit}>
-        <Switch on={item.blocking} label={blocking} onChange={(next) => onChange({ blocking: next })} />
+      <Card
+        name={blocking}
+        value={yesNo(item.blocking)}
+        effect="Encendido impide programar. Apagado advierte."
+        editing={canEdit}
+      >
+        <Switch
+          on={item.blocking}
+          label={blocking}
+          onChange={(next) => onChange({ blocking: next })}
+        />
       </Card>
     </>
   );
