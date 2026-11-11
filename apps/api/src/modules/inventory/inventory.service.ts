@@ -330,8 +330,8 @@ export class InventoryService {
     // El cursor lo crea `pollAvailabilityDelta` de forma perezosa: si el último
     // suscriptor se va justo antes de que otro se suscriba a la misma
     // referencia, shareReplay revive la fuente y el cursor debe re-sembrarse.
-    let stream!: Observable<MessageEvent>;
-    stream = interval(STREAM_TICK_MS).pipe(
+    // `finalize` lee `stream` cuando la fuente se desmonta, ya asignada.
+    const stream: Observable<MessageEvent> = interval(STREAM_TICK_MS).pipe(
       concatMap(() => this.pollAvailabilityDelta(eventId)), // concatMap: nunca solapa consultas
       filter((payload): payload is StreamPayload => payload !== null),
       map((payload) => ({ data: JSON.stringify(payload) }) as MessageEvent),
