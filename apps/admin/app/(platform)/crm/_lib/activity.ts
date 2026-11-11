@@ -30,7 +30,7 @@ export function buildCrmActivity(input: {
     status: string;
     createdAt: string;
     publicId: string;
-    totalAmount: string;
+    totalAmount?: string;
     currency: string;
     event?: { title: string } | null;
   }>;

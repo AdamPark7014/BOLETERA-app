@@ -5,7 +5,7 @@ import type { InventoryMetrics, OrdersPaymentsMetrics } from '@boletera/shared';
 import { http } from '../http';
 import { queryKeys } from '../query-keys';
 import { useEvents } from './events';
-import type { OrderRow } from './orders';
+import type { OrderRow, OrdersEnvelope } from './orders';
 
 /** Range filters shared by reservation suite metrics. */
 export type ReservationRangeParams = {
@@ -67,7 +67,8 @@ export function useReservationOrdersMetrics(params: ReservationRangeParams = {})
 export function useReservationOrders(filters: Record<string, unknown> = {}) {
   return useQuery({
     queryKey: queryKeys.reservations.orders(filters),
-    queryFn: ({ signal }) => http<OrderRow[]>('/admin/orders', { signal }),
+    // El endpoint manda el sobre paginado; versiones viejas mandaban el arreglo.
+    queryFn: ({ signal }) => http<OrdersEnvelope | OrderRow[]>('/admin/orders', { signal }),
   });
 }
 

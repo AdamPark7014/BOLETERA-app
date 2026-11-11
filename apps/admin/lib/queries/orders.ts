@@ -9,7 +9,11 @@ export type OrderRow = {
   publicId: string;
   status: string;
   channel: string;
-  totalAmount: string;
+  /** El detalle lo trae; el listado de /admin/orders no (manda expectedAmount). */
+  totalAmount?: string;
+  expectedAmount?: string | number | null;
+  chargedAmount?: string | number | null;
+  expectedCurrency?: string | null;
   currency: string;
   buyerName: string;
   buyerEmail: string;
