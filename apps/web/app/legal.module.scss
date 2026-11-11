@@ -1,124 +1,148 @@
-.page {
-  max-width: 44rem;
-  margin: 0 auto;
-  padding: var(--space-2xl) var(--space-lg) var(--space-3xl);
-  color: var(--text-heading);
-  line-height: var(--leading-relaxed);
-}
+// Ayuda, privacidad y términos en el lenguaje Black Ticket: columna de 720 px,
+// texto en --text / --text-secondary sobre el lienzo oscuro, enlaces hueso
+// subrayados. Sin rojos de marca, mayúsculas con tracking ni cajas claras.
 
-.updated {
-  color: var(--text-muted);
-  font-size: var(--text-base);
-  margin-bottom: var(--space-lg);
+.page {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 32px 48px 96px;
+  color: var(--text-secondary);
+  font: var(--body);
 }
 
 .page h1 {
-  font-family: var(--font-family-heading);
-  font-size: clamp(2rem, 5vw, 2.75rem);
-  letter-spacing: 0.02em;
-  margin: 0 0 var(--space-3xs);
+  margin: 0 0 8px;
+  font: var(--title);
+  font-weight: 560;
+  color: var(--text);
+}
+
+.updated {
+  margin: 0 0 32px;
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
 }
 
 .page h2 {
-  font-size: var(--text-xl);
-  margin: var(--space-xl) 0 var(--space-xs);
-  /* scroll-margin: los enlaces #reembolsos / #arco no quedan bajo la barra. */
-  scroll-margin-top: calc(var(--header-height) + var(--space-md));
+  margin: 40px 0 12px;
+  font: var(--body-lg);
+  font-weight: 560;
+  color: var(--text);
+  // Los enlaces #reembolsos / #arco no quedan bajo la barra fija.
+  scroll-margin-top: 96px;
 }
 
 .page h3 {
-  font-size: var(--text-lg);
-  margin: var(--space-lg) 0 var(--space-3xs);
+  margin: 24px 0 8px;
+  font: var(--body);
+  font-weight: 560;
+  color: var(--text);
 }
 
 .page p,
 .page li {
-  font-size: var(--text-md);
+  margin: 0 0 12px;
+  color: var(--text-secondary);
+  font: var(--body);
+}
+
+.page strong {
+  color: var(--text);
+  font-weight: 560;
 }
 
 .page ul,
 .page ol {
-  margin: var(--space-xs) 0 var(--space-md) 1.25rem;
+  margin: 8px 0 16px;
+  padding-left: 20px;
 }
 
 .page li {
-  margin-bottom: var(--space-3xs);
+  margin-bottom: 4px;
 }
 
 .page a {
-  color: var(--color-accent-text);
+  color: var(--text);
   text-decoration: underline;
+  text-underline-offset: 3px;
 
   &:hover {
-    color: var(--color-accent-text-hover);
+    color: var(--text-secondary);
   }
 }
 
-/*
- * Aviso de borrador. Es deliberadamente visible: este texto NO está revisado
- * por un abogado y no debe publicarse como definitivo.
- */
+// Aviso de borrador: visible pero en el lenguaje del lienzo (filete dorado).
 .draftNotice {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3xs);
-  margin: 0 0 var(--space-lg);
-  padding: var(--space-md) 1.1rem;
-  border: 2px solid var(--color-warning);
-  background: var(--color-warning-bg);
+  gap: 4px;
+  margin: 0 0 32px;
+  padding: 16px 20px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
+  box-shadow: inset 2px 0 0 var(--gold);
   color: var(--text-secondary);
-  font-size: var(--text-base);
+  font: var(--body-sm);
 
   strong {
-    color: var(--text-primary);
-    font-size: var(--text-md);
+    color: var(--text);
+    font: var(--body);
+    font-weight: 560;
+  }
+
+  p {
+    margin: 0;
+    font: var(--body-sm);
   }
 }
 
-/* Índice de la página legal. */
+// Índice de la página.
 .toc {
-  margin: 0 0 var(--space-xl);
-  padding: var(--space-md) 1.1rem;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-muted);
+  margin: 0 0 32px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 
   h2 {
-    margin: 0 0 var(--space-xs);
-    font-size: var(--text-base);
-    font-weight: var(--weight-bold);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wider);
-    color: var(--text-muted);
+    margin: 0 0 8px;
+    font: var(--caption);
+    letter-spacing: var(--caption-tracking);
+    color: var(--text-tertiary);
   }
 
   ul {
-    margin: var(--bl-space-0);
-    padding: var(--bl-space-0);
+    margin: 0;
+    padding: 0;
     list-style: none;
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-3xs) var(--space-md);
+    gap: 0 24px;
+  }
+
+  li {
+    margin: 0;
   }
 
   a {
     display: inline-flex;
     align-items: center;
-    min-height: var(--target-min);
-    font-size: var(--text-base);
+    min-height: 44px;
   }
 }
 
-/* Bloque de datos del responsable / contacto. */
+// Bloque de datos del responsable / contacto.
 .dataBlock {
-  margin: var(--space-xs) 0 var(--space-md);
-  padding: var(--space-md) 1.1rem;
-  border-left: 3px solid var(--color-accent);
-  background: var(--color-surface-muted);
-  font-size: var(--text-base);
+  margin: 8px 0 16px;
+  padding: 16px 20px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
 
   p {
-    margin: 0 0 var(--space-3xs);
-    font-size: var(--text-base);
+    margin: 0 0 4px;
+    font: var(--body-sm);
   }
 
   p:last-child {
@@ -129,16 +153,14 @@
 .footerLinks {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-xs) var(--space-md);
-  margin-top: var(--space-xl);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border);
+  gap: 0 24px;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
 
   a {
     display: inline-flex;
     align-items: center;
-    min-height: var(--control-height-sm);
-    font-size: var(--text-base);
-    font-weight: var(--weight-semibold);
+    min-height: 44px;
   }
 }

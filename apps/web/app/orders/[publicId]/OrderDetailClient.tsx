@@ -120,13 +120,7 @@ type LoadState =
  * viven en el navegador, así que un render en servidor no puede acreditar nada
  * y recibiría un 403 sistemático para el comprador invitado.
  */
-export function OrderDetailClient({
-  publicId,
-  urlToken,
-}: {
-  publicId: string;
-  urlToken?: string;
-}) {
+export function OrderDetailClient({ publicId, urlToken }: { publicId: string; urlToken?: string }) {
   const brand = useTenantBrand();
   const [state, setState] = useState<LoadState>({ phase: 'loading' });
   const [gatewayDemo, setGatewayDemo] = useState(false);
@@ -240,7 +234,7 @@ export function OrderDetailClient({
           </span>
         </div>
 
-        <header className={purchase.stack}>
+        <header className={styles.hero}>
           {refunded ? (
             <NamedStatus status="reembolsado" />
           ) : completed ? (
@@ -377,7 +371,9 @@ export function OrderDetailClient({
               </li>
             ))}
             {!tickets.length && (
-              <li className={styles.muted}>Los códigos QR aparecerán cuando el pago se confirme.</li>
+              <li className={styles.muted}>
+                Los códigos QR aparecerán cuando el pago se confirme.
+              </li>
             )}
           </ul>
         </section>
@@ -399,7 +395,10 @@ export function OrderDetailClient({
             Ver más eventos
           </Link>
           {showDeferred && (
-            <Link href={orderPath(order.publicId, token, '/pago', { method })} className={styles.ghost}>
+            <Link
+              href={orderPath(order.publicId, token, '/pago', { method })}
+              className={styles.ghost}
+            >
               Ver instrucciones completas
             </Link>
           )}

@@ -89,7 +89,8 @@ const ORDER_STATUS_LABEL: Record<string, string> = {
 function statusName(status: string): 'pendiente' | 'cobrado' | 'reembolsado' | null {
   if (status === 'COMPLETED') return 'cobrado';
   if (status === 'REFUNDED' || status === 'PARTIALLY_REFUNDED') return 'reembolsado';
-  if (status === 'PENDING' || status === 'PROCESSING' || status === 'PENDING_REFUND') return 'pendiente';
+  if (status === 'PENDING' || status === 'PROCESSING' || status === 'PENDING_REFUND')
+    return 'pendiente';
   return null;
 }
 
@@ -186,8 +187,8 @@ export default function CuentaPage() {
         (i.tickets ?? []).map((t) => ({
           ...t,
           eventTitle: o.event.title,
-        })),
-      ) ?? [],
+        }))
+      ) ?? []
   );
 
   const completedOrders = orders.filter((o) => o.status === 'COMPLETED');
@@ -196,10 +197,7 @@ export default function CuentaPage() {
     const now = Date.now();
     return completedOrders
       .filter((o) => new Date(o.event.startsAt).getTime() >= now - 6 * 60 * 60 * 1000)
-      .sort(
-        (a, b) =>
-          new Date(a.event.startsAt).getTime() - new Date(b.event.startsAt).getTime(),
-      );
+      .sort((a, b) => new Date(a.event.startsAt).getTime() - new Date(b.event.startsAt).getTime());
   }, [completedOrders]);
 
   const past = useMemo(() => {
@@ -241,9 +239,7 @@ export default function CuentaPage() {
               // En una devolución PARCIAL el total de la orden no es lo que se
               // devuelve: enseñarlo sería afirmar una cifra que nadie calculó.
               amount:
-                o.status === 'PARTIALLY_REFUNDED'
-                  ? null
-                  : formatMoney(o.totalAmount, currency),
+                o.status === 'PARTIALLY_REFUNDED' ? null : formatMoney(o.totalAmount, currency),
               compensation: null,
               when:
                 `Vuelve por ${methodLabel}. Te avisamos por correo en cuanto quede ` +
@@ -257,7 +253,7 @@ export default function CuentaPage() {
           const deadlines = anchor
             ? refundDeadlines(
                 anchor,
-                buyerRefundPolicy(o.settlementBusinessDays, o.bankBusinessDays),
+                buyerRefundPolicy(o.settlementBusinessDays, o.bankBusinessDays)
               )
             : null;
           const copy = refundStatusCopy(summary.status, {
@@ -288,7 +284,7 @@ export default function CuentaPage() {
                   : `Vuelve por ${methodLabel}.`,
           };
         }),
-    [orders],
+    [orders]
   );
 
   /** Cualquier mutación puede toparse con la sesión caducada a mitad de camino. */
@@ -401,9 +397,9 @@ export default function CuentaPage() {
           <section className={styles.sessionExpired} role="alert" aria-labelledby="expired-title">
             <h2 id="expired-title">Tu sesión caducó</h2>
             <p>
-              Por seguridad, cerramos la sesión después de un rato o cuando cambian los
-              datos de tu cuenta. Tus boletos siguen guardados: vuelve a entrar y
-              regresarás a esta misma página.
+              Por seguridad, cerramos la sesión después de un rato o cuando cambian los datos de tu
+              cuenta. Tus boletos siguen guardados: vuelve a entrar y regresarás a esta misma
+              página.
             </p>
             <Link href={LOGIN_BACK} className={styles.browse}>
               Volver a entrar
@@ -413,8 +409,8 @@ export default function CuentaPage() {
           <section className={styles.loadError} role="alert" aria-labelledby="error-title">
             <h2 id="error-title">No pudimos cargar tus boletos</h2>
             <p>
-              Puede ser tu conexión o algo temporal de nuestro lado. Tus compras no se
-              pierden: vuelve a intentarlo.
+              Puede ser tu conexión o algo temporal de nuestro lado. Tus compras no se pierden:
+              vuelve a intentarlo.
             </p>
             <button
               type="button"
@@ -460,11 +456,16 @@ export default function CuentaPage() {
                         {/* Sin importe conocido no se escribe una cifra falsa. */}
                         {amount ? <strong>{amount}</strong> : <strong aria-hidden="true">—</strong>}
                         {compensation && (
-                          <span className={styles.refundBonus}>+ {compensation} de bonificación</span>
+                          <span className={styles.refundBonus}>
+                            + {compensation} de bonificación
+                          </span>
                         )}
                         <Link href={`/orders/${order.publicId}`} className={styles.refundLink}>
                           Ver detalle
-                          <span className={styles.srOnly}> del reembolso de {order.event.title}</span>
+                          <span className={styles.srOnly}>
+                            {' '}
+                            del reembolso de {order.event.title}
+                          </span>
                         </Link>
                       </div>
                     </li>
@@ -499,9 +500,7 @@ export default function CuentaPage() {
                   const when = new Date(o.event.startsAt);
                   const tickets = o.items?.flatMap((i) => i.tickets ?? []) ?? [];
                   const count =
-                    tickets.length ||
-                    o.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ||
-                    0;
+                    tickets.length || o.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) || 0;
                   const cancelled = o.event.status === 'CANCELLED';
                   return (
                     <li key={o.publicId} className={styles.walletCard}>
@@ -555,11 +554,16 @@ export default function CuentaPage() {
                         comprador a la puerta con un código muerto.
                       */}
                       <div className={styles.walletActions}>
-                        {statusName(o.status) ? <NamedStatus status={statusName(o.status)!} /> : (
+                        {statusName(o.status) ? (
+                          <NamedStatus status={statusName(o.status)!} />
+                        ) : (
                           <span>{ORDER_STATUS_LABEL[o.status] ?? o.status}</span>
                         )}
                         {index === 0 ? (
-                          <TicketButton type="button" onClick={() => router.push(`/orders/${o.publicId}`)}>
+                          <TicketButton
+                            type="button"
+                            onClick={() => router.push(`/orders/${o.publicId}`)}
+                          >
                             {cancelled ? 'Ver reembolso' : 'Ver boleto'}
                           </TicketButton>
                         ) : (
@@ -584,7 +588,7 @@ export default function CuentaPage() {
               {showTools ? 'Ocultar herramientas' : 'Transferencias y factura'}
             </button>
 
-            <div id="cuenta-tools" hidden={!showTools}>
+            <div id="cuenta-tools" className={styles.tools} hidden={!showTools}>
               {transferCode && (
                 <section className={styles.section}>
                   <h2>Aceptar boleto</h2>
@@ -605,9 +609,7 @@ export default function CuentaPage() {
               <section className={styles.section}>
                 <h2>Transferir boleto</h2>
                 {myTickets.length === 0 ? (
-                  <p className={styles.hint}>
-                    Todavía no tienes boletos que puedas transferir.
-                  </p>
+                  <p className={styles.hint}>Todavía no tienes boletos que puedas transferir.</p>
                 ) : (
                   <form onSubmit={sendTransfer} className={styles.formStack}>
                     <div className={styles.formStack} role="group" aria-label="Boleto">

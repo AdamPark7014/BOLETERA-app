@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, useState } from 'react';
 import Link from 'next/link';
+import { Field, TicketButton } from '@boletera/ui';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SiteHeader } from '@/components/SiteHeader';
 import styles from '../login.module.scss';
@@ -33,8 +34,7 @@ function ResetForm() {
       if (!res.ok) {
         setFailed(true);
         setMsg(
-          data.message ||
-            'El enlace ya no es válido. Pide uno nuevo desde «Recuperar contraseña».',
+          data.message || 'El enlace ya no es válido. Pide uno nuevo desde «Recuperar contraseña».'
         );
         return;
       }
@@ -54,30 +54,22 @@ function ResetForm() {
       <p className={styles.sub}>
         Elige una contraseña de al menos 8 caracteres para la cuenta de abajo.
       </p>
-      <label htmlFor="reset-email">
-        Correo electrónico
-        <input id="reset-email" name="email" type="email" value={email} readOnly />
-      </label>
-      <label htmlFor="reset-password">
-        Contraseña nueva
-        <input
-          id="reset-password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          minLength={8}
-          aria-describedby="reset-password-hint"
-          required
-        />
-      </label>
-      <p id="reset-password-hint" className={styles.hint}>
-        Mínimo 8 caracteres.
-      </p>
-      <button type="submit" disabled={loading}>
+      <Field id="reset-email" name="email" label="Correo" type="email" value={email} readOnly />
+      <Field
+        id="reset-password"
+        name="password"
+        label="Contraseña nueva"
+        type="password"
+        autoComplete="new-password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        minLength={8}
+        hint="Mínimo 8 caracteres."
+        required
+      />
+      <TicketButton type="submit" disabled={loading}>
         {loading ? 'Guardando…' : 'Guardar contraseña'}
-      </button>
+      </TicketButton>
       {msg && (
         <p className={styles.feedback} role={failed ? 'alert' : 'status'}>
           {msg}

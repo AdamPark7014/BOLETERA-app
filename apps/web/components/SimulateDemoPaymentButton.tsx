@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { TicketButton } from '@boletera/ui';
 import { networkError, readApiError } from '@/lib/api-errors';
 import { fetchOrderResource, orderPath, readStoredOrderAccessToken } from '@/lib/order-access';
 import styles from './SimulateDemoPaymentButton.module.scss';
@@ -41,7 +42,7 @@ export function SimulateDemoPaymentButton({
       throw new Error(
         res.forbidden
           ? 'Abre la orden desde el enlace del correo para simular el pago.'
-          : res.message,
+          : res.message
       );
     }
     if (!res.data.id) throw new Error('Orden sin id');
@@ -77,15 +78,15 @@ export function SimulateDemoPaymentButton({
 
   return (
     <div className={[styles.wrap, className].filter(Boolean).join(' ')}>
-      <button
+      <TicketButton
         type="button"
-        className={styles.btn}
+        variant="secondary"
         onClick={() => void simulate()}
         disabled={busy || !publicId}
         aria-busy={busy}
       >
         {busy ? 'Simulando…' : 'Simular acreditamiento'}
-      </button>
+      </TicketButton>
       {error ? (
         <p className={styles.error} role="alert">
           {error}

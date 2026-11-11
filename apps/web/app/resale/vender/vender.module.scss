@@ -1,145 +1,62 @@
-.shell {
-  min-height: 100vh;
-  color: var(--text-primary);
-  background:
-    radial-gradient(100% 60% at 0% -5%, rgba(225, 29, 72, 0.05), transparent 50%),
-    linear-gradient(
-      180deg,
-      var(--color-surface-muted) 0%,
-      var(--color-surface-sunken) 55%,
-      var(--color-surface-muted) 100%
-    );
-}
+// Vender boleto en el lenguaje Black Ticket: misma columna y campos que el
+// checkout (`Field`, `TicketButton`).
 
 .page {
-  max-width: 28rem;
+  width: min(720px, 100%);
   margin: 0 auto;
-  padding: 1.75rem var(--layout-gutter) var(--space-2xl);
+  padding: 32px 48px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  h1 {
+    margin: 0;
+    font: var(--title);
+    font-weight: 560;
+    color: var(--text);
+  }
 }
 
 .eyebrow {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.page h1 {
-  margin: 0 0 var(--space-3xs);
-  font-family: var(--font-family-heading);
-  font-size: clamp(2.1rem, 4vw, 2.8rem);
-  letter-spacing: 0.03em;
-  line-height: 0.95;
+  margin: 0;
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
 }
 
 .lead {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-5);
-  color: var(--text-muted);
-  font-size: var(--text-md);
-  line-height: var(--leading-normal);
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--body);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--bl-space-4);
-  padding: var(--bl-space-5) var(--bl-space-5);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-
-  button {
-    margin-top: var(--space-3xs);
-    min-height: var(--control-height-md);
-    padding: 0.85rem var(--space-md);
-    border: none;
-    background: var(--color-accent);
-    color: var(--text-on-accent);
-    font: inherit;
-    font-weight: var(--weight-bold);
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    &:not(:disabled):hover {
-      background: var(--color-accent-hover);
-    }
-  }
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--bl-space-1-5);
-
-  label {
-    /*
-     * La etiqueta era mayúsculas de 0.72rem en gris claro: costaba leerla y no
-     * llegaba a 4.5:1. Ahora es texto normal en el gris secundario.
-     */
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-    color: var(--text-secondary);
-  }
-
-  input {
-    min-height: var(--control-height-md);
-    padding: var(--bl-space-3) var(--bl-space-3);
-    border: 1px solid var(--color-border-strong);
-    font: inherit;
-    font-size: var(--text-md);
-    color: var(--text-primary);
-    background: var(--color-surface);
-
-    &::placeholder {
-      color: var(--text-placeholder);
-      opacity: 1;
-    }
-
-    &:focus-visible {
-      border-color: var(--color-accent);
-    }
-  }
-}
-
-.hint {
-  margin: var(--bl-space-0);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  line-height: var(--leading-normal);
+  gap: 24px;
+  margin-top: 16px;
 }
 
 .error {
-  margin: var(--bl-space-0);
-  padding: 0.625rem var(--space-sm);
-  background: var(--color-danger-bg);
-  border: 1px solid var(--color-danger-border);
-  color: var(--color-danger-text);
-  font-size: var(--text-base);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-normal);
+  margin: 0;
+  color: var(--danger);
+  font: var(--body);
 
   a {
-    color: var(--color-danger-strong);
+    color: var(--text);
     text-decoration: underline;
+    text-underline-offset: 3px;
   }
 }
 
 .back {
   display: inline-flex;
   align-items: center;
-  min-height: var(--control-height-sm);
-  margin-top: var(--space-md);
-  font-size: var(--text-base);
-  font-weight: var(--weight-semibold);
-  color: var(--text-muted);
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: 8px;
+  color: var(--text);
+  font: var(--body);
   text-decoration: underline;
-
-  &:hover {
-    color: var(--color-accent-text);
-  }
+  text-underline-offset: 3px;
 }

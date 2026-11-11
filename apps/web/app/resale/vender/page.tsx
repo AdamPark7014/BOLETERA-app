@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Field, TicketButton } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { authHeaders, clearSession, getToken } from '@/lib/auth';
 import styles from './vender.module.scss';
@@ -43,7 +44,7 @@ export default function ResaleSellPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(
-          data.message ?? 'No pudimos publicar el boleto. Revisa el código y el precio.',
+          data.message ?? 'No pudimos publicar el boleto. Revisa el código y el precio.'
         );
       }
       router.push('/resale');
@@ -51,7 +52,7 @@ export default function ResaleSellPage() {
       setError(
         err instanceof Error
           ? err.message
-          : 'No pudimos conectarnos. Revisa tu conexión e inténtalo otra vez.',
+          : 'No pudimos conectarnos. Revisa tu conexión e inténtalo otra vez.'
       );
     } finally {
       setLoading(false);
@@ -59,46 +60,40 @@ export default function ResaleSellPage() {
   }
 
   return (
-    <div className={styles.shell}>
+    <>
       <SiteHeader />
       <main id="contenido" tabIndex={-1} className={styles.page}>
         <p className={styles.eyebrow}>Reventa oficial</p>
         <h1>Vender boleto</h1>
         <p className={styles.lead}>
-          Publica un boleto de tu cuenta. El precio debe respetar el tope máximo que fija
-          el evento.
+          Publica un boleto de tu cuenta. El precio debe respetar el tope máximo que fija el evento.
         </p>
 
         <form onSubmit={submit} className={styles.form}>
-          <div className={styles.field}>
-            <label htmlFor="ticket-code">Código del boleto</label>
-            <input
-              id="ticket-code"
-              name="ticketCode"
-              value={ticketCode}
-              onChange={(e) => setTicketCode(e.target.value)}
-              placeholder="BL-XXXX"
-              aria-describedby="ticket-code-hint"
-              required
-            />
-            <p id="ticket-code-hint" className={styles.hint}>
-              Lo encuentras en el detalle de la orden, junto al QR.
-            </p>
-          </div>
+          <Field
+            id="ticket-code"
+            name="ticketCode"
+            label="Código del boleto"
+            value={ticketCode}
+            onChange={(e) => setTicketCode(e.target.value)}
+            placeholder="BL-XXXX"
+            hint="Lo encuentras en el detalle de la orden, junto al QR."
+            autoComplete="off"
+            required
+          />
 
-          <div className={styles.field}>
-            <label htmlFor="asking-price">Precio de reventa (MXN)</label>
-            <input
-              id="asking-price"
-              name="askingPrice"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              value={askingPrice}
-              onChange={(e) => setAskingPrice(e.target.value)}
-              required
-            />
-          </div>
+          <Field
+            id="asking-price"
+            name="askingPrice"
+            label="Precio de reventa (MXN)"
+            kind="money"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={askingPrice}
+            onChange={(e) => setAskingPrice(e.target.value)}
+            required
+          />
 
           {error && (
             <p className={styles.error} role="alert">
@@ -107,15 +102,15 @@ export default function ResaleSellPage() {
             </p>
           )}
 
-          <button type="submit" disabled={loading}>
+          <TicketButton type="submit" disabled={loading}>
             {loading ? 'Publicando…' : 'Publicar listado'}
-          </button>
+          </TicketButton>
         </form>
 
         <Link href="/resale" className={styles.back}>
           Volver a reventa
         </Link>
       </main>
-    </div>
+    </>
   );
 }

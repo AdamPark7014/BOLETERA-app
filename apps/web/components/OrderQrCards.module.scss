@@ -1,57 +1,73 @@
+// Códigos QR de acceso en el lenguaje Black Ticket. El QR conserva su
+// fondo blanco propio (lo exige el lector en puerta); el resto, tokens oscuros.
+
 .section {
-  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
   :global(h2) {
-    font-size: var(--bl-text-lg);
-    font-weight: 600;
+    margin: 0;
+    font: var(--title);
+    font-weight: 560;
+    color: var(--text);
   }
 }
 
 .event {
-  /* var(--bl-gray-500) no llegaba a 4.5:1 sobre el fondo claro de la página */
-  color: var(--bl-gray-600);
-  font-size: var(--bl-text-md);
-  margin-top: 0.25rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--body);
 }
 
 .hint {
-  margin-top: 0.5rem;
-  font-size: var(--bl-text-sm);
-  color: var(--bl-gray-600);
-  line-height: 1.45;
+  margin: 0;
+  color: var(--text-tertiary);
+  font: var(--body-sm);
 }
 
 .notice {
-  margin-top: 0.75rem;
-  padding: var(--bl-space-3) var(--bl-space-3);
-  border: 1px solid var(--bl-warning);
-  background: var(--bl-warning-subtle);
-  color: #78350f;
-  font-size: var(--bl-text-md);
-  line-height: 1.5;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  background: var(--ink-raised);
+  box-shadow: inset 2px 0 0 var(--danger);
+  color: var(--text);
+  font: var(--body-sm);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--bl-space-4);
+  gap: 16px;
   list-style: none;
-  margin-top: 1rem;
+  margin: 4px 0 0;
+  padding: 0;
 }
 
 .card {
-  padding: var(--bl-space-4);
-  border: 1px solid var(--bl-border);
-  border-radius: var(--bl-radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
   text-align: center;
 
   :global(img) {
     display: block;
-    margin: 0 auto 0.75rem;
+    width: 180px;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--r-s);
   }
 
   :global(code) {
-    font-size: var(--bl-text-xs);
-    color: var(--bl-text-secondary);
+    font: var(--mono);
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
   }
 }

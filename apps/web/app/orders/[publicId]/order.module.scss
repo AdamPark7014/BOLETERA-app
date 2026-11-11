@@ -1,797 +1,561 @@
+// Orden, pago y acceso en el lenguaje Black Ticket. Misma columna de 720 px,
+// tipo y tokens que el checkout; el lienzo oscuro viene de app/layout.tsx.
+
 .shell {
-  min-height: 100vh;
-  color: var(--bl-text-primary);
-  background:
-    radial-gradient(100% 60% at 50% -10%, rgba(225, 29, 72, 0.07), transparent 55%),
-    linear-gradient(180deg, var(--bl-gray-25) 0%, var(--bl-gray-100) 50%, var(--bl-gray-25) 100%);
+  min-height: 100%;
 }
 
 .page {
-  max-width: 40rem;
+  width: min(720px, 100%);
   margin: 0 auto;
-  padding: 1.75rem clamp(1rem, 3vw, 2rem) 3.5rem;
-}
-
-.steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--bl-space-2-5) var(--bl-space-4);
-  margin-bottom: 1.15rem;
-  font-size: var(--bl-text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.stepDone {
-  color: var(--bl-success);
-}
-
-.stepActive {
-  color: var(--bl-accent-text);
-}
-
-.stepTodo {
-  color: var(--bl-text-tertiary);
-}
-
-.hero {
-  margin-bottom: 1.35rem;
-  text-align: left;
-}
-
-.ok {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-  font-size: var(--bl-text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--bl-success);
-}
-
-.pending {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-  font-size: var(--bl-text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--bl-warning);
-}
-
-.hero h1 {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-  font-family: var(--font-heading), 'Bebas Neue', sans-serif;
-  font-size: clamp(2.1rem, 4.5vw, 2.9rem);
-  letter-spacing: 0.03em;
-  line-height: 0.95;
-}
-
-.sub {
-  margin: var(--bl-space-0);
-  color: var(--bl-text-tertiary);
-  font-size: var(--bl-text-md);
-
-  code {
-    font-family: ui-monospace, monospace;
-    font-size: var(--bl-text-md);
-    color: var(--bl-text-secondary);
-  }
-}
-
-.eventCard {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--bl-space-4);
-  padding: var(--bl-space-4) var(--bl-space-5);
-  margin-bottom: 1rem;
-  background: var(--bl-elevated);
-  border: 1px solid var(--bl-border);
-
-  h2 {
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-    font-size: var(--bl-text-xl);
-  }
-
-  p {
-    margin: 0.2rem 0 0;
-    font-size: var(--bl-text-md);
-    color: var(--bl-text-secondary);
-  }
-
-  @media (max-width: 560px) {
-    flex-direction: column;
-  }
-}
-
-.kicker {
-  margin: 0 0 0.25rem !important;
-  font-size: 0.64rem !important;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--bl-text-tertiary) !important;
-}
-
-.eventSide {
-  text-align: right;
+  padding: 32px 48px 96px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: var(--bl-space-1-5);
-
-  strong {
-    font-size: var(--bl-text-xl);
-    font-variant-numeric: tabular-nums;
-
-    span {
-      font-size: var(--bl-text-2xs);
-      color: var(--bl-text-tertiary);
-      font-weight: 600;
-    }
-  }
-}
-
-.section {
-  text-align: left;
-  border: 1px solid var(--bl-border);
-  background: var(--bl-elevated);
-  padding: var(--bl-space-4) var(--bl-space-5);
-  margin-bottom: 1rem;
-
-  h2 {
-    font-size: var(--bl-text-lg);
-    margin: var(--bl-space-0);
-  }
-}
-
-.sectionHead {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--bl-space-3);
-  margin-bottom: 0.75rem;
-}
-
-/* Sirve para `<a>` (con token) y para `<button>` (descarga vía fetch con JWT) */
-.pdfLink {
-  padding: var(--bl-space-0);
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: var(--bl-text-sm);
-  font-weight: 700;
-  color: var(--bl-accent-text);
-  text-decoration: none;
-  cursor: pointer;
-
-  &:hover {
-    text-decoration: underline;
-  }
-
-  &:disabled {
-    color: var(--bl-text-tertiary);
-    cursor: not-allowed;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--bl-accent-text);
-    outline-offset: 2px;
-  }
-}
-
-.ticketList {
-  list-style: none;
-  margin: var(--bl-space-0);
-  padding: var(--bl-space-0);
-
-  li {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--bl-space-4);
-    padding: var(--bl-space-2) var(--bl-space-0);
-    border-top: 1px solid var(--bl-gray-100);
-    font-size: var(--bl-text-md);
-    color: var(--bl-text-secondary);
-
-    code {
-      font-family: ui-monospace, monospace;
-      color: var(--bl-text-primary);
-      font-weight: 600;
-    }
-  }
-}
-
-.muted {
-  color: var(--bl-text-tertiary) !important;
-  border-top: none !important;
-}
-
-.textLink {
-  color: var(--bl-accent-text);
-  font-size: var(--bl-text-md);
-  font-weight: 600;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-.link,
-.secondary,
-.ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--bl-space-3) var(--bl-space-4);
-  font-size: var(--bl-text-md);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.link {
-  background: var(--bl-accent);
-  color: var(--bl-text-inverse);
-
-  &:hover {
-    background: var(--bl-accent-hover);
-  }
-}
-
-.secondary {
-  background: var(--bl-gray-900);
-  color: var(--bl-text-inverse);
-}
-
-.ghost {
-  background: var(--bl-elevated);
-  color: var(--bl-text-primary);
-  border: 1px solid var(--bl-border);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--bl-space-2);
-  margin-top: 1.15rem;
-}
-
-.trust {
-  list-style: none;
-  margin: var(--bl-space-6) var(--bl-space-0) var(--bl-space-0);
-  padding: var(--bl-space-0);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--bl-space-1-5);
-
-  li {
-    font-size: var(--bl-text-2xs);
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: var(--bl-space-1) var(--bl-space-2);
-    border: 1px solid var(--bl-border);
-    background: var(--bl-elevated);
-    color: var(--bl-text-secondary);
-  }
-}
-
-.instructions {
-  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-4);
-  line-height: 1.55;
-  font-size: var(--bl-text-md);
-  color: var(--bl-text-secondary);
-
-  code {
-    font-family: ui-monospace, monospace;
-    background: var(--bl-surface-sunken);
-    padding: var(--bl-space-0-5) var(--bl-space-1-5);
-  }
-}
-
-.empty {
-  text-align: center;
-  padding: var(--bl-space-10) var(--bl-space-4);
-
-  h1 {
-    font-family: var(--font-heading), 'Bebas Neue', sans-serif;
-    font-size: var(--bl-text-4xl);
-    letter-spacing: 0.04em;
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
-  }
-
-  p {
-    /* var(--bl-gray-500) se quedaba en 4.4:1 sobre el fondo claro (WCAG AA pide 4.5:1) */
-    color: var(--bl-gray-600);
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
-    line-height: 1.6;
-  }
-
-  code {
-    font-family: ui-monospace, monospace;
-    background: var(--bl-surface-sunken);
-    padding: 0.1rem 0.35rem;
-    color: var(--bl-text-secondary);
-  }
-
-  .actions {
-    justify-content: center;
-  }
-}
-
-.error {
-  color: var(--bl-danger-text);
-}
-
-.errorBox {
-  margin: var(--bl-space-4) var(--bl-space-0) var(--bl-space-0);
-  padding: var(--bl-space-3) var(--bl-space-3);
-  border: 1px solid var(--bl-danger-text);
-  background: var(--bl-danger-subtle);
-  color: var(--bl-danger-text);
-  font-size: var(--bl-text-md);
-  line-height: 1.5;
-}
-
-.gateNote {
-  margin: var(--bl-space-2-5) var(--bl-space-0) var(--bl-space-0);
-  font-size: var(--bl-text-sm);
-  line-height: 1.55;
-  color: var(--bl-gray-600);
-}
-
-.demoNote {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
-  padding: var(--bl-space-2-5) var(--bl-space-3);
-  border: 1px solid var(--bl-warning);
-  background: var(--bl-warning-subtle);
-  color: #78350f;
-  font-size: var(--bl-text-md);
-  font-weight: 600;
-}
-
-/* --- Desglose de importes: el total y sus partes, sin sorpresas al final --- */
-
-.breakdown {
-  list-style: none;
-  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
-  padding: var(--bl-space-0);
-
-  li {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--bl-space-4);
-    padding: var(--bl-space-1-5) var(--bl-space-0);
-    font-size: var(--bl-text-md);
-    color: var(--bl-text-secondary);
-
-    strong {
-      font-variant-numeric: tabular-nums;
-      color: var(--bl-text-primary);
-    }
-  }
-}
-
-.breakdownTotal {
-  margin-top: 0.35rem;
-  padding-top: 0.6rem !important;
-  border-top: 1px solid var(--bl-border);
-  font-weight: 700;
-  font-size: 1rem !important;
-  color: var(--bl-text-primary) !important;
-}
-
-.totalNote {
-  font-size: var(--bl-text-2xs);
-  line-height: 1.4;
-  color: var(--bl-gray-600);
-  font-weight: 500;
-  max-width: 14rem;
-}
-
-/* --- Pago diferido: pasos, datos copiables e importe exacto --- */
-
-.steps2 {
-  margin: var(--bl-space-4) var(--bl-space-0) var(--bl-space-4);
-  padding-left: 1.15rem;
-  font-size: var(--bl-text-md);
-  line-height: 1.6;
-  color: var(--bl-text-secondary);
-
-  li {
-    margin-bottom: 0.3rem;
-  }
-}
-
-.payGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: var(--bl-space-3);
-}
-
-.copyField {
-  padding: var(--bl-space-3) var(--bl-space-3);
-  border: 1px solid var(--bl-border-strong);
-  background: var(--bl-surface);
-}
-
-.copyLabel {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: var(--bl-text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--bl-text-secondary);
-}
-
-.copyRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--bl-space-2-5);
-}
-
-.copyValue {
-  font-family: ui-monospace, monospace;
-  font-size: var(--bl-text-lg);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--bl-text-primary);
-  word-break: break-all;
-}
-
-.amount {
-  font-size: var(--bl-text-lg);
-  font-variant-numeric: tabular-nums;
-  color: var(--bl-text-primary);
-}
-
-.copyBtn {
-  flex: none;
-  /* 44×44 px de área táctil (WCAG 2.2 · 2.5.8 Target Size) */
-  min-width: 5rem;
-  min-height: 2.75rem;
-  padding: var(--bl-space-2) var(--bl-space-3);
-  border: 1px solid var(--bl-gray-600);
-  background: var(--bl-elevated);
-  font: inherit;
-  font-size: var(--bl-text-sm);
-  font-weight: 700;
-  color: var(--bl-text-primary);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--bl-surface-sunken);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--bl-accent-text);
-    outline-offset: 2px;
-  }
-}
-
-.copyHint {
-  display: block;
-  margin-top: 0.4rem;
-  font-size: var(--bl-text-xs);
-  line-height: 1.45;
-  color: var(--bl-gray-600);
-}
-
-.instructionsNote {
-  margin: var(--bl-space-4) var(--bl-space-0) var(--bl-space-0);
-  font-size: var(--bl-text-md);
-  line-height: 1.55;
-  color: var(--bl-text-secondary);
-}
-
-/* --- Esqueleto de carga: la página no se bloquea con un spinner --- */
-
-.skeleton {
-  display: grid;
-  gap: var(--bl-space-3);
-}
-
-.skelLine,
-.skelBlock {
-  border-radius: var(--bl-radius-sm);
-  background: linear-gradient(90deg, #ececec 25%, #f6f6f6 37%, #ececec 63%);
-  background-size: 400% 100%;
-  animation: shimmer 1.4s ease infinite;
-}
-
-.skelLine {
-  height: 2.4rem;
-  width: 60%;
-}
-
-.skelBlock {
-  height: 7rem;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skelLine,
-  .skelBlock {
-    animation: none;
-  }
+  gap: 32px;
 }
 
 .srOnly {
   position: absolute;
   width: 1px;
   height: 1px;
+  padding: 0;
   margin: -1px;
-  padding: var(--bl-space-0);
   overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
 
-/* --- Reembolsos: cuánto, por qué medio y para cuándo -------------------- */
-/* Nada depende solo del color: cada tono lleva su titular en texto (WCAG
-   1.4.1) y todos los pares cumplen 4.5:1 sobre su propio fondo. */
-
-.refundedTag {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-  font-size: var(--bl-text-xs);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--bl-info-text);
+// —— Pasos 1 Carrito · 2 Pago · 3 Boletos ——
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
 }
 
-.cancelBanner {
-  text-align: left;
-  border: 1px solid var(--bl-danger-border);
-  border-left: 4px solid var(--bl-danger-text);
-  background: var(--bl-danger-subtle);
-  padding: var(--bl-space-4) var(--bl-space-5);
-  margin-bottom: 1rem;
-  color: var(--bl-danger-text);
+.stepDone,
+.stepTodo,
+.stepActive {
+  padding-bottom: 4px;
+}
+
+.stepDone {
+  color: var(--text-secondary);
+}
+
+.stepTodo {
+  color: var(--text-tertiary);
+}
+
+.stepActive {
+  color: var(--text);
+  border-bottom: 1px solid var(--gold);
+}
+
+// —— Encabezado de pago ——
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+
+  > p {
+    margin: 0;
+  }
+
+  h1 {
+    margin: 0;
+    font: var(--title);
+    font-weight: 560;
+    color: var(--text);
+  }
+}
+
+.pending {
+  margin: 0;
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+.sub {
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--body);
+
+  code {
+    font: var(--mono);
+    color: var(--text);
+  }
+}
+
+// —— Esqueleto ——
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skelLine,
+.skelBlock {
+  border-radius: var(--r-m);
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+}
+
+.skelLine {
+  height: 32px;
+  width: 50%;
+}
+
+.skelBlock {
+  height: 120px;
+}
+
+// —— Evento ——
+.eventCard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px 24px;
+  padding: 20px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
+
+  > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1 1 260px;
+  }
 
   h2 {
-    font-size: var(--bl-text-lg);
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-    color: var(--bl-danger-text);
+    margin: 0;
+    font: var(--body-lg);
+    font-weight: 560;
+    color: var(--text);
+    overflow-wrap: anywhere;
   }
 
   p {
-    margin: var(--bl-space-0);
-    font-size: var(--bl-text-md);
-    line-height: 1.5;
+    margin: 0;
+    color: var(--text-secondary);
+    font: var(--body-sm);
   }
 }
 
+.kicker,
+.refundKicker,
 .cancelKicker {
-  margin: 0 0 0.3rem !important;
-  font-size: var(--bl-text-xs);
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--bl-danger-text);
+  margin: 0;
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
 }
 
-.refundPanel {
-  text-align: left;
-  border: 1px solid var(--bl-border);
-  border-left: 4px solid var(--bl-gray-600);
-  background: var(--bl-elevated);
-  padding: var(--bl-space-4) var(--bl-space-5);
-  margin-bottom: 1rem;
+.eventSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+// —— Secciones ——
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 
   h2 {
-    font-size: var(--bl-text-lg);
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-2);
-    color: var(--bl-text-primary);
+    margin: 0;
+    font: var(--title);
+    font-weight: 560;
+    color: var(--text);
   }
 
-  h3 {
-    font-size: var(--bl-text-md);
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
-    color: var(--bl-text-primary);
+  > p {
+    margin: 0;
+    color: var(--text-secondary);
+    font: var(--body);
   }
 }
 
-.tone_progress {
-  border-left-color: var(--bl-info-text);
-  background: #f5f8ff;
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
 }
 
-.tone_done {
-  border-left-color: var(--bl-success-text);
-  background: #f3fbf7;
-}
-
-.tone_alert {
-  border-left-color: var(--bl-danger-text);
-  background: #fef6f6;
-}
-
-.refundKicker {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1);
-  font-size: var(--bl-text-xs);
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--bl-text-secondary);
-}
-
-.refundDetail {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
-  font-size: var(--bl-text-md);
-  line-height: 1.55;
-  color: var(--bl-text-secondary);
-}
-
+.breakdown,
 .refundRows {
   list-style: none;
-  margin: var(--bl-space-0);
-  padding: var(--bl-space-0);
-  border-top: 1px solid var(--bl-border);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
 
   li {
     display: flex;
     justify-content: space-between;
-    gap: var(--bl-space-4);
-    padding: var(--bl-space-2) var(--bl-space-0);
-    border-bottom: 1px solid #ededed;
-    font-size: var(--bl-text-md);
-    color: var(--bl-text-secondary);
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--text-secondary);
+    font: var(--body-sm);
   }
 
   strong {
-    color: var(--bl-text-primary);
-    text-align: right;
+    color: var(--text);
+    font-weight: 560;
     font-variant-numeric: tabular-nums;
+    text-align: right;
   }
 }
 
+.breakdownTotal,
 .refundRowStrong {
-  font-weight: 700;
-  color: var(--bl-text-primary) !important;
-
+  span,
   strong {
-    font-size: var(--bl-text-lg);
+    color: var(--text) !important;
+    font: var(--money) !important;
   }
 }
 
-.refundNote {
-  margin: var(--bl-space-3) var(--bl-space-0) var(--bl-space-0);
-  font-size: var(--bl-text-sm);
-  line-height: 1.5;
-  color: var(--bl-text-secondary);
-}
+// —— Boletos ——
+.ticketList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
 
-.compensation {
-  margin-top: 0.95rem;
-  border: 1px solid #a7f3d0;
-  background: var(--bl-success-subtle);
-  padding: var(--bl-space-3) var(--bl-space-4);
-  color: #065f46;
-
-  h3 {
-    color: #065f46 !important;
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--text-secondary);
+    font: var(--body-sm);
   }
 
-  p {
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-    font-size: var(--bl-text-md);
-    line-height: 1.5;
-  }
-
-  p:last-child {
-    margin-bottom: 0;
-    color: #065f46;
+  code {
+    font: var(--mono);
+    color: var(--text);
+    overflow-wrap: anywhere;
   }
 }
 
-.bankAccountNote {
-  margin-top: 0.95rem;
-  border: 1px solid var(--bl-warning-border);
-  background: var(--bl-warning-subtle);
-  padding: var(--bl-space-3) var(--bl-space-4);
-  color: #78350f;
-
-  h3 {
-    color: #78350f !important;
-  }
-
-  p {
-    margin: var(--bl-space-0);
-    font-size: var(--bl-text-md);
-    line-height: 1.5;
-  }
+.muted {
+  color: var(--text-tertiary) !important;
 }
 
 .ticketsVoidNote {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
-  padding: var(--bl-space-2) var(--bl-space-3);
-  border-left: 3px solid var(--bl-danger-text);
-  background: var(--bl-danger-subtle);
-  font-size: var(--bl-text-sm);
-  line-height: 1.45;
-  color: var(--bl-danger-text);
+  margin: 0;
+  color: var(--danger) !important;
+  font: var(--body-sm) !important;
 }
 
-/* --- Línea de tiempo: qué pasó y cuándo, con fechas reales -------------- */
+// —— Cancelación y reembolso: filete a la izquierda, sin rellenos de color ——
+.cancelBanner,
+.refundPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
+  box-shadow: inset 2px 0 0 var(--line-strong);
 
+  h2 {
+    margin: 0;
+    font: var(--body-lg);
+    font-weight: 560;
+    color: var(--text);
+  }
+
+  h3 {
+    margin: 0;
+    font: var(--body);
+    font-weight: 560;
+    color: var(--text);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+    font: var(--body-sm);
+  }
+}
+
+.cancelBanner {
+  box-shadow: inset 2px 0 0 var(--danger);
+}
+
+.tone_progress {
+  box-shadow: inset 2px 0 0 var(--gold);
+}
+
+.tone_done {
+  box-shadow: inset 2px 0 0 var(--money-in);
+}
+
+.tone_alert {
+  box-shadow: inset 2px 0 0 var(--danger);
+
+  h2 {
+    color: var(--danger);
+  }
+}
+
+.refundDetail {
+  color: var(--text-secondary);
+}
+
+.refundNote {
+  color: var(--text-tertiary) !important;
+  font: var(--caption) !important;
+}
+
+.compensation,
+.bankAccountNote {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+
+  strong {
+    color: var(--text);
+  }
+}
+
+// —— Línea de tiempo ——
 .timeline {
   list-style: none;
-  margin: var(--bl-space-0);
-  padding: var(--bl-space-0);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 
   li {
     position: relative;
-    display: flex;
-    gap: var(--bl-space-3);
-    padding: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4) var(--bl-space-0);
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 12px;
+    padding-bottom: 16px;
+  }
 
-    /* La línea que une los hitos. Decorativa: el orden lo da el <ol>. */
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0.28rem;
-      top: 0.85rem;
-      bottom: 0;
-      width: 1px;
-      background: var(--bl-gray-300);
-    }
+  li:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 14px;
+    bottom: 0;
+    width: 1px;
+    background: var(--line-strong);
+  }
 
-    &:last-child::before {
-      display: none;
-    }
+  p {
+    margin: 0;
   }
 }
 
 .timelineDot {
-  flex: 0 0 auto;
-  width: 0.62rem;
-  height: 0.62rem;
-  margin-top: 0.28rem;
+  width: 9px;
+  height: 9px;
+  margin: 6px 0 0 3px;
   border-radius: 50%;
-  background: var(--bl-success-text);
+  background: var(--text);
 }
 
-.timelineFuture {
-  .timelineDot {
-    background: var(--bl-elevated);
-    border: 2px solid var(--bl-gray-500);
-  }
+.timelineFuture .timelineDot {
+  background: transparent;
+  border: 1px solid var(--text-tertiary);
 }
 
 .timelineLabel {
-  margin: var(--bl-space-0);
-  font-size: var(--bl-text-md);
-  font-weight: 700;
-  color: var(--bl-text-primary);
+  color: var(--text);
+  font-weight: 560;
+}
+
+.timelineFuture .timelineLabel {
+  color: var(--text-secondary);
 }
 
 .timelineTag {
-  font-weight: 600;
-  color: var(--bl-text-secondary);
+  color: var(--text-tertiary);
+  font-weight: 400;
 }
 
 .timelineDate {
-  margin: 0.1rem 0 0;
-  font-size: var(--bl-text-sm);
-  color: var(--bl-text-secondary);
+  color: var(--text-secondary);
+  font: var(--body-sm);
 }
 
 .timelineDetail {
-  margin: 0.2rem 0 0;
-  font-size: var(--bl-text-sm);
-  line-height: 1.45;
-  color: var(--bl-text-secondary);
+  color: var(--text-tertiary);
+  font: var(--caption);
+}
+
+// —— Pago diferido ——
+.demoNote,
+.instructionsNote {
+  margin: 0;
+  color: var(--text-tertiary) !important;
+  font: var(--body-sm) !important;
+}
+
+.demoNote {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  background: var(--gold-wash);
+  color: var(--text) !important;
+}
+
+.steps2 {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-secondary);
+  font: var(--body-sm);
+}
+
+.payGrid {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+
+.copyField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.copyLabel {
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+.copyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.copyValue {
+  font: var(--mono);
+  font-size: 20px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.amount {
+  font: var(--money);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.copyHint {
+  display: block;
+  color: var(--text-tertiary);
+  font: var(--caption);
+}
+
+.errorBox {
+  margin: 0;
+  color: var(--danger) !important;
+  font: var(--body) !important;
+}
+
+// —— Acciones: enlaces de texto, una sola primaria por vista ——
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+}
+
+.link,
+.secondary,
+.ghost,
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  color: var(--text);
+  font: var(--body);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.ghost {
+  color: var(--text-secondary);
+}
+
+.trust {
+  list-style: none;
+  margin: 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+// —— Acceso denegado / vacío ——
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  h1 {
+    margin: 0;
+    font: var(--title);
+    font-weight: 560;
+    color: var(--text);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+    font: var(--body);
+  }
+
+  code {
+    font: var(--mono);
+    color: var(--text);
+  }
+}
+
+.gateNote {
+  color: var(--text-tertiary) !important;
+  font: var(--body-sm) !important;
 }

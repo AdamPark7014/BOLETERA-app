@@ -3,15 +3,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Badge, Button, Card, CardFooter, CardHeader, EmptyState } from '@boletera/ui';
+import { NamedStatus, TicketButton } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventPosterArt } from '@/components/EventPosterArt';
-import {
-  normalizeCartItem,
-  secondsUntil,
-  useCartStore,
-  type CartItem,
-} from '@/lib/cart-store';
+import { normalizeCartItem, secondsUntil, useCartStore, type CartItem } from '@/lib/cart-store';
 import { formatCountdown } from '@/lib/payment-window';
 import { releaseHolds } from '@/lib/release-holds';
 import { fetchCartPricing, formatMoney, type CartPricing } from '@/lib/pricing';
@@ -36,8 +31,7 @@ function fmtDate(iso?: string) {
 }
 
 function seatSummary(item: CartItem) {
-  const labels =
-    item.lines?.flatMap((l) => l.seatLabels ?? []) ?? item.seatLabels ?? [];
+  const labels = item.lines?.flatMap((l) => l.seatLabels ?? []) ?? item.seatLabels ?? [];
   if (!labels.length) return null;
   const shown = labels.slice(0, 6).join(' · ');
   return labels.length > 6 ? `${shown}…` : shown;
@@ -110,7 +104,7 @@ export default function CartPage() {
   const currency = active[0]?.currency || 'MXN';
   const soonest = active.reduce(
     (min, i) => Math.min(min, secondsUntil(i.expiresAt)),
-    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY
   );
 
   // Precio final con cargos e IVA, ya en el carrito.
@@ -120,7 +114,12 @@ export default function CartPage() {
   // se paga. `pricing/calculate-cart` es público y devuelve el desglose, así que
   // se pide por evento (el endpoint es de un solo evento) y se suma.
   const pricingKey = active
-    .map((i) => `${i.eventId}:${pricingItemsFor(i).map((l) => `${l.offerId}x${l.quantity}`).join(',')}`)
+    .map(
+      (i) =>
+        `${i.eventId}:${pricingItemsFor(i)
+          .map((l) => `${l.offerId}x${l.quantity}`)
+          .join(',')}`
+    )
     .join('|');
   const [pricingByEvent, setPricingByEvent] = useState<Record<string, CartPricing>>({});
   const [pricingLoading, setPricingLoading] = useState(false);
@@ -138,9 +137,9 @@ export default function CartPage() {
     void Promise.all(
       targets.map((t) =>
         fetchCartPricing(API, { eventId: t.eventId, items: t.items }, controller.signal).then(
-          (data) => [t.eventId, data] as const,
-        ),
-      ),
+          (data) => [t.eventId, data] as const
+        )
+      )
     )
       .then((entries) => {
         if (controller.signal.aborted) return;
@@ -165,13 +164,13 @@ export default function CartPage() {
       s +
       Number(pricingByEvent[i.eventId].fees || 0) +
       Number(pricingByEvent[i.eventId].taxes || 0),
-    0,
+    0
   );
 
   return (
-    <div className={styles.shell}>
+    <>
       <SiteHeader />
-      <main className={styles.page}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
         <nav className={styles.steps} aria-label="Progreso de compra">
           <span className={styles.stepActive} aria-current="step">
             1 Carrito
@@ -181,32 +180,27 @@ export default function CartPage() {
         </nav>
 
         <header className={styles.hero}>
-          <Badge tone="accent" variant="soft" size="md">
-            Paso 1 de 3 · Reserva
-          </Badge>
-          <h1>Tu carrito</h1>
+          <h1>Carrito</h1>
           <p className={styles.lead}>
             {items.length
-              ? 'Tus asientos están en hold. Completa el pago antes de que expire el tiempo.'
+              ? 'Tus lugares están apartados. Completa el pago antes de que venza el tiempo.'
               : 'Cuando elijas asientos, aparecerán aquí listos para pagar.'}
           </p>
         </header>
 
         {!items.length ? (
-          <Card className={styles.empty} variant="elevated" padding="lg">
-            <EmptyState
-              title="Carrito vacío"
-              description="Explora la cartelera y asegura tus lugares con hold en vivo."
-              action={
-                <div className={styles.emptyActions}>
-                  <Button onClick={() => router.push('/events')}>Ver eventos</Button>
-                  <Button variant="outline" onClick={() => router.push('/')}>
-                    Ir al inicio
-                  </Button>
-                </div>
-              }
-            />
-          </Card>
+          <section className={styles.empty} aria-label="Carrito vacío">
+            <p className={styles.emptyTitle}>Carrito vacío</p>
+            <p className={styles.lead}>Explora la cartelera y aparta tus lugares en vivo.</p>
+            <div className={styles.emptyActions}>
+              <TicketButton type="button" onClick={() => router.push('/events')}>
+                Ver eventos
+              </TicketButton>
+              <Link href="/" className={styles.textLink}>
+                Ir al inicio
+              </Link>
+            </div>
+          </section>
         ) : (
           <div className={styles.grid}>
             <section className={styles.list} aria-label="Reservas en carrito">
@@ -222,17 +216,15 @@ export default function CartPage() {
                 const when = fmtDate(item.startsAt);
 
                 return (
-                  <Card key={item.eventId} className={styles.card} variant="elevated" padding="none">
+                  <article key={item.eventId} className={styles.card}>
                     <div className={styles.cardInner}>
                       <div className={styles.posterThumb} aria-hidden="true">
                         <EventPosterArt event={posterFor(item)} size="sm" showDate />
                       </div>
                       <div className={styles.cardContent}>
                         <div className={styles.cardTop}>
-                          <div>
-                            <Badge tone="success" variant="soft" size="sm" dot>
-                              Hold activo
-                            </Badge>
+                          <div className={styles.cardHead}>
+                            <NamedStatus status="apartado" />
                             <h2>
                               {item.slug ? (
                                 <Link href={`/events/${item.slug}`}>{item.eventTitle}</Link>
@@ -270,7 +262,7 @@ export default function CartPage() {
                           {seats && (
                             <div>
                               <dt>Asientos</dt>
-                              <dd>{seats}</dd>
+                              <dd className={styles.mono}>{seats}</dd>
                             </div>
                           )}
                           {pricing ? (
@@ -284,7 +276,7 @@ export default function CartPage() {
                                 <dd>
                                   {formatMoney(
                                     Number(pricing.fees || 0) + Number(pricing.taxes || 0),
-                                    itemCurrency,
+                                    itemCurrency
                                   )}
                                 </dd>
                               </div>
@@ -314,15 +306,24 @@ export default function CartPage() {
                           ) : null}
                         </dl>
 
-                        <CardFooter className={styles.actions}>
-                          <Button onClick={() => goCheckout(router, item)}>Ir a pagar</Button>
+                        <div className={styles.actions}>
+                          {/* Con un solo evento la primaria es «Continuar al pago» del
+                              resumen; aquí va secundario para no tener dos primarias. */}
+                          <TicketButton
+                            type="button"
+                            variant={active.length === 1 ? 'secondary' : 'primary'}
+                            onClick={() => goCheckout(router, item)}
+                          >
+                            Ir a pagar
+                          </TicketButton>
                           {item.slug && (
-                            <Button variant="outline" onClick={() => router.push(`/events/${item.slug}`)}>
+                            <Link href={`/events/${item.slug}`} className={styles.textLink}>
                               Ver evento
-                            </Button>
+                            </Link>
                           )}
-                          <Button
-                            variant="ghost"
+                          <button
+                            type="button"
+                            className={styles.textLink}
                             onClick={() => {
                               if (idx < 0) return;
                               releaseItem(item);
@@ -330,21 +331,20 @@ export default function CartPage() {
                             }}
                           >
                             Quitar
-                          </Button>
-                        </CardFooter>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </Card>
+                  </article>
                 );
               })}
 
               {expired.length > 0 && (
-                <Card className={styles.expiredBlock} variant="outline" padding="md">
-                  <CardHeader
-                    as="h3"
-                    title="Reservas expiradas"
-                    description="El hold se liberó. Vuelve al mapa para elegir de nuevo."
-                  />
+                <section className={styles.expiredBlock} aria-labelledby="cart-expired">
+                  <h3 id="cart-expired">Reservas vencidas</h3>
+                  <p className={styles.hint}>
+                    El apartado se liberó. Vuelve al mapa para elegir de nuevo.
+                  </p>
                   <ul>
                     {expired.map((item) => {
                       const idx = rawItems.findIndex((r) => r.eventId === item.eventId);
@@ -352,9 +352,7 @@ export default function CartPage() {
                         <li key={`exp-${item.eventId}`}>
                           <span>{item.eventTitle}</span>
                           <div>
-                            {item.slug && (
-                              <Link href={`/events/${item.slug}`}>Reelegir</Link>
-                            )}
+                            {item.slug && <Link href={`/events/${item.slug}`}>Reelegir</Link>}
                             <button type="button" onClick={() => idx >= 0 && removeAt(idx)}>
                               Limpiar
                             </button>
@@ -363,13 +361,13 @@ export default function CartPage() {
                       );
                     })}
                   </ul>
-                </Card>
+                </section>
               )}
             </section>
 
             <aside className={styles.summary} aria-label="Resumen">
-              <Card variant="elevated" padding="md" className={styles.summaryCard}>
-                <CardHeader as="h2" title="Resumen" />
+              <div className={styles.summaryCard}>
+                <h2>Resumen</h2>
                 <ul className={styles.summaryRows}>
                   <li>
                     <span>Eventos activos</span>
@@ -415,26 +413,20 @@ export default function CartPage() {
                 </p>
 
                 {active.length === 1 ? (
-                  <Button fullWidth size="lg" onClick={() => goCheckout(router, active[0])}>
+                  <TicketButton
+                    type="button"
+                    fullWidth
+                    onClick={() => goCheckout(router, active[0])}
+                  >
                     Continuar al pago
-                  </Button>
+                  </TicketButton>
                 ) : active.length > 1 ? (
                   <p className={styles.multiNote}>
                     Paga cada evento por separado para mantener el hold correcto.
                   </p>
                 ) : null}
 
-                <div className={styles.trust}>
-                  <Badge tone="success" variant="soft" size="sm">
-                    Boletos oficiales
-                  </Badge>
-                  <Badge tone="warning" variant="soft" size="sm">
-                    Hold en vivo
-                  </Badge>
-                  <Badge tone="info" variant="soft" size="sm">
-                    Pago Banorte
-                  </Badge>
-                </div>
+                <p className={styles.trust}>Boletos oficiales · Apartado en vivo · Pago Banorte</p>
                 <p className={styles.hint}>
                   Sin credenciales Banorte el checkout opera en modo demo (sin cargo real).
                 </p>
@@ -451,11 +443,11 @@ export default function CartPage() {
                     Vaciar carrito
                   </button>
                 </div>
-              </Card>
+              </div>
             </aside>
           </div>
         )}
       </main>
-    </div>
+    </>
   );
 }

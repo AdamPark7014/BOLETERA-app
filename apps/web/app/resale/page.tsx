@@ -60,15 +60,15 @@ export default async function ResalePage() {
   }
 
   return (
-    <div className={styles.shell}>
+    <>
       <SiteHeader />
       <main id="contenido" tabIndex={-1} className={styles.page}>
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Mercado secundario</p>
           <h1>Reventa oficial</h1>
           <p className={styles.lead}>
-            Boletos verificados con tope de precio. El comprador recibe un QR nuevo y el
-            original se invalida.
+            Boletos verificados con tope de precio. El comprador recibe un QR nuevo y el original se
+            invalida.
           </p>
           <div className={styles.heroActions}>
             <Link href="/resale/vender" className={styles.primary}>
@@ -109,8 +109,8 @@ export default async function ResalePage() {
             <div className={styles.error} role="alert">
               <strong>No pudimos cargar los listados</strong>
               <p>
-                Es un problema temporal. Vuelve a intentarlo en unos minutos; si querías
-                publicar un boleto, puedes hacerlo de todos modos.
+                Es un problema temporal. Vuelve a intentarlo en unos minutos; si querías publicar un
+                boleto, puedes hacerlo de todos modos.
               </p>
               <Link href="/resale/vender">Vender mi boleto</Link>
             </div>
@@ -118,8 +118,7 @@ export default async function ResalePage() {
             <div className={styles.empty}>
               <strong>Sin listados activos</strong>
               <p>
-                Cuando alguien ponga un boleto en reventa aparecerá aquí con su precio y
-                asiento.
+                Cuando alguien ponga un boleto en reventa aparecerá aquí con su precio y asiento.
               </p>
               <Link href="/">Explorar la cartelera</Link>
             </div>
@@ -138,9 +137,7 @@ export default async function ResalePage() {
                 return (
                   <li key={l.id} className={styles.card}>
                     <div>
-                      <p className={styles.status}>
-                        {LISTING_STATUS_LABEL[l.status] ?? l.status}
-                      </p>
+                      <p className={styles.status}>{LISTING_STATUS_LABEL[l.status] ?? l.status}</p>
                       <h3>{event?.title || 'Evento'}</h3>
                       <p className={styles.meta}>
                         {when
@@ -159,11 +156,7 @@ export default async function ResalePage() {
                           Precio original $
                           {original.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                           {Number.isFinite(markup) && (
-                            <>
-                              {' '}
-                              · {markup > 0 ? `+${markup}%` : `${markup}%`} respecto al
-                              original
-                            </>
+                            <> · {markup > 0 ? `+${markup}%` : `${markup}%`} respecto al original</>
                           )}
                         </p>
                       )}
@@ -186,6 +179,6 @@ export default async function ResalePage() {
           )}
         </section>
       </main>
-    </div>
+    </>
   );
 }

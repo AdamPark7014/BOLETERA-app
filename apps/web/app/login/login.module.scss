@@ -1,544 +1,61 @@
-@use '../../styles/breakpoints' as bp;
+// Recuperar y crear contraseña en el lenguaje Black Ticket: misma columna y
+// controles (`Field`, `TicketButton`) que /login. Sin tarjeta ni fondo propio.
 
 .page {
-  position: relative;
-  min-height: calc(100vh - var(--header-height));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl) 1.25rem;
-  overflow: hidden;
-  background: linear-gradient(180deg, var(--color-surface-muted) 0%, #f0f0f3 100%);
-}
-
-.glow {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 50% 50% at 20% 30%, rgba(225, 29, 72, 0.08), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 70%, rgba(251, 113, 133, 0.1), transparent 60%);
-}
-
-.shell {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-xl);
-  width: 100%;
-  max-width: 64rem;
-
-  @include bp.from(bp.$bp-lg) {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-2xl);
-  }
-}
-
-/* ---- Izquierda (marketing) ---- */
-.left {
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  padding: var(--space-md) 0;
-
-  @include bp.from(bp.$bp-lg) {
-    display: flex;
-  }
-}
-
-.kicker {
-  margin: 0 0 var(--space-md);
-  display: inline-block;
-  width: fit-content;
-  padding: var(--space-3xs) 0.625rem;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-accent-text);
-  background: var(--color-accent-tint);
-  border: 1px solid var(--bl-accent-border);
-  border-radius: var(--radius-pill);
-}
-
-/*
- * Titular de marketing: es un <p>, no un encabezado. El h1 de la página vive
- * en la tarjeta del formulario, que sí está visible en móvil.
- */
-.leadHeadline {
-  margin: 0 0 var(--space-lg);
-  font-size: var(--bl-text-5xl);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
-  color: var(--text-primary);
-}
-
-.gradient {
-  background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.perks {
-  list-style: none;
-  margin: 0 0 var(--space-xl);
-  padding: var(--bl-space-0);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-
-  li {
-    display: flex;
-    align-items: center;
-    gap: var(--bl-space-2-5);
-    font-size: var(--text-md);
-    color: var(--text-secondary);
-  }
-}
-
-.check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
-  color: var(--text-inverse);
-  background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
-  border-radius: var(--radius-circle);
-}
-
-/* ---- Derecha (formulario) ---- */
-.right {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.card {
-  width: 100%;
-  max-width: 26rem;
-  padding: var(--space-lg);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-xl);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 20px 60px -20px rgba(0, 0, 0, 0.1);
-
-  @include bp.from(bp.$bp-xs) {
-    padding: var(--space-xl);
-  }
-}
-
-.tabs {
-  display: flex;
-  gap: var(--space-3xs);
-  padding: var(--space-3xs);
-  margin-bottom: var(--space-lg);
-  background: var(--bl-surface-sunken);
-  border-radius: var(--bl-radius-lg);
-}
-
-.tab,
-.tabActive {
-  flex: 1;
-  min-height: var(--control-height-sm);
-  padding: var(--space-xs) var(--space-sm);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  /* var(--bl-gray-500) sobre var(--bl-gray-100) quedaba en 4.4:1. */
-  color: var(--text-muted);
-  background: transparent;
-  border: none;
-  border-radius: var(--bl-radius-sm);
-  cursor: pointer;
-  transition:
-    background var(--duration-fast),
-    color var(--duration-fast);
-}
-
-.tab:hover {
-  color: var(--text-primary);
-}
-
-.tabActive {
-  color: var(--text-primary);
-  background: var(--color-surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-  font-weight: var(--weight-semibold);
-}
-
-.cardHead {
-  margin-bottom: var(--space-lg);
-
-  h1 {
-    margin: 0 0 var(--space-2xs);
-    font-size: var(--text-xl);
-    font-weight: var(--weight-semibold);
-    color: var(--text-primary);
-    letter-spacing: var(--tracking-tight);
-  }
-
-  p {
-    margin: var(--bl-space-0);
-    font-size: var(--text-base);
-    color: var(--text-muted);
-    line-height: var(--leading-normal);
-  }
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-sm);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-
-  label {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    color: var(--text-secondary);
-  }
-}
-
-.labelRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-xs);
-}
-
-.forgot {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--target-min);
-  font-size: var(--text-xs);
-  color: var(--color-accent-text);
-  text-decoration: underline;
-  font-weight: var(--weight-medium);
-}
-
-.hint {
-  margin: var(--bl-space-0);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  line-height: var(--leading-normal);
-}
-
-.inputWrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  input {
-    width: 100%;
-    min-height: var(--control-height-md);
-    padding: var(--bl-space-2-5) var(--bl-space-3);
-    font-size: var(--text-md);
-    color: var(--text-primary);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border-soft);
-    border-radius: var(--bl-radius-md);
-    transition:
-      border-color var(--duration-fast),
-      box-shadow var(--duration-fast);
-
-    &::placeholder {
-      color: var(--text-placeholder);
-      opacity: 1;
-    }
-
-    &:hover {
-      border-color: var(--color-border-strong);
-    }
-
-    &:focus-visible {
-      border-color: var(--color-accent);
-    }
-  }
-}
-
-.field:has(.icon) {
-  .inputWrap input {
-    padding-left: 2.625rem;
-  }
-}
-
-.icon {
-  position: absolute;
-  left: 0.875rem;
-  display: flex;
-  /* var(--bl-gray-400) daba 2.5:1: por debajo del 3:1 que pide un elemento de interfaz. */
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.eyeBtn {
-  position: absolute;
-  right: var(--space-xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--target-min);
-  height: var(--target-min);
-  color: var(--text-muted);
-  background: transparent;
-  border: none;
-  border-radius: var(--bl-radius-sm);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--bl-surface-sunken);
-    color: var(--text-primary);
-  }
-}
-
-.error {
-  padding: 0.625rem var(--space-sm);
-  font-size: var(--text-sm);
-  line-height: 1.4;
-  color: var(--color-danger-text);
-  background: var(--color-danger-bg);
-  border: 1px solid var(--color-danger-border);
-  border-radius: var(--bl-radius-md);
-}
-
-.submit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  width: 100%;
-  min-height: var(--control-height-md);
-  padding: 0.875rem var(--space-md);
-  font-size: var(--text-md);
-  font-weight: var(--weight-semibold);
-  color: var(--text-on-accent);
-  /* Fondo sólido: el degradado a var(--bl-accent-hover) dejaba el texto blanco en 2.9:1. */
-  background: var(--color-accent);
-  border: none;
-  border-radius: var(--bl-radius-lg);
-  cursor: pointer;
-  box-shadow: var(--shadow-accent);
-  transition:
-    background var(--duration-fast),
-    transform 0.1s,
-    box-shadow var(--duration-fast);
-
-  &:hover:not(:disabled) {
-    background: var(--color-accent-hover);
-    box-shadow: 0 6px 18px rgba(225, 29, 72, 0.38);
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.99);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-}
-
-.spinner {
-  width: var(--space-md);
-  height: var(--space-md);
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: var(--paper-0);
-  border-radius: var(--radius-circle);
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: var(--bl-space-3);
-  margin: var(--space-xs) 0;
-  font-size: var(--text-xs);
-  /* var(--bl-gray-400) sobre blanco daba 2.5:1 en un texto informativo. */
-  color: var(--text-muted);
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--color-border-soft);
-  }
-}
-
-.socials {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-xs);
-}
-
-.socialBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  min-height: var(--control-height-sm);
-  padding: 0.5625rem var(--space-sm);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--ink-800);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--bl-radius-md);
-  cursor: pointer;
-  transition:
-    background var(--duration-fast),
-    border-color var(--duration-fast);
-
-  &:hover:not(:disabled) {
-    background: var(--color-surface-muted);
-    border-color: var(--color-border-strong);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.terms {
-  margin: var(--bl-space-5) var(--bl-space-0) var(--bl-space-0);
-  font-size: var(--text-xs);
-  text-align: center;
-  color: var(--text-muted);
-  line-height: 1.55;
-
-  a {
-    color: var(--color-accent-text);
-    text-decoration: underline;
-  }
-}
-
-/* -------------------------------------------------------------------------
- * Formularios simples (recuperar / restablecer contraseña).
- * Estas dos páginas usaban `.card` y clases (`.sub`, `.hint`) que nunca
- * existieron: los campos salían sin estilo ninguno.
- * ------------------------------------------------------------------------- */
-.simpleCard {
-  width: 100%;
-  max-width: 26rem;
+  width: min(720px, 100%);
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: 32px 48px 96px;
+}
+
+.simpleCard {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-xl);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 20px 60px -20px rgba(0, 0, 0, 0.1);
+  gap: 24px;
 
   h1 {
-    margin: var(--bl-space-0);
-    font-size: var(--text-xl);
-    font-weight: var(--weight-semibold);
-    letter-spacing: var(--tracking-tight);
-  }
-
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2xs);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    color: var(--text-secondary);
-  }
-
-  input {
-    min-height: var(--control-height-md);
-    padding: var(--bl-space-2-5) var(--bl-space-3);
-    font: inherit;
-    font-size: var(--text-md);
-    font-weight: 400;
-    color: var(--text-primary);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border-soft);
-    border-radius: var(--bl-radius-md);
-
-    &:read-only {
-      background: var(--color-surface-sunken);
-      color: var(--text-secondary);
-    }
-  }
-
-  button[type='submit'] {
-    min-height: var(--control-height-md);
-    padding: 0.875rem var(--space-md);
-    font: inherit;
-    font-size: var(--text-md);
-    font-weight: var(--weight-semibold);
-    color: var(--text-on-accent);
-    background: var(--color-accent);
-    border: none;
-    border-radius: var(--bl-radius-lg);
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      background: var(--color-accent-hover);
-    }
-
-    &:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
+    margin: 0;
+    font: var(--title);
+    font-weight: 560;
+    color: var(--text);
   }
 }
 
 .sub {
-  margin: var(--bl-space-0);
-  font-size: var(--text-base);
-  color: var(--text-muted);
-  line-height: var(--leading-normal);
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--body);
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-tertiary);
+  font: var(--body-sm);
 }
 
 .feedback {
-  margin: var(--bl-space-0);
-  padding: 0.625rem var(--space-sm);
-  font-size: var(--text-sm);
-  line-height: 1.4;
+  margin: 0;
   color: var(--text-secondary);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border);
-  border-radius: var(--bl-radius-md);
+  font: var(--body-sm);
+  overflow-wrap: anywhere;
+
+  &[role='alert'] {
+    color: var(--danger);
+  }
+
+  a {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .backLink {
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
-  min-height: var(--control-height-sm);
-  font-size: var(--text-base);
-  font-weight: var(--weight-semibold);
-  color: var(--color-accent-text);
+  min-height: 44px;
+  color: var(--text);
+  font: var(--body);
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
