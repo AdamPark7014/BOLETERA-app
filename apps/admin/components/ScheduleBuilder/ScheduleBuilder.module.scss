@@ -1,17 +1,13 @@
-$ink: var(--bl-gray-900);
-$ink-soft: var(--bl-gray-700);
-$muted: var(--bl-gray-500);
-$border: var(--bl-gray-200);
-$surface: #ffffff;
-$surface-soft: var(--bl-gray-25);
-$danger: var(--bl-danger-text);
-$warning: var(--bl-warning-text);
-$success: var(--bl-success);
+// Constructor de recurrencia en el lenguaje Black Ticket: tinta, línea y texto
+// del lienzo (`--ink*`, `--line*`, `--text*`). Sin tarjetas blancas, sin bordes
+// de color ni mayúsculas con tracking; el conflicto se lee en texto `--danger`.
 
 .wrap {
   display: flex;
   flex-direction: column;
   gap: var(--bl-space-4);
+  // El contenedor (p. ej. `.builder` de series) pone el marco; aquí no se repite.
+  color: var(--text);
 }
 
 .modes {
@@ -22,22 +18,24 @@ $success: var(--bl-success);
 .modeOn,
 .modeOff {
   padding: var(--bl-space-2) var(--bl-space-4);
-  border-radius: var(--bl-radius-md);
-  font-size: var(--bl-text-sm);
-  font-weight: 600;
+  border-radius: var(--r-m);
+  font: var(--body-sm);
   cursor: pointer;
-  border: 1px solid $border;
+  border: 1px solid var(--line);
+  background: transparent;
 }
 
 .modeOn {
-  background: $ink;
-  border-color: $ink;
-  color: var(--bl-text-inverse);
+  border-color: var(--gold);
+  color: var(--text);
 }
 
 .modeOff {
-  background: $surface;
-  color: $muted;
+  color: var(--text-secondary);
+
+  &:hover {
+    color: var(--text);
+  }
 }
 
 .grid {
@@ -49,31 +47,29 @@ $success: var(--bl-success);
     display: flex;
     flex-direction: column;
     gap: var(--bl-space-1-5);
-    font-size: var(--bl-text-sm);
-    font-weight: 500;
-    color: $ink-soft;
+    font: var(--caption);
+    color: var(--text-secondary);
   }
 
   input,
   select {
     padding: var(--bl-space-2-5) var(--bl-space-3);
-    border: 1px solid $border;
-    border-radius: var(--bl-radius-md);
-    font-size: var(--bl-text-md);
-    color: $ink;
-    background: $surface;
+    border: 1px solid var(--line);
+    border-radius: var(--r-m);
+    font: var(--body);
+    color: var(--text);
+    background: var(--ink);
+    color-scheme: dark;
 
     &:focus {
       outline: none;
-      border-color: $ink;
-      box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.06);
+      border-color: var(--focus);
     }
   }
 
   small {
-    color: $muted;
-    font-size: var(--bl-text-xs);
-    font-weight: 400;
+    color: var(--text-tertiary);
+    font: var(--caption);
   }
 }
 
@@ -84,19 +80,19 @@ $success: var(--bl-success);
   gap: var(--bl-space-2);
 
   small {
-    color: $muted;
-    font-size: var(--bl-text-xs);
+    color: var(--text-tertiary);
+    font: var(--caption);
   }
 }
 
 .fieldLabel {
-  font-size: var(--bl-text-sm);
-  font-weight: 500;
-  color: $ink-soft;
+  font: var(--caption);
+  color: var(--text-secondary);
 }
 
 .weekdays {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--bl-space-1-5);
 }
 
@@ -105,65 +101,62 @@ $success: var(--bl-success);
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  border: 1px solid $border;
-  font-size: var(--bl-text-sm);
-  font-weight: 600;
+  border: 1px solid var(--line);
+  font: var(--body-sm);
   cursor: pointer;
+  background: transparent;
 }
 
 .dayOn {
-  background: $ink;
-  border-color: $ink;
-  color: var(--bl-text-inverse);
+  border-color: var(--gold);
+  background: var(--gold-wash);
+  color: var(--text);
 }
 
 .dayOff {
-  background: $surface;
-  color: $muted;
+  color: var(--text-secondary);
+
+  &:hover {
+    color: var(--text);
+  }
 }
 
 .summary {
   margin: var(--bl-space-0);
   padding: var(--bl-space-2-5) var(--bl-space-3);
-  background: $surface-soft;
-  border: 1px solid $border;
-  border-radius: var(--bl-radius-md);
-  font-size: var(--bl-text-sm);
-  color: $ink-soft;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  font: var(--body-sm);
+  color: var(--text-secondary);
 }
 
 .error {
   margin: var(--bl-space-0);
-  color: $danger;
-  font-size: var(--bl-text-sm);
+  color: var(--danger);
+  font: var(--body-sm);
 }
 
 .previewHead {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--bl-space-2);
-  font-size: var(--bl-text-md);
-  color: $ink;
+  font: var(--body);
+  color: var(--text);
 }
 
 .badgeBlocking,
 .badgeWarn {
-  padding: var(--bl-space-0-5) var(--bl-space-2);
-  border-radius: 5px;
-  font-size: var(--bl-text-2xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font: var(--caption);
 }
 
 .badgeBlocking {
-  background: var(--bl-danger-subtle);
-  color: $danger;
+  color: var(--danger);
 }
 
 .badgeWarn {
-  background: var(--bl-warning-subtle);
-  color: $warning;
+  color: var(--text-secondary);
 }
 
 .occurrences {
@@ -172,110 +165,120 @@ $success: var(--bl-success);
   padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
-  gap: var(--bl-space-1-5);
   max-height: 22rem;
   overflow-y: auto;
+  border-top: 1px solid var(--line);
 
   li {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: var(--bl-space-2);
     align-items: start;
-    padding: var(--bl-space-2) var(--bl-space-3);
-    border: 1px solid $border;
-    border-left-width: 3px;
-    border-radius: var(--bl-radius-md);
-    background: $surface;
-    font-size: var(--bl-text-sm);
+    padding: var(--bl-space-2-5) var(--bl-space-1);
+    border-bottom: 1px solid var(--line);
+    font: var(--body-sm);
+    color: var(--text);
   }
 }
 
 .occOk {
-  border-left-color: $success;
+  color: var(--text);
 }
 
 .occWarn {
-  border-left-color: $warning;
-  background: #fffdf5;
+  color: var(--text);
 }
 
 .occBlocking {
-  border-left-color: $danger;
-  background: #fffafa;
+  background: var(--danger-wash);
 }
 
 .occMain {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--bl-space-2);
-  text-transform: capitalize;
+  color: var(--text);
 
   span {
-    color: $muted;
-    text-transform: none;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
   }
 }
 
 .tag {
   padding: 0.1rem 0.35rem;
-  border-radius: var(--bl-radius-xs);
-  background: var(--bl-surface-sunken);
-  color: $muted;
-  font-size: var(--bl-text-2xs);
-  font-weight: 600;
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  color: var(--text-tertiary);
+  font: var(--caption);
 }
 
 .conflictList {
   grid-column: 1 / -1;
   list-style: none;
-  margin: var(--bl-space-1-5) var(--bl-space-0) var(--bl-space-0);
+  margin: var(--bl-space-1) var(--bl-space-0) var(--bl-space-0);
   padding: var(--bl-space-0);
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-size: var(--bl-text-xs);
-  color: $ink-soft;
+  font: var(--caption);
+  color: var(--text-secondary);
+
+  // Anula la fila de `.occurrences li`: aquí cada conflicto es una línea.
+  li {
+    display: block;
+    padding: 0;
+    border: 0;
+    font: var(--caption);
+    color: var(--text-secondary);
+  }
+}
+
+// Fecha omitida: sigue en la lista para poder restaurarla, pero no cuenta.
+.occExcluded {
+  opacity: 0.55;
+
+  strong {
+    text-decoration: line-through;
+  }
 }
 
 .conflictKind {
   display: inline-block;
   margin-right: 0.35rem;
-  padding: 0.05rem 0.3rem;
-  border-radius: var(--bl-radius-xs);
-  background: var(--bl-surface-sunken);
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: var(--bl-text-2xs);
-  letter-spacing: 0.05em;
+  color: var(--danger);
+  font: var(--caption);
 }
 
 .skipBtn {
   align-self: center;
   padding: var(--bl-space-1) var(--bl-space-2);
-  border: 1px solid $border;
-  border-radius: var(--bl-radius-sm);
-  background: $surface;
-  color: $muted;
-  font-size: var(--bl-text-xs);
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  background: transparent;
+  color: var(--text-secondary);
+  font: var(--caption);
   cursor: pointer;
 
   &:hover {
-    color: $ink;
-    border-color: var(--bl-gray-400);
+    color: var(--text);
+    border-color: var(--line-strong);
   }
 }
 
 .exceptions {
   margin: var(--bl-space-0);
-  font-size: var(--bl-text-xs);
-  color: $muted;
+  font: var(--caption);
+  color: var(--text-tertiary);
 
   button {
     border: none;
     background: none;
-    color: $ink;
+    padding: 0;
+    color: var(--text);
     text-decoration: underline;
     cursor: pointer;
-    font-size: var(--bl-text-xs);
+    font: var(--caption);
   }
 }

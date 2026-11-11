@@ -64,7 +64,7 @@ export function ScheduleBuilder({
   const { mode, rule } = value;
   const patchRule = useCallback(
     (patch: Partial<RecurrenceRule>) => onChange({ mode, rule: { ...rule, ...patch } }),
-    [mode, rule, onChange],
+    [mode, rule, onChange]
   );
 
   const summary = useMemo(() => {
@@ -132,9 +132,7 @@ export function ScheduleBuilder({
 
   function toggleWeekday(day: Weekday) {
     const current = rule.byWeekday ?? [];
-    const next = current.includes(day)
-      ? current.filter((item) => item !== day)
-      : [...current, day];
+    const next = current.includes(day) ? current.filter((item) => item !== day) : [...current, day];
     patchRule({ byWeekday: next.length ? next : undefined });
   }
 
@@ -344,11 +342,13 @@ export function ScheduleBuilder({
               <li
                 key={occurrence.startsAt}
                 className={
-                  occurrence.blocking
-                    ? styles.occBlocking
-                    : occurrence.conflicts.length
-                      ? styles.occWarn
-                      : styles.occOk
+                  excluded
+                    ? styles.occExcluded
+                    : occurrence.blocking
+                      ? styles.occBlocking
+                      : occurrence.conflicts.length
+                        ? styles.occWarn
+                        : styles.occOk
                 }
               >
                 <div className={styles.occMain}>
@@ -362,7 +362,10 @@ export function ScheduleBuilder({
                   </strong>
                   <span>{occurrence.localTime}</span>
                   {occurrence.clamped && (
-                    <span className={styles.tag} title="El día no existe en ese mes; se ajustó al último día">
+                    <span
+                      className={styles.tag}
+                      title="El día no existe en ese mes; se ajustó al último día"
+                    >
                       ajustada
                     </span>
                   )}

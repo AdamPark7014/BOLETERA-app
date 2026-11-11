@@ -1,6 +1,8 @@
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  EventSeriesKind,
+  EventSeriesStatus,
   EventStatus,
   Prisma,
   SalePhaseKind,
@@ -11,6 +13,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { SaleWindowService } from './sale-window.service';
 import { SalePhaseQuotaService, type PhaseQuotaUsage } from './sale-phase-quota.service';
 import { resolvePhaseStatus, withResolvedStatus } from './sale-phase-status';
+import { storedRule, storedTemplate } from './event-series.service';
 
 type EventMetadata = Record<string, unknown>;
 
@@ -220,43 +223,95 @@ export class EventManagementService {
       description: string;
       venueId: string;
       occurrences: Array<{
-        date: Date;
+        date: Date | string;
         title?: string;
         capacity?: number;
         basePrice?: number;
       }>;
+      /** Regla que generó las fechas (ScheduleBuilder). Se guarda para mostrarla y extender. */
+      recurrence?: unknown;
+      /** Plantilla de cada fecha (aforo, precio…). Se guarda para extender. */
+      template?: unknown;
     },
   ) {
-    const occurrences = [];
-
-    for (let i = 0; i < data.occurrences.length; i++) {
-      const occ = data.occurrences[i];
-      const basePrice = occ.basePrice ?? 100;
-      const event = await this.prisma.event.create({
-        data: {
-          title: occ.title || data.seriesName,
-          description: data.description,
-          slug: this.slugify(`${data.seriesName}-${occ.date.toISOString()}`),
-          organizationId: orgId,
-          venueId: data.venueId,
-          startsAt: new Date(occ.date),
-          timezone: 'America/Mexico_City',
-          status: EventStatus.SCHEDULED,
-          totalCapacity: occ.capacity ?? 5000,
-          minPrice: new Decimal(basePrice),
-          maxPrice: new Decimal(basePrice * 2.5),
-          metadata: {
-            eventKind: 'series',
-            seriesName: data.seriesName,
-            seriesOrder: i + 1,
-          },
-        },
-      });
-      occurrences.push(event);
+    if (!orgId) throw new BadRequestException('Tu usuario no tiene organización');
+    if (!data.seriesName?.trim()) throw new BadRequestException('Falta el nombre de la serie');
+    if (!Array.isArray(data.occurrences) || !data.occurrences.length) {
+      throw new BadRequestException('La serie necesita al menos una fecha');
     }
+    // Del JSON llega texto, no Date: antes `occ.date.toISOString()` reventaba.
+    const dates = data.occurrences.map((occ) => new Date(occ.date));
+    if (dates.some((d) => Number.isNaN(d.getTime()))) {
+      throw new BadRequestException('Hay una fecha inválida en la serie');
+    }
+    const rule = storedRule(data.recurrence as Prisma.JsonValue);
+    const template = storedTemplate(data.template as Prisma.JsonValue);
+    const first = data.occurrences[0];
+    const savedTemplate = template ?? {
+      capacity: first.capacity ?? 5000,
+      basePrice: first.basePrice ?? 100,
+    };
+    const timezone = rule?.timezone ?? 'America/Mexico_City';
+
+    const { series, occurrences } = await this.prisma.$transaction(
+      async (tx) => {
+        // La fila EventSeries es lo que lee el catálogo (events/schedule/series).
+        const series = await tx.eventSeries.create({
+          data: {
+            organizationId: orgId,
+            venueId: data.venueId,
+            name: data.seriesName.trim(),
+            slug: this.slugify(data.seriesName),
+            description: data.description?.trim() || null,
+            kind: EventSeriesKind.SERIES,
+            // Las fechas nacen SCHEDULED, así que la serie ya está activa.
+            status: EventSeriesStatus.ACTIVE,
+            timezone,
+            recurrence: rule ? (JSON.parse(JSON.stringify(rule)) as Prisma.InputJsonValue) : Prisma.DbNull,
+            template: JSON.parse(JSON.stringify(savedTemplate)) as Prisma.InputJsonValue,
+          },
+        });
+
+        const occurrences = [];
+        for (let i = 0; i < data.occurrences.length; i++) {
+          const occ = data.occurrences[i];
+          const basePrice = occ.basePrice ?? 100;
+          const event = await tx.event.create({
+            data: {
+              title: occ.title || data.seriesName,
+              description: data.description,
+              slug: this.slugify(`${data.seriesName}-${dates[i].toISOString()}`),
+              organizationId: orgId,
+              venueId: data.venueId,
+              startsAt: dates[i],
+              timezone,
+              status: EventStatus.SCHEDULED,
+              totalCapacity: occ.capacity ?? 5000,
+              minPrice: new Decimal(basePrice),
+              maxPrice: new Decimal(basePrice * 2.5),
+              seriesId: series.id,
+              seriesOrder: i + 1,
+              metadata: {
+                eventKind: 'series',
+                seriesName: data.seriesName,
+                seriesOrder: i + 1,
+              },
+            },
+          });
+          occurrences.push(event);
+        }
+        return { series, occurrences };
+      },
+      { timeout: 60_000 },
+    );
 
     this.logger.log(`Event series created: ${data.seriesName} (${occurrences.length})`);
-    return { seriesName: data.seriesName, occurrences, totalEvents: occurrences.length };
+    return {
+      seriesId: series.id,
+      seriesName: data.seriesName,
+      occurrences,
+      totalEvents: occurrences.length,
+    };
   }
 
   async createResidency(
@@ -272,13 +327,29 @@ export class EventManagementService {
       exceptions?: Date[];
     },
   ) {
+    if (!orgId) throw new BadRequestException('Tu usuario no tiene organización');
     const events = [];
     let currentDate = new Date(data.startDate);
     const dayInMs = 24 * 60 * 60 * 1000;
     let created = 0;
 
+    // Fila EventSeries para que la residencia aparezca en el catálogo de series.
+    const series = await this.prisma.eventSeries.create({
+      data: {
+        organizationId: orgId,
+        venueId: data.venueId,
+        name: data.name,
+        slug: this.slugify(data.name),
+        description: `Residencia: ${data.name}`,
+        kind: EventSeriesKind.RESIDENCY,
+        status: EventSeriesStatus.ACTIVE,
+        template: { capacity: data.capacity, basePrice: data.basePrice },
+      },
+    });
+
     while (created < data.occurrenceCount) {
-      if (data.exceptions?.some((d) => d.toDateString() === currentDate.toDateString())) {
+      // Del JSON llegan textos: se convierten antes de comparar.
+      if (data.exceptions?.some((d) => new Date(d).toDateString() === currentDate.toDateString())) {
         currentDate = new Date(currentDate.getTime() + dayInMs);
         continue;
       }
@@ -296,6 +367,8 @@ export class EventManagementService {
           totalCapacity: data.capacity,
           minPrice: new Decimal(data.basePrice),
           maxPrice: new Decimal(data.basePrice * 2),
+          seriesId: series.id,
+          seriesOrder: created + 1,
           metadata: {
             eventKind: 'residency',
             residencyName: data.name,
@@ -313,7 +386,7 @@ export class EventManagementService {
       else currentDate.setMonth(currentDate.getMonth() + 1);
     }
 
-    return { name: data.name, frequency: data.frequency, events };
+    return { seriesId: series.id, name: data.name, frequency: data.frequency, events, totalEvents: events.length };
   }
 
   async setPricingRules(

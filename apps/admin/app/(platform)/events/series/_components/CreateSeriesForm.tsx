@@ -89,12 +89,17 @@ export function CreateSeriesForm({ disabled, onCreated }: Props) {
     }
 
     try {
-      const result = await createSeries.mutateAsync({
+      // La regla y la plantilla se guardan en la serie para mostrarlas y poder
+      // extenderla después. El hook reenvía el cuerpo completo al API.
+      const payload = {
         seriesName: seriesName.trim(),
         description: description.trim(),
         venueId,
         occurrences,
-      });
+        recurrence: { ...schedule.rule, timezone },
+        template,
+      };
+      const result = await createSeries.mutateAsync(payload);
       setSeriesName('');
       setDescription('');
       onCreated?.(

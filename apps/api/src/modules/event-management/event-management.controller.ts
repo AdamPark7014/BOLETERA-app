@@ -82,6 +82,10 @@ export class EventManagementController {
         capacity?: number;
         basePrice?: number;
       }>;
+      /** Regla del ScheduleBuilder; se guarda en EventSeries.recurrence. */
+      recurrence?: unknown;
+      /** Plantilla (aforo, precio…); se guarda en EventSeries.template. */
+      template?: unknown;
     }
   ) {
     return await this.eventService.createEventSeries(orgId, data);
