@@ -1,3 +1,8 @@
+/*
+ * Visor 3D en el lenguaje Black Ticket: solo tokens de @boletera/ui (black-ticket.scss).
+ * Los valores tras la coma son el mismo token, por si el visor se monta fuera de [data-black-ticket].
+ */
+
 .wrap {
   width: 100%;
   --venue-h: 520px;
@@ -8,8 +13,11 @@
   width: 100%;
   height: var(--venue-h);
   overflow: hidden;
-  background: #08080a;
-  border: 1px solid #1a1a1d;
+  background: var(--ink, #0b0b0c);
+  border: 1px solid var(--line, #2c2c2f);
+  border-radius: var(--r-m, 8px);
+  color: var(--text, #f3f0e8);
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
 }
 
 .canvas canvas {
@@ -20,14 +28,14 @@
 
 .overlayTop {
   position: absolute;
-  top: 0.7rem;
-  left: 0.7rem;
-  right: 0.7rem;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 8px;
   pointer-events: none;
   z-index: 2;
 }
@@ -35,42 +43,33 @@
 .topLeft {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-}
-
-.badge {
-  align-self: flex-start;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(250, 250, 250, 0.9);
-  background: rgba(225, 29, 72, 0.9);
-  padding: 0.3rem 0.55rem;
+  gap: 8px;
 }
 
 .meta {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: rgba(250, 250, 250, 0.45);
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
+  color: var(--text-secondary, #a39e94);
+  font-variant-numeric: tabular-nums;
 }
 
 .selBadge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(225, 29, 72, 0.92);
-  padding: 0.35rem 0.65rem;
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
+  color: var(--text, #f3f0e8);
+  background: var(--glass, rgba(28, 28, 31, 0.92));
+  border: 1px solid var(--gold, #c6a56d);
+  border-radius: var(--r-s, 6px);
+  padding: 4px 10px;
+  font-variant-numeric: tabular-nums;
 }
 
 .overlayBottom {
   position: absolute;
-  left: 0.7rem;
-  right: 0.7rem;
-  bottom: 0.7rem;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 0.75rem;
+  gap: 8px 12px;
   align-items: center;
   justify-content: space-between;
   pointer-events: none;
@@ -78,203 +77,185 @@
 }
 
 .legend,
-.sections {
+.sections,
+.egressLegend {
   list-style: none;
   margin: 0;
-  padding: 0.35rem 0.55rem;
+  padding: 6px 10px;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 0.75rem;
-  background: rgba(8, 8, 10, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(8px);
+  gap: 4px 14px;
+  background: var(--glass, rgba(28, 28, 31, 0.92));
+  border: 1px solid var(--line, #2c2c2f);
+  border-radius: var(--r-s, 6px);
+  pointer-events: none;
 }
 
 .legend li,
-.sections li {
+.sections li,
+.egressLegend li {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.64rem;
-  font-weight: 600;
-  color: rgba(250, 250, 250, 0.75);
+  gap: 6px;
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
+  color: var(--text-secondary, #a39e94);
 }
 
 .sections em {
   font-style: normal;
-  opacity: 0.45;
-  font-size: 0.58rem;
+  color: var(--text-tertiary, #8a857c);
   font-variant-numeric: tabular-nums;
 }
 
 .legend i,
 .sections i {
-  width: 0.45rem;
-  height: 0.45rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
   display: inline-block;
+  flex: none;
 }
 
 .legAvail {
-  background: #5b9fd4;
-}
-
-.legHeat {
-  background: linear-gradient(90deg, #3f3f46, #be4646, #b48c32, #22c55e);
-}
-
-.legPrice {
-  background: linear-gradient(90deg, #486581, #a16207, #e11d48);
+  background: var(--seat-access, #8eafd0);
 }
 
 .legSel {
-  background: #fff;
-  outline: 1.5px solid #e11d48;
-  outline-offset: 1px;
+  background: var(--text, #f3f0e8);
+  box-shadow: 0 0 0 1px var(--gold, #c6a56d);
 }
 
 .legSold {
-  background: #52525b;
+  background: var(--seat-sold, #3a342c);
+  box-shadow: inset 0 0 0 1px var(--seat-sold-line, #6a6258);
 }
 
 .viewHeatBar {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.35rem;
-  padding: 0.28rem 0.45rem;
-  background: rgba(8, 8, 10, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(250, 250, 250, 0.55);
+  gap: 8px;
+  padding: 4px 10px;
+  background: var(--glass, rgba(28, 28, 31, 0.92));
+  border: 1px solid var(--line, #2c2c2f);
+  border-radius: var(--r-s, 6px);
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
+  color: var(--text-secondary, #a39e94);
+  font-variant-numeric: tabular-nums;
   pointer-events: none;
+  align-self: flex-start;
 }
 
-.viewHeatScale {
-  width: 5.5rem;
-  height: 0.28rem;
-  border-radius: 1px;
-  background: linear-gradient(90deg, #3f3f46 0%, #be4646 28%, #b48c32 50%, #38a078 72%, #22c55e 100%);
-}
-
-.priceHeatScale {
-  width: 5.5rem;
-  height: 0.28rem;
-  border-radius: 1px;
-  background: linear-gradient(90deg, #486581 0%, #a16207 55%, #e11d48 100%);
+/* El degradado es la escala de datos (precio o vista); lo pinta el componente con los mismos tonos que la escena. */
+.heatScale {
+  width: 88px;
+  height: 4px;
+  border-radius: 2px;
 }
 
 .tooltip {
   position: absolute;
   left: 50%;
-  top: 3.2rem;
+  top: 52px;
   transform: translateX(-50%);
   z-index: 3;
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.55rem 0.75rem;
-  background: rgba(8, 8, 10, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fafafa;
-  min-width: 10rem;
+  gap: 2px;
+  padding: 8px 12px;
+  background: var(--glass, rgba(28, 28, 31, 0.92));
+  border: 1px solid var(--line, #2c2c2f);
+  border-radius: var(--r-m, 8px);
+  box-shadow: var(--shadow-sheet, 0 12px 32px rgba(0, 0, 0, 0.45));
+  color: var(--text, #f3f0e8);
+  min-width: 160px;
   text-align: center;
 }
 
 .tooltip strong {
-  font-size: 0.85rem;
+  font: var(--body-sm, 420 14px/20px system-ui, sans-serif);
+  font-weight: var(--weight-medium, 560);
 }
 
 .tooltip span {
-  font-size: 0.7rem;
-  color: rgba(250, 250, 250, 0.58);
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
+  color: var(--text-secondary, #a39e94);
+  font-variant-numeric: tabular-nums;
 }
 
 .tooltip em {
-  margin-top: 0.12rem;
+  margin-top: 2px;
   font-style: normal;
-  font-size: 0.58rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #fb7185;
-  font-weight: 700;
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
+  color: var(--text-tertiary, #8a857c);
 }
 
 .levelBar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-top: 0.35rem;
+  gap: 6px;
   pointer-events: auto;
 }
 
 .levelBtn,
 .levelActive {
   appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(8, 8, 10, 0.78);
-  color: rgba(250, 250, 250, 0.72);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 0.28rem 0.5rem;
+  border: 1px solid var(--line, #2c2c2f);
+  border-radius: var(--r-s, 6px);
+  background: var(--glass, rgba(28, 28, 31, 0.92));
+  color: var(--text-secondary, #a39e94);
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
+  padding: 5px 10px;
   cursor: pointer;
+  transition:
+    border-color var(--move-state, 120ms) var(--move-ease, ease),
+    color var(--move-state, 120ms) var(--move-ease, ease);
+}
+
+.levelBtn:hover {
+  border-color: var(--line-strong, #3a3a3e);
+  color: var(--text, #f3f0e8);
 }
 
 .levelActive {
-  border-color: rgba(225, 29, 72, 0.75);
-  background: rgba(225, 29, 72, 0.88);
-  color: #fff;
+  border-color: var(--gold, #c6a56d);
+  background: var(--ink-overlay, #1c1c1f);
+  color: var(--text, #f3f0e8);
+}
+
+.levelBtn:focus-visible,
+.levelActive:focus-visible {
+  outline: 1.5px solid var(--focus, #c6a56d);
+  outline-offset: 2px;
 }
 
 .egressHint {
-  margin: 0.35rem 0 0;
+  margin: 0;
   max-width: 18rem;
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: rgba(250, 250, 250, 0.55);
-  line-height: 1.35;
+  font: var(--caption, 420 12px/16px system-ui, sans-serif);
+  color: var(--text-secondary, #a39e94);
 }
 
 .egressLegend {
-  list-style: none;
-  margin: 0.35rem 0 0;
-  padding: 0.3rem 0.45rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.65rem;
-  background: rgba(8, 8, 10, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  pointer-events: none;
-}
-
-.egressLegend li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: rgba(250, 250, 250, 0.7);
+  align-self: flex-start;
 }
 
 .egressLegend i {
-  width: 0.7rem;
-  height: 0.18rem;
+  width: 12px;
+  height: 3px;
+  border-radius: 1px;
   display: inline-block;
 }
 
 .swatchRoute {
-  background: #f9a8d4;
+  background: var(--text-secondary, #a39e94);
 }
 
 .swatchRouteActive {
-  background: #f472b6;
+  background: var(--gold, #c6a56d);
 }
 
 .swatchBottleneck {
-  background: #fb923c;
-  height: 0.28rem;
+  background: var(--danger, #c9847a);
+  height: 4px;
 }

@@ -1,14 +1,7 @@
 /// <reference path="./react-three-fiber.d.ts" />
 'use client';
 
-import {
-  Suspense,
-  useMemo,
-  useState,
-  useCallback,
-  useRef,
-  type CSSProperties,
-} from 'react';
+import { Suspense, useMemo, useState, useCallback, useRef, type CSSProperties } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import {
   OrbitControls,
@@ -36,7 +29,17 @@ import {
   type EgressOverlayScene3D,
 } from '@boletera/venue-engine';
 import type { SeatMapData } from '@boletera/shared';
+import { BT, toneHeatColor, toneZoneColor } from './btTokens';
 import styles from './Venue3DViewer.module.css';
+
+// Paradas de las escalas de calor de @boletera/venue-engine (priceHeatColor / sightlineHeatColor),
+// pasadas por el mismo tono que los asientos para que la leyenda diga lo mismo que la escena.
+const PRICE_HEAT_STOPS = ['#486581', '#a16207', '#e11d48'];
+const VIEW_HEAT_STOPS = ['#3f3f46', '#be4646', '#b48c32', '#38a078', '#22c55e'];
+
+function heatScale(stops: string[]): CSSProperties {
+  return { background: `linear-gradient(90deg, ${stops.map((c) => toneHeatColor(c)).join(', ')})` };
+}
 
 export type Venue3DHeatMode = 'off' | 'price' | 'view';
 
@@ -88,7 +91,14 @@ export interface Venue3DViewerProps {
     rotation?: number;
     levelId?: string;
   }[];
-  focusPoints?: { id: string; label?: string; x: number; y: number; z?: number; levelId?: string }[];
+  focusPoints?: {
+    id: string;
+    label?: string;
+    x: number;
+    y: number;
+    z?: number;
+    levelId?: string;
+  }[];
   /** Multi-level venue filter chips (same ids as map.venue.levels). */
   levels?: { id: string; name: string; elevation?: number; zIndex?: number }[];
   /** Full map for egress path overlays (same geometry as 2D Salidas) + view heat. */
@@ -115,40 +125,40 @@ function VenueShell() {
       {/* Deep opaque ground — prevents “underfloor” void if camera dips */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 0]} receiveShadow>
         <circleGeometry args={[28, 80]} />
-        <meshStandardMaterial color="#050506" roughness={1} metalness={0} />
+        <meshStandardMaterial color={BT.inkSunken} roughness={1} metalness={0} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 0]} receiveShadow>
         <circleGeometry args={[15, 72]} />
-        <meshStandardMaterial color="#0c0c0e" roughness={0.95} metalness={0.04} />
+        <meshStandardMaterial color={BT.ink} roughness={0.95} metalness={0.04} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -1.4]} receiveShadow>
         <circleGeometry args={[3.85, 56]} />
-        <meshStandardMaterial color="#151518" roughness={0.8} metalness={0.12} />
+        <meshStandardMaterial color={BT.inkRaised} roughness={0.8} metalness={0.12} />
       </mesh>
       {/* GA ring lines */}
       {[2.2, 2.9, 3.55].map((r) => (
         <mesh key={r} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -1.4]}>
           <ringGeometry args={[r - 0.02, r, 64]} />
-          <meshBasicMaterial color="#2a2a30" transparent opacity={0.55} />
+          <meshBasicMaterial color={BT.line} transparent opacity={0.55} />
         </mesh>
       ))}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
         <ringGeometry args={[12.1, 13.4, 72]} />
-        <meshStandardMaterial color="#09090b" roughness={0.92} />
+        <meshStandardMaterial color={BT.inkSunken} roughness={0.92} />
       </mesh>
       {/* Upper bowl wall */}
       <mesh position={[0, 3.1, 12.2]}>
         <boxGeometry args={[26, 6.2, 0.55]} />
-        <meshStandardMaterial color="#0a0a0c" roughness={1} />
+        <meshStandardMaterial color={BT.ink} roughness={1} />
       </mesh>
       {/* Side wings */}
       <mesh position={[-12.5, 2.4, 2]} rotation={[0, 0.35, 0]}>
         <boxGeometry args={[0.45, 5.2, 16]} />
-        <meshStandardMaterial color="#0b0b0d" roughness={1} />
+        <meshStandardMaterial color={BT.ink} roughness={1} />
       </mesh>
       <mesh position={[12.5, 2.4, 2]} rotation={[0, -0.35, 0]}>
         <boxGeometry args={[0.45, 5.2, 16]} />
-        <meshStandardMaterial color="#0b0b0d" roughness={1} />
+        <meshStandardMaterial color={BT.ink} roughness={1} />
       </mesh>
     </group>
   );
@@ -179,62 +189,51 @@ function StageBlock({
     <group position={[px, py, pz]} rotation={[0, rotY, 0]}>
       <mesh position={[0, 0.28, 0.2]} castShadow>
         <boxGeometry args={[Math.max(width, 4), 0.55, Math.max(depth, 2)]} />
-        <meshStandardMaterial color="#141416" roughness={0.5} metalness={0.3} />
+        <meshStandardMaterial color={BT.inkRaised} roughness={0.5} metalness={0.3} />
       </mesh>
       <mesh position={[0, 0.58, 0]}>
         <boxGeometry args={[Math.max(width * 0.9, 3.5), 0.08, Math.max(depth * 0.75, 1.6)]} />
-        <meshStandardMaterial
-          color="#9f1239"
-          emissive="#7f1d1d"
-          emissiveIntensity={0.22}
-          roughness={0.45}
-        />
+        <meshStandardMaterial color={BT.inkOverlay} roughness={0.7} metalness={0.1} />
       </mesh>
       {/* LED wall */}
       <mesh position={[0, 2.4, -Math.max(depth * 0.45, 1.2)]}>
         <boxGeometry args={[Math.max(width * 1.08, 6), 3.6, 0.2]} />
-        <meshStandardMaterial
-          color="#120810"
-          emissive="#4c0519"
-          emissiveIntensity={0.28}
-          roughness={0.45}
-        />
+        <meshStandardMaterial color={BT.inkOverlay} roughness={0.55} />
       </mesh>
       {/* Speakers */}
       {[-width * 0.55, width * 0.55].map((x) => (
         <mesh key={x} position={[x, 1.4, -0.4]} castShadow>
           <boxGeometry args={[0.7, 2.2, 0.7]} />
-          <meshStandardMaterial color="#0f0f12" roughness={0.6} metalness={0.4} />
+          <meshStandardMaterial color={BT.ink} roughness={0.6} metalness={0.4} />
         </mesh>
       ))}
       <mesh position={[-2.2, 3.8, 0.4]} rotation={[0.35, 0, 0.15]}>
         <coneGeometry args={[1.1, 4.2, 24, 1, true]} />
-        <meshBasicMaterial color="#fda4af" transparent opacity={0.045} depthWrite={false} />
+        <meshBasicMaterial color={BT.text} transparent opacity={0.02} depthWrite={false} />
       </mesh>
       <mesh position={[2.2, 3.8, 0.4]} rotation={[0.35, 0, -0.15]}>
         <coneGeometry args={[1.1, 4.2, 24, 1, true]} />
-        <meshBasicMaterial color="#fda4af" transparent opacity={0.045} depthWrite={false} />
+        <meshBasicMaterial color={BT.text} transparent opacity={0.02} depthWrite={false} />
       </mesh>
       <spotLight
         position={[0, 8, -1]}
         angle={0.5}
         penumbra={0.6}
         intensity={42}
-        color="#fff7ed"
+        color={BT.text}
         castShadow
       />
-      <pointLight position={[0, 2.8, -4.5]} intensity={10} color="#fb7185" distance={16} />
+      <pointLight position={[0, 2.8, -4.5]} intensity={10} color={BT.gold} distance={16} />
       <Billboard position={[0, 1.55, 0.7]} follow lockX={false} lockY={false} lockZ={false}>
         <Text
           fontSize={0.34}
-          color="#f5f5f4"
+          color={BT.textSecondary}
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.018}
-          outlineColor="#0a0a0a"
-          letterSpacing={0.16}
+          outlineColor={BT.ink}
         >
-          ESCENARIO
+          Escenario
         </Text>
       </Billboard>
     </group>
@@ -309,7 +308,12 @@ function GeometryOverlays({
                   receiveShadow
                 >
                   <planeGeometry args={[Math.max(len, 0.2), corridorW]} />
-                  <meshBasicMaterial color="#64748b" transparent opacity={0.28} depthWrite={false} />
+                  <meshBasicMaterial
+                    color={BT.textTertiary}
+                    transparent
+                    opacity={0.22}
+                    depthWrite={false}
+                  />
                 </mesh>
               );
             })}
@@ -338,7 +342,7 @@ function GeometryOverlays({
                   castShadow
                 >
                   <boxGeometry args={[stairW, 0.08, Math.max(len, 0.25)]} />
-                  <meshStandardMaterial color="#ea580c" roughness={0.7} metalness={0.1} />
+                  <meshStandardMaterial color={BT.goldDeep} roughness={0.7} metalness={0.1} />
                 </mesh>
               );
             })}
@@ -353,14 +357,21 @@ function GeometryOverlays({
           <group key={exit.id} position={[p[0], 0, p[2]]}>
             <mesh position={[0, 1.05, 0]} castShadow>
               <boxGeometry args={[doorW, 2.1, 0.12]} />
-              <meshStandardMaterial color="#16a34a" emissive="#14532d" emissiveIntensity={0.35} roughness={0.55} />
+              <meshStandardMaterial color={BT.moneyIn} roughness={0.55} />
             </mesh>
             <mesh position={[0, 2.25, 0]}>
               <boxGeometry args={[doorW * 1.05, 0.18, 0.14]} />
-              <meshStandardMaterial color="#bbf7d0" roughness={0.4} />
+              <meshStandardMaterial color={BT.text} roughness={0.4} />
             </mesh>
             <Billboard position={[0, 2.6, 0]}>
-              <Text fontSize={0.28} color="#bbf7d0" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="#052e16">
+              <Text
+                fontSize={0.28}
+                color={BT.text}
+                anchorX="center"
+                anchorY="middle"
+                outlineWidth={0.02}
+                outlineColor={BT.ink}
+              >
                 {exit.label ?? 'Salida'}
               </Text>
             </Billboard>
@@ -376,15 +387,22 @@ function GeometryOverlays({
               <mesh castShadow>
                 <boxGeometry args={[2.4, 1.1, 0.12]} />
                 <meshStandardMaterial
-                  color="#0ea5e9"
-                  emissive="#0369a1"
-                  emissiveIntensity={0.55}
+                  color={BT.inkOverlay}
+                  emissive={BT.seatAccess}
+                  emissiveIntensity={0.18}
                   roughness={0.35}
                   metalness={0.2}
                 />
               </mesh>
               <Billboard position={[0, 0.85, 0]}>
-                <Text fontSize={0.22} color="#e0f2fe" anchorX="center" anchorY="middle" outlineWidth={0.015} outlineColor="#0c4a6e">
+                <Text
+                  fontSize={0.22}
+                  color={BT.textSecondary}
+                  anchorX="center"
+                  anchorY="middle"
+                  outlineWidth={0.015}
+                  outlineColor={BT.ink}
+                >
                   LED
                 </Text>
               </Billboard>
@@ -396,14 +414,21 @@ function GeometryOverlays({
             <group key={item.id} position={[x, y, z]} rotation={[0, rotY, 0]}>
               <mesh castShadow>
                 <boxGeometry args={[0.55, 0.9, 0.45]} />
-                <meshStandardMaterial color="#27272a" roughness={0.65} metalness={0.25} />
+                <meshStandardMaterial color={BT.inkOverlay} roughness={0.65} metalness={0.25} />
               </mesh>
               <mesh position={[0, 0.15, 0.2]}>
                 <cylinderGeometry args={[0.18, 0.18, 0.08, 20]} />
-                <meshStandardMaterial color="#52525b" roughness={0.5} />
+                <meshStandardMaterial color={BT.lineStrong} roughness={0.5} />
               </mesh>
               <Billboard position={[0, 0.7, 0]}>
-                <Text fontSize={0.2} color="#d4d4d8" anchorX="center" anchorY="middle" outlineWidth={0.012} outlineColor="#18181b">
+                <Text
+                  fontSize={0.2}
+                  color={BT.textSecondary}
+                  anchorX="center"
+                  anchorY="middle"
+                  outlineWidth={0.012}
+                  outlineColor={BT.ink}
+                >
                   Altavoz
                 </Text>
               </Billboard>
@@ -415,10 +440,17 @@ function GeometryOverlays({
           <group key={item.id} position={[x, 0, z]} rotation={[0, rotY, 0]}>
             <mesh position={[0, 1.0, 0]} castShadow>
               <boxGeometry args={[0.9, 2.0, 0.1]} />
-              <meshStandardMaterial color="#a16207" emissive="#713f12" emissiveIntensity={0.25} roughness={0.6} />
+              <meshStandardMaterial color={BT.goldDeep} roughness={0.6} />
             </mesh>
             <Billboard position={[0, 2.25, 0]}>
-              <Text fontSize={0.22} color="#fde68a" anchorX="center" anchorY="middle" outlineWidth={0.015} outlineColor="#422006">
+              <Text
+                fontSize={0.22}
+                color={BT.textSecondary}
+                anchorX="center"
+                anchorY="middle"
+                outlineWidth={0.015}
+                outlineColor={BT.ink}
+              >
                 {item.label ?? 'Puerta'}
               </Text>
             </Billboard>
@@ -432,19 +464,26 @@ function GeometryOverlays({
             <mesh>
               <octahedronGeometry args={[0.28, 0]} />
               <meshStandardMaterial
-                color="#f59e0b"
-                emissive="#b45309"
-                emissiveIntensity={0.45}
+                color={BT.gold}
+                emissive={BT.goldDeep}
+                emissiveIntensity={0.2}
                 roughness={0.35}
                 metalness={0.15}
               />
             </mesh>
             <mesh position={[0, -0.05, 0]}>
               <sphereGeometry args={[0.12, 16, 16]} />
-              <meshBasicMaterial color="#fef3c7" />
+              <meshBasicMaterial color={BT.text} />
             </mesh>
             <Billboard position={[0, 0.55, 0]}>
-              <Text fontSize={0.24} color="#fef3c7" anchorX="center" anchorY="middle" outlineWidth={0.018} outlineColor="#78350f">
+              <Text
+                fontSize={0.24}
+                color={BT.text}
+                anchorX="center"
+                anchorY="middle"
+                outlineWidth={0.018}
+                outlineColor={BT.ink}
+              >
                 {fp.label ?? 'Foco'}
               </Text>
             </Billboard>
@@ -462,7 +501,13 @@ function GeometryOverlays({
         return (
           <mesh key={obs.id} position={[cx, h / 2, cz]} castShadow receiveShadow>
             <boxGeometry args={[w, h, d]} />
-            <meshStandardMaterial color="#3f3f46" roughness={0.85} metalness={0.05} transparent opacity={0.72} />
+            <meshStandardMaterial
+              color={BT.lineStrong}
+              roughness={0.85}
+              metalness={0.05}
+              transparent
+              opacity={0.72}
+            />
           </mesh>
         );
       })}
@@ -489,7 +534,7 @@ function EgressPathOverlays({
           <Line
             key={`egress-${path.sectionId}`}
             points={path.points}
-            color={active ? '#f472b6' : '#f9a8d4'}
+            color={active ? BT.gold : BT.textSecondary}
             lineWidth={active ? 3.5 : 1.8}
             transparent
             opacity={active ? 0.95 : 0.45}
@@ -506,7 +551,7 @@ function EgressPathOverlays({
           <Line
             key={`bn-${b.edgeId}`}
             points={b.points}
-            color="#fb923c"
+            color={BT.moneyOut}
             lineWidth={5}
             transparent
             opacity={0.88}
@@ -598,15 +643,19 @@ function ChairSeat({
 }) {
   if (seat.decorative) {
     return (
-      <group position={[seat.px, seat.py, seat.pz]} rotation={[seat.rotX ?? 0, seat.rotY, seat.rotZ ?? 0]} raycast={() => null}>
+      <group
+        position={[seat.px, seat.py, seat.pz]}
+        rotation={[seat.rotX ?? 0, seat.rotY, seat.rotZ ?? 0]}
+        raycast={() => null}
+      >
         <mesh position={[0, 0.05, 0]} raycast={() => null}>
           <boxGeometry args={[0.2, 0.08, 0.22]} />
-          <meshStandardMaterial color={seat.color || '#1f1f23'} roughness={0.95} />
+          <meshStandardMaterial color={seat.color || BT.seatFree} roughness={0.95} />
         </mesh>
         {/* Backrest at local +Z — same facing as interactive chairs */}
         <mesh position={[0, 0.14, 0.08]} raycast={() => null}>
           <boxGeometry args={[0.2, 0.16, 0.05]} />
-          <meshStandardMaterial color={seat.color || '#1a1a1e'} roughness={0.95} />
+          <meshStandardMaterial color={seat.color || BT.inkRaised} roughness={0.95} />
         </mesh>
       </group>
     );
@@ -616,11 +665,9 @@ function ChairSeat({
   const restricted = seat.visibility?.restrictedView;
   const disabled =
     seat.status === 'sold' || seat.status === 'blocked' || seat.status === 'held' || blockedView;
-  const zoneBase = seat.visibility?.premiumView
-    ? '#d4a017'
-    : seat.color || '#5b9fd4';
-  const base = heatColor || (restricted ? '#94a3b8' : zoneBase);
-  const color = selected ? '#ffffff' : hovered ? '#fecdd3' : base;
+  const zoneBase = seat.visibility?.premiumView ? BT.bonePressed : seat.color || BT.seatAccess;
+  const base = heatColor || (restricted ? BT.textTertiary : zoneBase);
+  const color = selected ? BT.text : hovered ? BT.bonePressed : base;
   const lift = selected ? 0.08 : hovered ? 0.045 : 0;
 
   return (
@@ -647,8 +694,8 @@ function ChairSeat({
         <boxGeometry args={[0.26, 0.08, 0.24]} />
         <meshStandardMaterial
           color={color}
-          emissive={selected ? '#9f1239' : '#000000'}
-          emissiveIntensity={selected ? 0.45 : 0}
+          emissive={selected ? BT.goldDeep : '#000000'}
+          emissiveIntensity={selected ? 0.35 : 0}
           roughness={0.55}
           metalness={0.08}
           opacity={disabled ? 0.28 : 1}
@@ -659,7 +706,7 @@ function ChairSeat({
       <mesh castShadow position={[0, 0.16, 0.09]}>
         <boxGeometry args={[0.26, 0.18, 0.05]} />
         <meshStandardMaterial
-          color={selected ? '#fafafa' : hovered ? '#fda4af' : base}
+          color={selected ? BT.text : hovered ? BT.bonePressed : base}
           roughness={0.6}
           metalness={0.06}
           opacity={disabled ? 0.28 : 1}
@@ -687,9 +734,9 @@ function SeatingBowl({
   const handleHover = useCallback(
     (id: string | null) => {
       setHovered(id);
-      onHoverSeat(id ? seats.find((s) => s.id === id) ?? null : null);
+      onHoverSeat(id ? (seats.find((s) => s.id === id) ?? null) : null);
     },
-    [onHoverSeat, seats],
+    [onHoverSeat, seats]
   );
 
   const deco = seats.filter((s) => s.decorative);
@@ -698,7 +745,14 @@ function SeatingBowl({
   return (
     <group>
       {deco.map((seat) => (
-        <ChairSeat key={seat.id} seat={seat} selected={false} hovered={false} onHover={() => {}} onClick={() => {}} />
+        <ChairSeat
+          key={seat.id}
+          seat={seat}
+          selected={false}
+          hovered={false}
+          onHover={() => {}}
+          onClick={() => {}}
+        />
       ))}
       {real.map((seat) => (
         <ChairSeat
@@ -788,14 +842,17 @@ function Scene({
 }) {
   return (
     <>
-      <color attach="background" args={['#050506']} />
-      <fog attach="fog" args={['#050506', 14, 36]} />
-      <fog attach="fog" args={['#070708', 16, 38]} />
-      <color attach="background" args={['#070708']} />
+      <color attach="background" args={[BT.ink]} />
+      <fog attach="fog" args={[BT.ink, 16, 38]} />
       <ambientLight intensity={0.28} />
-      <directionalLight position={[7, 16, 5]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} />
-      <directionalLight position={[-6, 8, -4]} intensity={0.35} color="#93c5fd" />
-      <hemisphereLight intensity={0.4} color="#fafafa" groundColor="#0a0a0a" />
+      <directionalLight
+        position={[7, 16, 5]}
+        intensity={1.5}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+      />
+      <directionalLight position={[-6, 8, -4]} intensity={0.35} color={BT.textSecondary} />
+      <hemisphereLight intensity={0.4} color={BT.text} groundColor={BT.ink} />
 
       <VenueShell />
       <StageBlock z={stageZ} pose={stagePose} />
@@ -827,11 +884,7 @@ function Scene({
       ) : (
         <>
           <PerspectiveCamera makeDefault position={[0, 11, 13.5]} fov={40} />
-          <ConstrainedOrbit
-            stageZ={stageZ}
-            autoOrbit={autoOrbit}
-            onUserInteract={onUserInteract}
-          />
+          <ConstrainedOrbit stageZ={stageZ} autoOrbit={autoOrbit} onUserInteract={onUserInteract} />
         </>
       )}
     </>
@@ -865,7 +918,7 @@ export function Venue3DViewer({
   const [levelFilter, setLevelFilter] = useState<string | 'ALL'>('ALL');
   const [showEgress, setShowEgress] = useState(false);
   const [heatModeInternal, setHeatModeInternal] = useState<Venue3DHeatMode>(() =>
-    resolveHeatDefault(heatDefault),
+    resolveHeatDefault(heatDefault)
   );
   const heatMode = heatModeProp ?? heatModeInternal;
 
@@ -887,7 +940,8 @@ export function Venue3DViewer({
   const layout = useMemo(() => {
     const enriched: BowlSeat[] = seats.map((s, i) => ({
       ...s,
-      color: s.color || sectionColor(s.section || String(i)),
+      // Tono sobrio sobre --ink; conserva el matiz de la zona del mapa 2D.
+      color: toneZoneColor(s.color || sectionColor(s.section || String(i))),
     }));
     return layoutSeatsAuto(enriched, {
       mode: 'published',
@@ -899,7 +953,16 @@ export function Venue3DViewer({
       furniture: furnitureProp,
       focusPoints: focusPointsProp,
     });
-  }, [seats, stage, aislesProp, obstaclesProp, stairsProp, exitsProp, furnitureProp, focusPointsProp]);
+  }, [
+    seats,
+    stage,
+    aislesProp,
+    obstaclesProp,
+    stairsProp,
+    exitsProp,
+    furnitureProp,
+    focusPointsProp,
+  ]);
 
   const {
     seats: laidOutAll,
@@ -984,7 +1047,7 @@ export function Venue3DViewer({
     const heatBySeat = new Map<string, string>();
     const gradeBySeat = new Map<string, string>();
     for (const s of result.scores) {
-      heatBySeat.set(s.seatId, sightlineHeatColor(s.score));
+      heatBySeat.set(s.seatId, toneHeatColor(sightlineHeatColor(s.score)) ?? BT.textTertiary);
       gradeBySeat.set(s.seatId, s.grade);
     }
     return { heatBySeat, gradeBySeat, summary: result.summary };
@@ -996,7 +1059,10 @@ export function Venue3DViewer({
     for (const s of laidOut) {
       if (s.decorative) continue;
       if (typeof s.price !== 'number' || !Number.isFinite(s.price)) continue;
-      heatBySeat.set(s.id, priceHeatColor(s.price, priceRange.min, priceRange.max));
+      heatBySeat.set(
+        s.id,
+        toneHeatColor(priceHeatColor(s.price, priceRange.min, priceRange.max)) ?? BT.textTertiary
+      );
     }
     return heatBySeat.size ? heatBySeat : null;
   }, [heatMode, laidOut, priceRange]);
@@ -1057,7 +1123,6 @@ export function Venue3DViewer({
 
         <div className={styles.overlayTop}>
           <div className={styles.topLeft}>
-            <span className={styles.badge}>Venue 3D</span>
             <span className={styles.meta}>
               {interactiveCount} asientos
               {levelFilter !== 'ALL'
@@ -1088,7 +1153,7 @@ export function Venue3DViewer({
               </div>
             )}
             {showHeatToolbar && (
-              <div className={styles.levelBar} role="toolbar" aria-label="Heat y salidas">
+              <div className={styles.levelBar} role="toolbar" aria-label="Capas del recinto">
                 {hasPricedSeats && (
                   <button
                     type="button"
@@ -1123,32 +1188,31 @@ export function Venue3DViewer({
             )}
             {heatMode === 'price' && priceRange && (
               <div className={styles.viewHeatBar} aria-hidden>
-                <span>
-                  ${priceRange.min.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                </span>
-                <div className={styles.priceHeatScale} />
-                <span>
-                  ${priceRange.max.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                </span>
+                <span>${priceRange.min.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+                <div className={styles.heatScale} style={heatScale(PRICE_HEAT_STOPS)} />
+                <span>${priceRange.max.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
               </div>
             )}
             {heatMode === 'view' && sightlineMeta && (
               <div className={styles.viewHeatBar} aria-hidden>
                 <span>Mala</span>
-                <div className={styles.viewHeatScale} />
+                <div className={styles.heatScale} style={heatScale(VIEW_HEAT_STOPS)} />
                 <span>Buena</span>
               </div>
             )}
             {heatMode === 'view' && sightlineMeta && (
               <p className={styles.egressHint} role="status" aria-live="polite">
-                Heat de vista · {sightlineMeta.heatBySeat.size} asientos
-                {sightlineMeta.summary.premium
-                  ? ` · ${sightlineMeta.summary.premium} premium`
-                  : ''}
+                Calidad de vista · {sightlineMeta.heatBySeat.size} asientos
+                {sightlineMeta.summary.premium ? ` · ${sightlineMeta.summary.premium} premium` : ''}
               </p>
             )}
             {showEgress && egressOverlay && (
-              <p className={styles.egressHint} id="egress-3d-status" role="status" aria-live="polite">
+              <p
+                className={styles.egressHint}
+                id="egress-3d-status"
+                role="status"
+                aria-live="polite"
+              >
                 {egressOverlay.hasNetwork
                   ? `Rutas · ${egressOverlay.paths.length} sección(es)${
                       egressOverlay.clearanceMinutes != null
@@ -1159,7 +1223,11 @@ export function Venue3DViewer({
               </p>
             )}
             {showEgress && (
-              <ul className={styles.egressLegend} id="egress-3d-legend" aria-label="Leyenda de salidas">
+              <ul
+                className={styles.egressLegend}
+                id="egress-3d-legend"
+                aria-label="Leyenda de salidas"
+              >
                 <li>
                   <i className={styles.swatchRoute} aria-hidden /> Ruta
                 </li>
@@ -1189,7 +1257,7 @@ export function Venue3DViewer({
                 ? ` · vista ${sightlineMeta.gradeBySeat.get(hover.id)}`
                 : ''}
             </span>
-            <em>Click para {selectedSet.has(hover.id) ? 'quitar' : 'elegir'}</em>
+            <em>Clic para {selectedSet.has(hover.id) ? 'quitar' : 'elegir'}</em>
           </div>
         )}
 
@@ -1197,12 +1265,13 @@ export function Venue3DViewer({
           <ul className={styles.legend}>
             <li>
               <i
-                className={
+                className={styles.legAvail}
+                style={
                   heatMode === 'view'
-                    ? styles.legHeat
+                    ? heatScale(VIEW_HEAT_STOPS)
                     : heatMode === 'price'
-                      ? styles.legPrice
-                      : styles.legAvail
+                      ? heatScale(PRICE_HEAT_STOPS)
+                      : undefined
                 }
               />{' '}
               {heatMode === 'view'

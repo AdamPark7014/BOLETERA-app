@@ -48,21 +48,24 @@ export type SectionPlate = {
   height: number;
 };
 
+// Paleta de respaldo (zonas sin color propio): solo tonos de los tokens Black Ticket, sobrios sobre --ink.
 const SECTION_PALETTE = [
-  '#c45c6a',
-  '#c4a35a',
-  '#5a9e78',
-  '#5b9fd4',
-  '#7a8fd4',
-  '#b87a9a',
-  '#8b9aab',
-  '#a67c6d',
+  '#C6A56D', // --gold
+  '#8EAFD0', // --seat-access
+  '#8EAE96', // --money-in
+  '#C9847A', // --money-out
+  '#A39E94', // --text-secondary
+  '#E4E0D6', // --bone-pressed
+  '#8E7344', // --gold-deep
 ];
 
 export function sectionColor(key: string, fallbackIndex = 0) {
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-  return SECTION_PALETTE[h % SECTION_PALETTE.length] ?? SECTION_PALETTE[fallbackIndex % SECTION_PALETTE.length];
+  return (
+    SECTION_PALETTE[h % SECTION_PALETTE.length] ??
+    SECTION_PALETTE[fallbackIndex % SECTION_PALETTE.length]
+  );
 }
 
 /**
@@ -71,7 +74,7 @@ export function sectionColor(key: string, fallbackIndex = 0) {
  */
 function wedgeLayout(
   bySection: Map<string, BowlSeat[]>,
-  opts?: { span?: number; sectionOrder?: string[] },
+  opts?: { span?: number; sectionOrder?: string[] }
 ): { seats: LaidOutSeat[]; plates: SectionPlate[] } {
   const sectionKeys = opts?.sectionOrder ?? Array.from(bySection.keys());
   const laid: LaidOutSeat[] = [];
@@ -156,7 +159,10 @@ function wedgeLayout(
   return { seats: laid, plates };
 }
 
-export function layoutSeatsInBowl(seats: BowlSeat[], opts?: { maxSeats?: number }): {
+export function layoutSeatsInBowl(
+  seats: BowlSeat[],
+  opts?: { maxSeats?: number }
+): {
   seats: LaidOutSeat[];
   plates: SectionPlate[];
 } {
@@ -246,8 +252,15 @@ function bowlsToSeatMap(
       rotation?: number;
       levelId?: string;
     }[];
-    focusPoints?: { id: string; label?: string; x: number; y: number; z?: number; levelId?: string }[];
-  },
+    focusPoints?: {
+      id: string;
+      label?: string;
+      x: number;
+      y: number;
+      z?: number;
+      levelId?: string;
+    }[];
+  }
 ) {
   const bySection = new Map<string, BowlSeat[]>();
   for (const s of seats) {
@@ -414,8 +427,15 @@ export function layoutSeatsFromPublished(
       rotation?: number;
       levelId?: string;
     }[];
-    focusPoints?: { id: string; label?: string; x: number; y: number; z?: number; levelId?: string }[];
-  },
+    focusPoints?: {
+      id: string;
+      label?: string;
+      x: number;
+      y: number;
+      z?: number;
+      levelId?: string;
+    }[];
+  }
 ): { seats: LaidOutSeat[]; plates: SectionPlate[]; stageZ: number } & LayoutSceneExtras {
   const max = opts?.maxSeats ?? 1200;
   const list = seats.slice(0, max).filter((s) => Number.isFinite(s.x) && Number.isFinite(s.y));
@@ -433,7 +453,7 @@ export function layoutSeatsFromPublished(
       exits: opts?.exits,
       furniture: opts?.furniture,
       focusPoints: opts?.focusPoints,
-    }),
+    })
   );
   const projected = projectTo3D(scene, { maxSeats: max });
 
@@ -522,8 +542,15 @@ export function layoutSeatsAuto(
       rotation?: number;
       levelId?: string;
     }[];
-    focusPoints?: { id: string; label?: string; x: number; y: number; z?: number; levelId?: string }[];
-  },
+    focusPoints?: {
+      id: string;
+      label?: string;
+      x: number;
+      y: number;
+      z?: number;
+      levelId?: string;
+    }[];
+  }
 ) {
   const mode = opts?.mode ?? 'auto';
   if (mode === 'bowl') return { ...layoutSeatsInBowl(seats, opts), stageZ: -6.6, ...EMPTY_EXTRAS };
