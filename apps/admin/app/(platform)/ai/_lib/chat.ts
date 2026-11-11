@@ -6,12 +6,7 @@ import type {
   AiSalesForecastResponse,
   AiSegmentationResponse,
 } from '@boletera/shared';
-import {
-  formatCount,
-  formatImpactValue,
-  formatMxn,
-  formatPercentPoints,
-} from './format';
+import { formatCount, formatImpactValue, formatMxn, formatPercentPoints } from './format';
 import {
   anomalyMetricLabel,
   fraudBandLabel,
@@ -61,7 +56,7 @@ function pushFact(
   facts: string[],
   citations: AiChatCitation[],
   source: string,
-  detail: string,
+  detail: string
 ): void {
   facts.push(detail);
   citations.push({ source, detail });
@@ -82,7 +77,7 @@ export function buildGroundedContext(bundle: AiChatBundle): AiGroundedContext {
       facts,
       citations,
       'Resumen ejecutivo',
-      `Narrativa: ${summary.narrative.trim() || 'sin texto'}`,
+      `Narrativa: ${summary.narrative.trim() || 'sin texto'}`
     );
     for (const kpi of summary.kpisCited.slice(0, 6)) {
       const unit =
@@ -101,7 +96,7 @@ export function buildGroundedContext(bundle: AiChatBundle): AiGroundedContext {
           kpi.deltaPercent === null
             ? ''
             : ` (Δ ${kpi.deltaPercent >= 0 ? '+' : ''}${formatCount(kpi.deltaPercent, 1)} %)`
-        }`,
+        }`
       );
     }
     for (const item of summary.highlights.slice(0, 4)) {
@@ -118,14 +113,14 @@ export function buildGroundedContext(bundle: AiChatBundle): AiGroundedContext {
       facts,
       citations,
       'Anomalías',
-      `${formatCount(anomalies.anomalies.length)} alertas · ${sufficiencyLabel(anomalies.sufficiency)} · z ≥ ${formatCount(anomalies.zThreshold, 1)}`,
+      `${formatCount(anomalies.anomalies.length)} alertas · ${sufficiencyLabel(anomalies.sufficiency)} · z ≥ ${formatCount(anomalies.zThreshold, 1)}`
     );
     for (const row of anomalies.anomalies.slice(0, 5)) {
       pushFact(
         facts,
         citations,
         'Anomalía',
-        `${anomalyMetricLabel(row.metric)} (${row.direction}, ${row.severity}): observado ${formatCount(row.observed, 2)}, z ${formatCount(row.zScore, 2)}${row.eventTitle ? ` · ${row.eventTitle}` : ''}`,
+        `${anomalyMetricLabel(row.metric)} (${row.direction}, ${row.severity}): observado ${formatCount(row.observed, 2)}, z ${formatCount(row.zScore, 2)}${row.eventTitle ? ` · ${row.eventTitle}` : ''}`
       );
     }
   }
@@ -136,7 +131,7 @@ export function buildGroundedContext(bundle: AiChatBundle): AiGroundedContext {
       facts,
       citations,
       'Recomendaciones',
-      `${formatCount(recommendations.recommendations.length)} insights accionables`,
+      `${formatCount(recommendations.recommendations.length)} insights accionables`
     );
     for (const rec of recommendations.recommendations.slice(0, 6)) {
       const impact = rec.estimatedImpact
@@ -146,7 +141,7 @@ export function buildGroundedContext(bundle: AiChatBundle): AiGroundedContext {
         facts,
         citations,
         'Insight',
-        `${priorityLabel(rec.priority)} · ${recommendationKindLabel(rec.kind)}: ${rec.title}${impact}`,
+        `${priorityLabel(rec.priority)} · ${recommendationKindLabel(rec.kind)}: ${rec.title}${impact}`
       );
     }
   }
@@ -157,14 +152,14 @@ export function buildGroundedContext(bundle: AiChatBundle): AiGroundedContext {
       facts,
       citations,
       'Fraude',
-      `${formatCount(fraud.summary.scored)} evaluados · ${formatCount(fraud.summary.highOrCritical)} alto/crítico · score medio ${formatCount(fraud.summary.averageScore, 2)}`,
+      `${formatCount(fraud.summary.scored)} evaluados · ${formatCount(fraud.summary.highOrCritical)} alto/crítico · score medio ${formatCount(fraud.summary.averageScore, 2)}`
     );
     for (const score of fraud.scores.slice(0, 4)) {
       pushFact(
         facts,
         citations,
         'Riesgo',
-        `${score.subjectType} ${score.subjectId}: banda ${fraudBandLabel(score.band)} (${formatCount(score.score, 2)})`,
+        `${score.subjectType} ${score.subjectId}: banda ${fraudBandLabel(score.band)} (${formatCount(score.score, 2)})`
       );
     }
   }
@@ -175,14 +170,14 @@ export function buildGroundedContext(bundle: AiChatBundle): AiGroundedContext {
       facts,
       citations,
       'Segmentación',
-      `${sufficiencyLabel(segmentation.sufficiency)} · muestra ${formatCount(segmentation.sampleSize)}`,
+      `${sufficiencyLabel(segmentation.sufficiency)} · muestra ${formatCount(segmentation.sampleSize)}`
     );
     for (const row of segmentation.segments.slice(0, 6)) {
       pushFact(
         facts,
         citations,
         'Segmento',
-        `${segmentLabel(row.segment)}: ${formatCount(row.count)} (${formatPercentPoints(row.percentOfTotal)}) · ticket medio ${formatMxn(row.averageMonetaryMxn)}`,
+        `${segmentLabel(row.segment)}: ${formatCount(row.count)} (${formatPercentPoints(row.percentOfTotal)}) · ticket medio ${formatMxn(row.averageMonetaryMxn)}`
       );
     }
   }
@@ -193,7 +188,7 @@ export function buildGroundedContext(bundle: AiChatBundle): AiGroundedContext {
       facts,
       citations,
       'Pronóstico',
-      `${forecast.eventTitle}: ocupación actual ${formatPercentPoints(forecast.occupancyPercent)}; proyectada ${formatPercentPoints(forecast.projectedOccupancyPercent.point)} (${formatPercentPoints(forecast.projectedOccupancyPercent.lower)}–${formatPercentPoints(forecast.projectedOccupancyPercent.upper)}); ingreso proyectado ${formatMxn(forecast.projectedGrossRevenue.point)}`,
+      `${forecast.eventTitle}: ocupación actual ${formatPercentPoints(forecast.occupancyPercent)}; proyectada ${formatPercentPoints(forecast.projectedOccupancyPercent.point)} (${formatPercentPoints(forecast.projectedOccupancyPercent.lower)}–${formatPercentPoints(forecast.projectedOccupancyPercent.upper)}); ingreso proyectado ${formatMxn(forecast.projectedGrossRevenue.point)}`
     );
   }
 
@@ -241,9 +236,10 @@ const PROMPTS: Array<{
       if (rows.length === 0) {
         return 'No hay datos de anomalías en contexto. El panel solo muestra picos/caídas cuando el motor responde; no invento alertas.';
       }
-      return ['Alertas observadas (solo hechos del motor):', ...rows.map((r) => `• ${r.detail}`)].join(
-        '\n',
-      );
+      return [
+        'Alertas observadas (solo hechos del motor):',
+        ...rows.map((r) => `• ${r.detail}`),
+      ].join('\n');
     },
   },
   {
@@ -251,7 +247,9 @@ const PROMPTS: Array<{
     label: '¿Qué recomiendas?',
     match: /recomiend|insight|accion|acción|qu[eé] hacer|prioriz/i,
     answer: (ctx) => {
-      const rows = ctx.citations.filter((c) => c.source === 'Insight' || c.source === 'Recomendaciones');
+      const rows = ctx.citations.filter(
+        (c) => c.source === 'Insight' || c.source === 'Recomendaciones'
+      );
       if (rows.length === 0) {
         return 'No hay recomendaciones cargadas. Cuando existan, aparecerán con prioridad e impacto estimado solo si el motor lo calcula.';
       }
@@ -293,7 +291,7 @@ const PROMPTS: Array<{
     match: /segment|rfm|churn|clientes|audiencia/i,
     answer: (ctx) => {
       const rows = ctx.citations.filter(
-        (c) => c.source === 'Segmentación' || c.source === 'Segmento',
+        (c) => c.source === 'Segmentación' || c.source === 'Segmento'
       );
       if (rows.length === 0) {
         return 'Sin segmentación en contexto. Con historial insuficiente el motor lo declara; no fabrico RFM.';
@@ -310,12 +308,13 @@ export const AI_CHAT_SUGGESTIONS = PROMPTS.map((p) => ({
 
 export function answerFromContext(
   question: string,
-  ctx: AiGroundedContext,
+  ctx: AiGroundedContext
 ): { content: string; citations: AiChatCitation[] } {
   const trimmed = question.trim();
   if (!trimmed) {
     return {
-      content: 'Escribe una pregunta sobre métricas, anomalías, fraude, segmentos o el pronóstico del evento seleccionado.',
+      content:
+        'Escribe una pregunta sobre métricas, anomalías, fraude, segmentos o el pronóstico del evento seleccionado.',
       citations: [],
     };
   }
@@ -371,7 +370,7 @@ export function answerFromContext(
 export function createMessage(
   role: AiChatRole,
   content: string,
-  citations?: readonly AiChatCitation[],
+  citations?: readonly AiChatCitation[]
 ): AiChatMessage {
   return {
     id: `${role}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

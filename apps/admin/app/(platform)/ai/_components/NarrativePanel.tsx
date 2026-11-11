@@ -1,8 +1,9 @@
 'use client';
 
 import type { AiExecutiveNarrativeResponse } from '@boletera/shared';
-import { Badge, Button } from '@boletera/ui';
+import { TicketButton } from '@boletera/ui';
 import type { UseQueryResult } from '@tanstack/react-query';
+import styles from '../../events/_ticket/frame.module.scss';
 import {
   formatCount,
   formatGeneratedAt,
@@ -10,8 +11,7 @@ import {
   formatMxn,
   formatPercentPoints,
 } from '../_lib/format';
-import styles from '../ai.module.scss';
-import { PanelState } from './PanelState';
+import { FigureRow, PanelState } from './PanelState';
 
 type CitedKpi = AiExecutiveNarrativeResponse['kpisCited'][number];
 
@@ -44,85 +44,72 @@ export function NarrativePanel({
       isEmpty={(value) => !value.narrative.trim() && value.highlights.length === 0}
       emptyTitle="Sin resumen ejecutivo"
       emptyDescription="Cuando el motor genere una narrativa determinista aparecerá aquí. No se inventan hechos no observados."
-      emptyHints={['GET /ai/summaries/executive', 'Idioma es-MX · moneda MXN']}
     >
       {(data) => (
-        <div className={styles.narrative}>
-          <div className={styles.metaRow}>
-            <Badge tone="info" variant="outline">
-              {data.method.name}
-            </Badge>
-            <Badge tone="neutral" variant="outline">
-              {data.language} · {data.currency}
-            </Badge>
-            <Badge tone="neutral" variant="outline">
-              {data.timezone}
-            </Badge>
-            <span className={styles.muted}>
-              Generado {formatGeneratedAt(data.generatedAt)}
-            </span>
-          </div>
-
-          <p className={styles.muted}>
-            Periodo {formatMetricsRange(data.dateRange)} · vs{' '}
+        <div className={styles.stack}>
+          <p className={styles.tertiary}>
+            {data.method.name} · {data.language} · {data.currency} · {data.timezone} · generado{' '}
+            {formatGeneratedAt(data.generatedAt)}
+          </p>
+          <p className={styles.tertiary}>
+            Periodo {formatMetricsRange(data.dateRange)} · contra{' '}
             {formatMetricsRange(data.comparisonRange)}
           </p>
-
-          <p className={styles.narrativeBody}>{data.narrative}</p>
-
+          <p className={styles.quiet} style={{ color: 'var(--text)' }}>
+            {data.narrative}
+          </p>
           {data.highlights.length > 0 ? (
-            <div className={styles.bulletBlock}>
-              <h3 className={styles.blockTitle}>Highlights</h3>
-              <ul className={styles.bullets}>
+            <>
+              <p className={styles.rowTitle}>Lo destacado</p>
+              <ul className={styles.rows}>
                 {data.highlights.map((item) => (
-                  <li key={item}>{item}</li>
+                  <li key={item} className={styles.row}>
+                    <p className={styles.quiet}>{item}</p>
+                  </li>
                 ))}
               </ul>
-            </div>
+            </>
           ) : null}
-
           {data.watchouts.length > 0 ? (
-            <div className={styles.bulletBlock}>
-              <h3 className={styles.blockTitle}>Watchouts</h3>
-              <ul className={styles.bulletsWarn}>
+            <>
+              <p className={styles.rowTitle}>A vigilar</p>
+              <ul className={styles.rows}>
                 {data.watchouts.map((item) => (
-                  <li key={item}>{item}</li>
+                  <li key={item} className={styles.row}>
+                    <p className={styles.quiet}>{item}</p>
+                  </li>
                 ))}
               </ul>
-            </div>
+            </>
           ) : null}
-
           {data.kpisCited.length > 0 ? (
-            <div className={styles.kpiCited}>
+            <div className={styles.rows}>
               {data.kpisCited.map((kpi) => (
-                <article key={kpi.key} className={styles.kpiCitedCard}>
-                  <span>{kpi.label}</span>
-                  <strong>{formatKpi(kpi.unit, kpi.value)}</strong>
-                  <small>
-                    Prev. {formatKpi(kpi.unit, kpi.previousValue)}
-                    {kpi.deltaPercent === null
+                <FigureRow
+                  key={kpi.key}
+                  label={kpi.label}
+                  meta={`Antes ${formatKpi(kpi.unit, kpi.previousValue)}${
+                    kpi.deltaPercent === null
                       ? ''
-                      : ` · ${kpi.deltaPercent >= 0 ? '+' : ''}${formatCount(kpi.deltaPercent, 1)} %`}
-                  </small>
-                </article>
+                      : ` · ${kpi.deltaPercent >= 0 ? '+' : ''}${formatCount(kpi.deltaPercent, 1)} %`
+                  }`}
+                  value={formatKpi(kpi.unit, kpi.value)}
+                />
               ))}
             </div>
           ) : null}
-
-          <p className={styles.methodNote}>
+          <p className={styles.tertiary}>
             {data.method.id}: {data.method.rationale}
           </p>
-
-          <div className={styles.inlineActions}>
-            <Button
-              size="sm"
-              variant="secondary"
+          <div>
+            <TicketButton
+              variant="ghost"
               onClick={() => {
                 void query.refetch();
               }}
             >
               Regenerar resumen
-            </Button>
+            </TicketButton>
           </div>
         </div>
       )}

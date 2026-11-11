@@ -118,11 +118,9 @@ export function buildKeyAlerts(keys: readonly ApiKey[], now: number): KeyAlert[]
   const expired = keys.filter((key) => classifyKey(key, now) === 'expired');
   const expiring = keys.filter((key) => classifyKey(key, now) === 'expiring');
   const rotationDue = keys.filter((key) => classifyKey(key, now) === 'rotationDue');
-  const idleActive = keys.filter(
-    (key) => key.active && classifyKey(key, now) === 'idle',
-  );
+  const idleActive = keys.filter((key) => key.active && classifyKey(key, now) === 'idle');
   const writeHeavy = keys.filter(
-    (key) => key.active && countWriteScopes(key.scopes) > 0 && !key.lastUsedAt,
+    (key) => key.active && countWriteScopes(key.scopes) > 0 && !key.lastUsedAt
   );
 
   if (expired.length > 0) {

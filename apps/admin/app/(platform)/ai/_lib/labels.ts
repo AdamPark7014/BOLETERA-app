@@ -11,11 +11,7 @@ import type {
 import type { BadgeTone } from '@boletera/ui';
 
 export type AiAnomalySeverity = 'watch' | 'alert' | 'critical';
-export type AiImpactMetric =
-  | 'tickets'
-  | 'revenue_mxn'
-  | 'occupancy_pp'
-  | 'risk_reduction';
+export type AiImpactMetric = 'tickets' | 'revenue_mxn' | 'occupancy_pp' | 'risk_reduction';
 
 function assertNever(value: never): never {
   throw new Error(`Valor AI no contemplado: ${String(value)}`);

@@ -1,8 +1,8 @@
 'use client';
 
 import type { AiSalesForecastResponse } from '@boletera/shared';
-import { AreaChart, Badge } from '@boletera/ui';
 import type { UseQueryResult } from '@tanstack/react-query';
+import styles from '../../events/_ticket/frame.module.scss';
 import {
   formatCount,
   formatGeneratedAt,
@@ -11,14 +11,8 @@ import {
   formatPercentPoints,
   formatRatio,
 } from '../_lib/format';
-import {
-  confidenceLabel,
-  confidenceTone,
-  sufficiencyLabel,
-  sufficiencyTone,
-} from '../_lib/labels';
-import styles from '../ai.module.scss';
-import { PanelEmpty, PanelError, PanelSkeleton, PanelState } from './PanelState';
+import { confidenceLabel, sufficiencyLabel } from '../_lib/labels';
+import { FigureRow, PanelEmpty, PanelError, PanelSkeleton } from './PanelState';
 
 export function ForecastPanel({
   eventId,
@@ -30,22 +24,12 @@ export function ForecastPanel({
   if (!eventId) {
     return (
       <PanelEmpty
-        title="Selecciona un evento"
-        description="La predicción de ventas y ocupación requiere un evento concreto. Elige uno en la barra superior."
-        hints={['GET /ai/forecast/events/:eventId', 'Intervalos con cobertura explícita']}
+        title="Elige un evento"
+        description="La predicción de ventas y ocupación requiere un evento concreto. Elígelo arriba."
       />
     );
   }
-
-  if (query.isPending) {
-    return (
-      <div aria-busy="true" aria-live="polite">
-        <span className={styles.srOnly}>Cargando predicción…</span>
-        <PanelSkeleton height={180} lines={4} />
-      </div>
-    );
-  }
-
+  if (query.isPending) return <PanelSkeleton label="Cargando predicción." />;
   if (query.error) {
     return (
       <PanelError
@@ -56,117 +40,78 @@ export function ForecastPanel({
       />
     );
   }
+  const data = query.data;
+  if (!data)
+    return <PanelEmpty title="Sin predicción" description="No hay proyección para este evento." />;
 
   return (
-    <PanelState
-      data={query.data}
-      isPending={false}
-      error={null}
-      isEmpty={() => false}
-      emptyTitle="Sin predicción"
-      emptyDescription="No hay proyección disponible para este evento."
-    >
-      {(data) => {
-        const paceSeries = [
-          {
-            id: 'pace',
-            name: 'Ocupación acumulada observada',
-            data: data.observedPace.map((point) => ({
-              label: `Día ${point.dayIndex}`,
-              value: Number((point.cumulativeOccupancy * 100).toFixed(2)),
-            })),
-          },
-        ];
+    <div className={styles.stack}>
+      <p className={styles.tertiary}>
+        Confianza {confidenceLabel(data.projectedOccupancyPercent.level)} ·{' '}
+        {sufficiencyLabel(data.projectedOccupancyPercent.sufficiency)} · {data.daysUntilEvent} días
+        al evento · {formatGeneratedAt(data.generatedAt)}
+      </p>
+      <div className={styles.rows}>
+        <FigureRow
+          label="Ocupación actual"
+          meta={`${formatCount(data.ticketsSold)} de ${formatCount(data.totalCapacity)} boletos`}
+          value={formatPercentPoints(data.occupancyPercent)}
+        />
+        <FigureRow
+          label="Ocupación proyectada"
+          meta={`Cobertura ${(data.projectedOccupancyPercent.coverage * 100).toFixed(0)} %`}
+          value={formatInterval(data.projectedOccupancyPercent, 'percent')}
+        />
+        <FigureRow
+          label="Ingreso bruto proyectado"
+          meta={`Actual ${formatMxn(data.grossRevenue)}`}
+          value={formatInterval(data.projectedGrossRevenue, 'mxn')}
+        />
+        <FigureRow
+          label="Boletos proyectados"
+          meta={`Método ${data.method.name}`}
+          value={formatInterval(data.projectedTicketsSold, 'count')}
+        />
+      </div>
 
-        return (
-          <div className={styles.stackTight}>
-            <div className={styles.metaRow}>
-              <Badge tone={confidenceTone(data.projectedOccupancyPercent.level)}>
-                Confianza {confidenceLabel(data.projectedOccupancyPercent.level)}
-              </Badge>
-              <Badge
-                tone={sufficiencyTone(data.projectedOccupancyPercent.sufficiency)}
-                variant="outline"
-              >
-                {sufficiencyLabel(data.projectedOccupancyPercent.sufficiency)}
-              </Badge>
-              <span className={styles.muted}>
-                {data.daysUntilEvent} días al evento · {formatGeneratedAt(data.generatedAt)}
-              </span>
-            </div>
+      <p className={styles.rowTitle}>Ritmo de venta observado</p>
+      {data.observedPace.length > 1 ? (
+        <ul className={styles.rows} aria-label="Ocupación acumulada observada">
+          {data.observedPace.map((point) => (
+            <li key={point.dayIndex} className={styles.row}>
+              <p className={styles.rowMeta}>Día {point.dayIndex}</p>
+              <span />
+              <p className={styles.figure}>{formatRatio(point.cumulativeOccupancy)}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.quiet}>Aún no hay puntos de ritmo de venta suficientes.</p>
+      )}
 
-            <div className={styles.forecastGrid}>
-              <article className={styles.forecastCard}>
-                <span>Ocupación actual</span>
-                <strong>{formatPercentPoints(data.occupancyPercent)}</strong>
-                <small>
-                  {formatCount(data.ticketsSold)} / {formatCount(data.totalCapacity)} boletos
-                </small>
-              </article>
-              <article className={styles.forecastCard}>
-                <span>Ocupación proyectada</span>
-                <strong>
-                  {formatInterval(data.projectedOccupancyPercent, 'percent')}
-                </strong>
-                <small>
-                  Cobertura {(data.projectedOccupancyPercent.coverage * 100).toFixed(0)} %
-                </small>
-              </article>
-              <article className={styles.forecastCard}>
-                <span>Ingreso bruto proyectado</span>
-                <strong>{formatInterval(data.projectedGrossRevenue, 'mxn')}</strong>
-                <small>Actual {formatMxn(data.grossRevenue)}</small>
-              </article>
-              <article className={styles.forecastCard}>
-                <span>Boletos proyectados</span>
-                <strong>{formatInterval(data.projectedTicketsSold, 'count')}</strong>
-                <small>Método {data.method.name}</small>
-              </article>
-            </div>
+      {data.comparables.length > 0 ? (
+        <>
+          <p className={styles.rowTitle}>Eventos comparables</p>
+          <ul className={styles.rows}>
+            {data.comparables.map((item) => (
+              <li key={item.eventId} className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>{item.title}</p>
+                  <p className={styles.rowMeta}>
+                    {item.category} · similitud {formatRatio(item.similarity)}
+                  </p>
+                </div>
+                <p className={styles.figure}>{formatPercentPoints(item.finalOccupancyPercent)}</p>
+                <p className={styles.figure}>{formatMxn(item.finalGrossRevenue)}</p>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
 
-            {data.observedPace.length > 1 ? (
-              <AreaChart
-                label="Curva de sell-through observada"
-                series={paceSeries}
-                height={220}
-                formatValue={(value) => formatRatio(value / 100)}
-              />
-            ) : (
-              <PanelEmpty
-                title="Sin curva observada"
-                description="Aún no hay puntos de ritmo de venta suficientes para graficar el sell-through."
-              />
-            )}
-
-            {data.comparables.length > 0 ? (
-              <div className={styles.comparables}>
-                <h3 className={styles.blockTitle}>Eventos comparables</h3>
-                <ul className={styles.comparableList}>
-                  {data.comparables.map((item) => (
-                    <li key={item.eventId}>
-                      <div>
-                        <strong>{item.title}</strong>
-                        <span className={styles.muted}>
-                          {item.category} · similitud {formatRatio(item.similarity)}
-                        </span>
-                      </div>
-                      <div className={styles.comparableStats}>
-                        <span>{formatPercentPoints(item.finalOccupancyPercent)}</span>
-                        <span>{formatMxn(item.finalGrossRevenue)}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            <p className={styles.methodNote}>
-              {data.method.rationale} · muestra{' '}
-              {formatCount(data.projectedOccupancyPercent.sampleSize)}
-            </p>
-          </div>
-        );
-      }}
-    </PanelState>
+      <p className={styles.tertiary}>
+        {data.method.rationale} · muestra {formatCount(data.projectedOccupancyPercent.sampleSize)}
+      </p>
+    </div>
   );
 }

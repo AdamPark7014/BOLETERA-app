@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Badge, Button, EmptyState } from '@boletera/ui';
+import { Field, TicketButton } from '@boletera/ui';
+import styles from '../../events/_ticket/frame.module.scss';
 import {
   AI_CHAT_SUGGESTIONS,
   answerFromContext,
@@ -11,12 +12,17 @@ import {
   type AiChatMessage,
 } from '../_lib/chat';
 import { formatGeneratedAt } from '../_lib/format';
-import styles from '../ai.module.scss';
 
 type ChatPanelProps = {
   bundle: AiChatBundle;
   loading?: boolean;
 };
+
+function roleLabel(role: AiChatMessage['role']): string {
+  if (role === 'user') return 'Tú';
+  if (role === 'system') return 'Gobernanza';
+  return 'Copiloto';
+}
 
 export function ChatPanel({ bundle, loading = false }: ChatPanelProps) {
   const context = useMemo(() => buildGroundedContext(bundle), [bundle]);
@@ -31,7 +37,7 @@ export function ChatPanel({ bundle, loading = false }: ChatPanelProps) {
     setMessages([
       createMessage(
         'system',
-        'Copiloto contextual: solo responde con hechos ya cargados del ai-engine (métricas, eventos, anomalías, insights). Si falta dato, lo declara. Las acciones mutantes requieren confirmación humana.',
+        'Copiloto contextual: solo responde con hechos ya cargados del ai-engine (métricas, eventos, anomalías, insights). Si falta dato, lo declara. Las acciones que cambian datos requieren confirmación humana.'
       ),
     ]);
   }, []);
@@ -45,11 +51,9 @@ export function ChatPanel({ bundle, loading = false }: ChatPanelProps) {
   function ask(question: string) {
     const trimmed = question.trim();
     if (!trimmed || loading) return;
-
     const userMsg = createMessage('user', trimmed);
     const reply = answerFromContext(trimmed, context);
     const assistantMsg = createMessage('assistant', reply.content, reply.citations);
-
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
     setDraft('');
   }
@@ -60,108 +64,71 @@ export function ChatPanel({ bundle, loading = false }: ChatPanelProps) {
   }
 
   return (
-    <div className={styles.chat}>
-      <div className={styles.chatMeta}>
-        <Badge tone="info" variant="outline">
-          {bundle.rangeLabel}
-        </Badge>
-        {bundle.eventLabel ? (
-          <Badge tone="accent" variant="outline">
-            {bundle.eventLabel}
-          </Badge>
-        ) : (
-          <Badge tone="neutral" variant="outline">
-            Sin evento en foco
-          </Badge>
-        )}
-        <span className={styles.muted}>
-          {context.facts.length} hechos anclados
-          {context.unavailable.length > 0
-            ? ` · ${context.unavailable.length} fuentes pendientes`
-            : ''}
-        </span>
-      </div>
-
-      <div className={styles.chatSuggestions} role="group" aria-label="Preguntas sugeridas">
+    <div className={styles.stack}>
+      <p className={styles.tertiary}>
+        {bundle.rangeLabel} · {bundle.eventLabel ?? 'sin evento en foco'} · {context.facts.length}{' '}
+        hechos anclados
+        {context.unavailable.length > 0
+          ? ` · ${context.unavailable.length} fuentes pendientes`
+          : ''}
+      </p>
+      <div
+        role="group"
+        aria-label="Preguntas sugeridas"
+        style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
+      >
         {AI_CHAT_SUGGESTIONS.map((item) => (
-          <Button
+          <TicketButton
             key={item.id}
-            size="sm"
-            variant="secondary"
+            variant="ghost"
             disabled={loading}
             onClick={() => ask(item.label)}
           >
             {item.label}
-          </Button>
+          </TicketButton>
         ))}
       </div>
-
-      <div className={styles.chatThread} ref={listRef} aria-live="polite">
-        {messages.length === 0 ? (
-          <EmptyState
-            size="sm"
-            tone="neutral"
-            illustration="inbox"
-            title="Chat contextual"
-            description="Pregunta por el resumen, anomalías o pronóstico. Las respuestas citan solo datos cargados."
-          />
-        ) : (
-          <ul className={styles.chatMessages}>
-            {messages.map((message) => (
-              <li
-                key={message.id}
-                className={
-                  message.role === 'user'
-                    ? styles.chatBubbleUser
-                    : message.role === 'system'
-                      ? styles.chatBubbleSystem
-                      : styles.chatBubbleAssistant
-                }
-              >
-                <div className={styles.chatBubbleHead}>
-                  <strong>
-                    {message.role === 'user'
-                      ? 'Tú'
-                      : message.role === 'system'
-                        ? 'Gobernanza'
-                        : 'Copiloto'}
-                  </strong>
-                  <span className={styles.muted}>
-                    {formatGeneratedAt(message.createdAt)}
-                  </span>
-                </div>
-                <p className={styles.chatBody}>{message.content}</p>
-                {message.citations && message.citations.length > 0 ? (
-                  <ul className={styles.chatCitations}>
-                    {message.citations.slice(0, 4).map((citation, index) => (
-                      <li key={`${message.id}-${index}`}>
-                        <span>{citation.source}</span>
-                        <em>{citation.detail}</em>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
+      <div ref={listRef} aria-live="polite" style={{ maxHeight: 420, overflowY: 'auto' }}>
+        <ul className={styles.rows}>
+          {messages.map((message) => (
+            <li
+              key={message.id}
+              className={styles.row}
+              style={{ gridTemplateColumns: 'minmax(0, 1fr)' }}
+            >
+              <div className={styles.stack} style={{ gap: 4 }}>
+                <p className={styles.rowMeta}>
+                  {roleLabel(message.role)} · {formatGeneratedAt(message.createdAt)}
+                </p>
+                <p
+                  className={message.role === 'system' ? styles.tertiary : styles.quiet}
+                  style={message.role === 'user' ? { color: 'var(--text)' } : undefined}
+                >
+                  {message.content}
+                </p>
+                {message.citations?.slice(0, 4).map((citation, index) => (
+                  <p key={`${message.id}-${index}`} className={styles.tertiary}>
+                    {citation.source} · {citation.detail}
+                  </p>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
-
-      <form className={styles.chatComposer} onSubmit={onSubmit}>
-        <label className={styles.srOnly} htmlFor="ai-chat-input">
-          Pregunta al copiloto
-        </label>
-        <textarea
-          id="ai-chat-input"
+      <form className={styles.stack} onSubmit={onSubmit}>
+        <Field
+          label="Pregunta al copiloto"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          rows={2}
-          placeholder="Ej. ¿Hay anomalías de reembolsos en este periodo?"
+          placeholder="¿Hay anomalías de reembolsos en este periodo?"
           disabled={loading}
         />
-        <Button type="submit" size="sm" disabled={loading || !draft.trim()}>
-          Preguntar
-        </Button>
+        <div>
+          <TicketButton type="submit" variant="secondary" disabled={loading || !draft.trim()}>
+            Preguntar
+          </TicketButton>
+        </div>
       </form>
     </div>
   );

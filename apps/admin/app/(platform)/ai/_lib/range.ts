@@ -8,10 +8,7 @@ export type AiRange = {
   comparisonLabel: string;
 };
 
-const META: Record<
-  AiRangeKey,
-  { label: string; days: number; comparisonLabel: string }
-> = {
+const META: Record<AiRangeKey, { label: string; days: number; comparisonLabel: string }> = {
   '7d': {
     label: '7 días',
     days: 7,

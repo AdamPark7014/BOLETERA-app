@@ -41,18 +41,18 @@ export function useIntegrationsUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   const setSelectedId = useCallback(
     (id: IntegrationKind | null) => replaceParams({ connector: id }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setFilter = useCallback(
     (filter: IntegrationsUrlState['filter']) =>
       replaceParams({ filter: filter === 'all' ? null : filter }),
-    [replaceParams],
+    [replaceParams]
   );
 
   return { ...state, setSelectedId, setFilter };

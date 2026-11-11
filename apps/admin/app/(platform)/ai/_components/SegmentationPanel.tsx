@@ -1,29 +1,11 @@
 'use client';
 
 import type { AiSegmentationResponse } from '@boletera/shared';
-import { Badge, DonutChart } from '@boletera/ui';
 import type { UseQueryResult } from '@tanstack/react-query';
+import styles from '../../events/_ticket/frame.module.scss';
 import { formatCount, formatGeneratedAt, formatMxn, formatRatio } from '../_lib/format';
-import type { AiCustomerSegment } from '@boletera/shared';
-import {
-  confidenceLabel,
-  confidenceTone,
-  segmentLabel,
-  sufficiencyLabel,
-  sufficiencyTone,
-} from '../_lib/labels';
-import styles from '../ai.module.scss';
+import { confidenceLabel, segmentLabel, sufficiencyLabel } from '../_lib/labels';
 import { PanelEmpty, PanelState } from './PanelState';
-
-const SEGMENT_COLORS = {
-  champion: '#059669',
-  loyal: '#0d9488',
-  promising: '#2563eb',
-  at_risk: '#d97706',
-  hibernating: '#71717a',
-  new: '#7c3aed',
-  insufficient_history: '#a1a1aa',
-} as const satisfies Record<AiCustomerSegment, string>;
 
 export function SegmentationPanel({
   query,
@@ -38,115 +20,71 @@ export function SegmentationPanel({
       onRetry={() => {
         void query.refetch();
       }}
-      isEmpty={(value) =>
-        value.segments.length === 0 && value.customers.length === 0
-      }
+      isEmpty={(value) => value.segments.length === 0 && value.customers.length === 0}
       emptyTitle="Sin segmentación de clientes"
-      emptyDescription="RFM y churn aparecen cuando hay historial de compras suficiente. Con muestra insuficiente el motor lo declara; no se fabrican segmentos."
-      emptyHints={['GET /ai/segmentation/customers', 'Segmentos RFM + churn']}
+      emptyDescription="RFM y abandono aparecen cuando hay historial de compras suficiente. Con muestra insuficiente el motor lo declara; no se fabrican segmentos."
     >
       {(data) => {
-        const donutSlices = data.segments
-          .filter((row) => row.count > 0)
-          .map((row) => ({
-            id: row.segment,
-            label: segmentLabel(row.segment),
-            value: row.count,
-            color: SEGMENT_COLORS[row.segment],
-          }));
-
         const topCustomers = [...data.customers]
           .sort((a, b) => b.monetaryMxn - a.monetaryMxn)
           .slice(0, 12);
-
         return (
-          <div className={styles.stackTight}>
-            <div className={styles.metaRow}>
-              <Badge tone={sufficiencyTone(data.sufficiency)} variant="outline">
-                {sufficiencyLabel(data.sufficiency)}
-              </Badge>
-              <Badge tone="neutral" variant="outline">
-                {formatCount(data.sampleSize)} clientes en muestra
-              </Badge>
-              <span className={styles.muted}>
-                {formatGeneratedAt(data.generatedAt)}
-              </span>
-            </div>
-
-            {donutSlices.length > 0 ? (
-              <DonutChart
-                label="Distribución por segmento"
-                slices={donutSlices}
-                formatValue={(value) => formatCount(value)}
-              />
-            ) : (
-              <PanelEmpty
-                title="Sin conteos por segmento"
-                description="El motor respondió pero no hay distribución agregada para graficar."
-              />
-            )}
-
+          <div className={styles.stack}>
+            <p className={styles.tertiary}>
+              {sufficiencyLabel(data.sufficiency)} · {formatCount(data.sampleSize)} clientes en
+              muestra · {formatGeneratedAt(data.generatedAt)}
+            </p>
             {data.segments.length > 0 ? (
-              <ul className={styles.segmentSummary}>
+              <ul className={styles.rows}>
                 {data.segments.map((row) => (
-                  <li key={row.segment}>
-                    <div>
-                      <strong>{segmentLabel(row.segment)}</strong>
-                      <span className={styles.muted}>
-                        {formatRatio(row.percentOfTotal / 100)} del total
-                      </span>
+                  <li key={row.segment} className={styles.row}>
+                    <div className={styles.rowMain}>
+                      <p className={styles.rowTitle}>{segmentLabel(row.segment)}</p>
+                      <p className={styles.rowMeta}>
+                        {formatRatio(row.percentOfTotal / 100)} del total · promedio{' '}
+                        {formatMxn(row.averageMonetaryMxn)}
+                      </p>
                     </div>
-                    <div className={styles.comparableStats}>
-                      <span>{formatCount(row.count)}</span>
-                      <span>{formatMxn(row.averageMonetaryMxn)} avg</span>
-                    </div>
+                    <span />
+                    <p className={styles.figure}>{formatCount(row.count)}</p>
                   </li>
                 ))}
               </ul>
-            ) : null}
-
+            ) : (
+              <PanelEmpty
+                title="Sin conteos por segmento"
+                description="El motor respondió pero no hay distribución agregada."
+              />
+            )}
             {topCustomers.length > 0 ? (
-              <div className={styles.comparables}>
-                <h3 className={styles.blockTitle}>Clientes destacados</h3>
-                <ul className={styles.customerList}>
+              <>
+                <p className={styles.rowTitle}>Clientes destacados</p>
+                <ul className={styles.rows}>
                   {topCustomers.map((customer) => (
-                    <li key={customer.userId}>
-                      <div>
-                        <strong>{customer.email || customer.userId}</strong>
-                        <span className={styles.muted}>
-                          {segmentLabel(customer.segment)} · R{' '}
-                          {formatCount(customer.recencyDays)}d · F{' '}
-                          {formatCount(customer.frequency)}
-                        </span>
+                    <li key={customer.userId} className={styles.row}>
+                      <div className={styles.rowMain}>
+                        <p className={styles.rowTitle}>{customer.email || customer.userId}</p>
+                        <p className={styles.rowMeta}>
+                          {segmentLabel(customer.segment)} · R {formatCount(customer.recencyDays)} d
+                          · F {formatCount(customer.frequency)} ·{' '}
+                          {customer.churnProbability === null
+                            ? 'abandono sin dato'
+                            : `abandono ${formatRatio(customer.churnProbability)} (${confidenceLabel(customer.churnConfidence)})`}
+                        </p>
                       </div>
-                      <div className={styles.customerStats}>
-                        <span>{formatMxn(customer.monetaryMxn)}</span>
-                        {customer.churnProbability === null ? (
-                          <Badge tone="neutral" variant="outline">
-                            Churn n/d
-                          </Badge>
-                        ) : (
-                          <Badge
-                            tone={confidenceTone(customer.churnConfidence)}
-                            variant="outline"
-                          >
-                            Churn {formatRatio(customer.churnProbability)} (
-                            {confidenceLabel(customer.churnConfidence)})
-                          </Badge>
-                        )}
-                      </div>
+                      <span />
+                      <p className={styles.figure}>{formatMxn(customer.monetaryMxn)}</p>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </>
             ) : (
               <PanelEmpty
                 title="Sin filas de cliente"
                 description="Hay resumen de segmentos pero el motor no devolvió clientes individuales en este lote."
               />
             )}
-
-            <p className={styles.methodNote}>
+            <p className={styles.tertiary}>
               {data.method.name}: {data.method.rationale}
             </p>
           </div>

@@ -1,41 +1,25 @@
 'use client';
 
 import { Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityFeed,
-  Badge,
-  Button,
-  DataTable,
-  DonutChart,
-  EmptyState,
-  FilterBar,
-  KpiCard,
-  Modal,
-  PageHeader,
-  Section,
-  SegmentedControl,
-  StatusDot,
-  formatDateTime,
-  formatNumber,
-  type ActivityItem,
-  type DataTableColumn,
-  type FilterDefinition,
-} from '@boletera/ui';
-import { QueryError } from '@/components/QueryStates';
-import { useToast } from '@/components/Toast/ToastProvider';
+import { Field, TicketButton } from '@boletera/ui';
+import { ApiError } from '@/lib/api';
 import { useAuditLog } from '@/lib/queries/audit';
 import {
   useApiManagementKeys,
+  useApiUsageSummary,
   useCreateManagedApiKey,
   useQuotaTemplates,
   useRevokeManagedApiKey,
   useRotateManagedApiKey,
-  useApiUsageSummary,
   type ApiKey,
 } from '@/lib/queries/api-management';
-import { useSession } from '@/lib/use-session';
-import { CreateKeyModal, type CreateKeyPayload } from './_components/CreateKeyModal';
-import { KeyDetailDrawer } from './_components/KeyDetailDrawer';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Segment, SheetSelect } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { formatWhen } from '../events/_ticket/read';
+import { CreateKeyForm, type CreateKeyPayload } from './_components/CreateKeyForm';
+import { KeyDetail, type KeyConfirm } from './_components/KeyDetail';
 import { formatCount, relativePast } from './_lib/format';
 import {
   buildKeyAlerts,
@@ -47,41 +31,64 @@ import {
   matchesQuery,
   rateLimitBuckets,
   scopeDistribution,
+  type HealthFilter,
 } from './_lib/keys';
-import { isWriteScope, scopeLabel } from './_lib/scopes';
-import { useApiManagementUrlState } from './_lib/use-url-state';
-import styles from './api-management.module.scss';
+import { scopeLabel } from './_lib/scopes';
+import { useApiManagementUrlState, type ApiManagementUrlState } from './_lib/use-url-state';
 
-function auditLabel(action: string): { verb: string; detail?: string } {
+function auditLabel(action: string): string {
   switch (action) {
     case 'API_KEY_CREATED':
-      return { verb: 'creó la clave', detail: 'API key' };
+      return 'Creó la llave';
     case 'API_KEY_REVOKED':
-      return { verb: 'revocó la clave', detail: 'API key' };
+      return 'Revocó la llave';
     default:
-      return { verb: action.toLowerCase().replaceAll('_', ' ') };
+      return action.toLowerCase().replaceAll('_', ' ');
   }
 }
 
-function ApiManagementCockpit() {
-  const { organizationId } = useSession();
-  const toast = useToast();
+function failMessage(cause: unknown, fallback: string): string {
+  if (cause instanceof ApiError) return cause.userMessage;
+  if (cause instanceof Error) return cause.message;
+  return fallback;
+}
+
+export default function ApiManagementPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <ApiBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function ApiBody() {
+  const session = useSession();
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (session.status === 'loading') return <p className={styles.quiet}>Cargando API.</p>;
+  return <GestionApi organizationId={session.orgId} />;
+}
+
+function GestionApi({ organizationId }: { organizationId: string }) {
   const url = useApiManagementUrlState();
   const deferredQ = useDeferredValue(url.q);
 
   const keysQuery = useApiManagementKeys(organizationId);
   const auditQuery = useAuditLog(organizationId, 40);
   const quotasQuery = useQuotaTemplates();
-  const createKey = useCreateManagedApiKey(organizationId ?? '');
-  const revokeKey = useRevokeManagedApiKey(organizationId ?? '');
-  const rotateKey = useRotateManagedApiKey(organizationId ?? '');
+  const createKey = useCreateManagedApiKey(organizationId);
+  const revokeKey = useRevokeManagedApiKey(organizationId);
+  const rotateKey = useRotateManagedApiKey(organizationId);
 
   const [now, setNow] = useState(() => Date.now());
   const [createOpen, setCreateOpen] = useState(false);
   const [secret, setSecret] = useState<{ value: string; name: string } | null>(null);
-  const [rotateTarget, setRotateTarget] = useState<ApiKey | null>(null);
-  const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
+  const [confirm, setConfirm] = useState<KeyConfirm>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const usageQuery = useApiUsageSummary(organizationId, now);
 
@@ -90,28 +97,19 @@ function ApiManagementCockpit() {
     return () => window.clearInterval(id);
   }, []);
 
-  const keys = keysQuery.data ?? [];
+  const keys = useMemo(() => keysQuery.data ?? [], [keysQuery.data]);
   const kpis = useMemo(() => computeApiKpis(keys, now), [keys, now]);
   const alerts = useMemo(() => buildKeyAlerts(keys, now), [keys, now]);
   const scopes = useMemo(() => scopeDistribution(keys), [keys]);
   const buckets = useMemo(() => rateLimitBuckets(keys), [keys]);
-
   const filtered = useMemo(
-    () =>
-      keys.filter(
-        (key) => matchesHealth(key, url.health, now) && matchesQuery(key, deferredQ),
-      ),
-    [deferredQ, keys, now, url.health],
+    () => keys.filter((key) => matchesHealth(key, url.health, now) && matchesQuery(key, deferredQ)),
+    [deferredQ, keys, now, url.health]
   );
 
-  const selected = useMemo(
-    () => (url.selectedId ? keys.find((key) => key.id === url.selectedId) ?? null : null),
-    [keys, url.selectedId],
-  );
-
-  const activityItems = useMemo<ActivityItem[]>(() => {
+  const activity = useMemo(() => {
     const entries = (auditQuery.data ?? []).filter(
-      (entry) => entry.entityType === 'ApiKey' || entry.action.startsWith('API_KEY_'),
+      (entry) => entry.entityType === 'ApiKey' || entry.action.startsWith('API_KEY_')
     );
     return entries.slice(0, 12).map((entry) => {
       const meta = entry.metadata ?? {};
@@ -121,34 +119,13 @@ function ApiManagementCockpit() {
           : typeof meta.keyPrefix === 'string'
             ? String(meta.keyPrefix)
             : entry.entityId.slice(0, 8);
-      const labels = auditLabel(entry.action);
-      return {
-        id: entry.id,
-        actor: 'Administración',
-        action: labels.verb,
-        target: name,
-        timestamp: entry.createdAt,
-        detail: labels.detail,
-      };
+      return { id: entry.id, verb: auditLabel(entry.action), name, at: entry.createdAt };
     });
   }, [auditQuery.data]);
 
-  const filterDefs = useMemo<FilterDefinition[]>(
-    () => [
-      {
-        id: 'health',
-        label: 'Estado',
-        multiple: false,
-        options: HEALTH_FILTER_OPTIONS.filter((option) => option.value !== 'all').map(
-          (option) => ({ value: option.value, label: option.label }),
-        ),
-      },
-    ],
-    [],
-  );
-
   async function onCreate(payload: CreateKeyPayload) {
-    if (!organizationId) return;
+    setNotice(null);
+    setActionError(null);
     const created = await createKey.mutateAsync({
       name: payload.name,
       scopes: payload.scopes,
@@ -157,35 +134,37 @@ function ApiManagementCockpit() {
     });
     setSecret({ value: created.secret, name: payload.name });
     setCreateOpen(false);
-    toast.success('API key generada');
+    setNotice('Llave generada.');
   }
 
-  async function onRevoke() {
-    if (!revokeTarget || !organizationId) return;
-    setBusyId(revokeTarget.id);
+  async function onRevoke(target: ApiKey) {
+    setBusyId(target.id);
+    setNotice(null);
+    setActionError(null);
     try {
-      await revokeKey.mutateAsync(revokeTarget.id);
-      toast.success(`Clave «${revokeTarget.name}» revocada`);
-      setRevokeTarget(null);
-      if (url.selectedId === revokeTarget.id) url.setSelectedId(null);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo revocar');
+      await revokeKey.mutateAsync(target.id);
+      setNotice(`Llave «${target.name}» revocada.`);
+      setConfirm(null);
+      if (url.selectedId === target.id) url.setSelectedId(null);
+    } catch (cause) {
+      setActionError(failMessage(cause, 'No se pudo revocar.'));
     } finally {
       setBusyId(null);
     }
   }
 
-  async function onRotate() {
-    if (!rotateTarget || !organizationId) return;
-    setBusyId(rotateTarget.id);
+  async function onRotate(target: ApiKey) {
+    setBusyId(target.id);
+    setNotice(null);
+    setActionError(null);
     try {
-      const created = await rotateKey.mutateAsync(rotateTarget);
-      setSecret({ value: created.secret, name: rotateTarget.name });
-      toast.success('Rotación completada — copia el nuevo secreto');
-      setRotateTarget(null);
-      if (url.selectedId === rotateTarget.id) url.setSelectedId(null);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo rotar la clave');
+      const created = await rotateKey.mutateAsync(target);
+      setSecret({ value: created.secret, name: target.name });
+      setNotice('Rotación hecha. Copia el secreto nuevo.');
+      setConfirm(null);
+      if (url.selectedId === target.id) url.setSelectedId(null);
+    } catch (cause) {
+      setActionError(failMessage(cause, 'No se pudo rotar la llave.'));
     } finally {
       setBusyId(null);
     }
@@ -195,235 +174,112 @@ function ApiManagementCockpit() {
     if (!secret) return;
     try {
       await navigator.clipboard.writeText(secret.value);
-      toast.success('Secreto copiado al portapapeles');
+      setNotice('Secreto copiado.');
     } catch {
-      toast.info('Copia el secreto manualmente');
+      setNotice('Copia el secreto a mano.');
     }
   }
 
-  const columns: DataTableColumn<ApiKey>[] = [
+  const loadingKeys = keysQuery.isPending;
+  const figures = [
+    { label: 'Llaves activas', meta: `${formatCount(kpis.total)} en total`, value: kpis.active },
     {
-      key: 'name',
-      header: 'Clave',
-      width: 220,
-      sortValue: (row) => row.name,
-      render: (row) => (
-        <div className={styles.keyMeta}>
-          <strong>{row.name}</strong>
-          <code>{row.keyPrefix}…</code>
-        </div>
-      ),
+      label: 'Uso reciente',
+      meta: 'Llaves con tráfico en 24 h (derivado)',
+      value: usageQuery.data?.usedIn24h ?? kpis.usedRecently,
     },
     {
-      key: 'status',
-      header: 'Estado',
-      width: 150,
-      sortValue: (row) => classifyKey(row, now),
-      render: (row) => {
-        const health = keyHealthMeta(classifyKey(row, now));
-        return (
-          <Badge tone={health.tone} variant="soft" size="sm" dot>
-            {health.label}
-          </Badge>
-        );
-      },
+      label: 'Límite medio por minuto',
+      meta:
+        kpis.nearHighLimit > 0
+          ? `${formatCount(kpis.nearHighLimit)} con 5 000 o más`
+          : 'Límite de las llaves activas',
+      value: kpis.avgLimit,
     },
     {
-      key: 'scopes',
-      header: 'Scopes',
-      width: 240,
-      render: (row) => (
-        <div className={styles.scopes}>
-          {row.scopes.slice(0, 3).map((scope) => (
-            <Badge
-              key={scope}
-              tone={isWriteScope(scope) ? 'warning' : 'neutral'}
-              variant="outline"
-              size="sm"
-            >
-              {scopeLabel(scope)}
-            </Badge>
-          ))}
-          {row.scopes.length > 3 ? (
-            <Badge tone="neutral" variant="soft" size="sm">
-              +{row.scopes.length - 3}
-            </Badge>
-          ) : null}
-        </div>
-      ),
-    },
-    {
-      key: 'rateLimit',
-      header: 'Límite/min',
-      width: 110,
-      align: 'right',
-      sortValue: (row) => row.rateLimit,
-      render: (row) => formatNumber(row.rateLimit),
-    },
-    {
-      key: 'lastUsedAt',
-      header: 'Último uso',
-      width: 130,
-      sortValue: (row) => (row.lastUsedAt ? new Date(row.lastUsedAt).getTime() : 0),
-      render: (row) => (
-        <span
-          className={styles.muted}
-          title={row.lastUsedAt ? formatDateTime(row.lastUsedAt) : undefined}
-        >
-          {relativePast(row.lastUsedAt, now)}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Acciones',
-      width: 180,
-      resizable: false,
-      render: (row) =>
-        row.active ? (
-          <div className={styles.rowActions}>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={busyId === row.id}
-              onClick={(event) => {
-                event.stopPropagation();
-                setRotateTarget(row);
-              }}
-            >
-              Rotar
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={busyId === row.id}
-              onClick={(event) => {
-                event.stopPropagation();
-                setRevokeTarget(row);
-              }}
-            >
-              Revocar
-            </Button>
-          </div>
-        ) : (
-          <span className={styles.muted}>—</span>
-        ),
+      label: 'Por rotar',
+      meta: 'Más de 90 días, por expirar o expiradas',
+      value: kpis.rotationDue,
     },
   ];
 
-  if (!organizationId) {
-    return (
-      <div className={styles.page}>
-        <EmptyState
-          title="Sin organización"
-          description="Inicia sesión con una cuenta vinculada a una organización."
-          illustration="error"
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Plataforma · Developer"
-        title="Gestión de API"
-        description="Llaves, scopes, rate limits y rotación segura. El secreto solo se revela una vez al crear o rotar."
-        actions={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
-            Nueva API key
-          </Button>
-        }
-      >
-        <div className={styles.metaRow}>
-          <Badge tone="info" variant="outline">
-            {keysQuery.isPending ? '—' : `${formatCount(kpis.active)} activas`}
-          </Badge>
-          <Badge tone="neutral" variant="outline">
-            Prefijo visible · secreto una sola vez
-          </Badge>
-        </div>
-      </PageHeader>
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>API</h1>
+        <p className={styles.quiet}>
+          Llaves, permisos, límites y rotación. Se ve el prefijo; el secreto se muestra una sola vez
+          al crear o rotar.
+        </p>
+      </header>
 
       {secret ? (
-        <div className={styles.secretBanner} role="status" aria-live="polite">
-          <h2>Copia el secreto ahora — «{secret.name}»</h2>
-          <p>
-            No volverá a mostrarse. Guárdalo en tu vault antes de cerrar este aviso. Tras
-            «Entendido» desaparece de la UI.
+        <div className={styles.stack} role="status" aria-live="polite" style={{ marginBottom: 24 }}>
+          <p className={styles.rowTitle}>Copia el secreto ahora · «{secret.name}»</p>
+          <p className={styles.quiet}>
+            No vuelve a mostrarse. Guárdalo en tu bóveda antes de cerrar este aviso; tras
+            «Entendido» desaparece.
           </p>
-          <div className={styles.secretBox}>
-            <code>{secret.value}</code>
-            <Button type="button" size="sm" variant="secondary" onClick={() => void copySecret()}>
+          <p className={styles.mono} style={{ overflowWrap: 'anywhere' }}>
+            {secret.value}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            <TicketButton variant="secondary" onClick={() => void copySecret()}>
               Copiar
-            </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={() => setSecret(null)}>
+            </TicketButton>
+            <TicketButton variant="ghost" onClick={() => setSecret(null)}>
               Entendido
-            </Button>
+            </TicketButton>
           </div>
         </div>
       ) : null}
 
-      {alerts.length > 0 ? (
-        <div className={styles.alerts} aria-label="Alertas de API">
-          {alerts.map((alert) => (
-            <div key={alert.id} className={styles.alert} role="status">
-              <Badge tone={alert.tone} variant="soft" size="sm" dot>
-                Atención
-              </Badge>
-              <span>{alert.text}</span>
+      <div className={styles.stack}>
+        {createOpen ? (
+          <CreateKeyForm
+            busy={createKey.isPending}
+            onCancel={() => setCreateOpen(false)}
+            onSubmit={onCreate}
+            describeError={(cause) => failMessage(cause, 'No se pudo crear la llave.')}
+          />
+        ) : (
+          <div>
+            <TicketButton variant="primary" onClick={() => setCreateOpen(true)}>
+              Nueva llave
+            </TicketButton>
+          </div>
+        )}
+        {actionError ? (
+          <p className={styles.danger} role="alert">
+            {actionError}
+          </p>
+        ) : null}
+        {notice ? (
+          <p className={styles.quiet} role="status">
+            {notice}
+          </p>
+        ) : null}
+        {alerts.map((alert) => (
+          <p key={alert.id} className={styles.quiet} role="status">
+            Atención · {alert.text}
+          </p>
+        ))}
+        <div className={styles.rows}>
+          {figures.map((item) => (
+            <div key={item.label} className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>{item.label}</p>
+                <p className={styles.rowMeta}>{item.meta}</p>
+              </div>
+              <span />
+              <p className={styles.figure}>{loadingKeys ? '—' : formatCount(item.value)}</p>
             </div>
           ))}
         </div>
-      ) : null}
-
-      <Section columns={4} gap="md" aria-label="Indicadores de API">
-        <KpiCard
-          label="Llaves activas"
-          value={formatCount(kpis.active)}
-          tone="success"
-          loading={keysQuery.isPending}
-          hint={`${formatCount(kpis.total)} totales`}
-        />
-        <KpiCard
-          label="Uso reciente"
-          value={formatCount(usageQuery.data?.usedIn24h ?? kpis.usedRecently)}
-          tone="info"
-          loading={keysQuery.isPending}
-          hint="Claves con tráfico en 24 h (derivado)"
-        />
-        <KpiCard
-          label="Límite medio"
-          value={formatCount(kpis.avgLimit)}
-          unit="/min"
-          loading={keysQuery.isPending}
-          hint={
-            kpis.nearHighLimit > 0
-              ? `${formatCount(kpis.nearHighLimit)} con ≥5k rpm`
-              : 'Rate limit de claves activas'
-          }
-        />
-        <KpiCard
-          label="Por rotar"
-          value={formatCount(kpis.rotationDue)}
-          tone={kpis.rotationDue > 0 ? 'warning' : 'neutral'}
-          loading={keysQuery.isPending}
-          hint=">90 días, por expirar o expiradas"
-        />
-      </Section>
-
-      <div className={styles.tabs}>
-        <SegmentedControl
-          label="Vista de gestión de API"
-          size="sm"
+        <Segment<ApiManagementUrlState['tab']>
+          label="Vista"
           value={url.tab}
-          onValueChange={(value) => {
-            if (value === 'keys' || value === 'quotas' || value === 'usage') {
-              url.setTab(value);
-            }
-          }}
+          onChange={url.setTab}
           options={[
             { value: 'keys', label: 'Llaves' },
             { value: 'quotas', label: 'Cuotas' },
@@ -432,357 +288,229 @@ function ApiManagementCockpit() {
         />
       </div>
 
-      {keysQuery.error ? (
-        <QueryError error={keysQuery.error} onRetry={() => void keysQuery.refetch()} />
-      ) : null}
+      <div style={{ marginTop: 24 }}>
+        {keysQuery.error ? (
+          <ApiErrorView
+            error={keysQuery.error}
+            context="abrir las llaves"
+            onRetry={() => void keysQuery.refetch()}
+          />
+        ) : null}
 
-      {!keysQuery.error && url.tab === 'keys' ? (
-        <div className={styles.layout}>
-          <Section
-            title="API keys"
-            description="Prefijo visible, scopes concedidos y rate limit. Nunca se listan secretos."
-            actions={
-              <div className={styles.livePill}>
-                <StatusDot tone="success" pulse aria-hidden />
-                En vivo
-              </div>
-            }
-          >
-            <div className={styles.filters}>
-              <FilterBar
-                filters={filterDefs}
-                value={url.filterSelection}
-                onChange={url.setFilterSelection}
-                search={{
-                  value: url.q,
-                  onChange: url.setSearch,
-                  placeholder: 'Buscar por nombre, prefijo o scope',
-                }}
-              >
-                <SegmentedControl
-                  label="Filtro rápido de estado"
-                  size="sm"
-                  value={
-                    url.health === 'all' ||
-                    url.health === 'active' ||
-                    url.health === 'revoked' ||
-                    url.health === 'rotationDue'
-                      ? url.health
-                      : 'all'
-                  }
-                  onValueChange={(value) => {
-                    if (
-                      value === 'all' ||
-                      value === 'active' ||
-                      value === 'revoked' ||
-                      value === 'rotationDue'
-                    ) {
-                      url.setHealth(value);
-                    }
-                  }}
-                  options={[
-                    { value: 'all', label: 'Todas' },
-                    { value: 'active', label: 'Activas' },
-                    { value: 'rotationDue', label: 'Rotar' },
-                    { value: 'revoked', label: 'Revocadas' },
-                  ]}
-                />
-              </FilterBar>
-            </div>
-
-            <div className={styles.tableMeta}>
-              <span className={styles.muted}>
-                {formatCount(filtered.length)} de {formatCount(keys.length)} claves
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
+        {!keysQuery.error && url.tab === 'keys' ? (
+          <div className={styles.stack}>
+            <Field
+              label="Buscar"
+              kind="search"
+              value={url.q}
+              onChange={(event) => url.setSearch(event.target.value)}
+              placeholder="Nombre, prefijo o permiso"
+            />
+            <SheetSelect
+              label="Estado"
+              value={url.health}
+              placeholder="Todas"
+              options={HEALTH_FILTER_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
+              }))}
+              onChange={(value) => url.setHealth(value as HealthFilter)}
+            />
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+              <p className={styles.tertiary}>
+                {formatCount(filtered.length)} de {formatCount(keys.length)} llaves
+              </p>
+              <TicketButton
+                variant="ghost"
+                disabled={keysQuery.isFetching}
                 onClick={() => void keysQuery.refetch()}
               >
-                Actualizar
-              </Button>
+                {keysQuery.isFetching ? 'Actualizando' : 'Actualizar'}
+              </TicketButton>
             </div>
-
-            <DataTable
-              label="API keys"
-              columns={columns}
-              data={filtered}
-              rowKey={(row) => row.id}
-              loading={keysQuery.isPending}
-              maxHeight={480}
-              onRowClick={(row) => url.setSelectedId(row.id)}
-              empty={
-                <EmptyState
-                  title={keys.length === 0 ? 'Sin API keys' : 'Sin resultados'}
-                  description={
-                    keys.length === 0
-                      ? 'Crea la primera clave para conectar POS, marketplaces u otros sistemas.'
-                      : 'Ajusta la búsqueda o limpia los filtros de la URL.'
-                  }
-                  illustration={keys.length === 0 ? 'inbox' : 'search'}
-                  action={
-                    keys.length === 0 ? (
-                      <Button type="button" onClick={() => setCreateOpen(true)}>
-                        Generar API key
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={url.clearFilters}
-                      >
-                        Limpiar filtros
-                      </Button>
-                    )
-                  }
-                />
-              }
-            />
-          </Section>
-
-          <div className={styles.stack}>
-            <Section
-              className={styles.card}
-              title="Rate limits"
-              description="Distribución de cuotas en claves activas"
-            >
-              {buckets.every((bucket) => bucket.count === 0) ? (
-                <p className={styles.muted}>Sin claves activas para agrupar.</p>
-              ) : (
-                <ul className={styles.bucketList}>
-                  {buckets.map((bucket) => (
-                    <li key={bucket.id} className={styles.bucketRow}>
-                      <span>{bucket.label}</span>
-                      <strong>{formatCount(bucket.count)}</strong>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
-
-            <Section
-              className={styles.card}
-              title="Scopes en uso"
-              description="Concesiones entre claves activas"
-            >
-              {scopes.length === 0 ? (
-                <EmptyState
-                  title="Sin scopes"
-                  description="Aparecerán al emitir la primera clave activa."
-                  illustration="chart"
-                  size="sm"
-                />
-              ) : (
-                <DonutChart
-                  label="Distribución de scopes en claves activas"
-                  slices={scopes}
-                  height={200}
-                  centerLabel="Concesiones"
-                  formatValue={(value) => formatCount(value)}
-                />
-              )}
-            </Section>
-          </div>
-        </div>
-      ) : null}
-
-      {!keysQuery.error && url.tab === 'quotas' ? (
-        <Section
-          title="Plantillas de cuota"
-          description="Perfiles sugeridos. La API aún no persiste cuotas globales; al crear una key usa el rate limit del formulario."
-        >
-          <div className={styles.quotaGrid}>
-            {(quotasQuery.data ?? []).map((template) => (
-              <article key={template.id} className={styles.quotaCard}>
-                <div className={styles.scopes}>
-                  <Badge
-                    tone={template.environment === 'sandbox' ? 'info' : 'success'}
-                    variant="soft"
-                    size="sm"
-                  >
-                    {template.environment}
-                  </Badge>
-                  <Badge tone="neutral" variant="outline" size="sm">
-                    {formatCount(template.rpm)} rpm
-                  </Badge>
+            {loadingKeys ? <p className={styles.quiet}>Cargando llaves.</p> : null}
+            {!loadingKeys && keys.length === 0 ? (
+              <p className={styles.quiet}>
+                Sin llaves. Crea la primera para conectar POS, marketplaces u otros sistemas.
+              </p>
+            ) : null}
+            {!loadingKeys && keys.length > 0 && filtered.length === 0 ? (
+              <div className={styles.stack}>
+                <p className={styles.quiet}>Nada con ese criterio.</p>
+                <div>
+                  <TicketButton variant="ghost" onClick={url.clearFilters}>
+                    Limpiar filtros
+                  </TicketButton>
                 </div>
-                <h3>{template.name}</h3>
-                <p>{template.description}</p>
-                <p className={styles.muted}>Burst sugerido: {formatCount(template.burst)} /min</p>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setCreateOpen(true)}
-                >
-                  Crear key con este perfil
-                </Button>
-              </article>
-            ))}
+              </div>
+            ) : null}
+            {filtered.map((key) => {
+              const open = url.selectedId === key.id;
+              const health = keyHealthMeta(classifyKey(key, now));
+              return (
+                <div key={key.id} className={styles.stack}>
+                  <button
+                    type="button"
+                    className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+                    aria-expanded={open}
+                    onClick={() => {
+                      setConfirm(null);
+                      url.setSelectedId(open ? null : key.id);
+                    }}
+                  >
+                    <span>
+                      {key.name} · <span className={styles.mono}>{key.keyPrefix}…</span>
+                    </span>
+                    <span className={styles.tertiary}>
+                      {health.label} · {relativePast(key.lastUsedAt, now)}
+                    </span>
+                  </button>
+                  {open ? (
+                    <KeyDetail
+                      keyRow={key}
+                      now={now}
+                      busy={busyId === key.id}
+                      confirm={confirm}
+                      onAsk={(kind) => setConfirm({ kind, keyId: key.id })}
+                      onCancel={() => setConfirm(null)}
+                      onRotate={() => void onRotate(key)}
+                      onRevoke={() => void onRevoke(key)}
+                    />
+                  ) : null}
+                </div>
+              );
+            })}
+
+            <header className={styles.sectionHead} style={{ marginTop: 24, marginBottom: 0 }}>
+              <p className={styles.rowTitle}>Límites</p>
+              <p className={styles.tertiary}>Reparto de cuotas en llaves activas.</p>
+            </header>
+            {buckets.every((bucket) => bucket.count === 0) ? (
+              <p className={styles.quiet}>Sin llaves activas para agrupar.</p>
+            ) : (
+              <div className={styles.rows}>
+                {buckets.map((bucket) => (
+                  <div key={bucket.id} className={styles.row}>
+                    <p className={styles.rowTitle}>{bucket.label}</p>
+                    <span />
+                    <p className={styles.figure}>{formatCount(bucket.count)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <header className={styles.sectionHead} style={{ marginTop: 24, marginBottom: 0 }}>
+              <p className={styles.rowTitle}>Permisos en uso</p>
+              <p className={styles.tertiary}>Concesiones entre llaves activas.</p>
+            </header>
+            {scopes.length === 0 ? (
+              <p className={styles.quiet}>Aparecen al emitir la primera llave activa.</p>
+            ) : (
+              <div className={styles.rows}>
+                {scopes.map((slice) => (
+                  <div key={slice.id} className={styles.row}>
+                    <div className={styles.rowMain}>
+                      <p className={styles.rowTitle}>{scopeLabel(slice.id)}</p>
+                      <p className={styles.mono}>{slice.id}</p>
+                    </div>
+                    <span />
+                    <p className={styles.figure}>{formatCount(slice.value)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </Section>
-      ) : null}
+        ) : null}
 
-      {!keysQuery.error && url.tab === 'usage' ? (
-        <Section
-          title="Uso estimado"
-          description="Sin series de gateway: se deriva de lastUsedAt de cada clave."
-        >
-          <p className={styles.usageNote}>{usageQuery.data?.note}</p>
-          <Section columns={4} gap="md" aria-label="Resumen de uso">
-            <KpiCard
-              label="Activas"
-              value={formatCount(usageQuery.data?.activeKeys ?? 0)}
-              loading={usageQuery.isPending}
-            />
-            <KpiCard
-              label="Con uso 24 h"
-              value={formatCount(usageQuery.data?.usedIn24h ?? 0)}
-              tone="info"
-              loading={usageQuery.isPending}
-            />
-            <KpiCard
-              label="Con uso 7 d"
-              value={formatCount(usageQuery.data?.usedIn7d ?? 0)}
-              tone="success"
-              loading={usageQuery.isPending}
-            />
-            <KpiCard
-              label="Idle activas"
-              value={formatCount(usageQuery.data?.idleActive ?? 0)}
-              tone="warning"
-              loading={usageQuery.isPending}
-            />
-          </Section>
-        </Section>
-      ) : null}
+        {!keysQuery.error && url.tab === 'quotas' ? (
+          <div className={styles.stack}>
+            <p className={styles.tertiary}>
+              Perfiles sugeridos. El API aún no guarda cuotas globales; al crear una llave manda el
+              límite del formulario.
+            </p>
+            <ul className={styles.rows}>
+              {(quotasQuery.data ?? []).map((template) => (
+                <li key={template.id} className={styles.row}>
+                  <div className={styles.rowMain}>
+                    <p className={styles.rowTitle}>{template.name}</p>
+                    <p className={styles.rowMeta}>
+                      {template.environment === 'sandbox' ? 'Sandbox' : 'Producción'} · ráfaga
+                      sugerida {formatCount(template.burst)} por minuto · {template.description}
+                    </p>
+                  </div>
+                  <p className={styles.figure}>{formatCount(template.rpm)}/min</p>
+                  <TicketButton variant="ghost" onClick={() => setCreateOpen(true)}>
+                    Crear llave
+                  </TicketButton>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
-      <Section
-        title="Actividad de claves"
-        description="Creaciones y revocaciones del registro de auditoría."
-        actions={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
+        {!keysQuery.error && url.tab === 'usage' ? (
+          <div className={styles.stack}>
+            <p className={styles.tertiary}>
+              Sin series del gateway: se deriva del último uso de cada llave.
+            </p>
+            {usageQuery.data?.note ? <p className={styles.quiet}>{usageQuery.data.note}</p> : null}
+            <div className={styles.rows}>
+              {[
+                { label: 'Activas', value: usageQuery.data?.activeKeys },
+                { label: 'Con uso en 24 h', value: usageQuery.data?.usedIn24h },
+                { label: 'Con uso en 7 días', value: usageQuery.data?.usedIn7d },
+                { label: 'Activas sin uso', value: usageQuery.data?.idleActive },
+              ].map((item) => (
+                <div key={item.label} className={styles.row}>
+                  <p className={styles.rowTitle}>{item.label}</p>
+                  <span />
+                  <p className={styles.figure}>
+                    {usageQuery.isPending ? '—' : formatCount(item.value ?? 0)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <header className={styles.sectionHead} style={{ marginTop: 24 }}>
+        <p className={styles.rowTitle}>Actividad de llaves</p>
+        <p className={styles.tertiary}>Altas y revocaciones del registro de auditoría.</p>
+      </header>
+      <div className={styles.stack}>
+        <div>
+          <TicketButton
+            variant="ghost"
+            disabled={auditQuery.isFetching}
             onClick={() => void auditQuery.refetch()}
           >
-            Actualizar
-          </Button>
-        }
-      >
-        {auditQuery.error ? (
-          <QueryError error={auditQuery.error} onRetry={() => void auditQuery.refetch()} />
-        ) : (
-          <ActivityFeed
-            items={activityItems}
-            loading={auditQuery.isPending}
-            label="Actividad de API keys"
-            empty={
-              <EmptyState
-                title="Sin actividad reciente"
-                description="Las altas y bajas de claves aparecerán aquí."
-                illustration="inbox"
-                size="sm"
-              />
-            }
-          />
-        )}
-      </Section>
-
-      <CreateKeyModal
-        open={createOpen}
-        busy={createKey.isPending}
-        onClose={() => setCreateOpen(false)}
-        onSubmit={onCreate}
-      />
-
-      <KeyDetailDrawer
-        keyRow={selected}
-        now={now}
-        busy={Boolean(busyId)}
-        onClose={() => url.setSelectedId(null)}
-        onRotate={(key) => setRotateTarget(key)}
-        onRevoke={(key) => setRevokeTarget(key)}
-      />
-
-      <Modal
-        open={Boolean(rotateTarget)}
-        onClose={() => setRotateTarget(null)}
-        title="Rotar API key"
-        description={
-          rotateTarget
-            ? `Se emitirá una nueva clave para «${rotateTarget.name}» con los mismos scopes y se revocará la actual.`
-            : undefined
-        }
-        footer={
-          <div className={styles.modalFooter}>
-            <Button type="button" variant="ghost" onClick={() => setRotateTarget(null)}>
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              loading={Boolean(rotateTarget && busyId === rotateTarget.id)}
-              loadingLabel="Rotando…"
-              onClick={() => void onRotate()}
-            >
-              Rotar ahora
-            </Button>
-          </div>
-        }
-      >
-        <p className={styles.muted}>
-          Las integraciones dejarán de autenticarse con el prefijo actual. Ten listo el vault
-          para el nuevo secreto (se muestra una sola vez).
-        </p>
-      </Modal>
-
-      <Modal
-        open={Boolean(revokeTarget)}
-        onClose={() => setRevokeTarget(null)}
-        title="Revocar API key"
-        description={
-          revokeTarget
-            ? `«${revokeTarget.name}» (${revokeTarget.keyPrefix}…) dejará de aceptar tráfico de inmediato.`
-            : undefined
-        }
-        footer={
-          <div className={styles.modalFooter}>
-            <Button type="button" variant="ghost" onClick={() => setRevokeTarget(null)}>
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              variant="danger"
-              loading={Boolean(revokeTarget && busyId === revokeTarget.id)}
-              loadingLabel="Revocando…"
-              onClick={() => void onRevoke()}
-            >
-              Revocar
-            </Button>
-          </div>
-        }
-      >
-        <p className={styles.muted}>
-          Esta acción no se puede deshacer. Usa rotación si solo necesitas renovar el secreto.
-        </p>
-      </Modal>
-    </div>
-  );
-}
-
-export default function ApiManagementPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className={styles.page} role="status" aria-live="polite">
-          Cargando gestión de API…
+            {auditQuery.isFetching ? 'Actualizando' : 'Actualizar actividad'}
+          </TicketButton>
         </div>
-      }
-    >
-      <ApiManagementCockpit />
-    </Suspense>
+        {auditQuery.error ? (
+          <p className={styles.danger} role="alert">
+            {failMessage(auditQuery.error, 'No se pudo leer la auditoría.')}
+          </p>
+        ) : auditQuery.isPending ? (
+          <p className={styles.quiet}>Cargando actividad.</p>
+        ) : activity.length === 0 ? (
+          <p className={styles.quiet}>Sin actividad reciente.</p>
+        ) : (
+          <ul className={styles.rows}>
+            {activity.map((item) => (
+              <li key={item.id} className={styles.row}>
+                <div className={styles.rowMain}>
+                  <p className={styles.rowTitle}>{item.verb}</p>
+                  <p className={styles.rowMeta}>{item.name}</p>
+                </div>
+                <span />
+                <p className={styles.tertiary}>{formatWhen(item.at)}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
   );
 }

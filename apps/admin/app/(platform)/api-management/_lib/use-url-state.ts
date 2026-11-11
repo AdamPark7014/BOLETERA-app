@@ -39,8 +39,7 @@ export function useApiManagementUrlState() {
     const health: HealthFilter = isHealthFilter(healthRaw) ? healthRaw : 'all';
     const tabRaw = searchParams.get('tab') ?? 'keys';
     const tab: ApiManagementUrlState['tab'] = isTab(tabRaw) ? tabRaw : 'keys';
-    const filterSelection: FilterSelection =
-      health === 'all' ? {} : { health: [health] };
+    const filterSelection: FilterSelection = health === 'all' ? {} : { health: [health] };
     return {
       q: searchParams.get('q') ?? '',
       health,
@@ -60,14 +59,14 @@ export function useApiManagementUrlState() {
       const qs = next.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
 
   const setSearch = useCallback((q: string) => replaceParams({ q: q || null }), [replaceParams]);
 
   const setHealth = useCallback(
     (health: HealthFilter) => replaceParams({ health: health === 'all' ? null : health }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setFilterSelection = useCallback(
@@ -77,24 +76,20 @@ export function useApiManagementUrlState() {
         health: next && isKeyHealth(next) ? next : null,
       });
     },
-    [replaceParams],
+    [replaceParams]
   );
 
   const setSelectedId = useCallback(
     (keyId: string | null) => replaceParams({ key: keyId }),
-    [replaceParams],
+    [replaceParams]
   );
 
   const setTab = useCallback(
-    (tab: ApiManagementUrlState['tab']) =>
-      replaceParams({ tab: tab === 'keys' ? null : tab }),
-    [replaceParams],
+    (tab: ApiManagementUrlState['tab']) => replaceParams({ tab: tab === 'keys' ? null : tab }),
+    [replaceParams]
   );
 
-  const clearFilters = useCallback(
-    () => replaceParams({ q: null, health: null }),
-    [replaceParams],
-  );
+  const clearFilters = useCallback(() => replaceParams({ q: null, health: null }), [replaceParams]);
 
   return {
     ...state,

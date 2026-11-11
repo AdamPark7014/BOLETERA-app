@@ -1,63 +1,62 @@
 'use client';
 
 import { Suspense, useMemo, useState } from 'react';
-import {
-  Badge,
-  Button,
-  EmptyState,
-  formatNumber,
-  KpiCard,
-  PageHeader,
-  Section,
-  SegmentedControl,
-  StatusDot,
-} from '@boletera/ui';
-import { QueryError } from '@/components/QueryStates';
-import { useToast } from '@/components/Toast/ToastProvider';
-import { Notice } from '../orders/_ui/States';
+import { TicketButton } from '@boletera/ui';
+import { ApiError } from '@/lib/api';
 import {
   useBanorteConfig,
   useIntegrationCatalog,
   useValidateBanorteSetup,
   useWebhookHealth,
   type BanorteValidateResult,
-  type IntegrationCatalogItem,
-  type IntegrationKind,
 } from '@/lib/queries/integrations';
-import { SetupDrawer } from './_components/SetupDrawer';
-import {
-  categoryLabel,
-  computeIntegrationKpis,
-  healthMeta,
-  resolveHealth,
-} from './_lib/health';
-import { useIntegrationsUrlState } from './_lib/use-url-state';
-import styles from './integrations.module.scss';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
+import { AdminFrame } from '../events/_ticket/AdminFrame';
+import { Segment } from '../events/_ticket/controls';
+import styles from '../events/_ticket/frame.module.scss';
+import { formatCount } from '../events/_ticket/read';
+import { ConnectorDetail } from './_components/ConnectorDetail';
+import { categoryLabel, computeIntegrationKpis, healthMeta, resolveHealth } from './_lib/health';
+import { useIntegrationsUrlState, type IntegrationsUrlState } from './_lib/use-url-state';
 
-function IntegrationsCockpit() {
-  const toast = useToast();
+function failMessage(cause: unknown, fallback: string): string {
+  if (cause instanceof ApiError) return cause.userMessage;
+  if (cause instanceof Error) return cause.message;
+  return fallback;
+}
+
+export default function IntegrationsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <IntegracionesBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function IntegracionesBody() {
+  const session = useSession();
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (session.status === 'loading') return <p className={styles.quiet}>Cargando integraciones.</p>;
+  return <Integraciones />;
+}
+
+function Integraciones() {
   const url = useIntegrationsUrlState();
-
   const catalogQuery = useIntegrationCatalog();
   const banorteQuery = useBanorteConfig();
   const webhooksQuery = useWebhookHealth(!banorteQuery.isError);
   const validateBanorte = useValidateBanorteSetup();
-
   const [validation, setValidation] = useState<BanorteValidateResult | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const catalog = catalogQuery.data ?? [];
   const banorte = banorteQuery.data;
   const webhooks = webhooksQuery.data;
-
-  const kpis = useMemo(
-    () => computeIntegrationKpis(banorte, webhooks),
-    [banorte, webhooks],
-  );
-
-  const selected = useMemo(
-    () => catalog.find((item) => item.id === url.selectedId) ?? null,
-    [catalog, url.selectedId],
-  );
+  const kpis = useMemo(() => computeIntegrationKpis(banorte, webhooks), [banorte, webhooks]);
 
   const filtered = useMemo(() => {
     if (url.filter === 'all') return catalog;
@@ -68,282 +67,176 @@ function IntegrationsCockpit() {
     });
   }, [banorte, catalog, url.filter, webhooks]);
 
-  const anyFilter = url.filter !== 'all';
-  const refreshing =
-    catalogQuery.isFetching || banorteQuery.isFetching || webhooksQuery.isFetching;
+  const refreshing = catalogQuery.isFetching || banorteQuery.isFetching || webhooksQuery.isFetching;
+  const pendingHealth = banorteQuery.isPending;
 
   function refreshAll() {
+    setNotice(null);
     void catalogQuery.refetch();
     void banorteQuery.refetch();
     void webhooksQuery.refetch();
   }
 
   async function onValidateBanorte() {
+    setNotice(null);
+    setActionError(null);
     try {
       const result = await validateBanorte.mutateAsync();
       setValidation(result);
-      toast.success(
+      setNotice(
         result.ready && !result.demo
-          ? 'Health check OK — Banorte listo'
+          ? 'Validación en orden: Banorte listo.'
           : result.demo
-            ? 'Health check: entorno demo'
-            : 'Health check: configuración incompleta',
+            ? 'Validación: entorno demo.'
+            : 'Validación: configuración incompleta.'
       );
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo validar Banorte');
+    } catch (cause) {
+      setActionError(failMessage(cause, 'No se pudo validar Banorte.'));
     }
   }
 
   async function onCopy(label: string, value: string) {
+    setActionError(null);
     try {
       await navigator.clipboard.writeText(value);
-      toast.success(`${label} copiado`);
+      setNotice(`${label} copiado.`);
     } catch {
-      toast.info('Copia el valor manualmente');
+      setNotice('Copia el valor a mano.');
     }
   }
 
-  function openConnector(id: IntegrationKind) {
-    url.setSelectedId(id);
-  }
+  const figures = [
+    {
+      label: 'Conectores',
+      meta: 'Catálogo documentado',
+      value: kpis.catalog,
+      wait: catalogQuery.isPending,
+    },
+    { label: 'Sanas', meta: 'Listas en producción', value: kpis.healthy, wait: pendingHealth },
+    {
+      label: 'Requieren ajuste',
+      meta: 'Mal configuradas o degradadas',
+      value: kpis.needsSetup,
+      wait: pendingHealth,
+    },
+    {
+      label: 'Demo o sin telemetría',
+      meta: 'El correo SMTP no tiene lectura de salud',
+      value: kpis.demoOrUnknown,
+      wait: pendingHealth,
+    },
+  ];
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Plataforma"
-        title="Integraciones"
-        description="Catálogo de Banorte, email SMTP y webhooks IPN. Salud y setup sin exponer secretos."
-        actions={
-          <div className={styles.headerActions}>
-            <Button
-              type="button"
-              variant="outline"
-              loading={validateBanorte.isPending}
-              loadingLabel="Validando…"
-              onClick={() => void onValidateBanorte()}
-            >
-              Health check Banorte
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              loading={refreshing}
-              loadingLabel="Actualizando…"
-              onClick={refreshAll}
-            >
-              Actualizar
-            </Button>
-          </div>
-        }
-      />
-
-      <Section columns={4} gap="md" aria-label="Indicadores de integraciones">
-        <KpiCard
-          label="Conectores"
-          value={formatNumber(kpis.catalog)}
-          loading={catalogQuery.isPending}
-          hint="Catálogo documentado"
-        />
-        <KpiCard
-          label="Sanas"
-          value={formatNumber(kpis.healthy)}
-          tone="success"
-          loading={banorteQuery.isPending}
-          hint="Listas en producción"
-        />
-        <KpiCard
-          label="Requieren setup"
-          value={formatNumber(kpis.needsSetup)}
-          tone={kpis.needsSetup > 0 ? 'warning' : 'neutral'}
-          loading={banorteQuery.isPending}
-          hint="Mal configuradas o degradadas"
-        />
-        <KpiCard
-          label="Demo / sin telemetría"
-          value={formatNumber(kpis.demoOrUnknown)}
-          tone="info"
-          loading={banorteQuery.isPending}
-          hint="Email SMTP sin endpoint de salud"
-        />
-      </Section>
-
-      <Notice tone="info" title="Telemetría por conector">
-        <p>
-          Banorte y webhooks IPN consultan APIs reales; el correo SMTP aparece como demo porque no
-          hay endpoint de salud expuesto. Usa el health check antes de activar cobros en producción.
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Integraciones</h1>
+        <p className={styles.quiet}>
+          Banorte, correo SMTP y webhooks IPN. Salud y pasos de configuración sin mostrar secretos.
         </p>
-      </Notice>
+      </header>
+
+      <div className={styles.stack}>
+        <div className={styles.rows}>
+          {figures.map((item) => (
+            <div key={item.label} className={styles.row}>
+              <div className={styles.rowMain}>
+                <p className={styles.rowTitle}>{item.label}</p>
+                <p className={styles.rowMeta}>{item.meta}</p>
+              </div>
+              <span />
+              <p className={styles.figure}>{item.wait ? '—' : formatCount(item.value)}</p>
+            </div>
+          ))}
+        </div>
+        <p className={styles.tertiary}>
+          Banorte y los webhooks IPN leen el API real; el correo SMTP sale como sin telemetría
+          porque no hay lectura de salud. Valida Banorte antes de activar cobros en producción.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+          <TicketButton
+            variant="secondary"
+            disabled={validateBanorte.isPending}
+            onClick={() => void onValidateBanorte()}
+          >
+            {validateBanorte.isPending ? 'Validando' : 'Validar Banorte'}
+          </TicketButton>
+          <TicketButton variant="ghost" disabled={refreshing} onClick={refreshAll}>
+            {refreshing ? 'Actualizando' : 'Actualizar'}
+          </TicketButton>
+        </div>
+        {actionError ? (
+          <p className={styles.danger} role="alert">
+            {actionError}
+          </p>
+        ) : null}
+        {notice ? (
+          <p className={styles.quiet} role="status">
+            {notice}
+          </p>
+        ) : null}
+      </div>
 
       {banorteQuery.error ? (
-        <QueryError
-          error={banorteQuery.error}
-          onRetry={() => void banorteQuery.refetch()}
-        />
+        <div style={{ marginTop: 24 }}>
+          <ApiErrorView
+            error={banorteQuery.error}
+            context="leer la configuración de Banorte"
+            onRetry={() => void banorteQuery.refetch()}
+          />
+        </div>
       ) : null}
 
-      <div className={styles.layout}>
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <div>
-              <h2>Catálogo</h2>
-              <p>Conectores con health derivado de APIs reales cuando existen.</p>
-            </div>
-          </div>
-
-          <div className={styles.toolbar}>
-            <SegmentedControl
-              label="Filtro de salud"
-              size="sm"
-              value={url.filter}
-              onValueChange={(value) => {
-                if (value === 'all' || value === 'needsSetup' || value === 'healthy') {
-                  url.setFilter(value);
-                }
-              }}
-              options={[
-                { value: 'all', label: 'Todos' },
-                { value: 'healthy', label: 'Sanos' },
-                { value: 'needsSetup', label: 'Setup' },
-              ]}
-            />
-            <div className={styles.filterMeta}>
-              <span>
-                {formatNumber(filtered.length)} de {formatNumber(catalog.length)} conectores
-                {anyFilter ? ' coinciden con el filtro' : ''}.
-              </span>
-              {anyFilter ? (
-                <Button type="button" variant="ghost" size="sm" onClick={() => url.setFilter('all')}>
-                  Limpiar filtros
-                </Button>
+      <header className={styles.sectionHead} style={{ marginTop: 24 }}>
+        <p className={styles.rowTitle}>Catálogo</p>
+        <p className={styles.tertiary}>
+          {formatCount(filtered.length)} de {formatCount(catalog.length)} conectores
+          {url.filter !== 'all' ? ' con ese filtro' : ''}.
+        </p>
+      </header>
+      <div className={styles.stack}>
+        <Segment<IntegrationsUrlState['filter']>
+          label="Filtro de salud"
+          value={url.filter}
+          onChange={url.setFilter}
+          options={[
+            { value: 'all', label: 'Todos' },
+            { value: 'healthy', label: 'Sanos' },
+            { value: 'needsSetup', label: 'Por ajustar' },
+          ]}
+        />
+        {filtered.length === 0 ? <p className={styles.quiet}>Nada con ese criterio.</p> : null}
+        {filtered.map((item) => {
+          const open = url.selectedId === item.id;
+          const health = healthMeta(resolveHealth(item.id, banorte, webhooks));
+          return (
+            <div key={item.id} className={styles.stack}>
+              <button
+                type="button"
+                className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+                aria-expanded={open}
+                onClick={() => url.setSelectedId(open ? null : item.id)}
+              >
+                <span>
+                  {item.name} · {categoryLabel(item.category)}
+                </span>
+                <span className={styles.tertiary}>{health.label}</span>
+              </button>
+              {open ? (
+                <ConnectorDetail
+                  item={item}
+                  banorte={banorte}
+                  webhooks={webhooks}
+                  validation={validation}
+                  validating={validateBanorte.isPending}
+                  onValidateBanorte={() => void onValidateBanorte()}
+                  onCopy={(label, value) => void onCopy(label, value)}
+                />
               ) : null}
             </div>
-          </div>
-
-          {filtered.length === 0 ? (
-            <EmptyState
-              title="Sin conectores en este filtro"
-              description="Cambia el filtro o abre el catálogo completo."
-              illustration="search"
-              action={
-                <Button type="button" variant="outline" onClick={() => url.setFilter('all')}>
-                  Ver todos
-                </Button>
-              }
-            />
-          ) : (
-            <div className={styles.catalog}>
-              {filtered.map((item) => (
-                <CatalogCard
-                  key={item.id}
-                  item={item}
-                  selected={url.selectedId === item.id}
-                  health={resolveHealth(item.id, banorte, webhooks)}
-                  onOpen={() => openConnector(item.id)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        <aside className={styles.sideCard}>
-          <div className={styles.sideHead}>
-            <h2>Salud en vivo</h2>
-            <p>Estado por conector</p>
-          </div>
-          <ul className={styles.healthList}>
-            {catalog.map((item) => {
-              const health = healthMeta(resolveHealth(item.id, banorte, webhooks));
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className={styles.healthRow}
-                    onClick={() => openConnector(item.id)}
-                  >
-                    <StatusDot tone={health.statusTone} aria-hidden />
-                    <div>
-                      <strong>{item.name}</strong>
-                      <span>{categoryLabel(item.category)}</span>
-                    </div>
-                    <Badge tone={health.tone} variant="outline" size="sm">
-                      {health.label}
-                    </Badge>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-
-          {webhooks ? (
-            <p className={styles.note}>{webhooks.note}</p>
-          ) : (
-            <p className={styles.note}>
-              La salud de webhooks se deriva del IPN Banorte en /payments/config.
-            </p>
-          )}
-        </aside>
+          );
+        })}
       </div>
-
-      <SetupDrawer
-        item={selected}
-        banorte={banorte}
-        webhooks={webhooks}
-        validation={validation}
-        validating={validateBanorte.isPending}
-        onClose={() => url.setSelectedId(null)}
-        onValidateBanorte={() => void onValidateBanorte()}
-        onCopy={(label, value) => void onCopy(label, value)}
-      />
-    </div>
-  );
-}
-
-function CatalogCard({
-  item,
-  selected,
-  health,
-  onOpen,
-}: {
-  item: IntegrationCatalogItem;
-  selected: boolean;
-  health: ReturnType<typeof resolveHealth>;
-  onOpen: () => void;
-}) {
-  const meta = healthMeta(health);
-  return (
-    <button
-      type="button"
-      className={styles.card}
-      data-selected={selected ? 'true' : 'false'}
-      onClick={onOpen}
-    >
-      <div className={styles.cardHead}>
-        <h3 className={styles.cardTitle}>{item.name}</h3>
-        <Badge tone={meta.tone} variant="soft" size="sm" dot>
-          {meta.label}
-        </Badge>
-      </div>
-      <p className={styles.cardSummary}>{item.summary}</p>
-      <div className={styles.cardMeta}>
-        <Badge tone="neutral" variant="outline" size="sm">
-          {categoryLabel(item.category)}
-        </Badge>
-        <span className={styles.muted}>Abrir setup</span>
-      </div>
-    </button>
-  );
-}
-
-export default function IntegrationsPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className={styles.page} role="status" aria-live="polite">
-          Cargando integraciones…
-        </div>
-      }
-    >
-      <IntegrationsCockpit />
-    </Suspense>
+    </section>
   );
 }

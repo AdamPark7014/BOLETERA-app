@@ -182,7 +182,7 @@ export function emailCredentialSlots(): CredentialSlot[] {
 export function resolveHealth(
   kind: IntegrationKind,
   banorte: BanorteConfig | undefined,
-  webhooks: WebhookHealthSnapshot | undefined,
+  webhooks: WebhookHealthSnapshot | undefined
 ): IntegrationHealth {
   if (kind === 'banorte') return classifyBanorteHealth(banorte);
   if (kind === 'email') return emailIntegrationHealth();
@@ -198,7 +198,7 @@ export type IntegrationKpis = {
 
 export function computeIntegrationKpis(
   banorte: BanorteConfig | undefined,
-  webhooks: WebhookHealthSnapshot | undefined,
+  webhooks: WebhookHealthSnapshot | undefined
 ): IntegrationKpis {
   const statuses: IntegrationHealth[] = [
     classifyBanorteHealth(banorte),

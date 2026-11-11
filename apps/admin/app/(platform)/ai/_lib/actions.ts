@@ -1,12 +1,6 @@
-import type {
-  AiRecommendationKind,
-  AiRecommendationPriority,
-} from '@boletera/shared';
+import type { AiRecommendationKind, AiRecommendationPriority } from '@boletera/shared';
 
-export type AiProposedActionStatus =
-  | 'pending_confirmation'
-  | 'confirmed'
-  | 'dismissed';
+export type AiProposedActionStatus = 'pending_confirmation' | 'confirmed' | 'dismissed';
 
 export type AiProposedAction = {
   id: string;

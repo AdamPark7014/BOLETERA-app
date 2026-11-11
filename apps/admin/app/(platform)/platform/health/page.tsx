@@ -1,78 +1,76 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import {
-  Badge,
-  Button,
-  Card,
-  KpiCard,
-  PageHeader,
-  Section,
-  Tabs,
-  formatNumber,
-  type BadgeTone,
-} from '@boletera/ui';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { ParameterCard, TicketButton } from '@boletera/ui';
 import {
   getAdminReconciliation,
   getPlatformHealthChecks,
   type ReconciliationCheck,
   type ReconciliationReport,
 } from '@/lib/platform-api';
-import { useSession } from '@/lib/use-session';
-import styles from './health.module.scss';
+import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../../events/_shared/api-state';
+import { AdminFrame } from '../../events/_ticket/AdminFrame';
+import { Param, Segment, Switch } from '../../events/_ticket/controls';
+import styles from '../../events/_ticket/frame.module.scss';
+import { formatCount, formatWhen } from '../../events/_ticket/read';
 
 type StatusFilter = 'all' | ReconciliationCheck['status'];
 
 const STATUS_LABEL: Record<ReconciliationCheck['status'], string> = {
-  ok: 'OK',
-  warn: 'Alerta',
+  ok: 'En orden',
+  warn: 'Aviso',
   error: 'Error',
 };
 
-const STATUS_TONE: Record<ReconciliationCheck['status'], BadgeTone> = {
-  ok: 'success',
-  warn: 'warning',
-  error: 'danger',
-};
-
-function formatSample(sample: Record<string, string | number | null>) {
+function formatSample(sample: Record<string, string | number | null>): string {
   return Object.entries(sample)
-    .map(([k, v]) => `${k}=${v ?? '—'}`)
+    .map(([key, value]) => `${key}=${value ?? '—'}`)
     .join(' · ');
 }
 
 export default function PlatformHealthPage() {
-  const { token, role } = useSession();
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <SaludBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function SaludBody() {
+  const session = useSession();
+  const token = session.token;
+  const role = session.role;
+  const canSee = role === 'ADMIN' || role === 'SUPER_ADMIN';
+  const canPlatformWide = role === 'SUPER_ADMIN';
   const [data, setData] = useState<ReconciliationReport | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [platformWide, setPlatformWide] = useState(false);
-
-  const canPlatformWide = role === 'SUPER_ADMIN';
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!token) {
-      setError('Inicia sesión para ver los diagnósticos');
-      setLoading(false);
+    if (!token || !canSee) {
+      if (session.status !== 'loading') setLoading(false);
       return;
     }
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
       const report =
         canPlatformWide && platformWide
           ? await getPlatformHealthChecks(token)
           : await getAdminReconciliation(token);
       setData(report);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo cargar el reporte');
+    } catch (cause) {
+      setError(cause);
       setData(null);
     } finally {
       setLoading(false);
     }
-  }, [token, canPlatformWide, platformWide]);
+  }, [token, canSee, canPlatformWide, platformWide, session.status]);
 
   useEffect(() => {
     void load();
@@ -81,157 +79,145 @@ export default function PlatformHealthPage() {
   const checks = useMemo(() => {
     const list = data?.checks ?? [];
     if (filter === 'all') return list;
-    return list.filter((c) => c.status === filter);
+    return list.filter((check) => check.status === filter);
   }, [data, filter]);
 
-  const summary = data?.summary;
-
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (!canSee && session.status !== 'loading') {
     return (
-      <div className={styles.page}>
-        <PageHeader
-          eyebrow="Operaciones"
-          title="Salud operativa"
-          description="Diagnóstico de consistencia entre órdenes, pagos, boletos, inventario y reembolsos."
-        />
-        <Section title="Acceso restringido">
-          <p className={styles.muted}>
-            Los diagnósticos operativos requieren rol ADMIN o SUPER_ADMIN.{' '}
-            <Link href="/dashboard">Volver al inicio</Link>
+      <section>
+        <header className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Salud</h1>
+          <p className={styles.quiet}>
+            Los diagnósticos los abre administrador o superadministrador.
           </p>
-        </Section>
-      </div>
+        </header>
+      </section>
     );
   }
+  if (error) {
+    return <ApiErrorView error={error} context="abrir salud" onRetry={() => void load()} />;
+  }
+  if ((loading && !data) || !token) return <p className={styles.quiet}>Cargando salud.</p>;
+
+  const summary = data?.summary;
+  const total = data?.checks.length ?? 0;
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Operaciones"
-        title="Salud operativa"
-        description="Diagnóstico de consistencia entre órdenes, pagos, boletos, inventario y reembolsos. Solo lectura — no corrige datos."
-        actions={
-          <Button
-            type="button"
-            variant="outline"
-            loading={loading}
-            loadingLabel="Actualizando…"
-            onClick={() => void load()}
-          >
-            Actualizar
-          </Button>
-        }
-      />
-
-      <div className={styles.toolbar}>
-        {canPlatformWide ? (
-          <label className={styles.muted}>
-            <input
-              type="checkbox"
-              checked={platformWide}
-              onChange={(e) => setPlatformWide(e.target.checked)}
-              className={styles.checkbox}
-            />
-            Vista plataforma (cross-tenant)
-          </label>
-        ) : null}
-        {data ? (
-          <span className={styles.muted}>
-            Generado {new Date(data.generatedAt).toLocaleString('es-MX')}
-            {data.scope === 'platform' ? ' · alcance global' : ' · tu organización'}
-          </span>
-        ) : null}
-      </div>
-
-      {error ? (
-        <p className={styles.error} role="alert">
-          {error}
+    <section>
+      <header className={styles.sectionHead}>
+        <h1 className={styles.sectionTitle}>Salud</h1>
+        <p className={styles.quiet}>
+          Consistencia entre órdenes, pagos, boletos, inventario y reembolsos. Solo lectura: no
+          corrige datos.
         </p>
-      ) : null}
-
-      {summary ? (
-        <Section columns={4} gap="md" aria-label="Resumen">
-          <KpiCard label="Checks OK" value={formatNumber(summary.ok)} tone="success" />
-          <KpiCard
-            label="Alertas"
-            value={formatNumber(summary.warn)}
-            tone={summary.warn > 0 ? 'warning' : 'neutral'}
-          />
-          <KpiCard
-            label="Errores"
-            value={formatNumber(summary.error)}
-            tone={summary.error > 0 ? 'danger' : 'neutral'}
-          />
-          <KpiCard label="Total checks" value={formatNumber(data?.checks.length ?? 0)} />
-        </Section>
-      ) : null}
-
-      <Tabs
-        label="Filtrar por estado"
-        variant="pill"
-        value={filter}
-        onValueChange={(id) => setFilter(id as StatusFilter)}
-        items={[
-          {
-            id: 'all',
-            label: 'Todos',
-            badge: data ? String(data.checks.length) : undefined,
-          },
-          {
-            id: 'error',
-            label: STATUS_LABEL.error,
-            badge: summary ? String(summary.error) : undefined,
-          },
-          {
-            id: 'warn',
-            label: STATUS_LABEL.warn,
-            badge: summary ? String(summary.warn) : undefined,
-          },
-          {
-            id: 'ok',
-            label: STATUS_LABEL.ok,
-            badge: summary ? String(summary.ok) : undefined,
-          },
-        ]}
-      />
-
-      <Section title="Checks de reconciliación">
-        {loading && !data ? (
-          <p className={styles.muted}>Cargando diagnósticos…</p>
-        ) : checks.length === 0 ? (
-          <p className={styles.muted}>Sin resultados para el filtro seleccionado.</p>
-        ) : (
-          <div className={styles.checkList}>
-            {checks.map((check) => (
-              <Card key={check.id} variant="outline" padding="md" className={styles.checkCard}>
-                <div className={styles.checkHead}>
-                  <div>
-                    <h3>{check.label}</h3>
-                    <p>{check.description}</p>
-                  </div>
-                  <div className={styles.checkMeta}>
-                    <Badge tone={STATUS_TONE[check.status]} variant="soft" size="sm">
-                      {STATUS_LABEL[check.status]}
-                    </Badge>
-                    <span className={styles.count}>
-                      {check.count.toLocaleString('es-MX')} incidencias
-                    </span>
-                  </div>
-                </div>
-                {check.samples.length > 0 ? (
-                  <ul className={styles.samples} aria-label={`Muestras ${check.id}`}>
-                    {check.samples.map((sample, i) => (
-                      <li key={i} className={styles.sample}>
-                        {formatSample(sample)}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </Card>
-            ))}
+        {data ? (
+          <p className={styles.tertiary}>
+            Generado {formatWhen(data.generatedAt)} ·{' '}
+            {data.scope === 'platform' ? 'toda la plataforma' : 'tu organización'}
+          </p>
+        ) : null}
+      </header>
+      <div className={styles.stack}>
+        {canPlatformWide ? (
+          <Param name="Alcance">
+            <ParameterCard
+              name="Alcance"
+              value={platformWide ? 'Toda la plataforma' : 'Tu organización'}
+              effect="Encendido lee los diagnósticos de todas las organizaciones."
+            >
+              <Switch on={platformWide} label="Toda la plataforma" onChange={setPlatformWide} />
+            </ParameterCard>
+          </Param>
+        ) : null}
+        {summary ? (
+          <div className={styles.rows}>
+            <div className={styles.row}>
+              <p className={styles.rowTitle}>En orden</p>
+              <span />
+              <p className={styles.figure}>{formatCount(summary.ok)}</p>
+            </div>
+            <div className={styles.row}>
+              <p className={styles.rowTitle}>Avisos</p>
+              <span />
+              <p className={styles.figure}>{formatCount(summary.warn)}</p>
+            </div>
+            <div className={styles.row}>
+              <p className={styles.rowTitle}>Errores</p>
+              <span />
+              <p className={styles.figure}>{formatCount(summary.error)}</p>
+            </div>
+            <div className={styles.row}>
+              <p className={styles.rowTitle}>Diagnósticos</p>
+              <span />
+              <p className={styles.figure}>{formatCount(total)}</p>
+            </div>
           </div>
-        )}
-      </Section>
-    </div>
+        ) : null}
+        <Segment<StatusFilter>
+          label="Filtrar por estado"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: `Todos · ${formatCount(total)}` },
+            { value: 'error', label: `Error · ${formatCount(summary?.error ?? 0)}` },
+            { value: 'warn', label: `Aviso · ${formatCount(summary?.warn ?? 0)}` },
+            { value: 'ok', label: `En orden · ${formatCount(summary?.ok ?? 0)}` },
+          ]}
+        />
+        <div>
+          <TicketButton variant="secondary" disabled={loading} onClick={() => void load()}>
+            {loading ? 'Actualizando' : 'Actualizar'}
+          </TicketButton>
+        </div>
+      </div>
+      <header className={styles.sectionHead} style={{ marginTop: 24 }}>
+        <p className={styles.rowTitle}>Diagnósticos</p>
+      </header>
+      {checks.length === 0 ? <p className={styles.quiet}>Nada con ese criterio.</p> : null}
+      <div className={styles.stack}>
+        {checks.map((check) => {
+          const open = openId === check.id;
+          return (
+            <div key={check.id} className={styles.stack}>
+              <button
+                type="button"
+                className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
+                aria-expanded={open}
+                onClick={() => setOpenId(open ? null : check.id)}
+              >
+                <span>
+                  {check.label} · {STATUS_LABEL[check.status]}
+                </span>
+                <span className={styles.figure}>{formatCount(check.count)}</span>
+              </button>
+              {open ? (
+                <>
+                  <p className={styles.quiet}>{check.description}</p>
+                  <p className={styles.tertiary}>
+                    {formatCount(check.count)} incidencias ·{' '}
+                    <span className={styles.mono}>{check.id}</span>
+                  </p>
+                  {check.samples.length > 0 ? (
+                    <ul className={styles.rows} aria-label={`Muestras ${check.id}`}>
+                      {check.samples.map((sample, index) => (
+                        <li key={index} className={styles.row}>
+                          <p className={styles.mono} style={{ overflowWrap: 'anywhere' }}>
+                            {formatSample(sample)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className={styles.tertiary}>Sin muestras.</p>
+                  )}
+                </>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

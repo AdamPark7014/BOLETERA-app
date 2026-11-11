@@ -31,7 +31,7 @@ export function formatMetricsRange(range: MetricsDateRange): string {
 
 export function formatInterval(
   interval: AiConfidenceInterval,
-  kind: 'count' | 'percent' | 'mxn',
+  kind: 'count' | 'percent' | 'mxn'
 ): string {
   const format =
     kind === 'mxn'

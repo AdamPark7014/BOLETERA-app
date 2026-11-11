@@ -1,20 +1,11 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react';
+import { memo, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Skeleton } from '@boletera/ui';
 import { usePrefetchNavigation } from '@/lib/prefetch';
 import { useSession } from '@/lib/use-session';
-import {
-  ShellCommandPalette,
-  type CommandPaletteMode,
-} from './ShellCommandPalette';
+import { ShellCommandPalette, type CommandPaletteMode } from './ShellCommandPalette';
 import { ShellSidebar } from './ShellSidebar';
 import { ShellTopbar } from './ShellTopbar';
 import { ThemeProvider } from './use-theme';
@@ -46,10 +37,39 @@ function isTicketSurface(pathname: string): boolean {
   ) {
     return true;
   }
+  if (SECTION_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return true;
+  }
+  if (venueMap.length === 3 && venueMap[0] === 'venues' && venueMap[2] === '3d') return true;
   const parts = pathname.split('/').filter(Boolean);
+  if (parts.length === 3 && parts[0] === 'events' && parts[2] === 'cancel') return true;
   if (parts.length !== 2 || parts[0] !== 'events') return false;
   return parts[1] !== 'series';
 }
+
+/** Secciones del índice que se abren con todo lo que cuelga de ellas. */
+const SECTION_PREFIXES = [
+  '/dashboard',
+  '/orders',
+  '/inventory',
+  '/reservations',
+  '/pricing',
+  '/channels',
+  '/calendar',
+  '/resale',
+  '/memberships',
+  '/sponsorships',
+  '/analytics',
+  '/reports',
+  '/audit',
+  '/crm',
+  '/automations',
+  '/integrations',
+  '/api-management',
+  '/ai',
+  '/platform',
+  '/events/series',
+];
 
 function SkipLink() {
   return (
