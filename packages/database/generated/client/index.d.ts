@@ -39472,6 +39472,9 @@ export namespace Prisma {
     notes: string | null
     requestedBy: string | null
     processedBy: string | null
+    payoutClabe: string | null
+    payoutAccountHolder: string | null
+    payoutClabeAt: Date | null
     requestedAt: Date | null
     processedAt: Date | null
     updatedAt: Date | null
@@ -39486,6 +39489,9 @@ export namespace Prisma {
     notes: string | null
     requestedBy: string | null
     processedBy: string | null
+    payoutClabe: string | null
+    payoutAccountHolder: string | null
+    payoutClabeAt: Date | null
     requestedAt: Date | null
     processedAt: Date | null
     updatedAt: Date | null
@@ -39500,6 +39506,9 @@ export namespace Prisma {
     notes: number
     requestedBy: number
     processedBy: number
+    payoutClabe: number
+    payoutAccountHolder: number
+    payoutClabeAt: number
     requestedAt: number
     processedAt: number
     updatedAt: number
@@ -39524,6 +39533,9 @@ export namespace Prisma {
     notes?: true
     requestedBy?: true
     processedBy?: true
+    payoutClabe?: true
+    payoutAccountHolder?: true
+    payoutClabeAt?: true
     requestedAt?: true
     processedAt?: true
     updatedAt?: true
@@ -39538,6 +39550,9 @@ export namespace Prisma {
     notes?: true
     requestedBy?: true
     processedBy?: true
+    payoutClabe?: true
+    payoutAccountHolder?: true
+    payoutClabeAt?: true
     requestedAt?: true
     processedAt?: true
     updatedAt?: true
@@ -39552,6 +39567,9 @@ export namespace Prisma {
     notes?: true
     requestedBy?: true
     processedBy?: true
+    payoutClabe?: true
+    payoutAccountHolder?: true
+    payoutClabeAt?: true
     requestedAt?: true
     processedAt?: true
     updatedAt?: true
@@ -39653,6 +39671,9 @@ export namespace Prisma {
     notes: string | null
     requestedBy: string
     processedBy: string | null
+    payoutClabe: string | null
+    payoutAccountHolder: string | null
+    payoutClabeAt: Date | null
     requestedAt: Date
     processedAt: Date | null
     updatedAt: Date
@@ -39686,6 +39707,9 @@ export namespace Prisma {
     notes?: boolean
     requestedBy?: boolean
     processedBy?: boolean
+    payoutClabe?: boolean
+    payoutAccountHolder?: boolean
+    payoutClabeAt?: boolean
     requestedAt?: boolean
     processedAt?: boolean
     updatedAt?: boolean
@@ -39701,6 +39725,9 @@ export namespace Prisma {
     notes?: boolean
     requestedBy?: boolean
     processedBy?: boolean
+    payoutClabe?: boolean
+    payoutAccountHolder?: boolean
+    payoutClabeAt?: boolean
     requestedAt?: boolean
     processedAt?: boolean
     updatedAt?: boolean
@@ -39716,6 +39743,9 @@ export namespace Prisma {
     notes?: boolean
     requestedBy?: boolean
     processedBy?: boolean
+    payoutClabe?: boolean
+    payoutAccountHolder?: boolean
+    payoutClabeAt?: boolean
     requestedAt?: boolean
     processedAt?: boolean
     updatedAt?: boolean
@@ -39731,12 +39761,15 @@ export namespace Prisma {
     notes?: boolean
     requestedBy?: boolean
     processedBy?: boolean
+    payoutClabe?: boolean
+    payoutAccountHolder?: boolean
+    payoutClabeAt?: boolean
     requestedAt?: boolean
     processedAt?: boolean
     updatedAt?: boolean
   }
 
-  export type RefundOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "amount" | "reason" | "status" | "notes" | "requestedBy" | "processedBy" | "requestedAt" | "processedAt" | "updatedAt", ExtArgs["result"]["refund"]>
+  export type RefundOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "amount" | "reason" | "status" | "notes" | "requestedBy" | "processedBy" | "payoutClabe" | "payoutAccountHolder" | "payoutClabeAt" | "requestedAt" | "processedAt" | "updatedAt", ExtArgs["result"]["refund"]>
   export type RefundInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     order?: boolean | OrderDefaultArgs<ExtArgs>
   }
@@ -39761,6 +39794,9 @@ export namespace Prisma {
       notes: string | null
       requestedBy: string
       processedBy: string | null
+      payoutClabe: string | null
+      payoutAccountHolder: string | null
+      payoutClabeAt: Date | null
       requestedAt: Date
       processedAt: Date | null
       updatedAt: Date
@@ -40196,6 +40232,9 @@ export namespace Prisma {
     readonly notes: FieldRef<"Refund", 'String'>
     readonly requestedBy: FieldRef<"Refund", 'String'>
     readonly processedBy: FieldRef<"Refund", 'String'>
+    readonly payoutClabe: FieldRef<"Refund", 'String'>
+    readonly payoutAccountHolder: FieldRef<"Refund", 'String'>
+    readonly payoutClabeAt: FieldRef<"Refund", 'DateTime'>
     readonly requestedAt: FieldRef<"Refund", 'DateTime'>
     readonly processedAt: FieldRef<"Refund", 'DateTime'>
     readonly updatedAt: FieldRef<"Refund", 'DateTime'>
@@ -72800,6 +72839,9 @@ export namespace Prisma {
     notes: 'notes',
     requestedBy: 'requestedBy',
     processedBy: 'processedBy',
+    payoutClabe: 'payoutClabe',
+    payoutAccountHolder: 'payoutAccountHolder',
+    payoutClabeAt: 'payoutClabeAt',
     requestedAt: 'requestedAt',
     processedAt: 'processedAt',
     updatedAt: 'updatedAt'
@@ -76781,6 +76823,9 @@ export namespace Prisma {
     notes?: StringNullableFilter<"Refund"> | string | null
     requestedBy?: StringFilter<"Refund"> | string
     processedBy?: StringNullableFilter<"Refund"> | string | null
+    payoutClabe?: StringNullableFilter<"Refund"> | string | null
+    payoutAccountHolder?: StringNullableFilter<"Refund"> | string | null
+    payoutClabeAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     requestedAt?: DateTimeFilter<"Refund"> | Date | string
     processedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     updatedAt?: DateTimeFilter<"Refund"> | Date | string
@@ -76796,6 +76841,9 @@ export namespace Prisma {
     notes?: SortOrderInput | SortOrder
     requestedBy?: SortOrder
     processedBy?: SortOrderInput | SortOrder
+    payoutClabe?: SortOrderInput | SortOrder
+    payoutAccountHolder?: SortOrderInput | SortOrder
+    payoutClabeAt?: SortOrderInput | SortOrder
     requestedAt?: SortOrder
     processedAt?: SortOrderInput | SortOrder
     updatedAt?: SortOrder
@@ -76814,6 +76862,9 @@ export namespace Prisma {
     notes?: StringNullableFilter<"Refund"> | string | null
     requestedBy?: StringFilter<"Refund"> | string
     processedBy?: StringNullableFilter<"Refund"> | string | null
+    payoutClabe?: StringNullableFilter<"Refund"> | string | null
+    payoutAccountHolder?: StringNullableFilter<"Refund"> | string | null
+    payoutClabeAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     requestedAt?: DateTimeFilter<"Refund"> | Date | string
     processedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     updatedAt?: DateTimeFilter<"Refund"> | Date | string
@@ -76829,6 +76880,9 @@ export namespace Prisma {
     notes?: SortOrderInput | SortOrder
     requestedBy?: SortOrder
     processedBy?: SortOrderInput | SortOrder
+    payoutClabe?: SortOrderInput | SortOrder
+    payoutAccountHolder?: SortOrderInput | SortOrder
+    payoutClabeAt?: SortOrderInput | SortOrder
     requestedAt?: SortOrder
     processedAt?: SortOrderInput | SortOrder
     updatedAt?: SortOrder
@@ -76851,6 +76905,9 @@ export namespace Prisma {
     notes?: StringNullableWithAggregatesFilter<"Refund"> | string | null
     requestedBy?: StringWithAggregatesFilter<"Refund"> | string
     processedBy?: StringNullableWithAggregatesFilter<"Refund"> | string | null
+    payoutClabe?: StringNullableWithAggregatesFilter<"Refund"> | string | null
+    payoutAccountHolder?: StringNullableWithAggregatesFilter<"Refund"> | string | null
+    payoutClabeAt?: DateTimeNullableWithAggregatesFilter<"Refund"> | Date | string | null
     requestedAt?: DateTimeWithAggregatesFilter<"Refund"> | Date | string
     processedAt?: DateTimeNullableWithAggregatesFilter<"Refund"> | Date | string | null
     updatedAt?: DateTimeWithAggregatesFilter<"Refund"> | Date | string
@@ -82562,6 +82619,9 @@ export namespace Prisma {
     notes?: string | null
     requestedBy: string
     processedBy?: string | null
+    payoutClabe?: string | null
+    payoutAccountHolder?: string | null
+    payoutClabeAt?: Date | string | null
     requestedAt?: Date | string
     processedAt?: Date | string | null
     updatedAt?: Date | string
@@ -82577,6 +82637,9 @@ export namespace Prisma {
     notes?: string | null
     requestedBy: string
     processedBy?: string | null
+    payoutClabe?: string | null
+    payoutAccountHolder?: string | null
+    payoutClabeAt?: Date | string | null
     requestedAt?: Date | string
     processedAt?: Date | string | null
     updatedAt?: Date | string
@@ -82590,6 +82653,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     requestedBy?: StringFieldUpdateOperationsInput | string
     processedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutAccountHolder?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -82605,6 +82671,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     requestedBy?: StringFieldUpdateOperationsInput | string
     processedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutAccountHolder?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -82619,6 +82688,9 @@ export namespace Prisma {
     notes?: string | null
     requestedBy: string
     processedBy?: string | null
+    payoutClabe?: string | null
+    payoutAccountHolder?: string | null
+    payoutClabeAt?: Date | string | null
     requestedAt?: Date | string
     processedAt?: Date | string | null
     updatedAt?: Date | string
@@ -82632,6 +82704,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     requestedBy?: StringFieldUpdateOperationsInput | string
     processedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutAccountHolder?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -82646,6 +82721,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     requestedBy?: StringFieldUpdateOperationsInput | string
     processedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutAccountHolder?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -88005,6 +88083,9 @@ export namespace Prisma {
     notes?: SortOrder
     requestedBy?: SortOrder
     processedBy?: SortOrder
+    payoutClabe?: SortOrder
+    payoutAccountHolder?: SortOrder
+    payoutClabeAt?: SortOrder
     requestedAt?: SortOrder
     processedAt?: SortOrder
     updatedAt?: SortOrder
@@ -88023,6 +88104,9 @@ export namespace Prisma {
     notes?: SortOrder
     requestedBy?: SortOrder
     processedBy?: SortOrder
+    payoutClabe?: SortOrder
+    payoutAccountHolder?: SortOrder
+    payoutClabeAt?: SortOrder
     requestedAt?: SortOrder
     processedAt?: SortOrder
     updatedAt?: SortOrder
@@ -88037,6 +88121,9 @@ export namespace Prisma {
     notes?: SortOrder
     requestedBy?: SortOrder
     processedBy?: SortOrder
+    payoutClabe?: SortOrder
+    payoutAccountHolder?: SortOrder
+    payoutClabeAt?: SortOrder
     requestedAt?: SortOrder
     processedAt?: SortOrder
     updatedAt?: SortOrder
@@ -103717,6 +103804,9 @@ export namespace Prisma {
     notes?: string | null
     requestedBy: string
     processedBy?: string | null
+    payoutClabe?: string | null
+    payoutAccountHolder?: string | null
+    payoutClabeAt?: Date | string | null
     requestedAt?: Date | string
     processedAt?: Date | string | null
     updatedAt?: Date | string
@@ -103730,6 +103820,9 @@ export namespace Prisma {
     notes?: string | null
     requestedBy: string
     processedBy?: string | null
+    payoutClabe?: string | null
+    payoutAccountHolder?: string | null
+    payoutClabeAt?: Date | string | null
     requestedAt?: Date | string
     processedAt?: Date | string | null
     updatedAt?: Date | string
@@ -104306,6 +104399,9 @@ export namespace Prisma {
     notes?: StringNullableFilter<"Refund"> | string | null
     requestedBy?: StringFilter<"Refund"> | string
     processedBy?: StringNullableFilter<"Refund"> | string | null
+    payoutClabe?: StringNullableFilter<"Refund"> | string | null
+    payoutAccountHolder?: StringNullableFilter<"Refund"> | string | null
+    payoutClabeAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     requestedAt?: DateTimeFilter<"Refund"> | Date | string
     processedAt?: DateTimeNullableFilter<"Refund"> | Date | string | null
     updatedAt?: DateTimeFilter<"Refund"> | Date | string
@@ -114882,6 +114978,9 @@ export namespace Prisma {
     notes?: string | null
     requestedBy: string
     processedBy?: string | null
+    payoutClabe?: string | null
+    payoutAccountHolder?: string | null
+    payoutClabeAt?: Date | string | null
     requestedAt?: Date | string
     processedAt?: Date | string | null
     updatedAt?: Date | string
@@ -114974,6 +115073,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     requestedBy?: StringFieldUpdateOperationsInput | string
     processedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutAccountHolder?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -114987,6 +115089,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     requestedBy?: StringFieldUpdateOperationsInput | string
     processedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutAccountHolder?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -115000,6 +115105,9 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     requestedBy?: StringFieldUpdateOperationsInput | string
     processedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutAccountHolder?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

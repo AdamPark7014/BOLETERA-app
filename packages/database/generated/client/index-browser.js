@@ -583,6 +583,9 @@ exports.Prisma.RefundScalarFieldEnum = {
   notes: 'notes',
   requestedBy: 'requestedBy',
   processedBy: 'processedBy',
+  payoutClabe: 'payoutClabe',
+  payoutAccountHolder: 'payoutAccountHolder',
+  payoutClabeAt: 'payoutClabeAt',
   requestedAt: 'requestedAt',
   processedAt: 'processedAt',
   updatedAt: 'updatedAt'

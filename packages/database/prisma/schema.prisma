@@ -914,6 +914,12 @@ model Refund {
   requestedBy String // Admin email or customer ID
   processedBy String?
 
+  // Cuenta del comprador para reembolsos que no vuelven a la tarjeta (SPEI/OXXO).
+  // La captura el comprador con el token de su orden; dígito verificador validado.
+  payoutClabe         String?   @db.VarChar(18)
+  payoutAccountHolder String?   @db.VarChar(120)
+  payoutClabeAt       DateTime?
+
   // Audit
   requestedAt DateTime  @default(now())
   processedAt DateTime?
