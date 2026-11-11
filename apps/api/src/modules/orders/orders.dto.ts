@@ -103,3 +103,20 @@ export type OrderRequester = {
   email?: string;
   accessToken?: string;
 };
+
+/**
+ * Cuenta para un reembolso que no vuelve a tarjeta. Aquí solo se acota la
+ * forma; el dígito verificador de Banxico se comprueba en el servicio
+ * (`clabe.ts`), que es quien responde el mensaje en español.
+ */
+export class RefundPayoutClabeDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(24)
+  clabe!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  accountHolder!: string;
+}

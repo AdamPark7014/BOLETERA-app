@@ -4,7 +4,9 @@ import {
   Get,
   Headers,
   Header,
+  HttpCode,
   Param,
+  Patch,
   Post,
   Query,
   Request,
@@ -18,7 +20,8 @@ import type { Response } from 'express';
 import { parseSalesChannel } from '../../common/sales-channel';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
-import { CreateOrderDto, type OrderRequester } from './orders.dto';
+import { BuyerSelfServiceService } from './buyer-self-service.service';
+import { CreateOrderDto, RefundPayoutClabeDto, type OrderRequester } from './orders.dto';
 import { OrdersService } from './orders.service';
 
 type OptionalAuthRequest = { user?: { sub: string; email?: string; role?: string } };
@@ -26,7 +29,10 @@ type OptionalAuthRequest = { user?: { sub: string; email?: string; role?: string
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private orders: OrdersService) {}
+  constructor(
+    private orders: OrdersService,
+    private selfService: BuyerSelfServiceService
+  ) {}
 
   @Post()
   @UseGuards(OptionalJwtAuthGuard)
@@ -35,7 +41,7 @@ export class OrdersController {
     @Request() req: OptionalAuthRequest,
     @Headers('x-channel') channelHeader?: string,
     @Headers('idempotency-key') idempotencyKey?: string,
-    @Headers('x-forwarded-for') forwardedFor?: string,
+    @Headers('x-forwarded-for') forwardedFor?: string
   ) {
     // `x-channel` es telemetría, no autorización: el servicio degrada a WEB si
     // no hay personal autenticado detrás. El cajero sale del token, así que
@@ -70,7 +76,7 @@ export class OrdersController {
   qrcodes(
     @Param('publicId') publicId: string,
     @Request() req: OptionalAuthRequest,
-    @Query('accessToken') accessToken?: string,
+    @Query('accessToken') accessToken?: string
   ) {
     return this.orders.getQrCodesForOrder(publicId, this.requester(req, accessToken));
   }
@@ -98,7 +104,7 @@ export class OrdersController {
   wallet(
     @Param('publicId') publicId: string,
     @Request() req: OptionalAuthRequest,
-    @Query('accessToken') accessToken?: string,
+    @Query('accessToken') accessToken?: string
   ) {
     return this.orders.getWalletForOrder(publicId, this.requester(req, accessToken));
   }
@@ -110,7 +116,7 @@ export class OrdersController {
     @Param('publicId') publicId: string,
     @Request() req: OptionalAuthRequest,
     @Res({ passthrough: true }) res: Response,
-    @Query('accessToken') accessToken?: string,
+    @Query('accessToken') accessToken?: string
   ) {
     const buf = await this.orders.buildTicketsPdf(publicId, this.requester(req, accessToken));
     res.set({
@@ -126,9 +132,46 @@ export class OrdersController {
     @Param('publicId') publicId: string,
     @Request() req: { user: { sub: string } },
     @Body()
-    body: { receptorRfc: string; receptorNombre: string; receptorUsoCfdi?: string },
+    body: { receptorRfc: string; receptorNombre: string; receptorUsoCfdi?: string }
   ) {
     return this.orders.requestCfdiForBuyer(publicId, req.user.sub, body);
+  }
+
+  /**
+   * El comprador pide que le reenviemos el boleto. Misma credencial que leer
+   * la orden; tope por orden de 1 por minuto y 3 por hora (429 en español).
+   * La respuesta trae el correo enmascarado, nunca completo.
+   */
+  @Post(':publicId/resend')
+  @HttpCode(200)
+  @UseGuards(OptionalJwtAuthGuard)
+  resend(
+    @Param('publicId') publicId: string,
+    @Request() req: OptionalAuthRequest,
+    @Query('accessToken') accessToken?: string
+  ) {
+    return this.selfService.resendTickets(publicId, this.requester(req, accessToken));
+  }
+
+  /**
+   * CLABE y titular para un reembolso PENDING de esta orden que no vuelve a
+   * tarjeta. Respuesta y logs con la CLABE enmascarada (últimos 4).
+   */
+  @Patch(':publicId/refunds/:refundId/clabe')
+  @UseGuards(OptionalJwtAuthGuard)
+  savePayoutClabe(
+    @Param('publicId') publicId: string,
+    @Param('refundId') refundId: string,
+    @Body() body: RefundPayoutClabeDto,
+    @Request() req: OptionalAuthRequest,
+    @Query('accessToken') accessToken?: string
+  ) {
+    return this.selfService.savePayoutClabe(
+      publicId,
+      refundId,
+      this.requester(req, accessToken),
+      body
+    );
   }
 
   @Get(':publicId')
@@ -136,7 +179,7 @@ export class OrdersController {
   get(
     @Param('publicId') publicId: string,
     @Request() req: OptionalAuthRequest,
-    @Query('accessToken') accessToken?: string,
+    @Query('accessToken') accessToken?: string
   ) {
     return this.orders.getForRequester(publicId, this.requester(req, accessToken));
   }

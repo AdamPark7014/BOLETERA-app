@@ -11,11 +11,31 @@ import {
   refundDeadlines,
   refundFallbackCopy,
   refundMethodLabel,
-  refundNeedsBankAccount,
   refundStatusCopy,
   summarizeRefunds,
+  isCompensationRefund,
 } from '@/lib/refund-policy';
+import { RefundClabeForm, type RefundPayout } from './RefundClabeForm';
 import styles from './order.module.scss';
+
+/** Fila de reembolso con la cuenta SPEI que el API devuelve (CLABE enmascarada). */
+export type BuyerRefund = OrderRefund & Omit<RefundPayout, 'id'>;
+
+/**
+ * Métodos cuyo reembolso vuelve al mismo instrumento. Mismo criterio que el
+ * API (`buyer-self-service.service.ts`): ahí no se pide CLABE.
+ */
+const CARD_LIKE_METHODS = new Set(['CARD', 'CLIP', 'APPLE_PAY', 'GOOGLE_PAY', 'PAYPAL']);
+
+/** Credencial y destino para que el panel pueda guardar la CLABE. */
+export type RefundPanelAccess = {
+  apiBase: string;
+  publicId: string;
+  accessToken?: string | null;
+  onSaved?: () => void;
+  /** Falso si la vista ya pinta otro botón primario. */
+  primary?: boolean;
+};
 
 /**
  * Lo que esta vista necesita saber de la orden para contar el reembolso.
@@ -36,7 +56,7 @@ export type RefundAwareOrder = {
   createdAt?: string | null;
   completedAt?: string | null;
   refundedAt?: string | null;
-  refunds?: OrderRefund[] | null;
+  refunds?: BuyerRefund[] | null;
   /** Plazo que el API calculó para esta orden. El correo lee el mismo número. */
   settlementBusinessDays?: number | null;
   bankBusinessDays?: number | null;
@@ -57,7 +77,9 @@ export function EventCancelledBanner({ order }: { order: RefundAwareOrder }) {
     <section className={styles.cancelBanner} aria-labelledby="cancel-banner-title">
       <p className={styles.cancelKicker}>Evento cancelado</p>
       <h2 id="cancel-banner-title">
-        {order.event?.title ? `${order.event.title} no se va a realizar` : 'El evento fue cancelado'}
+        {order.event?.title
+          ? `${order.event.title} no se va a realizar`
+          : 'El evento fue cancelado'}
       </h2>
       <p>
         {when ? `Se canceló el ${when}. ` : ''}
@@ -85,7 +107,14 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
  * sitio donde está definido y configurable por entorno; si cada pantalla lo
  * escribiera, acabarían contradiciéndose entre ellas y con el correo.
  */
-export function RefundStatusPanel({ order }: { order: RefundAwareOrder }) {
+export function RefundStatusPanel({
+  order,
+  access,
+}: {
+  order: RefundAwareOrder;
+  /** Sin esto el panel solo informa; con esto ofrece capturar la CLABE. */
+  access?: RefundPanelAccess;
+}) {
   const summary = summarizeRefunds(order.refunds);
   if (!summary && !orderHasRefund(order.status)) return null;
 
@@ -112,14 +141,24 @@ export function RefundStatusPanel({ order }: { order: RefundAwareOrder }) {
     );
   }
 
-  const anchor = summary.requestedAt ?? (order.refundedAt ? new Date(order.refundedAt) : new Date());
+  const anchor =
+    summary.requestedAt ?? (order.refundedAt ? new Date(order.refundedAt) : new Date());
   const deadlines = refundDeadlines(
     anchor,
-    buyerRefundPolicy(order.settlementBusinessDays, order.bankBusinessDays),
+    buyerRefundPolicy(order.settlementBusinessDays, order.bankBusinessDays)
   );
   const sentBy = formatPolicyDate(deadlines.sentBy);
   const visibleBy = formatPolicyDate(deadlines.visibleBy);
   const copy = refundStatusCopy(summary.status, { methodLabel, sentBy, visibleBy });
+
+  // La CLABE se pide sobre la devolución pendiente (no la bonificación) y solo
+  // si el pago no fue con tarjeta: el API aplica la misma regla y es quien manda.
+  const method = String(order.paymentMethod ?? '').toUpperCase();
+  const pending = (order.refunds ?? []).find(
+    (r) => Boolean(r.id) && String(r.status).toUpperCase() === 'PENDING' && !isCompensationRefund(r)
+  );
+  const payoutRefund: RefundPayout | null =
+    pending?.id && !CARD_LIKE_METHODS.has(method) ? { ...pending, id: pending.id } : null;
 
   const total = Number(order.totalAmount) || 0;
   // El desglose solo se enseña si lo devuelto ES el cobro íntegro. Repartir un
@@ -140,10 +179,7 @@ export function RefundStatusPanel({ order }: { order: RefundAwareOrder }) {
       <ul className={styles.refundRows}>
         {hasBreakdown && (
           <>
-            <Row
-              label="Precio de los boletos"
-              value={formatMoney(order.subtotal ?? 0, currency)}
-            />
+            <Row label="Precio de los boletos" value={formatMoney(order.subtotal ?? 0, currency)} />
             <Row label="Cargo por servicio" value={formatMoney(order.fees ?? 0, currency)} />
             <Row label="IVA" value={formatMoney(order.taxAmount ?? 0, currency)} />
           </>
@@ -167,9 +203,7 @@ export function RefundStatusPanel({ order }: { order: RefundAwareOrder }) {
 
       {summary.compensationTotal > 0 && (
         <div className={styles.compensation}>
-          <h3>
-            Además: bonificación de {formatMoney(summary.compensationTotal, currency)}
-          </h3>
+          <h3>Además: bonificación de {formatMoney(summary.compensationTotal, currency)}</h3>
           <p>
             Es una indemnización adicional por la cancelación, <strong>no</strong> parte de tu
             devolución. Se paga aparte, por el mismo medio y con el mismo plazo.
@@ -178,15 +212,16 @@ export function RefundStatusPanel({ order }: { order: RefundAwareOrder }) {
         </div>
       )}
 
-      {refundNeedsBankAccount(order.paymentMethod) && (
-        <div className={styles.bankAccountNote}>
-          <h3>Necesitamos tu CLABE</h3>
-          <p>
-            Pagaste en efectivo, así que no hay tarjeta a la que devolver. Respóndenos al correo del
-            reembolso con tu CLABE interbancaria (18 dígitos) y el nombre del titular. El plazo
-            empieza a contar desde que la recibimos.
-          </p>
-        </div>
+      {access && payoutRefund && (
+        <RefundClabeForm
+          key={payoutRefund.id}
+          apiBase={access.apiBase}
+          publicId={access.publicId}
+          accessToken={access.accessToken}
+          refund={payoutRefund}
+          onSaved={access.onSaved}
+          primary={access.primary}
+        />
       )}
     </section>
   );
@@ -251,7 +286,7 @@ export function OrderTimeline({
     });
     const deadlines = refundDeadlines(
       refundedAt,
-      buyerRefundPolicy(order.settlementBusinessDays, order.bankBusinessDays),
+      buyerRefundPolicy(order.settlementBusinessDays, order.bankBusinessDays)
     );
     if (summary?.status === 'COMPLETED') {
       steps.push({

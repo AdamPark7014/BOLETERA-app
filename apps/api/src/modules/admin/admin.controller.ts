@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PermissionKey } from '@boletera/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -8,6 +18,10 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { ReconciliationService } from '../reconciliation/reconciliation.service';
 import { AdminService, type VenueWrite } from './admin.service';
+import { maskClabe } from '../orders/clabe';
+
+/** Roles que liquidan reembolsos SPEI y necesitan la CLABE completa. */
+const CLABE_FULL_ROLES = new Set(['ADMIN', 'SUPER_ADMIN', 'FINANCE']);
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -16,7 +30,7 @@ import { AdminService, type VenueWrite } from './admin.service';
 export class AdminController {
   constructor(
     private admin: AdminService,
-    private reconciliation: ReconciliationService,
+    private reconciliation: ReconciliationService
   ) {}
 
   @Get('dashboard')
@@ -39,11 +53,20 @@ export class AdminController {
 
   @Get('orders/:id')
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'VENUE_MANAGER')
-  orderDetail(
-    @Request() req: { user: { organizationId?: string } },
-    @Param('id') id: string,
+  async orderDetail(
+    @Request() req: { user: { organizationId?: string; role?: string } },
+    @Param('id') id: string
   ) {
-    return this.admin.getOrder(req.user.organizationId!, id);
+    const order = await this.admin.getOrder(req.user.organizationId!, id);
+    // La CLABE completa solo para quien paga el reembolso; el resto ve los últimos 4.
+    if (CLABE_FULL_ROLES.has(req.user.role ?? '')) return order;
+    return {
+      ...order,
+      refunds: order.refunds.map((refund) => ({
+        ...refund,
+        payoutClabe: maskClabe(refund.payoutClabe),
+      })),
+    };
   }
 
   @Post('orders/:id/refund')
@@ -52,7 +75,7 @@ export class AdminController {
   refundOrder(
     @Request() req: { user: { organizationId?: string; email?: string; sub?: string } },
     @Param('id') id: string,
-    @Body() body: { reason?: string; amount?: number; notes?: string },
+    @Body() body: { reason?: string; amount?: number; notes?: string }
   ) {
     return this.admin.requestRefund(req.user.organizationId!, id, {
       ...body,
@@ -62,10 +85,7 @@ export class AdminController {
 
   @Post('orders/:id/resend-email')
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'VENUE_MANAGER')
-  resendEmail(
-    @Request() req: { user: { organizationId?: string } },
-    @Param('id') id: string,
-  ) {
+  resendEmail(@Request() req: { user: { organizationId?: string } }, @Param('id') id: string) {
     return this.admin.resendOrderEmail(req.user.organizationId!, id);
   }
 
@@ -74,9 +94,13 @@ export class AdminController {
   cancelOrder(
     @Request() req: { user: { organizationId?: string } },
     @Param('id') id: string,
-    @Body() body: { reason?: string },
+    @Body() body: { reason?: string }
   ) {
-    return this.admin.cancelOrderForOrg(req.user.organizationId!, id, body.reason || 'Admin cancel');
+    return this.admin.cancelOrderForOrg(
+      req.user.organizationId!,
+      id,
+      body.reason || 'Admin cancel'
+    );
   }
 
   @Get('payouts')
@@ -90,7 +114,7 @@ export class AdminController {
   processPayout(
     @Request() req: { user: { organizationId?: string } },
     @Param('payoutId') payoutId: string,
-    @Body() body: { referenceId?: string },
+    @Body() body: { referenceId?: string }
   ) {
     return this.admin.markPayoutProcessing(req.user.organizationId!, payoutId, body.referenceId);
   }
@@ -100,7 +124,7 @@ export class AdminController {
   completePayout(
     @Request() req: { user: { organizationId?: string } },
     @Param('payoutId') payoutId: string,
-    @Body() body: { referenceId: string },
+    @Body() body: { referenceId: string }
   ) {
     return this.admin.markPayoutCompleted(req.user.organizationId!, payoutId, body.referenceId);
   }
@@ -122,7 +146,7 @@ export class AdminController {
   updateVenue(
     @Request() req: { user: { organizationId?: string; sub?: string } },
     @Param('id') id: string,
-    @Body() body: VenueWrite,
+    @Body() body: VenueWrite
   ) {
     return this.admin.updateVenue(req.user.organizationId!, id, body, req.user.sub);
   }
@@ -137,7 +161,7 @@ export class AdminController {
   @Roles('ADMIN', 'SUPER_ADMIN')
   branding(
     @Request() req: { user: { organizationId?: string } },
-    @Body() body: { primaryColor?: string; logoUrl?: string; subdomain?: string },
+    @Body() body: { primaryColor?: string; logoUrl?: string; subdomain?: string }
   ) {
     return this.admin.updateTheme(req.user.organizationId!, body);
   }
@@ -152,7 +176,7 @@ export class AdminController {
   @Roles('ADMIN', 'SUPER_ADMIN')
   updateSiteContent(
     @Request() req: { user: { organizationId?: string } },
-    @Body() body: { siteContent: unknown },
+    @Body() body: { siteContent: unknown }
   ) {
     return this.admin.updateSiteContent(req.user.organizationId!, body.siteContent);
   }
@@ -162,7 +186,7 @@ export class AdminController {
   sales(
     @Request() req: { user: { organizationId?: string } },
     @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query('to') to?: string
   ) {
     return this.admin.salesReport(req.user.organizationId!, from, to);
   }

@@ -48,7 +48,19 @@ type Refund = {
   processedBy: string | null;
   requestedAt: string;
   processedAt: string | null;
+  /** Cuenta que dejó el comprador para devolución SPEI/OXXO. */
+  payoutClabe?: string | null;
+  payoutAccountHolder?: string | null;
+  payoutClabeAt?: string | null;
 };
+
+/** Roles que ven la CLABE completa para pagar el reembolso. El resto, últimos 4. */
+const CLABE_FULL_ROLES = new Set(['ADMIN', 'SUPER_ADMIN', 'FINANCE']);
+
+/** Últimos 4 a la vista; el resto con puntos. */
+function maskClabe(clabe: string): string {
+  return `${'•'.repeat(Math.max(clabe.length - 4, 0))}${clabe.slice(-4)}`;
+}
 
 type OrderDetail = {
   id: string;
@@ -168,18 +180,28 @@ function OrdenBody() {
   }
   if (loading || !token || !order) return <p className={styles.quiet}>Cargando orden.</p>;
 
-  return <OrderView order={order} token={token} reload={() => setNonce((n) => n + 1)} />;
+  return (
+    <OrderView
+      order={order}
+      token={token}
+      role={session.role}
+      reload={() => setNonce((n) => n + 1)}
+    />
+  );
 }
 
 function OrderView({
   order,
   token,
+  role,
   reload,
 }: {
   order: OrderDetail;
   token: string;
+  role: string | null;
   reload: () => void;
 }) {
+  const seesFullClabe = CLABE_FULL_ROLES.has(String(role ?? '').toUpperCase());
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [refundAmount, setRefundAmount] = useState('');
@@ -648,6 +670,17 @@ function OrderView({
                           .join(' · ')}
                       </p>
                       <p className={styles.rowMeta}>{rmeta.hint}</p>
+                      {r.payoutClabe ? (
+                        <p className={styles.rowMeta}>
+                          Cuenta del cliente:{' '}
+                          <span className={styles.mono}>
+                            {seesFullClabe ? r.payoutClabe : maskClabe(r.payoutClabe)}
+                          </span>
+                          {r.payoutAccountHolder ? ` · ${r.payoutAccountHolder}` : ''}
+                          {r.payoutClabeAt ? ` · registrada ${formatWhen(r.payoutClabeAt)}` : ''}
+                          {seesFullClabe ? '' : ' · Finanzas ve la CLABE completa'}
+                        </p>
+                      ) : null}
                     </div>
                     <span />
                     <p className={`${styles.figure} ${styles.out}`}>

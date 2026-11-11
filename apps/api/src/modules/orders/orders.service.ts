@@ -48,6 +48,7 @@ import { ChannelQuotaService } from '../channel-management/channel-quota.service
 import { TicketPdfService } from '../notification/ticket-pdf.service';
 import { BillingService } from '../billing/billing.service';
 import type { OrderRequester } from './orders.dto';
+import { maskClabe } from './clabe';
 
 initDefaultProviders();
 
@@ -88,8 +89,16 @@ const GA_CLAIM_ATTEMPTS = 5;
  * `requestedBy` y `processedBy` no aparecen aquí y tampoco en el `select`: son
  * correos de personal interno y no tienen por qué llegar hasta este punto.
  */
-function toBuyerRefund<T extends { notes: string | null }>(refund: T): T {
-  return { ...refund, notes: buyerVisibleRefundNote(refund.notes) };
+function toBuyerRefund<T extends { notes: string | null; payoutClabe?: string | null }>(
+  refund: T
+): T {
+  // La CLABE sale enmascarada (últimos 4) incluso hacia su dueño: basta para
+  // reconocerla y no deja la cuenta completa en pantallas ni capturas.
+  return {
+    ...refund,
+    notes: buyerVisibleRefundNote(refund.notes),
+    ...(refund.payoutClabe !== undefined ? { payoutClabe: maskClabe(refund.payoutClabe) } : {}),
+  };
 }
 
 @Injectable()
@@ -105,7 +114,7 @@ export class OrdersService {
     private campaigns: CampaignExecutionService,
     private quotas: ChannelQuotaService,
     private ticketPdf: TicketPdfService,
-    private billing: BillingService,
+    private billing: BillingService
   ) {}
 
   async createOrder(dto: {
@@ -205,12 +214,11 @@ export class OrdersService {
 
     if (affiliateRef && !isKnownAffiliateRef(event.metadata, affiliateRef)) {
       this.logger.warn(
-        `Affiliate ref "${affiliateRef}" not in event ${event.id} partner list — tracking anyway`,
+        `Affiliate ref "${affiliateRef}" not in event ${event.id} partner list — tracking anyway`
       );
     }
 
-    const compRequested =
-      dto.isComp === true || (dto.paymentMethod ?? '').toUpperCase() === 'COMP';
+    const compRequested = dto.isComp === true || (dto.paymentMethod ?? '').toUpperCase() === 'COMP';
     if (compRequested && dto.untrustedRequest && !(actor && COMP_ROLES.includes(actor.role))) {
       throw new ForbiddenException('Solo el personal autorizado puede emitir cortesías');
     }
@@ -305,7 +313,9 @@ export class OrdersService {
 
     let promotionId: string | undefined;
     if (appliedPromotionCode) {
-      const promo = await this.prisma.promotion.findUnique({ where: { code: appliedPromotionCode } });
+      const promo = await this.prisma.promotion.findUnique({
+        where: { code: appliedPromotionCode },
+      });
       if (promo) promotionId = promo.id;
     }
 
@@ -357,7 +367,7 @@ export class OrdersService {
       // Una alerta de revisión que no se puede encolar no justifica rechazar una
       // compra que el propio motor consideró aceptable.
       await this.afterSale(publicId, 'alerta de fraude', () =>
-        this.notifications.enqueueFraudAlert(publicId, fraudResult.score, 'REVIEW'),
+        this.notifications.enqueueFraudAlert(publicId, fraudResult.score, 'REVIEW')
       );
     }
 
@@ -369,7 +379,7 @@ export class OrdersService {
     // `{"paymentMethod":"CASH"}` desde la web emitía boletos gratis (F1-01).
     if (!isMethodAllowedForChannel(channelType, method)) {
       throw new ForbiddenException(
-        `El método de pago ${method} no está disponible en el canal ${channel}`,
+        `El método de pago ${method} no está disponible en el canal ${channel}`
       );
     }
     if (
@@ -415,8 +425,7 @@ export class OrdersService {
         paymentMethod: method as 'CARD' | 'SPEI' | 'OXXO',
       });
 
-    const providerGateway =
-      providerId === 'banorte' ? PaymentGateway.BANORTE : PaymentGateway.CASH;
+    const providerGateway = providerId === 'banorte' ? PaymentGateway.BANORTE : PaymentGateway.CASH;
     const commissionRate = event.organization?.commissionRate ?? DEFAULT_COMMISSION_RATE;
     // Un solo reloj para orden, intent y hold: si el intent dura más que la
     // reserva, prometemos un plazo que el inventario no respeta (ver
@@ -458,9 +467,7 @@ export class OrdersService {
               accessTokenHash: this.hashToken(accessToken),
               accessTokenAt: new Date(),
               ...(clientSaleId ? { clientSaleId } : {}),
-              ...(Object.keys(posOps).length
-                ? ({ posOps } as Record<string, unknown>)
-                : {}),
+              ...(Object.keys(posOps).length ? ({ posOps } as Record<string, unknown>) : {}),
               items: {
                 create: pricedLines.map((line) => ({
                   offerId: line.offerId,
@@ -506,7 +513,7 @@ export class OrdersService {
 
           return { created, intent };
         },
-        { timeout: DB_TX_TIMEOUT_MS },
+        { timeout: DB_TX_TIMEOUT_MS }
       );
 
     // --- Paso 1: transacción corta, solo BD. Ninguna llamada de red dentro.
@@ -519,9 +526,7 @@ export class OrdersService {
       if (this.isIdempotencyConflict(e) && (idempotencyKey || clientSaleId)) {
         const replay =
           (idempotencyKey ? await this.findByIdempotencyKey(idempotencyKey) : null) ||
-          (clientSaleId
-            ? await this.findByClientSaleId(event.organizationId, clientSaleId)
-            : null);
+          (clientSaleId ? await this.findByClientSaleId(event.organizationId, clientSaleId) : null);
         if (replay) return replay;
         throw new ConflictException('Ya existe una orden en curso con esa clave de idempotencia');
       }
@@ -594,7 +599,7 @@ export class OrdersService {
         await this.afterSale(order.id, 'aviso de pago pendiente', () =>
           this.notifications.enqueuePaymentPending(order.id, dto.buyerEmail, {
             accessToken,
-          }),
+          })
         );
       }
 
@@ -702,7 +707,7 @@ export class OrdersService {
                 });
                 if (claimed.count !== 1) {
                   throw new ConflictException(
-                    `El boleto del asiento ${hold.seatId} ya no está disponible`,
+                    `El boleto del asiento ${hold.seatId} ya no está disponible`
                   );
                 }
               } else {
@@ -724,7 +729,7 @@ export class OrdersService {
             });
           }
         },
-        { timeout: DB_TX_TIMEOUT_MS },
+        { timeout: DB_TX_TIMEOUT_MS }
       );
     } catch (e) {
       // El dinero ya está capturado: el intent se queda PENDING y este evento
@@ -764,17 +769,17 @@ export class OrdersService {
     await this.afterSale(order.id, 'correo de confirmación', () =>
       this.notifications.enqueueOrderConfirmation(order.id, dto.buyerEmail, buyerName, {
         accessToken,
-      }),
+      })
     );
 
     if (appliedPromotionCode) {
       await this.afterSale(order.id, 'registro de uso de promoción', () =>
-        this.campaigns.recordPromotionUse(dto.eventId, appliedPromotionCode),
+        this.campaigns.recordPromotionUse(dto.eventId, appliedPromotionCode)
       );
     }
     if (!compRequested) {
       await this.afterSale(order.id, 'saldo de lealtad', () =>
-        this.campaigns.awardLoyaltyForPaidOrder(userId, dto.eventId),
+        this.campaigns.awardLoyaltyForPaidOrder(userId, dto.eventId)
       );
     }
 
@@ -799,7 +804,7 @@ export class OrdersService {
       orderItemId: string;
       buyerEmail: string;
       buyerName: string;
-    },
+    }
   ) {
     for (let attempt = 0; attempt < GA_CLAIM_ATTEMPTS; attempt++) {
       const candidate = await tx.ticket.findFirst({
@@ -860,8 +865,7 @@ export class OrdersService {
   }
 
   private resolveClientSaleId(posOps: Record<string, unknown> | undefined): string | undefined {
-    const fromOps =
-      typeof posOps?.clientSaleId === 'string' ? posOps.clientSaleId.trim() : '';
+    const fromOps = typeof posOps?.clientSaleId === 'string' ? posOps.clientSaleId.trim() : '';
     return fromOps || undefined;
   }
 
@@ -893,7 +897,7 @@ export class OrdersService {
     } catch (error) {
       this.logger.error(
         `Orden ${orderId} completada, pero falló «${what}»: ` +
-          `${error instanceof Error ? error.message : String(error)}`,
+          `${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
@@ -966,7 +970,7 @@ export class OrdersService {
 
   private async offerIdForHold(
     hold: { seatId: string | null; offerId: string | null },
-    fallback?: string,
+    fallback?: string
   ) {
     if (hold.offerId) return hold.offerId;
     if (hold.seatId) {
@@ -1017,6 +1021,11 @@ export class OrdersService {
             notes: true,
             requestedAt: true,
             processedAt: true,
+            // Cuenta para devolución SPEI/OXXO: la CLABE sale enmascarada en
+            // `toBuyerRefund`; titular y fecha le dicen que ya la dio.
+            payoutClabe: true,
+            payoutAccountHolder: true,
+            payoutClabeAt: true,
           },
           orderBy: { requestedAt: 'asc' },
         },
@@ -1054,6 +1063,33 @@ export class OrdersService {
   }
 
   /**
+   * Acredita al solicitante con la MISMA regla que `getForRequester` y devuelve
+   * solo lo que necesitan las acciones del comprador (reenvío, CLABE). Sin PII
+   * de más ni el hash del token.
+   */
+  async authorizeBuyerAction(publicId: string, requester: OrderRequester) {
+    const order = await this.prisma.order.findUnique({
+      where: { publicId },
+      select: {
+        id: true,
+        publicId: true,
+        status: true,
+        userId: true,
+        buyerEmail: true,
+        buyerName: true,
+        paymentMethod: true,
+        accessTokenHash: true,
+        accessTokenAt: true,
+        payment: { select: { method: true } },
+      },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    await this.assertOrderAccess(order, requester);
+    const { accessTokenHash: _hash, accessTokenAt: _issuedAt, ...safe } = order;
+    return safe;
+  }
+
+  /**
    * Sondeo público del checkout: solo lo justo para saber si ya se pagó.
    * Sin importes ni método de pago, que es PII de la compra.
    */
@@ -1081,7 +1117,7 @@ export class OrdersService {
       accessTokenHash: string | null;
       accessTokenAt: Date | null;
     },
-    requester: OrderRequester,
+    requester: OrderRequester
   ) {
     if (requester.userId && order.userId === requester.userId) return;
 
@@ -1112,9 +1148,7 @@ export class OrdersService {
   async listForUser(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const orders = await this.prisma.order.findMany({
-      where: user
-        ? { OR: [{ userId }, { buyerEmail: user.email }] }
-        : { userId },
+      where: user ? { OR: [{ userId }, { buyerEmail: user.email }] } : { userId },
       orderBy: { createdAt: 'desc' },
       take: 50,
       include: {
@@ -1148,6 +1182,11 @@ export class OrdersService {
             notes: true,
             requestedAt: true,
             processedAt: true,
+            // Cuenta para devolución SPEI/OXXO: la CLABE sale enmascarada en
+            // `toBuyerRefund`; titular y fecha le dicen que ya la dio.
+            payoutClabe: true,
+            payoutAccountHolder: true,
+            payoutClabeAt: true,
           },
           orderBy: { requestedAt: 'asc' },
         },
@@ -1197,7 +1236,7 @@ export class OrdersService {
 
   private buyerDeadlineDays(
     organizationId: string,
-    policies: Map<string, { settlementBusinessDays: number; bankBusinessDays: number }>,
+    policies: Map<string, { settlementBusinessDays: number; bankBusinessDays: number }>
   ) {
     const found = policies.get(organizationId);
     if (found) return found;
@@ -1222,7 +1261,7 @@ export class OrdersService {
    */
   private async ticketsHeldByRequester(
     order: Awaited<ReturnType<OrdersService['getByPublicId']>>,
-    requester: OrderRequester,
+    requester: OrderRequester
   ) {
     let email = requester.email?.toLowerCase();
     if (!email && requester.userId) {
@@ -1262,7 +1301,7 @@ export class OrdersService {
         const qrPayload = buildQrPayload(t.id, order.eventId, secret, t.keyEpoch ?? 0);
         const qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 180, margin: 1 });
         return { id: t.id, code: t.code, qrPayload, qrDataUrl };
-      }),
+      })
     );
     return {
       publicId: order.publicId,
@@ -1338,14 +1377,19 @@ export class OrdersService {
         status: { in: [TicketStatus.SOLD, TicketStatus.USED] },
       },
       include: {
-        event: { select: { id: true, title: true, startsAt: true, venue: { select: { name: true } } } },
+        event: {
+          select: { id: true, title: true, startsAt: true, venue: { select: { name: true } } },
+        },
       },
       orderBy: { event: { startsAt: 'asc' } },
       take: 200,
     });
 
     // Agrupados por evento, que es como los pinta la app.
-    const porEvento = new Map<string, { event: (typeof tickets)[number]['event']; tickets: typeof tickets }>();
+    const porEvento = new Map<
+      string,
+      { event: (typeof tickets)[number]['event']; tickets: typeof tickets }
+    >();
     for (const t of tickets) {
       const grupo = porEvento.get(t.event.id) ?? { event: t.event, tickets: [] as typeof tickets };
       grupo.tickets.push(t);
@@ -1387,7 +1431,7 @@ export class OrdersService {
         section: t.section,
         row: t.row,
         seatNumber: t.seatNumber,
-      })),
+      }))
     );
     return this.ticketPdf.buildPdfBuffer({
       eventTitle: order.event.title,
@@ -1401,7 +1445,7 @@ export class OrdersService {
   async requestCfdiForBuyer(
     publicId: string,
     userId: string,
-    data: { receptorRfc: string; receptorNombre: string; receptorUsoCfdi?: string },
+    data: { receptorRfc: string; receptorNombre: string; receptorUsoCfdi?: string }
   ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User required');
@@ -1410,8 +1454,7 @@ export class OrdersService {
       throw new BadRequestException('Order not completed');
     }
     const owns =
-      order.userId === userId ||
-      order.buyerEmail.toLowerCase() === user.email.toLowerCase();
+      order.userId === userId || order.buyerEmail.toLowerCase() === user.email.toLowerCase();
     if (!owns) throw new BadRequestException('Not your order');
 
     return this.billing.stampOrderInvoice(order.organizationId, {
@@ -1422,5 +1465,3 @@ export class OrdersService {
     });
   }
 }
-
-

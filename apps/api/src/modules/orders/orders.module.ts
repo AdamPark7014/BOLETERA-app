@@ -6,6 +6,7 @@ import { ChannelManagementModule } from '../channel-management/channel-managemen
 import { FraudModule } from '../fraud/fraud.module';
 import { NotificationModule } from '../notification/notification.module';
 import { PricingModule } from '../pricing/pricing.module';
+import { BuyerSelfServiceService } from './buyer-self-service.service';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 
@@ -20,7 +21,7 @@ import { OrdersService } from './orders.service';
     NotificationModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [OrdersService, BuyerSelfServiceService],
   exports: [OrdersService],
 })
 export class OrdersModule {}

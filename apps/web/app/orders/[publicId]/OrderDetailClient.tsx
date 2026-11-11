@@ -11,10 +11,16 @@ import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButto
 import { fetchOrderResource, orderPath, resolveOrderAccessToken } from '@/lib/order-access';
 import { isDeferredMethod } from '@/lib/payment-window';
 import { formatMoney } from '@/lib/pricing';
-import { orderHasRefund, type OrderRefund } from '@/lib/refund-policy';
+import { orderHasRefund } from '@/lib/refund-policy';
 import { DeferredPaymentPanel } from './DeferredPaymentPanel';
 import { OrderAccessGate } from './OrderAccessGate';
-import { EventCancelledBanner, OrderTimeline, RefundStatusPanel } from './RefundStatusPanel';
+import {
+  EventCancelledBanner,
+  OrderTimeline,
+  RefundStatusPanel,
+  type BuyerRefund,
+} from './RefundStatusPanel';
+import { ResendTicketButton } from './ResendTicketButton';
 import { TicketsPdfLink } from './TicketsPdfLink';
 import styles from './order.module.scss';
 
@@ -50,7 +56,7 @@ type OrderDetail = {
    * las incluye (el `include` vive en el módulo `orders`); la vista degrada sin
    * ellas y se enciende sola en cuanto lleguen.
    */
-  refunds?: OrderRefund[] | null;
+  refunds?: BuyerRefund[] | null;
   event?: {
     title: string;
     slug: string;
@@ -249,7 +255,17 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
 
         {/* Lo excepcional va arriba: la cancelación y el dinero de vuelta. */}
         <EventCancelledBanner order={order} />
-        <RefundStatusPanel order={order} />
+        <RefundStatusPanel
+          order={order}
+          access={{
+            apiBase: API,
+            publicId: order.publicId,
+            accessToken: token,
+            onSaved: () => void load(),
+            // «Descargar PDF» ya es el primario cuando la orden sigue cobrada.
+            primary: !completed,
+          }}
+        />
 
         {order.event && (
           <section className={styles.eventCard} aria-label="Evento">
@@ -353,8 +369,13 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
         <section className={styles.section}>
           <div className={styles.sectionHead}>
             <h2>Tus boletos ({tickets.length})</h2>
-            {completed && (
-              <TicketsPdfLink apiBase={API} publicId={order.publicId} accessToken={token} />
+            {(completed || order.status === 'PARTIALLY_REFUNDED') && (
+              <div className={styles.actions}>
+                {completed && (
+                  <TicketsPdfLink apiBase={API} publicId={order.publicId} accessToken={token} />
+                )}
+                <ResendTicketButton apiBase={API} publicId={order.publicId} accessToken={token} />
+              </div>
             )}
           </div>
           {(refunded || eventCancelled) && (
