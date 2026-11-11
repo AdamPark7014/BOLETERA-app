@@ -2,8 +2,8 @@
 
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
-import { Button, Input } from '@boletera/ui';
-import { AuthShell, MobileBrand, StatusBanner } from '../_components/AuthShell';
+import { Field, TicketButton } from '@boletera/ui';
+import { AuthShell, StatusBanner } from '../_components/AuthShell';
 import styles from '../login.module.scss';
 
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
@@ -45,42 +45,41 @@ export default function AdminForgotPasswordPage() {
   }
 
   return (
-    <AuthShell compact>
-      <MobileBrand />
-
-      <header className={styles.cardHeader}>
-        <h1>Recuperar contraseña</h1>
-        <p>Te enviamos un enlace si el correo está registrado en tu organización.</p>
-      </header>
-
-      <form className={styles.form} onSubmit={onSubmit}>
-        <Input
+    <AuthShell
+      title="Recuperar contraseña"
+      lead="Te enviamos un enlace si el correo está registrado en tu organización."
+    >
+      <form className={styles.form} onSubmit={(e) => void onSubmit(e)}>
+        <Field
           id="forgot-email"
+          label="Correo"
           type="email"
-          label="Email corporativo"
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="tu@empresa.com"
           required
         />
 
         {error ? <StatusBanner tone="error">{error}</StatusBanner> : null}
         {msg ? <StatusBanner tone="success">{msg}</StatusBanner> : null}
-
         {devUrl ? (
           <StatusBanner tone="info">
-            Dev: <Link href={devUrl}>{devUrl}</Link>
+            Enlace de desarrollo:{' '}
+            <Link className={styles.inlineLink} href={devUrl}>
+              abrir restablecimiento
+            </Link>
           </StatusBanner>
         ) : null}
 
-        <Button type="submit" fullWidth loading={loading} loadingLabel="Enviando…">
-          Enviar enlace
-        </Button>
+        <TicketButton type="submit" fullWidth disabled={loading || email.trim().length === 0}>
+          {loading ? 'Enviando' : 'Enviar enlace'}
+        </TicketButton>
       </form>
 
-      <p className={styles.footer}>
-        <Link href="/login">← Volver al inicio de sesión</Link>
+      <p className={styles.foot}>
+        <Link className={styles.inlineLink} href="/login">
+          Volver a entrar
+        </Link>
       </p>
     </AuthShell>
   );

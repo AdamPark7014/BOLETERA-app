@@ -179,7 +179,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem(STORAGE_KEYS.token);
     if (!stored) {
       setLoading(false);
-      router.replace('/login');
+      // El proveedor envuelve también /login/forgot y /login/reset: sin esta
+      // guarda, recuperar la contraseña sin sesión regresaba siempre a /login.
+      if (!window.location.pathname.startsWith('/login')) router.replace('/login');
       return;
     }
 

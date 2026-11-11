@@ -10,13 +10,7 @@ export type SeriesFilters = {
 };
 
 const TABS: readonly SeriesTab[] = ['catalogo', 'crear-serie', 'crear-residencia'];
-const KINDS: readonly EventSeriesKind[] = [
-  'SERIES',
-  'RESIDENCY',
-  'TOUR',
-  'SEASON',
-  'FESTIVAL',
-];
+const KINDS: readonly EventSeriesKind[] = ['SERIES', 'RESIDENCY', 'TOUR', 'SEASON', 'FESTIVAL'];
 const STATUSES: readonly EventSeriesStatus[] = ['DRAFT', 'ACTIVE', 'COMPLETED', 'ARCHIVED'];
 
 export function parseFilters(params: URLSearchParams): SeriesFilters {
@@ -26,9 +20,7 @@ export function parseFilters(params: URLSearchParams): SeriesFilters {
   return {
     q: params.get('q') ?? '',
     tab: (TABS as readonly string[]).includes(tabRaw) ? (tabRaw as SeriesTab) : 'catalogo',
-    kind: (KINDS as readonly string[]).includes(kindRaw)
-      ? (kindRaw as EventSeriesKind)
-      : 'ALL',
+    kind: (KINDS as readonly string[]).includes(kindRaw) ? (kindRaw as EventSeriesKind) : 'ALL',
     status: (STATUSES as readonly string[]).includes(statusRaw)
       ? (statusRaw as EventSeriesStatus)
       : 'ALL',
@@ -50,13 +42,7 @@ export function filterSeries(rows: SeriesRow[], filters: SeriesFilters): SeriesR
     if (filters.kind !== 'ALL' && row.kind !== filters.kind) return false;
     if (filters.status !== 'ALL' && row.status !== filters.status) return false;
     if (!q) return true;
-    const haystack = [
-      row.name,
-      row.venue?.name ?? '',
-      row.summary ?? '',
-      row.kind,
-      row.status,
-    ]
+    const haystack = [row.name, row.venue?.name ?? '', row.summary ?? '', row.kind, row.status]
       .join(' ')
       .toLocaleLowerCase('es-MX');
     return haystack.includes(q);

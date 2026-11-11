@@ -1,20 +1,22 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useParams, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { flatSeats, normalizeSeatMap } from '@boletera/venue-engine';
 import type { LayoutPublishStatusValue } from '@boletera/shared';
 import type { SeatMapData } from '@boletera/shared';
-import { Badge, Button, PageHeader, type BadgeTone } from '@boletera/ui';
 import { getVenueLayout } from '@/lib/platform-api';
 import { ApiStateBoundary, useSession } from '../../../events/_shared/api-state';
-import styles from '../../venues.module.scss';
+import { AdminFrame } from '../../../events/_ticket/AdminFrame';
+import frame from '../../../events/_ticket/frame.module.scss';
+import { formatCount } from '../../../events/_ticket/read';
+import styles from './venue-3d.module.scss';
 
-const Venue3DViewer = dynamic(
-  () => import('@boletera/venue-3d').then((m) => m.Venue3DViewer),
-  { ssr: false },
-);
+const Venue3DViewer = dynamic(() => import('@boletera/venue-3d').then((m) => m.Venue3DViewer), {
+  ssr: false,
+});
 
 const STATUS_LABEL: Record<LayoutPublishStatusValue, string> = {
   DRAFT: 'Borrador',
@@ -23,23 +25,19 @@ const STATUS_LABEL: Record<LayoutPublishStatusValue, string> = {
   ARCHIVED: 'Archivado',
 };
 
-function publishStatusTone(status: LayoutPublishStatusValue): BadgeTone {
-  switch (status) {
-    case 'PUBLISHED':
-      return 'success';
-    case 'IN_REVIEW':
-      return 'info';
-    case 'ARCHIVED':
-      return 'warning';
-    default:
-      return 'neutral';
-  }
+export default function Venue3DPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <Venue3DBody />
+      </AdminFrame>
+    </Suspense>
+  );
 }
 
-export default function Venue3DPage() {
+function Venue3DBody() {
   const { id: venueId } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const layoutVersionParam = searchParams.get('v') ?? '0';
   const [mapData, setMapData] = useState<SeatMapData | null>(null);
   const [venueName, setVenueName] = useState('');
@@ -55,7 +53,7 @@ export default function Venue3DPage() {
     getVenueLayout(token, venueId)
       .then((data) => {
         setMapData(data.layout.mapData);
-        setVenueName(data.venue?.name ?? 'Venue');
+        setVenueName(data.venue?.name ?? 'Recinto');
         if (data.layout.publishStatus) setPublishStatus(data.layout.publishStatus);
       })
       .catch(setError);
@@ -100,64 +98,50 @@ export default function Venue3DPage() {
   }
 
   return (
-    <div className={styles.studioPage}>
-      <PageHeader
-        eyebrow={
-          <span className={styles.statusRow}>
-            <Badge tone={publishStatusTone(publishStatus)} variant="soft">
-              {STATUS_LABEL[publishStatus]}
-            </Badge>
-            {layoutVersionParam !== '0' ? (
-              <Badge tone="neutral" variant="soft">
-                Layout v{layoutVersionParam}
-              </Badge>
-            ) : null}
-            <Badge tone="info" variant="soft">
-              {seats.length} asientos
-            </Badge>
-          </span>
-        }
-        title={`Preview 3D — ${venueName}`}
-        breadcrumbs={[
-          { label: 'Recintos', href: '/venues' },
-          { label: venueName, href: `/venues/${venueId}/map` },
-          { label: 'Vista 3D' },
-        ]}
-        description="Vista interactiva 3D del layout guardado"
-        actions={
-          <div className={styles.studioActions}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push(`/venues/${venueId}/map`)}
-            >
-              Editar mapa 2D
-            </Button>
-          </div>
-        }
-      />
+    <section>
+      <header className={frame.sectionHead}>
+        <h1 className={frame.sectionTitle}>Vista 3D · {venueName}</h1>
+        <p className={frame.quiet}>
+          {STATUS_LABEL[publishStatus]}
+          {layoutVersionParam !== '0' ? ` · layout v${layoutVersionParam}` : ''} ·{' '}
+          {formatCount(seats.length)} asientos
+        </p>
+        <p className={frame.tertiary}>
+          Vista interactiva del layout guardado. Se lee aquí; se edita en el mapa 2D.
+        </p>
+        <p className={styles.links}>
+          <Link href={`/venues/${venueId}/map`} className={styles.inlineLink}>
+            Editar mapa 2D
+          </Link>
+          <Link href="/venues" className={styles.inlineLink}>
+            Recintos
+          </Link>
+        </p>
+      </header>
 
       {seats.length === 0 ? (
-        <p>
-          Este venue todavía no tiene asientos en su layout. Ve al editor de mapa y aplica una
+        <p className={frame.quiet}>
+          Este recinto todavía no tiene asientos en su layout. Ve al editor de mapa y aplica una
           plantilla.
         </p>
       ) : (
-        <Venue3DViewer
-          mode="orbit"
-          seats={seats}
-          height={620}
-          stage={normalized?.venue?.stage}
-          aisles={normalized?.venue?.aisles}
-          obstacles={normalized?.venue?.obstacles}
-          stairs={normalized?.venue?.stairs}
-          exits={normalized?.venue?.exits}
-          furniture={normalized?.venue?.furniture}
-          focusPoints={normalized?.venue?.focusPoints}
-          levels={normalized?.venue?.levels}
-          mapData={normalized}
-        />
+        <div className={styles.viewer}>
+          <Venue3DViewer
+            mode="orbit"
+            seats={seats}
+            height={620}
+            stage={normalized?.venue?.stage}
+            aisles={normalized?.venue?.aisles}
+            obstacles={normalized?.venue?.obstacles}
+            stairs={normalized?.venue?.stairs}
+            exits={normalized?.venue?.exits}
+            furniture={normalized?.venue?.furniture}
+            focusPoints={normalized?.venue?.focusPoints}
+            levels={normalized?.venue?.levels}
+            mapData={normalized}
+          />
+        </div>
       )}
-    </div>
+    </section>
   );
 }

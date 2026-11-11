@@ -1,157 +1,117 @@
-// Pantalla de decisión irreversible: el peso visual va donde está el riesgo.
+// Cancelación en el lenguaje Black Ticket: el riesgo se lee en las cifras y en
+// el botón de peligro, no en colores de alarma.
 
-.field {
-  display: grid;
-  gap: var(--bl-space-1-5);
-  max-width: 46rem;
-
-  > span {
-    font-size: var(--text-sm, 0.875rem);
-    font-weight: 600;
-    color: var(--color-text, inherit);
-  }
-
-  textarea,
-  input {
-    width: 100%;
-    padding: var(--bl-space-2-5) var(--bl-space-3);
-    font: inherit;
-    color: inherit;
-    background: var(--color-surface, var(--bl-elevated));
-    border: 1px solid var(--color-border, var(--bl-border-strong));
-    border-radius: var(--radius-md, 8px);
-    resize: vertical;
-
-    &:focus-visible {
-      outline: 2px solid var(--color-accent, #2563eb);
-      outline-offset: 1px;
-    }
-  }
+.area {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 640px;
 }
 
-.hint {
-  color: var(--color-text-muted, var(--bl-text-secondary));
-  font-size: var(--text-xs, 0.8125rem);
+.label {
+  color: var(--text);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
 }
 
-.hintWarn {
-  color: var(--color-warning-text, #a16207);
-  font-size: var(--text-xs, 0.8125rem);
-  font-weight: 600;
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 72px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-m);
+  background: var(--ink-sunken);
+  color: var(--text);
+  font: var(--body-sm);
+  resize: vertical;
 }
 
-.error {
-  margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-4);
-  padding: var(--bl-space-3) var(--bl-space-4);
-  color: var(--color-danger-text, #b91c1c);
-  background: var(--color-danger-wash, #fef2f2);
-  border: 1px solid var(--color-danger-border, #fecaca);
-  border-left-width: 4px;
-  border-radius: var(--radius-md, 8px);
+.textarea:focus-visible {
+  border-color: transparent;
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
 }
-
-// --- Imputabilidad -----------------------------------------------------------
-// Dos opciones grandes y explícitas en vez de una casilla: la respuesta decide
-// si se paga una bonificación legal, así que no puede parecer un ajuste menor.
 
 .choices {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  gap: var(--bl-space-3);
-  max-width: 46rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 640px;
 }
 
-.choice,
-.choiceOn {
-  display: grid;
-  gap: var(--bl-space-1-5);
-  justify-items: start;
-  padding: var(--bl-space-4);
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  background: var(--ink-raised);
+  color: var(--text);
+  font: var(--body-sm);
   text-align: left;
   cursor: pointer;
-  background: var(--color-surface, var(--bl-elevated));
-  border: 1px solid var(--color-border, var(--bl-border-strong));
-  border-radius: var(--radius-lg, 12px);
-  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
 
-  strong {
-    font-size: var(--text-md, 1rem);
-  }
+.choice:hover {
+  background: var(--ink-overlay);
+}
 
-  span {
-    color: var(--color-text-muted, var(--bl-text-secondary));
-    font-size: var(--text-sm, 0.875rem);
-  }
-
-  &:hover {
-    border-color: var(--color-border-strong, #a1a1aa);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--color-accent, #2563eb);
-    outline-offset: 2px;
-  }
+.choice:focus-visible {
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .choiceOn {
-  border-color: var(--color-accent, #2563eb);
-  // Además del color: el borde grueso distingue la selección sin depender de
-  // percibir el matiz.
-  box-shadow: inset 0 0 0 1px var(--color-accent, #2563eb);
-  background: var(--color-accent-wash, #eff6ff);
+  box-shadow: inset 2px 0 0 var(--gold);
+  background: var(--gold-wash);
 }
 
-// --- Impacto -----------------------------------------------------------------
+.choiceTitle {
+  font-weight: var(--weight-medium);
+}
 
-.kpis {
+.figures {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: var(--bl-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
 }
 
-.execute {
+.confirm {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 640px;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-m);
+  background: var(--ink-raised);
 }
 
-.placeholder {
-  margin: var(--bl-space-0);
-  color: var(--color-text-muted, var(--bl-text-secondary));
-  font-size: var(--text-sm, 0.875rem);
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.failedList {
-  display: grid;
-  gap: var(--bl-space-2);
-  margin: var(--bl-space-0);
-  padding: var(--bl-space-0);
-  list-style: none;
-
-  li {
-    display: flex;
-    gap: var(--bl-space-3);
-    align-items: baseline;
-    flex-wrap: wrap;
-    padding: var(--bl-space-2-5) var(--bl-space-3);
-    background: var(--color-danger-wash, #fef2f2);
-    border-radius: var(--radius-md, 8px);
-
-    a {
-      font-weight: 600;
-      font-family: ui-monospace, monospace;
-    }
-
-    span {
-      color: var(--color-danger-text, #b91c1c);
-      font-size: var(--text-sm, 0.875rem);
-    }
-  }
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .choice,
-  .choiceOn {
-    transition: none;
+.subTitle {
+  margin: 0;
+  color: var(--text);
+  font: var(--body);
+  font-weight: var(--weight-medium);
+}
+
+@media (max-width: 640px) {
+  .choices {
+    grid-template-columns: 1fr;
   }
 }

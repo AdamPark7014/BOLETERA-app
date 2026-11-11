@@ -1,25 +1,22 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Field, TicketButton, formatTicketAmount } from '@boletera/ui';
 import {
-  Button,
-  Card,
-  CardHeader,
-  EmptyState,
-  formatCurrency,
-  formatNumber,
-  Skeleton,
-} from '@boletera/ui';
-import { ScheduleBuilder, type ScheduleBuilderValue } from '@/components/ScheduleBuilder/ScheduleBuilder';
-import { useToast } from '@/components/Toast/ToastProvider';
+  ScheduleBuilder,
+  type ScheduleBuilderValue,
+} from '@/components/ScheduleBuilder/ScheduleBuilder';
 import { useCreateEventSeries } from '@/lib/queries/events';
 import { useVenues } from '@/lib/queries/venues';
 import type { SchedulePreview, SeriesTemplate } from '@/lib/scheduling-api';
+import frame from '../../_ticket/frame.module.scss';
+import { SheetSelect } from '../../_ticket/controls';
+import { formatCount } from '../../_ticket/read';
 import styles from '../series.module.scss';
 
 type Props = {
   disabled?: boolean;
-  onCreated?: () => void;
+  onCreated?: (message: string) => void;
 };
 
 function defaultStartLocal(): string {
@@ -31,7 +28,6 @@ function defaultStartLocal(): string {
 }
 
 export function CreateSeriesForm({ disabled, onCreated }: Props) {
-  const toast = useToast();
   const venuesQuery = useVenues();
   const createSeries = useCreateEventSeries();
 
@@ -41,6 +37,7 @@ export function CreateSeriesForm({ disabled, onCreated }: Props) {
   const [capacity, setCapacity] = useState(500);
   const [basePrice, setBasePrice] = useState(450);
   const [preview, setPreview] = useState<SchedulePreview | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
   const [schedule, setSchedule] = useState<ScheduleBuilderValue>({
     mode: 'recurring',
     rule: {
@@ -60,7 +57,7 @@ export function CreateSeriesForm({ disabled, onCreated }: Props) {
       currency: 'MXN',
       description: description || undefined,
     }),
-    [capacity, basePrice, description],
+    [capacity, basePrice, description]
   );
 
   const canSubmit =
@@ -75,6 +72,7 @@ export function CreateSeriesForm({ disabled, onCreated }: Props) {
 
   async function submit() {
     if (!canSubmit || !preview) return;
+    setFailure(null);
     const exceptions = new Set(schedule.rule.exceptions ?? []);
     const occurrences = preview.occurrences
       .filter((item) => !exceptions.has(item.localDate))
@@ -86,7 +84,7 @@ export function CreateSeriesForm({ disabled, onCreated }: Props) {
       }));
 
     if (!occurrences.length) {
-      toast.error('No hay fechas válidas para la serie');
+      setFailure('No hay fechas válidas para la serie.');
       return;
     }
 
@@ -97,115 +95,91 @@ export function CreateSeriesForm({ disabled, onCreated }: Props) {
         venueId,
         occurrences,
       });
-      toast.success(
-        `Serie creada · ${formatNumber(result.totalEvents)} eventos en gestión. Revisa el listado de Eventos.`,
-      );
       setSeriesName('');
       setDescription('');
-      onCreated?.();
+      onCreated?.(
+        `Serie creada · ${formatCount(result.totalEvents)} eventos en gestión. Revisa el listado de Eventos.`
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo crear la serie');
+      setFailure(error instanceof Error ? error.message : 'No se pudo crear la serie.');
     }
   }
 
-  if (venuesQuery.isPending) return <Skeleton height={280} />;
+  if (venuesQuery.isPending) return <p className={frame.quiet}>Cargando recintos.</p>;
   if (venuesQuery.error) {
     return (
-      <EmptyState
-        title="No se pudieron cargar recintos"
-        description={
-          venuesQuery.error instanceof Error
-            ? venuesQuery.error.message
-            : 'Error desconocido'
-        }
-        illustration="error"
-        tone="danger"
-        action={
-          <Button type="button" onClick={() => void venuesQuery.refetch()}>
+      <div className={styles.alert} role="alert">
+        <p className={styles.subTitle}>No se pudieron cargar recintos</p>
+        <p className={frame.danger}>
+          {venuesQuery.error instanceof Error ? venuesQuery.error.message : 'Error desconocido'}
+        </p>
+        <div className={styles.actions}>
+          <TicketButton variant="secondary" onClick={() => void venuesQuery.refetch()}>
             Reintentar
-          </Button>
-        }
-      />
+          </TicketButton>
+        </div>
+      </div>
     );
   }
   if (!venuesQuery.data?.length) {
-    return (
-      <EmptyState
-        title="Sin recintos"
-        description="Necesitas al menos un recinto para crear una serie."
-        illustration="seats"
-      />
-    );
+    return <p className={frame.quiet}>Necesitas al menos un recinto para crear una serie.</p>;
   }
 
   return (
-    <Card variant="outline" padding="lg">
-      <CardHeader
-        title="Nueva serie de funciones"
-        description="Alta rápida de fechas a partir de la vista previa del ScheduleBuilder. Para series programadas con fases y ficha en este catálogo, usa el asistente completo."
-      />
+    <div className={styles.block}>
+      <h2 className={styles.subTitle}>Nueva serie de funciones</h2>
+      <p className={frame.quiet}>
+        Alta rápida de fechas a partir de la vista previa de recurrencia. Para series con fases y
+        ficha propia, usa el asistente completo.
+      </p>
       <div className={styles.formGrid}>
-        <label className={`${styles.field} ${styles.full}`}>
-          Nombre de la serie
-          <input
-            value={seriesName}
-            onChange={(e) => setSeriesName(e.target.value)}
-            placeholder="Ej. Ciclo de jazz — primavera"
-            disabled={disabled}
-          />
-        </label>
-        <label className={`${styles.field} ${styles.full}`}>
-          Descripción
-          <textarea
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            disabled={disabled}
-          />
-        </label>
-        <label className={styles.field}>
-          Recinto
-          <select
+        <Field
+          className={styles.full}
+          label="Nombre de la serie"
+          value={seriesName}
+          onChange={(e) => setSeriesName(e.target.value)}
+          placeholder="Ej. Ciclo de jazz — primavera"
+          disabled={disabled}
+        />
+        <Field
+          className={styles.full}
+          label="Descripción"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          disabled={disabled}
+        />
+        <div className={`${styles.pick} ${styles.full}`}>
+          <p className={styles.caption}>Recinto</p>
+          <SheetSelect
+            label="Recinto"
             value={venueId}
-            onChange={(e) => setVenueId(e.target.value)}
-            disabled={disabled}
-          >
-            <option value="">Seleccionar…</option>
-            {venuesQuery.data.map((venue) => (
-              <option key={venue.id} value={venue.id}>
-                {venue.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.field}>
-          Aforo por fecha
-          <input
-            type="number"
-            min={1}
-            value={capacity}
-            onChange={(e) => setCapacity(Number(e.target.value) || 0)}
-            disabled={disabled}
+            placeholder="Seleccionar recinto"
+            options={venuesQuery.data.map((venue) => ({ value: venue.id, label: venue.name }))}
+            onChange={setVenueId}
           />
-        </label>
-        <label className={styles.field}>
-          Precio base (MXN)
-          <input
-            type="number"
-            min={0}
-            step={50}
-            value={basePrice}
-            onChange={(e) => setBasePrice(Number(e.target.value) || 0)}
-            disabled={disabled}
-          />
-        </label>
-        <p className={`${styles.hint} ${styles.full}`}>
-          Precio de referencia: <strong>{formatCurrency(basePrice, 0)}</strong> · zona horaria{' '}
-          {timezone}
-        </p>
+        </div>
+        <Field
+          label="Aforo por fecha"
+          type="number"
+          min={1}
+          value={capacity}
+          onChange={(e) => setCapacity(Number(e.target.value) || 0)}
+          disabled={disabled}
+        />
+        <Field
+          label="Precio base"
+          kind="money"
+          type="number"
+          min={0}
+          step={50}
+          value={basePrice}
+          onChange={(e) => setBasePrice(Number(e.target.value) || 0)}
+          hint={`${formatTicketAmount(basePrice)} MXN · zona horaria ${timezone}`}
+          disabled={disabled}
+        />
       </div>
 
-      <div className={styles.builderBlock}>
+      <div className={styles.builder}>
         {venueId ? (
           <ScheduleBuilder
             venueId={venueId}
@@ -218,27 +192,34 @@ export function CreateSeriesForm({ disabled, onCreated }: Props) {
             onPreview={setPreview}
           />
         ) : (
-          <p className={styles.hint}>Selecciona un recinto para calcular la recurrencia.</p>
+          <p className={frame.tertiary}>Selecciona un recinto para calcular la recurrencia.</p>
         )}
       </div>
 
-      {(preview?.totals.blocking ?? 0) > 0 && (
-        <p className={styles.alertDanger} role="alert">
-          Hay {formatNumber(preview?.totals.blocking ?? 0)} conflicto(s) bloqueantes. Ajusta la
+      {(preview?.totals.blocking ?? 0) > 0 ? (
+        <p className={frame.danger} role="alert">
+          Hay {formatCount(preview?.totals.blocking ?? 0)} conflicto(s) bloqueantes. Ajusta la
           recurrencia antes de crear.
         </p>
-      )}
+      ) : null}
+      {venueId && !preview ? (
+        <p className={frame.tertiary}>
+          Sin vista previa de fechas no se puede crear: la serie necesita al menos una fecha.
+        </p>
+      ) : null}
+      {failure ? (
+        <p className={frame.danger} role="alert">
+          {failure}
+        </p>
+      ) : null}
 
-      <div className={styles.formActions}>
-        <Button
-          type="button"
-          loading={createSeries.isPending}
-          disabled={!canSubmit}
-          onClick={() => void submit()}
-        >
-          Crear serie ({formatNumber(preview?.totals.occurrences ?? 0)} fechas)
-        </Button>
+      <div className={styles.actions}>
+        <TicketButton disabled={!canSubmit || createSeries.isPending} onClick={() => void submit()}>
+          {createSeries.isPending
+            ? 'Creando serie'
+            : `Crear serie (${formatCount(preview?.totals.occurrences ?? 0)} fechas)`}
+        </TicketButton>
       </div>
-    </Card>
+    </div>
   );
 }

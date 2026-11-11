@@ -3,8 +3,8 @@
 import { FormEvent, Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, Input } from '@boletera/ui';
-import { AuthShell, MobileBrand, StatusBanner } from '../_components/AuthShell';
+import { Field, TicketButton } from '@boletera/ui';
+import { AuthShell, StatusBanner } from '../_components/AuthShell';
 import styles from '../login.module.scss';
 
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
@@ -46,36 +46,37 @@ function ResetForm() {
 
   return (
     <>
-      <MobileBrand />
-
-      <header className={styles.cardHeader}>
-        <h1>Nueva contraseña</h1>
-        <p>Elige una contraseña segura de al menos 8 caracteres.</p>
-      </header>
-
-      <form className={styles.form} onSubmit={onSubmit}>
-        <Input id="reset-email" type="email" label="Email" value={email} readOnly />
-        <Input
+      <form className={styles.form} onSubmit={(e) => void onSubmit(e)}>
+        <Field id="reset-email" label="Correo" type="email" value={email} readOnly />
+        <Field
           id="reset-password"
-          type="password"
           label="Nueva contraseña"
+          type="password"
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           minLength={8}
+          hint="Al menos 8 caracteres."
           required
         />
 
+        {!token ? (
+          <p className={styles.tertiary}>
+            Este enlace no trae token. Ábrelo desde el correo de recuperación.
+          </p>
+        ) : null}
         {error ? <StatusBanner tone="error">{error}</StatusBanner> : null}
         {msg ? <StatusBanner tone="success">{msg}</StatusBanner> : null}
 
-        <Button type="submit" fullWidth loading={loading} loadingLabel="Guardando…">
-          Guardar contraseña
-        </Button>
+        <TicketButton type="submit" fullWidth disabled={loading || password.length === 0}>
+          {loading ? 'Guardando' : 'Guardar contraseña'}
+        </TicketButton>
       </form>
 
-      <p className={styles.footer}>
-        <Link href="/login">← Volver al inicio de sesión</Link>
+      <p className={styles.foot}>
+        <Link className={styles.inlineLink} href="/login">
+          Volver a entrar
+        </Link>
       </p>
     </>
   );
@@ -83,15 +84,11 @@ function ResetForm() {
 
 export default function AdminResetPasswordPage() {
   return (
-    <AuthShell compact>
-      <Suspense
-        fallback={
-          <>
-            <MobileBrand />
-            <p className={styles.cardHeader}>Cargando…</p>
-          </>
-        }
-      >
+    <AuthShell
+      title="Nueva contraseña"
+      lead="Elige una contraseña segura de al menos 8 caracteres."
+    >
+      <Suspense fallback={<p className={styles.quiet}>Cargando.</p>}>
         <ResetForm />
       </Suspense>
     </AuthShell>

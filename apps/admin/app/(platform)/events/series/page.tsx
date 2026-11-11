@@ -1,38 +1,33 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Field, ParameterCard, TicketButton } from '@boletera/ui';
 import {
-  Badge,
-  Button,
-  Card,
-  EmptyState,
-  FilterBar,
-  formatNumber,
-  KpiCard,
-  PageHeader,
-  Section,
-  Skeleton,
-  Tabs,
-  formatDateTime,
-  type FilterDefinition,
-  type FilterSelection,
-} from '@boletera/ui';
-import { useToast } from '@/components/Toast/ToastProvider';
-import { listSeries, type EventSeriesKind, type EventSeriesStatus, type SeriesRow } from '@/lib/scheduling-api';
-import { useSession } from '@/lib/use-session';
-import platform from '../../_styles/platform.module.scss';
+  listSeries,
+  type EventSeriesKind,
+  type EventSeriesStatus,
+  type SeriesRow,
+} from '@/lib/scheduling-api';
+import { useSession as usePermissions } from '@/lib/use-session';
+import { AnonymousView, NoOrgView, useSession } from '../_shared/api-state';
+import { AdminFrame } from '../_ticket/AdminFrame';
+import { Param, Segment, SheetSelect } from '../_ticket/controls';
+import frame from '../_ticket/frame.module.scss';
+import { formatCount, formatWhen } from '../_ticket/read';
 import { CreateResidencyForm } from './_components/CreateResidencyForm';
 import { CreateSeriesForm } from './_components/CreateSeriesForm';
+import { describeFailure } from './_lib/errors';
 import {
   filterSeries,
   filtersToParams,
   parseFilters,
   seriesKpis,
   type SeriesFilters,
+  type SeriesTab,
 } from './_lib/filters';
-import { KIND_LABELS, STATUS_LABELS, kindTone, statusTone } from './_lib/labels';
+import { KIND_LABELS, STATUS_LABELS } from './_lib/labels';
 import styles from './series.module.scss';
 
 function formatDate(iso: string | null): string {
@@ -40,35 +35,36 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString('es-MX', { dateStyle: 'medium' });
 }
 
-function countBy<T extends string>(rows: SeriesRow[], key: (row: SeriesRow) => T): Map<T, number> {
-  const counts = new Map<T, number>();
-  for (const row of rows) {
-    const value = key(row);
-    counts.set(value, (counts.get(value) ?? 0) + 1);
-  }
-  return counts;
+export default function SeriesListPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <SeriesBody />
+      </AdminFrame>
+    </Suspense>
+  );
 }
 
-export default function SeriesListPage() {
+function SeriesBody() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const toast = useToast();
-  const { can, status: sessionStatus } = useSession();
+  const session = useSession();
+  const { can } = usePermissions();
   const canWrite = can('event:write');
 
   const filters = useMemo(() => parseFilters(searchParams), [searchParams]);
   const [rows, setRows] = useState<SeriesRow[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const setFilters = useCallback(
     (patch: Partial<SeriesFilters>) => {
       const next = { ...filters, ...patch };
-      const params = filtersToParams(next);
-      const qs = params.toString();
+      const qs = filtersToParams(next).toString();
       router.replace(qs ? `/events/series?${qs}` : '/events/series', { scroll: false });
     },
-    [filters, router],
+    [filters, router]
   );
 
   const load = useCallback(async () => {
@@ -77,341 +73,251 @@ export default function SeriesListPage() {
     try {
       setRows(await listSeries());
     } catch (err) {
-      setRows([]);
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar las series');
+      setRows(null);
+      setError(err);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const ready = session.status === 'ready';
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (ready) void load();
+  }, [ready, load]);
 
-  const filtered = useMemo(
-    () => (rows ? filterSeries(rows, filters) : []),
-    [rows, filters],
-  );
+  const filtered = useMemo(() => (rows ? filterSeries(rows, filters) : []), [rows, filters]);
   const kpis = useMemo(() => seriesKpis(rows ?? []), [rows]);
-  const kindCounts = useMemo(() => countBy(rows ?? [], (row) => row.kind), [rows]);
-  const statusCounts = useMemo(() => countBy(rows ?? [], (row) => row.status), [rows]);
 
-  const filterDefs = useMemo<FilterDefinition[]>(
-    () => [
-      {
-        id: 'kind',
-        label: 'Tipo',
-        multiple: false,
-        options: Array.from(kindCounts.entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(([kind, count]) => ({
-            value: kind,
-            label: KIND_LABELS[kind],
-            count,
-          })),
-      },
-      {
-        id: 'status',
-        label: 'Estado',
-        multiple: false,
-        options: Array.from(statusCounts.entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(([status, count]) => ({
-            value: status,
-            label: STATUS_LABELS[status],
-            count,
-          })),
-      },
-    ],
-    [kindCounts, statusCounts],
-  );
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (session.status === 'loading') return <p className={frame.quiet}>Cargando series.</p>;
 
-  const filterSelection = useMemo<FilterSelection>(() => {
-    const next: Record<string, readonly string[]> = {};
-    if (filters.kind !== 'ALL') next.kind = [filters.kind];
-    if (filters.status !== 'ALL') next.status = [filters.status];
-    return next;
-  }, [filters.kind, filters.status]);
-
-  if (sessionStatus === 'loading') {
-    return (
-      <div className={styles.page}>
-        <Skeleton height={96} />
-        <Skeleton height={180} />
-      </div>
-    );
-  }
+  const tabs: { value: SeriesTab; label: string }[] = canWrite
+    ? [
+        { value: 'catalogo', label: 'Catálogo' },
+        { value: 'crear-serie', label: 'Crear serie' },
+        { value: 'crear-residencia', label: 'Crear residencia' },
+      ]
+    : [{ value: 'catalogo', label: 'Catálogo' }];
+  const tab: SeriesTab = canWrite ? filters.tab : 'catalogo';
+  const failure = error ? describeFailure(error, 'events/schedule/series') : null;
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        eyebrow="Programación"
-        title="Series y residencias"
-        description={`${formatNumber(kpis.total)} programas · ${formatNumber(kpis.active)} activas · ${formatNumber(kpis.upcomingDates)} fechas próximas`}
-        breadcrumbs={[
-          { label: 'Eventos', href: '/events' },
-          { label: 'Series' },
-        ]}
-        actions={
-          <div className={styles.actions}>
-            <Link href="/calendar" className={platform.ghostBtn}>
-              Calendario
-            </Link>
-            <Link href="/events/new" className={platform.ghostBtn}>
-              Asistente completo
-            </Link>
-            {canWrite && (
-              <Button type="button" onClick={() => setFilters({ tab: 'crear-serie' })}>
-                Nueva serie
-              </Button>
-            )}
-          </div>
-        }
-      >
-        <Tabs
-          label="Secciones de series"
-          variant="pill"
-          value={filters.tab}
-          onValueChange={(id) =>
-            setFilters({
-              tab: id as SeriesFilters['tab'],
-            })
-          }
-          items={[
-            {
-              id: 'catalogo',
-              label: 'Catálogo',
-              badge: rows ? formatNumber(rows.length) : undefined,
-            },
-            {
-              id: 'crear-serie',
-              label: 'Crear serie',
-              disabled: !canWrite,
-            },
-            {
-              id: 'crear-residencia',
-              label: 'Crear residencia',
-              disabled: !canWrite,
-            },
-          ]}
-        />
-      </PageHeader>
+    <section>
+      <header className={frame.sectionHead}>
+        <h1 className={frame.sectionTitle}>Series y residencias</h1>
+        <p className={frame.quiet}>
+          Programas recurrentes y residencias con fechas, aforo y próxima función.
+        </p>
+        <p className={styles.links}>
+          <Link href="/calendar" className={styles.inlineLink}>
+            Calendario
+          </Link>
+          <Link href="/events/new" className={styles.inlineLink}>
+            Asistente completo
+          </Link>
+        </p>
+      </header>
 
-      <Section columns={4} gap="md" className={styles.kpiStrip} aria-label="Indicadores de series">
-        <KpiCard
-          label="Programas"
-          value={formatNumber(kpis.total)}
-          loading={loading}
-          hint="Series y temporadas"
-          tone="accent"
-        />
-        <KpiCard
-          label="Activas"
-          value={formatNumber(kpis.active)}
-          loading={loading}
-          tone="success"
-          hint="Estado ACTIVE"
-        />
-        <KpiCard
-          label="Fechas próximas"
-          value={formatNumber(kpis.upcomingDates)}
-          loading={loading}
-          tone="info"
-          hint="Suma de upcoming"
-        />
-        <KpiCard
-          label="Aforo agregado"
-          value={formatNumber(kpis.capacity)}
-          loading={loading}
-          hint="Capacidad de todas las fechas"
-        />
-      </Section>
+      {tabs.length > 1 ? (
+        <div className={styles.block}>
+          <Segment
+            label="Secciones de series"
+            value={tab}
+            options={tabs}
+            onChange={(next) => setFilters({ tab: next })}
+          />
+        </div>
+      ) : (
+        <p className={`${frame.tertiary} ${styles.block}`}>
+          Sin permiso para crear: el catálogo se lee, no se crean series ni residencias.
+        </p>
+      )}
 
-      {filters.tab === 'crear-serie' && (
+      {notice ? (
+        <p className={`${frame.quiet} ${styles.block}`} role="status">
+          {notice}
+        </p>
+      ) : null}
+
+      {tab === 'crear-serie' ? (
         <CreateSeriesForm
           disabled={!canWrite}
-          onCreated={() => {
+          onCreated={(message) => {
+            setNotice(message);
             setFilters({ tab: 'catalogo' });
             void load();
           }}
         />
-      )}
+      ) : null}
 
-      {filters.tab === 'crear-residencia' && (
+      {tab === 'crear-residencia' ? (
         <CreateResidencyForm
           disabled={!canWrite}
-          onCreated={() => {
+          onCreated={(message) => {
+            setNotice(message);
             setFilters({ tab: 'catalogo' });
             void load();
           }}
         />
-      )}
+      ) : null}
 
-      {filters.tab === 'catalogo' && (
-        <Section
-          title="Catálogo de series"
-          description="Programas recurrentes y residencias con fechas, aforo y próxima función."
-        >
-          {rows && rows.length > 0 && (
-            <>
-              <div className={styles.filters}>
-                <FilterBar
-                  filters={filterDefs}
-                  value={filterSelection}
-                  onChange={(next) =>
-                    setFilters({
-                      kind: (next.kind?.[0] as EventSeriesKind | undefined) ?? 'ALL',
-                      status: (next.status?.[0] as EventSeriesStatus | undefined) ?? 'ALL',
-                    })
-                  }
-                  search={{
-                    value: filters.q,
-                    onChange: (value) => setFilters({ q: value }),
-                    placeholder: 'Nombre, recinto o resumen…',
-                  }}
-                />
-              </div>
+      {tab === 'catalogo' ? (
+        <div className={styles.block}>
+          {loading ? <p className={frame.quiet}>Cargando catálogo.</p> : null}
 
-              <div className={styles.tableMeta}>
-                <span className={styles.muted}>
-                  {filtered.length === rows.length
-                    ? `${formatNumber(filtered.length)} programas en catálogo`
-                    : `${formatNumber(filtered.length)} de ${formatNumber(rows.length)} programas coinciden con los filtros`}
-                </span>
-              </div>
-            </>
-          )}
-
-          {loading ? (
-            <Skeleton height={240} />
-          ) : error ? (
-            <EmptyState
-              title="No se pudo cargar el catálogo"
-              description={error}
-              illustration="error"
-              tone="danger"
-              action={
-                <Button
-                  type="button"
-                  onClick={() => {
-                    void load();
-                    toast.success('Reintentando…');
-                  }}
-                >
+          {!loading && failure ? (
+            <div className={styles.alert} role="alert">
+              <p className={styles.subTitle}>No se pudo cargar el catálogo</p>
+              <p className={frame.danger}>{failure.title}</p>
+              <p className={frame.mono}>
+                GET /events/schedule/series · {failure.status ?? 'sin respuesta'} · {failure.detail}
+              </p>
+              <div className={styles.actions}>
+                <TicketButton variant="secondary" onClick={() => void load()}>
                   Reintentar
-                </Button>
-              }
-            />
-          ) : !rows?.length ? (
-            <EmptyState
-              title="Todavía no hay series"
-              description="Crea una serie o residencia desde las pestañas superiores, o usa el asistente completo."
-              illustration="inbox"
-              hints={[
-                'Serie: varias fechas a partir de una recurrencia',
-                'Residencia: mismo venue con frecuencia fija',
-              ]}
-              action={
-                canWrite ? (
-                  <Button type="button" onClick={() => setFilters({ tab: 'crear-serie' })}>
-                    Crear serie
-                  </Button>
-                ) : undefined
-              }
-              secondaryAction={
-                <Link href="/events/new" className={platform.ghostBtn}>
-                  Asistente completo
-                </Link>
-              }
-            />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              title="Sin coincidencias"
-              description="Prueba otro texto o limpia los filtros de tipo y estado."
-              illustration="search"
-              action={
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setFilters({ q: '', kind: 'ALL', status: 'ALL' })}
-                >
-                  Limpiar filtros
-                </Button>
-              }
-            />
-          ) : (
-            <Card variant="outline" padding="md" className={styles.catalogCard}>
-              <div className={styles.tableWrap}>
-                <table className={platform.table}>
-                  <caption className={styles.srOnly}>Catálogo de series y residencias</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Programa</th>
-                      <th scope="col">Tipo</th>
-                      <th scope="col">Recinto</th>
-                      <th scope="col">Recurrencia</th>
-                      <th scope="col" className={styles.numeric}>
-                        Fechas
-                      </th>
-                      <th scope="col">Próxima</th>
-                      <th scope="col">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((row) => (
-                      <tr key={row.id}>
-                        <td className={styles.programCell}>
-                          <Link href={`/events/series/${row.id}`}>{row.name}</Link>
-                          <span className={styles.subtle}>
-                            {formatDate(row.firstDate)} → {formatDate(row.lastDate)}
-                          </span>
-                        </td>
-                        <td>
-                          <Badge tone={kindTone(row.kind)} dot size="sm">
-                            {KIND_LABELS[row.kind]}
-                          </Badge>
-                        </td>
-                        <td>{row.venue?.name ?? '—'}</td>
-                        <td>
-                          <span className={styles.subtle}>{row.summary ?? '—'}</span>
-                        </td>
-                        <td className={styles.numeric}>
-                          {formatNumber(row.totals.events)}
-                          {row.totals.cancelled > 0 && (
-                            <span className={styles.subtle}>
-                              {' '}
-                              · {formatNumber(row.totals.cancelled)} cancel.
-                            </span>
-                          )}
-                          <div className={styles.subtle}>
-                            {formatNumber(row.totals.capacity)} lugares
-                          </div>
-                        </td>
-                        <td>{formatDate(row.nextDate)}</td>
-                        <td>
-                          <Badge tone={statusTone(row.status)} variant="soft" size="sm">
-                            {STATUS_LABELS[row.status]}
-                          </Badge>
-                          <div className={styles.subtle}>Alta {formatDateTime(row.createdAt)}</div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                </TicketButton>
               </div>
-            </Card>
-          )}
-        </Section>
-      )}
+            </div>
+          ) : null}
 
-      {!canWrite && filters.tab !== 'catalogo' && (
-        <EmptyState
-          title="Sin permiso event:write"
-          description="Puedes consultar el catálogo, pero no crear series ni residencias."
-          illustration="error"
-          tone="danger"
-        />
-      )}
-    </div>
+          {!loading && rows ? (
+            <>
+              <div className={styles.figures}>
+                <Param name="Programas">
+                  <ParameterCard
+                    name="Programas"
+                    value={formatCount(kpis.total)}
+                    valueStyle="tabular"
+                    effect="Series y temporadas."
+                  />
+                </Param>
+                <Param name="Activas">
+                  <ParameterCard
+                    name="Activas"
+                    value={formatCount(kpis.active)}
+                    valueStyle="tabular"
+                    effect="En estado Activa."
+                  />
+                </Param>
+                <Param name="Fechas próximas">
+                  <ParameterCard
+                    name="Fechas próximas"
+                    value={formatCount(kpis.upcomingDates)}
+                    valueStyle="tabular"
+                    effect="Funciones por venir."
+                  />
+                </Param>
+                <Param name="Aforo agregado">
+                  <ParameterCard
+                    name="Aforo agregado"
+                    value={formatCount(kpis.capacity)}
+                    valueStyle="tabular"
+                    effect="Capacidad de todas las fechas."
+                  />
+                </Param>
+              </div>
+
+              {rows.length === 0 ? (
+                <p className={frame.quiet}>
+                  Todavía no hay series. Crea una serie o residencia, o usa el asistente completo.
+                </p>
+              ) : (
+                <>
+                  <div className={styles.filters}>
+                    <Field
+                      label="Buscar"
+                      kind="search"
+                      value={filters.q}
+                      placeholder="Nombre, recinto o resumen"
+                      onChange={(e) => setFilters({ q: e.target.value })}
+                    />
+                    <div className={styles.pick}>
+                      <p className={styles.caption}>Tipo</p>
+                      <SheetSelect
+                        label="Tipo"
+                        value={filters.kind}
+                        placeholder="Todos"
+                        options={[
+                          { value: 'ALL', label: 'Todos' },
+                          ...(Object.keys(KIND_LABELS) as EventSeriesKind[]).map((kind) => ({
+                            value: kind,
+                            label: KIND_LABELS[kind],
+                          })),
+                        ]}
+                        onChange={(next) => setFilters({ kind: next as SeriesFilters['kind'] })}
+                      />
+                    </div>
+                    <div className={styles.pick}>
+                      <p className={styles.caption}>Estado</p>
+                      <SheetSelect
+                        label="Estado"
+                        value={filters.status}
+                        placeholder="Todos"
+                        options={[
+                          { value: 'ALL', label: 'Todos' },
+                          ...(Object.keys(STATUS_LABELS) as EventSeriesStatus[]).map((status) => ({
+                            value: status,
+                            label: STATUS_LABELS[status],
+                          })),
+                        ]}
+                        onChange={(next) => setFilters({ status: next as SeriesFilters['status'] })}
+                      />
+                    </div>
+                  </div>
+
+                  <p className={frame.tertiary}>
+                    {filtered.length === rows.length
+                      ? `${formatCount(filtered.length)} programas`
+                      : `${formatCount(filtered.length)} de ${formatCount(rows.length)} programas`}
+                  </p>
+
+                  {filtered.length === 0 ? (
+                    <div className={styles.actions}>
+                      <p className={frame.quiet}>Sin coincidencias.</p>
+                      <TicketButton
+                        variant="ghost"
+                        onClick={() => setFilters({ q: '', kind: 'ALL', status: 'ALL' })}
+                      >
+                        Limpiar filtros
+                      </TicketButton>
+                    </div>
+                  ) : (
+                    <ul className={frame.rows}>
+                      {filtered.map((row) => (
+                        <li key={row.id} className={frame.row}>
+                          <div className={frame.rowMain}>
+                            <p className={frame.rowTitle}>
+                              <Link href={`/events/series/${row.id}`} className={styles.inlineLink}>
+                                {row.name}
+                              </Link>
+                            </p>
+                            <p className={frame.rowMeta}>
+                              {KIND_LABELS[row.kind]} · {row.venue?.name ?? 'Sin recinto'} ·{' '}
+                              {formatDate(row.firstDate)} → {formatDate(row.lastDate)}
+                              {row.summary ? ` · ${row.summary}` : ''}
+                            </p>
+                            <p className={frame.rowMeta}>
+                              Próxima {formatDate(row.nextDate)} ·{' '}
+                              {formatCount(row.totals.capacity)} lugares
+                              {row.totals.cancelled > 0
+                                ? ` · ${formatCount(row.totals.cancelled)} canceladas`
+                                : ''}{' '}
+                              · alta {formatWhen(row.createdAt)}
+                            </p>
+                          </div>
+                          <p className={frame.rowMeta}>{STATUS_LABELS[row.status]}</p>
+                          <p className={frame.figure}>{formatCount(row.totals.events)}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
   );
 }

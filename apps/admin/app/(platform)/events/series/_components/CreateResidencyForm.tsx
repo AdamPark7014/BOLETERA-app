@@ -1,25 +1,22 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Field, TicketButton, formatTicketAmount } from '@boletera/ui';
 import {
-  Button,
-  Card,
-  CardHeader,
-  EmptyState,
-  formatCurrency,
-  formatNumber,
-  Skeleton,
-} from '@boletera/ui';
-import { ScheduleBuilder, type ScheduleBuilderValue } from '@/components/ScheduleBuilder/ScheduleBuilder';
-import { useToast } from '@/components/Toast/ToastProvider';
+  ScheduleBuilder,
+  type ScheduleBuilderValue,
+} from '@/components/ScheduleBuilder/ScheduleBuilder';
 import { useCreateResidency } from '@/lib/queries/events';
 import { useVenues } from '@/lib/queries/venues';
 import type { SchedulePreview, SeriesTemplate } from '@/lib/scheduling-api';
+import frame from '../../_ticket/frame.module.scss';
+import { SheetSelect } from '../../_ticket/controls';
+import { formatCount } from '../../_ticket/read';
 import styles from '../series.module.scss';
 
 type Props = {
   disabled?: boolean;
-  onCreated?: () => void;
+  onCreated?: (message: string) => void;
 };
 
 type Frequency = 'daily' | 'weekly' | 'biweekly' | 'monthly';
@@ -47,7 +44,6 @@ const FREQUENCY_LABELS: Record<Frequency, string> = {
 };
 
 export function CreateResidencyForm({ disabled, onCreated }: Props) {
-  const toast = useToast();
   const venuesQuery = useVenues();
   const createResidency = useCreateResidency();
 
@@ -56,6 +52,7 @@ export function CreateResidencyForm({ disabled, onCreated }: Props) {
   const [capacity, setCapacity] = useState(400);
   const [basePrice, setBasePrice] = useState(350);
   const [preview, setPreview] = useState<SchedulePreview | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
   const [schedule, setSchedule] = useState<ScheduleBuilderValue>({
     mode: 'recurring',
     rule: {
@@ -77,7 +74,7 @@ export function CreateResidencyForm({ disabled, onCreated }: Props) {
       basePrice,
       currency: 'MXN',
     }),
-    [capacity, basePrice],
+    [capacity, basePrice]
   );
 
   const canSubmit =
@@ -91,6 +88,7 @@ export function CreateResidencyForm({ disabled, onCreated }: Props) {
 
   async function submit() {
     if (!canSubmit) return;
+    setFailure(null);
     try {
       const result = await createResidency.mutateAsync({
         name: name.trim(),
@@ -101,105 +99,84 @@ export function CreateResidencyForm({ disabled, onCreated }: Props) {
         capacity,
         basePrice,
       });
-      const total =
-        typeof result.totalEvents === 'number' ? result.totalEvents : occurrenceCount;
-      toast.success(`Residencia creada · ${formatNumber(total)} fechas`);
+      const total = typeof result.totalEvents === 'number' ? result.totalEvents : occurrenceCount;
       setName('');
-      onCreated?.();
+      onCreated?.(`Residencia creada · ${formatCount(total)} fechas`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo crear la residencia');
+      setFailure(error instanceof Error ? error.message : 'No se pudo crear la residencia.');
     }
   }
 
-  if (venuesQuery.isPending) return <Skeleton height={280} />;
+  if (venuesQuery.isPending) return <p className={frame.quiet}>Cargando recintos.</p>;
   if (venuesQuery.error) {
     return (
-      <EmptyState
-        title="No se pudieron cargar recintos"
-        description={
-          venuesQuery.error instanceof Error
-            ? venuesQuery.error.message
-            : 'Error desconocido'
-        }
-        illustration="error"
-        tone="danger"
-        action={
-          <Button type="button" onClick={() => void venuesQuery.refetch()}>
+      <div className={styles.alert} role="alert">
+        <p className={styles.subTitle}>No se pudieron cargar recintos</p>
+        <p className={frame.danger}>
+          {venuesQuery.error instanceof Error ? venuesQuery.error.message : 'Error desconocido'}
+        </p>
+        <div className={styles.actions}>
+          <TicketButton variant="secondary" onClick={() => void venuesQuery.refetch()}>
             Reintentar
-          </Button>
-        }
-      />
+          </TicketButton>
+        </div>
+      </div>
     );
   }
   if (!venuesQuery.data?.length) {
-    return (
-      <EmptyState
-        title="Sin recintos"
-        description="Necesitas al menos un recinto para crear una residencia."
-        illustration="seats"
-      />
-    );
+    return <p className={frame.quiet}>Necesitas al menos un recinto para crear una residencia.</p>;
   }
 
   return (
-    <Card variant="outline" padding="lg">
-      <CardHeader
-        title="Nueva residencia"
-        description="Alta rápida de residencia: misma plaza y ritmo fijo. La frecuencia se deriva de la regla del ScheduleBuilder."
-      />
+    <div className={styles.block}>
+      <h2 className={styles.subTitle}>Nueva residencia</h2>
+      <p className={frame.quiet}>
+        Misma plaza y ritmo fijo. La frecuencia se deriva de la regla de recurrencia.
+      </p>
       <div className={styles.formGrid}>
-        <label className={`${styles.field} ${styles.full}`}>
-          Nombre de la residencia
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ej. Residencia stand-up — Foro Sur"
-            disabled={disabled}
-          />
-        </label>
-        <label className={styles.field}>
-          Recinto
-          <select
+        <Field
+          className={styles.full}
+          label="Nombre de la residencia"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ej. Residencia stand-up — Foro Sur"
+          disabled={disabled}
+        />
+        <div className={`${styles.pick} ${styles.full}`}>
+          <p className={styles.caption}>Recinto</p>
+          <SheetSelect
+            label="Recinto"
             value={venueId}
-            onChange={(e) => setVenueId(e.target.value)}
-            disabled={disabled}
-          >
-            <option value="">Seleccionar…</option>
-            {venuesQuery.data.map((venue) => (
-              <option key={venue.id} value={venue.id}>
-                {venue.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.field}>
-          Aforo
-          <input
-            type="number"
-            min={1}
-            value={capacity}
-            onChange={(e) => setCapacity(Number(e.target.value) || 0)}
-            disabled={disabled}
+            placeholder="Seleccionar recinto"
+            options={venuesQuery.data.map((venue) => ({ value: venue.id, label: venue.name }))}
+            onChange={setVenueId}
           />
-        </label>
-        <label className={styles.field}>
-          Precio base (MXN)
-          <input
-            type="number"
-            min={0}
-            step={50}
-            value={basePrice}
-            onChange={(e) => setBasePrice(Number(e.target.value) || 0)}
-            disabled={disabled}
-          />
-        </label>
-        <p className={`${styles.hint} ${styles.full}`}>
-          Frecuencia efectiva: <strong>{FREQUENCY_LABELS[frequency]}</strong> ·{' '}
-          {formatNumber(occurrenceCount)} fechas · {formatCurrency(basePrice, 0)}
+        </div>
+        <Field
+          label="Aforo"
+          type="number"
+          min={1}
+          value={capacity}
+          onChange={(e) => setCapacity(Number(e.target.value) || 0)}
+          disabled={disabled}
+        />
+        <Field
+          label="Precio base"
+          kind="money"
+          type="number"
+          min={0}
+          step={50}
+          value={basePrice}
+          onChange={(e) => setBasePrice(Number(e.target.value) || 0)}
+          disabled={disabled}
+        />
+        <p className={`${frame.quiet} ${styles.full}`}>
+          Frecuencia efectiva: {FREQUENCY_LABELS[frequency]} · {formatCount(occurrenceCount)} fechas
+          · {formatTicketAmount(basePrice)} MXN
         </p>
       </div>
 
-      <div className={styles.builderBlock}>
+      <div className={styles.builder}>
         {venueId ? (
           <ScheduleBuilder
             venueId={venueId}
@@ -212,26 +189,29 @@ export function CreateResidencyForm({ disabled, onCreated }: Props) {
             onPreview={setPreview}
           />
         ) : (
-          <p className={styles.hint}>Selecciona un recinto para calcular la residencia.</p>
+          <p className={frame.tertiary}>Selecciona un recinto para calcular la residencia.</p>
         )}
       </div>
 
-      {(preview?.totals.blocking ?? 0) > 0 && (
-        <p className={styles.alertDanger} role="alert">
+      {(preview?.totals.blocking ?? 0) > 0 ? (
+        <p className={frame.danger} role="alert">
           Hay conflictos bloqueantes en la vista previa. Ajústalos antes de crear.
         </p>
-      )}
+      ) : null}
+      {failure ? (
+        <p className={frame.danger} role="alert">
+          {failure}
+        </p>
+      ) : null}
 
-      <div className={styles.formActions}>
-        <Button
-          type="button"
-          loading={createResidency.isPending}
-          disabled={!canSubmit}
+      <div className={styles.actions}>
+        <TicketButton
+          disabled={!canSubmit || createResidency.isPending}
           onClick={() => void submit()}
         >
-          Crear residencia
-        </Button>
+          {createResidency.isPending ? 'Creando residencia' : 'Crear residencia'}
+        </TicketButton>
       </div>
-    </Card>
+    </div>
   );
 }

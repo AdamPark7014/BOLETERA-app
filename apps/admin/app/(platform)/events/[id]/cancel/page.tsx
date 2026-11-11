@@ -24,16 +24,13 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
-import {
-  Badge,
-  Button,
-  KpiCard,
-  Modal,
-  PageHeader,
-  Section,
-} from '@boletera/ui';
-import { ApiError, adminApi, getStoredToken } from '@/lib/api';
+import { Suspense, useCallback, useMemo, useState } from 'react';
+import { Field, Money, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { ApiError, adminApi } from '@/lib/api';
+import { AnonymousView, NoOrgView, useSession } from '../../_shared/api-state';
+import { AdminFrame } from '../../_ticket/AdminFrame';
+import { Param } from '../../_ticket/controls';
+import frame from '../../_ticket/frame.module.scss';
 import styles from './cancel.module.scss';
 
 /** Proyección que devuelve el API en modo `dryRun`. */
@@ -59,13 +56,24 @@ type Outcome = {
   failed: { publicId: string; error: string }[];
 };
 
-const money = (value: string | number) =>
-  `$${Number(value).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+const amount = (value: string | number) => Number(value) || 0;
 
 export default function CancelEventPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminFrame>
+        <CancelBody />
+      </AdminFrame>
+    </Suspense>
+  );
+}
+
+function CancelBody() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const session = useSession();
   const eventId = params?.id ?? '';
+  const token = session.token;
 
   const [reason, setReason] = useState('');
   const [attributable, setAttributable] = useState<boolean | null>(null);
@@ -85,7 +93,6 @@ export default function CancelEventPage() {
 
   const call = useCallback(
     async (dryRun: boolean) => {
-      const token = getStoredToken();
       if (!token) throw new ApiError(401, 'Sin sesión', null, '');
       return adminApi<Projection | Outcome>(`/payments/events/${eventId}/cancel`, token, {
         method: 'POST',
@@ -97,13 +104,15 @@ export default function CancelEventPage() {
         }),
       });
     },
-    [eventId, reason, attributable, justification],
+    [token, eventId, reason, attributable, justification]
   );
 
   async function project() {
     setBusy(true);
     setError(null);
     setOutcome(null);
+    setConfirmOpen(false);
+    setTypedTitle('');
     try {
       const result = (await call(true)) as Projection;
       setProjection(result);
@@ -132,224 +141,276 @@ export default function CancelEventPage() {
 
   const titleMatches = useMemo(
     () => typedTitle.trim().toLowerCase() === (projection?.eventTitle ?? '').trim().toLowerCase(),
-    [typedTitle, projection],
+    [typedTitle, projection]
   );
+
+  if (session.status === 'anonymous') return <AnonymousView />;
+  if (session.status === 'no-org') return <NoOrgView />;
+  if (session.status === 'loading' || !token)
+    return <p className={frame.quiet}>Cargando cancelación.</p>;
 
   // --- Resultado -----------------------------------------------------------
   if (outcome) {
     const partial = outcome.failed.length > 0;
     return (
-      <>
-        <PageHeader
-          eyebrow="Evento cancelado"
-          title={outcome.eventTitle}
-          breadcrumbs={[
-            { label: 'Eventos', href: '/events' },
-            { label: 'Cancelación' },
-          ]}
-          description={
-            partial
+      <section>
+        <header className={frame.sectionHead}>
+          <h1 className={frame.sectionTitle}>Evento cancelado · {outcome.eventTitle}</h1>
+          <p className={frame.quiet}>
+            {partial
               ? 'La cancelación se asentó, pero algunas devoluciones quedaron pendientes de reintentar.'
-              : 'El evento quedó cancelado y todas las devoluciones se asentaron.'
-          }
-          actions={
-            <Button variant="secondary" onClick={() => router.push('/events')}>
-              Volver a eventos
-            </Button>
-          }
-          bordered
-        />
+              : 'El evento quedó cancelado y todas las devoluciones se asentaron.'}
+          </p>
+        </header>
+        <div className={styles.section}>
+          <Param name="Órdenes devueltas">
+            <ParameterCard
+              name="Órdenes devueltas"
+              value={`${outcome.ordersRefunded} de ${outcome.ordersAffected}`}
+              valueStyle="tabular"
+              effect="Órdenes pagadas con devolución asentada."
+            />
+          </Param>
+          <div className={styles.figures}>
+            <Money
+              label="Devuelto"
+              amount={amount(outcome.refundedTotal)}
+              currency
+              direction="out"
+            />
+            <Money
+              label="Bonificación · art. 92 Bis LFPC"
+              amount={amount(outcome.compensationTotal)}
+              currency
+              direction="out"
+            />
+          </div>
+        </div>
 
-        <Section columns={3} gap="md">
-          <KpiCard label="Órdenes devueltas" value={`${outcome.ordersRefunded} / ${outcome.ordersAffected}`} />
-          <KpiCard label="Devuelto" value={money(outcome.refundedTotal)} />
-          <KpiCard
-            label="Bonificación"
-            value={money(outcome.compensationTotal)}
-            hint="Art. 92 Bis LFPC"
-          />
-        </Section>
-
-        {partial && (
-          <Section
-            title="Devoluciones pendientes"
-            description="Estas órdenes no se pudieron devolver. Revísalas y reintenta desde la cola de reembolsos."
-          >
-            <ul className={styles.failedList}>
+        {partial ? (
+          <div className={styles.section}>
+            <h2 className={styles.subTitle}>Devoluciones pendientes</h2>
+            <p className={frame.quiet}>
+              Estas órdenes no se pudieron devolver. Revísalas y reintenta desde la cola de
+              reembolsos.
+            </p>
+            <ul className={frame.rows}>
               {outcome.failed.map((f) => (
-                <li key={f.publicId}>
-                  <Link href={`/orders/${f.publicId}`}>{f.publicId}</Link>
-                  <span>{f.error}</span>
+                <li key={f.publicId} className={frame.row}>
+                  <div className={frame.rowMain}>
+                    <p className={frame.rowTitle}>
+                      <Link href={`/orders/${f.publicId}`} className={frame.mono}>
+                        {f.publicId}
+                      </Link>
+                    </p>
+                    <p className={frame.rowMeta}>{f.error}</p>
+                  </div>
                 </li>
               ))}
             </ul>
-          </Section>
-        )}
-      </>
+          </div>
+        ) : null}
+
+        <TicketButton variant="secondary" onClick={() => router.push('/events')}>
+          Volver a eventos
+        </TicketButton>
+      </section>
     );
   }
 
   // --- Formulario ----------------------------------------------------------
   return (
-    <>
-      <PageHeader
-        eyebrow="Operación irreversible"
-        title="Cancelar evento"
-        breadcrumbs={[
-          { label: 'Eventos', href: '/events' },
-          { label: 'Cancelación' },
-        ]}
-        description="Se cierra la venta, se devuelve el dinero de todas las órdenes pagadas y se avisa a cada comprador."
-        bordered
-      />
+    <section>
+      <header className={frame.sectionHead}>
+        <h1 className={frame.sectionTitle}>Cancelar evento</h1>
+        <p className={frame.quiet}>
+          Operación irreversible. Se cierra la venta, se devuelve el dinero de todas las órdenes
+          pagadas y se avisa a cada comprador.
+        </p>
+      </header>
 
-      {error && (
-        <p className={styles.error} role="alert">
+      {error ? (
+        <p className={frame.danger} role="alert">
           {error}
         </p>
-      )}
+      ) : null}
 
-      <Section
-        title="Motivo"
-        description="Este texto se envía tal cual en el correo a cada comprador. Escríbelo pensando en quien lo va a leer."
-      >
-        <label className={styles.field}>
-          <span>Motivo de la cancelación</span>
+      <div className={styles.section}>
+        <h2 className={styles.subTitle}>Motivo</h2>
+        <label className={styles.area}>
+          <span className={styles.label}>Motivo de la cancelación</span>
           <textarea
+            className={styles.textarea}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             placeholder="El artista canceló la gira por motivos de salud"
             aria-describedby="reason-hint"
           />
-          <small id="reason-hint" className={reasonValid ? styles.hint : styles.hintWarn}>
-            {reasonValid ? 'Se enviará a los compradores.' : 'Al menos 10 caracteres.'}
-          </small>
+          <span id="reason-hint" className={reasonValid ? frame.tertiary : frame.quiet}>
+            {reasonValid
+              ? 'Se enviará tal cual a los compradores.'
+              : 'Al menos 10 caracteres. Lo lee cada comprador.'}
+          </span>
         </label>
-      </Section>
+      </div>
 
-      <Section
-        title="¿La causa es imputable al promotor?"
-        description="De esta respuesta depende una obligación legal: si la cancelación es imputable, además del reembolso completo procede una bonificación mínima del 20% de lo pagado (LFPC art. 92 Bis)."
-      >
+      <div className={styles.section}>
+        <h2 className={styles.subTitle}>¿La causa es imputable al promotor?</h2>
+        <p className={frame.quiet}>
+          De esta respuesta depende una obligación legal: si la cancelación es imputable, además del
+          reembolso completo procede una bonificación mínima del 20% de lo pagado (LFPC art. 92
+          Bis).
+        </p>
         <div className={styles.choices} role="radiogroup" aria-label="Imputabilidad">
           <button
             type="button"
             role="radio"
             aria-checked={attributable === true}
-            className={attributable === true ? styles.choiceOn : styles.choice}
+            className={
+              attributable === true ? `${styles.choice} ${styles.choiceOn}` : styles.choice
+            }
             onClick={() => setAttributable(true)}
           >
-            <strong>Sí, es imputable</strong>
-            <span>Decisión del promotor, artista o vendedor.</span>
-            <Badge tone="warning">Bonificación 20%</Badge>
+            <span className={styles.choiceTitle}>Sí, es imputable</span>
+            <span className={frame.quiet}>Decisión del promotor, artista o vendedor.</span>
+            <span className={frame.tertiary}>Reembolso y bonificación del 20%</span>
           </button>
-
           <button
             type="button"
             role="radio"
             aria-checked={attributable === false}
-            className={attributable === false ? styles.choiceOn : styles.choice}
+            className={
+              attributable === false ? `${styles.choice} ${styles.choiceOn}` : styles.choice
+            }
             onClick={() => setAttributable(false)}
           >
-            <strong>No es imputable</strong>
-            <span>Causa externa respaldada por autoridad competente.</span>
-            <Badge tone="neutral">Solo reembolso</Badge>
+            <span className={styles.choiceTitle}>No es imputable</span>
+            <span className={frame.quiet}>Causa externa respaldada por autoridad competente.</span>
+            <span className={frame.tertiary}>Solo reembolso</span>
           </button>
         </div>
 
-        {attributable === false && (
-          <label className={styles.field}>
-            <span>Justificación (queda en la bitácora)</span>
+        {attributable === false ? (
+          <label className={styles.area}>
+            <span className={styles.label}>Justificación (queda en la bitácora)</span>
             <textarea
+              className={styles.textarea}
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
               rows={2}
               placeholder="Aviso de Protección Civil del 16 de agosto de 2026"
               aria-describedby="justification-hint"
             />
-            <small id="justification-hint" className={justificationValid ? styles.hint : styles.hintWarn}>
+            <span
+              id="justification-hint"
+              className={justificationValid ? frame.tertiary : frame.quiet}
+            >
               {justificationValid
                 ? 'Se auditará junto con la cancelación.'
                 : 'Obligatoria: es lo que sustenta no pagar la bonificación.'}
-            </small>
+            </span>
           </label>
-        )}
-      </Section>
+        ) : null}
+      </div>
 
-      <Section
-        title="Impacto"
-        description="Antes de mover un peso, calcula cuánto sale. Este paso no modifica nada."
-        actions={
-          <Button onClick={project} disabled={!canProject} loading={busy && !confirmOpen}>
-            Calcular impacto
-          </Button>
-        }
-      >
+      <div className={styles.section}>
+        <h2 className={styles.subTitle}>Impacto</h2>
+        <p className={frame.quiet}>
+          Antes de mover un peso, calcula cuánto sale. Este paso no modifica nada.
+        </p>
+        <div className={styles.actions}>
+          <TicketButton onClick={() => void project()} disabled={!canProject}>
+            {busy && !confirmOpen
+              ? 'Calculando'
+              : projection
+                ? 'Recalcular impacto'
+                : 'Calcular impacto'}
+          </TicketButton>
+        </div>
+
         {projection ? (
           <>
-            <div className={styles.kpis}>
-              <KpiCard label="Órdenes afectadas" value={String(projection.ordersAffected)} />
-              <KpiCard label="A devolver" value={money(projection.refundableTotal)} />
-              <KpiCard
-                label="Bonificación"
-                value={money(projection.compensationTotal)}
-                hint={
-                  projection.compensationRate > 0
-                    ? `${Math.round(projection.compensationRate * 100)}% del art. 92 Bis`
-                    : 'No aplica: causa no imputable'
-                }
+            <Param name="Órdenes afectadas">
+              <ParameterCard
+                name="Órdenes afectadas"
+                value={String(projection.ordersAffected)}
+                valueStyle="tabular"
+                effect="Órdenes pagadas que se devolverán."
               />
-              <KpiCard label="Salida total" value={money(projection.grandTotal)} tone="danger" />
+            </Param>
+            <div className={styles.figures}>
+              <Money label="A devolver" amount={amount(projection.refundableTotal)} currency />
+              <Money
+                label={
+                  projection.compensationRate > 0
+                    ? `Bonificación · ${Math.round(projection.compensationRate * 100)}% art. 92 Bis`
+                    : 'Bonificación · no aplica'
+                }
+                amount={amount(projection.compensationTotal)}
+                currency
+              />
+              <Money
+                label="Salida total"
+                amount={amount(projection.grandTotal)}
+                currency
+                direction="out"
+              />
             </div>
-            <div className={styles.execute}>
-              <Button variant="danger" onClick={() => setConfirmOpen(true)}>
-                Cancelar evento y devolver {money(projection.grandTotal)}
-              </Button>
-            </div>
+
+            {confirmOpen ? (
+              <div className={styles.confirm} role="group" aria-label="Confirmar cancelación">
+                <p className={styles.subTitle}>Confirmar cancelación</p>
+                <p className={frame.quiet}>
+                  Esta acción no se puede deshacer. Se devolverán{' '}
+                  <span className={frame.out}>
+                    {formatTicketAmount(amount(projection.grandTotal))} MXN
+                  </span>{' '}
+                  a {projection.ordersAffected} órdenes, se cerrará la venta y se avisará a cada
+                  comprador.
+                </p>
+                {/* Escribir el nombre es la fricción que distingue una decisión de un
+                    clic equivocado en la pestaña de al lado. */}
+                <Field
+                  label={`Escribe «${projection.eventTitle}» para confirmar`}
+                  value={typedTitle}
+                  onChange={(e) => setTypedTitle(e.target.value)}
+                  autoComplete="off"
+                  error={
+                    typedTitle.length > 0 && !titleMatches ? 'El nombre no coincide.' : undefined
+                  }
+                />
+                <div className={styles.actions}>
+                  <TicketButton
+                    variant="danger"
+                    onClick={() => void execute()}
+                    disabled={!titleMatches || busy}
+                  >
+                    {busy ? 'Cancelando' : 'Cancelar definitivamente'}
+                  </TicketButton>
+                  <TicketButton
+                    variant="ghost"
+                    onClick={() => setConfirmOpen(false)}
+                    disabled={busy}
+                  >
+                    No cancelar
+                  </TicketButton>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.actions}>
+                <TicketButton variant="danger" onClick={() => setConfirmOpen(true)}>
+                  Cancelar evento y devolver {formatTicketAmount(amount(projection.grandTotal))} MXN
+                </TicketButton>
+              </div>
+            )}
           </>
         ) : (
-          <p className={styles.placeholder}>
+          <p className={frame.tertiary}>
             Completa el motivo y la imputabilidad para calcular el impacto.
           </p>
         )}
-      </Section>
-
-      <Modal
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        title="Confirmar cancelación"
-        description="Esta acción no se puede deshacer."
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setConfirmOpen(false)} disabled={busy}>
-              No cancelar
-            </Button>
-            <Button variant="danger" onClick={execute} disabled={!titleMatches || busy} loading={busy}>
-              Cancelar definitivamente
-            </Button>
-          </>
-        }
-      >
-        <p>
-          Se devolverán <strong>{money(projection?.grandTotal ?? 0)}</strong> a{' '}
-          <strong>{projection?.ordersAffected ?? 0}</strong> órdenes, se cerrará la venta y se
-          avisará a cada comprador.
-        </p>
-        <label className={styles.field}>
-          {/* Escribir el nombre es la fricción que distingue una decisión de un
-              clic equivocado en la pestaña de al lado. */}
-          <span>
-            Escribe <strong>{projection?.eventTitle}</strong> para confirmar
-          </span>
-          <input
-            value={typedTitle}
-            onChange={(e) => setTypedTitle(e.target.value)}
-            autoComplete="off"
-            aria-invalid={typedTitle.length > 0 && !titleMatches}
-          />
-        </label>
-      </Modal>
-    </>
+      </div>
+    </section>
   );
 }

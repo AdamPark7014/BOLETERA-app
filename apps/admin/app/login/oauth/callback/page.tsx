@@ -1,8 +1,12 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { storeSession } from '@/lib/api';
+import { AuthShell, StatusBanner } from '../../_components/AuthShell';
+import { oauthCallbackRedirectUri, resolveOauthProvider } from '../../_lib/oauth';
+import styles from '../../login.module.scss';
 
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
 
@@ -13,13 +17,13 @@ function OauthCallbackHandler() {
 
   useEffect(() => {
     const code = params.get('code');
-    const provider = (params.get('provider') || 'google') as 'google' | 'microsoft';
+    const provider = resolveOauthProvider(params.get('provider'));
     if (!code) {
-      setError('Falta código OAuth');
+      setError('Falta el código del proveedor. Vuelve a intentarlo desde la pantalla de acceso.');
       return;
     }
 
-    const redirectUri = `${window.location.origin}/login/oauth/callback?provider=${provider}`;
+    const redirectUri = oauthCallbackRedirectUri(provider, window.location.origin);
     void (async () => {
       try {
         const res = await fetch(`${API}/auth/oauth/${provider}/callback`, {
@@ -29,7 +33,7 @@ function OauthCallbackHandler() {
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body.message || 'SSO falló');
+          throw new Error(body.message || 'El inicio de sesión con el proveedor falló.');
         }
         const data = (await res.json()) as {
           accessToken: string;
@@ -44,23 +48,21 @@ function OauthCallbackHandler() {
         });
         router.replace('/dashboard');
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Error SSO');
+        setError(e instanceof Error ? e.message : 'Error de inicio de sesión con el proveedor.');
       }
     })();
   }, [params, router]);
 
+  if (!error) return <p className={styles.quiet}>Completando el acceso con tu proveedor.</p>;
   return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', fontFamily: 'system-ui' }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1>{error ? 'No se pudo iniciar sesión' : 'Completando SSO…'}</h1>
-        {error && <p style={{ color: 'var(--bl-danger-text)' }}>{error}</p>}
-        {error && (
-          <a href="/login" style={{ color: 'var(--bl-info)' }}>
-            Volver al login
-          </a>
-        )}
-      </div>
-    </main>
+    <>
+      <StatusBanner tone="error">{error}</StatusBanner>
+      <p className={styles.foot}>
+        <Link className={styles.inlineLink} href="/login">
+          Volver a entrar
+        </Link>
+      </p>
+    </>
   );
 }
 
@@ -70,16 +72,10 @@ function OauthCallbackHandler() {
  */
 export default function OauthCallbackPage() {
   return (
-    <Suspense
-      fallback={
-        <main
-          style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', fontFamily: 'system-ui' }}
-        >
-          <h1>Completando SSO…</h1>
-        </main>
-      }
-    >
-      <OauthCallbackHandler />
-    </Suspense>
+    <AuthShell title="Inicio de sesión único">
+      <Suspense fallback={<p className={styles.quiet}>Completando el acceso con tu proveedor.</p>}>
+        <OauthCallbackHandler />
+      </Suspense>
+    </AuthShell>
   );
 }
