@@ -3,6 +3,8 @@
 packages/database/generated/
 pnpm-lock.yaml
 *.tsbuildinfo
+# Next lo reescribe en cada `next dev`/`next build` con su propio estilo.
+next-env.d.ts
 test-results/
 # Notas y reglas de agentes: su formato lo cuidan sus scripts.
 .ai/
