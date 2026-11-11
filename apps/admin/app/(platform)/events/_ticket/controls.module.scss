@@ -71,6 +71,56 @@
   text-align: center;
 }
 
+// Campo editable del Stepper (opción `editable`): misma altura que − y +, cifra tabular.
+.stepField {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-m);
+  background: var(--ink-sunken);
+}
+
+.stepField:focus-within {
+  outline: 1.5px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.stepInput {
+  width: 4ch;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: var(--money);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.stepInput::-webkit-outer-spin-button,
+.stepInput::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.stepInput:focus {
+  outline: none;
+}
+
+.stepInput::placeholder {
+  color: var(--text-disabled);
+}
+
+.stepUnit {
+  color: var(--text-secondary);
+  font: var(--money);
+}
+
 .bounds {
   color: var(--text-tertiary);
   font: var(--caption);

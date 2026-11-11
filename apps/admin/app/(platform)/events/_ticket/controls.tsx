@@ -31,12 +31,20 @@ export function Switch({
   );
 }
 
+/** Acota un número tecleado a [min, max] y lo deja entero, como los botones − y +. */
+function clampStep(next: number, min: number, max: number | null): number {
+  const whole = Math.trunc(next);
+  const floor = Math.max(min, whole);
+  return max != null ? Math.min(max, floor) : floor;
+}
+
 export function Stepper({
   value,
   min,
   max,
   unit,
   label,
+  editable = false,
   onChange,
 }: {
   value: number | null;
@@ -44,6 +52,11 @@ export function Stepper({
   max: number | null;
   unit?: string;
   label: string;
+  /**
+   * Muestra un campo numérico entre − y + para escribir la cifra directo. Opcional para no cambiar
+   * las pantallas que ya usan el Stepper de solo botones.
+   */
+  editable?: boolean;
   onChange: (next: number) => void;
 }) {
   const atMin = value == null || value <= min;
@@ -58,10 +71,21 @@ export function Stepper({
       >
         −
       </button>
-      <span className={styles.stepValue}>
-        {value == null ? '—' : value}
-        {unit && value != null ? unit : ''}
-      </span>
+      {editable ? (
+        <StepInput
+          value={value}
+          min={min}
+          max={max}
+          unit={unit}
+          label={label}
+          onChange={onChange}
+        />
+      ) : (
+        <span className={styles.stepValue}>
+          {value == null ? '—' : value}
+          {unit && value != null ? unit : ''}
+        </span>
+      )}
       <button
         type="button"
         aria-label={`Subir ${label}`}
@@ -73,8 +97,86 @@ export function Stepper({
       >
         +
       </button>
-      <span className={styles.bounds}>{max != null ? `${min}–${max}${unit ?? ''}` : `Mínimo ${min}`}</span>
+      <span className={styles.bounds}>
+        {max != null ? `${min}–${max}${unit ?? ''}` : `Mínimo ${min}`}
+      </span>
     </div>
+  );
+}
+
+/**
+ * Campo numérico del Stepper. Mientras se escribe, solo avisa cifras dentro del rango; al salir del campo
+ * (o con Intro) acota lo escrito a [min, max]. Vacío o inválido vuelve al valor anterior; Esc lo descarta.
+ */
+function StepInput({
+  value,
+  min,
+  max,
+  unit,
+  label,
+  onChange,
+}: {
+  value: number | null;
+  min: number;
+  max: number | null;
+  unit?: string;
+  label: string;
+  onChange: (next: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const shown = draft ?? (value == null ? '' : String(value));
+
+  function commit() {
+    if (draft == null) return;
+    const parsed = draft.trim() === '' ? Number.NaN : Number(draft);
+    setDraft(null);
+    if (!Number.isFinite(parsed)) return;
+    const next = clampStep(parsed, min, max);
+    if (next !== value) onChange(next);
+  }
+
+  return (
+    <span className={styles.stepField}>
+      <input
+        type="number"
+        inputMode="numeric"
+        className={styles.stepInput}
+        aria-label={label}
+        min={min}
+        max={max ?? undefined}
+        step={1}
+        value={shown}
+        placeholder="—"
+        onChange={(event) => {
+          const text = event.target.value;
+          setDraft(text);
+          const parsed = text.trim() === '' ? Number.NaN : Number(text);
+          if (
+            Number.isInteger(parsed) &&
+            parsed >= min &&
+            (max == null || parsed <= max) &&
+            parsed !== value
+          ) {
+            onChange(parsed);
+          }
+        }}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            commit();
+          } else if (event.key === 'Escape') {
+            setDraft(null);
+          }
+        }}
+        onWheel={(event) => event.currentTarget.blur()}
+      />
+      {unit ? (
+        <span className={styles.stepUnit} aria-hidden="true">
+          {unit}
+        </span>
+      ) : null}
+    </span>
   );
 }
 

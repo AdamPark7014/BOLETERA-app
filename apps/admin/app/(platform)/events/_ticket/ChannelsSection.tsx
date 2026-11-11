@@ -61,7 +61,7 @@ export function ChannelsSection({
 
   function patch(key: string, partial: Partial<Pick<DraftSlot, 'enabled' | 'allocation'>>) {
     setSlots((current) =>
-      current.map((slot) => (slot.key === key ? { ...slot, ...partial, touched: true } : slot)),
+      current.map((slot) => (slot.key === key ? { ...slot, ...partial, touched: true } : slot))
     );
     setNotice(null);
   }
@@ -84,7 +84,10 @@ export function ChannelsSection({
       await configureChannels(token, eventId, config);
       const lines = sent
         .filter((slot) => before.get(slot.key) !== channelValue(slot))
-        .map((slot) => `${slot.label}: ${before.get(slot.key) ?? 'Sin reparto'} → ${channelValue(slot)}`);
+        .map(
+          (slot) =>
+            `${slot.label}: ${before.get(slot.key) ?? 'Sin reparto'} → ${channelValue(slot)}`
+        );
       setNotice(lines.join(' · ') || 'Canales guardados.');
       onSaved();
     } catch (cause) {
@@ -129,6 +132,7 @@ export function ChannelsSection({
                       min={0}
                       max={100}
                       unit="%"
+                      editable
                       onChange={(allocation) =>
                         patch(slot.key, {
                           allocation,

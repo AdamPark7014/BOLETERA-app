@@ -429,6 +429,7 @@ function CanalesBody() {
                       min={0}
                       max={100}
                       unit="%"
+                      editable
                       onChange={(value) => patchChannel(key, { allocation: value })}
                     />
                   ) : null}
@@ -443,7 +444,8 @@ function CanalesBody() {
           {saveError}
         </p>
       ) : null}
-      <div className={styles.saveBar}>
+      {/* Al final del reparto y fija en su sitio: la barra pegajosa del marco tapaba tarjetas al desplazarse. */}
+      <div className={`${styles.saveBar} ${local.saveBarEnd}`}>
         <p className={allocationIssue && dirty ? styles.out : styles.quiet} aria-live="polite">
           {dirty
             ? allocationIssue

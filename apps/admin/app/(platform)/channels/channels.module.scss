@@ -18,3 +18,8 @@
   color: var(--text-secondary);
   font: var(--body-sm);
 }
+
+/* La barra «Guardar sección» va al final del reparto, en su sitio: sin sticky no tapa tarjetas. */
+div.saveBarEnd {
+  position: static;
+}
