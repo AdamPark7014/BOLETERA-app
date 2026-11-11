@@ -20,6 +20,8 @@ export function money(n: number): string {
 
 /** Etiqueta corta para los botones de billete: $500, $1,000. */
 export function billLabel(n: number): string {
+  // La moneda de 50 centavos: sin esto se redondeaba a «$1».
+  if (n > 0 && n < 1) return `${Math.round(n * 100)}¢`;
   return `$${n.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`;
 }
 

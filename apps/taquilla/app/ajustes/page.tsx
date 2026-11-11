@@ -13,6 +13,8 @@ import styles from './ajustes.module.scss';
 export default function AjustesPage() {
   const router = useRouter();
   const [serialOk, setSerialOk] = useState(false);
+  // `navigator` no existe en el servidor: se lee tras hidratar para que el texto coincida.
+  const [serialSupported, setSerialSupported] = useState<boolean | null>(null);
   const [pin, setPin] = useState('');
   const [currentPin, setCurrentPin] = useState('');
   const [msg, setMsg] = useState('');
@@ -28,6 +30,7 @@ export default function AjustesPage() {
       return;
     }
     setSerialOk(Boolean(getSerialPort()));
+    setSerialSupported(isSerialSupported());
     setManager(isManager());
     setRole(getTaquillaUser()?.role ?? '');
     setQuotas(getLocalQuotas());
@@ -70,7 +73,15 @@ export default function AjustesPage() {
 
       <section className={styles.section}>
         <h2>Impresora térmica</h2>
-        <p>Web Serial {isSerialSupported() ? 'disponible' : 'no disponible en este navegador'}.</p>
+        <p>
+          Web Serial{' '}
+          {serialSupported === null
+            ? '…'
+            : serialSupported
+              ? 'disponible'
+              : 'no disponible en este navegador'}
+          .
+        </p>
         <p>Estado: {serialOk ? 'conectada' : 'sin puerto'}</p>
         <Button type="button" variant="secondary" onClick={() => void connectPrinter()}>
           Conectar impresora USB

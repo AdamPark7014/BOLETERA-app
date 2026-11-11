@@ -71,10 +71,9 @@
   }
 
   dt {
-    font-size: var(--bl-text-xs);
-    color: var(--muted-2);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font: var(--caption);
+    letter-spacing: var(--caption-tracking);
+    color: var(--text-secondary);
   }
 
   dd {
@@ -99,12 +98,13 @@
   padding: var(--bl-space-0);
   margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-3);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--bl-space-2);
 
   li {
     display: grid;
-    grid-template-columns: 72px 1fr 84px;
+    grid-template-columns: 56px minmax(0, 1fr) minmax(72px, auto);
+    min-width: 0;
     gap: var(--bl-space-2);
     align-items: center;
     padding: var(--bl-space-1-5) var(--bl-space-2-5);
@@ -119,6 +119,9 @@
   }
 
   input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     min-height: 48px;
     padding: var(--bl-space-0) var(--bl-space-3);
     font-size: var(--bl-text-xl);
@@ -159,6 +162,12 @@
 
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
+  }
+
+  // Las tres cifras se leen en la misma columna: el número de «Esperado» no se
+  // va a la derecha mientras Contado/Diferencia quedan a la izquierda.
+  p {
+    text-align: left;
   }
 }
 

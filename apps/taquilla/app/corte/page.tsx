@@ -52,6 +52,9 @@ import styles from './corte.module.scss';
 /** Por encima de esta diferencia el cierre exige autorización de gerencia. */
 const VARIANCE_PIN_THRESHOLD = 50;
 
+/** `billLabel` ya rotula la moneda de 50 centavos como «50¢». */
+const denomLabel = billLabel;
+
 type Prompt = null | 'DROP' | 'CLOSE' | 'HANDOFF';
 
 function readMoney(value: unknown): number | null {
@@ -78,10 +81,16 @@ export default function CortePage() {
   const [zReports, setZReports] = useState<ZReport[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
-  const cashierName = useMemo(() => {
+  // Se lee de localStorage tras hidratar: en el servidor no existe y el texto
+  // del encabezado no coincidiría con el del cliente.
+  const [cashierName, setCashierName] = useState('');
+  useEffect(() => {
     const user = getTaquillaUser();
-    if (!user) return getCashierId();
-    return [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+    setCashierName(
+      user
+        ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email
+        : getCashierId()
+    );
   }, []);
 
   const showToast = useCallback((msg: string) => {
@@ -99,7 +108,7 @@ export default function CortePage() {
     fetchSessionSummary(sessionId)
       .then(setReport)
       .catch((err: unknown) =>
-        showToast(err instanceof Error ? err.message : 'No se pudo cargar el turno'),
+        showToast(err instanceof Error ? err.message : 'No se pudo cargar el turno')
       );
   }, [showToast]);
 
@@ -136,11 +145,7 @@ export default function CortePage() {
     }
     setLoading(true);
     try {
-      const summary = await addCashDrop(
-        amount,
-        dropNote.trim() || `Retiro de ${cashierName}`,
-        pin,
-      );
+      const summary = await addCashDrop(amount, dropNote.trim() || `Retiro de ${cashierName}`, pin);
       setReport(summary);
       setDropAmount('');
       setDropNote('');
@@ -175,7 +180,7 @@ export default function CortePage() {
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [counted, report, showToast],
+    [counted, report, showToast]
   );
 
   async function doHandoff(pin: string) {
@@ -236,7 +241,7 @@ export default function CortePage() {
       '',
       ...(useDenominations
         ? MXN_DENOMINATIONS.filter((d) => Number(counts[String(d)]) > 0).map(
-            (d) => `${billLabel(d)} × ${counts[String(d)]}`,
+            (d) => `${denomLabel(d)} × ${counts[String(d)]}`
           )
         : []),
       '',
@@ -284,7 +289,7 @@ export default function CortePage() {
         run: () => router.push('/'),
       },
     ],
-    [closed, countEntered, needsPin, closeShift, router, showToast],
+    [closed, countEntered, needsPin, closeShift, router, showToast]
   );
 
   const totalMethods = report
@@ -294,7 +299,7 @@ export default function CortePage() {
   return (
     <PosShell
       title="Corte de caja"
-      eyebrow={`Responsable · ${cashierName}`}
+      eyebrow={cashierName ? `Responsable · ${cashierName}` : 'Responsable'}
       backHref="/"
       size="md"
       hotkeys={hotkeys}
@@ -329,7 +334,10 @@ export default function CortePage() {
           </p>
 
           <Card padding="md" className={styles.section}>
-            <CardHeader title="Arqueo de efectivo" description="Cuenta el cajón y compara con el esperado." />
+            <CardHeader
+              title="Arqueo de efectivo"
+              description="Cuenta el cajón y compara con el esperado."
+            />
             <dl className={styles.details}>
               <div>
                 <dt>Fondo inicial</dt>
@@ -375,7 +383,7 @@ export default function CortePage() {
                   <ul className={styles.denoms}>
                     {MXN_DENOMINATIONS.map((d) => (
                       <li key={d}>
-                        <span>{billLabel(d)}</span>
+                        <span>{denomLabel(d)}</span>
                         <input
                           type="number"
                           min={0}
@@ -388,7 +396,7 @@ export default function CortePage() {
                               [String(d)]: Math.max(0, Number(e.target.value) || 0),
                             }));
                           }}
-                          aria-label={`Piezas de ${billLabel(d)}`}
+                          aria-label={`Piezas de ${denomLabel(d)}`}
                         />
                         <em>{money(d * (Number(counts[String(d)]) || 0))}</em>
                       </li>
@@ -410,7 +418,11 @@ export default function CortePage() {
               </>
             )}
 
-            <div className={styles.reconcile} role="group" aria-label="Esperado, contado y diferencia">
+            <div
+              className={styles.reconcile}
+              role="group"
+              aria-label="Esperado, contado y diferencia"
+            >
               <Money label="Esperado" amount={shownExpected} />
               {hasCount ? (
                 <Money label="Contado" amount={shownCounted} />
@@ -471,7 +483,9 @@ export default function CortePage() {
                         </div>
                       </div>
                       <span className={styles.amount}>{money(amount)}</span>
-                      <Badge tone="neutral" variant="outline" size="sm">{pct}%</Badge>
+                      <Badge tone="neutral" variant="outline" size="sm">
+                        {pct}%
+                      </Badge>
                     </li>
                   );
                 })}
@@ -510,7 +524,9 @@ export default function CortePage() {
             {handoffDone ? 'Turno entregado' : 'Turno cerrado'}
           </Badge>
           <p>
-            {handoffDone ? 'Turno entregado al cajero entrante.' : 'Corte Z archivado en el sistema.'}
+            {handoffDone
+              ? 'Turno entregado al cajero entrante.'
+              : 'Corte Z archivado en el sistema.'}
           </p>
           <div className={styles.doneActions}>
             <TicketButton
@@ -528,7 +544,10 @@ export default function CortePage() {
 
       {zReports.length > 0 && (
         <Card padding="md" className={styles.section}>
-          <CardHeader title="Cortes anteriores" description="Últimos reportes Z de esta organización." />
+          <CardHeader
+            title="Cortes anteriores"
+            description="Últimos reportes Z de esta organización."
+          />
           <ul className={styles.zList}>
             {zReports.map((z) => {
               const when = z.closedAt
@@ -551,7 +570,11 @@ export default function CortePage() {
                   <span>{who}</span>
                   <em className={styles.zDiff}>
                     <NamedStatus status={diff === 0 ? 'cuadrado' : 'descuadrado'} />
-                    <span className={diff === 0 ? undefined : diff > 0 ? styles.moneyIn : styles.moneyOut}>
+                    <span
+                      className={
+                        diff === 0 ? undefined : diff > 0 ? styles.moneyIn : styles.moneyOut
+                      }
+                    >
                       {formatTicketAmount(diff)}
                     </span>
                   </em>
@@ -575,7 +598,7 @@ export default function CortePage() {
         open={prompt === 'CLOSE'}
         title={`Cerrar turno con diferencia de ${money(shownVariance)}`}
         detail={`Esperado ${money(shownExpected)} · contado ${money(shownCounted)}. Una diferencia mayor a ${money(
-          VARIANCE_PIN_THRESHOLD,
+          VARIANCE_PIN_THRESHOLD
         )} requiere autorización de gerencia.`}
         confirmLabel="Cerrar turno"
         danger
