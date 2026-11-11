@@ -54,7 +54,7 @@ export class PricingService {
   constructor(
     private prisma: PrismaService,
     private audit: AuditService,
-    private campaigns: CampaignExecutionService,
+    private campaigns: CampaignExecutionService
   ) {}
 
   /** Tasas efectivas de la organización. Sin fila, las del entorno. */
@@ -122,7 +122,7 @@ export class PricingService {
 
     const appliedRules: string[] = [];
     let dynamicMultiplier = 1.0;
-    let basePrice = Number(offer.basePrice);
+    const basePrice = Number(offer.basePrice);
 
     // 1. Calculate occupancy rate
     const soldCount = await this.prisma.ticket.count({
@@ -166,7 +166,7 @@ export class PricingService {
 
     // 4. Apply customer segment pricing
     const segmentKey =
-      ctx.customerSegment === 'EARLY_BUYER' ? 'EARLY_BIRD' : (ctx.customerSegment || 'REGULAR');
+      ctx.customerSegment === 'EARLY_BUYER' ? 'EARLY_BIRD' : ctx.customerSegment || 'REGULAR';
     const segmentMultiplier =
       this.PRICE_RULES[segmentKey as keyof typeof this.PRICE_RULES] ?? this.PRICE_RULES.REGULAR;
     if (segmentMultiplier !== 1.0) {
@@ -203,7 +203,7 @@ export class PricingService {
     const total = subtotal.plus(fees).plus(taxes);
 
     this.logger.log(
-      `Price calculated for event ${ctx.eventId}: ${total.toFixed(2)} (multiplier: ${dynamicMultiplier.toFixed(2)})`,
+      `Price calculated for event ${ctx.eventId}: ${total.toFixed(2)} (multiplier: ${dynamicMultiplier.toFixed(2)})`
     );
 
     return {
@@ -232,7 +232,10 @@ export class PricingService {
       return { multiplier: this.PRICE_RULES.SURGE_HIGH, reason: 'High demand (80-90% sold)' };
     }
     if (occupancyRate >= 0.7) {
-      return { multiplier: this.PRICE_RULES.SURGE_MODERATE, reason: 'Moderate demand (70-80% sold)' };
+      return {
+        multiplier: this.PRICE_RULES.SURGE_MODERATE,
+        reason: 'Moderate demand (70-80% sold)',
+      };
     }
     return { multiplier: 1.0, reason: 'No surge' };
   }
@@ -251,12 +254,15 @@ export class PricingService {
 
   // ==================== DISCOUNT CALCULATION ====================
 
-  private calculateDiscount(promotion: { type: string; value: unknown; maxDiscount?: unknown }, subtotal: number): number {
+  private calculateDiscount(
+    promotion: { type: string; value: unknown; maxDiscount?: unknown },
+    subtotal: number
+  ): number {
     return promotionDiscount(
       promotion.type,
       Number(promotion.value),
       subtotal,
-      promotion.maxDiscount != null ? Number(promotion.maxDiscount) : null,
+      promotion.maxDiscount != null ? Number(promotion.maxDiscount) : null
     );
   }
 
@@ -269,59 +275,8 @@ export class PricingService {
     return true;
   }
 
-  // ==================== UPDATE DYNAMIC PRICES ====================
-
-  async updateDynamicPrices(eventId: string) {
-    const event = await this.prisma.event.findUnique({
-      where: { id: eventId },
-      include: { offers: true },
-    });
-
-    if (!event) throw new BadRequestException('Event not found');
-
-    const now = new Date();
-
-    for (const offer of event.offers) {
-      const soldCount = await this.prisma.ticket.count({
-        where: {
-          eventId,
-          offerId: offer.id,
-          status: { in: ['SOLD', 'USED'] },
-        },
-      });
-
-      const occupancyRate = soldCount / offer.totalQuantity;
-      const surge = this.calculateSurgePricing(occupancyRate);
-
-      if (surge.multiplier !== 1.0) {
-        const adjustedPrice = Number(offer.basePrice) * surge.multiplier;
-
-        await this.prisma.dynamicPrice.create({
-          data: {
-            eventId,
-            offerId: offer.id,
-            adjustedPrice: new Decimal(adjustedPrice),
-            priceMultiplier: surge.multiplier,
-            reason: `surge_pricing_${occupancyRate.toFixed(2)}`,
-            activeFrom: now,
-            activeTo: new Date(now.getTime() + 60 * 60 * 1000), // 1 hour
-          },
-        });
-
-        this.logger.log(`Updated dynamic price for offer ${offer.id}: ${adjustedPrice.toFixed(2)}`);
-      }
-    }
-  }
-
-  // ==================== GET PRICE HISTORY ====================
-
-  async getPriceHistory(offerId: string, limit = 20) {
-    return await this.prisma.dynamicPrice.findMany({
-      where: { offerId },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    });
-  }
+  // Las recomendaciones de precio, su cola de aprobación y el historial viven en
+  // `pricing-recommendations.service.ts` (motor en `recommendation-engine.ts`).
 
   // ==================== ESTIMATE REVENUE ====================
 
@@ -396,5 +351,3 @@ function requireRate(value: unknown, label: string): number {
   }
   return Number(value.toFixed(4));
 }
-
-

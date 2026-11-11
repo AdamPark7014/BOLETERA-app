@@ -525,8 +525,8 @@ function PreciosBody() {
                   </p>
                   {bundleQ.data?.enableDynamic === false ? (
                     <p className={styles.quiet}>
-                      El evento tiene el precio dinámico apagado. Las recomendaciones se consultan,
-                      pero la ocupación no sube precio. Se enciende en la ficha del evento.
+                      El evento tiene el precio dinámico apagado: nada se aplica solo, cada cambio
+                      pide aprobación. Se enciende en la ficha del evento.
                     </p>
                   ) : null}
 

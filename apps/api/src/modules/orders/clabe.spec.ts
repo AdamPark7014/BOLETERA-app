@@ -34,7 +34,8 @@ describe('CLABE (dígito verificador Banxico)', () => {
   });
 
   it('rechaza lo que no es texto', () => {
-    expect(isValidClabe(32180000118359719)).toBe(false);
+    // Un número (aunque sea entero seguro) no es una CLABE: debe llegar como texto.
+    expect(isValidClabe(321800001183597)).toBe(false);
     expect(isValidClabe(undefined)).toBe(false);
   });
 

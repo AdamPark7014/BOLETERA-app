@@ -74,6 +74,7 @@ model Organization {
   fiscalProfile   FiscalProfile?
   cfdiInvoices    CfdiInvoice[]
   seasonPasses    SeasonPass[]
+  membershipPlans MembershipPlan[]
 
   // Audit
   createdAt DateTime @default(now())
@@ -504,19 +505,20 @@ model Event {
   metadata Json?
 
   // Relations
-  offers           Offer[]
-  tickets          Ticket[]
-  orders           Order[]
-  dynamicPrices    DynamicPrice[]
-  reviews          Review[]
-  fraudFlags       FraudFlag[]
-  seatMap          EventSeatMap?
-  disclosures      EventDisclosure[]
-  holds            SeatHold[]
-  waitlistEntries  WaitlistEntry[]
-  seasonPassEvents SeasonPassEvent[]
-  salePhases       SalePhase[]
-  inventoryBlocks  InventoryBlock[]
+  offers                 Offer[]
+  tickets                Ticket[]
+  orders                 Order[]
+  dynamicPrices          DynamicPrice[]
+  pricingRecommendations PricingRecommendation[]
+  reviews                Review[]
+  fraudFlags             FraudFlag[]
+  seatMap                EventSeatMap?
+  disclosures            EventDisclosure[]
+  holds                  SeatHold[]
+  waitlistEntries        WaitlistEntry[]
+  seasonPassEvents       SeasonPassEvent[]
+  salePhases             SalePhase[]
+  inventoryBlocks        InventoryBlock[]
 
   // Audit
   createdAt DateTime @default(now())
@@ -661,9 +663,10 @@ model Offer {
   isAvailable Boolean  @default(true)
 
   // Relations
-  tickets       Ticket[]
-  orderItems    OrderItem[]
-  dynamicPrices DynamicPrice[]
+  tickets                Ticket[]
+  orderItems             OrderItem[]
+  dynamicPrices          DynamicPrice[]
+  pricingRecommendations PricingRecommendation[]
 
   // Audit
   createdAt DateTime @default(now())
@@ -982,6 +985,7 @@ model User {
   wishlist        Wishlist[]
   sessions        Session[]
   userPermissions UserPermission[]
+  memberships     Membership[]
 
   // Audit
   createdAt DateTime @default(now())
@@ -1942,4 +1946,177 @@ model EventDisclosure {
   publishedBy String?
 
   @@index([eventId, publishedAt])
+}
+
+// ============================================================================
+// MEMBRESÍAS (20261111230000_memberships)
+// ============================================================================
+
+enum MembershipBillingPeriod {
+  MONTHLY
+  ANNUAL
+  /// Temporada: se cobra como un periodo de 12 meses.
+  SEASON
+}
+
+enum MembershipStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum MembershipPeriodKind {
+  NEW
+  RENEWAL
+}
+
+/// Plan (tier) de membresía de una organización.
+model MembershipPlan {
+  id             String                  @id @default(cuid())
+  organizationId String
+  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  tier           String
+  description    String?
+  price          Decimal                 @db.Decimal(12, 2)
+  currency       Currency                @default(MXN)
+  billingPeriod  MembershipBillingPeriod @default(ANNUAL)
+  /// Cupo máximo de miembros vigentes. Vacío = sin cupo.
+  maxMembers     Int?
+  active         Boolean                 @default(true)
+
+  memberships Membership[]
+  benefits    MembershipBenefit[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+/// Membresía de un usuario en un plan. La vigencia sale de sus periodos.
+model Membership {
+  id             String           @id @default(cuid())
+  organizationId String
+  planId         String
+  plan           MembershipPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         MembershipStatus @default(ACTIVE)
+  startedAt      DateTime
+  /// Fin del último periodo cobrado.
+  expiresAt      DateTime
+  cancelledAt    DateTime?
+
+  periods     MembershipPeriod[]
+  redemptions MembershipBenefitRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([planId, userId])
+  @@index([organizationId])
+  @@index([organizationId, expiresAt])
+}
+
+/// Cada periodo cobrado (alta o renovación). De aquí salen ingreso, renovación y retención.
+model MembershipPeriod {
+  id             String               @id @default(cuid())
+  organizationId String
+  membershipId   String
+  membership     Membership           @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  kind           MembershipPeriodKind @default(NEW)
+  startsAt       DateTime
+  endsAt         DateTime
+  amount         Decimal              @db.Decimal(12, 2)
+  recordedById   String?
+  createdAt      DateTime             @default(now())
+
+  @@index([membershipId, startsAt])
+  @@index([organizationId, startsAt])
+}
+
+/// Beneficio de un plan. `redemptionLimit` es el tope total de canjes; vacío = sin tope.
+model MembershipBenefit {
+  id              String         @id @default(cuid())
+  organizationId  String
+  planId          String
+  plan            MembershipPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name            String
+  type            String
+  description     String?
+  redemptionLimit Int?
+  active          Boolean        @default(true)
+
+  redemptions MembershipBenefitRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([planId])
+}
+
+/// Canje de un beneficio por un miembro.
+model MembershipBenefitRedemption {
+  id             String            @id @default(cuid())
+  organizationId String
+  benefitId      String
+  benefit        MembershipBenefit @relation(fields: [benefitId], references: [id], onDelete: Cascade)
+  membershipId   String
+  membership     Membership        @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  note           String?
+  recordedById   String?
+  redeemedAt     DateTime          @default(now())
+
+  @@index([benefitId])
+  @@index([membershipId])
+  @@index([organizationId, redeemedAt])
+}
+
+// ============================================================================
+// RECOMENDACIONES DE PRECIO (20261111231000_pricing_recommendations)
+// ============================================================================
+
+enum PricingRecommendationStatus {
+  PENDING
+  APPLIED
+  REJECTED
+  /// Otra recomendación más nueva de la misma oferta la reemplazó.
+  SUPERSEDED
+}
+
+/// Recomendación de precio encolada o aplicada. La vista previa no escribe aquí.
+/// Al aplicar se escribe `Offer.basePrice` y una fila de `DynamicPrice` como historial.
+model PricingRecommendation {
+  id             String                      @id @default(cuid())
+  organizationId String
+  eventId        String
+  event          Event                       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  offerId        String
+  offer          Offer                       @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  status         PricingRecommendationStatus @default(PENDING)
+  /// Precio de la oferta cuando se calculó.
+  fromPrice      Decimal                     @db.Decimal(12, 2)
+  proposedPrice  Decimal                     @db.Decimal(12, 2)
+  multiplier     Float
+  /// increase | decrease
+  direction      String
+  deltaPercent   Float
+  explanation    String
+  /// Factores, banda y señales con que se calculó.
+  payload        Json
+  createdById    String?
+  reviewedById   String?
+  reviewedAt     DateTime?
+  reviewNote     String?
+  appliedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId, status])
+  @@index([offerId, status])
+  @@index([organizationId])
 }

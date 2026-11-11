@@ -41,6 +41,7 @@ import {
   BillingModule,
   SeasonModule,
   MetricsModule,
+  MembershipsModule,
 } from './modules';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -306,6 +307,7 @@ function parseRedisUrl(raw?: string): { host: string; port: number; password?: s
     BillingModule,
     SeasonModule,
     MetricsModule,
+    MembershipsModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -13,13 +13,26 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { EventOrgAccessGuard } from '../auth/event-org-access.guard';
 import { OrgAccessGuard, type OrgScopedRequest } from '../auth/org-access.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { type RatePatch } from '../../common/pricing-rates';
+import { PricingRecommendationsService, type Actor } from './pricing-recommendations.service';
 import { PricingService } from './pricing.service';
 
-type ScopedRequest = OrgScopedRequest & { user?: { role?: string } };
+type ScopedRequest = OrgScopedRequest & { user?: { role?: string; sub?: string; id?: string } };
+
+const READ_ROLES = ['PROMOTER', 'VENUE_MANAGER', 'ADMIN', 'SUPER_ADMIN'] as const;
+const WRITE_ROLES = ['PROMOTER', 'ADMIN', 'SUPER_ADMIN'] as const;
+
+function actorOf(req: ScopedRequest): Actor {
+  return {
+    userId: req.user?.sub || req.user?.id,
+    role: req.user?.role,
+    scopedOrganizationId: req.scopedOrganizationId ?? null,
+  };
+}
 
 function requireScope(req: ScopedRequest): string | null {
   const scoped = req.scopedOrganizationId ?? null;
@@ -31,7 +44,10 @@ function requireScope(req: ScopedRequest): string | null {
 @ApiTags('Pricing')
 @Controller('pricing')
 export class PricingController {
-  constructor(private pricingService: PricingService) {}
+  constructor(
+    private pricingService: PricingService,
+    private recommendationsService: PricingRecommendationsService
+  ) {}
 
   /** Tasas de la organización. Vacío, las del entorno. No cambia la fórmula. */
   @Get('rates')
@@ -51,7 +67,7 @@ export class PricingController {
   saveRates(
     @Request() req: ScopedRequest,
     @Body() body: RatePatch,
-    @CurrentUser() user: { sub?: string; id?: string },
+    @CurrentUser() user: { sub?: string; id?: string }
   ) {
     const organizationId = requireScope(req);
     if (!organizationId) throw new BadRequestException('organizationId requerido');
@@ -70,7 +86,7 @@ export class PricingController {
       quantity: number;
       customerSegment?: 'EARLY_BUYER' | 'REGULAR' | 'VVIP';
       promotionCode?: string;
-    },
+    }
   ) {
     return await this.pricingService.calculatePrice({
       ...dto,
@@ -87,7 +103,7 @@ export class PricingController {
       items: { offerId: string; quantity: number }[];
       promotionCode?: string;
       customerSegment?: 'EARLY_BUYER' | 'REGULAR' | 'VVIP';
-    },
+    }
   ) {
     if (!dto.items?.length) {
       return { subtotal: '0', fees: '0', taxes: '0', total: '0', discount: '0', lines: [] };
@@ -125,33 +141,115 @@ export class PricingController {
     };
   }
 
-  // ==================== UPDATE DYNAMIC PRICES ====================
+  // ==================== RECOMENDACIONES ====================
+  //
+  // Motor determinista en `recommendation-engine.ts` (reglas documentadas ahí).
+  // Rutas por evento: el tenant sale del evento (EventOrgAccessGuard).
 
+  @Get('events/:eventId/recommendations')
+  @UseGuards(JwtAuthGuard, RolesGuard, EventOrgAccessGuard)
+  @Roles(...READ_ROLES)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Recomendaciones de precio por oferta (no escribe)' })
+  recommendations(@Param('eventId') eventId: string) {
+    return this.recommendationsService.buildBundle(eventId);
+  }
+
+  @Post('events/:eventId/recommendations/preview')
+  @UseGuards(JwtAuthGuard, RolesGuard, EventOrgAccessGuard)
+  @Roles(...READ_ROLES)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Vista previa del paquete de recomendaciones (no escribe)' })
+  previewRecommendations(@Param('eventId') eventId: string) {
+    return this.recommendationsService.buildBundle(eventId);
+  }
+
+  @Get('events/:eventId/recommendations/pending')
+  @UseGuards(JwtAuthGuard, RolesGuard, EventOrgAccessGuard)
+  @Roles(...READ_ROLES)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cola de aprobación de precios del evento' })
+  pendingRecommendations(@Param('eventId') eventId: string) {
+    return this.recommendationsService.listPending(eventId);
+  }
+
+  @Post('events/:eventId/recommendations/apply')
+  @UseGuards(JwtAuthGuard, RolesGuard, EventOrgAccessGuard)
+  @Roles(...WRITE_ROLES)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Aplicar o encolar recomendaciones de ofertas' })
+  applyRecommendations(
+    @Param('eventId') eventId: string,
+    @Body() body: { offerIds?: string[]; confirmApproval?: boolean },
+    @Request() req: ScopedRequest
+  ) {
+    return this.recommendationsService.apply(
+      eventId,
+      body?.offerIds ?? [],
+      body?.confirmApproval === true,
+      actorOf(req)
+    );
+  }
+
+  /** Genera, aplica solas las seguras y encola el resto. */
   @Post('events/:eventId/update-dynamic')
-  @ApiOperation({ summary: 'Update dynamic prices for event' })
-  async updateDynamicPrices(@Param('eventId') eventId: string) {
-    await this.pricingService.updateDynamicPrices(eventId);
-    return { message: 'Dynamic prices updated' };
+  @UseGuards(JwtAuthGuard, RolesGuard, EventOrgAccessGuard)
+  @Roles(...WRITE_ROLES)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Generar recomendaciones: aplica las seguras y encola el resto' })
+  updateDynamicPrices(@Param('eventId') eventId: string, @Request() req: ScopedRequest) {
+    return this.recommendationsService.generate(eventId, actorOf(req));
+  }
+
+  @Post('recommendations/:id/approve')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles(...WRITE_ROLES)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Aprobar y aplicar una recomendación encolada' })
+  approveRecommendation(
+    @Param('id') id: string,
+    @Body() body: { note?: string },
+    @Request() req: ScopedRequest
+  ) {
+    return this.recommendationsService.approve(id, body?.note, actorOf(req));
+  }
+
+  @Post('recommendations/:id/reject')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles(...WRITE_ROLES)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Rechazar una recomendación encolada' })
+  rejectRecommendation(
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+    @Request() req: ScopedRequest
+  ) {
+    return this.recommendationsService.reject(id, body?.reason, actorOf(req));
   }
 
   // ==================== PRICE HISTORY ====================
 
   @Get('offers/:offerId/history')
-  @ApiOperation({ summary: 'Get price history for offer' })
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles(...READ_ROLES)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Historial de precio de la oferta' })
   async getPriceHistory(
     @Param('offerId') offerId: string,
-    @Query('limit') limit?: number,
+    @Request() req: ScopedRequest,
+    @Query('limit') limit?: string
   ) {
-    return await this.pricingService.getPriceHistory(offerId, limit);
+    return this.recommendationsService.history(offerId, Number(limit ?? 20), actorOf(req));
   }
 
   // ==================== REVENUE ESTIMATION ====================
 
   @Get('events/:eventId/revenue-estimate')
+  @UseGuards(JwtAuthGuard, RolesGuard, EventOrgAccessGuard)
+  @Roles(...READ_ROLES)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Estimate event revenue' })
   async estimateRevenue(@Param('eventId') eventId: string) {
     return await this.pricingService.estimateEventRevenue(eventId);
   }
 }
-
-

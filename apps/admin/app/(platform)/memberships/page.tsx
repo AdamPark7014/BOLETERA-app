@@ -240,7 +240,7 @@ function MembresiasBody({ orgId }: { orgId: string }) {
     setActionError(null);
     try {
       await renewMembership.mutateAsync(membershipId);
-      setNotice('Renovación solicitada.');
+      setNotice('Renovación registrada.');
     } catch (cause) {
       setActionError(cause instanceof Error ? cause.message : 'No se pudo renovar.');
     } finally {
@@ -289,7 +289,7 @@ function MembresiasBody({ orgId }: { orgId: string }) {
             <p className={styles.rowMeta}>
               {metricsUnavailable
                 ? 'Métricas no disponibles'
-                : `${formatCount(kpis.activePlans)} plan${kpis.activePlans === 1 ? '' : 'es'} activos`}
+                : `${formatCount(kpis.activePlans)} ${kpis.activePlans === 1 ? 'plan activo' : 'planes activos'}`}
             </p>
           </div>
           <span />

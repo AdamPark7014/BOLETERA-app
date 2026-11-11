@@ -302,6 +302,37 @@ export type OrgInvitation = $Result.DefaultSelection<Prisma.$OrgInvitationPayloa
  * Nunca se actualiza una fila: republicar crea otra. El historial ES la prueba.
  */
 export type EventDisclosure = $Result.DefaultSelection<Prisma.$EventDisclosurePayload>
+/**
+ * Model MembershipPlan
+ * Plan (tier) de membresía de una organización.
+ */
+export type MembershipPlan = $Result.DefaultSelection<Prisma.$MembershipPlanPayload>
+/**
+ * Model Membership
+ * Membresía de un usuario en un plan. La vigencia sale de sus periodos.
+ */
+export type Membership = $Result.DefaultSelection<Prisma.$MembershipPayload>
+/**
+ * Model MembershipPeriod
+ * Cada periodo cobrado (alta o renovación). De aquí salen ingreso, renovación y retención.
+ */
+export type MembershipPeriod = $Result.DefaultSelection<Prisma.$MembershipPeriodPayload>
+/**
+ * Model MembershipBenefit
+ * Beneficio de un plan. `redemptionLimit` es el tope total de canjes; vacío = sin tope.
+ */
+export type MembershipBenefit = $Result.DefaultSelection<Prisma.$MembershipBenefitPayload>
+/**
+ * Model MembershipBenefitRedemption
+ * Canje de un beneficio por un miembro.
+ */
+export type MembershipBenefitRedemption = $Result.DefaultSelection<Prisma.$MembershipBenefitRedemptionPayload>
+/**
+ * Model PricingRecommendation
+ * Recomendación de precio encolada o aplicada. La vista previa no escribe aquí.
+ * Al aplicar se escribe `Offer.basePrice` y una fila de `DynamicPrice` como historial.
+ */
+export type PricingRecommendation = $Result.DefaultSelection<Prisma.$PricingRecommendationPayload>
 
 /**
  * Enums
@@ -724,6 +755,41 @@ export const SeasonPassPurchaseStatus: {
 
 export type SeasonPassPurchaseStatus = (typeof SeasonPassPurchaseStatus)[keyof typeof SeasonPassPurchaseStatus]
 
+
+export const MembershipBillingPeriod: {
+  MONTHLY: 'MONTHLY',
+  ANNUAL: 'ANNUAL',
+  SEASON: 'SEASON'
+};
+
+export type MembershipBillingPeriod = (typeof MembershipBillingPeriod)[keyof typeof MembershipBillingPeriod]
+
+
+export const MembershipStatus: {
+  ACTIVE: 'ACTIVE',
+  CANCELLED: 'CANCELLED'
+};
+
+export type MembershipStatus = (typeof MembershipStatus)[keyof typeof MembershipStatus]
+
+
+export const MembershipPeriodKind: {
+  NEW: 'NEW',
+  RENEWAL: 'RENEWAL'
+};
+
+export type MembershipPeriodKind = (typeof MembershipPeriodKind)[keyof typeof MembershipPeriodKind]
+
+
+export const PricingRecommendationStatus: {
+  PENDING: 'PENDING',
+  APPLIED: 'APPLIED',
+  REJECTED: 'REJECTED',
+  SUPERSEDED: 'SUPERSEDED'
+};
+
+export type PricingRecommendationStatus = (typeof PricingRecommendationStatus)[keyof typeof PricingRecommendationStatus]
+
 }
 
 export type OrgType = $Enums.OrgType
@@ -861,6 +927,22 @@ export const PosSessionStatus: typeof $Enums.PosSessionStatus
 export type SeasonPassPurchaseStatus = $Enums.SeasonPassPurchaseStatus
 
 export const SeasonPassPurchaseStatus: typeof $Enums.SeasonPassPurchaseStatus
+
+export type MembershipBillingPeriod = $Enums.MembershipBillingPeriod
+
+export const MembershipBillingPeriod: typeof $Enums.MembershipBillingPeriod
+
+export type MembershipStatus = $Enums.MembershipStatus
+
+export const MembershipStatus: typeof $Enums.MembershipStatus
+
+export type MembershipPeriodKind = $Enums.MembershipPeriodKind
+
+export const MembershipPeriodKind: typeof $Enums.MembershipPeriodKind
+
+export type PricingRecommendationStatus = $Enums.PricingRecommendationStatus
+
+export const PricingRecommendationStatus: typeof $Enums.PricingRecommendationStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -1509,6 +1591,66 @@ export class PrismaClient<
     * ```
     */
   get eventDisclosure(): Prisma.EventDisclosureDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.membershipPlan`: Exposes CRUD operations for the **MembershipPlan** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MembershipPlans
+    * const membershipPlans = await prisma.membershipPlan.findMany()
+    * ```
+    */
+  get membershipPlan(): Prisma.MembershipPlanDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.membership`: Exposes CRUD operations for the **Membership** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Memberships
+    * const memberships = await prisma.membership.findMany()
+    * ```
+    */
+  get membership(): Prisma.MembershipDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.membershipPeriod`: Exposes CRUD operations for the **MembershipPeriod** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MembershipPeriods
+    * const membershipPeriods = await prisma.membershipPeriod.findMany()
+    * ```
+    */
+  get membershipPeriod(): Prisma.MembershipPeriodDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.membershipBenefit`: Exposes CRUD operations for the **MembershipBenefit** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MembershipBenefits
+    * const membershipBenefits = await prisma.membershipBenefit.findMany()
+    * ```
+    */
+  get membershipBenefit(): Prisma.MembershipBenefitDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.membershipBenefitRedemption`: Exposes CRUD operations for the **MembershipBenefitRedemption** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MembershipBenefitRedemptions
+    * const membershipBenefitRedemptions = await prisma.membershipBenefitRedemption.findMany()
+    * ```
+    */
+  get membershipBenefitRedemption(): Prisma.MembershipBenefitRedemptionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.pricingRecommendation`: Exposes CRUD operations for the **PricingRecommendation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PricingRecommendations
+    * const pricingRecommendations = await prisma.pricingRecommendation.findMany()
+    * ```
+    */
+  get pricingRecommendation(): Prisma.PricingRecommendationDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -2002,7 +2144,13 @@ export namespace Prisma {
     SeasonPassEvent: 'SeasonPassEvent',
     SeasonPassPurchase: 'SeasonPassPurchase',
     OrgInvitation: 'OrgInvitation',
-    EventDisclosure: 'EventDisclosure'
+    EventDisclosure: 'EventDisclosure',
+    MembershipPlan: 'MembershipPlan',
+    Membership: 'Membership',
+    MembershipPeriod: 'MembershipPeriod',
+    MembershipBenefit: 'MembershipBenefit',
+    MembershipBenefitRedemption: 'MembershipBenefitRedemption',
+    PricingRecommendation: 'PricingRecommendation'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -2021,7 +2169,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "organization" | "venue" | "venueLayout" | "venueLayoutSnapshot" | "section" | "seatRow" | "seat" | "eventSeatMap" | "seatHold" | "inventoryBlock" | "tenantTheme" | "accessZone" | "ticketScan" | "paymentIntent" | "auditEvent" | "cashierShift" | "event" | "eventSeries" | "salePhase" | "venueBlackout" | "offer" | "ticket" | "order" | "orderItem" | "payment" | "refund" | "user" | "permission" | "rolePermission" | "userPermission" | "session" | "posTerminal" | "posCashierSession" | "resaleListing" | "resaleOffer" | "dynamicPrice" | "promotion" | "fraudFlag" | "eventAnalytics" | "promoterPayout" | "cart" | "wishlist" | "review" | "waitlistEntry" | "ticketTransfer" | "apiKey" | "fiscalProfile" | "cfdiInvoice" | "seasonPass" | "seasonPassEvent" | "seasonPassPurchase" | "orgInvitation" | "eventDisclosure"
+      modelProps: "organization" | "venue" | "venueLayout" | "venueLayoutSnapshot" | "section" | "seatRow" | "seat" | "eventSeatMap" | "seatHold" | "inventoryBlock" | "tenantTheme" | "accessZone" | "ticketScan" | "paymentIntent" | "auditEvent" | "cashierShift" | "event" | "eventSeries" | "salePhase" | "venueBlackout" | "offer" | "ticket" | "order" | "orderItem" | "payment" | "refund" | "user" | "permission" | "rolePermission" | "userPermission" | "session" | "posTerminal" | "posCashierSession" | "resaleListing" | "resaleOffer" | "dynamicPrice" | "promotion" | "fraudFlag" | "eventAnalytics" | "promoterPayout" | "cart" | "wishlist" | "review" | "waitlistEntry" | "ticketTransfer" | "apiKey" | "fiscalProfile" | "cfdiInvoice" | "seasonPass" | "seasonPassEvent" | "seasonPassPurchase" | "orgInvitation" | "eventDisclosure" | "membershipPlan" | "membership" | "membershipPeriod" | "membershipBenefit" | "membershipBenefitRedemption" | "pricingRecommendation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5947,6 +6095,450 @@ export namespace Prisma {
           }
         }
       }
+      MembershipPlan: {
+        payload: Prisma.$MembershipPlanPayload<ExtArgs>
+        fields: Prisma.MembershipPlanFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MembershipPlanFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MembershipPlanFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>
+          }
+          findFirst: {
+            args: Prisma.MembershipPlanFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MembershipPlanFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>
+          }
+          findMany: {
+            args: Prisma.MembershipPlanFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>[]
+          }
+          create: {
+            args: Prisma.MembershipPlanCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>
+          }
+          createMany: {
+            args: Prisma.MembershipPlanCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MembershipPlanCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>[]
+          }
+          delete: {
+            args: Prisma.MembershipPlanDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>
+          }
+          update: {
+            args: Prisma.MembershipPlanUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>
+          }
+          deleteMany: {
+            args: Prisma.MembershipPlanDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MembershipPlanUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MembershipPlanUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>[]
+          }
+          upsert: {
+            args: Prisma.MembershipPlanUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPlanPayload>
+          }
+          aggregate: {
+            args: Prisma.MembershipPlanAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMembershipPlan>
+          }
+          groupBy: {
+            args: Prisma.MembershipPlanGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MembershipPlanGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MembershipPlanCountArgs<ExtArgs>
+            result: $Utils.Optional<MembershipPlanCountAggregateOutputType> | number
+          }
+        }
+      }
+      Membership: {
+        payload: Prisma.$MembershipPayload<ExtArgs>
+        fields: Prisma.MembershipFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MembershipFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MembershipFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          findFirst: {
+            args: Prisma.MembershipFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MembershipFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          findMany: {
+            args: Prisma.MembershipFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          create: {
+            args: Prisma.MembershipCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          createMany: {
+            args: Prisma.MembershipCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MembershipCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          delete: {
+            args: Prisma.MembershipDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          update: {
+            args: Prisma.MembershipUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          deleteMany: {
+            args: Prisma.MembershipDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MembershipUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MembershipUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          upsert: {
+            args: Prisma.MembershipUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          aggregate: {
+            args: Prisma.MembershipAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMembership>
+          }
+          groupBy: {
+            args: Prisma.MembershipGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MembershipGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MembershipCountArgs<ExtArgs>
+            result: $Utils.Optional<MembershipCountAggregateOutputType> | number
+          }
+        }
+      }
+      MembershipPeriod: {
+        payload: Prisma.$MembershipPeriodPayload<ExtArgs>
+        fields: Prisma.MembershipPeriodFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MembershipPeriodFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MembershipPeriodFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+          }
+          findFirst: {
+            args: Prisma.MembershipPeriodFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MembershipPeriodFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+          }
+          findMany: {
+            args: Prisma.MembershipPeriodFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>[]
+          }
+          create: {
+            args: Prisma.MembershipPeriodCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+          }
+          createMany: {
+            args: Prisma.MembershipPeriodCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MembershipPeriodCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>[]
+          }
+          delete: {
+            args: Prisma.MembershipPeriodDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+          }
+          update: {
+            args: Prisma.MembershipPeriodUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+          }
+          deleteMany: {
+            args: Prisma.MembershipPeriodDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MembershipPeriodUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MembershipPeriodUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>[]
+          }
+          upsert: {
+            args: Prisma.MembershipPeriodUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPeriodPayload>
+          }
+          aggregate: {
+            args: Prisma.MembershipPeriodAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMembershipPeriod>
+          }
+          groupBy: {
+            args: Prisma.MembershipPeriodGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MembershipPeriodGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MembershipPeriodCountArgs<ExtArgs>
+            result: $Utils.Optional<MembershipPeriodCountAggregateOutputType> | number
+          }
+        }
+      }
+      MembershipBenefit: {
+        payload: Prisma.$MembershipBenefitPayload<ExtArgs>
+        fields: Prisma.MembershipBenefitFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MembershipBenefitFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MembershipBenefitFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>
+          }
+          findFirst: {
+            args: Prisma.MembershipBenefitFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MembershipBenefitFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>
+          }
+          findMany: {
+            args: Prisma.MembershipBenefitFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>[]
+          }
+          create: {
+            args: Prisma.MembershipBenefitCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>
+          }
+          createMany: {
+            args: Prisma.MembershipBenefitCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MembershipBenefitCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>[]
+          }
+          delete: {
+            args: Prisma.MembershipBenefitDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>
+          }
+          update: {
+            args: Prisma.MembershipBenefitUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>
+          }
+          deleteMany: {
+            args: Prisma.MembershipBenefitDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MembershipBenefitUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MembershipBenefitUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>[]
+          }
+          upsert: {
+            args: Prisma.MembershipBenefitUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitPayload>
+          }
+          aggregate: {
+            args: Prisma.MembershipBenefitAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMembershipBenefit>
+          }
+          groupBy: {
+            args: Prisma.MembershipBenefitGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MembershipBenefitGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MembershipBenefitCountArgs<ExtArgs>
+            result: $Utils.Optional<MembershipBenefitCountAggregateOutputType> | number
+          }
+        }
+      }
+      MembershipBenefitRedemption: {
+        payload: Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>
+        fields: Prisma.MembershipBenefitRedemptionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MembershipBenefitRedemptionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MembershipBenefitRedemptionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>
+          }
+          findFirst: {
+            args: Prisma.MembershipBenefitRedemptionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MembershipBenefitRedemptionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>
+          }
+          findMany: {
+            args: Prisma.MembershipBenefitRedemptionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>[]
+          }
+          create: {
+            args: Prisma.MembershipBenefitRedemptionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>
+          }
+          createMany: {
+            args: Prisma.MembershipBenefitRedemptionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MembershipBenefitRedemptionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>[]
+          }
+          delete: {
+            args: Prisma.MembershipBenefitRedemptionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>
+          }
+          update: {
+            args: Prisma.MembershipBenefitRedemptionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>
+          }
+          deleteMany: {
+            args: Prisma.MembershipBenefitRedemptionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MembershipBenefitRedemptionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MembershipBenefitRedemptionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>[]
+          }
+          upsert: {
+            args: Prisma.MembershipBenefitRedemptionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipBenefitRedemptionPayload>
+          }
+          aggregate: {
+            args: Prisma.MembershipBenefitRedemptionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMembershipBenefitRedemption>
+          }
+          groupBy: {
+            args: Prisma.MembershipBenefitRedemptionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MembershipBenefitRedemptionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MembershipBenefitRedemptionCountArgs<ExtArgs>
+            result: $Utils.Optional<MembershipBenefitRedemptionCountAggregateOutputType> | number
+          }
+        }
+      }
+      PricingRecommendation: {
+        payload: Prisma.$PricingRecommendationPayload<ExtArgs>
+        fields: Prisma.PricingRecommendationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PricingRecommendationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PricingRecommendationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>
+          }
+          findFirst: {
+            args: Prisma.PricingRecommendationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PricingRecommendationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>
+          }
+          findMany: {
+            args: Prisma.PricingRecommendationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>[]
+          }
+          create: {
+            args: Prisma.PricingRecommendationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>
+          }
+          createMany: {
+            args: Prisma.PricingRecommendationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PricingRecommendationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>[]
+          }
+          delete: {
+            args: Prisma.PricingRecommendationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>
+          }
+          update: {
+            args: Prisma.PricingRecommendationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>
+          }
+          deleteMany: {
+            args: Prisma.PricingRecommendationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PricingRecommendationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PricingRecommendationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>[]
+          }
+          upsert: {
+            args: Prisma.PricingRecommendationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PricingRecommendationPayload>
+          }
+          aggregate: {
+            args: Prisma.PricingRecommendationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePricingRecommendation>
+          }
+          groupBy: {
+            args: Prisma.PricingRecommendationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PricingRecommendationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PricingRecommendationCountArgs<ExtArgs>
+            result: $Utils.Optional<PricingRecommendationCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -6096,6 +6688,12 @@ export namespace Prisma {
     seasonPassPurchase?: SeasonPassPurchaseOmit
     orgInvitation?: OrgInvitationOmit
     eventDisclosure?: EventDisclosureOmit
+    membershipPlan?: MembershipPlanOmit
+    membership?: MembershipOmit
+    membershipPeriod?: MembershipPeriodOmit
+    membershipBenefit?: MembershipBenefitOmit
+    membershipBenefitRedemption?: MembershipBenefitRedemptionOmit
+    pricingRecommendation?: PricingRecommendationOmit
   }
 
   /* Types for Logging */
@@ -6187,6 +6785,7 @@ export namespace Prisma {
     apiKeys: number
     cfdiInvoices: number
     seasonPasses: number
+    membershipPlans: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6201,6 +6800,7 @@ export namespace Prisma {
     apiKeys?: boolean | OrganizationCountOutputTypeCountApiKeysArgs
     cfdiInvoices?: boolean | OrganizationCountOutputTypeCountCfdiInvoicesArgs
     seasonPasses?: boolean | OrganizationCountOutputTypeCountSeasonPassesArgs
+    membershipPlans?: boolean | OrganizationCountOutputTypeCountMembershipPlansArgs
   }
 
   // Custom InputTypes
@@ -6289,6 +6889,13 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountSeasonPassesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SeasonPassWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountMembershipPlansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipPlanWhereInput
   }
 
 
@@ -6577,6 +7184,7 @@ export namespace Prisma {
     tickets: number
     orders: number
     dynamicPrices: number
+    pricingRecommendations: number
     reviews: number
     fraudFlags: number
     disclosures: number
@@ -6592,6 +7200,7 @@ export namespace Prisma {
     tickets?: boolean | EventCountOutputTypeCountTicketsArgs
     orders?: boolean | EventCountOutputTypeCountOrdersArgs
     dynamicPrices?: boolean | EventCountOutputTypeCountDynamicPricesArgs
+    pricingRecommendations?: boolean | EventCountOutputTypeCountPricingRecommendationsArgs
     reviews?: boolean | EventCountOutputTypeCountReviewsArgs
     fraudFlags?: boolean | EventCountOutputTypeCountFraudFlagsArgs
     disclosures?: boolean | EventCountOutputTypeCountDisclosuresArgs
@@ -6639,6 +7248,13 @@ export namespace Prisma {
    */
   export type EventCountOutputTypeCountDynamicPricesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DynamicPriceWhereInput
+  }
+
+  /**
+   * EventCountOutputType without action
+   */
+  export type EventCountOutputTypeCountPricingRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PricingRecommendationWhereInput
   }
 
   /**
@@ -6737,12 +7353,14 @@ export namespace Prisma {
     tickets: number
     orderItems: number
     dynamicPrices: number
+    pricingRecommendations: number
   }
 
   export type OfferCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tickets?: boolean | OfferCountOutputTypeCountTicketsArgs
     orderItems?: boolean | OfferCountOutputTypeCountOrderItemsArgs
     dynamicPrices?: boolean | OfferCountOutputTypeCountDynamicPricesArgs
+    pricingRecommendations?: boolean | OfferCountOutputTypeCountPricingRecommendationsArgs
   }
 
   // Custom InputTypes
@@ -6775,6 +7393,13 @@ export namespace Prisma {
    */
   export type OfferCountOutputTypeCountDynamicPricesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DynamicPriceWhereInput
+  }
+
+  /**
+   * OfferCountOutputType without action
+   */
+  export type OfferCountOutputTypeCountPricingRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PricingRecommendationWhereInput
   }
 
 
@@ -6967,6 +7592,7 @@ export namespace Prisma {
     wishlist: number
     sessions: number
     userPermissions: number
+    memberships: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6976,6 +7602,7 @@ export namespace Prisma {
     wishlist?: boolean | UserCountOutputTypeCountWishlistArgs
     sessions?: boolean | UserCountOutputTypeCountSessionsArgs
     userPermissions?: boolean | UserCountOutputTypeCountUserPermissionsArgs
+    memberships?: boolean | UserCountOutputTypeCountMembershipsArgs
   }
 
   // Custom InputTypes
@@ -7029,6 +7656,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountUserPermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UserPermissionWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountMembershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
   }
 
 
@@ -7202,6 +7836,117 @@ export namespace Prisma {
    */
   export type SeasonPassCountOutputTypeCountPurchasesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SeasonPassPurchaseWhereInput
+  }
+
+
+  /**
+   * Count Type MembershipPlanCountOutputType
+   */
+
+  export type MembershipPlanCountOutputType = {
+    memberships: number
+    benefits: number
+  }
+
+  export type MembershipPlanCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    memberships?: boolean | MembershipPlanCountOutputTypeCountMembershipsArgs
+    benefits?: boolean | MembershipPlanCountOutputTypeCountBenefitsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * MembershipPlanCountOutputType without action
+   */
+  export type MembershipPlanCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlanCountOutputType
+     */
+    select?: MembershipPlanCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * MembershipPlanCountOutputType without action
+   */
+  export type MembershipPlanCountOutputTypeCountMembershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
+  }
+
+  /**
+   * MembershipPlanCountOutputType without action
+   */
+  export type MembershipPlanCountOutputTypeCountBenefitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipBenefitWhereInput
+  }
+
+
+  /**
+   * Count Type MembershipCountOutputType
+   */
+
+  export type MembershipCountOutputType = {
+    periods: number
+    redemptions: number
+  }
+
+  export type MembershipCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    periods?: boolean | MembershipCountOutputTypeCountPeriodsArgs
+    redemptions?: boolean | MembershipCountOutputTypeCountRedemptionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * MembershipCountOutputType without action
+   */
+  export type MembershipCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipCountOutputType
+     */
+    select?: MembershipCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * MembershipCountOutputType without action
+   */
+  export type MembershipCountOutputTypeCountPeriodsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipPeriodWhereInput
+  }
+
+  /**
+   * MembershipCountOutputType without action
+   */
+  export type MembershipCountOutputTypeCountRedemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipBenefitRedemptionWhereInput
+  }
+
+
+  /**
+   * Count Type MembershipBenefitCountOutputType
+   */
+
+  export type MembershipBenefitCountOutputType = {
+    redemptions: number
+  }
+
+  export type MembershipBenefitCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    redemptions?: boolean | MembershipBenefitCountOutputTypeCountRedemptionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * MembershipBenefitCountOutputType without action
+   */
+  export type MembershipBenefitCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitCountOutputType
+     */
+    select?: MembershipBenefitCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * MembershipBenefitCountOutputType without action
+   */
+  export type MembershipBenefitCountOutputTypeCountRedemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipBenefitRedemptionWhereInput
   }
 
 
@@ -7660,6 +8405,7 @@ export namespace Prisma {
     fiscalProfile?: boolean | Organization$fiscalProfileArgs<ExtArgs>
     cfdiInvoices?: boolean | Organization$cfdiInvoicesArgs<ExtArgs>
     seasonPasses?: boolean | Organization$seasonPassesArgs<ExtArgs>
+    membershipPlans?: boolean | Organization$membershipPlansArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -7792,6 +8538,7 @@ export namespace Prisma {
     fiscalProfile?: boolean | Organization$fiscalProfileArgs<ExtArgs>
     cfdiInvoices?: boolean | Organization$cfdiInvoicesArgs<ExtArgs>
     seasonPasses?: boolean | Organization$seasonPassesArgs<ExtArgs>
+    membershipPlans?: boolean | Organization$membershipPlansArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -7813,6 +8560,7 @@ export namespace Prisma {
       fiscalProfile: Prisma.$FiscalProfilePayload<ExtArgs> | null
       cfdiInvoices: Prisma.$CfdiInvoicePayload<ExtArgs>[]
       seasonPasses: Prisma.$SeasonPassPayload<ExtArgs>[]
+      membershipPlans: Prisma.$MembershipPlanPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -8263,6 +9011,7 @@ export namespace Prisma {
     fiscalProfile<T extends Organization$fiscalProfileArgs<ExtArgs> = {}>(args?: Subset<T, Organization$fiscalProfileArgs<ExtArgs>>): Prisma__FiscalProfileClient<$Result.GetResult<Prisma.$FiscalProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     cfdiInvoices<T extends Organization$cfdiInvoicesArgs<ExtArgs> = {}>(args?: Subset<T, Organization$cfdiInvoicesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CfdiInvoicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     seasonPasses<T extends Organization$seasonPassesArgs<ExtArgs> = {}>(args?: Subset<T, Organization$seasonPassesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SeasonPassPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    membershipPlans<T extends Organization$membershipPlansArgs<ExtArgs> = {}>(args?: Subset<T, Organization$membershipPlansArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9014,6 +9763,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SeasonPassScalarFieldEnum | SeasonPassScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.membershipPlans
+   */
+  export type Organization$membershipPlansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    where?: MembershipPlanWhereInput
+    orderBy?: MembershipPlanOrderByWithRelationInput | MembershipPlanOrderByWithRelationInput[]
+    cursor?: MembershipPlanWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipPlanScalarFieldEnum | MembershipPlanScalarFieldEnum[]
   }
 
   /**
@@ -27367,6 +28140,7 @@ export namespace Prisma {
     tickets?: boolean | Event$ticketsArgs<ExtArgs>
     orders?: boolean | Event$ordersArgs<ExtArgs>
     dynamicPrices?: boolean | Event$dynamicPricesArgs<ExtArgs>
+    pricingRecommendations?: boolean | Event$pricingRecommendationsArgs<ExtArgs>
     reviews?: boolean | Event$reviewsArgs<ExtArgs>
     fraudFlags?: boolean | Event$fraudFlagsArgs<ExtArgs>
     seatMap?: boolean | Event$seatMapArgs<ExtArgs>
@@ -27538,6 +28312,7 @@ export namespace Prisma {
     tickets?: boolean | Event$ticketsArgs<ExtArgs>
     orders?: boolean | Event$ordersArgs<ExtArgs>
     dynamicPrices?: boolean | Event$dynamicPricesArgs<ExtArgs>
+    pricingRecommendations?: boolean | Event$pricingRecommendationsArgs<ExtArgs>
     reviews?: boolean | Event$reviewsArgs<ExtArgs>
     fraudFlags?: boolean | Event$fraudFlagsArgs<ExtArgs>
     seatMap?: boolean | Event$seatMapArgs<ExtArgs>
@@ -27570,6 +28345,7 @@ export namespace Prisma {
       tickets: Prisma.$TicketPayload<ExtArgs>[]
       orders: Prisma.$OrderPayload<ExtArgs>[]
       dynamicPrices: Prisma.$DynamicPricePayload<ExtArgs>[]
+      pricingRecommendations: Prisma.$PricingRecommendationPayload<ExtArgs>[]
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
       fraudFlags: Prisma.$FraudFlagPayload<ExtArgs>[]
       seatMap: Prisma.$EventSeatMapPayload<ExtArgs> | null
@@ -28050,6 +28826,7 @@ export namespace Prisma {
     tickets<T extends Event$ticketsArgs<ExtArgs> = {}>(args?: Subset<T, Event$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     orders<T extends Event$ordersArgs<ExtArgs> = {}>(args?: Subset<T, Event$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     dynamicPrices<T extends Event$dynamicPricesArgs<ExtArgs> = {}>(args?: Subset<T, Event$dynamicPricesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DynamicPricePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    pricingRecommendations<T extends Event$pricingRecommendationsArgs<ExtArgs> = {}>(args?: Subset<T, Event$pricingRecommendationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reviews<T extends Event$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, Event$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     fraudFlags<T extends Event$fraudFlagsArgs<ExtArgs> = {}>(args?: Subset<T, Event$fraudFlagsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FraudFlagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     seatMap<T extends Event$seatMapArgs<ExtArgs> = {}>(args?: Subset<T, Event$seatMapArgs<ExtArgs>>): Prisma__EventSeatMapClient<$Result.GetResult<Prisma.$EventSeatMapPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -28641,6 +29418,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: DynamicPriceScalarFieldEnum | DynamicPriceScalarFieldEnum[]
+  }
+
+  /**
+   * Event.pricingRecommendations
+   */
+  export type Event$pricingRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    where?: PricingRecommendationWhereInput
+    orderBy?: PricingRecommendationOrderByWithRelationInput | PricingRecommendationOrderByWithRelationInput[]
+    cursor?: PricingRecommendationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PricingRecommendationScalarFieldEnum | PricingRecommendationScalarFieldEnum[]
   }
 
   /**
@@ -32829,6 +33630,7 @@ export namespace Prisma {
     tickets?: boolean | Offer$ticketsArgs<ExtArgs>
     orderItems?: boolean | Offer$orderItemsArgs<ExtArgs>
     dynamicPrices?: boolean | Offer$dynamicPricesArgs<ExtArgs>
+    pricingRecommendations?: boolean | Offer$pricingRecommendationsArgs<ExtArgs>
     _count?: boolean | OfferCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["offer"]>
 
@@ -32912,6 +33714,7 @@ export namespace Prisma {
     tickets?: boolean | Offer$ticketsArgs<ExtArgs>
     orderItems?: boolean | Offer$orderItemsArgs<ExtArgs>
     dynamicPrices?: boolean | Offer$dynamicPricesArgs<ExtArgs>
+    pricingRecommendations?: boolean | Offer$pricingRecommendationsArgs<ExtArgs>
     _count?: boolean | OfferCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OfferIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -32928,6 +33731,7 @@ export namespace Prisma {
       tickets: Prisma.$TicketPayload<ExtArgs>[]
       orderItems: Prisma.$OrderItemPayload<ExtArgs>[]
       dynamicPrices: Prisma.$DynamicPricePayload<ExtArgs>[]
+      pricingRecommendations: Prisma.$PricingRecommendationPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -33349,6 +34153,7 @@ export namespace Prisma {
     tickets<T extends Offer$ticketsArgs<ExtArgs> = {}>(args?: Subset<T, Offer$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     orderItems<T extends Offer$orderItemsArgs<ExtArgs> = {}>(args?: Subset<T, Offer$orderItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     dynamicPrices<T extends Offer$dynamicPricesArgs<ExtArgs> = {}>(args?: Subset<T, Offer$dynamicPricesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DynamicPricePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    pricingRecommendations<T extends Offer$pricingRecommendationsArgs<ExtArgs> = {}>(args?: Subset<T, Offer$pricingRecommendationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -33864,6 +34669,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: DynamicPriceScalarFieldEnum | DynamicPriceScalarFieldEnum[]
+  }
+
+  /**
+   * Offer.pricingRecommendations
+   */
+  export type Offer$pricingRecommendationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    where?: PricingRecommendationWhereInput
+    orderBy?: PricingRecommendationOrderByWithRelationInput | PricingRecommendationOrderByWithRelationInput[]
+    cursor?: PricingRecommendationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PricingRecommendationScalarFieldEnum | PricingRecommendationScalarFieldEnum[]
   }
 
   /**
@@ -40994,6 +41823,7 @@ export namespace Prisma {
     wishlist?: boolean | User$wishlistArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     userPermissions?: boolean | User$userPermissionsArgs<ExtArgs>
+    memberships?: boolean | User$membershipsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -41084,6 +41914,7 @@ export namespace Prisma {
     wishlist?: boolean | User$wishlistArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     userPermissions?: boolean | User$userPermissionsArgs<ExtArgs>
+    memberships?: boolean | User$membershipsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -41104,6 +41935,7 @@ export namespace Prisma {
       wishlist: Prisma.$WishlistPayload<ExtArgs>[]
       sessions: Prisma.$SessionPayload<ExtArgs>[]
       userPermissions: Prisma.$UserPermissionPayload<ExtArgs>[]
+      memberships: Prisma.$MembershipPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -41533,6 +42365,7 @@ export namespace Prisma {
     wishlist<T extends User$wishlistArgs<ExtArgs> = {}>(args?: Subset<T, User$wishlistArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WishlistPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     sessions<T extends User$sessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     userPermissions<T extends User$userPermissionsArgs<ExtArgs> = {}>(args?: Subset<T, User$userPermissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    memberships<T extends User$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, User$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -42159,6 +42992,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: UserPermissionScalarFieldEnum | UserPermissionScalarFieldEnum[]
+  }
+
+  /**
+   * User.memberships
+   */
+  export type User$membershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    cursor?: MembershipWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
   }
 
   /**
@@ -72289,6 +73146,7181 @@ export namespace Prisma {
 
 
   /**
+   * Model MembershipPlan
+   */
+
+  export type AggregateMembershipPlan = {
+    _count: MembershipPlanCountAggregateOutputType | null
+    _avg: MembershipPlanAvgAggregateOutputType | null
+    _sum: MembershipPlanSumAggregateOutputType | null
+    _min: MembershipPlanMinAggregateOutputType | null
+    _max: MembershipPlanMaxAggregateOutputType | null
+  }
+
+  export type MembershipPlanAvgAggregateOutputType = {
+    price: Decimal | null
+    maxMembers: number | null
+  }
+
+  export type MembershipPlanSumAggregateOutputType = {
+    price: Decimal | null
+    maxMembers: number | null
+  }
+
+  export type MembershipPlanMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    name: string | null
+    slug: string | null
+    tier: string | null
+    description: string | null
+    price: Decimal | null
+    currency: $Enums.Currency | null
+    billingPeriod: $Enums.MembershipBillingPeriod | null
+    maxMembers: number | null
+    active: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MembershipPlanMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    name: string | null
+    slug: string | null
+    tier: string | null
+    description: string | null
+    price: Decimal | null
+    currency: $Enums.Currency | null
+    billingPeriod: $Enums.MembershipBillingPeriod | null
+    maxMembers: number | null
+    active: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MembershipPlanCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    name: number
+    slug: number
+    tier: number
+    description: number
+    price: number
+    currency: number
+    billingPeriod: number
+    maxMembers: number
+    active: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type MembershipPlanAvgAggregateInputType = {
+    price?: true
+    maxMembers?: true
+  }
+
+  export type MembershipPlanSumAggregateInputType = {
+    price?: true
+    maxMembers?: true
+  }
+
+  export type MembershipPlanMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    name?: true
+    slug?: true
+    tier?: true
+    description?: true
+    price?: true
+    currency?: true
+    billingPeriod?: true
+    maxMembers?: true
+    active?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MembershipPlanMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    name?: true
+    slug?: true
+    tier?: true
+    description?: true
+    price?: true
+    currency?: true
+    billingPeriod?: true
+    maxMembers?: true
+    active?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MembershipPlanCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    name?: true
+    slug?: true
+    tier?: true
+    description?: true
+    price?: true
+    currency?: true
+    billingPeriod?: true
+    maxMembers?: true
+    active?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type MembershipPlanAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MembershipPlan to aggregate.
+     */
+    where?: MembershipPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipPlans to fetch.
+     */
+    orderBy?: MembershipPlanOrderByWithRelationInput | MembershipPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MembershipPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MembershipPlans
+    **/
+    _count?: true | MembershipPlanCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MembershipPlanAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MembershipPlanSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MembershipPlanMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MembershipPlanMaxAggregateInputType
+  }
+
+  export type GetMembershipPlanAggregateType<T extends MembershipPlanAggregateArgs> = {
+        [P in keyof T & keyof AggregateMembershipPlan]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMembershipPlan[P]>
+      : GetScalarType<T[P], AggregateMembershipPlan[P]>
+  }
+
+
+
+
+  export type MembershipPlanGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipPlanWhereInput
+    orderBy?: MembershipPlanOrderByWithAggregationInput | MembershipPlanOrderByWithAggregationInput[]
+    by: MembershipPlanScalarFieldEnum[] | MembershipPlanScalarFieldEnum
+    having?: MembershipPlanScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MembershipPlanCountAggregateInputType | true
+    _avg?: MembershipPlanAvgAggregateInputType
+    _sum?: MembershipPlanSumAggregateInputType
+    _min?: MembershipPlanMinAggregateInputType
+    _max?: MembershipPlanMaxAggregateInputType
+  }
+
+  export type MembershipPlanGroupByOutputType = {
+    id: string
+    organizationId: string
+    name: string
+    slug: string
+    tier: string
+    description: string | null
+    price: Decimal
+    currency: $Enums.Currency
+    billingPeriod: $Enums.MembershipBillingPeriod
+    maxMembers: number | null
+    active: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: MembershipPlanCountAggregateOutputType | null
+    _avg: MembershipPlanAvgAggregateOutputType | null
+    _sum: MembershipPlanSumAggregateOutputType | null
+    _min: MembershipPlanMinAggregateOutputType | null
+    _max: MembershipPlanMaxAggregateOutputType | null
+  }
+
+  type GetMembershipPlanGroupByPayload<T extends MembershipPlanGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MembershipPlanGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MembershipPlanGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MembershipPlanGroupByOutputType[P]>
+            : GetScalarType<T[P], MembershipPlanGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MembershipPlanSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    name?: boolean
+    slug?: boolean
+    tier?: boolean
+    description?: boolean
+    price?: boolean
+    currency?: boolean
+    billingPeriod?: boolean
+    maxMembers?: boolean
+    active?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    memberships?: boolean | MembershipPlan$membershipsArgs<ExtArgs>
+    benefits?: boolean | MembershipPlan$benefitsArgs<ExtArgs>
+    _count?: boolean | MembershipPlanCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipPlan"]>
+
+  export type MembershipPlanSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    name?: boolean
+    slug?: boolean
+    tier?: boolean
+    description?: boolean
+    price?: boolean
+    currency?: boolean
+    billingPeriod?: boolean
+    maxMembers?: boolean
+    active?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipPlan"]>
+
+  export type MembershipPlanSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    name?: boolean
+    slug?: boolean
+    tier?: boolean
+    description?: boolean
+    price?: boolean
+    currency?: boolean
+    billingPeriod?: boolean
+    maxMembers?: boolean
+    active?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipPlan"]>
+
+  export type MembershipPlanSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    name?: boolean
+    slug?: boolean
+    tier?: boolean
+    description?: boolean
+    price?: boolean
+    currency?: boolean
+    billingPeriod?: boolean
+    maxMembers?: boolean
+    active?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type MembershipPlanOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "name" | "slug" | "tier" | "description" | "price" | "currency" | "billingPeriod" | "maxMembers" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["membershipPlan"]>
+  export type MembershipPlanInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+    memberships?: boolean | MembershipPlan$membershipsArgs<ExtArgs>
+    benefits?: boolean | MembershipPlan$benefitsArgs<ExtArgs>
+    _count?: boolean | MembershipPlanCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type MembershipPlanIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type MembershipPlanIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+
+  export type $MembershipPlanPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MembershipPlan"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+      memberships: Prisma.$MembershipPayload<ExtArgs>[]
+      benefits: Prisma.$MembershipBenefitPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      name: string
+      slug: string
+      tier: string
+      description: string | null
+      price: Prisma.Decimal
+      currency: $Enums.Currency
+      billingPeriod: $Enums.MembershipBillingPeriod
+      /**
+       * Cupo máximo de miembros vigentes. Vacío = sin cupo.
+       */
+      maxMembers: number | null
+      active: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["membershipPlan"]>
+    composites: {}
+  }
+
+  type MembershipPlanGetPayload<S extends boolean | null | undefined | MembershipPlanDefaultArgs> = $Result.GetResult<Prisma.$MembershipPlanPayload, S>
+
+  type MembershipPlanCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MembershipPlanFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MembershipPlanCountAggregateInputType | true
+    }
+
+  export interface MembershipPlanDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MembershipPlan'], meta: { name: 'MembershipPlan' } }
+    /**
+     * Find zero or one MembershipPlan that matches the filter.
+     * @param {MembershipPlanFindUniqueArgs} args - Arguments to find a MembershipPlan
+     * @example
+     * // Get one MembershipPlan
+     * const membershipPlan = await prisma.membershipPlan.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MembershipPlanFindUniqueArgs>(args: SelectSubset<T, MembershipPlanFindUniqueArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MembershipPlan that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MembershipPlanFindUniqueOrThrowArgs} args - Arguments to find a MembershipPlan
+     * @example
+     * // Get one MembershipPlan
+     * const membershipPlan = await prisma.membershipPlan.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MembershipPlanFindUniqueOrThrowArgs>(args: SelectSubset<T, MembershipPlanFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MembershipPlan that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPlanFindFirstArgs} args - Arguments to find a MembershipPlan
+     * @example
+     * // Get one MembershipPlan
+     * const membershipPlan = await prisma.membershipPlan.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MembershipPlanFindFirstArgs>(args?: SelectSubset<T, MembershipPlanFindFirstArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MembershipPlan that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPlanFindFirstOrThrowArgs} args - Arguments to find a MembershipPlan
+     * @example
+     * // Get one MembershipPlan
+     * const membershipPlan = await prisma.membershipPlan.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MembershipPlanFindFirstOrThrowArgs>(args?: SelectSubset<T, MembershipPlanFindFirstOrThrowArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MembershipPlans that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPlanFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MembershipPlans
+     * const membershipPlans = await prisma.membershipPlan.findMany()
+     * 
+     * // Get first 10 MembershipPlans
+     * const membershipPlans = await prisma.membershipPlan.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const membershipPlanWithIdOnly = await prisma.membershipPlan.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MembershipPlanFindManyArgs>(args?: SelectSubset<T, MembershipPlanFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MembershipPlan.
+     * @param {MembershipPlanCreateArgs} args - Arguments to create a MembershipPlan.
+     * @example
+     * // Create one MembershipPlan
+     * const MembershipPlan = await prisma.membershipPlan.create({
+     *   data: {
+     *     // ... data to create a MembershipPlan
+     *   }
+     * })
+     * 
+     */
+    create<T extends MembershipPlanCreateArgs>(args: SelectSubset<T, MembershipPlanCreateArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MembershipPlans.
+     * @param {MembershipPlanCreateManyArgs} args - Arguments to create many MembershipPlans.
+     * @example
+     * // Create many MembershipPlans
+     * const membershipPlan = await prisma.membershipPlan.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MembershipPlanCreateManyArgs>(args?: SelectSubset<T, MembershipPlanCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MembershipPlans and returns the data saved in the database.
+     * @param {MembershipPlanCreateManyAndReturnArgs} args - Arguments to create many MembershipPlans.
+     * @example
+     * // Create many MembershipPlans
+     * const membershipPlan = await prisma.membershipPlan.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MembershipPlans and only return the `id`
+     * const membershipPlanWithIdOnly = await prisma.membershipPlan.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MembershipPlanCreateManyAndReturnArgs>(args?: SelectSubset<T, MembershipPlanCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MembershipPlan.
+     * @param {MembershipPlanDeleteArgs} args - Arguments to delete one MembershipPlan.
+     * @example
+     * // Delete one MembershipPlan
+     * const MembershipPlan = await prisma.membershipPlan.delete({
+     *   where: {
+     *     // ... filter to delete one MembershipPlan
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MembershipPlanDeleteArgs>(args: SelectSubset<T, MembershipPlanDeleteArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MembershipPlan.
+     * @param {MembershipPlanUpdateArgs} args - Arguments to update one MembershipPlan.
+     * @example
+     * // Update one MembershipPlan
+     * const membershipPlan = await prisma.membershipPlan.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MembershipPlanUpdateArgs>(args: SelectSubset<T, MembershipPlanUpdateArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MembershipPlans.
+     * @param {MembershipPlanDeleteManyArgs} args - Arguments to filter MembershipPlans to delete.
+     * @example
+     * // Delete a few MembershipPlans
+     * const { count } = await prisma.membershipPlan.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MembershipPlanDeleteManyArgs>(args?: SelectSubset<T, MembershipPlanDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MembershipPlans.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPlanUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MembershipPlans
+     * const membershipPlan = await prisma.membershipPlan.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MembershipPlanUpdateManyArgs>(args: SelectSubset<T, MembershipPlanUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MembershipPlans and returns the data updated in the database.
+     * @param {MembershipPlanUpdateManyAndReturnArgs} args - Arguments to update many MembershipPlans.
+     * @example
+     * // Update many MembershipPlans
+     * const membershipPlan = await prisma.membershipPlan.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MembershipPlans and only return the `id`
+     * const membershipPlanWithIdOnly = await prisma.membershipPlan.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MembershipPlanUpdateManyAndReturnArgs>(args: SelectSubset<T, MembershipPlanUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MembershipPlan.
+     * @param {MembershipPlanUpsertArgs} args - Arguments to update or create a MembershipPlan.
+     * @example
+     * // Update or create a MembershipPlan
+     * const membershipPlan = await prisma.membershipPlan.upsert({
+     *   create: {
+     *     // ... data to create a MembershipPlan
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MembershipPlan we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MembershipPlanUpsertArgs>(args: SelectSubset<T, MembershipPlanUpsertArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MembershipPlans.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPlanCountArgs} args - Arguments to filter MembershipPlans to count.
+     * @example
+     * // Count the number of MembershipPlans
+     * const count = await prisma.membershipPlan.count({
+     *   where: {
+     *     // ... the filter for the MembershipPlans we want to count
+     *   }
+     * })
+    **/
+    count<T extends MembershipPlanCountArgs>(
+      args?: Subset<T, MembershipPlanCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MembershipPlanCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MembershipPlan.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPlanAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MembershipPlanAggregateArgs>(args: Subset<T, MembershipPlanAggregateArgs>): Prisma.PrismaPromise<GetMembershipPlanAggregateType<T>>
+
+    /**
+     * Group by MembershipPlan.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPlanGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MembershipPlanGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MembershipPlanGroupByArgs['orderBy'] }
+        : { orderBy?: MembershipPlanGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MembershipPlanGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMembershipPlanGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MembershipPlan model
+   */
+  readonly fields: MembershipPlanFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MembershipPlan.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MembershipPlanClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    memberships<T extends MembershipPlan$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, MembershipPlan$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    benefits<T extends MembershipPlan$benefitsArgs<ExtArgs> = {}>(args?: Subset<T, MembershipPlan$benefitsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MembershipPlan model
+   */
+  interface MembershipPlanFieldRefs {
+    readonly id: FieldRef<"MembershipPlan", 'String'>
+    readonly organizationId: FieldRef<"MembershipPlan", 'String'>
+    readonly name: FieldRef<"MembershipPlan", 'String'>
+    readonly slug: FieldRef<"MembershipPlan", 'String'>
+    readonly tier: FieldRef<"MembershipPlan", 'String'>
+    readonly description: FieldRef<"MembershipPlan", 'String'>
+    readonly price: FieldRef<"MembershipPlan", 'Decimal'>
+    readonly currency: FieldRef<"MembershipPlan", 'Currency'>
+    readonly billingPeriod: FieldRef<"MembershipPlan", 'MembershipBillingPeriod'>
+    readonly maxMembers: FieldRef<"MembershipPlan", 'Int'>
+    readonly active: FieldRef<"MembershipPlan", 'Boolean'>
+    readonly createdAt: FieldRef<"MembershipPlan", 'DateTime'>
+    readonly updatedAt: FieldRef<"MembershipPlan", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MembershipPlan findUnique
+   */
+  export type MembershipPlanFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPlan to fetch.
+     */
+    where: MembershipPlanWhereUniqueInput
+  }
+
+  /**
+   * MembershipPlan findUniqueOrThrow
+   */
+  export type MembershipPlanFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPlan to fetch.
+     */
+    where: MembershipPlanWhereUniqueInput
+  }
+
+  /**
+   * MembershipPlan findFirst
+   */
+  export type MembershipPlanFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPlan to fetch.
+     */
+    where?: MembershipPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipPlans to fetch.
+     */
+    orderBy?: MembershipPlanOrderByWithRelationInput | MembershipPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MembershipPlans.
+     */
+    cursor?: MembershipPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MembershipPlans.
+     */
+    distinct?: MembershipPlanScalarFieldEnum | MembershipPlanScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipPlan findFirstOrThrow
+   */
+  export type MembershipPlanFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPlan to fetch.
+     */
+    where?: MembershipPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipPlans to fetch.
+     */
+    orderBy?: MembershipPlanOrderByWithRelationInput | MembershipPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MembershipPlans.
+     */
+    cursor?: MembershipPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MembershipPlans.
+     */
+    distinct?: MembershipPlanScalarFieldEnum | MembershipPlanScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipPlan findMany
+   */
+  export type MembershipPlanFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPlans to fetch.
+     */
+    where?: MembershipPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipPlans to fetch.
+     */
+    orderBy?: MembershipPlanOrderByWithRelationInput | MembershipPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MembershipPlans.
+     */
+    cursor?: MembershipPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipPlans.
+     */
+    skip?: number
+    distinct?: MembershipPlanScalarFieldEnum | MembershipPlanScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipPlan create
+   */
+  export type MembershipPlanCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MembershipPlan.
+     */
+    data: XOR<MembershipPlanCreateInput, MembershipPlanUncheckedCreateInput>
+  }
+
+  /**
+   * MembershipPlan createMany
+   */
+  export type MembershipPlanCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MembershipPlans.
+     */
+    data: MembershipPlanCreateManyInput | MembershipPlanCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MembershipPlan createManyAndReturn
+   */
+  export type MembershipPlanCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * The data used to create many MembershipPlans.
+     */
+    data: MembershipPlanCreateManyInput | MembershipPlanCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MembershipPlan update
+   */
+  export type MembershipPlanUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MembershipPlan.
+     */
+    data: XOR<MembershipPlanUpdateInput, MembershipPlanUncheckedUpdateInput>
+    /**
+     * Choose, which MembershipPlan to update.
+     */
+    where: MembershipPlanWhereUniqueInput
+  }
+
+  /**
+   * MembershipPlan updateMany
+   */
+  export type MembershipPlanUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MembershipPlans.
+     */
+    data: XOR<MembershipPlanUpdateManyMutationInput, MembershipPlanUncheckedUpdateManyInput>
+    /**
+     * Filter which MembershipPlans to update
+     */
+    where?: MembershipPlanWhereInput
+    /**
+     * Limit how many MembershipPlans to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MembershipPlan updateManyAndReturn
+   */
+  export type MembershipPlanUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * The data used to update MembershipPlans.
+     */
+    data: XOR<MembershipPlanUpdateManyMutationInput, MembershipPlanUncheckedUpdateManyInput>
+    /**
+     * Filter which MembershipPlans to update
+     */
+    where?: MembershipPlanWhereInput
+    /**
+     * Limit how many MembershipPlans to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MembershipPlan upsert
+   */
+  export type MembershipPlanUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MembershipPlan to update in case it exists.
+     */
+    where: MembershipPlanWhereUniqueInput
+    /**
+     * In case the MembershipPlan found by the `where` argument doesn't exist, create a new MembershipPlan with this data.
+     */
+    create: XOR<MembershipPlanCreateInput, MembershipPlanUncheckedCreateInput>
+    /**
+     * In case the MembershipPlan was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MembershipPlanUpdateInput, MembershipPlanUncheckedUpdateInput>
+  }
+
+  /**
+   * MembershipPlan delete
+   */
+  export type MembershipPlanDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+    /**
+     * Filter which MembershipPlan to delete.
+     */
+    where: MembershipPlanWhereUniqueInput
+  }
+
+  /**
+   * MembershipPlan deleteMany
+   */
+  export type MembershipPlanDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MembershipPlans to delete
+     */
+    where?: MembershipPlanWhereInput
+    /**
+     * Limit how many MembershipPlans to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MembershipPlan.memberships
+   */
+  export type MembershipPlan$membershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    cursor?: MembershipWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipPlan.benefits
+   */
+  export type MembershipPlan$benefitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    where?: MembershipBenefitWhereInput
+    orderBy?: MembershipBenefitOrderByWithRelationInput | MembershipBenefitOrderByWithRelationInput[]
+    cursor?: MembershipBenefitWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipBenefitScalarFieldEnum | MembershipBenefitScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipPlan without action
+   */
+  export type MembershipPlanDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPlan
+     */
+    select?: MembershipPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPlan
+     */
+    omit?: MembershipPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPlanInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Membership
+   */
+
+  export type AggregateMembership = {
+    _count: MembershipCountAggregateOutputType | null
+    _min: MembershipMinAggregateOutputType | null
+    _max: MembershipMaxAggregateOutputType | null
+  }
+
+  export type MembershipMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    planId: string | null
+    userId: string | null
+    status: $Enums.MembershipStatus | null
+    startedAt: Date | null
+    expiresAt: Date | null
+    cancelledAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MembershipMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    planId: string | null
+    userId: string | null
+    status: $Enums.MembershipStatus | null
+    startedAt: Date | null
+    expiresAt: Date | null
+    cancelledAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MembershipCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    planId: number
+    userId: number
+    status: number
+    startedAt: number
+    expiresAt: number
+    cancelledAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type MembershipMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    planId?: true
+    userId?: true
+    status?: true
+    startedAt?: true
+    expiresAt?: true
+    cancelledAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MembershipMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    planId?: true
+    userId?: true
+    status?: true
+    startedAt?: true
+    expiresAt?: true
+    cancelledAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MembershipCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    planId?: true
+    userId?: true
+    status?: true
+    startedAt?: true
+    expiresAt?: true
+    cancelledAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type MembershipAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Membership to aggregate.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Memberships
+    **/
+    _count?: true | MembershipCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MembershipMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MembershipMaxAggregateInputType
+  }
+
+  export type GetMembershipAggregateType<T extends MembershipAggregateArgs> = {
+        [P in keyof T & keyof AggregateMembership]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMembership[P]>
+      : GetScalarType<T[P], AggregateMembership[P]>
+  }
+
+
+
+
+  export type MembershipGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithAggregationInput | MembershipOrderByWithAggregationInput[]
+    by: MembershipScalarFieldEnum[] | MembershipScalarFieldEnum
+    having?: MembershipScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MembershipCountAggregateInputType | true
+    _min?: MembershipMinAggregateInputType
+    _max?: MembershipMaxAggregateInputType
+  }
+
+  export type MembershipGroupByOutputType = {
+    id: string
+    organizationId: string
+    planId: string
+    userId: string
+    status: $Enums.MembershipStatus
+    startedAt: Date
+    expiresAt: Date
+    cancelledAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: MembershipCountAggregateOutputType | null
+    _min: MembershipMinAggregateOutputType | null
+    _max: MembershipMaxAggregateOutputType | null
+  }
+
+  type GetMembershipGroupByPayload<T extends MembershipGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MembershipGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MembershipGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MembershipGroupByOutputType[P]>
+            : GetScalarType<T[P], MembershipGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MembershipSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    planId?: boolean
+    userId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    expiresAt?: boolean
+    cancelledAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    periods?: boolean | Membership$periodsArgs<ExtArgs>
+    redemptions?: boolean | Membership$redemptionsArgs<ExtArgs>
+    _count?: boolean | MembershipCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    planId?: boolean
+    userId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    expiresAt?: boolean
+    cancelledAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    planId?: boolean
+    userId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    expiresAt?: boolean
+    cancelledAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    planId?: boolean
+    userId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    expiresAt?: boolean
+    cancelledAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type MembershipOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "planId" | "userId" | "status" | "startedAt" | "expiresAt" | "cancelledAt" | "createdAt" | "updatedAt", ExtArgs["result"]["membership"]>
+  export type MembershipInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    periods?: boolean | Membership$periodsArgs<ExtArgs>
+    redemptions?: boolean | Membership$redemptionsArgs<ExtArgs>
+    _count?: boolean | MembershipCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type MembershipIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type MembershipIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $MembershipPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Membership"
+    objects: {
+      plan: Prisma.$MembershipPlanPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+      periods: Prisma.$MembershipPeriodPayload<ExtArgs>[]
+      redemptions: Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      planId: string
+      userId: string
+      status: $Enums.MembershipStatus
+      startedAt: Date
+      /**
+       * Fin del último periodo cobrado.
+       */
+      expiresAt: Date
+      cancelledAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["membership"]>
+    composites: {}
+  }
+
+  type MembershipGetPayload<S extends boolean | null | undefined | MembershipDefaultArgs> = $Result.GetResult<Prisma.$MembershipPayload, S>
+
+  type MembershipCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MembershipFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MembershipCountAggregateInputType | true
+    }
+
+  export interface MembershipDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Membership'], meta: { name: 'Membership' } }
+    /**
+     * Find zero or one Membership that matches the filter.
+     * @param {MembershipFindUniqueArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MembershipFindUniqueArgs>(args: SelectSubset<T, MembershipFindUniqueArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Membership that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MembershipFindUniqueOrThrowArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MembershipFindUniqueOrThrowArgs>(args: SelectSubset<T, MembershipFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Membership that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindFirstArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MembershipFindFirstArgs>(args?: SelectSubset<T, MembershipFindFirstArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Membership that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindFirstOrThrowArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MembershipFindFirstOrThrowArgs>(args?: SelectSubset<T, MembershipFindFirstOrThrowArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Memberships that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Memberships
+     * const memberships = await prisma.membership.findMany()
+     * 
+     * // Get first 10 Memberships
+     * const memberships = await prisma.membership.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const membershipWithIdOnly = await prisma.membership.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MembershipFindManyArgs>(args?: SelectSubset<T, MembershipFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Membership.
+     * @param {MembershipCreateArgs} args - Arguments to create a Membership.
+     * @example
+     * // Create one Membership
+     * const Membership = await prisma.membership.create({
+     *   data: {
+     *     // ... data to create a Membership
+     *   }
+     * })
+     * 
+     */
+    create<T extends MembershipCreateArgs>(args: SelectSubset<T, MembershipCreateArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Memberships.
+     * @param {MembershipCreateManyArgs} args - Arguments to create many Memberships.
+     * @example
+     * // Create many Memberships
+     * const membership = await prisma.membership.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MembershipCreateManyArgs>(args?: SelectSubset<T, MembershipCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Memberships and returns the data saved in the database.
+     * @param {MembershipCreateManyAndReturnArgs} args - Arguments to create many Memberships.
+     * @example
+     * // Create many Memberships
+     * const membership = await prisma.membership.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Memberships and only return the `id`
+     * const membershipWithIdOnly = await prisma.membership.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MembershipCreateManyAndReturnArgs>(args?: SelectSubset<T, MembershipCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Membership.
+     * @param {MembershipDeleteArgs} args - Arguments to delete one Membership.
+     * @example
+     * // Delete one Membership
+     * const Membership = await prisma.membership.delete({
+     *   where: {
+     *     // ... filter to delete one Membership
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MembershipDeleteArgs>(args: SelectSubset<T, MembershipDeleteArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Membership.
+     * @param {MembershipUpdateArgs} args - Arguments to update one Membership.
+     * @example
+     * // Update one Membership
+     * const membership = await prisma.membership.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MembershipUpdateArgs>(args: SelectSubset<T, MembershipUpdateArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Memberships.
+     * @param {MembershipDeleteManyArgs} args - Arguments to filter Memberships to delete.
+     * @example
+     * // Delete a few Memberships
+     * const { count } = await prisma.membership.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MembershipDeleteManyArgs>(args?: SelectSubset<T, MembershipDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Memberships.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Memberships
+     * const membership = await prisma.membership.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MembershipUpdateManyArgs>(args: SelectSubset<T, MembershipUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Memberships and returns the data updated in the database.
+     * @param {MembershipUpdateManyAndReturnArgs} args - Arguments to update many Memberships.
+     * @example
+     * // Update many Memberships
+     * const membership = await prisma.membership.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Memberships and only return the `id`
+     * const membershipWithIdOnly = await prisma.membership.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MembershipUpdateManyAndReturnArgs>(args: SelectSubset<T, MembershipUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Membership.
+     * @param {MembershipUpsertArgs} args - Arguments to update or create a Membership.
+     * @example
+     * // Update or create a Membership
+     * const membership = await prisma.membership.upsert({
+     *   create: {
+     *     // ... data to create a Membership
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Membership we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MembershipUpsertArgs>(args: SelectSubset<T, MembershipUpsertArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Memberships.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipCountArgs} args - Arguments to filter Memberships to count.
+     * @example
+     * // Count the number of Memberships
+     * const count = await prisma.membership.count({
+     *   where: {
+     *     // ... the filter for the Memberships we want to count
+     *   }
+     * })
+    **/
+    count<T extends MembershipCountArgs>(
+      args?: Subset<T, MembershipCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MembershipCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Membership.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MembershipAggregateArgs>(args: Subset<T, MembershipAggregateArgs>): Prisma.PrismaPromise<GetMembershipAggregateType<T>>
+
+    /**
+     * Group by Membership.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MembershipGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MembershipGroupByArgs['orderBy'] }
+        : { orderBy?: MembershipGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MembershipGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMembershipGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Membership model
+   */
+  readonly fields: MembershipFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Membership.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MembershipClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    plan<T extends MembershipPlanDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MembershipPlanDefaultArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    periods<T extends Membership$periodsArgs<ExtArgs> = {}>(args?: Subset<T, Membership$periodsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    redemptions<T extends Membership$redemptionsArgs<ExtArgs> = {}>(args?: Subset<T, Membership$redemptionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Membership model
+   */
+  interface MembershipFieldRefs {
+    readonly id: FieldRef<"Membership", 'String'>
+    readonly organizationId: FieldRef<"Membership", 'String'>
+    readonly planId: FieldRef<"Membership", 'String'>
+    readonly userId: FieldRef<"Membership", 'String'>
+    readonly status: FieldRef<"Membership", 'MembershipStatus'>
+    readonly startedAt: FieldRef<"Membership", 'DateTime'>
+    readonly expiresAt: FieldRef<"Membership", 'DateTime'>
+    readonly cancelledAt: FieldRef<"Membership", 'DateTime'>
+    readonly createdAt: FieldRef<"Membership", 'DateTime'>
+    readonly updatedAt: FieldRef<"Membership", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Membership findUnique
+   */
+  export type MembershipFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership findUniqueOrThrow
+   */
+  export type MembershipFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership findFirst
+   */
+  export type MembershipFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Memberships.
+     */
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership findFirstOrThrow
+   */
+  export type MembershipFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Memberships.
+     */
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership findMany
+   */
+  export type MembershipFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Memberships to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership create
+   */
+  export type MembershipCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Membership.
+     */
+    data: XOR<MembershipCreateInput, MembershipUncheckedCreateInput>
+  }
+
+  /**
+   * Membership createMany
+   */
+  export type MembershipCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Memberships.
+     */
+    data: MembershipCreateManyInput | MembershipCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Membership createManyAndReturn
+   */
+  export type MembershipCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * The data used to create many Memberships.
+     */
+    data: MembershipCreateManyInput | MembershipCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Membership update
+   */
+  export type MembershipUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Membership.
+     */
+    data: XOR<MembershipUpdateInput, MembershipUncheckedUpdateInput>
+    /**
+     * Choose, which Membership to update.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership updateMany
+   */
+  export type MembershipUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Memberships.
+     */
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyInput>
+    /**
+     * Filter which Memberships to update
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Membership updateManyAndReturn
+   */
+  export type MembershipUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * The data used to update Memberships.
+     */
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyInput>
+    /**
+     * Filter which Memberships to update
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Membership upsert
+   */
+  export type MembershipUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Membership to update in case it exists.
+     */
+    where: MembershipWhereUniqueInput
+    /**
+     * In case the Membership found by the `where` argument doesn't exist, create a new Membership with this data.
+     */
+    create: XOR<MembershipCreateInput, MembershipUncheckedCreateInput>
+    /**
+     * In case the Membership was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MembershipUpdateInput, MembershipUncheckedUpdateInput>
+  }
+
+  /**
+   * Membership delete
+   */
+  export type MembershipDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter which Membership to delete.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership deleteMany
+   */
+  export type MembershipDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Memberships to delete
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Membership.periods
+   */
+  export type Membership$periodsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    where?: MembershipPeriodWhereInput
+    orderBy?: MembershipPeriodOrderByWithRelationInput | MembershipPeriodOrderByWithRelationInput[]
+    cursor?: MembershipPeriodWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipPeriodScalarFieldEnum | MembershipPeriodScalarFieldEnum[]
+  }
+
+  /**
+   * Membership.redemptions
+   */
+  export type Membership$redemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    where?: MembershipBenefitRedemptionWhereInput
+    orderBy?: MembershipBenefitRedemptionOrderByWithRelationInput | MembershipBenefitRedemptionOrderByWithRelationInput[]
+    cursor?: MembershipBenefitRedemptionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipBenefitRedemptionScalarFieldEnum | MembershipBenefitRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * Membership without action
+   */
+  export type MembershipDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model MembershipPeriod
+   */
+
+  export type AggregateMembershipPeriod = {
+    _count: MembershipPeriodCountAggregateOutputType | null
+    _avg: MembershipPeriodAvgAggregateOutputType | null
+    _sum: MembershipPeriodSumAggregateOutputType | null
+    _min: MembershipPeriodMinAggregateOutputType | null
+    _max: MembershipPeriodMaxAggregateOutputType | null
+  }
+
+  export type MembershipPeriodAvgAggregateOutputType = {
+    amount: Decimal | null
+  }
+
+  export type MembershipPeriodSumAggregateOutputType = {
+    amount: Decimal | null
+  }
+
+  export type MembershipPeriodMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    membershipId: string | null
+    kind: $Enums.MembershipPeriodKind | null
+    startsAt: Date | null
+    endsAt: Date | null
+    amount: Decimal | null
+    recordedById: string | null
+    createdAt: Date | null
+  }
+
+  export type MembershipPeriodMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    membershipId: string | null
+    kind: $Enums.MembershipPeriodKind | null
+    startsAt: Date | null
+    endsAt: Date | null
+    amount: Decimal | null
+    recordedById: string | null
+    createdAt: Date | null
+  }
+
+  export type MembershipPeriodCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    membershipId: number
+    kind: number
+    startsAt: number
+    endsAt: number
+    amount: number
+    recordedById: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type MembershipPeriodAvgAggregateInputType = {
+    amount?: true
+  }
+
+  export type MembershipPeriodSumAggregateInputType = {
+    amount?: true
+  }
+
+  export type MembershipPeriodMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    membershipId?: true
+    kind?: true
+    startsAt?: true
+    endsAt?: true
+    amount?: true
+    recordedById?: true
+    createdAt?: true
+  }
+
+  export type MembershipPeriodMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    membershipId?: true
+    kind?: true
+    startsAt?: true
+    endsAt?: true
+    amount?: true
+    recordedById?: true
+    createdAt?: true
+  }
+
+  export type MembershipPeriodCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    membershipId?: true
+    kind?: true
+    startsAt?: true
+    endsAt?: true
+    amount?: true
+    recordedById?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type MembershipPeriodAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MembershipPeriod to aggregate.
+     */
+    where?: MembershipPeriodWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipPeriods to fetch.
+     */
+    orderBy?: MembershipPeriodOrderByWithRelationInput | MembershipPeriodOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MembershipPeriodWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipPeriods from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipPeriods.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MembershipPeriods
+    **/
+    _count?: true | MembershipPeriodCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MembershipPeriodAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MembershipPeriodSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MembershipPeriodMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MembershipPeriodMaxAggregateInputType
+  }
+
+  export type GetMembershipPeriodAggregateType<T extends MembershipPeriodAggregateArgs> = {
+        [P in keyof T & keyof AggregateMembershipPeriod]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMembershipPeriod[P]>
+      : GetScalarType<T[P], AggregateMembershipPeriod[P]>
+  }
+
+
+
+
+  export type MembershipPeriodGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipPeriodWhereInput
+    orderBy?: MembershipPeriodOrderByWithAggregationInput | MembershipPeriodOrderByWithAggregationInput[]
+    by: MembershipPeriodScalarFieldEnum[] | MembershipPeriodScalarFieldEnum
+    having?: MembershipPeriodScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MembershipPeriodCountAggregateInputType | true
+    _avg?: MembershipPeriodAvgAggregateInputType
+    _sum?: MembershipPeriodSumAggregateInputType
+    _min?: MembershipPeriodMinAggregateInputType
+    _max?: MembershipPeriodMaxAggregateInputType
+  }
+
+  export type MembershipPeriodGroupByOutputType = {
+    id: string
+    organizationId: string
+    membershipId: string
+    kind: $Enums.MembershipPeriodKind
+    startsAt: Date
+    endsAt: Date
+    amount: Decimal
+    recordedById: string | null
+    createdAt: Date
+    _count: MembershipPeriodCountAggregateOutputType | null
+    _avg: MembershipPeriodAvgAggregateOutputType | null
+    _sum: MembershipPeriodSumAggregateOutputType | null
+    _min: MembershipPeriodMinAggregateOutputType | null
+    _max: MembershipPeriodMaxAggregateOutputType | null
+  }
+
+  type GetMembershipPeriodGroupByPayload<T extends MembershipPeriodGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MembershipPeriodGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MembershipPeriodGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MembershipPeriodGroupByOutputType[P]>
+            : GetScalarType<T[P], MembershipPeriodGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MembershipPeriodSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    membershipId?: boolean
+    kind?: boolean
+    startsAt?: boolean
+    endsAt?: boolean
+    amount?: boolean
+    recordedById?: boolean
+    createdAt?: boolean
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipPeriod"]>
+
+  export type MembershipPeriodSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    membershipId?: boolean
+    kind?: boolean
+    startsAt?: boolean
+    endsAt?: boolean
+    amount?: boolean
+    recordedById?: boolean
+    createdAt?: boolean
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipPeriod"]>
+
+  export type MembershipPeriodSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    membershipId?: boolean
+    kind?: boolean
+    startsAt?: boolean
+    endsAt?: boolean
+    amount?: boolean
+    recordedById?: boolean
+    createdAt?: boolean
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipPeriod"]>
+
+  export type MembershipPeriodSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    membershipId?: boolean
+    kind?: boolean
+    startsAt?: boolean
+    endsAt?: boolean
+    amount?: boolean
+    recordedById?: boolean
+    createdAt?: boolean
+  }
+
+  export type MembershipPeriodOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "membershipId" | "kind" | "startsAt" | "endsAt" | "amount" | "recordedById" | "createdAt", ExtArgs["result"]["membershipPeriod"]>
+  export type MembershipPeriodInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }
+  export type MembershipPeriodIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }
+  export type MembershipPeriodIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }
+
+  export type $MembershipPeriodPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MembershipPeriod"
+    objects: {
+      membership: Prisma.$MembershipPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      membershipId: string
+      kind: $Enums.MembershipPeriodKind
+      startsAt: Date
+      endsAt: Date
+      amount: Prisma.Decimal
+      recordedById: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["membershipPeriod"]>
+    composites: {}
+  }
+
+  type MembershipPeriodGetPayload<S extends boolean | null | undefined | MembershipPeriodDefaultArgs> = $Result.GetResult<Prisma.$MembershipPeriodPayload, S>
+
+  type MembershipPeriodCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MembershipPeriodFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MembershipPeriodCountAggregateInputType | true
+    }
+
+  export interface MembershipPeriodDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MembershipPeriod'], meta: { name: 'MembershipPeriod' } }
+    /**
+     * Find zero or one MembershipPeriod that matches the filter.
+     * @param {MembershipPeriodFindUniqueArgs} args - Arguments to find a MembershipPeriod
+     * @example
+     * // Get one MembershipPeriod
+     * const membershipPeriod = await prisma.membershipPeriod.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MembershipPeriodFindUniqueArgs>(args: SelectSubset<T, MembershipPeriodFindUniqueArgs<ExtArgs>>): Prisma__MembershipPeriodClient<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MembershipPeriod that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MembershipPeriodFindUniqueOrThrowArgs} args - Arguments to find a MembershipPeriod
+     * @example
+     * // Get one MembershipPeriod
+     * const membershipPeriod = await prisma.membershipPeriod.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MembershipPeriodFindUniqueOrThrowArgs>(args: SelectSubset<T, MembershipPeriodFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MembershipPeriodClient<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MembershipPeriod that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPeriodFindFirstArgs} args - Arguments to find a MembershipPeriod
+     * @example
+     * // Get one MembershipPeriod
+     * const membershipPeriod = await prisma.membershipPeriod.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MembershipPeriodFindFirstArgs>(args?: SelectSubset<T, MembershipPeriodFindFirstArgs<ExtArgs>>): Prisma__MembershipPeriodClient<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MembershipPeriod that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPeriodFindFirstOrThrowArgs} args - Arguments to find a MembershipPeriod
+     * @example
+     * // Get one MembershipPeriod
+     * const membershipPeriod = await prisma.membershipPeriod.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MembershipPeriodFindFirstOrThrowArgs>(args?: SelectSubset<T, MembershipPeriodFindFirstOrThrowArgs<ExtArgs>>): Prisma__MembershipPeriodClient<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MembershipPeriods that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPeriodFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MembershipPeriods
+     * const membershipPeriods = await prisma.membershipPeriod.findMany()
+     * 
+     * // Get first 10 MembershipPeriods
+     * const membershipPeriods = await prisma.membershipPeriod.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const membershipPeriodWithIdOnly = await prisma.membershipPeriod.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MembershipPeriodFindManyArgs>(args?: SelectSubset<T, MembershipPeriodFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MembershipPeriod.
+     * @param {MembershipPeriodCreateArgs} args - Arguments to create a MembershipPeriod.
+     * @example
+     * // Create one MembershipPeriod
+     * const MembershipPeriod = await prisma.membershipPeriod.create({
+     *   data: {
+     *     // ... data to create a MembershipPeriod
+     *   }
+     * })
+     * 
+     */
+    create<T extends MembershipPeriodCreateArgs>(args: SelectSubset<T, MembershipPeriodCreateArgs<ExtArgs>>): Prisma__MembershipPeriodClient<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MembershipPeriods.
+     * @param {MembershipPeriodCreateManyArgs} args - Arguments to create many MembershipPeriods.
+     * @example
+     * // Create many MembershipPeriods
+     * const membershipPeriod = await prisma.membershipPeriod.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MembershipPeriodCreateManyArgs>(args?: SelectSubset<T, MembershipPeriodCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MembershipPeriods and returns the data saved in the database.
+     * @param {MembershipPeriodCreateManyAndReturnArgs} args - Arguments to create many MembershipPeriods.
+     * @example
+     * // Create many MembershipPeriods
+     * const membershipPeriod = await prisma.membershipPeriod.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MembershipPeriods and only return the `id`
+     * const membershipPeriodWithIdOnly = await prisma.membershipPeriod.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MembershipPeriodCreateManyAndReturnArgs>(args?: SelectSubset<T, MembershipPeriodCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MembershipPeriod.
+     * @param {MembershipPeriodDeleteArgs} args - Arguments to delete one MembershipPeriod.
+     * @example
+     * // Delete one MembershipPeriod
+     * const MembershipPeriod = await prisma.membershipPeriod.delete({
+     *   where: {
+     *     // ... filter to delete one MembershipPeriod
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MembershipPeriodDeleteArgs>(args: SelectSubset<T, MembershipPeriodDeleteArgs<ExtArgs>>): Prisma__MembershipPeriodClient<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MembershipPeriod.
+     * @param {MembershipPeriodUpdateArgs} args - Arguments to update one MembershipPeriod.
+     * @example
+     * // Update one MembershipPeriod
+     * const membershipPeriod = await prisma.membershipPeriod.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MembershipPeriodUpdateArgs>(args: SelectSubset<T, MembershipPeriodUpdateArgs<ExtArgs>>): Prisma__MembershipPeriodClient<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MembershipPeriods.
+     * @param {MembershipPeriodDeleteManyArgs} args - Arguments to filter MembershipPeriods to delete.
+     * @example
+     * // Delete a few MembershipPeriods
+     * const { count } = await prisma.membershipPeriod.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MembershipPeriodDeleteManyArgs>(args?: SelectSubset<T, MembershipPeriodDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MembershipPeriods.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPeriodUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MembershipPeriods
+     * const membershipPeriod = await prisma.membershipPeriod.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MembershipPeriodUpdateManyArgs>(args: SelectSubset<T, MembershipPeriodUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MembershipPeriods and returns the data updated in the database.
+     * @param {MembershipPeriodUpdateManyAndReturnArgs} args - Arguments to update many MembershipPeriods.
+     * @example
+     * // Update many MembershipPeriods
+     * const membershipPeriod = await prisma.membershipPeriod.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MembershipPeriods and only return the `id`
+     * const membershipPeriodWithIdOnly = await prisma.membershipPeriod.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MembershipPeriodUpdateManyAndReturnArgs>(args: SelectSubset<T, MembershipPeriodUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MembershipPeriod.
+     * @param {MembershipPeriodUpsertArgs} args - Arguments to update or create a MembershipPeriod.
+     * @example
+     * // Update or create a MembershipPeriod
+     * const membershipPeriod = await prisma.membershipPeriod.upsert({
+     *   create: {
+     *     // ... data to create a MembershipPeriod
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MembershipPeriod we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MembershipPeriodUpsertArgs>(args: SelectSubset<T, MembershipPeriodUpsertArgs<ExtArgs>>): Prisma__MembershipPeriodClient<$Result.GetResult<Prisma.$MembershipPeriodPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MembershipPeriods.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPeriodCountArgs} args - Arguments to filter MembershipPeriods to count.
+     * @example
+     * // Count the number of MembershipPeriods
+     * const count = await prisma.membershipPeriod.count({
+     *   where: {
+     *     // ... the filter for the MembershipPeriods we want to count
+     *   }
+     * })
+    **/
+    count<T extends MembershipPeriodCountArgs>(
+      args?: Subset<T, MembershipPeriodCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MembershipPeriodCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MembershipPeriod.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPeriodAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MembershipPeriodAggregateArgs>(args: Subset<T, MembershipPeriodAggregateArgs>): Prisma.PrismaPromise<GetMembershipPeriodAggregateType<T>>
+
+    /**
+     * Group by MembershipPeriod.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipPeriodGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MembershipPeriodGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MembershipPeriodGroupByArgs['orderBy'] }
+        : { orderBy?: MembershipPeriodGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MembershipPeriodGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMembershipPeriodGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MembershipPeriod model
+   */
+  readonly fields: MembershipPeriodFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MembershipPeriod.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MembershipPeriodClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    membership<T extends MembershipDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MembershipDefaultArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MembershipPeriod model
+   */
+  interface MembershipPeriodFieldRefs {
+    readonly id: FieldRef<"MembershipPeriod", 'String'>
+    readonly organizationId: FieldRef<"MembershipPeriod", 'String'>
+    readonly membershipId: FieldRef<"MembershipPeriod", 'String'>
+    readonly kind: FieldRef<"MembershipPeriod", 'MembershipPeriodKind'>
+    readonly startsAt: FieldRef<"MembershipPeriod", 'DateTime'>
+    readonly endsAt: FieldRef<"MembershipPeriod", 'DateTime'>
+    readonly amount: FieldRef<"MembershipPeriod", 'Decimal'>
+    readonly recordedById: FieldRef<"MembershipPeriod", 'String'>
+    readonly createdAt: FieldRef<"MembershipPeriod", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MembershipPeriod findUnique
+   */
+  export type MembershipPeriodFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPeriod to fetch.
+     */
+    where: MembershipPeriodWhereUniqueInput
+  }
+
+  /**
+   * MembershipPeriod findUniqueOrThrow
+   */
+  export type MembershipPeriodFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPeriod to fetch.
+     */
+    where: MembershipPeriodWhereUniqueInput
+  }
+
+  /**
+   * MembershipPeriod findFirst
+   */
+  export type MembershipPeriodFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPeriod to fetch.
+     */
+    where?: MembershipPeriodWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipPeriods to fetch.
+     */
+    orderBy?: MembershipPeriodOrderByWithRelationInput | MembershipPeriodOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MembershipPeriods.
+     */
+    cursor?: MembershipPeriodWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipPeriods from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipPeriods.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MembershipPeriods.
+     */
+    distinct?: MembershipPeriodScalarFieldEnum | MembershipPeriodScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipPeriod findFirstOrThrow
+   */
+  export type MembershipPeriodFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPeriod to fetch.
+     */
+    where?: MembershipPeriodWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipPeriods to fetch.
+     */
+    orderBy?: MembershipPeriodOrderByWithRelationInput | MembershipPeriodOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MembershipPeriods.
+     */
+    cursor?: MembershipPeriodWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipPeriods from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipPeriods.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MembershipPeriods.
+     */
+    distinct?: MembershipPeriodScalarFieldEnum | MembershipPeriodScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipPeriod findMany
+   */
+  export type MembershipPeriodFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipPeriods to fetch.
+     */
+    where?: MembershipPeriodWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipPeriods to fetch.
+     */
+    orderBy?: MembershipPeriodOrderByWithRelationInput | MembershipPeriodOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MembershipPeriods.
+     */
+    cursor?: MembershipPeriodWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipPeriods from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipPeriods.
+     */
+    skip?: number
+    distinct?: MembershipPeriodScalarFieldEnum | MembershipPeriodScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipPeriod create
+   */
+  export type MembershipPeriodCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MembershipPeriod.
+     */
+    data: XOR<MembershipPeriodCreateInput, MembershipPeriodUncheckedCreateInput>
+  }
+
+  /**
+   * MembershipPeriod createMany
+   */
+  export type MembershipPeriodCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MembershipPeriods.
+     */
+    data: MembershipPeriodCreateManyInput | MembershipPeriodCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MembershipPeriod createManyAndReturn
+   */
+  export type MembershipPeriodCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * The data used to create many MembershipPeriods.
+     */
+    data: MembershipPeriodCreateManyInput | MembershipPeriodCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MembershipPeriod update
+   */
+  export type MembershipPeriodUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MembershipPeriod.
+     */
+    data: XOR<MembershipPeriodUpdateInput, MembershipPeriodUncheckedUpdateInput>
+    /**
+     * Choose, which MembershipPeriod to update.
+     */
+    where: MembershipPeriodWhereUniqueInput
+  }
+
+  /**
+   * MembershipPeriod updateMany
+   */
+  export type MembershipPeriodUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MembershipPeriods.
+     */
+    data: XOR<MembershipPeriodUpdateManyMutationInput, MembershipPeriodUncheckedUpdateManyInput>
+    /**
+     * Filter which MembershipPeriods to update
+     */
+    where?: MembershipPeriodWhereInput
+    /**
+     * Limit how many MembershipPeriods to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MembershipPeriod updateManyAndReturn
+   */
+  export type MembershipPeriodUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * The data used to update MembershipPeriods.
+     */
+    data: XOR<MembershipPeriodUpdateManyMutationInput, MembershipPeriodUncheckedUpdateManyInput>
+    /**
+     * Filter which MembershipPeriods to update
+     */
+    where?: MembershipPeriodWhereInput
+    /**
+     * Limit how many MembershipPeriods to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MembershipPeriod upsert
+   */
+  export type MembershipPeriodUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MembershipPeriod to update in case it exists.
+     */
+    where: MembershipPeriodWhereUniqueInput
+    /**
+     * In case the MembershipPeriod found by the `where` argument doesn't exist, create a new MembershipPeriod with this data.
+     */
+    create: XOR<MembershipPeriodCreateInput, MembershipPeriodUncheckedCreateInput>
+    /**
+     * In case the MembershipPeriod was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MembershipPeriodUpdateInput, MembershipPeriodUncheckedUpdateInput>
+  }
+
+  /**
+   * MembershipPeriod delete
+   */
+  export type MembershipPeriodDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+    /**
+     * Filter which MembershipPeriod to delete.
+     */
+    where: MembershipPeriodWhereUniqueInput
+  }
+
+  /**
+   * MembershipPeriod deleteMany
+   */
+  export type MembershipPeriodDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MembershipPeriods to delete
+     */
+    where?: MembershipPeriodWhereInput
+    /**
+     * Limit how many MembershipPeriods to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MembershipPeriod without action
+   */
+  export type MembershipPeriodDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipPeriod
+     */
+    select?: MembershipPeriodSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipPeriod
+     */
+    omit?: MembershipPeriodOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipPeriodInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model MembershipBenefit
+   */
+
+  export type AggregateMembershipBenefit = {
+    _count: MembershipBenefitCountAggregateOutputType | null
+    _avg: MembershipBenefitAvgAggregateOutputType | null
+    _sum: MembershipBenefitSumAggregateOutputType | null
+    _min: MembershipBenefitMinAggregateOutputType | null
+    _max: MembershipBenefitMaxAggregateOutputType | null
+  }
+
+  export type MembershipBenefitAvgAggregateOutputType = {
+    redemptionLimit: number | null
+  }
+
+  export type MembershipBenefitSumAggregateOutputType = {
+    redemptionLimit: number | null
+  }
+
+  export type MembershipBenefitMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    planId: string | null
+    name: string | null
+    type: string | null
+    description: string | null
+    redemptionLimit: number | null
+    active: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MembershipBenefitMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    planId: string | null
+    name: string | null
+    type: string | null
+    description: string | null
+    redemptionLimit: number | null
+    active: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type MembershipBenefitCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    planId: number
+    name: number
+    type: number
+    description: number
+    redemptionLimit: number
+    active: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type MembershipBenefitAvgAggregateInputType = {
+    redemptionLimit?: true
+  }
+
+  export type MembershipBenefitSumAggregateInputType = {
+    redemptionLimit?: true
+  }
+
+  export type MembershipBenefitMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    planId?: true
+    name?: true
+    type?: true
+    description?: true
+    redemptionLimit?: true
+    active?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MembershipBenefitMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    planId?: true
+    name?: true
+    type?: true
+    description?: true
+    redemptionLimit?: true
+    active?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type MembershipBenefitCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    planId?: true
+    name?: true
+    type?: true
+    description?: true
+    redemptionLimit?: true
+    active?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type MembershipBenefitAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MembershipBenefit to aggregate.
+     */
+    where?: MembershipBenefitWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipBenefits to fetch.
+     */
+    orderBy?: MembershipBenefitOrderByWithRelationInput | MembershipBenefitOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MembershipBenefitWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipBenefits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipBenefits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MembershipBenefits
+    **/
+    _count?: true | MembershipBenefitCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MembershipBenefitAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MembershipBenefitSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MembershipBenefitMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MembershipBenefitMaxAggregateInputType
+  }
+
+  export type GetMembershipBenefitAggregateType<T extends MembershipBenefitAggregateArgs> = {
+        [P in keyof T & keyof AggregateMembershipBenefit]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMembershipBenefit[P]>
+      : GetScalarType<T[P], AggregateMembershipBenefit[P]>
+  }
+
+
+
+
+  export type MembershipBenefitGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipBenefitWhereInput
+    orderBy?: MembershipBenefitOrderByWithAggregationInput | MembershipBenefitOrderByWithAggregationInput[]
+    by: MembershipBenefitScalarFieldEnum[] | MembershipBenefitScalarFieldEnum
+    having?: MembershipBenefitScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MembershipBenefitCountAggregateInputType | true
+    _avg?: MembershipBenefitAvgAggregateInputType
+    _sum?: MembershipBenefitSumAggregateInputType
+    _min?: MembershipBenefitMinAggregateInputType
+    _max?: MembershipBenefitMaxAggregateInputType
+  }
+
+  export type MembershipBenefitGroupByOutputType = {
+    id: string
+    organizationId: string
+    planId: string
+    name: string
+    type: string
+    description: string | null
+    redemptionLimit: number | null
+    active: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: MembershipBenefitCountAggregateOutputType | null
+    _avg: MembershipBenefitAvgAggregateOutputType | null
+    _sum: MembershipBenefitSumAggregateOutputType | null
+    _min: MembershipBenefitMinAggregateOutputType | null
+    _max: MembershipBenefitMaxAggregateOutputType | null
+  }
+
+  type GetMembershipBenefitGroupByPayload<T extends MembershipBenefitGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MembershipBenefitGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MembershipBenefitGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MembershipBenefitGroupByOutputType[P]>
+            : GetScalarType<T[P], MembershipBenefitGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MembershipBenefitSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    planId?: boolean
+    name?: boolean
+    type?: boolean
+    description?: boolean
+    redemptionLimit?: boolean
+    active?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+    redemptions?: boolean | MembershipBenefit$redemptionsArgs<ExtArgs>
+    _count?: boolean | MembershipBenefitCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipBenefit"]>
+
+  export type MembershipBenefitSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    planId?: boolean
+    name?: boolean
+    type?: boolean
+    description?: boolean
+    redemptionLimit?: boolean
+    active?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipBenefit"]>
+
+  export type MembershipBenefitSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    planId?: boolean
+    name?: boolean
+    type?: boolean
+    description?: boolean
+    redemptionLimit?: boolean
+    active?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipBenefit"]>
+
+  export type MembershipBenefitSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    planId?: boolean
+    name?: boolean
+    type?: boolean
+    description?: boolean
+    redemptionLimit?: boolean
+    active?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type MembershipBenefitOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "planId" | "name" | "type" | "description" | "redemptionLimit" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["membershipBenefit"]>
+  export type MembershipBenefitInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+    redemptions?: boolean | MembershipBenefit$redemptionsArgs<ExtArgs>
+    _count?: boolean | MembershipBenefitCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type MembershipBenefitIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+  }
+  export type MembershipBenefitIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | MembershipPlanDefaultArgs<ExtArgs>
+  }
+
+  export type $MembershipBenefitPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MembershipBenefit"
+    objects: {
+      plan: Prisma.$MembershipPlanPayload<ExtArgs>
+      redemptions: Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      planId: string
+      name: string
+      type: string
+      description: string | null
+      redemptionLimit: number | null
+      active: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["membershipBenefit"]>
+    composites: {}
+  }
+
+  type MembershipBenefitGetPayload<S extends boolean | null | undefined | MembershipBenefitDefaultArgs> = $Result.GetResult<Prisma.$MembershipBenefitPayload, S>
+
+  type MembershipBenefitCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MembershipBenefitFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MembershipBenefitCountAggregateInputType | true
+    }
+
+  export interface MembershipBenefitDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MembershipBenefit'], meta: { name: 'MembershipBenefit' } }
+    /**
+     * Find zero or one MembershipBenefit that matches the filter.
+     * @param {MembershipBenefitFindUniqueArgs} args - Arguments to find a MembershipBenefit
+     * @example
+     * // Get one MembershipBenefit
+     * const membershipBenefit = await prisma.membershipBenefit.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MembershipBenefitFindUniqueArgs>(args: SelectSubset<T, MembershipBenefitFindUniqueArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MembershipBenefit that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MembershipBenefitFindUniqueOrThrowArgs} args - Arguments to find a MembershipBenefit
+     * @example
+     * // Get one MembershipBenefit
+     * const membershipBenefit = await prisma.membershipBenefit.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MembershipBenefitFindUniqueOrThrowArgs>(args: SelectSubset<T, MembershipBenefitFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MembershipBenefit that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitFindFirstArgs} args - Arguments to find a MembershipBenefit
+     * @example
+     * // Get one MembershipBenefit
+     * const membershipBenefit = await prisma.membershipBenefit.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MembershipBenefitFindFirstArgs>(args?: SelectSubset<T, MembershipBenefitFindFirstArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MembershipBenefit that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitFindFirstOrThrowArgs} args - Arguments to find a MembershipBenefit
+     * @example
+     * // Get one MembershipBenefit
+     * const membershipBenefit = await prisma.membershipBenefit.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MembershipBenefitFindFirstOrThrowArgs>(args?: SelectSubset<T, MembershipBenefitFindFirstOrThrowArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MembershipBenefits that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MembershipBenefits
+     * const membershipBenefits = await prisma.membershipBenefit.findMany()
+     * 
+     * // Get first 10 MembershipBenefits
+     * const membershipBenefits = await prisma.membershipBenefit.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const membershipBenefitWithIdOnly = await prisma.membershipBenefit.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MembershipBenefitFindManyArgs>(args?: SelectSubset<T, MembershipBenefitFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MembershipBenefit.
+     * @param {MembershipBenefitCreateArgs} args - Arguments to create a MembershipBenefit.
+     * @example
+     * // Create one MembershipBenefit
+     * const MembershipBenefit = await prisma.membershipBenefit.create({
+     *   data: {
+     *     // ... data to create a MembershipBenefit
+     *   }
+     * })
+     * 
+     */
+    create<T extends MembershipBenefitCreateArgs>(args: SelectSubset<T, MembershipBenefitCreateArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MembershipBenefits.
+     * @param {MembershipBenefitCreateManyArgs} args - Arguments to create many MembershipBenefits.
+     * @example
+     * // Create many MembershipBenefits
+     * const membershipBenefit = await prisma.membershipBenefit.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MembershipBenefitCreateManyArgs>(args?: SelectSubset<T, MembershipBenefitCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MembershipBenefits and returns the data saved in the database.
+     * @param {MembershipBenefitCreateManyAndReturnArgs} args - Arguments to create many MembershipBenefits.
+     * @example
+     * // Create many MembershipBenefits
+     * const membershipBenefit = await prisma.membershipBenefit.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MembershipBenefits and only return the `id`
+     * const membershipBenefitWithIdOnly = await prisma.membershipBenefit.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MembershipBenefitCreateManyAndReturnArgs>(args?: SelectSubset<T, MembershipBenefitCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MembershipBenefit.
+     * @param {MembershipBenefitDeleteArgs} args - Arguments to delete one MembershipBenefit.
+     * @example
+     * // Delete one MembershipBenefit
+     * const MembershipBenefit = await prisma.membershipBenefit.delete({
+     *   where: {
+     *     // ... filter to delete one MembershipBenefit
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MembershipBenefitDeleteArgs>(args: SelectSubset<T, MembershipBenefitDeleteArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MembershipBenefit.
+     * @param {MembershipBenefitUpdateArgs} args - Arguments to update one MembershipBenefit.
+     * @example
+     * // Update one MembershipBenefit
+     * const membershipBenefit = await prisma.membershipBenefit.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MembershipBenefitUpdateArgs>(args: SelectSubset<T, MembershipBenefitUpdateArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MembershipBenefits.
+     * @param {MembershipBenefitDeleteManyArgs} args - Arguments to filter MembershipBenefits to delete.
+     * @example
+     * // Delete a few MembershipBenefits
+     * const { count } = await prisma.membershipBenefit.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MembershipBenefitDeleteManyArgs>(args?: SelectSubset<T, MembershipBenefitDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MembershipBenefits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MembershipBenefits
+     * const membershipBenefit = await prisma.membershipBenefit.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MembershipBenefitUpdateManyArgs>(args: SelectSubset<T, MembershipBenefitUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MembershipBenefits and returns the data updated in the database.
+     * @param {MembershipBenefitUpdateManyAndReturnArgs} args - Arguments to update many MembershipBenefits.
+     * @example
+     * // Update many MembershipBenefits
+     * const membershipBenefit = await prisma.membershipBenefit.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MembershipBenefits and only return the `id`
+     * const membershipBenefitWithIdOnly = await prisma.membershipBenefit.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MembershipBenefitUpdateManyAndReturnArgs>(args: SelectSubset<T, MembershipBenefitUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MembershipBenefit.
+     * @param {MembershipBenefitUpsertArgs} args - Arguments to update or create a MembershipBenefit.
+     * @example
+     * // Update or create a MembershipBenefit
+     * const membershipBenefit = await prisma.membershipBenefit.upsert({
+     *   create: {
+     *     // ... data to create a MembershipBenefit
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MembershipBenefit we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MembershipBenefitUpsertArgs>(args: SelectSubset<T, MembershipBenefitUpsertArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MembershipBenefits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitCountArgs} args - Arguments to filter MembershipBenefits to count.
+     * @example
+     * // Count the number of MembershipBenefits
+     * const count = await prisma.membershipBenefit.count({
+     *   where: {
+     *     // ... the filter for the MembershipBenefits we want to count
+     *   }
+     * })
+    **/
+    count<T extends MembershipBenefitCountArgs>(
+      args?: Subset<T, MembershipBenefitCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MembershipBenefitCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MembershipBenefit.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MembershipBenefitAggregateArgs>(args: Subset<T, MembershipBenefitAggregateArgs>): Prisma.PrismaPromise<GetMembershipBenefitAggregateType<T>>
+
+    /**
+     * Group by MembershipBenefit.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MembershipBenefitGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MembershipBenefitGroupByArgs['orderBy'] }
+        : { orderBy?: MembershipBenefitGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MembershipBenefitGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMembershipBenefitGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MembershipBenefit model
+   */
+  readonly fields: MembershipBenefitFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MembershipBenefit.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MembershipBenefitClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    plan<T extends MembershipPlanDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MembershipPlanDefaultArgs<ExtArgs>>): Prisma__MembershipPlanClient<$Result.GetResult<Prisma.$MembershipPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    redemptions<T extends MembershipBenefit$redemptionsArgs<ExtArgs> = {}>(args?: Subset<T, MembershipBenefit$redemptionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MembershipBenefit model
+   */
+  interface MembershipBenefitFieldRefs {
+    readonly id: FieldRef<"MembershipBenefit", 'String'>
+    readonly organizationId: FieldRef<"MembershipBenefit", 'String'>
+    readonly planId: FieldRef<"MembershipBenefit", 'String'>
+    readonly name: FieldRef<"MembershipBenefit", 'String'>
+    readonly type: FieldRef<"MembershipBenefit", 'String'>
+    readonly description: FieldRef<"MembershipBenefit", 'String'>
+    readonly redemptionLimit: FieldRef<"MembershipBenefit", 'Int'>
+    readonly active: FieldRef<"MembershipBenefit", 'Boolean'>
+    readonly createdAt: FieldRef<"MembershipBenefit", 'DateTime'>
+    readonly updatedAt: FieldRef<"MembershipBenefit", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MembershipBenefit findUnique
+   */
+  export type MembershipBenefitFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefit to fetch.
+     */
+    where: MembershipBenefitWhereUniqueInput
+  }
+
+  /**
+   * MembershipBenefit findUniqueOrThrow
+   */
+  export type MembershipBenefitFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefit to fetch.
+     */
+    where: MembershipBenefitWhereUniqueInput
+  }
+
+  /**
+   * MembershipBenefit findFirst
+   */
+  export type MembershipBenefitFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefit to fetch.
+     */
+    where?: MembershipBenefitWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipBenefits to fetch.
+     */
+    orderBy?: MembershipBenefitOrderByWithRelationInput | MembershipBenefitOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MembershipBenefits.
+     */
+    cursor?: MembershipBenefitWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipBenefits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipBenefits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MembershipBenefits.
+     */
+    distinct?: MembershipBenefitScalarFieldEnum | MembershipBenefitScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipBenefit findFirstOrThrow
+   */
+  export type MembershipBenefitFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefit to fetch.
+     */
+    where?: MembershipBenefitWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipBenefits to fetch.
+     */
+    orderBy?: MembershipBenefitOrderByWithRelationInput | MembershipBenefitOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MembershipBenefits.
+     */
+    cursor?: MembershipBenefitWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipBenefits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipBenefits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MembershipBenefits.
+     */
+    distinct?: MembershipBenefitScalarFieldEnum | MembershipBenefitScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipBenefit findMany
+   */
+  export type MembershipBenefitFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefits to fetch.
+     */
+    where?: MembershipBenefitWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipBenefits to fetch.
+     */
+    orderBy?: MembershipBenefitOrderByWithRelationInput | MembershipBenefitOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MembershipBenefits.
+     */
+    cursor?: MembershipBenefitWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipBenefits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipBenefits.
+     */
+    skip?: number
+    distinct?: MembershipBenefitScalarFieldEnum | MembershipBenefitScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipBenefit create
+   */
+  export type MembershipBenefitCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MembershipBenefit.
+     */
+    data: XOR<MembershipBenefitCreateInput, MembershipBenefitUncheckedCreateInput>
+  }
+
+  /**
+   * MembershipBenefit createMany
+   */
+  export type MembershipBenefitCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MembershipBenefits.
+     */
+    data: MembershipBenefitCreateManyInput | MembershipBenefitCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MembershipBenefit createManyAndReturn
+   */
+  export type MembershipBenefitCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * The data used to create many MembershipBenefits.
+     */
+    data: MembershipBenefitCreateManyInput | MembershipBenefitCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MembershipBenefit update
+   */
+  export type MembershipBenefitUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MembershipBenefit.
+     */
+    data: XOR<MembershipBenefitUpdateInput, MembershipBenefitUncheckedUpdateInput>
+    /**
+     * Choose, which MembershipBenefit to update.
+     */
+    where: MembershipBenefitWhereUniqueInput
+  }
+
+  /**
+   * MembershipBenefit updateMany
+   */
+  export type MembershipBenefitUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MembershipBenefits.
+     */
+    data: XOR<MembershipBenefitUpdateManyMutationInput, MembershipBenefitUncheckedUpdateManyInput>
+    /**
+     * Filter which MembershipBenefits to update
+     */
+    where?: MembershipBenefitWhereInput
+    /**
+     * Limit how many MembershipBenefits to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MembershipBenefit updateManyAndReturn
+   */
+  export type MembershipBenefitUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * The data used to update MembershipBenefits.
+     */
+    data: XOR<MembershipBenefitUpdateManyMutationInput, MembershipBenefitUncheckedUpdateManyInput>
+    /**
+     * Filter which MembershipBenefits to update
+     */
+    where?: MembershipBenefitWhereInput
+    /**
+     * Limit how many MembershipBenefits to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MembershipBenefit upsert
+   */
+  export type MembershipBenefitUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MembershipBenefit to update in case it exists.
+     */
+    where: MembershipBenefitWhereUniqueInput
+    /**
+     * In case the MembershipBenefit found by the `where` argument doesn't exist, create a new MembershipBenefit with this data.
+     */
+    create: XOR<MembershipBenefitCreateInput, MembershipBenefitUncheckedCreateInput>
+    /**
+     * In case the MembershipBenefit was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MembershipBenefitUpdateInput, MembershipBenefitUncheckedUpdateInput>
+  }
+
+  /**
+   * MembershipBenefit delete
+   */
+  export type MembershipBenefitDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+    /**
+     * Filter which MembershipBenefit to delete.
+     */
+    where: MembershipBenefitWhereUniqueInput
+  }
+
+  /**
+   * MembershipBenefit deleteMany
+   */
+  export type MembershipBenefitDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MembershipBenefits to delete
+     */
+    where?: MembershipBenefitWhereInput
+    /**
+     * Limit how many MembershipBenefits to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MembershipBenefit.redemptions
+   */
+  export type MembershipBenefit$redemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    where?: MembershipBenefitRedemptionWhereInput
+    orderBy?: MembershipBenefitRedemptionOrderByWithRelationInput | MembershipBenefitRedemptionOrderByWithRelationInput[]
+    cursor?: MembershipBenefitRedemptionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipBenefitRedemptionScalarFieldEnum | MembershipBenefitRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipBenefit without action
+   */
+  export type MembershipBenefitDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefit
+     */
+    select?: MembershipBenefitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefit
+     */
+    omit?: MembershipBenefitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model MembershipBenefitRedemption
+   */
+
+  export type AggregateMembershipBenefitRedemption = {
+    _count: MembershipBenefitRedemptionCountAggregateOutputType | null
+    _min: MembershipBenefitRedemptionMinAggregateOutputType | null
+    _max: MembershipBenefitRedemptionMaxAggregateOutputType | null
+  }
+
+  export type MembershipBenefitRedemptionMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    benefitId: string | null
+    membershipId: string | null
+    note: string | null
+    recordedById: string | null
+    redeemedAt: Date | null
+  }
+
+  export type MembershipBenefitRedemptionMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    benefitId: string | null
+    membershipId: string | null
+    note: string | null
+    recordedById: string | null
+    redeemedAt: Date | null
+  }
+
+  export type MembershipBenefitRedemptionCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    benefitId: number
+    membershipId: number
+    note: number
+    recordedById: number
+    redeemedAt: number
+    _all: number
+  }
+
+
+  export type MembershipBenefitRedemptionMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    benefitId?: true
+    membershipId?: true
+    note?: true
+    recordedById?: true
+    redeemedAt?: true
+  }
+
+  export type MembershipBenefitRedemptionMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    benefitId?: true
+    membershipId?: true
+    note?: true
+    recordedById?: true
+    redeemedAt?: true
+  }
+
+  export type MembershipBenefitRedemptionCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    benefitId?: true
+    membershipId?: true
+    note?: true
+    recordedById?: true
+    redeemedAt?: true
+    _all?: true
+  }
+
+  export type MembershipBenefitRedemptionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MembershipBenefitRedemption to aggregate.
+     */
+    where?: MembershipBenefitRedemptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipBenefitRedemptions to fetch.
+     */
+    orderBy?: MembershipBenefitRedemptionOrderByWithRelationInput | MembershipBenefitRedemptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MembershipBenefitRedemptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipBenefitRedemptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipBenefitRedemptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MembershipBenefitRedemptions
+    **/
+    _count?: true | MembershipBenefitRedemptionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MembershipBenefitRedemptionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MembershipBenefitRedemptionMaxAggregateInputType
+  }
+
+  export type GetMembershipBenefitRedemptionAggregateType<T extends MembershipBenefitRedemptionAggregateArgs> = {
+        [P in keyof T & keyof AggregateMembershipBenefitRedemption]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMembershipBenefitRedemption[P]>
+      : GetScalarType<T[P], AggregateMembershipBenefitRedemption[P]>
+  }
+
+
+
+
+  export type MembershipBenefitRedemptionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipBenefitRedemptionWhereInput
+    orderBy?: MembershipBenefitRedemptionOrderByWithAggregationInput | MembershipBenefitRedemptionOrderByWithAggregationInput[]
+    by: MembershipBenefitRedemptionScalarFieldEnum[] | MembershipBenefitRedemptionScalarFieldEnum
+    having?: MembershipBenefitRedemptionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MembershipBenefitRedemptionCountAggregateInputType | true
+    _min?: MembershipBenefitRedemptionMinAggregateInputType
+    _max?: MembershipBenefitRedemptionMaxAggregateInputType
+  }
+
+  export type MembershipBenefitRedemptionGroupByOutputType = {
+    id: string
+    organizationId: string
+    benefitId: string
+    membershipId: string
+    note: string | null
+    recordedById: string | null
+    redeemedAt: Date
+    _count: MembershipBenefitRedemptionCountAggregateOutputType | null
+    _min: MembershipBenefitRedemptionMinAggregateOutputType | null
+    _max: MembershipBenefitRedemptionMaxAggregateOutputType | null
+  }
+
+  type GetMembershipBenefitRedemptionGroupByPayload<T extends MembershipBenefitRedemptionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MembershipBenefitRedemptionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MembershipBenefitRedemptionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MembershipBenefitRedemptionGroupByOutputType[P]>
+            : GetScalarType<T[P], MembershipBenefitRedemptionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MembershipBenefitRedemptionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    benefitId?: boolean
+    membershipId?: boolean
+    note?: boolean
+    recordedById?: boolean
+    redeemedAt?: boolean
+    benefit?: boolean | MembershipBenefitDefaultArgs<ExtArgs>
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipBenefitRedemption"]>
+
+  export type MembershipBenefitRedemptionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    benefitId?: boolean
+    membershipId?: boolean
+    note?: boolean
+    recordedById?: boolean
+    redeemedAt?: boolean
+    benefit?: boolean | MembershipBenefitDefaultArgs<ExtArgs>
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipBenefitRedemption"]>
+
+  export type MembershipBenefitRedemptionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    benefitId?: boolean
+    membershipId?: boolean
+    note?: boolean
+    recordedById?: boolean
+    redeemedAt?: boolean
+    benefit?: boolean | MembershipBenefitDefaultArgs<ExtArgs>
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membershipBenefitRedemption"]>
+
+  export type MembershipBenefitRedemptionSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    benefitId?: boolean
+    membershipId?: boolean
+    note?: boolean
+    recordedById?: boolean
+    redeemedAt?: boolean
+  }
+
+  export type MembershipBenefitRedemptionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "benefitId" | "membershipId" | "note" | "recordedById" | "redeemedAt", ExtArgs["result"]["membershipBenefitRedemption"]>
+  export type MembershipBenefitRedemptionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    benefit?: boolean | MembershipBenefitDefaultArgs<ExtArgs>
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }
+  export type MembershipBenefitRedemptionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    benefit?: boolean | MembershipBenefitDefaultArgs<ExtArgs>
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }
+  export type MembershipBenefitRedemptionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    benefit?: boolean | MembershipBenefitDefaultArgs<ExtArgs>
+    membership?: boolean | MembershipDefaultArgs<ExtArgs>
+  }
+
+  export type $MembershipBenefitRedemptionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MembershipBenefitRedemption"
+    objects: {
+      benefit: Prisma.$MembershipBenefitPayload<ExtArgs>
+      membership: Prisma.$MembershipPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      benefitId: string
+      membershipId: string
+      note: string | null
+      recordedById: string | null
+      redeemedAt: Date
+    }, ExtArgs["result"]["membershipBenefitRedemption"]>
+    composites: {}
+  }
+
+  type MembershipBenefitRedemptionGetPayload<S extends boolean | null | undefined | MembershipBenefitRedemptionDefaultArgs> = $Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload, S>
+
+  type MembershipBenefitRedemptionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MembershipBenefitRedemptionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MembershipBenefitRedemptionCountAggregateInputType | true
+    }
+
+  export interface MembershipBenefitRedemptionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MembershipBenefitRedemption'], meta: { name: 'MembershipBenefitRedemption' } }
+    /**
+     * Find zero or one MembershipBenefitRedemption that matches the filter.
+     * @param {MembershipBenefitRedemptionFindUniqueArgs} args - Arguments to find a MembershipBenefitRedemption
+     * @example
+     * // Get one MembershipBenefitRedemption
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MembershipBenefitRedemptionFindUniqueArgs>(args: SelectSubset<T, MembershipBenefitRedemptionFindUniqueArgs<ExtArgs>>): Prisma__MembershipBenefitRedemptionClient<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MembershipBenefitRedemption that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MembershipBenefitRedemptionFindUniqueOrThrowArgs} args - Arguments to find a MembershipBenefitRedemption
+     * @example
+     * // Get one MembershipBenefitRedemption
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MembershipBenefitRedemptionFindUniqueOrThrowArgs>(args: SelectSubset<T, MembershipBenefitRedemptionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MembershipBenefitRedemptionClient<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MembershipBenefitRedemption that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitRedemptionFindFirstArgs} args - Arguments to find a MembershipBenefitRedemption
+     * @example
+     * // Get one MembershipBenefitRedemption
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MembershipBenefitRedemptionFindFirstArgs>(args?: SelectSubset<T, MembershipBenefitRedemptionFindFirstArgs<ExtArgs>>): Prisma__MembershipBenefitRedemptionClient<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MembershipBenefitRedemption that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitRedemptionFindFirstOrThrowArgs} args - Arguments to find a MembershipBenefitRedemption
+     * @example
+     * // Get one MembershipBenefitRedemption
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MembershipBenefitRedemptionFindFirstOrThrowArgs>(args?: SelectSubset<T, MembershipBenefitRedemptionFindFirstOrThrowArgs<ExtArgs>>): Prisma__MembershipBenefitRedemptionClient<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MembershipBenefitRedemptions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitRedemptionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MembershipBenefitRedemptions
+     * const membershipBenefitRedemptions = await prisma.membershipBenefitRedemption.findMany()
+     * 
+     * // Get first 10 MembershipBenefitRedemptions
+     * const membershipBenefitRedemptions = await prisma.membershipBenefitRedemption.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const membershipBenefitRedemptionWithIdOnly = await prisma.membershipBenefitRedemption.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MembershipBenefitRedemptionFindManyArgs>(args?: SelectSubset<T, MembershipBenefitRedemptionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MembershipBenefitRedemption.
+     * @param {MembershipBenefitRedemptionCreateArgs} args - Arguments to create a MembershipBenefitRedemption.
+     * @example
+     * // Create one MembershipBenefitRedemption
+     * const MembershipBenefitRedemption = await prisma.membershipBenefitRedemption.create({
+     *   data: {
+     *     // ... data to create a MembershipBenefitRedemption
+     *   }
+     * })
+     * 
+     */
+    create<T extends MembershipBenefitRedemptionCreateArgs>(args: SelectSubset<T, MembershipBenefitRedemptionCreateArgs<ExtArgs>>): Prisma__MembershipBenefitRedemptionClient<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MembershipBenefitRedemptions.
+     * @param {MembershipBenefitRedemptionCreateManyArgs} args - Arguments to create many MembershipBenefitRedemptions.
+     * @example
+     * // Create many MembershipBenefitRedemptions
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MembershipBenefitRedemptionCreateManyArgs>(args?: SelectSubset<T, MembershipBenefitRedemptionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MembershipBenefitRedemptions and returns the data saved in the database.
+     * @param {MembershipBenefitRedemptionCreateManyAndReturnArgs} args - Arguments to create many MembershipBenefitRedemptions.
+     * @example
+     * // Create many MembershipBenefitRedemptions
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MembershipBenefitRedemptions and only return the `id`
+     * const membershipBenefitRedemptionWithIdOnly = await prisma.membershipBenefitRedemption.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MembershipBenefitRedemptionCreateManyAndReturnArgs>(args?: SelectSubset<T, MembershipBenefitRedemptionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MembershipBenefitRedemption.
+     * @param {MembershipBenefitRedemptionDeleteArgs} args - Arguments to delete one MembershipBenefitRedemption.
+     * @example
+     * // Delete one MembershipBenefitRedemption
+     * const MembershipBenefitRedemption = await prisma.membershipBenefitRedemption.delete({
+     *   where: {
+     *     // ... filter to delete one MembershipBenefitRedemption
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MembershipBenefitRedemptionDeleteArgs>(args: SelectSubset<T, MembershipBenefitRedemptionDeleteArgs<ExtArgs>>): Prisma__MembershipBenefitRedemptionClient<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MembershipBenefitRedemption.
+     * @param {MembershipBenefitRedemptionUpdateArgs} args - Arguments to update one MembershipBenefitRedemption.
+     * @example
+     * // Update one MembershipBenefitRedemption
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MembershipBenefitRedemptionUpdateArgs>(args: SelectSubset<T, MembershipBenefitRedemptionUpdateArgs<ExtArgs>>): Prisma__MembershipBenefitRedemptionClient<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MembershipBenefitRedemptions.
+     * @param {MembershipBenefitRedemptionDeleteManyArgs} args - Arguments to filter MembershipBenefitRedemptions to delete.
+     * @example
+     * // Delete a few MembershipBenefitRedemptions
+     * const { count } = await prisma.membershipBenefitRedemption.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MembershipBenefitRedemptionDeleteManyArgs>(args?: SelectSubset<T, MembershipBenefitRedemptionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MembershipBenefitRedemptions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitRedemptionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MembershipBenefitRedemptions
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MembershipBenefitRedemptionUpdateManyArgs>(args: SelectSubset<T, MembershipBenefitRedemptionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MembershipBenefitRedemptions and returns the data updated in the database.
+     * @param {MembershipBenefitRedemptionUpdateManyAndReturnArgs} args - Arguments to update many MembershipBenefitRedemptions.
+     * @example
+     * // Update many MembershipBenefitRedemptions
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MembershipBenefitRedemptions and only return the `id`
+     * const membershipBenefitRedemptionWithIdOnly = await prisma.membershipBenefitRedemption.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MembershipBenefitRedemptionUpdateManyAndReturnArgs>(args: SelectSubset<T, MembershipBenefitRedemptionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MembershipBenefitRedemption.
+     * @param {MembershipBenefitRedemptionUpsertArgs} args - Arguments to update or create a MembershipBenefitRedemption.
+     * @example
+     * // Update or create a MembershipBenefitRedemption
+     * const membershipBenefitRedemption = await prisma.membershipBenefitRedemption.upsert({
+     *   create: {
+     *     // ... data to create a MembershipBenefitRedemption
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MembershipBenefitRedemption we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MembershipBenefitRedemptionUpsertArgs>(args: SelectSubset<T, MembershipBenefitRedemptionUpsertArgs<ExtArgs>>): Prisma__MembershipBenefitRedemptionClient<$Result.GetResult<Prisma.$MembershipBenefitRedemptionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MembershipBenefitRedemptions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitRedemptionCountArgs} args - Arguments to filter MembershipBenefitRedemptions to count.
+     * @example
+     * // Count the number of MembershipBenefitRedemptions
+     * const count = await prisma.membershipBenefitRedemption.count({
+     *   where: {
+     *     // ... the filter for the MembershipBenefitRedemptions we want to count
+     *   }
+     * })
+    **/
+    count<T extends MembershipBenefitRedemptionCountArgs>(
+      args?: Subset<T, MembershipBenefitRedemptionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MembershipBenefitRedemptionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MembershipBenefitRedemption.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitRedemptionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MembershipBenefitRedemptionAggregateArgs>(args: Subset<T, MembershipBenefitRedemptionAggregateArgs>): Prisma.PrismaPromise<GetMembershipBenefitRedemptionAggregateType<T>>
+
+    /**
+     * Group by MembershipBenefitRedemption.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipBenefitRedemptionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MembershipBenefitRedemptionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MembershipBenefitRedemptionGroupByArgs['orderBy'] }
+        : { orderBy?: MembershipBenefitRedemptionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MembershipBenefitRedemptionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMembershipBenefitRedemptionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MembershipBenefitRedemption model
+   */
+  readonly fields: MembershipBenefitRedemptionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MembershipBenefitRedemption.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MembershipBenefitRedemptionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    benefit<T extends MembershipBenefitDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MembershipBenefitDefaultArgs<ExtArgs>>): Prisma__MembershipBenefitClient<$Result.GetResult<Prisma.$MembershipBenefitPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    membership<T extends MembershipDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MembershipDefaultArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MembershipBenefitRedemption model
+   */
+  interface MembershipBenefitRedemptionFieldRefs {
+    readonly id: FieldRef<"MembershipBenefitRedemption", 'String'>
+    readonly organizationId: FieldRef<"MembershipBenefitRedemption", 'String'>
+    readonly benefitId: FieldRef<"MembershipBenefitRedemption", 'String'>
+    readonly membershipId: FieldRef<"MembershipBenefitRedemption", 'String'>
+    readonly note: FieldRef<"MembershipBenefitRedemption", 'String'>
+    readonly recordedById: FieldRef<"MembershipBenefitRedemption", 'String'>
+    readonly redeemedAt: FieldRef<"MembershipBenefitRedemption", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MembershipBenefitRedemption findUnique
+   */
+  export type MembershipBenefitRedemptionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefitRedemption to fetch.
+     */
+    where: MembershipBenefitRedemptionWhereUniqueInput
+  }
+
+  /**
+   * MembershipBenefitRedemption findUniqueOrThrow
+   */
+  export type MembershipBenefitRedemptionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefitRedemption to fetch.
+     */
+    where: MembershipBenefitRedemptionWhereUniqueInput
+  }
+
+  /**
+   * MembershipBenefitRedemption findFirst
+   */
+  export type MembershipBenefitRedemptionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefitRedemption to fetch.
+     */
+    where?: MembershipBenefitRedemptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipBenefitRedemptions to fetch.
+     */
+    orderBy?: MembershipBenefitRedemptionOrderByWithRelationInput | MembershipBenefitRedemptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MembershipBenefitRedemptions.
+     */
+    cursor?: MembershipBenefitRedemptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipBenefitRedemptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipBenefitRedemptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MembershipBenefitRedemptions.
+     */
+    distinct?: MembershipBenefitRedemptionScalarFieldEnum | MembershipBenefitRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipBenefitRedemption findFirstOrThrow
+   */
+  export type MembershipBenefitRedemptionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefitRedemption to fetch.
+     */
+    where?: MembershipBenefitRedemptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipBenefitRedemptions to fetch.
+     */
+    orderBy?: MembershipBenefitRedemptionOrderByWithRelationInput | MembershipBenefitRedemptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MembershipBenefitRedemptions.
+     */
+    cursor?: MembershipBenefitRedemptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipBenefitRedemptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipBenefitRedemptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MembershipBenefitRedemptions.
+     */
+    distinct?: MembershipBenefitRedemptionScalarFieldEnum | MembershipBenefitRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipBenefitRedemption findMany
+   */
+  export type MembershipBenefitRedemptionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which MembershipBenefitRedemptions to fetch.
+     */
+    where?: MembershipBenefitRedemptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MembershipBenefitRedemptions to fetch.
+     */
+    orderBy?: MembershipBenefitRedemptionOrderByWithRelationInput | MembershipBenefitRedemptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MembershipBenefitRedemptions.
+     */
+    cursor?: MembershipBenefitRedemptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MembershipBenefitRedemptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MembershipBenefitRedemptions.
+     */
+    skip?: number
+    distinct?: MembershipBenefitRedemptionScalarFieldEnum | MembershipBenefitRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * MembershipBenefitRedemption create
+   */
+  export type MembershipBenefitRedemptionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MembershipBenefitRedemption.
+     */
+    data: XOR<MembershipBenefitRedemptionCreateInput, MembershipBenefitRedemptionUncheckedCreateInput>
+  }
+
+  /**
+   * MembershipBenefitRedemption createMany
+   */
+  export type MembershipBenefitRedemptionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MembershipBenefitRedemptions.
+     */
+    data: MembershipBenefitRedemptionCreateManyInput | MembershipBenefitRedemptionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MembershipBenefitRedemption createManyAndReturn
+   */
+  export type MembershipBenefitRedemptionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * The data used to create many MembershipBenefitRedemptions.
+     */
+    data: MembershipBenefitRedemptionCreateManyInput | MembershipBenefitRedemptionCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MembershipBenefitRedemption update
+   */
+  export type MembershipBenefitRedemptionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MembershipBenefitRedemption.
+     */
+    data: XOR<MembershipBenefitRedemptionUpdateInput, MembershipBenefitRedemptionUncheckedUpdateInput>
+    /**
+     * Choose, which MembershipBenefitRedemption to update.
+     */
+    where: MembershipBenefitRedemptionWhereUniqueInput
+  }
+
+  /**
+   * MembershipBenefitRedemption updateMany
+   */
+  export type MembershipBenefitRedemptionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MembershipBenefitRedemptions.
+     */
+    data: XOR<MembershipBenefitRedemptionUpdateManyMutationInput, MembershipBenefitRedemptionUncheckedUpdateManyInput>
+    /**
+     * Filter which MembershipBenefitRedemptions to update
+     */
+    where?: MembershipBenefitRedemptionWhereInput
+    /**
+     * Limit how many MembershipBenefitRedemptions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MembershipBenefitRedemption updateManyAndReturn
+   */
+  export type MembershipBenefitRedemptionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * The data used to update MembershipBenefitRedemptions.
+     */
+    data: XOR<MembershipBenefitRedemptionUpdateManyMutationInput, MembershipBenefitRedemptionUncheckedUpdateManyInput>
+    /**
+     * Filter which MembershipBenefitRedemptions to update
+     */
+    where?: MembershipBenefitRedemptionWhereInput
+    /**
+     * Limit how many MembershipBenefitRedemptions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MembershipBenefitRedemption upsert
+   */
+  export type MembershipBenefitRedemptionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MembershipBenefitRedemption to update in case it exists.
+     */
+    where: MembershipBenefitRedemptionWhereUniqueInput
+    /**
+     * In case the MembershipBenefitRedemption found by the `where` argument doesn't exist, create a new MembershipBenefitRedemption with this data.
+     */
+    create: XOR<MembershipBenefitRedemptionCreateInput, MembershipBenefitRedemptionUncheckedCreateInput>
+    /**
+     * In case the MembershipBenefitRedemption was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MembershipBenefitRedemptionUpdateInput, MembershipBenefitRedemptionUncheckedUpdateInput>
+  }
+
+  /**
+   * MembershipBenefitRedemption delete
+   */
+  export type MembershipBenefitRedemptionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter which MembershipBenefitRedemption to delete.
+     */
+    where: MembershipBenefitRedemptionWhereUniqueInput
+  }
+
+  /**
+   * MembershipBenefitRedemption deleteMany
+   */
+  export type MembershipBenefitRedemptionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MembershipBenefitRedemptions to delete
+     */
+    where?: MembershipBenefitRedemptionWhereInput
+    /**
+     * Limit how many MembershipBenefitRedemptions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MembershipBenefitRedemption without action
+   */
+  export type MembershipBenefitRedemptionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MembershipBenefitRedemption
+     */
+    select?: MembershipBenefitRedemptionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MembershipBenefitRedemption
+     */
+    omit?: MembershipBenefitRedemptionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipBenefitRedemptionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PricingRecommendation
+   */
+
+  export type AggregatePricingRecommendation = {
+    _count: PricingRecommendationCountAggregateOutputType | null
+    _avg: PricingRecommendationAvgAggregateOutputType | null
+    _sum: PricingRecommendationSumAggregateOutputType | null
+    _min: PricingRecommendationMinAggregateOutputType | null
+    _max: PricingRecommendationMaxAggregateOutputType | null
+  }
+
+  export type PricingRecommendationAvgAggregateOutputType = {
+    fromPrice: Decimal | null
+    proposedPrice: Decimal | null
+    multiplier: number | null
+    deltaPercent: number | null
+  }
+
+  export type PricingRecommendationSumAggregateOutputType = {
+    fromPrice: Decimal | null
+    proposedPrice: Decimal | null
+    multiplier: number | null
+    deltaPercent: number | null
+  }
+
+  export type PricingRecommendationMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    eventId: string | null
+    offerId: string | null
+    status: $Enums.PricingRecommendationStatus | null
+    fromPrice: Decimal | null
+    proposedPrice: Decimal | null
+    multiplier: number | null
+    direction: string | null
+    deltaPercent: number | null
+    explanation: string | null
+    createdById: string | null
+    reviewedById: string | null
+    reviewedAt: Date | null
+    reviewNote: string | null
+    appliedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PricingRecommendationMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    eventId: string | null
+    offerId: string | null
+    status: $Enums.PricingRecommendationStatus | null
+    fromPrice: Decimal | null
+    proposedPrice: Decimal | null
+    multiplier: number | null
+    direction: string | null
+    deltaPercent: number | null
+    explanation: string | null
+    createdById: string | null
+    reviewedById: string | null
+    reviewedAt: Date | null
+    reviewNote: string | null
+    appliedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PricingRecommendationCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    eventId: number
+    offerId: number
+    status: number
+    fromPrice: number
+    proposedPrice: number
+    multiplier: number
+    direction: number
+    deltaPercent: number
+    explanation: number
+    payload: number
+    createdById: number
+    reviewedById: number
+    reviewedAt: number
+    reviewNote: number
+    appliedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PricingRecommendationAvgAggregateInputType = {
+    fromPrice?: true
+    proposedPrice?: true
+    multiplier?: true
+    deltaPercent?: true
+  }
+
+  export type PricingRecommendationSumAggregateInputType = {
+    fromPrice?: true
+    proposedPrice?: true
+    multiplier?: true
+    deltaPercent?: true
+  }
+
+  export type PricingRecommendationMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    eventId?: true
+    offerId?: true
+    status?: true
+    fromPrice?: true
+    proposedPrice?: true
+    multiplier?: true
+    direction?: true
+    deltaPercent?: true
+    explanation?: true
+    createdById?: true
+    reviewedById?: true
+    reviewedAt?: true
+    reviewNote?: true
+    appliedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PricingRecommendationMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    eventId?: true
+    offerId?: true
+    status?: true
+    fromPrice?: true
+    proposedPrice?: true
+    multiplier?: true
+    direction?: true
+    deltaPercent?: true
+    explanation?: true
+    createdById?: true
+    reviewedById?: true
+    reviewedAt?: true
+    reviewNote?: true
+    appliedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PricingRecommendationCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    eventId?: true
+    offerId?: true
+    status?: true
+    fromPrice?: true
+    proposedPrice?: true
+    multiplier?: true
+    direction?: true
+    deltaPercent?: true
+    explanation?: true
+    payload?: true
+    createdById?: true
+    reviewedById?: true
+    reviewedAt?: true
+    reviewNote?: true
+    appliedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PricingRecommendationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PricingRecommendation to aggregate.
+     */
+    where?: PricingRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PricingRecommendations to fetch.
+     */
+    orderBy?: PricingRecommendationOrderByWithRelationInput | PricingRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PricingRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PricingRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PricingRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PricingRecommendations
+    **/
+    _count?: true | PricingRecommendationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PricingRecommendationAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PricingRecommendationSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PricingRecommendationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PricingRecommendationMaxAggregateInputType
+  }
+
+  export type GetPricingRecommendationAggregateType<T extends PricingRecommendationAggregateArgs> = {
+        [P in keyof T & keyof AggregatePricingRecommendation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePricingRecommendation[P]>
+      : GetScalarType<T[P], AggregatePricingRecommendation[P]>
+  }
+
+
+
+
+  export type PricingRecommendationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PricingRecommendationWhereInput
+    orderBy?: PricingRecommendationOrderByWithAggregationInput | PricingRecommendationOrderByWithAggregationInput[]
+    by: PricingRecommendationScalarFieldEnum[] | PricingRecommendationScalarFieldEnum
+    having?: PricingRecommendationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PricingRecommendationCountAggregateInputType | true
+    _avg?: PricingRecommendationAvgAggregateInputType
+    _sum?: PricingRecommendationSumAggregateInputType
+    _min?: PricingRecommendationMinAggregateInputType
+    _max?: PricingRecommendationMaxAggregateInputType
+  }
+
+  export type PricingRecommendationGroupByOutputType = {
+    id: string
+    organizationId: string
+    eventId: string
+    offerId: string
+    status: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal
+    proposedPrice: Decimal
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonValue
+    createdById: string | null
+    reviewedById: string | null
+    reviewedAt: Date | null
+    reviewNote: string | null
+    appliedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: PricingRecommendationCountAggregateOutputType | null
+    _avg: PricingRecommendationAvgAggregateOutputType | null
+    _sum: PricingRecommendationSumAggregateOutputType | null
+    _min: PricingRecommendationMinAggregateOutputType | null
+    _max: PricingRecommendationMaxAggregateOutputType | null
+  }
+
+  type GetPricingRecommendationGroupByPayload<T extends PricingRecommendationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PricingRecommendationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PricingRecommendationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PricingRecommendationGroupByOutputType[P]>
+            : GetScalarType<T[P], PricingRecommendationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PricingRecommendationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    eventId?: boolean
+    offerId?: boolean
+    status?: boolean
+    fromPrice?: boolean
+    proposedPrice?: boolean
+    multiplier?: boolean
+    direction?: boolean
+    deltaPercent?: boolean
+    explanation?: boolean
+    payload?: boolean
+    createdById?: boolean
+    reviewedById?: boolean
+    reviewedAt?: boolean
+    reviewNote?: boolean
+    appliedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    offer?: boolean | OfferDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["pricingRecommendation"]>
+
+  export type PricingRecommendationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    eventId?: boolean
+    offerId?: boolean
+    status?: boolean
+    fromPrice?: boolean
+    proposedPrice?: boolean
+    multiplier?: boolean
+    direction?: boolean
+    deltaPercent?: boolean
+    explanation?: boolean
+    payload?: boolean
+    createdById?: boolean
+    reviewedById?: boolean
+    reviewedAt?: boolean
+    reviewNote?: boolean
+    appliedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    offer?: boolean | OfferDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["pricingRecommendation"]>
+
+  export type PricingRecommendationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    eventId?: boolean
+    offerId?: boolean
+    status?: boolean
+    fromPrice?: boolean
+    proposedPrice?: boolean
+    multiplier?: boolean
+    direction?: boolean
+    deltaPercent?: boolean
+    explanation?: boolean
+    payload?: boolean
+    createdById?: boolean
+    reviewedById?: boolean
+    reviewedAt?: boolean
+    reviewNote?: boolean
+    appliedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    offer?: boolean | OfferDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["pricingRecommendation"]>
+
+  export type PricingRecommendationSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    eventId?: boolean
+    offerId?: boolean
+    status?: boolean
+    fromPrice?: boolean
+    proposedPrice?: boolean
+    multiplier?: boolean
+    direction?: boolean
+    deltaPercent?: boolean
+    explanation?: boolean
+    payload?: boolean
+    createdById?: boolean
+    reviewedById?: boolean
+    reviewedAt?: boolean
+    reviewNote?: boolean
+    appliedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type PricingRecommendationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "eventId" | "offerId" | "status" | "fromPrice" | "proposedPrice" | "multiplier" | "direction" | "deltaPercent" | "explanation" | "payload" | "createdById" | "reviewedById" | "reviewedAt" | "reviewNote" | "appliedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["pricingRecommendation"]>
+  export type PricingRecommendationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    offer?: boolean | OfferDefaultArgs<ExtArgs>
+  }
+  export type PricingRecommendationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    offer?: boolean | OfferDefaultArgs<ExtArgs>
+  }
+  export type PricingRecommendationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    event?: boolean | EventDefaultArgs<ExtArgs>
+    offer?: boolean | OfferDefaultArgs<ExtArgs>
+  }
+
+  export type $PricingRecommendationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PricingRecommendation"
+    objects: {
+      event: Prisma.$EventPayload<ExtArgs>
+      offer: Prisma.$OfferPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      eventId: string
+      offerId: string
+      status: $Enums.PricingRecommendationStatus
+      /**
+       * Precio de la oferta cuando se calculó.
+       */
+      fromPrice: Prisma.Decimal
+      proposedPrice: Prisma.Decimal
+      multiplier: number
+      /**
+       * increase | decrease
+       */
+      direction: string
+      deltaPercent: number
+      explanation: string
+      /**
+       * Factores, banda y señales con que se calculó.
+       */
+      payload: Prisma.JsonValue
+      createdById: string | null
+      reviewedById: string | null
+      reviewedAt: Date | null
+      reviewNote: string | null
+      appliedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["pricingRecommendation"]>
+    composites: {}
+  }
+
+  type PricingRecommendationGetPayload<S extends boolean | null | undefined | PricingRecommendationDefaultArgs> = $Result.GetResult<Prisma.$PricingRecommendationPayload, S>
+
+  type PricingRecommendationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PricingRecommendationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PricingRecommendationCountAggregateInputType | true
+    }
+
+  export interface PricingRecommendationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PricingRecommendation'], meta: { name: 'PricingRecommendation' } }
+    /**
+     * Find zero or one PricingRecommendation that matches the filter.
+     * @param {PricingRecommendationFindUniqueArgs} args - Arguments to find a PricingRecommendation
+     * @example
+     * // Get one PricingRecommendation
+     * const pricingRecommendation = await prisma.pricingRecommendation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PricingRecommendationFindUniqueArgs>(args: SelectSubset<T, PricingRecommendationFindUniqueArgs<ExtArgs>>): Prisma__PricingRecommendationClient<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PricingRecommendation that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PricingRecommendationFindUniqueOrThrowArgs} args - Arguments to find a PricingRecommendation
+     * @example
+     * // Get one PricingRecommendation
+     * const pricingRecommendation = await prisma.pricingRecommendation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PricingRecommendationFindUniqueOrThrowArgs>(args: SelectSubset<T, PricingRecommendationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PricingRecommendationClient<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PricingRecommendation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PricingRecommendationFindFirstArgs} args - Arguments to find a PricingRecommendation
+     * @example
+     * // Get one PricingRecommendation
+     * const pricingRecommendation = await prisma.pricingRecommendation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PricingRecommendationFindFirstArgs>(args?: SelectSubset<T, PricingRecommendationFindFirstArgs<ExtArgs>>): Prisma__PricingRecommendationClient<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PricingRecommendation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PricingRecommendationFindFirstOrThrowArgs} args - Arguments to find a PricingRecommendation
+     * @example
+     * // Get one PricingRecommendation
+     * const pricingRecommendation = await prisma.pricingRecommendation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PricingRecommendationFindFirstOrThrowArgs>(args?: SelectSubset<T, PricingRecommendationFindFirstOrThrowArgs<ExtArgs>>): Prisma__PricingRecommendationClient<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PricingRecommendations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PricingRecommendationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PricingRecommendations
+     * const pricingRecommendations = await prisma.pricingRecommendation.findMany()
+     * 
+     * // Get first 10 PricingRecommendations
+     * const pricingRecommendations = await prisma.pricingRecommendation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const pricingRecommendationWithIdOnly = await prisma.pricingRecommendation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PricingRecommendationFindManyArgs>(args?: SelectSubset<T, PricingRecommendationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PricingRecommendation.
+     * @param {PricingRecommendationCreateArgs} args - Arguments to create a PricingRecommendation.
+     * @example
+     * // Create one PricingRecommendation
+     * const PricingRecommendation = await prisma.pricingRecommendation.create({
+     *   data: {
+     *     // ... data to create a PricingRecommendation
+     *   }
+     * })
+     * 
+     */
+    create<T extends PricingRecommendationCreateArgs>(args: SelectSubset<T, PricingRecommendationCreateArgs<ExtArgs>>): Prisma__PricingRecommendationClient<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PricingRecommendations.
+     * @param {PricingRecommendationCreateManyArgs} args - Arguments to create many PricingRecommendations.
+     * @example
+     * // Create many PricingRecommendations
+     * const pricingRecommendation = await prisma.pricingRecommendation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PricingRecommendationCreateManyArgs>(args?: SelectSubset<T, PricingRecommendationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PricingRecommendations and returns the data saved in the database.
+     * @param {PricingRecommendationCreateManyAndReturnArgs} args - Arguments to create many PricingRecommendations.
+     * @example
+     * // Create many PricingRecommendations
+     * const pricingRecommendation = await prisma.pricingRecommendation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PricingRecommendations and only return the `id`
+     * const pricingRecommendationWithIdOnly = await prisma.pricingRecommendation.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PricingRecommendationCreateManyAndReturnArgs>(args?: SelectSubset<T, PricingRecommendationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a PricingRecommendation.
+     * @param {PricingRecommendationDeleteArgs} args - Arguments to delete one PricingRecommendation.
+     * @example
+     * // Delete one PricingRecommendation
+     * const PricingRecommendation = await prisma.pricingRecommendation.delete({
+     *   where: {
+     *     // ... filter to delete one PricingRecommendation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PricingRecommendationDeleteArgs>(args: SelectSubset<T, PricingRecommendationDeleteArgs<ExtArgs>>): Prisma__PricingRecommendationClient<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PricingRecommendation.
+     * @param {PricingRecommendationUpdateArgs} args - Arguments to update one PricingRecommendation.
+     * @example
+     * // Update one PricingRecommendation
+     * const pricingRecommendation = await prisma.pricingRecommendation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PricingRecommendationUpdateArgs>(args: SelectSubset<T, PricingRecommendationUpdateArgs<ExtArgs>>): Prisma__PricingRecommendationClient<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PricingRecommendations.
+     * @param {PricingRecommendationDeleteManyArgs} args - Arguments to filter PricingRecommendations to delete.
+     * @example
+     * // Delete a few PricingRecommendations
+     * const { count } = await prisma.pricingRecommendation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PricingRecommendationDeleteManyArgs>(args?: SelectSubset<T, PricingRecommendationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PricingRecommendations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PricingRecommendationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PricingRecommendations
+     * const pricingRecommendation = await prisma.pricingRecommendation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PricingRecommendationUpdateManyArgs>(args: SelectSubset<T, PricingRecommendationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PricingRecommendations and returns the data updated in the database.
+     * @param {PricingRecommendationUpdateManyAndReturnArgs} args - Arguments to update many PricingRecommendations.
+     * @example
+     * // Update many PricingRecommendations
+     * const pricingRecommendation = await prisma.pricingRecommendation.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PricingRecommendations and only return the `id`
+     * const pricingRecommendationWithIdOnly = await prisma.pricingRecommendation.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PricingRecommendationUpdateManyAndReturnArgs>(args: SelectSubset<T, PricingRecommendationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one PricingRecommendation.
+     * @param {PricingRecommendationUpsertArgs} args - Arguments to update or create a PricingRecommendation.
+     * @example
+     * // Update or create a PricingRecommendation
+     * const pricingRecommendation = await prisma.pricingRecommendation.upsert({
+     *   create: {
+     *     // ... data to create a PricingRecommendation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PricingRecommendation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PricingRecommendationUpsertArgs>(args: SelectSubset<T, PricingRecommendationUpsertArgs<ExtArgs>>): Prisma__PricingRecommendationClient<$Result.GetResult<Prisma.$PricingRecommendationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PricingRecommendations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PricingRecommendationCountArgs} args - Arguments to filter PricingRecommendations to count.
+     * @example
+     * // Count the number of PricingRecommendations
+     * const count = await prisma.pricingRecommendation.count({
+     *   where: {
+     *     // ... the filter for the PricingRecommendations we want to count
+     *   }
+     * })
+    **/
+    count<T extends PricingRecommendationCountArgs>(
+      args?: Subset<T, PricingRecommendationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PricingRecommendationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PricingRecommendation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PricingRecommendationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PricingRecommendationAggregateArgs>(args: Subset<T, PricingRecommendationAggregateArgs>): Prisma.PrismaPromise<GetPricingRecommendationAggregateType<T>>
+
+    /**
+     * Group by PricingRecommendation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PricingRecommendationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PricingRecommendationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PricingRecommendationGroupByArgs['orderBy'] }
+        : { orderBy?: PricingRecommendationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PricingRecommendationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPricingRecommendationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PricingRecommendation model
+   */
+  readonly fields: PricingRecommendationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PricingRecommendation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PricingRecommendationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    event<T extends EventDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EventDefaultArgs<ExtArgs>>): Prisma__EventClient<$Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    offer<T extends OfferDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OfferDefaultArgs<ExtArgs>>): Prisma__OfferClient<$Result.GetResult<Prisma.$OfferPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PricingRecommendation model
+   */
+  interface PricingRecommendationFieldRefs {
+    readonly id: FieldRef<"PricingRecommendation", 'String'>
+    readonly organizationId: FieldRef<"PricingRecommendation", 'String'>
+    readonly eventId: FieldRef<"PricingRecommendation", 'String'>
+    readonly offerId: FieldRef<"PricingRecommendation", 'String'>
+    readonly status: FieldRef<"PricingRecommendation", 'PricingRecommendationStatus'>
+    readonly fromPrice: FieldRef<"PricingRecommendation", 'Decimal'>
+    readonly proposedPrice: FieldRef<"PricingRecommendation", 'Decimal'>
+    readonly multiplier: FieldRef<"PricingRecommendation", 'Float'>
+    readonly direction: FieldRef<"PricingRecommendation", 'String'>
+    readonly deltaPercent: FieldRef<"PricingRecommendation", 'Float'>
+    readonly explanation: FieldRef<"PricingRecommendation", 'String'>
+    readonly payload: FieldRef<"PricingRecommendation", 'Json'>
+    readonly createdById: FieldRef<"PricingRecommendation", 'String'>
+    readonly reviewedById: FieldRef<"PricingRecommendation", 'String'>
+    readonly reviewedAt: FieldRef<"PricingRecommendation", 'DateTime'>
+    readonly reviewNote: FieldRef<"PricingRecommendation", 'String'>
+    readonly appliedAt: FieldRef<"PricingRecommendation", 'DateTime'>
+    readonly createdAt: FieldRef<"PricingRecommendation", 'DateTime'>
+    readonly updatedAt: FieldRef<"PricingRecommendation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PricingRecommendation findUnique
+   */
+  export type PricingRecommendationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which PricingRecommendation to fetch.
+     */
+    where: PricingRecommendationWhereUniqueInput
+  }
+
+  /**
+   * PricingRecommendation findUniqueOrThrow
+   */
+  export type PricingRecommendationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which PricingRecommendation to fetch.
+     */
+    where: PricingRecommendationWhereUniqueInput
+  }
+
+  /**
+   * PricingRecommendation findFirst
+   */
+  export type PricingRecommendationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which PricingRecommendation to fetch.
+     */
+    where?: PricingRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PricingRecommendations to fetch.
+     */
+    orderBy?: PricingRecommendationOrderByWithRelationInput | PricingRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PricingRecommendations.
+     */
+    cursor?: PricingRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PricingRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PricingRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PricingRecommendations.
+     */
+    distinct?: PricingRecommendationScalarFieldEnum | PricingRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * PricingRecommendation findFirstOrThrow
+   */
+  export type PricingRecommendationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which PricingRecommendation to fetch.
+     */
+    where?: PricingRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PricingRecommendations to fetch.
+     */
+    orderBy?: PricingRecommendationOrderByWithRelationInput | PricingRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PricingRecommendations.
+     */
+    cursor?: PricingRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PricingRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PricingRecommendations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PricingRecommendations.
+     */
+    distinct?: PricingRecommendationScalarFieldEnum | PricingRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * PricingRecommendation findMany
+   */
+  export type PricingRecommendationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter, which PricingRecommendations to fetch.
+     */
+    where?: PricingRecommendationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PricingRecommendations to fetch.
+     */
+    orderBy?: PricingRecommendationOrderByWithRelationInput | PricingRecommendationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PricingRecommendations.
+     */
+    cursor?: PricingRecommendationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PricingRecommendations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PricingRecommendations.
+     */
+    skip?: number
+    distinct?: PricingRecommendationScalarFieldEnum | PricingRecommendationScalarFieldEnum[]
+  }
+
+  /**
+   * PricingRecommendation create
+   */
+  export type PricingRecommendationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PricingRecommendation.
+     */
+    data: XOR<PricingRecommendationCreateInput, PricingRecommendationUncheckedCreateInput>
+  }
+
+  /**
+   * PricingRecommendation createMany
+   */
+  export type PricingRecommendationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PricingRecommendations.
+     */
+    data: PricingRecommendationCreateManyInput | PricingRecommendationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PricingRecommendation createManyAndReturn
+   */
+  export type PricingRecommendationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * The data used to create many PricingRecommendations.
+     */
+    data: PricingRecommendationCreateManyInput | PricingRecommendationCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PricingRecommendation update
+   */
+  export type PricingRecommendationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PricingRecommendation.
+     */
+    data: XOR<PricingRecommendationUpdateInput, PricingRecommendationUncheckedUpdateInput>
+    /**
+     * Choose, which PricingRecommendation to update.
+     */
+    where: PricingRecommendationWhereUniqueInput
+  }
+
+  /**
+   * PricingRecommendation updateMany
+   */
+  export type PricingRecommendationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PricingRecommendations.
+     */
+    data: XOR<PricingRecommendationUpdateManyMutationInput, PricingRecommendationUncheckedUpdateManyInput>
+    /**
+     * Filter which PricingRecommendations to update
+     */
+    where?: PricingRecommendationWhereInput
+    /**
+     * Limit how many PricingRecommendations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PricingRecommendation updateManyAndReturn
+   */
+  export type PricingRecommendationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * The data used to update PricingRecommendations.
+     */
+    data: XOR<PricingRecommendationUpdateManyMutationInput, PricingRecommendationUncheckedUpdateManyInput>
+    /**
+     * Filter which PricingRecommendations to update
+     */
+    where?: PricingRecommendationWhereInput
+    /**
+     * Limit how many PricingRecommendations to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PricingRecommendation upsert
+   */
+  export type PricingRecommendationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PricingRecommendation to update in case it exists.
+     */
+    where: PricingRecommendationWhereUniqueInput
+    /**
+     * In case the PricingRecommendation found by the `where` argument doesn't exist, create a new PricingRecommendation with this data.
+     */
+    create: XOR<PricingRecommendationCreateInput, PricingRecommendationUncheckedCreateInput>
+    /**
+     * In case the PricingRecommendation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PricingRecommendationUpdateInput, PricingRecommendationUncheckedUpdateInput>
+  }
+
+  /**
+   * PricingRecommendation delete
+   */
+  export type PricingRecommendationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+    /**
+     * Filter which PricingRecommendation to delete.
+     */
+    where: PricingRecommendationWhereUniqueInput
+  }
+
+  /**
+   * PricingRecommendation deleteMany
+   */
+  export type PricingRecommendationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PricingRecommendations to delete
+     */
+    where?: PricingRecommendationWhereInput
+    /**
+     * Limit how many PricingRecommendations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PricingRecommendation without action
+   */
+  export type PricingRecommendationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PricingRecommendation
+     */
+    select?: PricingRecommendationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PricingRecommendation
+     */
+    omit?: PricingRecommendationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PricingRecommendationInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -73297,6 +81329,110 @@ export namespace Prisma {
   export type EventDisclosureScalarFieldEnum = (typeof EventDisclosureScalarFieldEnum)[keyof typeof EventDisclosureScalarFieldEnum]
 
 
+  export const MembershipPlanScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    name: 'name',
+    slug: 'slug',
+    tier: 'tier',
+    description: 'description',
+    price: 'price',
+    currency: 'currency',
+    billingPeriod: 'billingPeriod',
+    maxMembers: 'maxMembers',
+    active: 'active',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type MembershipPlanScalarFieldEnum = (typeof MembershipPlanScalarFieldEnum)[keyof typeof MembershipPlanScalarFieldEnum]
+
+
+  export const MembershipScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    planId: 'planId',
+    userId: 'userId',
+    status: 'status',
+    startedAt: 'startedAt',
+    expiresAt: 'expiresAt',
+    cancelledAt: 'cancelledAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type MembershipScalarFieldEnum = (typeof MembershipScalarFieldEnum)[keyof typeof MembershipScalarFieldEnum]
+
+
+  export const MembershipPeriodScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    membershipId: 'membershipId',
+    kind: 'kind',
+    startsAt: 'startsAt',
+    endsAt: 'endsAt',
+    amount: 'amount',
+    recordedById: 'recordedById',
+    createdAt: 'createdAt'
+  };
+
+  export type MembershipPeriodScalarFieldEnum = (typeof MembershipPeriodScalarFieldEnum)[keyof typeof MembershipPeriodScalarFieldEnum]
+
+
+  export const MembershipBenefitScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    planId: 'planId',
+    name: 'name',
+    type: 'type',
+    description: 'description',
+    redemptionLimit: 'redemptionLimit',
+    active: 'active',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type MembershipBenefitScalarFieldEnum = (typeof MembershipBenefitScalarFieldEnum)[keyof typeof MembershipBenefitScalarFieldEnum]
+
+
+  export const MembershipBenefitRedemptionScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    benefitId: 'benefitId',
+    membershipId: 'membershipId',
+    note: 'note',
+    recordedById: 'recordedById',
+    redeemedAt: 'redeemedAt'
+  };
+
+  export type MembershipBenefitRedemptionScalarFieldEnum = (typeof MembershipBenefitRedemptionScalarFieldEnum)[keyof typeof MembershipBenefitRedemptionScalarFieldEnum]
+
+
+  export const PricingRecommendationScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    eventId: 'eventId',
+    offerId: 'offerId',
+    status: 'status',
+    fromPrice: 'fromPrice',
+    proposedPrice: 'proposedPrice',
+    multiplier: 'multiplier',
+    direction: 'direction',
+    deltaPercent: 'deltaPercent',
+    explanation: 'explanation',
+    payload: 'payload',
+    createdById: 'createdById',
+    reviewedById: 'reviewedById',
+    reviewedAt: 'reviewedAt',
+    reviewNote: 'reviewNote',
+    appliedAt: 'appliedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PricingRecommendationScalarFieldEnum = (typeof PricingRecommendationScalarFieldEnum)[keyof typeof PricingRecommendationScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -73915,6 +82051,62 @@ export namespace Prisma {
    */
   export type ListEnumSeasonPassPurchaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SeasonPassPurchaseStatus[]'>
     
+
+
+  /**
+   * Reference to a field of type 'MembershipBillingPeriod'
+   */
+  export type EnumMembershipBillingPeriodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipBillingPeriod'>
+    
+
+
+  /**
+   * Reference to a field of type 'MembershipBillingPeriod[]'
+   */
+  export type ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipBillingPeriod[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'MembershipStatus'
+   */
+  export type EnumMembershipStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'MembershipStatus[]'
+   */
+  export type ListEnumMembershipStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'MembershipPeriodKind'
+   */
+  export type EnumMembershipPeriodKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipPeriodKind'>
+    
+
+
+  /**
+   * Reference to a field of type 'MembershipPeriodKind[]'
+   */
+  export type ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipPeriodKind[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'PricingRecommendationStatus'
+   */
+  export type EnumPricingRecommendationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PricingRecommendationStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'PricingRecommendationStatus[]'
+   */
+  export type ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PricingRecommendationStatus[]'>
+    
   /**
    * Deep Input Types
    */
@@ -73972,6 +82164,7 @@ export namespace Prisma {
     fiscalProfile?: XOR<FiscalProfileNullableScalarRelationFilter, FiscalProfileWhereInput> | null
     cfdiInvoices?: CfdiInvoiceListRelationFilter
     seasonPasses?: SeasonPassListRelationFilter
+    membershipPlans?: MembershipPlanListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -74023,6 +82216,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileOrderByWithRelationInput
     cfdiInvoices?: CfdiInvoiceOrderByRelationAggregateInput
     seasonPasses?: SeasonPassOrderByRelationAggregateInput
+    membershipPlans?: MembershipPlanOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -74077,6 +82271,7 @@ export namespace Prisma {
     fiscalProfile?: XOR<FiscalProfileNullableScalarRelationFilter, FiscalProfileWhereInput> | null
     cfdiInvoices?: CfdiInvoiceListRelationFilter
     seasonPasses?: SeasonPassListRelationFilter
+    membershipPlans?: MembershipPlanListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -75570,6 +83765,7 @@ export namespace Prisma {
     tickets?: TicketListRelationFilter
     orders?: OrderListRelationFilter
     dynamicPrices?: DynamicPriceListRelationFilter
+    pricingRecommendations?: PricingRecommendationListRelationFilter
     reviews?: ReviewListRelationFilter
     fraudFlags?: FraudFlagListRelationFilter
     seatMap?: XOR<EventSeatMapNullableScalarRelationFilter, EventSeatMapWhereInput> | null
@@ -75634,6 +83830,7 @@ export namespace Prisma {
     tickets?: TicketOrderByRelationAggregateInput
     orders?: OrderOrderByRelationAggregateInput
     dynamicPrices?: DynamicPriceOrderByRelationAggregateInput
+    pricingRecommendations?: PricingRecommendationOrderByRelationAggregateInput
     reviews?: ReviewOrderByRelationAggregateInput
     fraudFlags?: FraudFlagOrderByRelationAggregateInput
     seatMap?: EventSeatMapOrderByWithRelationInput
@@ -75701,6 +83898,7 @@ export namespace Prisma {
     tickets?: TicketListRelationFilter
     orders?: OrderListRelationFilter
     dynamicPrices?: DynamicPriceListRelationFilter
+    pricingRecommendations?: PricingRecommendationListRelationFilter
     reviews?: ReviewListRelationFilter
     fraudFlags?: FraudFlagListRelationFilter
     seatMap?: XOR<EventSeatMapNullableScalarRelationFilter, EventSeatMapWhereInput> | null
@@ -76139,6 +84337,7 @@ export namespace Prisma {
     tickets?: TicketListRelationFilter
     orderItems?: OrderItemListRelationFilter
     dynamicPrices?: DynamicPriceListRelationFilter
+    pricingRecommendations?: PricingRecommendationListRelationFilter
   }
 
   export type OfferOrderByWithRelationInput = {
@@ -76167,6 +84366,7 @@ export namespace Prisma {
     tickets?: TicketOrderByRelationAggregateInput
     orderItems?: OrderItemOrderByRelationAggregateInput
     dynamicPrices?: DynamicPriceOrderByRelationAggregateInput
+    pricingRecommendations?: PricingRecommendationOrderByRelationAggregateInput
   }
 
   export type OfferWhereUniqueInput = Prisma.AtLeast<{
@@ -76199,6 +84399,7 @@ export namespace Prisma {
     tickets?: TicketListRelationFilter
     orderItems?: OrderItemListRelationFilter
     dynamicPrices?: DynamicPriceListRelationFilter
+    pricingRecommendations?: PricingRecommendationListRelationFilter
   }, "id" | "eventId_zone">
 
   export type OfferOrderByWithAggregationInput = {
@@ -76947,6 +85148,7 @@ export namespace Prisma {
     wishlist?: WishlistListRelationFilter
     sessions?: SessionListRelationFilter
     userPermissions?: UserPermissionListRelationFilter
+    memberships?: MembershipListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -76980,6 +85182,7 @@ export namespace Prisma {
     wishlist?: WishlistOrderByRelationAggregateInput
     sessions?: SessionOrderByRelationAggregateInput
     userPermissions?: UserPermissionOrderByRelationAggregateInput
+    memberships?: MembershipOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -77016,6 +85219,7 @@ export namespace Prisma {
     wishlist?: WishlistListRelationFilter
     sessions?: SessionListRelationFilter
     userPermissions?: UserPermissionListRelationFilter
+    memberships?: MembershipListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -79249,6 +87453,560 @@ export namespace Prisma {
     publishedBy?: StringNullableWithAggregatesFilter<"EventDisclosure"> | string | null
   }
 
+  export type MembershipPlanWhereInput = {
+    AND?: MembershipPlanWhereInput | MembershipPlanWhereInput[]
+    OR?: MembershipPlanWhereInput[]
+    NOT?: MembershipPlanWhereInput | MembershipPlanWhereInput[]
+    id?: StringFilter<"MembershipPlan"> | string
+    organizationId?: StringFilter<"MembershipPlan"> | string
+    name?: StringFilter<"MembershipPlan"> | string
+    slug?: StringFilter<"MembershipPlan"> | string
+    tier?: StringFilter<"MembershipPlan"> | string
+    description?: StringNullableFilter<"MembershipPlan"> | string | null
+    price?: DecimalFilter<"MembershipPlan"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"MembershipPlan"> | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFilter<"MembershipPlan"> | $Enums.MembershipBillingPeriod
+    maxMembers?: IntNullableFilter<"MembershipPlan"> | number | null
+    active?: BoolFilter<"MembershipPlan"> | boolean
+    createdAt?: DateTimeFilter<"MembershipPlan"> | Date | string
+    updatedAt?: DateTimeFilter<"MembershipPlan"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    memberships?: MembershipListRelationFilter
+    benefits?: MembershipBenefitListRelationFilter
+  }
+
+  export type MembershipPlanOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    tier?: SortOrder
+    description?: SortOrderInput | SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    billingPeriod?: SortOrder
+    maxMembers?: SortOrderInput | SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+    memberships?: MembershipOrderByRelationAggregateInput
+    benefits?: MembershipBenefitOrderByRelationAggregateInput
+  }
+
+  export type MembershipPlanWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    organizationId_slug?: MembershipPlanOrganizationIdSlugCompoundUniqueInput
+    AND?: MembershipPlanWhereInput | MembershipPlanWhereInput[]
+    OR?: MembershipPlanWhereInput[]
+    NOT?: MembershipPlanWhereInput | MembershipPlanWhereInput[]
+    organizationId?: StringFilter<"MembershipPlan"> | string
+    name?: StringFilter<"MembershipPlan"> | string
+    slug?: StringFilter<"MembershipPlan"> | string
+    tier?: StringFilter<"MembershipPlan"> | string
+    description?: StringNullableFilter<"MembershipPlan"> | string | null
+    price?: DecimalFilter<"MembershipPlan"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"MembershipPlan"> | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFilter<"MembershipPlan"> | $Enums.MembershipBillingPeriod
+    maxMembers?: IntNullableFilter<"MembershipPlan"> | number | null
+    active?: BoolFilter<"MembershipPlan"> | boolean
+    createdAt?: DateTimeFilter<"MembershipPlan"> | Date | string
+    updatedAt?: DateTimeFilter<"MembershipPlan"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+    memberships?: MembershipListRelationFilter
+    benefits?: MembershipBenefitListRelationFilter
+  }, "id" | "organizationId_slug">
+
+  export type MembershipPlanOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    tier?: SortOrder
+    description?: SortOrderInput | SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    billingPeriod?: SortOrder
+    maxMembers?: SortOrderInput | SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: MembershipPlanCountOrderByAggregateInput
+    _avg?: MembershipPlanAvgOrderByAggregateInput
+    _max?: MembershipPlanMaxOrderByAggregateInput
+    _min?: MembershipPlanMinOrderByAggregateInput
+    _sum?: MembershipPlanSumOrderByAggregateInput
+  }
+
+  export type MembershipPlanScalarWhereWithAggregatesInput = {
+    AND?: MembershipPlanScalarWhereWithAggregatesInput | MembershipPlanScalarWhereWithAggregatesInput[]
+    OR?: MembershipPlanScalarWhereWithAggregatesInput[]
+    NOT?: MembershipPlanScalarWhereWithAggregatesInput | MembershipPlanScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MembershipPlan"> | string
+    organizationId?: StringWithAggregatesFilter<"MembershipPlan"> | string
+    name?: StringWithAggregatesFilter<"MembershipPlan"> | string
+    slug?: StringWithAggregatesFilter<"MembershipPlan"> | string
+    tier?: StringWithAggregatesFilter<"MembershipPlan"> | string
+    description?: StringNullableWithAggregatesFilter<"MembershipPlan"> | string | null
+    price?: DecimalWithAggregatesFilter<"MembershipPlan"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyWithAggregatesFilter<"MembershipPlan"> | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodWithAggregatesFilter<"MembershipPlan"> | $Enums.MembershipBillingPeriod
+    maxMembers?: IntNullableWithAggregatesFilter<"MembershipPlan"> | number | null
+    active?: BoolWithAggregatesFilter<"MembershipPlan"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"MembershipPlan"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"MembershipPlan"> | Date | string
+  }
+
+  export type MembershipWhereInput = {
+    AND?: MembershipWhereInput | MembershipWhereInput[]
+    OR?: MembershipWhereInput[]
+    NOT?: MembershipWhereInput | MembershipWhereInput[]
+    id?: StringFilter<"Membership"> | string
+    organizationId?: StringFilter<"Membership"> | string
+    planId?: StringFilter<"Membership"> | string
+    userId?: StringFilter<"Membership"> | string
+    status?: EnumMembershipStatusFilter<"Membership"> | $Enums.MembershipStatus
+    startedAt?: DateTimeFilter<"Membership"> | Date | string
+    expiresAt?: DateTimeFilter<"Membership"> | Date | string
+    cancelledAt?: DateTimeNullableFilter<"Membership"> | Date | string | null
+    createdAt?: DateTimeFilter<"Membership"> | Date | string
+    updatedAt?: DateTimeFilter<"Membership"> | Date | string
+    plan?: XOR<MembershipPlanScalarRelationFilter, MembershipPlanWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    periods?: MembershipPeriodListRelationFilter
+    redemptions?: MembershipBenefitRedemptionListRelationFilter
+  }
+
+  export type MembershipOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    expiresAt?: SortOrder
+    cancelledAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    plan?: MembershipPlanOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+    periods?: MembershipPeriodOrderByRelationAggregateInput
+    redemptions?: MembershipBenefitRedemptionOrderByRelationAggregateInput
+  }
+
+  export type MembershipWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    planId_userId?: MembershipPlanIdUserIdCompoundUniqueInput
+    AND?: MembershipWhereInput | MembershipWhereInput[]
+    OR?: MembershipWhereInput[]
+    NOT?: MembershipWhereInput | MembershipWhereInput[]
+    organizationId?: StringFilter<"Membership"> | string
+    planId?: StringFilter<"Membership"> | string
+    userId?: StringFilter<"Membership"> | string
+    status?: EnumMembershipStatusFilter<"Membership"> | $Enums.MembershipStatus
+    startedAt?: DateTimeFilter<"Membership"> | Date | string
+    expiresAt?: DateTimeFilter<"Membership"> | Date | string
+    cancelledAt?: DateTimeNullableFilter<"Membership"> | Date | string | null
+    createdAt?: DateTimeFilter<"Membership"> | Date | string
+    updatedAt?: DateTimeFilter<"Membership"> | Date | string
+    plan?: XOR<MembershipPlanScalarRelationFilter, MembershipPlanWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    periods?: MembershipPeriodListRelationFilter
+    redemptions?: MembershipBenefitRedemptionListRelationFilter
+  }, "id" | "planId_userId">
+
+  export type MembershipOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    expiresAt?: SortOrder
+    cancelledAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: MembershipCountOrderByAggregateInput
+    _max?: MembershipMaxOrderByAggregateInput
+    _min?: MembershipMinOrderByAggregateInput
+  }
+
+  export type MembershipScalarWhereWithAggregatesInput = {
+    AND?: MembershipScalarWhereWithAggregatesInput | MembershipScalarWhereWithAggregatesInput[]
+    OR?: MembershipScalarWhereWithAggregatesInput[]
+    NOT?: MembershipScalarWhereWithAggregatesInput | MembershipScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Membership"> | string
+    organizationId?: StringWithAggregatesFilter<"Membership"> | string
+    planId?: StringWithAggregatesFilter<"Membership"> | string
+    userId?: StringWithAggregatesFilter<"Membership"> | string
+    status?: EnumMembershipStatusWithAggregatesFilter<"Membership"> | $Enums.MembershipStatus
+    startedAt?: DateTimeWithAggregatesFilter<"Membership"> | Date | string
+    expiresAt?: DateTimeWithAggregatesFilter<"Membership"> | Date | string
+    cancelledAt?: DateTimeNullableWithAggregatesFilter<"Membership"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Membership"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Membership"> | Date | string
+  }
+
+  export type MembershipPeriodWhereInput = {
+    AND?: MembershipPeriodWhereInput | MembershipPeriodWhereInput[]
+    OR?: MembershipPeriodWhereInput[]
+    NOT?: MembershipPeriodWhereInput | MembershipPeriodWhereInput[]
+    id?: StringFilter<"MembershipPeriod"> | string
+    organizationId?: StringFilter<"MembershipPeriod"> | string
+    membershipId?: StringFilter<"MembershipPeriod"> | string
+    kind?: EnumMembershipPeriodKindFilter<"MembershipPeriod"> | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+    endsAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+    amount?: DecimalFilter<"MembershipPeriod"> | Decimal | DecimalJsLike | number | string
+    recordedById?: StringNullableFilter<"MembershipPeriod"> | string | null
+    createdAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+    membership?: XOR<MembershipScalarRelationFilter, MembershipWhereInput>
+  }
+
+  export type MembershipPeriodOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    membershipId?: SortOrder
+    kind?: SortOrder
+    startsAt?: SortOrder
+    endsAt?: SortOrder
+    amount?: SortOrder
+    recordedById?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    membership?: MembershipOrderByWithRelationInput
+  }
+
+  export type MembershipPeriodWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: MembershipPeriodWhereInput | MembershipPeriodWhereInput[]
+    OR?: MembershipPeriodWhereInput[]
+    NOT?: MembershipPeriodWhereInput | MembershipPeriodWhereInput[]
+    organizationId?: StringFilter<"MembershipPeriod"> | string
+    membershipId?: StringFilter<"MembershipPeriod"> | string
+    kind?: EnumMembershipPeriodKindFilter<"MembershipPeriod"> | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+    endsAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+    amount?: DecimalFilter<"MembershipPeriod"> | Decimal | DecimalJsLike | number | string
+    recordedById?: StringNullableFilter<"MembershipPeriod"> | string | null
+    createdAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+    membership?: XOR<MembershipScalarRelationFilter, MembershipWhereInput>
+  }, "id">
+
+  export type MembershipPeriodOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    membershipId?: SortOrder
+    kind?: SortOrder
+    startsAt?: SortOrder
+    endsAt?: SortOrder
+    amount?: SortOrder
+    recordedById?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: MembershipPeriodCountOrderByAggregateInput
+    _avg?: MembershipPeriodAvgOrderByAggregateInput
+    _max?: MembershipPeriodMaxOrderByAggregateInput
+    _min?: MembershipPeriodMinOrderByAggregateInput
+    _sum?: MembershipPeriodSumOrderByAggregateInput
+  }
+
+  export type MembershipPeriodScalarWhereWithAggregatesInput = {
+    AND?: MembershipPeriodScalarWhereWithAggregatesInput | MembershipPeriodScalarWhereWithAggregatesInput[]
+    OR?: MembershipPeriodScalarWhereWithAggregatesInput[]
+    NOT?: MembershipPeriodScalarWhereWithAggregatesInput | MembershipPeriodScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MembershipPeriod"> | string
+    organizationId?: StringWithAggregatesFilter<"MembershipPeriod"> | string
+    membershipId?: StringWithAggregatesFilter<"MembershipPeriod"> | string
+    kind?: EnumMembershipPeriodKindWithAggregatesFilter<"MembershipPeriod"> | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeWithAggregatesFilter<"MembershipPeriod"> | Date | string
+    endsAt?: DateTimeWithAggregatesFilter<"MembershipPeriod"> | Date | string
+    amount?: DecimalWithAggregatesFilter<"MembershipPeriod"> | Decimal | DecimalJsLike | number | string
+    recordedById?: StringNullableWithAggregatesFilter<"MembershipPeriod"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"MembershipPeriod"> | Date | string
+  }
+
+  export type MembershipBenefitWhereInput = {
+    AND?: MembershipBenefitWhereInput | MembershipBenefitWhereInput[]
+    OR?: MembershipBenefitWhereInput[]
+    NOT?: MembershipBenefitWhereInput | MembershipBenefitWhereInput[]
+    id?: StringFilter<"MembershipBenefit"> | string
+    organizationId?: StringFilter<"MembershipBenefit"> | string
+    planId?: StringFilter<"MembershipBenefit"> | string
+    name?: StringFilter<"MembershipBenefit"> | string
+    type?: StringFilter<"MembershipBenefit"> | string
+    description?: StringNullableFilter<"MembershipBenefit"> | string | null
+    redemptionLimit?: IntNullableFilter<"MembershipBenefit"> | number | null
+    active?: BoolFilter<"MembershipBenefit"> | boolean
+    createdAt?: DateTimeFilter<"MembershipBenefit"> | Date | string
+    updatedAt?: DateTimeFilter<"MembershipBenefit"> | Date | string
+    plan?: XOR<MembershipPlanScalarRelationFilter, MembershipPlanWhereInput>
+    redemptions?: MembershipBenefitRedemptionListRelationFilter
+  }
+
+  export type MembershipBenefitOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    description?: SortOrderInput | SortOrder
+    redemptionLimit?: SortOrderInput | SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    plan?: MembershipPlanOrderByWithRelationInput
+    redemptions?: MembershipBenefitRedemptionOrderByRelationAggregateInput
+  }
+
+  export type MembershipBenefitWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: MembershipBenefitWhereInput | MembershipBenefitWhereInput[]
+    OR?: MembershipBenefitWhereInput[]
+    NOT?: MembershipBenefitWhereInput | MembershipBenefitWhereInput[]
+    organizationId?: StringFilter<"MembershipBenefit"> | string
+    planId?: StringFilter<"MembershipBenefit"> | string
+    name?: StringFilter<"MembershipBenefit"> | string
+    type?: StringFilter<"MembershipBenefit"> | string
+    description?: StringNullableFilter<"MembershipBenefit"> | string | null
+    redemptionLimit?: IntNullableFilter<"MembershipBenefit"> | number | null
+    active?: BoolFilter<"MembershipBenefit"> | boolean
+    createdAt?: DateTimeFilter<"MembershipBenefit"> | Date | string
+    updatedAt?: DateTimeFilter<"MembershipBenefit"> | Date | string
+    plan?: XOR<MembershipPlanScalarRelationFilter, MembershipPlanWhereInput>
+    redemptions?: MembershipBenefitRedemptionListRelationFilter
+  }, "id">
+
+  export type MembershipBenefitOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    description?: SortOrderInput | SortOrder
+    redemptionLimit?: SortOrderInput | SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: MembershipBenefitCountOrderByAggregateInput
+    _avg?: MembershipBenefitAvgOrderByAggregateInput
+    _max?: MembershipBenefitMaxOrderByAggregateInput
+    _min?: MembershipBenefitMinOrderByAggregateInput
+    _sum?: MembershipBenefitSumOrderByAggregateInput
+  }
+
+  export type MembershipBenefitScalarWhereWithAggregatesInput = {
+    AND?: MembershipBenefitScalarWhereWithAggregatesInput | MembershipBenefitScalarWhereWithAggregatesInput[]
+    OR?: MembershipBenefitScalarWhereWithAggregatesInput[]
+    NOT?: MembershipBenefitScalarWhereWithAggregatesInput | MembershipBenefitScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MembershipBenefit"> | string
+    organizationId?: StringWithAggregatesFilter<"MembershipBenefit"> | string
+    planId?: StringWithAggregatesFilter<"MembershipBenefit"> | string
+    name?: StringWithAggregatesFilter<"MembershipBenefit"> | string
+    type?: StringWithAggregatesFilter<"MembershipBenefit"> | string
+    description?: StringNullableWithAggregatesFilter<"MembershipBenefit"> | string | null
+    redemptionLimit?: IntNullableWithAggregatesFilter<"MembershipBenefit"> | number | null
+    active?: BoolWithAggregatesFilter<"MembershipBenefit"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"MembershipBenefit"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"MembershipBenefit"> | Date | string
+  }
+
+  export type MembershipBenefitRedemptionWhereInput = {
+    AND?: MembershipBenefitRedemptionWhereInput | MembershipBenefitRedemptionWhereInput[]
+    OR?: MembershipBenefitRedemptionWhereInput[]
+    NOT?: MembershipBenefitRedemptionWhereInput | MembershipBenefitRedemptionWhereInput[]
+    id?: StringFilter<"MembershipBenefitRedemption"> | string
+    organizationId?: StringFilter<"MembershipBenefitRedemption"> | string
+    benefitId?: StringFilter<"MembershipBenefitRedemption"> | string
+    membershipId?: StringFilter<"MembershipBenefitRedemption"> | string
+    note?: StringNullableFilter<"MembershipBenefitRedemption"> | string | null
+    recordedById?: StringNullableFilter<"MembershipBenefitRedemption"> | string | null
+    redeemedAt?: DateTimeFilter<"MembershipBenefitRedemption"> | Date | string
+    benefit?: XOR<MembershipBenefitScalarRelationFilter, MembershipBenefitWhereInput>
+    membership?: XOR<MembershipScalarRelationFilter, MembershipWhereInput>
+  }
+
+  export type MembershipBenefitRedemptionOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    benefitId?: SortOrder
+    membershipId?: SortOrder
+    note?: SortOrderInput | SortOrder
+    recordedById?: SortOrderInput | SortOrder
+    redeemedAt?: SortOrder
+    benefit?: MembershipBenefitOrderByWithRelationInput
+    membership?: MembershipOrderByWithRelationInput
+  }
+
+  export type MembershipBenefitRedemptionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: MembershipBenefitRedemptionWhereInput | MembershipBenefitRedemptionWhereInput[]
+    OR?: MembershipBenefitRedemptionWhereInput[]
+    NOT?: MembershipBenefitRedemptionWhereInput | MembershipBenefitRedemptionWhereInput[]
+    organizationId?: StringFilter<"MembershipBenefitRedemption"> | string
+    benefitId?: StringFilter<"MembershipBenefitRedemption"> | string
+    membershipId?: StringFilter<"MembershipBenefitRedemption"> | string
+    note?: StringNullableFilter<"MembershipBenefitRedemption"> | string | null
+    recordedById?: StringNullableFilter<"MembershipBenefitRedemption"> | string | null
+    redeemedAt?: DateTimeFilter<"MembershipBenefitRedemption"> | Date | string
+    benefit?: XOR<MembershipBenefitScalarRelationFilter, MembershipBenefitWhereInput>
+    membership?: XOR<MembershipScalarRelationFilter, MembershipWhereInput>
+  }, "id">
+
+  export type MembershipBenefitRedemptionOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    benefitId?: SortOrder
+    membershipId?: SortOrder
+    note?: SortOrderInput | SortOrder
+    recordedById?: SortOrderInput | SortOrder
+    redeemedAt?: SortOrder
+    _count?: MembershipBenefitRedemptionCountOrderByAggregateInput
+    _max?: MembershipBenefitRedemptionMaxOrderByAggregateInput
+    _min?: MembershipBenefitRedemptionMinOrderByAggregateInput
+  }
+
+  export type MembershipBenefitRedemptionScalarWhereWithAggregatesInput = {
+    AND?: MembershipBenefitRedemptionScalarWhereWithAggregatesInput | MembershipBenefitRedemptionScalarWhereWithAggregatesInput[]
+    OR?: MembershipBenefitRedemptionScalarWhereWithAggregatesInput[]
+    NOT?: MembershipBenefitRedemptionScalarWhereWithAggregatesInput | MembershipBenefitRedemptionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MembershipBenefitRedemption"> | string
+    organizationId?: StringWithAggregatesFilter<"MembershipBenefitRedemption"> | string
+    benefitId?: StringWithAggregatesFilter<"MembershipBenefitRedemption"> | string
+    membershipId?: StringWithAggregatesFilter<"MembershipBenefitRedemption"> | string
+    note?: StringNullableWithAggregatesFilter<"MembershipBenefitRedemption"> | string | null
+    recordedById?: StringNullableWithAggregatesFilter<"MembershipBenefitRedemption"> | string | null
+    redeemedAt?: DateTimeWithAggregatesFilter<"MembershipBenefitRedemption"> | Date | string
+  }
+
+  export type PricingRecommendationWhereInput = {
+    AND?: PricingRecommendationWhereInput | PricingRecommendationWhereInput[]
+    OR?: PricingRecommendationWhereInput[]
+    NOT?: PricingRecommendationWhereInput | PricingRecommendationWhereInput[]
+    id?: StringFilter<"PricingRecommendation"> | string
+    organizationId?: StringFilter<"PricingRecommendation"> | string
+    eventId?: StringFilter<"PricingRecommendation"> | string
+    offerId?: StringFilter<"PricingRecommendation"> | string
+    status?: EnumPricingRecommendationStatusFilter<"PricingRecommendation"> | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFilter<"PricingRecommendation"> | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFilter<"PricingRecommendation"> | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFilter<"PricingRecommendation"> | number
+    direction?: StringFilter<"PricingRecommendation"> | string
+    deltaPercent?: FloatFilter<"PricingRecommendation"> | number
+    explanation?: StringFilter<"PricingRecommendation"> | string
+    payload?: JsonFilter<"PricingRecommendation">
+    createdById?: StringNullableFilter<"PricingRecommendation"> | string | null
+    reviewedById?: StringNullableFilter<"PricingRecommendation"> | string | null
+    reviewedAt?: DateTimeNullableFilter<"PricingRecommendation"> | Date | string | null
+    reviewNote?: StringNullableFilter<"PricingRecommendation"> | string | null
+    appliedAt?: DateTimeNullableFilter<"PricingRecommendation"> | Date | string | null
+    createdAt?: DateTimeFilter<"PricingRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"PricingRecommendation"> | Date | string
+    event?: XOR<EventScalarRelationFilter, EventWhereInput>
+    offer?: XOR<OfferScalarRelationFilter, OfferWhereInput>
+  }
+
+  export type PricingRecommendationOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    eventId?: SortOrder
+    offerId?: SortOrder
+    status?: SortOrder
+    fromPrice?: SortOrder
+    proposedPrice?: SortOrder
+    multiplier?: SortOrder
+    direction?: SortOrder
+    deltaPercent?: SortOrder
+    explanation?: SortOrder
+    payload?: SortOrder
+    createdById?: SortOrderInput | SortOrder
+    reviewedById?: SortOrderInput | SortOrder
+    reviewedAt?: SortOrderInput | SortOrder
+    reviewNote?: SortOrderInput | SortOrder
+    appliedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    event?: EventOrderByWithRelationInput
+    offer?: OfferOrderByWithRelationInput
+  }
+
+  export type PricingRecommendationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PricingRecommendationWhereInput | PricingRecommendationWhereInput[]
+    OR?: PricingRecommendationWhereInput[]
+    NOT?: PricingRecommendationWhereInput | PricingRecommendationWhereInput[]
+    organizationId?: StringFilter<"PricingRecommendation"> | string
+    eventId?: StringFilter<"PricingRecommendation"> | string
+    offerId?: StringFilter<"PricingRecommendation"> | string
+    status?: EnumPricingRecommendationStatusFilter<"PricingRecommendation"> | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFilter<"PricingRecommendation"> | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFilter<"PricingRecommendation"> | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFilter<"PricingRecommendation"> | number
+    direction?: StringFilter<"PricingRecommendation"> | string
+    deltaPercent?: FloatFilter<"PricingRecommendation"> | number
+    explanation?: StringFilter<"PricingRecommendation"> | string
+    payload?: JsonFilter<"PricingRecommendation">
+    createdById?: StringNullableFilter<"PricingRecommendation"> | string | null
+    reviewedById?: StringNullableFilter<"PricingRecommendation"> | string | null
+    reviewedAt?: DateTimeNullableFilter<"PricingRecommendation"> | Date | string | null
+    reviewNote?: StringNullableFilter<"PricingRecommendation"> | string | null
+    appliedAt?: DateTimeNullableFilter<"PricingRecommendation"> | Date | string | null
+    createdAt?: DateTimeFilter<"PricingRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"PricingRecommendation"> | Date | string
+    event?: XOR<EventScalarRelationFilter, EventWhereInput>
+    offer?: XOR<OfferScalarRelationFilter, OfferWhereInput>
+  }, "id">
+
+  export type PricingRecommendationOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    eventId?: SortOrder
+    offerId?: SortOrder
+    status?: SortOrder
+    fromPrice?: SortOrder
+    proposedPrice?: SortOrder
+    multiplier?: SortOrder
+    direction?: SortOrder
+    deltaPercent?: SortOrder
+    explanation?: SortOrder
+    payload?: SortOrder
+    createdById?: SortOrderInput | SortOrder
+    reviewedById?: SortOrderInput | SortOrder
+    reviewedAt?: SortOrderInput | SortOrder
+    reviewNote?: SortOrderInput | SortOrder
+    appliedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PricingRecommendationCountOrderByAggregateInput
+    _avg?: PricingRecommendationAvgOrderByAggregateInput
+    _max?: PricingRecommendationMaxOrderByAggregateInput
+    _min?: PricingRecommendationMinOrderByAggregateInput
+    _sum?: PricingRecommendationSumOrderByAggregateInput
+  }
+
+  export type PricingRecommendationScalarWhereWithAggregatesInput = {
+    AND?: PricingRecommendationScalarWhereWithAggregatesInput | PricingRecommendationScalarWhereWithAggregatesInput[]
+    OR?: PricingRecommendationScalarWhereWithAggregatesInput[]
+    NOT?: PricingRecommendationScalarWhereWithAggregatesInput | PricingRecommendationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PricingRecommendation"> | string
+    organizationId?: StringWithAggregatesFilter<"PricingRecommendation"> | string
+    eventId?: StringWithAggregatesFilter<"PricingRecommendation"> | string
+    offerId?: StringWithAggregatesFilter<"PricingRecommendation"> | string
+    status?: EnumPricingRecommendationStatusWithAggregatesFilter<"PricingRecommendation"> | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalWithAggregatesFilter<"PricingRecommendation"> | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalWithAggregatesFilter<"PricingRecommendation"> | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatWithAggregatesFilter<"PricingRecommendation"> | number
+    direction?: StringWithAggregatesFilter<"PricingRecommendation"> | string
+    deltaPercent?: FloatWithAggregatesFilter<"PricingRecommendation"> | number
+    explanation?: StringWithAggregatesFilter<"PricingRecommendation"> | string
+    payload?: JsonWithAggregatesFilter<"PricingRecommendation">
+    createdById?: StringNullableWithAggregatesFilter<"PricingRecommendation"> | string | null
+    reviewedById?: StringNullableWithAggregatesFilter<"PricingRecommendation"> | string | null
+    reviewedAt?: DateTimeNullableWithAggregatesFilter<"PricingRecommendation"> | Date | string | null
+    reviewNote?: StringNullableWithAggregatesFilter<"PricingRecommendation"> | string | null
+    appliedAt?: DateTimeNullableWithAggregatesFilter<"PricingRecommendation"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"PricingRecommendation"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"PricingRecommendation"> | Date | string
+  }
+
   export type OrganizationCreateInput = {
     id?: string
     name: string
@@ -79298,6 +88056,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -79349,6 +88108,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -79400,6 +88160,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -79451,6 +88212,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -81126,6 +89888,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -81187,6 +89950,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -81248,6 +90012,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -81309,6 +90074,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -81822,6 +90588,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutOfferInput
     orderItems?: OrderItemCreateNestedManyWithoutOfferInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutOfferInput
   }
 
   export type OfferUncheckedCreateInput = {
@@ -81849,6 +90616,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutOfferInput
     orderItems?: OrderItemUncheckedCreateNestedManyWithoutOfferInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutOfferInput
   }
 
   export type OfferUpdateInput = {
@@ -81876,6 +90644,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutOfferNestedInput
     orderItems?: OrderItemUpdateManyWithoutOfferNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutOfferNestedInput
   }
 
   export type OfferUncheckedUpdateInput = {
@@ -81903,6 +90672,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutOfferNestedInput
     orderItems?: OrderItemUncheckedUpdateManyWithoutOfferNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutOfferNestedInput
   }
 
   export type OfferCreateManyInput = {
@@ -82759,6 +91529,7 @@ export namespace Prisma {
     wishlist?: WishlistCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -82791,6 +91562,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -82823,6 +91595,7 @@ export namespace Prisma {
     wishlist?: WishlistUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -82855,6 +91628,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -85314,6 +94088,619 @@ export namespace Prisma {
     publishedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type MembershipPlanCreateInput = {
+    id?: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMembershipPlansInput
+    memberships?: MembershipCreateNestedManyWithoutPlanInput
+    benefits?: MembershipBenefitCreateNestedManyWithoutPlanInput
+  }
+
+  export type MembershipPlanUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutPlanInput
+    benefits?: MembershipBenefitUncheckedCreateNestedManyWithoutPlanInput
+  }
+
+  export type MembershipPlanUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMembershipPlansNestedInput
+    memberships?: MembershipUpdateManyWithoutPlanNestedInput
+    benefits?: MembershipBenefitUpdateManyWithoutPlanNestedInput
+  }
+
+  export type MembershipPlanUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutPlanNestedInput
+    benefits?: MembershipBenefitUncheckedUpdateManyWithoutPlanNestedInput
+  }
+
+  export type MembershipPlanCreateManyInput = {
+    id?: string
+    organizationId: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipPlanUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipPlanUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipCreateInput = {
+    id?: string
+    organizationId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    plan: MembershipPlanCreateNestedOneWithoutMembershipsInput
+    user: UserCreateNestedOneWithoutMembershipsInput
+    periods?: MembershipPeriodCreateNestedManyWithoutMembershipInput
+    redemptions?: MembershipBenefitRedemptionCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    userId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    periods?: MembershipPeriodUncheckedCreateNestedManyWithoutMembershipInput
+    redemptions?: MembershipBenefitRedemptionUncheckedCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    plan?: MembershipPlanUpdateOneRequiredWithoutMembershipsNestedInput
+    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+    periods?: MembershipPeriodUpdateManyWithoutMembershipNestedInput
+    redemptions?: MembershipBenefitRedemptionUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    periods?: MembershipPeriodUncheckedUpdateManyWithoutMembershipNestedInput
+    redemptions?: MembershipBenefitRedemptionUncheckedUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipCreateManyInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    userId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipPeriodCreateInput = {
+    id?: string
+    organizationId: string
+    kind?: $Enums.MembershipPeriodKind
+    startsAt: Date | string
+    endsAt: Date | string
+    amount: Decimal | DecimalJsLike | number | string
+    recordedById?: string | null
+    createdAt?: Date | string
+    membership: MembershipCreateNestedOneWithoutPeriodsInput
+  }
+
+  export type MembershipPeriodUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    membershipId: string
+    kind?: $Enums.MembershipPeriodKind
+    startsAt: Date | string
+    endsAt: Date | string
+    amount: Decimal | DecimalJsLike | number | string
+    recordedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type MembershipPeriodUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    kind?: EnumMembershipPeriodKindFieldUpdateOperationsInput | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    membership?: MembershipUpdateOneRequiredWithoutPeriodsNestedInput
+  }
+
+  export type MembershipPeriodUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    membershipId?: StringFieldUpdateOperationsInput | string
+    kind?: EnumMembershipPeriodKindFieldUpdateOperationsInput | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipPeriodCreateManyInput = {
+    id?: string
+    organizationId: string
+    membershipId: string
+    kind?: $Enums.MembershipPeriodKind
+    startsAt: Date | string
+    endsAt: Date | string
+    amount: Decimal | DecimalJsLike | number | string
+    recordedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type MembershipPeriodUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    kind?: EnumMembershipPeriodKindFieldUpdateOperationsInput | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipPeriodUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    membershipId?: StringFieldUpdateOperationsInput | string
+    kind?: EnumMembershipPeriodKindFieldUpdateOperationsInput | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitCreateInput = {
+    id?: string
+    organizationId: string
+    name: string
+    type: string
+    description?: string | null
+    redemptionLimit?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    plan: MembershipPlanCreateNestedOneWithoutBenefitsInput
+    redemptions?: MembershipBenefitRedemptionCreateNestedManyWithoutBenefitInput
+  }
+
+  export type MembershipBenefitUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    name: string
+    type: string
+    description?: string | null
+    redemptionLimit?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: MembershipBenefitRedemptionUncheckedCreateNestedManyWithoutBenefitInput
+  }
+
+  export type MembershipBenefitUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    plan?: MembershipPlanUpdateOneRequiredWithoutBenefitsNestedInput
+    redemptions?: MembershipBenefitRedemptionUpdateManyWithoutBenefitNestedInput
+  }
+
+  export type MembershipBenefitUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: MembershipBenefitRedemptionUncheckedUpdateManyWithoutBenefitNestedInput
+  }
+
+  export type MembershipBenefitCreateManyInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    name: string
+    type: string
+    description?: string | null
+    redemptionLimit?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipBenefitUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitRedemptionCreateInput = {
+    id?: string
+    organizationId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+    benefit: MembershipBenefitCreateNestedOneWithoutRedemptionsInput
+    membership: MembershipCreateNestedOneWithoutRedemptionsInput
+  }
+
+  export type MembershipBenefitRedemptionUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    benefitId: string
+    membershipId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+  }
+
+  export type MembershipBenefitRedemptionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    benefit?: MembershipBenefitUpdateOneRequiredWithoutRedemptionsNestedInput
+    membership?: MembershipUpdateOneRequiredWithoutRedemptionsNestedInput
+  }
+
+  export type MembershipBenefitRedemptionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    benefitId?: StringFieldUpdateOperationsInput | string
+    membershipId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitRedemptionCreateManyInput = {
+    id?: string
+    organizationId: string
+    benefitId: string
+    membershipId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+  }
+
+  export type MembershipBenefitRedemptionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitRedemptionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    benefitId?: StringFieldUpdateOperationsInput | string
+    membershipId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PricingRecommendationCreateInput = {
+    id?: string
+    organizationId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    event: EventCreateNestedOneWithoutPricingRecommendationsInput
+    offer: OfferCreateNestedOneWithoutPricingRecommendationsInput
+  }
+
+  export type PricingRecommendationUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    eventId: string
+    offerId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PricingRecommendationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    event?: EventUpdateOneRequiredWithoutPricingRecommendationsNestedInput
+    offer?: OfferUpdateOneRequiredWithoutPricingRecommendationsNestedInput
+  }
+
+  export type PricingRecommendationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    offerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PricingRecommendationCreateManyInput = {
+    id?: string
+    organizationId: string
+    eventId: string
+    offerId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PricingRecommendationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PricingRecommendationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    offerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -85509,6 +94896,12 @@ export namespace Prisma {
     none?: SeasonPassWhereInput
   }
 
+  export type MembershipPlanListRelationFilter = {
+    every?: MembershipPlanWhereInput
+    some?: MembershipPlanWhereInput
+    none?: MembershipPlanWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -85555,6 +94948,10 @@ export namespace Prisma {
   }
 
   export type SeasonPassOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MembershipPlanOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -87024,6 +96421,12 @@ export namespace Prisma {
     none?: DynamicPriceWhereInput
   }
 
+  export type PricingRecommendationListRelationFilter = {
+    every?: PricingRecommendationWhereInput
+    some?: PricingRecommendationWhereInput
+    none?: PricingRecommendationWhereInput
+  }
+
   export type ReviewListRelationFilter = {
     every?: ReviewWhereInput
     some?: ReviewWhereInput
@@ -87070,6 +96473,10 @@ export namespace Prisma {
   }
 
   export type DynamicPriceOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PricingRecommendationOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -88188,6 +97595,12 @@ export namespace Prisma {
     none?: UserPermissionWhereInput
   }
 
+  export type MembershipListRelationFilter = {
+    every?: MembershipWhereInput
+    some?: MembershipWhereInput
+    none?: MembershipWhereInput
+  }
+
   export type WishlistOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -88197,6 +97610,10 @@ export namespace Prisma {
   }
 
   export type UserPermissionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MembershipOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -89805,6 +99222,425 @@ export namespace Prisma {
     capacity?: SortOrder
   }
 
+  export type EnumMembershipBillingPeriodFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipBillingPeriod | EnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipBillingPeriod[] | ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipBillingPeriod[] | ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipBillingPeriodFilter<$PrismaModel> | $Enums.MembershipBillingPeriod
+  }
+
+  export type MembershipBenefitListRelationFilter = {
+    every?: MembershipBenefitWhereInput
+    some?: MembershipBenefitWhereInput
+    none?: MembershipBenefitWhereInput
+  }
+
+  export type MembershipBenefitOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MembershipPlanOrganizationIdSlugCompoundUniqueInput = {
+    organizationId: string
+    slug: string
+  }
+
+  export type MembershipPlanCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    tier?: SortOrder
+    description?: SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    billingPeriod?: SortOrder
+    maxMembers?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipPlanAvgOrderByAggregateInput = {
+    price?: SortOrder
+    maxMembers?: SortOrder
+  }
+
+  export type MembershipPlanMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    tier?: SortOrder
+    description?: SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    billingPeriod?: SortOrder
+    maxMembers?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipPlanMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    tier?: SortOrder
+    description?: SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    billingPeriod?: SortOrder
+    maxMembers?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipPlanSumOrderByAggregateInput = {
+    price?: SortOrder
+    maxMembers?: SortOrder
+  }
+
+  export type EnumMembershipBillingPeriodWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipBillingPeriod | EnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipBillingPeriod[] | ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipBillingPeriod[] | ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipBillingPeriodWithAggregatesFilter<$PrismaModel> | $Enums.MembershipBillingPeriod
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipBillingPeriodFilter<$PrismaModel>
+    _max?: NestedEnumMembershipBillingPeriodFilter<$PrismaModel>
+  }
+
+  export type EnumMembershipStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipStatus | EnumMembershipStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipStatus[] | ListEnumMembershipStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipStatus[] | ListEnumMembershipStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipStatusFilter<$PrismaModel> | $Enums.MembershipStatus
+  }
+
+  export type MembershipPlanScalarRelationFilter = {
+    is?: MembershipPlanWhereInput
+    isNot?: MembershipPlanWhereInput
+  }
+
+  export type MembershipPeriodListRelationFilter = {
+    every?: MembershipPeriodWhereInput
+    some?: MembershipPeriodWhereInput
+    none?: MembershipPeriodWhereInput
+  }
+
+  export type MembershipBenefitRedemptionListRelationFilter = {
+    every?: MembershipBenefitRedemptionWhereInput
+    some?: MembershipBenefitRedemptionWhereInput
+    none?: MembershipBenefitRedemptionWhereInput
+  }
+
+  export type MembershipPeriodOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MembershipBenefitRedemptionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MembershipPlanIdUserIdCompoundUniqueInput = {
+    planId: string
+    userId: string
+  }
+
+  export type MembershipCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    expiresAt?: SortOrder
+    cancelledAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    expiresAt?: SortOrder
+    cancelledAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    expiresAt?: SortOrder
+    cancelledAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumMembershipStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipStatus | EnumMembershipStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipStatus[] | ListEnumMembershipStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipStatus[] | ListEnumMembershipStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipStatusWithAggregatesFilter<$PrismaModel> | $Enums.MembershipStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipStatusFilter<$PrismaModel>
+    _max?: NestedEnumMembershipStatusFilter<$PrismaModel>
+  }
+
+  export type EnumMembershipPeriodKindFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipPeriodKind | EnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipPeriodKind[] | ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipPeriodKind[] | ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipPeriodKindFilter<$PrismaModel> | $Enums.MembershipPeriodKind
+  }
+
+  export type MembershipScalarRelationFilter = {
+    is?: MembershipWhereInput
+    isNot?: MembershipWhereInput
+  }
+
+  export type MembershipPeriodCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    membershipId?: SortOrder
+    kind?: SortOrder
+    startsAt?: SortOrder
+    endsAt?: SortOrder
+    amount?: SortOrder
+    recordedById?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MembershipPeriodAvgOrderByAggregateInput = {
+    amount?: SortOrder
+  }
+
+  export type MembershipPeriodMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    membershipId?: SortOrder
+    kind?: SortOrder
+    startsAt?: SortOrder
+    endsAt?: SortOrder
+    amount?: SortOrder
+    recordedById?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MembershipPeriodMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    membershipId?: SortOrder
+    kind?: SortOrder
+    startsAt?: SortOrder
+    endsAt?: SortOrder
+    amount?: SortOrder
+    recordedById?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MembershipPeriodSumOrderByAggregateInput = {
+    amount?: SortOrder
+  }
+
+  export type EnumMembershipPeriodKindWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipPeriodKind | EnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipPeriodKind[] | ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipPeriodKind[] | ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipPeriodKindWithAggregatesFilter<$PrismaModel> | $Enums.MembershipPeriodKind
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipPeriodKindFilter<$PrismaModel>
+    _max?: NestedEnumMembershipPeriodKindFilter<$PrismaModel>
+  }
+
+  export type MembershipBenefitCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    description?: SortOrder
+    redemptionLimit?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipBenefitAvgOrderByAggregateInput = {
+    redemptionLimit?: SortOrder
+  }
+
+  export type MembershipBenefitMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    description?: SortOrder
+    redemptionLimit?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipBenefitMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    planId?: SortOrder
+    name?: SortOrder
+    type?: SortOrder
+    description?: SortOrder
+    redemptionLimit?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type MembershipBenefitSumOrderByAggregateInput = {
+    redemptionLimit?: SortOrder
+  }
+
+  export type MembershipBenefitScalarRelationFilter = {
+    is?: MembershipBenefitWhereInput
+    isNot?: MembershipBenefitWhereInput
+  }
+
+  export type MembershipBenefitRedemptionCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    benefitId?: SortOrder
+    membershipId?: SortOrder
+    note?: SortOrder
+    recordedById?: SortOrder
+    redeemedAt?: SortOrder
+  }
+
+  export type MembershipBenefitRedemptionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    benefitId?: SortOrder
+    membershipId?: SortOrder
+    note?: SortOrder
+    recordedById?: SortOrder
+    redeemedAt?: SortOrder
+  }
+
+  export type MembershipBenefitRedemptionMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    benefitId?: SortOrder
+    membershipId?: SortOrder
+    note?: SortOrder
+    recordedById?: SortOrder
+    redeemedAt?: SortOrder
+  }
+
+  export type EnumPricingRecommendationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.PricingRecommendationStatus | EnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PricingRecommendationStatus[] | ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PricingRecommendationStatus[] | ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPricingRecommendationStatusFilter<$PrismaModel> | $Enums.PricingRecommendationStatus
+  }
+
+  export type PricingRecommendationCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    eventId?: SortOrder
+    offerId?: SortOrder
+    status?: SortOrder
+    fromPrice?: SortOrder
+    proposedPrice?: SortOrder
+    multiplier?: SortOrder
+    direction?: SortOrder
+    deltaPercent?: SortOrder
+    explanation?: SortOrder
+    payload?: SortOrder
+    createdById?: SortOrder
+    reviewedById?: SortOrder
+    reviewedAt?: SortOrder
+    reviewNote?: SortOrder
+    appliedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PricingRecommendationAvgOrderByAggregateInput = {
+    fromPrice?: SortOrder
+    proposedPrice?: SortOrder
+    multiplier?: SortOrder
+    deltaPercent?: SortOrder
+  }
+
+  export type PricingRecommendationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    eventId?: SortOrder
+    offerId?: SortOrder
+    status?: SortOrder
+    fromPrice?: SortOrder
+    proposedPrice?: SortOrder
+    multiplier?: SortOrder
+    direction?: SortOrder
+    deltaPercent?: SortOrder
+    explanation?: SortOrder
+    createdById?: SortOrder
+    reviewedById?: SortOrder
+    reviewedAt?: SortOrder
+    reviewNote?: SortOrder
+    appliedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PricingRecommendationMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    eventId?: SortOrder
+    offerId?: SortOrder
+    status?: SortOrder
+    fromPrice?: SortOrder
+    proposedPrice?: SortOrder
+    multiplier?: SortOrder
+    direction?: SortOrder
+    deltaPercent?: SortOrder
+    explanation?: SortOrder
+    createdById?: SortOrder
+    reviewedById?: SortOrder
+    reviewedAt?: SortOrder
+    reviewNote?: SortOrder
+    appliedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PricingRecommendationSumOrderByAggregateInput = {
+    fromPrice?: SortOrder
+    proposedPrice?: SortOrder
+    multiplier?: SortOrder
+    deltaPercent?: SortOrder
+  }
+
+  export type EnumPricingRecommendationStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PricingRecommendationStatus | EnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PricingRecommendationStatus[] | ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PricingRecommendationStatus[] | ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPricingRecommendationStatusWithAggregatesFilter<$PrismaModel> | $Enums.PricingRecommendationStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPricingRecommendationStatusFilter<$PrismaModel>
+    _max?: NestedEnumPricingRecommendationStatusFilter<$PrismaModel>
+  }
+
   export type OrgInvitationCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<OrgInvitationCreateWithoutOrganizationInput, OrgInvitationUncheckedCreateWithoutOrganizationInput> | OrgInvitationCreateWithoutOrganizationInput[] | OrgInvitationUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: OrgInvitationCreateOrConnectWithoutOrganizationInput | OrgInvitationCreateOrConnectWithoutOrganizationInput[]
@@ -89894,6 +99730,13 @@ export namespace Prisma {
     connect?: SeasonPassWhereUniqueInput | SeasonPassWhereUniqueInput[]
   }
 
+  export type MembershipPlanCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<MembershipPlanCreateWithoutOrganizationInput, MembershipPlanUncheckedCreateWithoutOrganizationInput> | MembershipPlanCreateWithoutOrganizationInput[] | MembershipPlanUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MembershipPlanCreateOrConnectWithoutOrganizationInput | MembershipPlanCreateOrConnectWithoutOrganizationInput[]
+    createMany?: MembershipPlanCreateManyOrganizationInputEnvelope
+    connect?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+  }
+
   export type OrgInvitationUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<OrgInvitationCreateWithoutOrganizationInput, OrgInvitationUncheckedCreateWithoutOrganizationInput> | OrgInvitationCreateWithoutOrganizationInput[] | OrgInvitationUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: OrgInvitationCreateOrConnectWithoutOrganizationInput | OrgInvitationCreateOrConnectWithoutOrganizationInput[]
@@ -89981,6 +99824,13 @@ export namespace Prisma {
     connectOrCreate?: SeasonPassCreateOrConnectWithoutOrganizationInput | SeasonPassCreateOrConnectWithoutOrganizationInput[]
     createMany?: SeasonPassCreateManyOrganizationInputEnvelope
     connect?: SeasonPassWhereUniqueInput | SeasonPassWhereUniqueInput[]
+  }
+
+  export type MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<MembershipPlanCreateWithoutOrganizationInput, MembershipPlanUncheckedCreateWithoutOrganizationInput> | MembershipPlanCreateWithoutOrganizationInput[] | MembershipPlanUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MembershipPlanCreateOrConnectWithoutOrganizationInput | MembershipPlanCreateOrConnectWithoutOrganizationInput[]
+    createMany?: MembershipPlanCreateManyOrganizationInputEnvelope
+    connect?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -90201,6 +100051,20 @@ export namespace Prisma {
     deleteMany?: SeasonPassScalarWhereInput | SeasonPassScalarWhereInput[]
   }
 
+  export type MembershipPlanUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<MembershipPlanCreateWithoutOrganizationInput, MembershipPlanUncheckedCreateWithoutOrganizationInput> | MembershipPlanCreateWithoutOrganizationInput[] | MembershipPlanUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MembershipPlanCreateOrConnectWithoutOrganizationInput | MembershipPlanCreateOrConnectWithoutOrganizationInput[]
+    upsert?: MembershipPlanUpsertWithWhereUniqueWithoutOrganizationInput | MembershipPlanUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: MembershipPlanCreateManyOrganizationInputEnvelope
+    set?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+    disconnect?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+    delete?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+    connect?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+    update?: MembershipPlanUpdateWithWhereUniqueWithoutOrganizationInput | MembershipPlanUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: MembershipPlanUpdateManyWithWhereWithoutOrganizationInput | MembershipPlanUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: MembershipPlanScalarWhereInput | MembershipPlanScalarWhereInput[]
+  }
+
   export type OrgInvitationUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<OrgInvitationCreateWithoutOrganizationInput, OrgInvitationUncheckedCreateWithoutOrganizationInput> | OrgInvitationCreateWithoutOrganizationInput[] | OrgInvitationUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: OrgInvitationCreateOrConnectWithoutOrganizationInput | OrgInvitationCreateOrConnectWithoutOrganizationInput[]
@@ -90373,6 +100237,20 @@ export namespace Prisma {
     update?: SeasonPassUpdateWithWhereUniqueWithoutOrganizationInput | SeasonPassUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: SeasonPassUpdateManyWithWhereWithoutOrganizationInput | SeasonPassUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: SeasonPassScalarWhereInput | SeasonPassScalarWhereInput[]
+  }
+
+  export type MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<MembershipPlanCreateWithoutOrganizationInput, MembershipPlanUncheckedCreateWithoutOrganizationInput> | MembershipPlanCreateWithoutOrganizationInput[] | MembershipPlanUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: MembershipPlanCreateOrConnectWithoutOrganizationInput | MembershipPlanCreateOrConnectWithoutOrganizationInput[]
+    upsert?: MembershipPlanUpsertWithWhereUniqueWithoutOrganizationInput | MembershipPlanUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: MembershipPlanCreateManyOrganizationInputEnvelope
+    set?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+    disconnect?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+    delete?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+    connect?: MembershipPlanWhereUniqueInput | MembershipPlanWhereUniqueInput[]
+    update?: MembershipPlanUpdateWithWhereUniqueWithoutOrganizationInput | MembershipPlanUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: MembershipPlanUpdateManyWithWhereWithoutOrganizationInput | MembershipPlanUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: MembershipPlanScalarWhereInput | MembershipPlanScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutVenuesInput = {
@@ -91413,6 +101291,13 @@ export namespace Prisma {
     connect?: DynamicPriceWhereUniqueInput | DynamicPriceWhereUniqueInput[]
   }
 
+  export type PricingRecommendationCreateNestedManyWithoutEventInput = {
+    create?: XOR<PricingRecommendationCreateWithoutEventInput, PricingRecommendationUncheckedCreateWithoutEventInput> | PricingRecommendationCreateWithoutEventInput[] | PricingRecommendationUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: PricingRecommendationCreateOrConnectWithoutEventInput | PricingRecommendationCreateOrConnectWithoutEventInput[]
+    createMany?: PricingRecommendationCreateManyEventInputEnvelope
+    connect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+  }
+
   export type ReviewCreateNestedManyWithoutEventInput = {
     create?: XOR<ReviewCreateWithoutEventInput, ReviewUncheckedCreateWithoutEventInput> | ReviewCreateWithoutEventInput[] | ReviewUncheckedCreateWithoutEventInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutEventInput | ReviewCreateOrConnectWithoutEventInput[]
@@ -91501,6 +101386,13 @@ export namespace Prisma {
     connectOrCreate?: DynamicPriceCreateOrConnectWithoutEventInput | DynamicPriceCreateOrConnectWithoutEventInput[]
     createMany?: DynamicPriceCreateManyEventInputEnvelope
     connect?: DynamicPriceWhereUniqueInput | DynamicPriceWhereUniqueInput[]
+  }
+
+  export type PricingRecommendationUncheckedCreateNestedManyWithoutEventInput = {
+    create?: XOR<PricingRecommendationCreateWithoutEventInput, PricingRecommendationUncheckedCreateWithoutEventInput> | PricingRecommendationCreateWithoutEventInput[] | PricingRecommendationUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: PricingRecommendationCreateOrConnectWithoutEventInput | PricingRecommendationCreateOrConnectWithoutEventInput[]
+    createMany?: PricingRecommendationCreateManyEventInputEnvelope
+    connect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
   }
 
   export type ReviewUncheckedCreateNestedManyWithoutEventInput = {
@@ -91653,6 +101545,20 @@ export namespace Prisma {
     update?: DynamicPriceUpdateWithWhereUniqueWithoutEventInput | DynamicPriceUpdateWithWhereUniqueWithoutEventInput[]
     updateMany?: DynamicPriceUpdateManyWithWhereWithoutEventInput | DynamicPriceUpdateManyWithWhereWithoutEventInput[]
     deleteMany?: DynamicPriceScalarWhereInput | DynamicPriceScalarWhereInput[]
+  }
+
+  export type PricingRecommendationUpdateManyWithoutEventNestedInput = {
+    create?: XOR<PricingRecommendationCreateWithoutEventInput, PricingRecommendationUncheckedCreateWithoutEventInput> | PricingRecommendationCreateWithoutEventInput[] | PricingRecommendationUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: PricingRecommendationCreateOrConnectWithoutEventInput | PricingRecommendationCreateOrConnectWithoutEventInput[]
+    upsert?: PricingRecommendationUpsertWithWhereUniqueWithoutEventInput | PricingRecommendationUpsertWithWhereUniqueWithoutEventInput[]
+    createMany?: PricingRecommendationCreateManyEventInputEnvelope
+    set?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    disconnect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    delete?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    connect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    update?: PricingRecommendationUpdateWithWhereUniqueWithoutEventInput | PricingRecommendationUpdateWithWhereUniqueWithoutEventInput[]
+    updateMany?: PricingRecommendationUpdateManyWithWhereWithoutEventInput | PricingRecommendationUpdateManyWithWhereWithoutEventInput[]
+    deleteMany?: PricingRecommendationScalarWhereInput | PricingRecommendationScalarWhereInput[]
   }
 
   export type ReviewUpdateManyWithoutEventNestedInput = {
@@ -91831,6 +101737,20 @@ export namespace Prisma {
     update?: DynamicPriceUpdateWithWhereUniqueWithoutEventInput | DynamicPriceUpdateWithWhereUniqueWithoutEventInput[]
     updateMany?: DynamicPriceUpdateManyWithWhereWithoutEventInput | DynamicPriceUpdateManyWithWhereWithoutEventInput[]
     deleteMany?: DynamicPriceScalarWhereInput | DynamicPriceScalarWhereInput[]
+  }
+
+  export type PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput = {
+    create?: XOR<PricingRecommendationCreateWithoutEventInput, PricingRecommendationUncheckedCreateWithoutEventInput> | PricingRecommendationCreateWithoutEventInput[] | PricingRecommendationUncheckedCreateWithoutEventInput[]
+    connectOrCreate?: PricingRecommendationCreateOrConnectWithoutEventInput | PricingRecommendationCreateOrConnectWithoutEventInput[]
+    upsert?: PricingRecommendationUpsertWithWhereUniqueWithoutEventInput | PricingRecommendationUpsertWithWhereUniqueWithoutEventInput[]
+    createMany?: PricingRecommendationCreateManyEventInputEnvelope
+    set?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    disconnect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    delete?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    connect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    update?: PricingRecommendationUpdateWithWhereUniqueWithoutEventInput | PricingRecommendationUpdateWithWhereUniqueWithoutEventInput[]
+    updateMany?: PricingRecommendationUpdateManyWithWhereWithoutEventInput | PricingRecommendationUpdateManyWithWhereWithoutEventInput[]
+    deleteMany?: PricingRecommendationScalarWhereInput | PricingRecommendationScalarWhereInput[]
   }
 
   export type ReviewUncheckedUpdateManyWithoutEventNestedInput = {
@@ -92111,6 +102031,13 @@ export namespace Prisma {
     connect?: DynamicPriceWhereUniqueInput | DynamicPriceWhereUniqueInput[]
   }
 
+  export type PricingRecommendationCreateNestedManyWithoutOfferInput = {
+    create?: XOR<PricingRecommendationCreateWithoutOfferInput, PricingRecommendationUncheckedCreateWithoutOfferInput> | PricingRecommendationCreateWithoutOfferInput[] | PricingRecommendationUncheckedCreateWithoutOfferInput[]
+    connectOrCreate?: PricingRecommendationCreateOrConnectWithoutOfferInput | PricingRecommendationCreateOrConnectWithoutOfferInput[]
+    createMany?: PricingRecommendationCreateManyOfferInputEnvelope
+    connect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+  }
+
   export type TicketUncheckedCreateNestedManyWithoutOfferInput = {
     create?: XOR<TicketCreateWithoutOfferInput, TicketUncheckedCreateWithoutOfferInput> | TicketCreateWithoutOfferInput[] | TicketUncheckedCreateWithoutOfferInput[]
     connectOrCreate?: TicketCreateOrConnectWithoutOfferInput | TicketCreateOrConnectWithoutOfferInput[]
@@ -92130,6 +102057,13 @@ export namespace Prisma {
     connectOrCreate?: DynamicPriceCreateOrConnectWithoutOfferInput | DynamicPriceCreateOrConnectWithoutOfferInput[]
     createMany?: DynamicPriceCreateManyOfferInputEnvelope
     connect?: DynamicPriceWhereUniqueInput | DynamicPriceWhereUniqueInput[]
+  }
+
+  export type PricingRecommendationUncheckedCreateNestedManyWithoutOfferInput = {
+    create?: XOR<PricingRecommendationCreateWithoutOfferInput, PricingRecommendationUncheckedCreateWithoutOfferInput> | PricingRecommendationCreateWithoutOfferInput[] | PricingRecommendationUncheckedCreateWithoutOfferInput[]
+    connectOrCreate?: PricingRecommendationCreateOrConnectWithoutOfferInput | PricingRecommendationCreateOrConnectWithoutOfferInput[]
+    createMany?: PricingRecommendationCreateManyOfferInputEnvelope
+    connect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
   }
 
   export type OfferUpdaterestrictedCardsInput = {
@@ -92187,6 +102121,20 @@ export namespace Prisma {
     deleteMany?: DynamicPriceScalarWhereInput | DynamicPriceScalarWhereInput[]
   }
 
+  export type PricingRecommendationUpdateManyWithoutOfferNestedInput = {
+    create?: XOR<PricingRecommendationCreateWithoutOfferInput, PricingRecommendationUncheckedCreateWithoutOfferInput> | PricingRecommendationCreateWithoutOfferInput[] | PricingRecommendationUncheckedCreateWithoutOfferInput[]
+    connectOrCreate?: PricingRecommendationCreateOrConnectWithoutOfferInput | PricingRecommendationCreateOrConnectWithoutOfferInput[]
+    upsert?: PricingRecommendationUpsertWithWhereUniqueWithoutOfferInput | PricingRecommendationUpsertWithWhereUniqueWithoutOfferInput[]
+    createMany?: PricingRecommendationCreateManyOfferInputEnvelope
+    set?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    disconnect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    delete?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    connect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    update?: PricingRecommendationUpdateWithWhereUniqueWithoutOfferInput | PricingRecommendationUpdateWithWhereUniqueWithoutOfferInput[]
+    updateMany?: PricingRecommendationUpdateManyWithWhereWithoutOfferInput | PricingRecommendationUpdateManyWithWhereWithoutOfferInput[]
+    deleteMany?: PricingRecommendationScalarWhereInput | PricingRecommendationScalarWhereInput[]
+  }
+
   export type TicketUncheckedUpdateManyWithoutOfferNestedInput = {
     create?: XOR<TicketCreateWithoutOfferInput, TicketUncheckedCreateWithoutOfferInput> | TicketCreateWithoutOfferInput[] | TicketUncheckedCreateWithoutOfferInput[]
     connectOrCreate?: TicketCreateOrConnectWithoutOfferInput | TicketCreateOrConnectWithoutOfferInput[]
@@ -92227,6 +102175,20 @@ export namespace Prisma {
     update?: DynamicPriceUpdateWithWhereUniqueWithoutOfferInput | DynamicPriceUpdateWithWhereUniqueWithoutOfferInput[]
     updateMany?: DynamicPriceUpdateManyWithWhereWithoutOfferInput | DynamicPriceUpdateManyWithWhereWithoutOfferInput[]
     deleteMany?: DynamicPriceScalarWhereInput | DynamicPriceScalarWhereInput[]
+  }
+
+  export type PricingRecommendationUncheckedUpdateManyWithoutOfferNestedInput = {
+    create?: XOR<PricingRecommendationCreateWithoutOfferInput, PricingRecommendationUncheckedCreateWithoutOfferInput> | PricingRecommendationCreateWithoutOfferInput[] | PricingRecommendationUncheckedCreateWithoutOfferInput[]
+    connectOrCreate?: PricingRecommendationCreateOrConnectWithoutOfferInput | PricingRecommendationCreateOrConnectWithoutOfferInput[]
+    upsert?: PricingRecommendationUpsertWithWhereUniqueWithoutOfferInput | PricingRecommendationUpsertWithWhereUniqueWithoutOfferInput[]
+    createMany?: PricingRecommendationCreateManyOfferInputEnvelope
+    set?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    disconnect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    delete?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    connect?: PricingRecommendationWhereUniqueInput | PricingRecommendationWhereUniqueInput[]
+    update?: PricingRecommendationUpdateWithWhereUniqueWithoutOfferInput | PricingRecommendationUpdateWithWhereUniqueWithoutOfferInput[]
+    updateMany?: PricingRecommendationUpdateManyWithWhereWithoutOfferInput | PricingRecommendationUpdateManyWithWhereWithoutOfferInput[]
+    deleteMany?: PricingRecommendationScalarWhereInput | PricingRecommendationScalarWhereInput[]
   }
 
   export type EventCreateNestedOneWithoutTicketsInput = {
@@ -92931,6 +102893,13 @@ export namespace Prisma {
     connect?: UserPermissionWhereUniqueInput | UserPermissionWhereUniqueInput[]
   }
 
+  export type MembershipCreateNestedManyWithoutUserInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
   export type OrderUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<OrderCreateWithoutUserInput, OrderUncheckedCreateWithoutUserInput> | OrderCreateWithoutUserInput[] | OrderUncheckedCreateWithoutUserInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutUserInput | OrderCreateOrConnectWithoutUserInput[]
@@ -92977,6 +102946,13 @@ export namespace Prisma {
     connectOrCreate?: UserPermissionCreateOrConnectWithoutUserInput | UserPermissionCreateOrConnectWithoutUserInput[]
     createMany?: UserPermissionCreateManyUserInputEnvelope
     connect?: UserPermissionWhereUniqueInput | UserPermissionWhereUniqueInput[]
+  }
+
+  export type MembershipUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
   }
 
   export type EnumUserRoleFieldUpdateOperationsInput = {
@@ -93087,6 +103063,20 @@ export namespace Prisma {
     deleteMany?: UserPermissionScalarWhereInput | UserPermissionScalarWhereInput[]
   }
 
+  export type MembershipUpdateManyWithoutUserNestedInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutUserInput | MembershipUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutUserInput | MembershipUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutUserInput | MembershipUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+  }
+
   export type OrderUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<OrderCreateWithoutUserInput, OrderUncheckedCreateWithoutUserInput> | OrderCreateWithoutUserInput[] | OrderUncheckedCreateWithoutUserInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutUserInput | OrderCreateOrConnectWithoutUserInput[]
@@ -93179,6 +103169,20 @@ export namespace Prisma {
     update?: UserPermissionUpdateWithWhereUniqueWithoutUserInput | UserPermissionUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserPermissionUpdateManyWithWhereWithoutUserInput | UserPermissionUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserPermissionScalarWhereInput | UserPermissionScalarWhereInput[]
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutUserInput | MembershipUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutUserInput | MembershipUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutUserInput | MembershipUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
   }
 
   export type RolePermissionCreateNestedManyWithoutPermissionInput = {
@@ -93994,6 +103998,358 @@ export namespace Prisma {
     upsert?: EventUpsertWithoutDisclosuresInput
     connect?: EventWhereUniqueInput
     update?: XOR<XOR<EventUpdateToOneWithWhereWithoutDisclosuresInput, EventUpdateWithoutDisclosuresInput>, EventUncheckedUpdateWithoutDisclosuresInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutMembershipPlansInput = {
+    create?: XOR<OrganizationCreateWithoutMembershipPlansInput, OrganizationUncheckedCreateWithoutMembershipPlansInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutMembershipPlansInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type MembershipCreateNestedManyWithoutPlanInput = {
+    create?: XOR<MembershipCreateWithoutPlanInput, MembershipUncheckedCreateWithoutPlanInput> | MembershipCreateWithoutPlanInput[] | MembershipUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutPlanInput | MembershipCreateOrConnectWithoutPlanInput[]
+    createMany?: MembershipCreateManyPlanInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
+  export type MembershipBenefitCreateNestedManyWithoutPlanInput = {
+    create?: XOR<MembershipBenefitCreateWithoutPlanInput, MembershipBenefitUncheckedCreateWithoutPlanInput> | MembershipBenefitCreateWithoutPlanInput[] | MembershipBenefitUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: MembershipBenefitCreateOrConnectWithoutPlanInput | MembershipBenefitCreateOrConnectWithoutPlanInput[]
+    createMany?: MembershipBenefitCreateManyPlanInputEnvelope
+    connect?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+  }
+
+  export type MembershipUncheckedCreateNestedManyWithoutPlanInput = {
+    create?: XOR<MembershipCreateWithoutPlanInput, MembershipUncheckedCreateWithoutPlanInput> | MembershipCreateWithoutPlanInput[] | MembershipUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutPlanInput | MembershipCreateOrConnectWithoutPlanInput[]
+    createMany?: MembershipCreateManyPlanInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
+  export type MembershipBenefitUncheckedCreateNestedManyWithoutPlanInput = {
+    create?: XOR<MembershipBenefitCreateWithoutPlanInput, MembershipBenefitUncheckedCreateWithoutPlanInput> | MembershipBenefitCreateWithoutPlanInput[] | MembershipBenefitUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: MembershipBenefitCreateOrConnectWithoutPlanInput | MembershipBenefitCreateOrConnectWithoutPlanInput[]
+    createMany?: MembershipBenefitCreateManyPlanInputEnvelope
+    connect?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+  }
+
+  export type EnumMembershipBillingPeriodFieldUpdateOperationsInput = {
+    set?: $Enums.MembershipBillingPeriod
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutMembershipPlansNestedInput = {
+    create?: XOR<OrganizationCreateWithoutMembershipPlansInput, OrganizationUncheckedCreateWithoutMembershipPlansInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutMembershipPlansInput
+    upsert?: OrganizationUpsertWithoutMembershipPlansInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutMembershipPlansInput, OrganizationUpdateWithoutMembershipPlansInput>, OrganizationUncheckedUpdateWithoutMembershipPlansInput>
+  }
+
+  export type MembershipUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<MembershipCreateWithoutPlanInput, MembershipUncheckedCreateWithoutPlanInput> | MembershipCreateWithoutPlanInput[] | MembershipUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutPlanInput | MembershipCreateOrConnectWithoutPlanInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutPlanInput | MembershipUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: MembershipCreateManyPlanInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutPlanInput | MembershipUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutPlanInput | MembershipUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+  }
+
+  export type MembershipBenefitUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<MembershipBenefitCreateWithoutPlanInput, MembershipBenefitUncheckedCreateWithoutPlanInput> | MembershipBenefitCreateWithoutPlanInput[] | MembershipBenefitUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: MembershipBenefitCreateOrConnectWithoutPlanInput | MembershipBenefitCreateOrConnectWithoutPlanInput[]
+    upsert?: MembershipBenefitUpsertWithWhereUniqueWithoutPlanInput | MembershipBenefitUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: MembershipBenefitCreateManyPlanInputEnvelope
+    set?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+    disconnect?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+    delete?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+    connect?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+    update?: MembershipBenefitUpdateWithWhereUniqueWithoutPlanInput | MembershipBenefitUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: MembershipBenefitUpdateManyWithWhereWithoutPlanInput | MembershipBenefitUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: MembershipBenefitScalarWhereInput | MembershipBenefitScalarWhereInput[]
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<MembershipCreateWithoutPlanInput, MembershipUncheckedCreateWithoutPlanInput> | MembershipCreateWithoutPlanInput[] | MembershipUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutPlanInput | MembershipCreateOrConnectWithoutPlanInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutPlanInput | MembershipUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: MembershipCreateManyPlanInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutPlanInput | MembershipUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutPlanInput | MembershipUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+  }
+
+  export type MembershipBenefitUncheckedUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<MembershipBenefitCreateWithoutPlanInput, MembershipBenefitUncheckedCreateWithoutPlanInput> | MembershipBenefitCreateWithoutPlanInput[] | MembershipBenefitUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: MembershipBenefitCreateOrConnectWithoutPlanInput | MembershipBenefitCreateOrConnectWithoutPlanInput[]
+    upsert?: MembershipBenefitUpsertWithWhereUniqueWithoutPlanInput | MembershipBenefitUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: MembershipBenefitCreateManyPlanInputEnvelope
+    set?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+    disconnect?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+    delete?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+    connect?: MembershipBenefitWhereUniqueInput | MembershipBenefitWhereUniqueInput[]
+    update?: MembershipBenefitUpdateWithWhereUniqueWithoutPlanInput | MembershipBenefitUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: MembershipBenefitUpdateManyWithWhereWithoutPlanInput | MembershipBenefitUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: MembershipBenefitScalarWhereInput | MembershipBenefitScalarWhereInput[]
+  }
+
+  export type MembershipPlanCreateNestedOneWithoutMembershipsInput = {
+    create?: XOR<MembershipPlanCreateWithoutMembershipsInput, MembershipPlanUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: MembershipPlanCreateOrConnectWithoutMembershipsInput
+    connect?: MembershipPlanWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutMembershipsInput = {
+    create?: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembershipsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type MembershipPeriodCreateNestedManyWithoutMembershipInput = {
+    create?: XOR<MembershipPeriodCreateWithoutMembershipInput, MembershipPeriodUncheckedCreateWithoutMembershipInput> | MembershipPeriodCreateWithoutMembershipInput[] | MembershipPeriodUncheckedCreateWithoutMembershipInput[]
+    connectOrCreate?: MembershipPeriodCreateOrConnectWithoutMembershipInput | MembershipPeriodCreateOrConnectWithoutMembershipInput[]
+    createMany?: MembershipPeriodCreateManyMembershipInputEnvelope
+    connect?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+  }
+
+  export type MembershipBenefitRedemptionCreateNestedManyWithoutMembershipInput = {
+    create?: XOR<MembershipBenefitRedemptionCreateWithoutMembershipInput, MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput> | MembershipBenefitRedemptionCreateWithoutMembershipInput[] | MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput[]
+    connectOrCreate?: MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput | MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput[]
+    createMany?: MembershipBenefitRedemptionCreateManyMembershipInputEnvelope
+    connect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+  }
+
+  export type MembershipPeriodUncheckedCreateNestedManyWithoutMembershipInput = {
+    create?: XOR<MembershipPeriodCreateWithoutMembershipInput, MembershipPeriodUncheckedCreateWithoutMembershipInput> | MembershipPeriodCreateWithoutMembershipInput[] | MembershipPeriodUncheckedCreateWithoutMembershipInput[]
+    connectOrCreate?: MembershipPeriodCreateOrConnectWithoutMembershipInput | MembershipPeriodCreateOrConnectWithoutMembershipInput[]
+    createMany?: MembershipPeriodCreateManyMembershipInputEnvelope
+    connect?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+  }
+
+  export type MembershipBenefitRedemptionUncheckedCreateNestedManyWithoutMembershipInput = {
+    create?: XOR<MembershipBenefitRedemptionCreateWithoutMembershipInput, MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput> | MembershipBenefitRedemptionCreateWithoutMembershipInput[] | MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput[]
+    connectOrCreate?: MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput | MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput[]
+    createMany?: MembershipBenefitRedemptionCreateManyMembershipInputEnvelope
+    connect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+  }
+
+  export type EnumMembershipStatusFieldUpdateOperationsInput = {
+    set?: $Enums.MembershipStatus
+  }
+
+  export type MembershipPlanUpdateOneRequiredWithoutMembershipsNestedInput = {
+    create?: XOR<MembershipPlanCreateWithoutMembershipsInput, MembershipPlanUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: MembershipPlanCreateOrConnectWithoutMembershipsInput
+    upsert?: MembershipPlanUpsertWithoutMembershipsInput
+    connect?: MembershipPlanWhereUniqueInput
+    update?: XOR<XOR<MembershipPlanUpdateToOneWithWhereWithoutMembershipsInput, MembershipPlanUpdateWithoutMembershipsInput>, MembershipPlanUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutMembershipsNestedInput = {
+    create?: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembershipsInput
+    upsert?: UserUpsertWithoutMembershipsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMembershipsInput, UserUpdateWithoutMembershipsInput>, UserUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type MembershipPeriodUpdateManyWithoutMembershipNestedInput = {
+    create?: XOR<MembershipPeriodCreateWithoutMembershipInput, MembershipPeriodUncheckedCreateWithoutMembershipInput> | MembershipPeriodCreateWithoutMembershipInput[] | MembershipPeriodUncheckedCreateWithoutMembershipInput[]
+    connectOrCreate?: MembershipPeriodCreateOrConnectWithoutMembershipInput | MembershipPeriodCreateOrConnectWithoutMembershipInput[]
+    upsert?: MembershipPeriodUpsertWithWhereUniqueWithoutMembershipInput | MembershipPeriodUpsertWithWhereUniqueWithoutMembershipInput[]
+    createMany?: MembershipPeriodCreateManyMembershipInputEnvelope
+    set?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+    disconnect?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+    delete?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+    connect?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+    update?: MembershipPeriodUpdateWithWhereUniqueWithoutMembershipInput | MembershipPeriodUpdateWithWhereUniqueWithoutMembershipInput[]
+    updateMany?: MembershipPeriodUpdateManyWithWhereWithoutMembershipInput | MembershipPeriodUpdateManyWithWhereWithoutMembershipInput[]
+    deleteMany?: MembershipPeriodScalarWhereInput | MembershipPeriodScalarWhereInput[]
+  }
+
+  export type MembershipBenefitRedemptionUpdateManyWithoutMembershipNestedInput = {
+    create?: XOR<MembershipBenefitRedemptionCreateWithoutMembershipInput, MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput> | MembershipBenefitRedemptionCreateWithoutMembershipInput[] | MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput[]
+    connectOrCreate?: MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput | MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput[]
+    upsert?: MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutMembershipInput | MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutMembershipInput[]
+    createMany?: MembershipBenefitRedemptionCreateManyMembershipInputEnvelope
+    set?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    disconnect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    delete?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    connect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    update?: MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutMembershipInput | MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutMembershipInput[]
+    updateMany?: MembershipBenefitRedemptionUpdateManyWithWhereWithoutMembershipInput | MembershipBenefitRedemptionUpdateManyWithWhereWithoutMembershipInput[]
+    deleteMany?: MembershipBenefitRedemptionScalarWhereInput | MembershipBenefitRedemptionScalarWhereInput[]
+  }
+
+  export type MembershipPeriodUncheckedUpdateManyWithoutMembershipNestedInput = {
+    create?: XOR<MembershipPeriodCreateWithoutMembershipInput, MembershipPeriodUncheckedCreateWithoutMembershipInput> | MembershipPeriodCreateWithoutMembershipInput[] | MembershipPeriodUncheckedCreateWithoutMembershipInput[]
+    connectOrCreate?: MembershipPeriodCreateOrConnectWithoutMembershipInput | MembershipPeriodCreateOrConnectWithoutMembershipInput[]
+    upsert?: MembershipPeriodUpsertWithWhereUniqueWithoutMembershipInput | MembershipPeriodUpsertWithWhereUniqueWithoutMembershipInput[]
+    createMany?: MembershipPeriodCreateManyMembershipInputEnvelope
+    set?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+    disconnect?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+    delete?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+    connect?: MembershipPeriodWhereUniqueInput | MembershipPeriodWhereUniqueInput[]
+    update?: MembershipPeriodUpdateWithWhereUniqueWithoutMembershipInput | MembershipPeriodUpdateWithWhereUniqueWithoutMembershipInput[]
+    updateMany?: MembershipPeriodUpdateManyWithWhereWithoutMembershipInput | MembershipPeriodUpdateManyWithWhereWithoutMembershipInput[]
+    deleteMany?: MembershipPeriodScalarWhereInput | MembershipPeriodScalarWhereInput[]
+  }
+
+  export type MembershipBenefitRedemptionUncheckedUpdateManyWithoutMembershipNestedInput = {
+    create?: XOR<MembershipBenefitRedemptionCreateWithoutMembershipInput, MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput> | MembershipBenefitRedemptionCreateWithoutMembershipInput[] | MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput[]
+    connectOrCreate?: MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput | MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput[]
+    upsert?: MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutMembershipInput | MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutMembershipInput[]
+    createMany?: MembershipBenefitRedemptionCreateManyMembershipInputEnvelope
+    set?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    disconnect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    delete?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    connect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    update?: MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutMembershipInput | MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutMembershipInput[]
+    updateMany?: MembershipBenefitRedemptionUpdateManyWithWhereWithoutMembershipInput | MembershipBenefitRedemptionUpdateManyWithWhereWithoutMembershipInput[]
+    deleteMany?: MembershipBenefitRedemptionScalarWhereInput | MembershipBenefitRedemptionScalarWhereInput[]
+  }
+
+  export type MembershipCreateNestedOneWithoutPeriodsInput = {
+    create?: XOR<MembershipCreateWithoutPeriodsInput, MembershipUncheckedCreateWithoutPeriodsInput>
+    connectOrCreate?: MembershipCreateOrConnectWithoutPeriodsInput
+    connect?: MembershipWhereUniqueInput
+  }
+
+  export type EnumMembershipPeriodKindFieldUpdateOperationsInput = {
+    set?: $Enums.MembershipPeriodKind
+  }
+
+  export type MembershipUpdateOneRequiredWithoutPeriodsNestedInput = {
+    create?: XOR<MembershipCreateWithoutPeriodsInput, MembershipUncheckedCreateWithoutPeriodsInput>
+    connectOrCreate?: MembershipCreateOrConnectWithoutPeriodsInput
+    upsert?: MembershipUpsertWithoutPeriodsInput
+    connect?: MembershipWhereUniqueInput
+    update?: XOR<XOR<MembershipUpdateToOneWithWhereWithoutPeriodsInput, MembershipUpdateWithoutPeriodsInput>, MembershipUncheckedUpdateWithoutPeriodsInput>
+  }
+
+  export type MembershipPlanCreateNestedOneWithoutBenefitsInput = {
+    create?: XOR<MembershipPlanCreateWithoutBenefitsInput, MembershipPlanUncheckedCreateWithoutBenefitsInput>
+    connectOrCreate?: MembershipPlanCreateOrConnectWithoutBenefitsInput
+    connect?: MembershipPlanWhereUniqueInput
+  }
+
+  export type MembershipBenefitRedemptionCreateNestedManyWithoutBenefitInput = {
+    create?: XOR<MembershipBenefitRedemptionCreateWithoutBenefitInput, MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput> | MembershipBenefitRedemptionCreateWithoutBenefitInput[] | MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput[]
+    connectOrCreate?: MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput | MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput[]
+    createMany?: MembershipBenefitRedemptionCreateManyBenefitInputEnvelope
+    connect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+  }
+
+  export type MembershipBenefitRedemptionUncheckedCreateNestedManyWithoutBenefitInput = {
+    create?: XOR<MembershipBenefitRedemptionCreateWithoutBenefitInput, MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput> | MembershipBenefitRedemptionCreateWithoutBenefitInput[] | MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput[]
+    connectOrCreate?: MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput | MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput[]
+    createMany?: MembershipBenefitRedemptionCreateManyBenefitInputEnvelope
+    connect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+  }
+
+  export type MembershipPlanUpdateOneRequiredWithoutBenefitsNestedInput = {
+    create?: XOR<MembershipPlanCreateWithoutBenefitsInput, MembershipPlanUncheckedCreateWithoutBenefitsInput>
+    connectOrCreate?: MembershipPlanCreateOrConnectWithoutBenefitsInput
+    upsert?: MembershipPlanUpsertWithoutBenefitsInput
+    connect?: MembershipPlanWhereUniqueInput
+    update?: XOR<XOR<MembershipPlanUpdateToOneWithWhereWithoutBenefitsInput, MembershipPlanUpdateWithoutBenefitsInput>, MembershipPlanUncheckedUpdateWithoutBenefitsInput>
+  }
+
+  export type MembershipBenefitRedemptionUpdateManyWithoutBenefitNestedInput = {
+    create?: XOR<MembershipBenefitRedemptionCreateWithoutBenefitInput, MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput> | MembershipBenefitRedemptionCreateWithoutBenefitInput[] | MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput[]
+    connectOrCreate?: MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput | MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput[]
+    upsert?: MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutBenefitInput | MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutBenefitInput[]
+    createMany?: MembershipBenefitRedemptionCreateManyBenefitInputEnvelope
+    set?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    disconnect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    delete?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    connect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    update?: MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutBenefitInput | MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutBenefitInput[]
+    updateMany?: MembershipBenefitRedemptionUpdateManyWithWhereWithoutBenefitInput | MembershipBenefitRedemptionUpdateManyWithWhereWithoutBenefitInput[]
+    deleteMany?: MembershipBenefitRedemptionScalarWhereInput | MembershipBenefitRedemptionScalarWhereInput[]
+  }
+
+  export type MembershipBenefitRedemptionUncheckedUpdateManyWithoutBenefitNestedInput = {
+    create?: XOR<MembershipBenefitRedemptionCreateWithoutBenefitInput, MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput> | MembershipBenefitRedemptionCreateWithoutBenefitInput[] | MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput[]
+    connectOrCreate?: MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput | MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput[]
+    upsert?: MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutBenefitInput | MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutBenefitInput[]
+    createMany?: MembershipBenefitRedemptionCreateManyBenefitInputEnvelope
+    set?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    disconnect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    delete?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    connect?: MembershipBenefitRedemptionWhereUniqueInput | MembershipBenefitRedemptionWhereUniqueInput[]
+    update?: MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutBenefitInput | MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutBenefitInput[]
+    updateMany?: MembershipBenefitRedemptionUpdateManyWithWhereWithoutBenefitInput | MembershipBenefitRedemptionUpdateManyWithWhereWithoutBenefitInput[]
+    deleteMany?: MembershipBenefitRedemptionScalarWhereInput | MembershipBenefitRedemptionScalarWhereInput[]
+  }
+
+  export type MembershipBenefitCreateNestedOneWithoutRedemptionsInput = {
+    create?: XOR<MembershipBenefitCreateWithoutRedemptionsInput, MembershipBenefitUncheckedCreateWithoutRedemptionsInput>
+    connectOrCreate?: MembershipBenefitCreateOrConnectWithoutRedemptionsInput
+    connect?: MembershipBenefitWhereUniqueInput
+  }
+
+  export type MembershipCreateNestedOneWithoutRedemptionsInput = {
+    create?: XOR<MembershipCreateWithoutRedemptionsInput, MembershipUncheckedCreateWithoutRedemptionsInput>
+    connectOrCreate?: MembershipCreateOrConnectWithoutRedemptionsInput
+    connect?: MembershipWhereUniqueInput
+  }
+
+  export type MembershipBenefitUpdateOneRequiredWithoutRedemptionsNestedInput = {
+    create?: XOR<MembershipBenefitCreateWithoutRedemptionsInput, MembershipBenefitUncheckedCreateWithoutRedemptionsInput>
+    connectOrCreate?: MembershipBenefitCreateOrConnectWithoutRedemptionsInput
+    upsert?: MembershipBenefitUpsertWithoutRedemptionsInput
+    connect?: MembershipBenefitWhereUniqueInput
+    update?: XOR<XOR<MembershipBenefitUpdateToOneWithWhereWithoutRedemptionsInput, MembershipBenefitUpdateWithoutRedemptionsInput>, MembershipBenefitUncheckedUpdateWithoutRedemptionsInput>
+  }
+
+  export type MembershipUpdateOneRequiredWithoutRedemptionsNestedInput = {
+    create?: XOR<MembershipCreateWithoutRedemptionsInput, MembershipUncheckedCreateWithoutRedemptionsInput>
+    connectOrCreate?: MembershipCreateOrConnectWithoutRedemptionsInput
+    upsert?: MembershipUpsertWithoutRedemptionsInput
+    connect?: MembershipWhereUniqueInput
+    update?: XOR<XOR<MembershipUpdateToOneWithWhereWithoutRedemptionsInput, MembershipUpdateWithoutRedemptionsInput>, MembershipUncheckedUpdateWithoutRedemptionsInput>
+  }
+
+  export type EventCreateNestedOneWithoutPricingRecommendationsInput = {
+    create?: XOR<EventCreateWithoutPricingRecommendationsInput, EventUncheckedCreateWithoutPricingRecommendationsInput>
+    connectOrCreate?: EventCreateOrConnectWithoutPricingRecommendationsInput
+    connect?: EventWhereUniqueInput
+  }
+
+  export type OfferCreateNestedOneWithoutPricingRecommendationsInput = {
+    create?: XOR<OfferCreateWithoutPricingRecommendationsInput, OfferUncheckedCreateWithoutPricingRecommendationsInput>
+    connectOrCreate?: OfferCreateOrConnectWithoutPricingRecommendationsInput
+    connect?: OfferWhereUniqueInput
+  }
+
+  export type EnumPricingRecommendationStatusFieldUpdateOperationsInput = {
+    set?: $Enums.PricingRecommendationStatus
+  }
+
+  export type EventUpdateOneRequiredWithoutPricingRecommendationsNestedInput = {
+    create?: XOR<EventCreateWithoutPricingRecommendationsInput, EventUncheckedCreateWithoutPricingRecommendationsInput>
+    connectOrCreate?: EventCreateOrConnectWithoutPricingRecommendationsInput
+    upsert?: EventUpsertWithoutPricingRecommendationsInput
+    connect?: EventWhereUniqueInput
+    update?: XOR<XOR<EventUpdateToOneWithWhereWithoutPricingRecommendationsInput, EventUpdateWithoutPricingRecommendationsInput>, EventUncheckedUpdateWithoutPricingRecommendationsInput>
+  }
+
+  export type OfferUpdateOneRequiredWithoutPricingRecommendationsNestedInput = {
+    create?: XOR<OfferCreateWithoutPricingRecommendationsInput, OfferUncheckedCreateWithoutPricingRecommendationsInput>
+    connectOrCreate?: OfferCreateOrConnectWithoutPricingRecommendationsInput
+    upsert?: OfferUpsertWithoutPricingRecommendationsInput
+    connect?: OfferWhereUniqueInput
+    update?: XOR<XOR<OfferUpdateToOneWithWhereWithoutPricingRecommendationsInput, OfferUpdateWithoutPricingRecommendationsInput>, OfferUncheckedUpdateWithoutPricingRecommendationsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -94907,6 +105263,74 @@ export namespace Prisma {
     _max?: NestedEnumSeasonPassPurchaseStatusFilter<$PrismaModel>
   }
 
+  export type NestedEnumMembershipBillingPeriodFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipBillingPeriod | EnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipBillingPeriod[] | ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipBillingPeriod[] | ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipBillingPeriodFilter<$PrismaModel> | $Enums.MembershipBillingPeriod
+  }
+
+  export type NestedEnumMembershipBillingPeriodWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipBillingPeriod | EnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipBillingPeriod[] | ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipBillingPeriod[] | ListEnumMembershipBillingPeriodFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipBillingPeriodWithAggregatesFilter<$PrismaModel> | $Enums.MembershipBillingPeriod
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipBillingPeriodFilter<$PrismaModel>
+    _max?: NestedEnumMembershipBillingPeriodFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMembershipStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipStatus | EnumMembershipStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipStatus[] | ListEnumMembershipStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipStatus[] | ListEnumMembershipStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipStatusFilter<$PrismaModel> | $Enums.MembershipStatus
+  }
+
+  export type NestedEnumMembershipStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipStatus | EnumMembershipStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipStatus[] | ListEnumMembershipStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipStatus[] | ListEnumMembershipStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipStatusWithAggregatesFilter<$PrismaModel> | $Enums.MembershipStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipStatusFilter<$PrismaModel>
+    _max?: NestedEnumMembershipStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMembershipPeriodKindFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipPeriodKind | EnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipPeriodKind[] | ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipPeriodKind[] | ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipPeriodKindFilter<$PrismaModel> | $Enums.MembershipPeriodKind
+  }
+
+  export type NestedEnumMembershipPeriodKindWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MembershipPeriodKind | EnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    in?: $Enums.MembershipPeriodKind[] | ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MembershipPeriodKind[] | ListEnumMembershipPeriodKindFieldRefInput<$PrismaModel>
+    not?: NestedEnumMembershipPeriodKindWithAggregatesFilter<$PrismaModel> | $Enums.MembershipPeriodKind
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMembershipPeriodKindFilter<$PrismaModel>
+    _max?: NestedEnumMembershipPeriodKindFilter<$PrismaModel>
+  }
+
+  export type NestedEnumPricingRecommendationStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.PricingRecommendationStatus | EnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PricingRecommendationStatus[] | ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PricingRecommendationStatus[] | ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPricingRecommendationStatusFilter<$PrismaModel> | $Enums.PricingRecommendationStatus
+  }
+
+  export type NestedEnumPricingRecommendationStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PricingRecommendationStatus | EnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PricingRecommendationStatus[] | ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PricingRecommendationStatus[] | ListEnumPricingRecommendationStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPricingRecommendationStatusWithAggregatesFilter<$PrismaModel> | $Enums.PricingRecommendationStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPricingRecommendationStatusFilter<$PrismaModel>
+    _max?: NestedEnumPricingRecommendationStatusFilter<$PrismaModel>
+  }
+
   export type OrgInvitationCreateWithoutOrganizationInput = {
     id?: string
     email: string
@@ -95062,6 +105486,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -95122,6 +105547,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -95216,6 +105642,7 @@ export namespace Prisma {
     wishlist?: WishlistCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrganizationInput = {
@@ -95247,6 +105674,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrganizationInput = {
@@ -95638,6 +106066,50 @@ export namespace Prisma {
 
   export type SeasonPassCreateManyOrganizationInputEnvelope = {
     data: SeasonPassCreateManyOrganizationInput | SeasonPassCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type MembershipPlanCreateWithoutOrganizationInput = {
+    id?: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutPlanInput
+    benefits?: MembershipBenefitCreateNestedManyWithoutPlanInput
+  }
+
+  export type MembershipPlanUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutPlanInput
+    benefits?: MembershipBenefitUncheckedCreateNestedManyWithoutPlanInput
+  }
+
+  export type MembershipPlanCreateOrConnectWithoutOrganizationInput = {
+    where: MembershipPlanWhereUniqueInput
+    create: XOR<MembershipPlanCreateWithoutOrganizationInput, MembershipPlanUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type MembershipPlanCreateManyOrganizationInputEnvelope = {
+    data: MembershipPlanCreateManyOrganizationInput | MembershipPlanCreateManyOrganizationInput[]
     skipDuplicates?: boolean
   }
 
@@ -96185,6 +106657,41 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"SeasonPass"> | Date | string
   }
 
+  export type MembershipPlanUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: MembershipPlanWhereUniqueInput
+    update: XOR<MembershipPlanUpdateWithoutOrganizationInput, MembershipPlanUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<MembershipPlanCreateWithoutOrganizationInput, MembershipPlanUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type MembershipPlanUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: MembershipPlanWhereUniqueInput
+    data: XOR<MembershipPlanUpdateWithoutOrganizationInput, MembershipPlanUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type MembershipPlanUpdateManyWithWhereWithoutOrganizationInput = {
+    where: MembershipPlanScalarWhereInput
+    data: XOR<MembershipPlanUpdateManyMutationInput, MembershipPlanUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type MembershipPlanScalarWhereInput = {
+    AND?: MembershipPlanScalarWhereInput | MembershipPlanScalarWhereInput[]
+    OR?: MembershipPlanScalarWhereInput[]
+    NOT?: MembershipPlanScalarWhereInput | MembershipPlanScalarWhereInput[]
+    id?: StringFilter<"MembershipPlan"> | string
+    organizationId?: StringFilter<"MembershipPlan"> | string
+    name?: StringFilter<"MembershipPlan"> | string
+    slug?: StringFilter<"MembershipPlan"> | string
+    tier?: StringFilter<"MembershipPlan"> | string
+    description?: StringNullableFilter<"MembershipPlan"> | string | null
+    price?: DecimalFilter<"MembershipPlan"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"MembershipPlan"> | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFilter<"MembershipPlan"> | $Enums.MembershipBillingPeriod
+    maxMembers?: IntNullableFilter<"MembershipPlan"> | number | null
+    active?: BoolFilter<"MembershipPlan"> | boolean
+    createdAt?: DateTimeFilter<"MembershipPlan"> | Date | string
+    updatedAt?: DateTimeFilter<"MembershipPlan"> | Date | string
+  }
+
   export type OrganizationCreateWithoutVenuesInput = {
     id?: string
     name: string
@@ -96233,6 +106740,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutVenuesInput = {
@@ -96283,6 +106791,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutVenuesInput = {
@@ -96339,6 +106848,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -96399,6 +106909,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -96687,6 +107198,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutVenuesInput = {
@@ -96737,6 +107249,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type EventUpsertWithWhereUniqueWithoutVenueInput = {
@@ -98098,6 +108611,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
@@ -98158,6 +108672,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
@@ -98281,6 +108796,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
@@ -98341,6 +108857,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
@@ -98454,6 +108971,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -98514,6 +109032,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -98631,6 +109150,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -98691,6 +109211,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -98798,6 +109319,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -98858,6 +109380,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -99034,6 +109557,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -99094,6 +109618,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -99264,6 +109789,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutTenantThemeInput = {
@@ -99314,6 +109840,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutTenantThemeInput = {
@@ -99380,6 +109907,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutTenantThemeInput = {
@@ -99430,6 +109958,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type VenueCreateWithoutAccessZonesInput = {
@@ -99860,6 +110389,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutEventsInput = {
@@ -99910,6 +110440,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutEventsInput = {
@@ -100049,6 +110580,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutOfferInput
     orderItems?: OrderItemCreateNestedManyWithoutOfferInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutOfferInput
   }
 
   export type OfferUncheckedCreateWithoutEventInput = {
@@ -100075,6 +110607,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutOfferInput
     orderItems?: OrderItemUncheckedCreateNestedManyWithoutOfferInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutOfferInput
   }
 
   export type OfferCreateOrConnectWithoutEventInput = {
@@ -100266,6 +110799,58 @@ export namespace Prisma {
 
   export type DynamicPriceCreateManyEventInputEnvelope = {
     data: DynamicPriceCreateManyEventInput | DynamicPriceCreateManyEventInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PricingRecommendationCreateWithoutEventInput = {
+    id?: string
+    organizationId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    offer: OfferCreateNestedOneWithoutPricingRecommendationsInput
+  }
+
+  export type PricingRecommendationUncheckedCreateWithoutEventInput = {
+    id?: string
+    organizationId: string
+    offerId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PricingRecommendationCreateOrConnectWithoutEventInput = {
+    where: PricingRecommendationWhereUniqueInput
+    create: XOR<PricingRecommendationCreateWithoutEventInput, PricingRecommendationUncheckedCreateWithoutEventInput>
+  }
+
+  export type PricingRecommendationCreateManyEventInputEnvelope = {
+    data: PricingRecommendationCreateManyEventInput | PricingRecommendationCreateManyEventInput[]
     skipDuplicates?: boolean
   }
 
@@ -100645,6 +111230,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutEventsInput = {
@@ -100695,6 +111281,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type VenueUpsertWithoutEventsInput = {
@@ -100922,6 +111509,47 @@ export namespace Prisma {
     activeTo?: DateTimeFilter<"DynamicPrice"> | Date | string
     createdAt?: DateTimeFilter<"DynamicPrice"> | Date | string
     updatedAt?: DateTimeFilter<"DynamicPrice"> | Date | string
+  }
+
+  export type PricingRecommendationUpsertWithWhereUniqueWithoutEventInput = {
+    where: PricingRecommendationWhereUniqueInput
+    update: XOR<PricingRecommendationUpdateWithoutEventInput, PricingRecommendationUncheckedUpdateWithoutEventInput>
+    create: XOR<PricingRecommendationCreateWithoutEventInput, PricingRecommendationUncheckedCreateWithoutEventInput>
+  }
+
+  export type PricingRecommendationUpdateWithWhereUniqueWithoutEventInput = {
+    where: PricingRecommendationWhereUniqueInput
+    data: XOR<PricingRecommendationUpdateWithoutEventInput, PricingRecommendationUncheckedUpdateWithoutEventInput>
+  }
+
+  export type PricingRecommendationUpdateManyWithWhereWithoutEventInput = {
+    where: PricingRecommendationScalarWhereInput
+    data: XOR<PricingRecommendationUpdateManyMutationInput, PricingRecommendationUncheckedUpdateManyWithoutEventInput>
+  }
+
+  export type PricingRecommendationScalarWhereInput = {
+    AND?: PricingRecommendationScalarWhereInput | PricingRecommendationScalarWhereInput[]
+    OR?: PricingRecommendationScalarWhereInput[]
+    NOT?: PricingRecommendationScalarWhereInput | PricingRecommendationScalarWhereInput[]
+    id?: StringFilter<"PricingRecommendation"> | string
+    organizationId?: StringFilter<"PricingRecommendation"> | string
+    eventId?: StringFilter<"PricingRecommendation"> | string
+    offerId?: StringFilter<"PricingRecommendation"> | string
+    status?: EnumPricingRecommendationStatusFilter<"PricingRecommendation"> | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFilter<"PricingRecommendation"> | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFilter<"PricingRecommendation"> | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFilter<"PricingRecommendation"> | number
+    direction?: StringFilter<"PricingRecommendation"> | string
+    deltaPercent?: FloatFilter<"PricingRecommendation"> | number
+    explanation?: StringFilter<"PricingRecommendation"> | string
+    payload?: JsonFilter<"PricingRecommendation">
+    createdById?: StringNullableFilter<"PricingRecommendation"> | string | null
+    reviewedById?: StringNullableFilter<"PricingRecommendation"> | string | null
+    reviewedAt?: DateTimeNullableFilter<"PricingRecommendation"> | Date | string | null
+    reviewNote?: StringNullableFilter<"PricingRecommendation"> | string | null
+    appliedAt?: DateTimeNullableFilter<"PricingRecommendation"> | Date | string | null
+    createdAt?: DateTimeFilter<"PricingRecommendation"> | Date | string
+    updatedAt?: DateTimeFilter<"PricingRecommendation"> | Date | string
   }
 
   export type ReviewUpsertWithWhereUniqueWithoutEventInput = {
@@ -101229,6 +111857,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutEventSeriesInput = {
@@ -101279,6 +111908,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutEventSeriesInput = {
@@ -101404,6 +112034,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -101464,6 +112095,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -101544,6 +112176,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutEventSeriesInput = {
@@ -101594,6 +112227,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type VenueUpsertWithoutEventSeriesInput = {
@@ -101737,6 +112371,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -101797,6 +112432,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -101873,6 +112509,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -101933,6 +112570,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -102136,6 +112774,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -102196,6 +112835,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -102344,6 +112984,58 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type PricingRecommendationCreateWithoutOfferInput = {
+    id?: string
+    organizationId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    event: EventCreateNestedOneWithoutPricingRecommendationsInput
+  }
+
+  export type PricingRecommendationUncheckedCreateWithoutOfferInput = {
+    id?: string
+    organizationId: string
+    eventId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PricingRecommendationCreateOrConnectWithoutOfferInput = {
+    where: PricingRecommendationWhereUniqueInput
+    create: XOR<PricingRecommendationCreateWithoutOfferInput, PricingRecommendationUncheckedCreateWithoutOfferInput>
+  }
+
+  export type PricingRecommendationCreateManyOfferInputEnvelope = {
+    data: PricingRecommendationCreateManyOfferInput | PricingRecommendationCreateManyOfferInput[]
+    skipDuplicates?: boolean
+  }
+
   export type EventUpsertWithoutOffersInput = {
     update: XOR<EventUpdateWithoutOffersInput, EventUncheckedUpdateWithoutOffersInput>
     create: XOR<EventCreateWithoutOffersInput, EventUncheckedCreateWithoutOffersInput>
@@ -102404,6 +113096,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -102464,6 +113157,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -102538,6 +113232,22 @@ export namespace Prisma {
     data: XOR<DynamicPriceUpdateManyMutationInput, DynamicPriceUncheckedUpdateManyWithoutOfferInput>
   }
 
+  export type PricingRecommendationUpsertWithWhereUniqueWithoutOfferInput = {
+    where: PricingRecommendationWhereUniqueInput
+    update: XOR<PricingRecommendationUpdateWithoutOfferInput, PricingRecommendationUncheckedUpdateWithoutOfferInput>
+    create: XOR<PricingRecommendationCreateWithoutOfferInput, PricingRecommendationUncheckedCreateWithoutOfferInput>
+  }
+
+  export type PricingRecommendationUpdateWithWhereUniqueWithoutOfferInput = {
+    where: PricingRecommendationWhereUniqueInput
+    data: XOR<PricingRecommendationUpdateWithoutOfferInput, PricingRecommendationUncheckedUpdateWithoutOfferInput>
+  }
+
+  export type PricingRecommendationUpdateManyWithWhereWithoutOfferInput = {
+    where: PricingRecommendationScalarWhereInput
+    data: XOR<PricingRecommendationUpdateManyMutationInput, PricingRecommendationUncheckedUpdateManyWithoutOfferInput>
+  }
+
   export type EventCreateWithoutTicketsInput = {
     id?: string
     externalId?: string | null
@@ -102587,6 +113297,7 @@ export namespace Prisma {
     offers?: OfferCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -102647,6 +113358,7 @@ export namespace Prisma {
     offers?: OfferUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -102687,6 +113399,7 @@ export namespace Prisma {
     event: EventCreateNestedOneWithoutOffersInput
     orderItems?: OrderItemCreateNestedManyWithoutOfferInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutOfferInput
   }
 
   export type OfferUncheckedCreateWithoutTicketsInput = {
@@ -102713,6 +113426,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     orderItems?: OrderItemUncheckedCreateNestedManyWithoutOfferInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutOfferInput
   }
 
   export type OfferCreateOrConnectWithoutTicketsInput = {
@@ -103043,6 +113757,7 @@ export namespace Prisma {
     offers?: OfferUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -103103,6 +113818,7 @@ export namespace Prisma {
     offers?: OfferUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -103149,6 +113865,7 @@ export namespace Prisma {
     event?: EventUpdateOneRequiredWithoutOffersNestedInput
     orderItems?: OrderItemUpdateManyWithoutOfferNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutOfferNestedInput
   }
 
   export type OfferUncheckedUpdateWithoutTicketsInput = {
@@ -103175,6 +113892,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orderItems?: OrderItemUncheckedUpdateManyWithoutOfferNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutOfferNestedInput
   }
 
   export type OrderItemUpsertWithoutTicketsInput = {
@@ -103431,6 +114149,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutOrdersInput = {
@@ -103481,6 +114200,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutOrdersInput = {
@@ -103537,6 +114257,7 @@ export namespace Prisma {
     offers?: OfferCreateNestedManyWithoutEventInput
     tickets?: TicketCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -103597,6 +114318,7 @@ export namespace Prisma {
     offers?: OfferUncheckedCreateNestedManyWithoutEventInput
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -103642,6 +114364,7 @@ export namespace Prisma {
     wishlist?: WishlistCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOrdersInput = {
@@ -103673,6 +114396,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOrdersInput = {
@@ -104005,6 +114729,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutOrdersInput = {
@@ -104055,6 +114780,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type EventUpsertWithoutOrdersInput = {
@@ -104117,6 +114843,7 @@ export namespace Prisma {
     offers?: OfferUpdateManyWithoutEventNestedInput
     tickets?: TicketUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -104177,6 +114904,7 @@ export namespace Prisma {
     offers?: OfferUncheckedUpdateManyWithoutEventNestedInput
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -104228,6 +114956,7 @@ export namespace Prisma {
     wishlist?: WishlistUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrdersInput = {
@@ -104259,6 +114988,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PromotionUpsertWithoutOrdersInput = {
@@ -104542,6 +115272,7 @@ export namespace Prisma {
     event: EventCreateNestedOneWithoutOffersInput
     tickets?: TicketCreateNestedManyWithoutOfferInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutOfferInput
   }
 
   export type OfferUncheckedCreateWithoutOrderItemsInput = {
@@ -104568,6 +115299,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutOfferInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutOfferInput
   }
 
   export type OfferCreateOrConnectWithoutOrderItemsInput = {
@@ -104759,6 +115491,7 @@ export namespace Prisma {
     event?: EventUpdateOneRequiredWithoutOffersNestedInput
     tickets?: TicketUpdateManyWithoutOfferNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutOfferNestedInput
   }
 
   export type OfferUncheckedUpdateWithoutOrderItemsInput = {
@@ -104785,6 +115518,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutOfferNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutOfferNestedInput
   }
 
   export type TicketUpsertWithWhereUniqueWithoutOrderItemInput = {
@@ -105115,6 +115849,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutUsersInput = {
@@ -105165,6 +115900,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutUsersInput = {
@@ -105427,6 +116163,44 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type MembershipCreateWithoutUserInput = {
+    id?: string
+    organizationId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    plan: MembershipPlanCreateNestedOneWithoutMembershipsInput
+    periods?: MembershipPeriodCreateNestedManyWithoutMembershipInput
+    redemptions?: MembershipBenefitRedemptionCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipUncheckedCreateWithoutUserInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    periods?: MembershipPeriodUncheckedCreateNestedManyWithoutMembershipInput
+    redemptions?: MembershipBenefitRedemptionUncheckedCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipCreateOrConnectWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    create: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput>
+  }
+
+  export type MembershipCreateManyUserInputEnvelope = {
+    data: MembershipCreateManyUserInput | MembershipCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type OrganizationUpsertWithoutUsersInput = {
     update: XOR<OrganizationUpdateWithoutUsersInput, OrganizationUncheckedUpdateWithoutUsersInput>
     create: XOR<OrganizationCreateWithoutUsersInput, OrganizationUncheckedCreateWithoutUsersInput>
@@ -105486,6 +116260,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutUsersInput = {
@@ -105536,6 +116311,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrderUpsertWithWhereUniqueWithoutUserInput = {
@@ -105690,6 +116466,38 @@ export namespace Prisma {
     granted?: BoolFilter<"UserPermission"> | boolean
     createdAt?: DateTimeFilter<"UserPermission"> | Date | string
     updatedAt?: DateTimeFilter<"UserPermission"> | Date | string
+  }
+
+  export type MembershipUpsertWithWhereUniqueWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    update: XOR<MembershipUpdateWithoutUserInput, MembershipUncheckedUpdateWithoutUserInput>
+    create: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput>
+  }
+
+  export type MembershipUpdateWithWhereUniqueWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    data: XOR<MembershipUpdateWithoutUserInput, MembershipUncheckedUpdateWithoutUserInput>
+  }
+
+  export type MembershipUpdateManyWithWhereWithoutUserInput = {
+    where: MembershipScalarWhereInput
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type MembershipScalarWhereInput = {
+    AND?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+    OR?: MembershipScalarWhereInput[]
+    NOT?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+    id?: StringFilter<"Membership"> | string
+    organizationId?: StringFilter<"Membership"> | string
+    planId?: StringFilter<"Membership"> | string
+    userId?: StringFilter<"Membership"> | string
+    status?: EnumMembershipStatusFilter<"Membership"> | $Enums.MembershipStatus
+    startedAt?: DateTimeFilter<"Membership"> | Date | string
+    expiresAt?: DateTimeFilter<"Membership"> | Date | string
+    cancelledAt?: DateTimeNullableFilter<"Membership"> | Date | string | null
+    createdAt?: DateTimeFilter<"Membership"> | Date | string
+    updatedAt?: DateTimeFilter<"Membership"> | Date | string
   }
 
   export type RolePermissionCreateWithoutPermissionInput = {
@@ -105856,6 +116664,7 @@ export namespace Prisma {
     cart?: CartCreateNestedOneWithoutUserInput
     wishlist?: WishlistCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutUserPermissionsInput = {
@@ -105887,6 +116696,7 @@ export namespace Prisma {
     cart?: CartUncheckedCreateNestedOneWithoutUserInput
     wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutUserPermissionsInput = {
@@ -105955,6 +116765,7 @@ export namespace Prisma {
     cart?: CartUpdateOneWithoutUserNestedInput
     wishlist?: WishlistUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutUserPermissionsInput = {
@@ -105986,6 +116797,7 @@ export namespace Prisma {
     cart?: CartUncheckedUpdateOneWithoutUserNestedInput
     wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PermissionUpsertWithoutUserPermissionsInput = {
@@ -106044,6 +116856,7 @@ export namespace Prisma {
     cart?: CartCreateNestedOneWithoutUserInput
     wishlist?: WishlistCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSessionsInput = {
@@ -106075,6 +116888,7 @@ export namespace Prisma {
     cart?: CartUncheckedCreateNestedOneWithoutUserInput
     wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSessionsInput = {
@@ -106122,6 +116936,7 @@ export namespace Prisma {
     cart?: CartUpdateOneWithoutUserNestedInput
     wishlist?: WishlistUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -106153,6 +116968,7 @@ export namespace Prisma {
     cart?: CartUncheckedUpdateOneWithoutUserNestedInput
     wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type OrganizationCreateWithoutPosTerminalsInput = {
@@ -106203,6 +117019,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutPosTerminalsInput = {
@@ -106253,6 +117070,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutPosTerminalsInput = {
@@ -106347,6 +117165,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutPosTerminalsInput = {
@@ -106397,6 +117216,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type PosCashierSessionUpsertWithWhereUniqueWithoutTerminalInput = {
@@ -106816,6 +117636,7 @@ export namespace Prisma {
     offers?: OfferCreateNestedManyWithoutEventInput
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -106876,6 +117697,7 @@ export namespace Prisma {
     offers?: OfferUncheckedCreateNestedManyWithoutEventInput
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -106916,6 +117738,7 @@ export namespace Prisma {
     event: EventCreateNestedOneWithoutOffersInput
     tickets?: TicketCreateNestedManyWithoutOfferInput
     orderItems?: OrderItemCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutOfferInput
   }
 
   export type OfferUncheckedCreateWithoutDynamicPricesInput = {
@@ -106942,6 +117765,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutOfferInput
     orderItems?: OrderItemUncheckedCreateNestedManyWithoutOfferInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutOfferInput
   }
 
   export type OfferCreateOrConnectWithoutDynamicPricesInput = {
@@ -107009,6 +117833,7 @@ export namespace Prisma {
     offers?: OfferUpdateManyWithoutEventNestedInput
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -107069,6 +117894,7 @@ export namespace Prisma {
     offers?: OfferUncheckedUpdateManyWithoutEventNestedInput
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -107115,6 +117941,7 @@ export namespace Prisma {
     event?: EventUpdateOneRequiredWithoutOffersNestedInput
     tickets?: TicketUpdateManyWithoutOfferNestedInput
     orderItems?: OrderItemUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutOfferNestedInput
   }
 
   export type OfferUncheckedUpdateWithoutDynamicPricesInput = {
@@ -107141,6 +117968,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutOfferNestedInput
     orderItems?: OrderItemUncheckedUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutOfferNestedInput
   }
 
   export type OrderCreateWithoutPromotionInput = {
@@ -107293,6 +118121,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
     disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
@@ -107353,6 +118182,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
     disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
@@ -107535,6 +118365,7 @@ export namespace Prisma {
     wishlist?: WishlistCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFraudFlagsInput = {
@@ -107566,6 +118397,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFraudFlagsInput = {
@@ -107634,6 +118466,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
     disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
@@ -107694,6 +118527,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
     disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
@@ -107894,6 +118728,7 @@ export namespace Prisma {
     wishlist?: WishlistUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFraudFlagsInput = {
@@ -107925,6 +118760,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type OrganizationCreateWithoutPromoterPayoutsInput = {
@@ -107975,6 +118811,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutPromoterPayoutsInput = {
@@ -108025,6 +118862,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutPromoterPayoutsInput = {
@@ -108091,6 +118929,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutPromoterPayoutsInput = {
@@ -108141,6 +118980,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserCreateWithoutCartInput = {
@@ -108172,6 +119012,7 @@ export namespace Prisma {
     wishlist?: WishlistCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCartInput = {
@@ -108203,6 +119044,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCartInput = {
@@ -108250,6 +119092,7 @@ export namespace Prisma {
     wishlist?: WishlistUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCartInput = {
@@ -108281,6 +119124,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutWishlistInput = {
@@ -108312,6 +119156,7 @@ export namespace Prisma {
     cart?: CartCreateNestedOneWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutWishlistInput = {
@@ -108343,6 +119188,7 @@ export namespace Prisma {
     cart?: CartUncheckedCreateNestedOneWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutWishlistInput = {
@@ -108390,6 +119236,7 @@ export namespace Prisma {
     cart?: CartUpdateOneWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutWishlistInput = {
@@ -108421,6 +119268,7 @@ export namespace Prisma {
     cart?: CartUncheckedUpdateOneWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type EventCreateWithoutReviewsInput = {
@@ -108473,6 +119321,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
     disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
@@ -108533,6 +119382,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
     disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
@@ -108577,6 +119427,7 @@ export namespace Prisma {
     wishlist?: WishlistCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReviewsInput = {
@@ -108608,6 +119459,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReviewsInput = {
@@ -108676,6 +119528,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
     disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
@@ -108736,6 +119589,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
     disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
@@ -108786,6 +119640,7 @@ export namespace Prisma {
     wishlist?: WishlistUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewsInput = {
@@ -108817,6 +119672,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type EventCreateWithoutWaitlistEntriesInput = {
@@ -108869,6 +119725,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -108929,6 +119786,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -109005,6 +119863,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -109065,6 +119924,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -109247,6 +120107,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutApiKeysInput = {
@@ -109297,6 +120158,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutApiKeysInput = {
@@ -109363,6 +120225,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutApiKeysInput = {
@@ -109413,6 +120276,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutFiscalProfileInput = {
@@ -109463,6 +120327,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyCreateNestedManyWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutFiscalProfileInput = {
@@ -109513,6 +120378,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutFiscalProfileInput = {
@@ -109579,6 +120445,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUpdateManyWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutFiscalProfileInput = {
@@ -109629,6 +120496,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutCfdiInvoicesInput = {
@@ -109679,6 +120547,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyCreateNestedManyWithoutOrganizationInput
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutCfdiInvoicesInput = {
@@ -109729,6 +120598,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutOrganizationInput
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutCfdiInvoicesInput = {
@@ -109874,6 +120744,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUpdateManyWithoutOrganizationNestedInput
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutCfdiInvoicesInput = {
@@ -109924,6 +120795,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutOrganizationNestedInput
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrderUpsertWithoutCfdiInvoicesInput = {
@@ -110059,6 +120931,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyCreateNestedManyWithoutOrganizationInput
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSeasonPassesInput = {
@@ -110109,6 +120982,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutOrganizationInput
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSeasonPassesInput = {
@@ -110298,6 +121172,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUpdateManyWithoutOrganizationNestedInput
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSeasonPassesInput = {
@@ -110348,6 +121223,7 @@ export namespace Prisma {
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutOrganizationNestedInput
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type VenueUpsertWithoutSeasonPassesInput = {
@@ -110570,6 +121446,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -110630,6 +121507,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -110759,6 +121637,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -110819,6 +121698,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -110977,6 +121857,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutInvitationsInput = {
@@ -111027,6 +121908,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
     cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
     seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+    membershipPlans?: MembershipPlanUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutInvitationsInput = {
@@ -111093,6 +121975,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutInvitationsInput = {
@@ -111143,6 +122026,7 @@ export namespace Prisma {
     fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
     cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
     seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+    membershipPlans?: MembershipPlanUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type EventCreateWithoutDisclosuresInput = {
@@ -111195,6 +122079,7 @@ export namespace Prisma {
     tickets?: TicketCreateNestedManyWithoutEventInput
     orders?: OrderCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
@@ -111255,6 +122140,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     orders?: OrderUncheckedCreateNestedManyWithoutEventInput
     dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    pricingRecommendations?: PricingRecommendationUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
     fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
     seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
@@ -111331,6 +122217,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -111391,6 +122278,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -111399,6 +122287,1420 @@ export namespace Prisma {
     seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
     salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
     inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
+  }
+
+  export type OrganizationCreateWithoutMembershipPlansInput = {
+    id?: string
+    name: string
+    slug: string
+    description?: string | null
+    type?: $Enums.OrgType
+    website?: string | null
+    logoUrl?: string | null
+    bannerUrl?: string | null
+    email: string
+    phone?: string | null
+    country: string
+    timezone?: string
+    currency?: $Enums.Currency
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    postalCode?: string | null
+    bankAccountName?: string | null
+    bankCode?: string | null
+    bankRoutingNumber?: string | null
+    bankAccountNumber?: string | null
+    paypalEmail?: string | null
+    stripeAccountId?: string | null
+    taxId?: string | null
+    verified?: boolean
+    verifiedAt?: Date | string | null
+    kycStatus?: $Enums.KYCStatus
+    amlStatus?: $Enums.AMLStatus
+    commissionRate?: number
+    feesInclusive?: boolean
+    allowResale?: boolean
+    resaleCommission?: number
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    invitations?: OrgInvitationCreateNestedManyWithoutOrganizationInput
+    venues?: VenueCreateNestedManyWithoutOrganizationInput
+    events?: EventCreateNestedManyWithoutOrganizationInput
+    eventSeries?: EventSeriesCreateNestedManyWithoutOrganizationInput
+    users?: UserCreateNestedManyWithoutOrganizationInput
+    orders?: OrderCreateNestedManyWithoutOrganizationInput
+    promoterPayouts?: PromoterPayoutCreateNestedManyWithoutOrganizationInput
+    tenantTheme?: TenantThemeCreateNestedOneWithoutOrganizationInput
+    posTerminals?: PosTerminalCreateNestedManyWithoutOrganizationInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutOrganizationInput
+    fiscalProfile?: FiscalProfileCreateNestedOneWithoutOrganizationInput
+    cfdiInvoices?: CfdiInvoiceCreateNestedManyWithoutOrganizationInput
+    seasonPasses?: SeasonPassCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutMembershipPlansInput = {
+    id?: string
+    name: string
+    slug: string
+    description?: string | null
+    type?: $Enums.OrgType
+    website?: string | null
+    logoUrl?: string | null
+    bannerUrl?: string | null
+    email: string
+    phone?: string | null
+    country: string
+    timezone?: string
+    currency?: $Enums.Currency
+    address?: string | null
+    city?: string | null
+    state?: string | null
+    postalCode?: string | null
+    bankAccountName?: string | null
+    bankCode?: string | null
+    bankRoutingNumber?: string | null
+    bankAccountNumber?: string | null
+    paypalEmail?: string | null
+    stripeAccountId?: string | null
+    taxId?: string | null
+    verified?: boolean
+    verifiedAt?: Date | string | null
+    kycStatus?: $Enums.KYCStatus
+    amlStatus?: $Enums.AMLStatus
+    commissionRate?: number
+    feesInclusive?: boolean
+    allowResale?: boolean
+    resaleCommission?: number
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    invitations?: OrgInvitationUncheckedCreateNestedManyWithoutOrganizationInput
+    venues?: VenueUncheckedCreateNestedManyWithoutOrganizationInput
+    events?: EventUncheckedCreateNestedManyWithoutOrganizationInput
+    eventSeries?: EventSeriesUncheckedCreateNestedManyWithoutOrganizationInput
+    users?: UserUncheckedCreateNestedManyWithoutOrganizationInput
+    orders?: OrderUncheckedCreateNestedManyWithoutOrganizationInput
+    promoterPayouts?: PromoterPayoutUncheckedCreateNestedManyWithoutOrganizationInput
+    tenantTheme?: TenantThemeUncheckedCreateNestedOneWithoutOrganizationInput
+    posTerminals?: PosTerminalUncheckedCreateNestedManyWithoutOrganizationInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutOrganizationInput
+    fiscalProfile?: FiscalProfileUncheckedCreateNestedOneWithoutOrganizationInput
+    cfdiInvoices?: CfdiInvoiceUncheckedCreateNestedManyWithoutOrganizationInput
+    seasonPasses?: SeasonPassUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutMembershipPlansInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutMembershipPlansInput, OrganizationUncheckedCreateWithoutMembershipPlansInput>
+  }
+
+  export type MembershipCreateWithoutPlanInput = {
+    id?: string
+    organizationId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutMembershipsInput
+    periods?: MembershipPeriodCreateNestedManyWithoutMembershipInput
+    redemptions?: MembershipBenefitRedemptionCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipUncheckedCreateWithoutPlanInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    periods?: MembershipPeriodUncheckedCreateNestedManyWithoutMembershipInput
+    redemptions?: MembershipBenefitRedemptionUncheckedCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipCreateOrConnectWithoutPlanInput = {
+    where: MembershipWhereUniqueInput
+    create: XOR<MembershipCreateWithoutPlanInput, MembershipUncheckedCreateWithoutPlanInput>
+  }
+
+  export type MembershipCreateManyPlanInputEnvelope = {
+    data: MembershipCreateManyPlanInput | MembershipCreateManyPlanInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type MembershipBenefitCreateWithoutPlanInput = {
+    id?: string
+    organizationId: string
+    name: string
+    type: string
+    description?: string | null
+    redemptionLimit?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: MembershipBenefitRedemptionCreateNestedManyWithoutBenefitInput
+  }
+
+  export type MembershipBenefitUncheckedCreateWithoutPlanInput = {
+    id?: string
+    organizationId: string
+    name: string
+    type: string
+    description?: string | null
+    redemptionLimit?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: MembershipBenefitRedemptionUncheckedCreateNestedManyWithoutBenefitInput
+  }
+
+  export type MembershipBenefitCreateOrConnectWithoutPlanInput = {
+    where: MembershipBenefitWhereUniqueInput
+    create: XOR<MembershipBenefitCreateWithoutPlanInput, MembershipBenefitUncheckedCreateWithoutPlanInput>
+  }
+
+  export type MembershipBenefitCreateManyPlanInputEnvelope = {
+    data: MembershipBenefitCreateManyPlanInput | MembershipBenefitCreateManyPlanInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type OrganizationUpsertWithoutMembershipPlansInput = {
+    update: XOR<OrganizationUpdateWithoutMembershipPlansInput, OrganizationUncheckedUpdateWithoutMembershipPlansInput>
+    create: XOR<OrganizationCreateWithoutMembershipPlansInput, OrganizationUncheckedCreateWithoutMembershipPlansInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutMembershipPlansInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutMembershipPlansInput, OrganizationUncheckedUpdateWithoutMembershipPlansInput>
+  }
+
+  export type OrganizationUpdateWithoutMembershipPlansInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumOrgTypeFieldUpdateOperationsInput | $Enums.OrgType
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    postalCode?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankCode?: NullableStringFieldUpdateOperationsInput | string | null
+    bankRoutingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    paypalEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    kycStatus?: EnumKYCStatusFieldUpdateOperationsInput | $Enums.KYCStatus
+    amlStatus?: EnumAMLStatusFieldUpdateOperationsInput | $Enums.AMLStatus
+    commissionRate?: FloatFieldUpdateOperationsInput | number
+    feesInclusive?: BoolFieldUpdateOperationsInput | boolean
+    allowResale?: BoolFieldUpdateOperationsInput | boolean
+    resaleCommission?: FloatFieldUpdateOperationsInput | number
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    invitations?: OrgInvitationUpdateManyWithoutOrganizationNestedInput
+    venues?: VenueUpdateManyWithoutOrganizationNestedInput
+    events?: EventUpdateManyWithoutOrganizationNestedInput
+    eventSeries?: EventSeriesUpdateManyWithoutOrganizationNestedInput
+    users?: UserUpdateManyWithoutOrganizationNestedInput
+    orders?: OrderUpdateManyWithoutOrganizationNestedInput
+    promoterPayouts?: PromoterPayoutUpdateManyWithoutOrganizationNestedInput
+    tenantTheme?: TenantThemeUpdateOneWithoutOrganizationNestedInput
+    posTerminals?: PosTerminalUpdateManyWithoutOrganizationNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutOrganizationNestedInput
+    fiscalProfile?: FiscalProfileUpdateOneWithoutOrganizationNestedInput
+    cfdiInvoices?: CfdiInvoiceUpdateManyWithoutOrganizationNestedInput
+    seasonPasses?: SeasonPassUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutMembershipPlansInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumOrgTypeFieldUpdateOperationsInput | $Enums.OrgType
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    postalCode?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankCode?: NullableStringFieldUpdateOperationsInput | string | null
+    bankRoutingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    paypalEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    stripeAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    verified?: BoolFieldUpdateOperationsInput | boolean
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    kycStatus?: EnumKYCStatusFieldUpdateOperationsInput | $Enums.KYCStatus
+    amlStatus?: EnumAMLStatusFieldUpdateOperationsInput | $Enums.AMLStatus
+    commissionRate?: FloatFieldUpdateOperationsInput | number
+    feesInclusive?: BoolFieldUpdateOperationsInput | boolean
+    allowResale?: BoolFieldUpdateOperationsInput | boolean
+    resaleCommission?: FloatFieldUpdateOperationsInput | number
+    settings?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    invitations?: OrgInvitationUncheckedUpdateManyWithoutOrganizationNestedInput
+    venues?: VenueUncheckedUpdateManyWithoutOrganizationNestedInput
+    events?: EventUncheckedUpdateManyWithoutOrganizationNestedInput
+    eventSeries?: EventSeriesUncheckedUpdateManyWithoutOrganizationNestedInput
+    users?: UserUncheckedUpdateManyWithoutOrganizationNestedInput
+    orders?: OrderUncheckedUpdateManyWithoutOrganizationNestedInput
+    promoterPayouts?: PromoterPayoutUncheckedUpdateManyWithoutOrganizationNestedInput
+    tenantTheme?: TenantThemeUncheckedUpdateOneWithoutOrganizationNestedInput
+    posTerminals?: PosTerminalUncheckedUpdateManyWithoutOrganizationNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutOrganizationNestedInput
+    fiscalProfile?: FiscalProfileUncheckedUpdateOneWithoutOrganizationNestedInput
+    cfdiInvoices?: CfdiInvoiceUncheckedUpdateManyWithoutOrganizationNestedInput
+    seasonPasses?: SeasonPassUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type MembershipUpsertWithWhereUniqueWithoutPlanInput = {
+    where: MembershipWhereUniqueInput
+    update: XOR<MembershipUpdateWithoutPlanInput, MembershipUncheckedUpdateWithoutPlanInput>
+    create: XOR<MembershipCreateWithoutPlanInput, MembershipUncheckedCreateWithoutPlanInput>
+  }
+
+  export type MembershipUpdateWithWhereUniqueWithoutPlanInput = {
+    where: MembershipWhereUniqueInput
+    data: XOR<MembershipUpdateWithoutPlanInput, MembershipUncheckedUpdateWithoutPlanInput>
+  }
+
+  export type MembershipUpdateManyWithWhereWithoutPlanInput = {
+    where: MembershipScalarWhereInput
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyWithoutPlanInput>
+  }
+
+  export type MembershipBenefitUpsertWithWhereUniqueWithoutPlanInput = {
+    where: MembershipBenefitWhereUniqueInput
+    update: XOR<MembershipBenefitUpdateWithoutPlanInput, MembershipBenefitUncheckedUpdateWithoutPlanInput>
+    create: XOR<MembershipBenefitCreateWithoutPlanInput, MembershipBenefitUncheckedCreateWithoutPlanInput>
+  }
+
+  export type MembershipBenefitUpdateWithWhereUniqueWithoutPlanInput = {
+    where: MembershipBenefitWhereUniqueInput
+    data: XOR<MembershipBenefitUpdateWithoutPlanInput, MembershipBenefitUncheckedUpdateWithoutPlanInput>
+  }
+
+  export type MembershipBenefitUpdateManyWithWhereWithoutPlanInput = {
+    where: MembershipBenefitScalarWhereInput
+    data: XOR<MembershipBenefitUpdateManyMutationInput, MembershipBenefitUncheckedUpdateManyWithoutPlanInput>
+  }
+
+  export type MembershipBenefitScalarWhereInput = {
+    AND?: MembershipBenefitScalarWhereInput | MembershipBenefitScalarWhereInput[]
+    OR?: MembershipBenefitScalarWhereInput[]
+    NOT?: MembershipBenefitScalarWhereInput | MembershipBenefitScalarWhereInput[]
+    id?: StringFilter<"MembershipBenefit"> | string
+    organizationId?: StringFilter<"MembershipBenefit"> | string
+    planId?: StringFilter<"MembershipBenefit"> | string
+    name?: StringFilter<"MembershipBenefit"> | string
+    type?: StringFilter<"MembershipBenefit"> | string
+    description?: StringNullableFilter<"MembershipBenefit"> | string | null
+    redemptionLimit?: IntNullableFilter<"MembershipBenefit"> | number | null
+    active?: BoolFilter<"MembershipBenefit"> | boolean
+    createdAt?: DateTimeFilter<"MembershipBenefit"> | Date | string
+    updatedAt?: DateTimeFilter<"MembershipBenefit"> | Date | string
+  }
+
+  export type MembershipPlanCreateWithoutMembershipsInput = {
+    id?: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMembershipPlansInput
+    benefits?: MembershipBenefitCreateNestedManyWithoutPlanInput
+  }
+
+  export type MembershipPlanUncheckedCreateWithoutMembershipsInput = {
+    id?: string
+    organizationId: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    benefits?: MembershipBenefitUncheckedCreateNestedManyWithoutPlanInput
+  }
+
+  export type MembershipPlanCreateOrConnectWithoutMembershipsInput = {
+    where: MembershipPlanWhereUniqueInput
+    create: XOR<MembershipPlanCreateWithoutMembershipsInput, MembershipPlanUncheckedCreateWithoutMembershipsInput>
+  }
+
+  export type UserCreateWithoutMembershipsInput = {
+    id?: string
+    email: string
+    emailVerified?: boolean
+    emailVerifiedAt?: Date | string | null
+    firstName: string
+    lastName: string
+    profileImage?: string | null
+    phone?: string | null
+    role?: $Enums.UserRole
+    password?: string | null
+    passwordResetToken?: string | null
+    passwordResetAt?: Date | string | null
+    provider?: string | null
+    providerId?: string | null
+    twoFactorEnabled?: boolean
+    twoFactorSecret?: string | null
+    active?: boolean
+    lastLogin?: Date | string | null
+    loyaltyPoints?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    orders?: OrderCreateNestedManyWithoutUserInput
+    reviews?: ReviewCreateNestedManyWithoutUserInput
+    fraudFlags?: FraudFlagCreateNestedManyWithoutUserInput
+    cart?: CartCreateNestedOneWithoutUserInput
+    wishlist?: WishlistCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    userPermissions?: UserPermissionCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutMembershipsInput = {
+    id?: string
+    email: string
+    emailVerified?: boolean
+    emailVerifiedAt?: Date | string | null
+    firstName: string
+    lastName: string
+    profileImage?: string | null
+    phone?: string | null
+    role?: $Enums.UserRole
+    organizationId?: string | null
+    password?: string | null
+    passwordResetToken?: string | null
+    passwordResetAt?: Date | string | null
+    provider?: string | null
+    providerId?: string | null
+    twoFactorEnabled?: boolean
+    twoFactorSecret?: string | null
+    active?: boolean
+    lastLogin?: Date | string | null
+    loyaltyPoints?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutUserInput
+    cart?: CartUncheckedCreateNestedOneWithoutUserInput
+    wishlist?: WishlistUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    userPermissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutMembershipsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+  }
+
+  export type MembershipPeriodCreateWithoutMembershipInput = {
+    id?: string
+    organizationId: string
+    kind?: $Enums.MembershipPeriodKind
+    startsAt: Date | string
+    endsAt: Date | string
+    amount: Decimal | DecimalJsLike | number | string
+    recordedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type MembershipPeriodUncheckedCreateWithoutMembershipInput = {
+    id?: string
+    organizationId: string
+    kind?: $Enums.MembershipPeriodKind
+    startsAt: Date | string
+    endsAt: Date | string
+    amount: Decimal | DecimalJsLike | number | string
+    recordedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type MembershipPeriodCreateOrConnectWithoutMembershipInput = {
+    where: MembershipPeriodWhereUniqueInput
+    create: XOR<MembershipPeriodCreateWithoutMembershipInput, MembershipPeriodUncheckedCreateWithoutMembershipInput>
+  }
+
+  export type MembershipPeriodCreateManyMembershipInputEnvelope = {
+    data: MembershipPeriodCreateManyMembershipInput | MembershipPeriodCreateManyMembershipInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type MembershipBenefitRedemptionCreateWithoutMembershipInput = {
+    id?: string
+    organizationId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+    benefit: MembershipBenefitCreateNestedOneWithoutRedemptionsInput
+  }
+
+  export type MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput = {
+    id?: string
+    organizationId: string
+    benefitId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+  }
+
+  export type MembershipBenefitRedemptionCreateOrConnectWithoutMembershipInput = {
+    where: MembershipBenefitRedemptionWhereUniqueInput
+    create: XOR<MembershipBenefitRedemptionCreateWithoutMembershipInput, MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput>
+  }
+
+  export type MembershipBenefitRedemptionCreateManyMembershipInputEnvelope = {
+    data: MembershipBenefitRedemptionCreateManyMembershipInput | MembershipBenefitRedemptionCreateManyMembershipInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type MembershipPlanUpsertWithoutMembershipsInput = {
+    update: XOR<MembershipPlanUpdateWithoutMembershipsInput, MembershipPlanUncheckedUpdateWithoutMembershipsInput>
+    create: XOR<MembershipPlanCreateWithoutMembershipsInput, MembershipPlanUncheckedCreateWithoutMembershipsInput>
+    where?: MembershipPlanWhereInput
+  }
+
+  export type MembershipPlanUpdateToOneWithWhereWithoutMembershipsInput = {
+    where?: MembershipPlanWhereInput
+    data: XOR<MembershipPlanUpdateWithoutMembershipsInput, MembershipPlanUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type MembershipPlanUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMembershipPlansNestedInput
+    benefits?: MembershipBenefitUpdateManyWithoutPlanNestedInput
+  }
+
+  export type MembershipPlanUncheckedUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    benefits?: MembershipBenefitUncheckedUpdateManyWithoutPlanNestedInput
+  }
+
+  export type UserUpsertWithoutMembershipsInput = {
+    update: XOR<UserUpdateWithoutMembershipsInput, UserUncheckedUpdateWithoutMembershipsInput>
+    create: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutMembershipsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutMembershipsInput, UserUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type UserUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: BoolFieldUpdateOperationsInput | boolean
+    emailVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    profileImage?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
+    twoFactorEnabled?: BoolFieldUpdateOperationsInput | boolean
+    twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    orders?: OrderUpdateManyWithoutUserNestedInput
+    reviews?: ReviewUpdateManyWithoutUserNestedInput
+    fraudFlags?: FraudFlagUpdateManyWithoutUserNestedInput
+    cart?: CartUpdateOneWithoutUserNestedInput
+    wishlist?: WishlistUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: BoolFieldUpdateOperationsInput | boolean
+    emailVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    firstName?: StringFieldUpdateOperationsInput | string
+    lastName?: StringFieldUpdateOperationsInput | string
+    profileImage?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    provider?: NullableStringFieldUpdateOperationsInput | string | null
+    providerId?: NullableStringFieldUpdateOperationsInput | string | null
+    twoFactorEnabled?: BoolFieldUpdateOperationsInput | boolean
+    twoFactorSecret?: NullableStringFieldUpdateOperationsInput | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    fraudFlags?: FraudFlagUncheckedUpdateManyWithoutUserNestedInput
+    cart?: CartUncheckedUpdateOneWithoutUserNestedInput
+    wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type MembershipPeriodUpsertWithWhereUniqueWithoutMembershipInput = {
+    where: MembershipPeriodWhereUniqueInput
+    update: XOR<MembershipPeriodUpdateWithoutMembershipInput, MembershipPeriodUncheckedUpdateWithoutMembershipInput>
+    create: XOR<MembershipPeriodCreateWithoutMembershipInput, MembershipPeriodUncheckedCreateWithoutMembershipInput>
+  }
+
+  export type MembershipPeriodUpdateWithWhereUniqueWithoutMembershipInput = {
+    where: MembershipPeriodWhereUniqueInput
+    data: XOR<MembershipPeriodUpdateWithoutMembershipInput, MembershipPeriodUncheckedUpdateWithoutMembershipInput>
+  }
+
+  export type MembershipPeriodUpdateManyWithWhereWithoutMembershipInput = {
+    where: MembershipPeriodScalarWhereInput
+    data: XOR<MembershipPeriodUpdateManyMutationInput, MembershipPeriodUncheckedUpdateManyWithoutMembershipInput>
+  }
+
+  export type MembershipPeriodScalarWhereInput = {
+    AND?: MembershipPeriodScalarWhereInput | MembershipPeriodScalarWhereInput[]
+    OR?: MembershipPeriodScalarWhereInput[]
+    NOT?: MembershipPeriodScalarWhereInput | MembershipPeriodScalarWhereInput[]
+    id?: StringFilter<"MembershipPeriod"> | string
+    organizationId?: StringFilter<"MembershipPeriod"> | string
+    membershipId?: StringFilter<"MembershipPeriod"> | string
+    kind?: EnumMembershipPeriodKindFilter<"MembershipPeriod"> | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+    endsAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+    amount?: DecimalFilter<"MembershipPeriod"> | Decimal | DecimalJsLike | number | string
+    recordedById?: StringNullableFilter<"MembershipPeriod"> | string | null
+    createdAt?: DateTimeFilter<"MembershipPeriod"> | Date | string
+  }
+
+  export type MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutMembershipInput = {
+    where: MembershipBenefitRedemptionWhereUniqueInput
+    update: XOR<MembershipBenefitRedemptionUpdateWithoutMembershipInput, MembershipBenefitRedemptionUncheckedUpdateWithoutMembershipInput>
+    create: XOR<MembershipBenefitRedemptionCreateWithoutMembershipInput, MembershipBenefitRedemptionUncheckedCreateWithoutMembershipInput>
+  }
+
+  export type MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutMembershipInput = {
+    where: MembershipBenefitRedemptionWhereUniqueInput
+    data: XOR<MembershipBenefitRedemptionUpdateWithoutMembershipInput, MembershipBenefitRedemptionUncheckedUpdateWithoutMembershipInput>
+  }
+
+  export type MembershipBenefitRedemptionUpdateManyWithWhereWithoutMembershipInput = {
+    where: MembershipBenefitRedemptionScalarWhereInput
+    data: XOR<MembershipBenefitRedemptionUpdateManyMutationInput, MembershipBenefitRedemptionUncheckedUpdateManyWithoutMembershipInput>
+  }
+
+  export type MembershipBenefitRedemptionScalarWhereInput = {
+    AND?: MembershipBenefitRedemptionScalarWhereInput | MembershipBenefitRedemptionScalarWhereInput[]
+    OR?: MembershipBenefitRedemptionScalarWhereInput[]
+    NOT?: MembershipBenefitRedemptionScalarWhereInput | MembershipBenefitRedemptionScalarWhereInput[]
+    id?: StringFilter<"MembershipBenefitRedemption"> | string
+    organizationId?: StringFilter<"MembershipBenefitRedemption"> | string
+    benefitId?: StringFilter<"MembershipBenefitRedemption"> | string
+    membershipId?: StringFilter<"MembershipBenefitRedemption"> | string
+    note?: StringNullableFilter<"MembershipBenefitRedemption"> | string | null
+    recordedById?: StringNullableFilter<"MembershipBenefitRedemption"> | string | null
+    redeemedAt?: DateTimeFilter<"MembershipBenefitRedemption"> | Date | string
+  }
+
+  export type MembershipCreateWithoutPeriodsInput = {
+    id?: string
+    organizationId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    plan: MembershipPlanCreateNestedOneWithoutMembershipsInput
+    user: UserCreateNestedOneWithoutMembershipsInput
+    redemptions?: MembershipBenefitRedemptionCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipUncheckedCreateWithoutPeriodsInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    userId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: MembershipBenefitRedemptionUncheckedCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipCreateOrConnectWithoutPeriodsInput = {
+    where: MembershipWhereUniqueInput
+    create: XOR<MembershipCreateWithoutPeriodsInput, MembershipUncheckedCreateWithoutPeriodsInput>
+  }
+
+  export type MembershipUpsertWithoutPeriodsInput = {
+    update: XOR<MembershipUpdateWithoutPeriodsInput, MembershipUncheckedUpdateWithoutPeriodsInput>
+    create: XOR<MembershipCreateWithoutPeriodsInput, MembershipUncheckedCreateWithoutPeriodsInput>
+    where?: MembershipWhereInput
+  }
+
+  export type MembershipUpdateToOneWithWhereWithoutPeriodsInput = {
+    where?: MembershipWhereInput
+    data: XOR<MembershipUpdateWithoutPeriodsInput, MembershipUncheckedUpdateWithoutPeriodsInput>
+  }
+
+  export type MembershipUpdateWithoutPeriodsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    plan?: MembershipPlanUpdateOneRequiredWithoutMembershipsNestedInput
+    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+    redemptions?: MembershipBenefitRedemptionUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipUncheckedUpdateWithoutPeriodsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: MembershipBenefitRedemptionUncheckedUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipPlanCreateWithoutBenefitsInput = {
+    id?: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutMembershipPlansInput
+    memberships?: MembershipCreateNestedManyWithoutPlanInput
+  }
+
+  export type MembershipPlanUncheckedCreateWithoutBenefitsInput = {
+    id?: string
+    organizationId: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutPlanInput
+  }
+
+  export type MembershipPlanCreateOrConnectWithoutBenefitsInput = {
+    where: MembershipPlanWhereUniqueInput
+    create: XOR<MembershipPlanCreateWithoutBenefitsInput, MembershipPlanUncheckedCreateWithoutBenefitsInput>
+  }
+
+  export type MembershipBenefitRedemptionCreateWithoutBenefitInput = {
+    id?: string
+    organizationId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+    membership: MembershipCreateNestedOneWithoutRedemptionsInput
+  }
+
+  export type MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput = {
+    id?: string
+    organizationId: string
+    membershipId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+  }
+
+  export type MembershipBenefitRedemptionCreateOrConnectWithoutBenefitInput = {
+    where: MembershipBenefitRedemptionWhereUniqueInput
+    create: XOR<MembershipBenefitRedemptionCreateWithoutBenefitInput, MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput>
+  }
+
+  export type MembershipBenefitRedemptionCreateManyBenefitInputEnvelope = {
+    data: MembershipBenefitRedemptionCreateManyBenefitInput | MembershipBenefitRedemptionCreateManyBenefitInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type MembershipPlanUpsertWithoutBenefitsInput = {
+    update: XOR<MembershipPlanUpdateWithoutBenefitsInput, MembershipPlanUncheckedUpdateWithoutBenefitsInput>
+    create: XOR<MembershipPlanCreateWithoutBenefitsInput, MembershipPlanUncheckedCreateWithoutBenefitsInput>
+    where?: MembershipPlanWhereInput
+  }
+
+  export type MembershipPlanUpdateToOneWithWhereWithoutBenefitsInput = {
+    where?: MembershipPlanWhereInput
+    data: XOR<MembershipPlanUpdateWithoutBenefitsInput, MembershipPlanUncheckedUpdateWithoutBenefitsInput>
+  }
+
+  export type MembershipPlanUpdateWithoutBenefitsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutMembershipPlansNestedInput
+    memberships?: MembershipUpdateManyWithoutPlanNestedInput
+  }
+
+  export type MembershipPlanUncheckedUpdateWithoutBenefitsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutPlanNestedInput
+  }
+
+  export type MembershipBenefitRedemptionUpsertWithWhereUniqueWithoutBenefitInput = {
+    where: MembershipBenefitRedemptionWhereUniqueInput
+    update: XOR<MembershipBenefitRedemptionUpdateWithoutBenefitInput, MembershipBenefitRedemptionUncheckedUpdateWithoutBenefitInput>
+    create: XOR<MembershipBenefitRedemptionCreateWithoutBenefitInput, MembershipBenefitRedemptionUncheckedCreateWithoutBenefitInput>
+  }
+
+  export type MembershipBenefitRedemptionUpdateWithWhereUniqueWithoutBenefitInput = {
+    where: MembershipBenefitRedemptionWhereUniqueInput
+    data: XOR<MembershipBenefitRedemptionUpdateWithoutBenefitInput, MembershipBenefitRedemptionUncheckedUpdateWithoutBenefitInput>
+  }
+
+  export type MembershipBenefitRedemptionUpdateManyWithWhereWithoutBenefitInput = {
+    where: MembershipBenefitRedemptionScalarWhereInput
+    data: XOR<MembershipBenefitRedemptionUpdateManyMutationInput, MembershipBenefitRedemptionUncheckedUpdateManyWithoutBenefitInput>
+  }
+
+  export type MembershipBenefitCreateWithoutRedemptionsInput = {
+    id?: string
+    organizationId: string
+    name: string
+    type: string
+    description?: string | null
+    redemptionLimit?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    plan: MembershipPlanCreateNestedOneWithoutBenefitsInput
+  }
+
+  export type MembershipBenefitUncheckedCreateWithoutRedemptionsInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    name: string
+    type: string
+    description?: string | null
+    redemptionLimit?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipBenefitCreateOrConnectWithoutRedemptionsInput = {
+    where: MembershipBenefitWhereUniqueInput
+    create: XOR<MembershipBenefitCreateWithoutRedemptionsInput, MembershipBenefitUncheckedCreateWithoutRedemptionsInput>
+  }
+
+  export type MembershipCreateWithoutRedemptionsInput = {
+    id?: string
+    organizationId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    plan: MembershipPlanCreateNestedOneWithoutMembershipsInput
+    user: UserCreateNestedOneWithoutMembershipsInput
+    periods?: MembershipPeriodCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipUncheckedCreateWithoutRedemptionsInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    userId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    periods?: MembershipPeriodUncheckedCreateNestedManyWithoutMembershipInput
+  }
+
+  export type MembershipCreateOrConnectWithoutRedemptionsInput = {
+    where: MembershipWhereUniqueInput
+    create: XOR<MembershipCreateWithoutRedemptionsInput, MembershipUncheckedCreateWithoutRedemptionsInput>
+  }
+
+  export type MembershipBenefitUpsertWithoutRedemptionsInput = {
+    update: XOR<MembershipBenefitUpdateWithoutRedemptionsInput, MembershipBenefitUncheckedUpdateWithoutRedemptionsInput>
+    create: XOR<MembershipBenefitCreateWithoutRedemptionsInput, MembershipBenefitUncheckedCreateWithoutRedemptionsInput>
+    where?: MembershipBenefitWhereInput
+  }
+
+  export type MembershipBenefitUpdateToOneWithWhereWithoutRedemptionsInput = {
+    where?: MembershipBenefitWhereInput
+    data: XOR<MembershipBenefitUpdateWithoutRedemptionsInput, MembershipBenefitUncheckedUpdateWithoutRedemptionsInput>
+  }
+
+  export type MembershipBenefitUpdateWithoutRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    plan?: MembershipPlanUpdateOneRequiredWithoutBenefitsNestedInput
+  }
+
+  export type MembershipBenefitUncheckedUpdateWithoutRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUpsertWithoutRedemptionsInput = {
+    update: XOR<MembershipUpdateWithoutRedemptionsInput, MembershipUncheckedUpdateWithoutRedemptionsInput>
+    create: XOR<MembershipCreateWithoutRedemptionsInput, MembershipUncheckedCreateWithoutRedemptionsInput>
+    where?: MembershipWhereInput
+  }
+
+  export type MembershipUpdateToOneWithWhereWithoutRedemptionsInput = {
+    where?: MembershipWhereInput
+    data: XOR<MembershipUpdateWithoutRedemptionsInput, MembershipUncheckedUpdateWithoutRedemptionsInput>
+  }
+
+  export type MembershipUpdateWithoutRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    plan?: MembershipPlanUpdateOneRequiredWithoutMembershipsNestedInput
+    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+    periods?: MembershipPeriodUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipUncheckedUpdateWithoutRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    periods?: MembershipPeriodUncheckedUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type EventCreateWithoutPricingRecommendationsInput = {
+    id?: string
+    externalId?: string | null
+    slug: string
+    title: string
+    description?: string | null
+    image?: string | null
+    bannerImage?: string | null
+    category?: $Enums.EventCategory
+    genre?: string | null
+    rating?: string | null
+    startsAt: Date | string
+    endsAt?: Date | string | null
+    timezone: string
+    doorsAt?: Date | string | null
+    durationMinutes?: number | null
+    status?: $Enums.EventStatus
+    publishedAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    cancellationReason?: string | null
+    announceAt?: Date | string | null
+    publishAt?: Date | string | null
+    salesStartAt?: Date | string | null
+    salesEndAt?: Date | string | null
+    rescheduledFrom?: Date | string | null
+    scheduleNote?: string | null
+    seriesOrder?: number | null
+    minPrice?: Decimal | DecimalJsLike | number | string
+    maxPrice?: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    totalCapacity: number
+    holdableCapacity?: number | null
+    allowResale?: boolean
+    transferAllowed?: boolean
+    refundable?: boolean
+    nonTransferable?: boolean
+    holdExpiration?: number
+    enableDynamic?: boolean
+    surgeThreshold?: number
+    surgePriceMultiplier?: number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutEventsInput
+    venue: VenueCreateNestedOneWithoutEventsInput
+    series?: EventSeriesCreateNestedOneWithoutEventsInput
+    offers?: OfferCreateNestedManyWithoutEventInput
+    tickets?: TicketCreateNestedManyWithoutEventInput
+    orders?: OrderCreateNestedManyWithoutEventInput
+    dynamicPrices?: DynamicPriceCreateNestedManyWithoutEventInput
+    reviews?: ReviewCreateNestedManyWithoutEventInput
+    fraudFlags?: FraudFlagCreateNestedManyWithoutEventInput
+    seatMap?: EventSeatMapCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureCreateNestedManyWithoutEventInput
+    holds?: SeatHoldCreateNestedManyWithoutEventInput
+    waitlistEntries?: WaitlistEntryCreateNestedManyWithoutEventInput
+    seasonPassEvents?: SeasonPassEventCreateNestedManyWithoutEventInput
+    salePhases?: SalePhaseCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockCreateNestedManyWithoutEventInput
+  }
+
+  export type EventUncheckedCreateWithoutPricingRecommendationsInput = {
+    id?: string
+    externalId?: string | null
+    slug: string
+    organizationId: string
+    venueId: string
+    title: string
+    description?: string | null
+    image?: string | null
+    bannerImage?: string | null
+    category?: $Enums.EventCategory
+    genre?: string | null
+    rating?: string | null
+    startsAt: Date | string
+    endsAt?: Date | string | null
+    timezone: string
+    doorsAt?: Date | string | null
+    durationMinutes?: number | null
+    status?: $Enums.EventStatus
+    publishedAt?: Date | string | null
+    cancelledAt?: Date | string | null
+    cancellationReason?: string | null
+    announceAt?: Date | string | null
+    publishAt?: Date | string | null
+    salesStartAt?: Date | string | null
+    salesEndAt?: Date | string | null
+    rescheduledFrom?: Date | string | null
+    scheduleNote?: string | null
+    seriesId?: string | null
+    seriesOrder?: number | null
+    minPrice?: Decimal | DecimalJsLike | number | string
+    maxPrice?: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    totalCapacity: number
+    holdableCapacity?: number | null
+    allowResale?: boolean
+    transferAllowed?: boolean
+    refundable?: boolean
+    nonTransferable?: boolean
+    holdExpiration?: number
+    enableDynamic?: boolean
+    surgeThreshold?: number
+    surgePriceMultiplier?: number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    offers?: OfferUncheckedCreateNestedManyWithoutEventInput
+    tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
+    orders?: OrderUncheckedCreateNestedManyWithoutEventInput
+    dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutEventInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
+    fraudFlags?: FraudFlagUncheckedCreateNestedManyWithoutEventInput
+    seatMap?: EventSeatMapUncheckedCreateNestedOneWithoutEventInput
+    disclosures?: EventDisclosureUncheckedCreateNestedManyWithoutEventInput
+    holds?: SeatHoldUncheckedCreateNestedManyWithoutEventInput
+    waitlistEntries?: WaitlistEntryUncheckedCreateNestedManyWithoutEventInput
+    seasonPassEvents?: SeasonPassEventUncheckedCreateNestedManyWithoutEventInput
+    salePhases?: SalePhaseUncheckedCreateNestedManyWithoutEventInput
+    inventoryBlocks?: InventoryBlockUncheckedCreateNestedManyWithoutEventInput
+  }
+
+  export type EventCreateOrConnectWithoutPricingRecommendationsInput = {
+    where: EventWhereUniqueInput
+    create: XOR<EventCreateWithoutPricingRecommendationsInput, EventUncheckedCreateWithoutPricingRecommendationsInput>
+  }
+
+  export type OfferCreateWithoutPricingRecommendationsInput = {
+    id?: string
+    name: string
+    zone: string
+    description?: string | null
+    basePrice: Decimal | DecimalJsLike | number | string
+    fees?: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    totalQuantity: number
+    remainingQuantity: number
+    soldQuantity?: number
+    holdQuantity?: number
+    minPerOrder?: number
+    maxPerOrder?: number
+    minAge?: number | null
+    restrictedCards?: OfferCreaterestrictedCardsInput | string[]
+    startDate: Date | string
+    endDate: Date | string
+    isAvailable?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    event: EventCreateNestedOneWithoutOffersInput
+    tickets?: TicketCreateNestedManyWithoutOfferInput
+    orderItems?: OrderItemCreateNestedManyWithoutOfferInput
+    dynamicPrices?: DynamicPriceCreateNestedManyWithoutOfferInput
+  }
+
+  export type OfferUncheckedCreateWithoutPricingRecommendationsInput = {
+    id?: string
+    eventId: string
+    name: string
+    zone: string
+    description?: string | null
+    basePrice: Decimal | DecimalJsLike | number | string
+    fees?: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    totalQuantity: number
+    remainingQuantity: number
+    soldQuantity?: number
+    holdQuantity?: number
+    minPerOrder?: number
+    maxPerOrder?: number
+    minAge?: number | null
+    restrictedCards?: OfferCreaterestrictedCardsInput | string[]
+    startDate: Date | string
+    endDate: Date | string
+    isAvailable?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    tickets?: TicketUncheckedCreateNestedManyWithoutOfferInput
+    orderItems?: OrderItemUncheckedCreateNestedManyWithoutOfferInput
+    dynamicPrices?: DynamicPriceUncheckedCreateNestedManyWithoutOfferInput
+  }
+
+  export type OfferCreateOrConnectWithoutPricingRecommendationsInput = {
+    where: OfferWhereUniqueInput
+    create: XOR<OfferCreateWithoutPricingRecommendationsInput, OfferUncheckedCreateWithoutPricingRecommendationsInput>
+  }
+
+  export type EventUpsertWithoutPricingRecommendationsInput = {
+    update: XOR<EventUpdateWithoutPricingRecommendationsInput, EventUncheckedUpdateWithoutPricingRecommendationsInput>
+    create: XOR<EventCreateWithoutPricingRecommendationsInput, EventUncheckedCreateWithoutPricingRecommendationsInput>
+    where?: EventWhereInput
+  }
+
+  export type EventUpdateToOneWithWhereWithoutPricingRecommendationsInput = {
+    where?: EventWhereInput
+    data: XOR<EventUpdateWithoutPricingRecommendationsInput, EventUncheckedUpdateWithoutPricingRecommendationsInput>
+  }
+
+  export type EventUpdateWithoutPricingRecommendationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    externalId?: NullableStringFieldUpdateOperationsInput | string | null
+    slug?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: EnumEventCategoryFieldUpdateOperationsInput | $Enums.EventCategory
+    genre?: NullableStringFieldUpdateOperationsInput | string | null
+    rating?: NullableStringFieldUpdateOperationsInput | string | null
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    timezone?: StringFieldUpdateOperationsInput | string
+    doorsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    durationMinutes?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesEndAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rescheduledFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduleNote?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesOrder?: NullableIntFieldUpdateOperationsInput | number | null
+    minPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    maxPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalCapacity?: IntFieldUpdateOperationsInput | number
+    holdableCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    allowResale?: BoolFieldUpdateOperationsInput | boolean
+    transferAllowed?: BoolFieldUpdateOperationsInput | boolean
+    refundable?: BoolFieldUpdateOperationsInput | boolean
+    nonTransferable?: BoolFieldUpdateOperationsInput | boolean
+    holdExpiration?: IntFieldUpdateOperationsInput | number
+    enableDynamic?: BoolFieldUpdateOperationsInput | boolean
+    surgeThreshold?: FloatFieldUpdateOperationsInput | number
+    surgePriceMultiplier?: FloatFieldUpdateOperationsInput | number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutEventsNestedInput
+    venue?: VenueUpdateOneRequiredWithoutEventsNestedInput
+    series?: EventSeriesUpdateOneWithoutEventsNestedInput
+    offers?: OfferUpdateManyWithoutEventNestedInput
+    tickets?: TicketUpdateManyWithoutEventNestedInput
+    orders?: OrderUpdateManyWithoutEventNestedInput
+    dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    reviews?: ReviewUpdateManyWithoutEventNestedInput
+    fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
+    seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUpdateManyWithoutEventNestedInput
+    holds?: SeatHoldUpdateManyWithoutEventNestedInput
+    waitlistEntries?: WaitlistEntryUpdateManyWithoutEventNestedInput
+    seasonPassEvents?: SeasonPassEventUpdateManyWithoutEventNestedInput
+    salePhases?: SalePhaseUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUpdateManyWithoutEventNestedInput
+  }
+
+  export type EventUncheckedUpdateWithoutPricingRecommendationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    externalId?: NullableStringFieldUpdateOperationsInput | string | null
+    slug?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    venueId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: EnumEventCategoryFieldUpdateOperationsInput | $Enums.EventCategory
+    genre?: NullableStringFieldUpdateOperationsInput | string | null
+    rating?: NullableStringFieldUpdateOperationsInput | string | null
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    timezone?: StringFieldUpdateOperationsInput | string
+    doorsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    durationMinutes?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cancellationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    announceAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    publishAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesStartAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    salesEndAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rescheduledFrom?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduleNote?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesId?: NullableStringFieldUpdateOperationsInput | string | null
+    seriesOrder?: NullableIntFieldUpdateOperationsInput | number | null
+    minPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    maxPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalCapacity?: IntFieldUpdateOperationsInput | number
+    holdableCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    allowResale?: BoolFieldUpdateOperationsInput | boolean
+    transferAllowed?: BoolFieldUpdateOperationsInput | boolean
+    refundable?: BoolFieldUpdateOperationsInput | boolean
+    nonTransferable?: BoolFieldUpdateOperationsInput | boolean
+    holdExpiration?: IntFieldUpdateOperationsInput | number
+    enableDynamic?: BoolFieldUpdateOperationsInput | boolean
+    surgeThreshold?: FloatFieldUpdateOperationsInput | number
+    surgePriceMultiplier?: FloatFieldUpdateOperationsInput | number
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    offers?: OfferUncheckedUpdateManyWithoutEventNestedInput
+    tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
+    orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
+    dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
+    fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
+    seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
+    disclosures?: EventDisclosureUncheckedUpdateManyWithoutEventNestedInput
+    holds?: SeatHoldUncheckedUpdateManyWithoutEventNestedInput
+    waitlistEntries?: WaitlistEntryUncheckedUpdateManyWithoutEventNestedInput
+    seasonPassEvents?: SeasonPassEventUncheckedUpdateManyWithoutEventNestedInput
+    salePhases?: SalePhaseUncheckedUpdateManyWithoutEventNestedInput
+    inventoryBlocks?: InventoryBlockUncheckedUpdateManyWithoutEventNestedInput
+  }
+
+  export type OfferUpsertWithoutPricingRecommendationsInput = {
+    update: XOR<OfferUpdateWithoutPricingRecommendationsInput, OfferUncheckedUpdateWithoutPricingRecommendationsInput>
+    create: XOR<OfferCreateWithoutPricingRecommendationsInput, OfferUncheckedCreateWithoutPricingRecommendationsInput>
+    where?: OfferWhereInput
+  }
+
+  export type OfferUpdateToOneWithWhereWithoutPricingRecommendationsInput = {
+    where?: OfferWhereInput
+    data: XOR<OfferUpdateWithoutPricingRecommendationsInput, OfferUncheckedUpdateWithoutPricingRecommendationsInput>
+  }
+
+  export type OfferUpdateWithoutPricingRecommendationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    zone?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    basePrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fees?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalQuantity?: IntFieldUpdateOperationsInput | number
+    remainingQuantity?: IntFieldUpdateOperationsInput | number
+    soldQuantity?: IntFieldUpdateOperationsInput | number
+    holdQuantity?: IntFieldUpdateOperationsInput | number
+    minPerOrder?: IntFieldUpdateOperationsInput | number
+    maxPerOrder?: IntFieldUpdateOperationsInput | number
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    restrictedCards?: OfferUpdaterestrictedCardsInput | string[]
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    event?: EventUpdateOneRequiredWithoutOffersNestedInput
+    tickets?: TicketUpdateManyWithoutOfferNestedInput
+    orderItems?: OrderItemUpdateManyWithoutOfferNestedInput
+    dynamicPrices?: DynamicPriceUpdateManyWithoutOfferNestedInput
+  }
+
+  export type OfferUncheckedUpdateWithoutPricingRecommendationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    zone?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    basePrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fees?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalQuantity?: IntFieldUpdateOperationsInput | number
+    remainingQuantity?: IntFieldUpdateOperationsInput | number
+    soldQuantity?: IntFieldUpdateOperationsInput | number
+    holdQuantity?: IntFieldUpdateOperationsInput | number
+    minPerOrder?: IntFieldUpdateOperationsInput | number
+    maxPerOrder?: IntFieldUpdateOperationsInput | number
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    restrictedCards?: OfferUpdaterestrictedCardsInput | string[]
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    endDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    isAvailable?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    tickets?: TicketUncheckedUpdateManyWithoutOfferNestedInput
+    orderItems?: OrderItemUncheckedUpdateManyWithoutOfferNestedInput
+    dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutOfferNestedInput
   }
 
   export type OrgInvitationCreateManyOrganizationInput = {
@@ -111645,6 +123947,21 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type MembershipPlanCreateManyOrganizationInput = {
+    id?: string
+    name: string
+    slug: string
+    tier: string
+    description?: string | null
+    price: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    billingPeriod?: $Enums.MembershipBillingPeriod
+    maxMembers?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type OrgInvitationUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
@@ -111817,6 +124134,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -111877,6 +124195,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -112014,6 +124333,7 @@ export namespace Prisma {
     wishlist?: WishlistUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOrganizationInput = {
@@ -112045,6 +124365,7 @@ export namespace Prisma {
     wishlist?: WishlistUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     userPermissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutOrganizationInput = {
@@ -112445,6 +124766,55 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type MembershipPlanUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutPlanNestedInput
+    benefits?: MembershipBenefitUpdateManyWithoutPlanNestedInput
+  }
+
+  export type MembershipPlanUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutPlanNestedInput
+    benefits?: MembershipBenefitUncheckedUpdateManyWithoutPlanNestedInput
+  }
+
+  export type MembershipPlanUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    billingPeriod?: EnumMembershipBillingPeriodFieldUpdateOperationsInput | $Enums.MembershipBillingPeriod
+    maxMembers?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type EventCreateManyVenueInput = {
     id?: string
     externalId?: string | null
@@ -112613,6 +124983,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -112673,6 +125044,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -113595,6 +125967,27 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type PricingRecommendationCreateManyEventInput = {
+    id?: string
+    organizationId: string
+    offerId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type ReviewCreateManyEventInput = {
     id?: string
     userId: string
@@ -113727,6 +126120,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutOfferNestedInput
     orderItems?: OrderItemUpdateManyWithoutOfferNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutOfferNestedInput
   }
 
   export type OfferUncheckedUpdateWithoutEventInput = {
@@ -113753,6 +126147,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutOfferNestedInput
     orderItems?: OrderItemUncheckedUpdateManyWithoutOfferNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutOfferNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutOfferNestedInput
   }
 
   export type OfferUncheckedUpdateManyWithoutEventInput = {
@@ -113993,6 +126388,69 @@ export namespace Prisma {
     reason?: StringFieldUpdateOperationsInput | string
     activeFrom?: DateTimeFieldUpdateOperationsInput | Date | string
     activeTo?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PricingRecommendationUpdateWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    offer?: OfferUpdateOneRequiredWithoutPricingRecommendationsNestedInput
+  }
+
+  export type PricingRecommendationUncheckedUpdateWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    offerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PricingRecommendationUncheckedUpdateManyWithoutEventInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    offerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -114417,6 +126875,7 @@ export namespace Prisma {
     tickets?: TicketUpdateManyWithoutEventNestedInput
     orders?: OrderUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUpdateOneWithoutEventNestedInput
@@ -114477,6 +126936,7 @@ export namespace Prisma {
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     orders?: OrderUncheckedUpdateManyWithoutEventNestedInput
     dynamicPrices?: DynamicPriceUncheckedUpdateManyWithoutEventNestedInput
+    pricingRecommendations?: PricingRecommendationUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
     fraudFlags?: FraudFlagUncheckedUpdateManyWithoutEventNestedInput
     seatMap?: EventSeatMapUncheckedUpdateOneWithoutEventNestedInput
@@ -114576,6 +127036,27 @@ export namespace Prisma {
     reason: string
     activeFrom: Date | string
     activeTo: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PricingRecommendationCreateManyOfferInput = {
+    id?: string
+    organizationId: string
+    eventId: string
+    status?: $Enums.PricingRecommendationStatus
+    fromPrice: Decimal | DecimalJsLike | number | string
+    proposedPrice: Decimal | DecimalJsLike | number | string
+    multiplier: number
+    direction: string
+    deltaPercent: number
+    explanation: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdById?: string | null
+    reviewedById?: string | null
+    reviewedAt?: Date | string | null
+    reviewNote?: string | null
+    appliedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -114723,6 +127204,69 @@ export namespace Prisma {
     reason?: StringFieldUpdateOperationsInput | string
     activeFrom?: DateTimeFieldUpdateOperationsInput | Date | string
     activeTo?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PricingRecommendationUpdateWithoutOfferInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    event?: EventUpdateOneRequiredWithoutPricingRecommendationsNestedInput
+  }
+
+  export type PricingRecommendationUncheckedUpdateWithoutOfferInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PricingRecommendationUncheckedUpdateManyWithoutOfferInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    status?: EnumPricingRecommendationStatusFieldUpdateOperationsInput | $Enums.PricingRecommendationStatus
+    fromPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    proposedPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    multiplier?: FloatFieldUpdateOperationsInput | number
+    direction?: StringFieldUpdateOperationsInput | string
+    deltaPercent?: FloatFieldUpdateOperationsInput | number
+    explanation?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedById?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewNote?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -115568,6 +128112,18 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type MembershipCreateManyUserInput = {
+    id?: string
+    organizationId: string
+    planId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type OrderUpdateWithoutUserInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -115827,6 +128383,46 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     permissionId?: StringFieldUpdateOperationsInput | string
     granted?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    plan?: MembershipPlanUpdateOneRequiredWithoutMembershipsNestedInput
+    periods?: MembershipPeriodUpdateManyWithoutMembershipNestedInput
+    redemptions?: MembershipBenefitRedemptionUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    periods?: MembershipPeriodUncheckedUpdateManyWithoutMembershipNestedInput
+    redemptions?: MembershipBenefitRedemptionUncheckedUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -116169,6 +128765,224 @@ export namespace Prisma {
     status?: EnumSeasonPassPurchaseStatusFieldUpdateOperationsInput | $Enums.SeasonPassPurchaseStatus
     seatSection?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipCreateManyPlanInput = {
+    id?: string
+    organizationId: string
+    userId: string
+    status?: $Enums.MembershipStatus
+    startedAt: Date | string
+    expiresAt: Date | string
+    cancelledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipBenefitCreateManyPlanInput = {
+    id?: string
+    organizationId: string
+    name: string
+    type: string
+    description?: string | null
+    redemptionLimit?: number | null
+    active?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type MembershipUpdateWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+    periods?: MembershipPeriodUpdateManyWithoutMembershipNestedInput
+    redemptions?: MembershipBenefitRedemptionUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipUncheckedUpdateWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    periods?: MembershipPeriodUncheckedUpdateManyWithoutMembershipNestedInput
+    redemptions?: MembershipBenefitRedemptionUncheckedUpdateManyWithoutMembershipNestedInput
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: EnumMembershipStatusFieldUpdateOperationsInput | $Enums.MembershipStatus
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitUpdateWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: MembershipBenefitRedemptionUpdateManyWithoutBenefitNestedInput
+  }
+
+  export type MembershipBenefitUncheckedUpdateWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: MembershipBenefitRedemptionUncheckedUpdateManyWithoutBenefitNestedInput
+  }
+
+  export type MembershipBenefitUncheckedUpdateManyWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    redemptionLimit?: NullableIntFieldUpdateOperationsInput | number | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipPeriodCreateManyMembershipInput = {
+    id?: string
+    organizationId: string
+    kind?: $Enums.MembershipPeriodKind
+    startsAt: Date | string
+    endsAt: Date | string
+    amount: Decimal | DecimalJsLike | number | string
+    recordedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type MembershipBenefitRedemptionCreateManyMembershipInput = {
+    id?: string
+    organizationId: string
+    benefitId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+  }
+
+  export type MembershipPeriodUpdateWithoutMembershipInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    kind?: EnumMembershipPeriodKindFieldUpdateOperationsInput | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipPeriodUncheckedUpdateWithoutMembershipInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    kind?: EnumMembershipPeriodKindFieldUpdateOperationsInput | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipPeriodUncheckedUpdateManyWithoutMembershipInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    kind?: EnumMembershipPeriodKindFieldUpdateOperationsInput | $Enums.MembershipPeriodKind
+    startsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    endsAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitRedemptionUpdateWithoutMembershipInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    benefit?: MembershipBenefitUpdateOneRequiredWithoutRedemptionsNestedInput
+  }
+
+  export type MembershipBenefitRedemptionUncheckedUpdateWithoutMembershipInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    benefitId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitRedemptionUncheckedUpdateManyWithoutMembershipInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    benefitId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitRedemptionCreateManyBenefitInput = {
+    id?: string
+    organizationId: string
+    membershipId: string
+    note?: string | null
+    recordedById?: string | null
+    redeemedAt?: Date | string
+  }
+
+  export type MembershipBenefitRedemptionUpdateWithoutBenefitInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    membership?: MembershipUpdateOneRequiredWithoutRedemptionsNestedInput
+  }
+
+  export type MembershipBenefitRedemptionUncheckedUpdateWithoutBenefitInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    membershipId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipBenefitRedemptionUncheckedUpdateManyWithoutBenefitInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    membershipId?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    recordedById?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

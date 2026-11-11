@@ -957,6 +957,92 @@ exports.Prisma.EventDisclosureScalarFieldEnum = {
   publishedBy: 'publishedBy'
 };
 
+exports.Prisma.MembershipPlanScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  name: 'name',
+  slug: 'slug',
+  tier: 'tier',
+  description: 'description',
+  price: 'price',
+  currency: 'currency',
+  billingPeriod: 'billingPeriod',
+  maxMembers: 'maxMembers',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MembershipScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  planId: 'planId',
+  userId: 'userId',
+  status: 'status',
+  startedAt: 'startedAt',
+  expiresAt: 'expiresAt',
+  cancelledAt: 'cancelledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MembershipPeriodScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  membershipId: 'membershipId',
+  kind: 'kind',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  amount: 'amount',
+  recordedById: 'recordedById',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.MembershipBenefitScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  planId: 'planId',
+  name: 'name',
+  type: 'type',
+  description: 'description',
+  redemptionLimit: 'redemptionLimit',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MembershipBenefitRedemptionScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  benefitId: 'benefitId',
+  membershipId: 'membershipId',
+  note: 'note',
+  recordedById: 'recordedById',
+  redeemedAt: 'redeemedAt'
+};
+
+exports.Prisma.PricingRecommendationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  eventId: 'eventId',
+  offerId: 'offerId',
+  status: 'status',
+  fromPrice: 'fromPrice',
+  proposedPrice: 'proposedPrice',
+  multiplier: 'multiplier',
+  direction: 'direction',
+  deltaPercent: 'deltaPercent',
+  explanation: 'explanation',
+  payload: 'payload',
+  createdById: 'createdById',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  reviewNote: 'reviewNote',
+  appliedAt: 'appliedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1302,6 +1388,29 @@ exports.SeasonPassPurchaseStatus = exports.$Enums.SeasonPassPurchaseStatus = {
   REFUNDED: 'REFUNDED'
 };
 
+exports.MembershipBillingPeriod = exports.$Enums.MembershipBillingPeriod = {
+  MONTHLY: 'MONTHLY',
+  ANNUAL: 'ANNUAL',
+  SEASON: 'SEASON'
+};
+
+exports.MembershipStatus = exports.$Enums.MembershipStatus = {
+  ACTIVE: 'ACTIVE',
+  CANCELLED: 'CANCELLED'
+};
+
+exports.MembershipPeriodKind = exports.$Enums.MembershipPeriodKind = {
+  NEW: 'NEW',
+  RENEWAL: 'RENEWAL'
+};
+
+exports.PricingRecommendationStatus = exports.$Enums.PricingRecommendationStatus = {
+  PENDING: 'PENDING',
+  APPLIED: 'APPLIED',
+  REJECTED: 'REJECTED',
+  SUPERSEDED: 'SUPERSEDED'
+};
+
 exports.Prisma.ModelName = {
   Organization: 'Organization',
   Venue: 'Venue',
@@ -1355,7 +1464,13 @@ exports.Prisma.ModelName = {
   SeasonPassEvent: 'SeasonPassEvent',
   SeasonPassPurchase: 'SeasonPassPurchase',
   OrgInvitation: 'OrgInvitation',
-  EventDisclosure: 'EventDisclosure'
+  EventDisclosure: 'EventDisclosure',
+  MembershipPlan: 'MembershipPlan',
+  Membership: 'Membership',
+  MembershipPeriod: 'MembershipPeriod',
+  MembershipBenefit: 'MembershipBenefit',
+  MembershipBenefitRedemption: 'MembershipBenefitRedemption',
+  PricingRecommendation: 'PricingRecommendation'
 };
 
 /**
