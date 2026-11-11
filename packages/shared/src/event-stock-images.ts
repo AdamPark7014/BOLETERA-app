@@ -10,21 +10,20 @@ export const EVENT_STOCK_IMAGES = {
   MUSIC_INDIE:
     'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1400&q=80',
   ELECTRO:
-    'https://images.unsplash.com/photo-1571266028243-e68f8570c9e0?auto=format&fit=crop&w=1400&q=80',
-  JAZZ:
-    'https://images.unsplash.com/photo-1415201364774-f6f0ba35c28b?auto=format&fit=crop&w=1400&q=80',
+    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1400&q=80',
+  JAZZ: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1400&q=80',
   COMEDY:
     'https://images.unsplash.com/photo-1585699324551-f6c309eedeca?auto=format&fit=crop&w=1400&q=80',
   THEATER:
     'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1400&q=80',
   BALLET:
-    'https://images.unsplash.com/photo-1518834107812-67b0b7c584ca?auto=format&fit=crop&w=1400&q=80',
+    'https://images.unsplash.com/photo-1547153760-18fc86324498?auto=format&fit=crop&w=1400&q=80',
   SPORTS:
     'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1400&q=80',
   FESTIVAL:
     'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1400&q=80',
   OPEN_AIR:
-    'https://images.unsplash.com/photo-1459749411175-04bf52924ce5?auto=format&fit=crop&w=1400&q=80',
+    'https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=1400&q=80',
   EXPERIENCE:
     'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1400&q=80',
 } as const;
@@ -133,8 +132,7 @@ export const CURATED_MARKETING_CARDS: readonly CuratedMarketingCard[] = [
 export const CITY_STOCK_IMAGES: Record<string, string> = {
   'Ciudad de México':
     'https://images.unsplash.com/photo-1518654842511-9a1f7e4c8735?auto=format&fit=crop&w=800&q=80',
-  CDMX:
-    'https://images.unsplash.com/photo-1518654842511-9a1f7e4c8735?auto=format&fit=crop&w=800&q=80',
+  CDMX: 'https://images.unsplash.com/photo-1518654842511-9a1f7e4c8735?auto=format&fit=crop&w=800&q=80',
   Monterrey:
     'https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=800&q=80',
   Guadalajara:
@@ -149,8 +147,7 @@ export const CITY_STOCK_IMAGES: Record<string, string> = {
     'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
   Querétaro:
     'https://images.unsplash.com/photo-1469854523086-cc02afe5c880?auto=format&fit=crop&w=800&q=80',
-  León:
-    'https://images.unsplash.com/photo-1469854523086-cc02afe5c880?auto=format&fit=crop&w=800&q=80',
+  León: 'https://images.unsplash.com/photo-1469854523086-cc02afe5c880?auto=format&fit=crop&w=800&q=80',
 };
 
 export function cityStockImage(city: string): string | undefined {

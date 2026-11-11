@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import styles from './EventPosterArt.module.scss';
+import { PosterImage } from './PosterImage';
 
 export type PosterEvent = {
   id: string;
@@ -74,10 +75,8 @@ export function EventPosterArt({
   /** Solo para el póster principal del hero: evita el lazy-load del LCP. */
   priority?: boolean;
 }) {
-  const src =
-    event.bannerImage ||
-    event.image ||
-    localPosterForCategory(event.category, event.slug || event.title);
+  const local = localPosterForCategory(event.category, event.slug || event.title);
+  const src = event.bannerImage || event.image || local;
   const d = event.startsAt ? new Date(event.startsAt) : null;
   const aspect = event.posterAspect || defaultAspect(event.category);
   const { width, height } = intrinsicSize(aspect);
@@ -92,9 +91,9 @@ export function EventPosterArt({
       data-aspect={aspect}
       aria-hidden="true"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <PosterImage
         src={src}
+        fallbackSrc={local}
         alt=""
         className={styles.photo}
         width={width}
