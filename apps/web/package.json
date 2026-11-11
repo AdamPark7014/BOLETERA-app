@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start --port 3040",
     "check-types": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint app components lib --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "test:watch": "jest --watch"
   },
@@ -29,10 +29,14 @@
     "zustand": "^4.4.8"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^16.4.6",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
     "sass": "^1.71.1",
     "typescript": "^5.9.2"
   }

@@ -94,7 +94,6 @@ function PagoContent() {
     if (result !== 'ok' || !publicId || !tokenReady) return;
 
     let cancelled = false;
-    let poll: ReturnType<typeof setInterval> | undefined;
 
     async function confirmDemo() {
       setConfirming(true);
@@ -133,7 +132,7 @@ function PagoContent() {
 
     setConfirming(true);
     setFailure(null);
-    poll = setInterval(async () => {
+    const poll = setInterval(async () => {
       try {
         const res = await fetch(`${API}/orders/${publicId}/status`, { cache: 'no-store' });
         if (!res.ok) return;
@@ -146,7 +145,7 @@ function PagoContent() {
 
     return () => {
       cancelled = true;
-      if (poll) clearInterval(poll);
+      clearInterval(poll);
     };
   }, [result, publicId, demo, gatewayDemo, router, token, tokenReady, loadOrder]);
 
