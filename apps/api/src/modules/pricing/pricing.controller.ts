@@ -24,7 +24,12 @@ import { PricingService } from './pricing.service';
 type ScopedRequest = OrgScopedRequest & { user?: { role?: string; sub?: string; id?: string } };
 
 const READ_ROLES = ['PROMOTER', 'VENUE_MANAGER', 'ADMIN', 'SUPER_ADMIN'] as const;
-const WRITE_ROLES = ['PROMOTER', 'ADMIN', 'SUPER_ADMIN'] as const;
+/**
+ * Aplicar, aprobar, rechazar y generar cambios de precio: solo administración
+ * (decisión de Adam, 13-11-2026). Promotor y gerente de recinto consultan.
+ * La pantalla de Precios del admin usa la misma lista.
+ */
+const WRITE_ROLES = ['ADMIN', 'SUPER_ADMIN'] as const;
 
 function actorOf(req: ScopedRequest): Actor {
   return {

@@ -107,25 +107,18 @@ export default function PricingPage() {
 }
 
 /**
- * Roles que el API deja aplicar, aprobar y rechazar (WRITE_ROLES en
- * pricing.controller.ts). La pantalla no los usa para decidir: decide
- * `price:write` (venues.edit). Mientras Adam no unifique las dos reglas, el aviso
- * dice la verdad de cada lado.
+ * Quién aplica, aprueba o rechaza cambios de precio: solo administración
+ * (decisión de Adam, 13-11-2026). Es la misma lista que WRITE_ROLES en
+ * pricing.controller.ts; si cambia allá, cambia aquí.
  */
-const API_WRITE_ROLES = new Set(['PROMOTER', 'ADMIN', 'SUPER_ADMIN']);
+const PRICE_WRITE_ROLES = new Set(['ADMIN', 'SUPER_ADMIN']);
 
-function pricingReadOnlyNote(role: string | null, canWrite: boolean): string | null {
-  const apiAllows = API_WRITE_ROLES.has((role ?? '').toUpperCase());
-  if (!canWrite && apiAllows) {
-    return 'Esta pantalla es de solo lectura para tu rol. El API sí te deja aplicar precios, pero aquí falta el permiso de edición; pídelo a un administrador.';
-  }
-  if (!canWrite)
-    return 'Esta pantalla es de solo lectura para tu rol: consultas recomendaciones, cola y señales.';
-  if (!apiAllows) {
-    return 'Tu rol ve los botones, pero el API solo deja aplicar o aprobar a promotor y administración: el servidor rechazará el cambio.';
-  }
-  return null;
+function canWritePrices(role: string | null): boolean {
+  return PRICE_WRITE_ROLES.has((role ?? '').toUpperCase());
 }
+
+const READ_ONLY_NOTE =
+  'Esta pantalla es de solo lectura para tu rol: consultas recomendaciones, cola y señales. Aplicar o aprobar precios lo hace administración.';
 
 function PreciosGate() {
   const session = useSession();
@@ -136,9 +129,9 @@ function PreciosGate() {
 }
 
 function PreciosBody() {
-  const { can, role } = useAppSession();
-  const canWrite = can('price:write');
-  const readOnlyNote = pricingReadOnlyNote(role, canWrite);
+  const { role } = useAppSession();
+  const canWrite = canWritePrices(role);
+  const readOnlyNote = canWrite ? null : READ_ONLY_NOTE;
   const url = usePricingUrlState();
   const eventsQ = useEvents();
 
@@ -990,7 +983,7 @@ function PendingItem({
               </div>
             </>
           ) : (
-            <p className={styles.tertiary}>Revisar la cola pide el permiso price:write.</p>
+            <p className={styles.tertiary}>Revisar la cola lo hace administración.</p>
           )}
         </div>
       ) : null}
