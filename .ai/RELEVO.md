@@ -1,10 +1,13 @@
 # RELEVO
 
 - **Último turno:** claude-code
-- **Fecha:** 2026-11-13
+- **Fecha:** 2026-11-14
 - **Rama:** main
 
 ## Hecho
+
+- 2026-11-14 claude-code: la plataforma completa corre en Docker Compose. Arreglados Dockerfile.api (build que fallaba en silencio, paquetes del workspace rotos), Dockerfile.web (CMD sin expandir APP_NAME), Dockerfile.worker, `.dockerignore` (metía `apps/api/.env` con secretos y pisaba DATABASE_URL; excluía turbo.json/pnpm-workspace.yaml) y build de paquetes con main en `dist/`. Web en SSR usa `API_INTERNAL_URL` si existe; fechas con `America/Mexico_City` (sin eso, error de hidratación #418 con el servidor en UTC).
+- 2026-11-14 claude-code: demo local en Docker (fuera del repo): `C:\dev\tmp\boletera-demo` (override con taquilla y nombres `boletera-demo-*`, `demo.env` con secretos aleatorios, galería de capturas). Levantar: `docker compose -p boletera-demo --env-file C:\dev\tmp\boletera-demo\demo.env -f docker-compose.yml -f C:\dev\tmp\boletera-demo\docker-compose.demo.yml up -d`; apagar: `docker compose -p boletera-demo down`.
 
 - 2026-11-13 claude-code: precios: solo ADMIN y SUPER_ADMIN aplican, generan, aprueban o rechazan (decisión de Adam); PROMOTER y VENUE_MANAGER consultan (403 en escritura, prueba de roles). La pantalla usa la misma lista y muestra aviso de solo lectura.
 - 2026-11-13 claude-code: doble ajuste de precio: si la última `applied_recommendation` de la oferta sigue igual a `basePrice` y está vigente, el checkout cobra `basePrice` sin surge ni multiplicador por tiempo (regla en `pricing.service.ts`).
