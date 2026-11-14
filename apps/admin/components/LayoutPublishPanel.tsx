@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, TicketButton } from '@boletera/ui';
 import type { LayoutPublishStatusValue } from '@boletera/shared';
 import {
@@ -44,18 +44,24 @@ export function LayoutPublishPanel({
   const [error, setError] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
+  // El aviso al padre va por ref: si el padre pasa una función nueva en cada
+  // render, depender de ella recreaba `refresh`, el efecto volvía a pedir el
+  // workflow, el padre se re-renderizaba… y el API terminaba en 429.
+  const onWorkflowChangeRef = useRef(onWorkflowChange);
+  onWorkflowChangeRef.current = onWorkflowChange;
+
   const refresh = useCallback(async () => {
     setError(null);
     try {
       const data = await getVenueLayoutWorkflow(token, venueId);
       setWorkflow(data);
-      onWorkflowChange?.(data);
+      onWorkflowChangeRef.current?.(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo cargar el estado del mapa');
     } finally {
       setLoading(false);
     }
-  }, [token, venueId, onWorkflowChange]);
+  }, [token, venueId]);
 
   useEffect(() => {
     void refresh();
