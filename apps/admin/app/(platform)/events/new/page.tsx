@@ -165,6 +165,13 @@ function CreateBody() {
         if (!alive) return;
         const seats = data.layout?.mapData ? countSeats(data.layout.mapData) : 0;
         setMap({ status: seats > 0 ? 'ok' : 'empty', seats });
+        // Sin cupo escrito, la oferta arranca con el aforo del mapa. Antes quedaba
+        // en blanco y el único modo de llenarlo era pulsar + una vez por butaca.
+        if (seats > 0) {
+          setForm((current) =>
+            current.capacity === '' ? { ...current, capacity: String(seats) } : current
+          );
+        }
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -528,6 +535,7 @@ function CreateBody() {
               <>
                 <Stepper
                   label="Cupo"
+                  editable
                   value={form.capacity === '' ? null : capacity}
                   min={1}
                   max={map.status === 'ok' ? map.seats : null}

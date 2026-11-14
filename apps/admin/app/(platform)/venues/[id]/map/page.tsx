@@ -7,6 +7,7 @@ import type { SeatMapData } from '@boletera/shared';
 import { NamedStatus, TicketButton } from '@boletera/ui';
 import { SeatMapEditor, type MapValidationState } from '@/components/SeatMapEditor';
 import { LayoutPublishPanel } from '@/components/LayoutPublishPanel';
+import { ApiError } from '@/lib/api';
 import {
   applyLayoutTemplate,
   suggestLayout,
@@ -30,7 +31,20 @@ const STATUS_LABEL: Record<LayoutPublishStatusValue, string> = {
 };
 
 function failMessage(cause: unknown): string {
-  if (cause instanceof Error && cause.message.trim()) return cause.message;
+  if (cause instanceof Error && cause.message.trim()) {
+    // Publicar devuelve 400 con `blockers`: sin listarlos, el promotor solo leía
+    // "no cumple los requisitos" y no sabía qué corregir (canales, aforo, mapa…).
+    const body = cause instanceof ApiError ? cause.body : null;
+    const blockers =
+      body && typeof body === 'object' && Array.isArray((body as { blockers?: unknown }).blockers)
+        ? (body as { blockers: unknown[] }).blockers
+            .map((b) =>
+              b && typeof b === 'object' ? String((b as { message?: unknown }).message ?? '') : ''
+            )
+            .filter(Boolean)
+        : [];
+    return blockers.length > 0 ? `${cause.message} ${blockers.join(' ')}` : cause.message;
+  }
   return 'No se guardó. Revisa la conexión.';
 }
 

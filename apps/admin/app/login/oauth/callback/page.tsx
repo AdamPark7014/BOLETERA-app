@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { storeSession } from '@/lib/api';
 import { AuthShell, StatusBanner } from '../../_components/AuthShell';
 import { oauthCallbackRedirectUri, resolveOauthProvider } from '../../_lib/oauth';
@@ -11,7 +11,6 @@ import styles from '../../login.module.scss';
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
 
 function OauthCallbackHandler() {
-  const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
 
@@ -46,12 +45,13 @@ function OauthCallbackHandler() {
           organizationId: data.user.organizationId ?? null,
           role: data.user.role ?? '',
         });
-        router.replace('/dashboard');
+        // Navegación completa: los proveedores de sesión leen el token al montar.
+        window.location.replace('/dashboard');
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Error de inicio de sesión con el proveedor.');
       }
     })();
-  }, [params, router]);
+  }, [params]);
 
   if (!error) return <p className={styles.quiet}>Completando el acceso con tu proveedor.</p>;
   return (

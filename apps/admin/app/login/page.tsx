@@ -2,7 +2,6 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Field, TicketButton } from '@boletera/ui';
 import { ApiError, login, storeSession } from '@/lib/api';
 import { AuthShell, StatusBanner } from './_components/AuthShell';
@@ -22,7 +21,6 @@ function startSso(provider: OauthProvider) {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -37,7 +35,11 @@ export default function LoginPage() {
     try {
       const { accessToken, user } = await login(email, password);
       storeSession(accessToken, user);
-      router.push('/dashboard');
+      // Navegación completa, no `router.push`: los dos proveedores de sesión
+      // (`lib/use-session` y `components/Session`) leen el token solo al montar
+      // y envuelven también /login. Con navegación de cliente seguían en
+      // "sin sesión" y el shell devolvía al usuario al login sin mensaje.
+      window.location.assign('/dashboard');
     } catch (err) {
       setError(
         err instanceof ApiError && err.status === 401
