@@ -611,13 +611,20 @@ export class InventoryService {
                  AND status = 'AVAILABLE'::"TicketStatus"
               RETURNING id, "offerId"`;
             if (!claimed.length) throw new ConflictException(`Seat ${seatId} not available`);
+            // La zona la decide el asiento, no el request: con un offerId ajeno
+            // se cobraba un asiento caro al precio de una zona barata.
+            if (dto.offerId && dto.offerId !== claimed[0].offerId) {
+              throw new BadRequestException(
+                `El asiento ${seatId} pertenece a otra zona; elige la zona de ese asiento`
+              );
+            }
 
             created.push(
               await tx.seatHold.create({
                 data: {
                   eventId: dto.eventId,
                   seatId,
-                  offerId: dto.offerId ?? claimed[0].offerId,
+                  offerId: claimed[0].offerId,
                   userId: dto.userId,
                   sessionId: dto.sessionId,
                   channel,

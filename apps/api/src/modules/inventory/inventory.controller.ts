@@ -246,8 +246,13 @@ export class InventoryController {
     @Body() body?: { sessionId?: string },
     @Headers('x-session-id') sessionHeader?: string
   ) {
+    // El hold guarda el id VERIFICADO de la identidad firmada (requireIdentity),
+    // no la cadena firmada completa: comparar contra la cadena cruda respondía
+    // 403 «Hold belongs to another session» a su propio dueño, el comprador no
+    // podía soltar asientos y chocaba con el tope de 10 apartados.
+    const rawSession = body?.sessionId ?? sessionHeader;
     return this.inventory.releaseHold(id, {
-      sessionId: body?.sessionId ?? sessionHeader,
+      sessionId: this.guestSession.verify(rawSession)?.id,
       userId: user?.sub,
       staff: false,
     });

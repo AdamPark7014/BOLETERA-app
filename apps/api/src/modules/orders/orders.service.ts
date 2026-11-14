@@ -74,9 +74,6 @@ const ACCESS_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** Transacciones cortas: nunca deben esperar a la red (F1-07). */
 const DB_TX_TIMEOUT_MS = 10_000;
 
-/** Reintentos al reclamar un boleto GA que otra venta pudo llevarse. */
-const GA_CLAIM_ATTEMPTS = 5;
-
 /**
  * Deja una fila de `Refund` en lo que el comprador puede ver.
  *
@@ -792,9 +789,13 @@ export class OrdersService {
   }
 
   /**
-   * Toma un boleto GA que siga realmente HELD. `updateMany` no admite LIMIT,
-   * así que se elige un candidato y se actualiza con el estado en el `where`:
-   * si otra venta se adelantó el count es 0 y se prueba con otro.
+   * Toma un boleto GA que siga realmente HELD. Los holds de admisión general no
+   * apuntan a una fila concreta: cualquier boleto HELD de la oferta sirve. Con
+   * `FOR UPDATE SKIP LOCKED` cada venta concurrente toma una fila distinta en
+   * un solo paso; el bucle anterior (findFirst + updateMany, 5 intentos) hacía
+   * que cientos de ventas eligieran la misma fila y, al agotar los intentos,
+   * rechazaba a compradores con apartado válido (26 de 200 en la prueba de
+   * carga con 2,000 compradores).
    */
   private async claimGeneralAdmissionTicket(
     tx: Prisma.TransactionClient,
@@ -806,29 +807,25 @@ export class OrdersService {
       buyerName: string;
     }
   ) {
-    for (let attempt = 0; attempt < GA_CLAIM_ATTEMPTS; attempt++) {
-      const candidate = await tx.ticket.findFirst({
-        where: {
-          eventId: params.eventId,
-          offerId: params.offerId,
-          status: TicketStatus.HELD,
-        },
-        select: { id: true },
-      });
-      if (!candidate) break;
-
-      const claimed = await tx.ticket.updateMany({
-        where: { id: candidate.id, status: TicketStatus.HELD },
-        data: {
-          status: TicketStatus.SOLD,
-          buyerEmail: params.buyerEmail,
-          buyerName: params.buyerName,
-          code: generateTicketCode(),
-          orderItemId: params.orderItemId,
-        },
-      });
-      if (claimed.count === 1) return;
-    }
+    const claimed = await tx.$queryRaw<Array<{ id: string }>>`
+      UPDATE "Ticket"
+         SET status = 'SOLD'::"TicketStatus",
+             "buyerEmail" = ${params.buyerEmail},
+             "buyerName" = ${params.buyerName},
+             code = ${generateTicketCode()},
+             "orderItemId" = ${params.orderItemId},
+             "updatedAt" = now()
+       WHERE id = (
+         SELECT id FROM "Ticket"
+          WHERE "eventId" = ${params.eventId}
+            AND "offerId" = ${params.offerId}
+            AND status = 'HELD'::"TicketStatus"
+          ORDER BY id
+          LIMIT 1
+            FOR UPDATE SKIP LOCKED
+       )
+      RETURNING id`;
+    if (claimed.length === 1) return;
     throw new ConflictException('Ya no hay boletos disponibles para esa oferta');
   }
 
@@ -968,19 +965,24 @@ export class OrdersService {
     return groups;
   }
 
+  /**
+   * Oferta que se cobra por un hold. En asiento numerado manda la oferta del
+   * boleto de ese asiento EN ESE EVENTO (el seatId se repite entre funciones del
+   * mismo recinto): antes ganaba `hold.offerId`, que venía del request, y un
+   * asiento de Luneta se cobraba al precio de Balcón.
+   */
   private async offerIdForHold(
-    hold: { seatId: string | null; offerId: string | null },
+    hold: { seatId: string | null; offerId: string | null; eventId: string },
     fallback?: string
   ) {
-    if (hold.offerId) return hold.offerId;
     if (hold.seatId) {
       const ticket = await this.prisma.ticket.findFirst({
-        where: { seatId: hold.seatId },
+        where: { eventId: hold.eventId, seatId: hold.seatId },
         select: { offerId: true },
       });
       if (ticket?.offerId) return ticket.offerId;
     }
-    return fallback;
+    return hold.offerId ?? fallback;
   }
 
   /** Lectura cruda para uso interno: NO autoriza. Fuera usa `getForRequester`. */
