@@ -217,7 +217,8 @@ export function EventPurchaseClient({
         coord3d: seat.coord3d,
         visibility: seat.visibility,
         section: seat.sectionName,
-        color: '#17171A',
+        // Color de la zona, como en el plano 2D; el visor lo baja a tono sobrio.
+        color: seat.sectionColor || '#17171A',
         price: offer ? Number(offer.basePrice) : undefined,
         levelId: seat.levelId,
         status: seat.visibility?.blocked
