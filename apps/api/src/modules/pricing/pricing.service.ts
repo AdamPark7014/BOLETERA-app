@@ -11,6 +11,7 @@ import {
 import { CampaignExecutionService } from '../campaign-execution/campaign-execution.service';
 import { promotionDiscount } from '../campaign-execution/loyalty';
 import { PrismaService } from '../prisma/prisma.service';
+import { APPLIED_REASON_PREFIX } from './pricing-recommendations.service';
 
 interface PricingContext {
   eventId: string;
@@ -136,8 +137,17 @@ export class PricingService {
     const occupancyRate = soldCount / offer.totalQuantity;
     appliedRules.push(`Occupancy: ${(occupancyRate * 100).toFixed(1)}%`);
 
+    // Precio dinámico del checkout: solo si el evento lo tiene activo y la
+    // oferta no trae ya una recomendación aplicada vigente (ver abajo).
+    const now = ctx.timestamp ?? new Date();
+    const dynamicOn =
+      event.enableDynamic && !(await this.hasActiveAppliedRecommendation(offer, now));
+    if (event.enableDynamic && !dynamicOn) {
+      appliedRules.push('Applied recommendation in force: base price charged as is');
+    }
+
     // 2. Apply dynamic pricing based on occupancy (if enabled)
-    if (event.enableDynamic) {
+    if (dynamicOn) {
       const surge = this.calculateSurgePricing(occupancyRate);
       if (surge.multiplier !== 1.0) {
         dynamicMultiplier *= surge.multiplier;
@@ -153,10 +163,8 @@ export class PricingService {
     // hubiera pedido. Peor: rompía la promesa del catálogo, porque el «desde»
     // anunciado dejaba de ser el que se cobraba en el checkout — que es
     // exactamente la práctica que la ley obliga a evitar.
-    if (event.enableDynamic) {
-      const daysUntilEvent =
-        (event.startsAt.getTime() - (ctx.timestamp?.getTime() ?? Date.now())) /
-        (1000 * 60 * 60 * 24);
+    if (dynamicOn) {
+      const daysUntilEvent = (event.startsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
       const timeMultiplier = this.calculateTimeMultiplier(daysUntilEvent);
       if (timeMultiplier !== 1.0) {
         dynamicMultiplier *= timeMultiplier;
@@ -220,6 +228,47 @@ export class PricingService {
         appliedRules,
       },
     };
+  }
+
+  // ==================== RECOMENDACIÓN APLICADA VIGENTE ====================
+
+  /**
+   * Evita el doble ajuste de precio.
+   *
+   * Cuando una recomendación se aplica (`pricing-recommendations.service.ts`),
+   * el ajuste por demanda y por tiempo YA quedó escrito en `Offer.basePrice` y
+   * se deja una fila `DynamicPrice` con `reason` que empieza con
+   * `applied_recommendation|`. Si el checkout volviera a multiplicar ese precio
+   * por el surge y por la cercanía de la fecha, el comprador pagaría el mismo
+   * ajuste dos veces.
+   *
+   * Regla conservadora: la recomendación está «vigente» cuando
+   *   1. es la última fila `applied_recommendation|` de la oferta (por `createdAt`),
+   *   2. su `adjustedPrice` sigue siendo igual a `Offer.basePrice` — si el
+   *      promotor cambió el precio a mano después (`updateOffer` no deja fila
+   *      de historial), el precio ya no es el de la recomendación y deja de
+   *      contar —, y
+   *   3. el momento del checkout cae dentro de `[activeFrom, activeTo]`.
+   * Con una vigente, el checkout cobra `basePrice` tal cual (sin surge ni
+   * multiplicador por tiempo); segmento y promociones siguen igual. Sin ella,
+   * todo sigue como antes.
+   *
+   * Límite conocido: un cambio manual que deje exactamente el mismo precio que
+   * puso la recomendación no se distingue de ella (`Offer.updatedAt` no sirve:
+   * también cambia con cada venta por el inventario).
+   */
+  private async hasActiveAppliedRecommendation(
+    offer: { id: string; basePrice: Prisma.Decimal | Decimal },
+    now: Date
+  ): Promise<boolean> {
+    const last = await this.prisma.dynamicPrice.findFirst({
+      where: { offerId: offer.id, reason: { startsWith: APPLIED_REASON_PREFIX } },
+      orderBy: { createdAt: 'desc' },
+      select: { adjustedPrice: true, activeFrom: true, activeTo: true },
+    });
+    if (!last) return false;
+    if (!new Decimal(last.adjustedPrice).equals(new Decimal(offer.basePrice))) return false;
+    return last.activeFrom <= now && now <= last.activeTo;
   }
 
   // ==================== SURGE PRICING CALCULATION ====================
