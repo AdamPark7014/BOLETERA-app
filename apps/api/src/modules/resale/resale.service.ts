@@ -3,8 +3,10 @@ import {
   BadRequestException,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
+import { generateTicketCode } from '@boletera/crypto';
 import { ResaleStatus, ResaleOfferStatus, SalesChannel } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -52,10 +54,12 @@ export class ResaleService {
     askingPrice: number;
     currency?: string;
     sellerId: string;
+    sellerEmail?: string;
     sellerName?: string;
   }) {
     const ticketInclude = {
       offer: true,
+      orderItem: { select: { order: { select: { userId: true } } } },
       event: { include: { organization: { select: { resaleCommission: true } } } },
     } as const;
     const ticket = data.ticketId
@@ -68,11 +72,22 @@ export class ResaleService {
           include: ticketInclude,
         });
 
-    if (!ticket) throw new NotFoundException('Ticket not found');
+    if (!ticket) throw new NotFoundException('Boleto no encontrado');
+    // Solo el dueño publica: antes bastaba conocer el código de un boleto ajeno.
+    const ownerId = ticket.orderItem?.order?.userId ?? null;
+    const sameEmail =
+      !!data.sellerEmail &&
+      !!ticket.buyerEmail &&
+      ticket.buyerEmail.trim().toLowerCase() === data.sellerEmail.trim().toLowerCase();
+    if (ownerId !== data.sellerId && !sameEmail) {
+      throw new ForbiddenException('Solo el dueño del boleto puede publicarlo en reventa');
+    }
 
     return this.createListingForTicket(ticket, {
       askingPrice: data.askingPrice,
-      currency: data.currency ?? 'USD',
+      // La moneda del anuncio es la del boleto: con 'USD' por omisión los
+      // anuncios de eventos en pesos quedaban en dólares.
+      currency: data.currency ?? ticket.offer.currency ?? 'MXN',
       sellerId: data.sellerId,
       sellerName: data.sellerName ?? 'Seller',
     });
@@ -83,15 +98,28 @@ export class ResaleService {
       id: string;
       status: string;
       orderItemId: string | null;
-      offer: { basePrice: unknown };
+      offer: { basePrice: unknown; currency?: string };
       event: { allowResale: boolean; organization: { resaleCommission: number | null } };
     },
     data: { askingPrice: number; currency: string; sellerId: string; sellerName: string }
   ) {
-    if (ticket.status !== 'SOLD') throw new BadRequestException('Ticket must be in SOLD status');
-    if (!ticket.orderItemId) throw new BadRequestException('Ticket must have order history');
+    if (ticket.status !== 'SOLD') {
+      throw new BadRequestException('Solo se puede revender un boleto vendido y sin usar');
+    }
+    if (!ticket.orderItemId)
+      throw new BadRequestException('El boleto no tiene una compra asociada');
     if (!ticket.event.allowResale) {
-      throw new BadRequestException('Resale not allowed for this event');
+      throw new BadRequestException('Este evento no permite reventa');
+    }
+    // Un boleto ofrecido en transferencia no puede estar a la vez en reventa.
+    const pendingTransfer = await this.prisma.ticketTransfer.findFirst({
+      where: { ticketId: ticket.id, status: 'PENDING', expiresAt: { gt: new Date() } },
+      select: { id: true },
+    });
+    if (pendingTransfer) {
+      throw new ConflictException(
+        'Este boleto tiene una transferencia pendiente; cancélala antes de revenderlo'
+      );
     }
 
     // Validate price bounds
@@ -101,7 +129,7 @@ export class ResaleService {
 
     if (data.askingPrice < minPrice || data.askingPrice > maxPrice) {
       throw new BadRequestException(
-        `Price must be between ${minPrice.toFixed(2)} and ${maxPrice.toFixed(2)}`
+        `El precio debe estar entre $${minPrice.toFixed(2)} y $${maxPrice.toFixed(2)}`
       );
     }
 
@@ -141,13 +169,17 @@ export class ResaleService {
       where: { id: data.listingId },
     });
 
-    if (!listing) throw new NotFoundException('Listing not found');
+    if (!listing) throw new NotFoundException('Anuncio no encontrado');
     if (listing.status !== ResaleStatus.ACTIVE) {
-      throw new ConflictException('Listing is not active');
+      throw new ConflictException('El anuncio ya no está activo');
+    }
+
+    if (listing.sellerId === data.buyerId) {
+      throw new BadRequestException('No puedes ofertar por tu propio boleto');
     }
 
     if (data.offerPrice > Number(listing.askingPrice)) {
-      throw new BadRequestException('Offer price cannot exceed asking price');
+      throw new BadRequestException('La oferta no puede superar el precio pedido');
     }
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hour expiration
@@ -170,15 +202,23 @@ export class ResaleService {
 
   // ==================== ACCEPT OFFER ====================
 
-  async acceptOffer(offerId: string) {
+  async acceptOffer(offerId: string, userId: string) {
     const offer = await this.prisma.resaleOffer.findUnique({
       where: { id: offerId },
       include: { listing: { include: { ticket: { include: { event: true } } } } },
     });
 
-    if (!offer) throw new NotFoundException('Offer not found');
+    if (!offer) throw new NotFoundException('Oferta no encontrada');
+    // Solo el vendedor acepta: antes cualquiera con sesión aceptaba su propia
+    // oferta de $1 por un boleto ajeno.
+    if (offer.listing.sellerId !== userId) {
+      throw new ForbiddenException('Solo quien vende puede aceptar la oferta');
+    }
     if (offer.status !== ResaleOfferStatus.PENDING) {
-      throw new BadRequestException('Offer is not pending');
+      throw new BadRequestException('La oferta ya no está pendiente');
+    }
+    if (offer.listing.status !== ResaleStatus.ACTIVE) {
+      throw new ConflictException('El anuncio ya no está activo');
     }
 
     return await this.prisma.$transaction(async (tx) => {
@@ -201,6 +241,9 @@ export class ResaleService {
           status: 'SOLD',
           buyerName: undefined,
           buyerEmail: offer.buyerEmail,
+          // El QR que el vendedor ya tiene deja de valer (como en transferencia).
+          code: generateTicketCode(),
+          keyEpoch: { increment: 1 },
         },
       });
 
@@ -237,7 +280,15 @@ export class ResaleService {
 
   // ==================== REJECT OFFER ====================
 
-  async rejectOffer(offerId: string) {
+  async rejectOffer(offerId: string, userId: string) {
+    const existing = await this.prisma.resaleOffer.findUnique({
+      where: { id: offerId },
+      include: { listing: { select: { sellerId: true } } },
+    });
+    if (!existing) throw new NotFoundException('Oferta no encontrada');
+    if (existing.listing.sellerId !== userId) {
+      throw new ForbiddenException('Solo quien vende puede rechazar la oferta');
+    }
     const offer = await this.prisma.resaleOffer.update({
       where: { id: offerId },
       data: {
@@ -253,12 +304,18 @@ export class ResaleService {
 
   // ==================== CANCEL LISTING ====================
 
-  async cancelListing(listingId: string) {
+  async cancelListing(listingId: string, userId: string) {
     const listing = await this.prisma.resaleListing.findUnique({
       where: { id: listingId },
     });
 
-    if (!listing) throw new NotFoundException('Listing not found');
+    if (!listing) throw new NotFoundException('Anuncio no encontrado');
+    if (listing.sellerId !== userId) {
+      throw new ForbiddenException('Solo quien vende puede cancelar el anuncio');
+    }
+    if (listing.status !== ResaleStatus.ACTIVE) {
+      throw new ConflictException('El anuncio ya no está activo');
+    }
 
     await this.prisma.resaleListing.update({
       where: { id: listingId },
@@ -369,7 +426,7 @@ export class ResaleService {
       include: { offer: true, event: true },
     });
 
-    if (!ticket) throw new NotFoundException('Ticket not found');
+    if (!ticket) throw new NotFoundException('Boleto no encontrado');
 
     const originalPrice = Number(ticket.offer.basePrice);
     const maxAllowedPrice = originalPrice * this.MAX_RESALE_PRICE_PERCENT;

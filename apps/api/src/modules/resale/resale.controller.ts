@@ -28,6 +28,7 @@ export class ResaleController {
     return await this.resaleService.createListing({
       ...dto,
       sellerId: req.user.sub,
+      sellerEmail: req.user.email,
       sellerName: dto.sellerName ?? req.user.email ?? 'Seller',
     });
   }
@@ -57,8 +58,8 @@ export class ResaleController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Accept resale offer' })
-  async acceptOffer(@Param('offerId') offerId: string) {
-    return await this.resaleService.acceptOffer(offerId);
+  async acceptOffer(@Param('offerId') offerId: string, @Request() req: { user: { sub: string } }) {
+    return await this.resaleService.acceptOffer(offerId, req.user.sub);
   }
 
   // ==================== REJECT OFFER ====================
@@ -67,8 +68,8 @@ export class ResaleController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Reject resale offer' })
-  async rejectOffer(@Param('offerId') offerId: string) {
-    return await this.resaleService.rejectOffer(offerId);
+  async rejectOffer(@Param('offerId') offerId: string, @Request() req: { user: { sub: string } }) {
+    return await this.resaleService.rejectOffer(offerId, req.user.sub);
   }
 
   // ==================== CANCEL LISTING ====================
@@ -77,8 +78,11 @@ export class ResaleController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cancel resale listing' })
-  async cancelListing(@Param('listingId') listingId: string) {
-    return await this.resaleService.cancelListing(listingId);
+  async cancelListing(
+    @Param('listingId') listingId: string,
+    @Request() req: { user: { sub: string } }
+  ) {
+    return await this.resaleService.cancelListing(listingId, req.user.sub);
   }
 
   // ==================== LIST ACTIVE LISTINGS ====================
