@@ -106,6 +106,27 @@ export default function PricingPage() {
   );
 }
 
+/**
+ * Roles que el API deja aplicar, aprobar y rechazar (WRITE_ROLES en
+ * pricing.controller.ts). La pantalla no los usa para decidir: decide
+ * `price:write` (venues.edit). Mientras Adam no unifique las dos reglas, el aviso
+ * dice la verdad de cada lado.
+ */
+const API_WRITE_ROLES = new Set(['PROMOTER', 'ADMIN', 'SUPER_ADMIN']);
+
+function pricingReadOnlyNote(role: string | null, canWrite: boolean): string | null {
+  const apiAllows = API_WRITE_ROLES.has((role ?? '').toUpperCase());
+  if (!canWrite && apiAllows) {
+    return 'Esta pantalla es de solo lectura para tu rol. El API sí te deja aplicar precios, pero aquí falta el permiso de edición; pídelo a un administrador.';
+  }
+  if (!canWrite)
+    return 'Esta pantalla es de solo lectura para tu rol: consultas recomendaciones, cola y señales.';
+  if (!apiAllows) {
+    return 'Tu rol ve los botones, pero el API solo deja aplicar o aprobar a promotor y administración: el servidor rechazará el cambio.';
+  }
+  return null;
+}
+
 function PreciosGate() {
   const session = useSession();
   if (session.status === 'anonymous') return <AnonymousView />;
@@ -115,8 +136,9 @@ function PreciosGate() {
 }
 
 function PreciosBody() {
-  const { can } = useAppSession();
+  const { can, role } = useAppSession();
   const canWrite = can('price:write');
+  const readOnlyNote = pricingReadOnlyNote(role, canWrite);
   const url = usePricingUrlState();
   const eventsQ = useEvents();
 
@@ -370,9 +392,9 @@ function PreciosBody() {
             {refreshing ? 'Actualizando' : 'Actualizar'}
           </TicketButton>
         </div>
-        {!canWrite ? (
-          <p className={styles.tertiary}>
-            Tu rol consulta. Aplicar y revisar la cola pide el permiso price:write.
+        {readOnlyNote ? (
+          <p className={styles.quiet} role="note">
+            {readOnlyNote}
           </p>
         ) : null}
         {previewMode && bundleQ.data ? (
