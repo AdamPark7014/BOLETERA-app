@@ -978,14 +978,15 @@ model User {
   loyaltyPoints Int @default(0)
 
   // Relations
-  orders          Order[]
-  reviews         Review[]
-  fraudFlags      FraudFlag[]      @relation("UserFraudFlags")
-  cart            Cart?
-  wishlist        Wishlist[]
-  sessions        Session[]
-  userPermissions UserPermission[]
-  memberships     Membership[]
+  orders              Order[]
+  reviews             Review[]
+  fraudFlags          FraudFlag[]          @relation("UserFraudFlags")
+  cart                Cart?
+  wishlist            Wishlist[]
+  sessions            Session[]
+  userPermissions     UserPermission[]
+  memberships         Membership[]
+  membershipCheckouts MembershipCheckout[]
 
   // Audit
   createdAt DateTime @default(now())
@@ -1987,6 +1988,7 @@ model MembershipPlan {
 
   memberships Membership[]
   benefits    MembershipBenefit[]
+  checkouts   MembershipCheckout[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2073,6 +2075,37 @@ model MembershipBenefitRedemption {
   @@index([benefitId])
   @@index([membershipId])
   @@index([organizationId, redeemedAt])
+}
+
+/// Compra de membresía en la web. Se cobra por el camino de las órdenes
+/// (PaymentIntent Banorte → IPN o confirmación demo → Payment); al confirmarse
+/// activa o renueva la Membership con su MembershipPeriod.
+model MembershipCheckout {
+  id             String               @id @default(cuid())
+  publicId       String               @unique
+  organizationId String
+  planId         String
+  plan           MembershipPlan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         OrderStatus          @default(PENDING)
+  kind           MembershipPeriodKind @default(NEW)
+  amount         Decimal              @db.Decimal(12, 2)
+  currency       Currency             @default(MXN)
+  paymentMethod  PaymentMethod        @default(CARD)
+  buyerEmail     String               @db.VarChar(255)
+  buyerName      String
+  paymentId      String?
+  membershipId   String?
+  periodId       String?              @unique
+  expiresAt      DateTime
+  completedAt    DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([organizationId, status, createdAt])
+  @@index([userId, status])
+  @@index([planId, status])
 }
 
 // ============================================================================

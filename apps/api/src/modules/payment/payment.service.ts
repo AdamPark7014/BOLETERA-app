@@ -97,6 +97,56 @@ class SettlementBlockedError extends Error {
 }
 
 /**
+ * Cobro que NO es una orden de boletos (hoy: compra de membresía) y que se paga
+ * por este mismo camino: intent Banorte → IPN o confirmación demo → `Payment`.
+ * No hay una segunda pasarela: el módulo dueño solo dice qué se compró y qué
+ * se activa al confirmarse el cobro.
+ */
+export type ExternalCharge = {
+  id: string;
+  publicId: string;
+  organizationId: string;
+  status: OrderStatus;
+  /** Importe esperado (de la base, nunca del cliente). */
+  amount: number;
+  currency: Currency;
+  paymentMethod: PaymentMethod;
+};
+
+export interface ExternalChargeHandler {
+  /** Prefijo de la clave de idempotencia del intent (`<kind>:<id>`). */
+  readonly kind: string;
+  /** Busca por id o publicId EXACTOS; `null` si la referencia no es suya. */
+  find(reference: string): Promise<ExternalCharge | null>;
+  /**
+   * Pasa el cobro a COMPLETED con un update condicional por estado dentro de la
+   * transacción. `false` = ya lo completó otro IPN (duplicado o concurrente).
+   */
+  claim(tx: Prisma.TransactionClient, id: string): Promise<boolean>;
+  /** Activa lo comprado, dentro de la misma transacción que crea el `Payment`. */
+  activate(tx: Prisma.TransactionClient, charge: ExternalCharge, paymentId: string): Promise<void>;
+  markFailed(id: string): Promise<void>;
+  /** El dinero entró pero no se puede activar: queda para devolución. */
+  markPendingRefund(id: string, action: string, metadata: Record<string, unknown>): Promise<void>;
+}
+
+/**
+ * Lo lanza `ExternalChargeHandler.activate` cuando el cobro entró pero no se
+ * puede activar (p. ej. el plan se llenó mientras se pagaba): la transacción
+ * se revierte y el cobro queda PENDING_REFUND, como una orden sin inventario.
+ */
+export class ExternalChargeBlockedError extends Error {
+  constructor(
+    readonly action: string,
+    message: string,
+    readonly metadata: Record<string, unknown> = {}
+  ) {
+    super(message);
+    this.name = 'ExternalChargeBlockedError';
+  }
+}
+
+/**
  * Modo estricto de conciliación de importes.
  *
  * DELIBERADO: por defecto (`PAYMENT_STRICT_SETTLEMENT` ausente o 'false') un
@@ -285,7 +335,29 @@ export class PaymentService {
       where: { id: data.orderId },
       include: { items: true, event: true },
     });
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) {
+      // Cobro que no es una orden de boletos (membresía): mismo camino demo.
+      const external = await this.findExternalCharge(data.orderId);
+      if (!external) throw new NotFoundException('Order not found');
+      if (external.charge.status === OrderStatus.COMPLETED) {
+        return { charge: external.charge, alreadyCompleted: true };
+      }
+      if (getBanorteConfig().isDemo) {
+        return this.settleExternalCharge(
+          external.handler,
+          external.charge,
+          data.externalId ?? data.intentId ?? `banorte_demo_${external.charge.publicId}`,
+          {
+            amount: external.charge.amount,
+            currency: external.charge.currency,
+            source: 'demo_confirm',
+          }
+        );
+      }
+      throw new BadRequestException(
+        'En producción la confirmación llega vía IPN Banorte (webhook).'
+      );
+    }
     if (order.status === OrderStatus.COMPLETED) {
       return { order, alreadyCompleted: true };
     }
@@ -301,6 +373,251 @@ export class PaymentService {
     }
 
     throw new BadRequestException('En producción la confirmación llega vía IPN Banorte (webhook).');
+  }
+
+  // ==================== COBROS QUE NO SON ÓRDENES (membresías) ==============
+
+  private externalHandlers: ExternalChargeHandler[] = [];
+
+  /** El módulo dueño (p. ej. membresías) se registra al arrancar. */
+  registerExternalCharge(handler: ExternalChargeHandler) {
+    if (!this.externalHandlers.some((h) => h.kind === handler.kind)) {
+      this.externalHandlers.push(handler);
+    }
+  }
+
+  /**
+   * Resuelve una referencia del banco a un cobro externo: id o publicId exactos
+   * en cada handler, o el externalId del intent (como en las órdenes).
+   */
+  private async findExternalCharge(
+    reference: string
+  ): Promise<{ handler: ExternalChargeHandler; charge: ExternalCharge } | null> {
+    if (!reference || this.externalHandlers.length === 0) return null;
+    for (const handler of this.externalHandlers) {
+      const charge = await handler.find(reference);
+      if (charge) return { handler, charge };
+    }
+    const intent = await this.prisma.paymentIntent.findFirst({
+      where: { externalId: reference, orderId: null },
+      orderBy: { createdAt: 'desc' },
+      select: { idempotencyKey: true },
+    });
+    const key = intent?.idempotencyKey ?? '';
+    const handler = this.externalHandlers.find((h) => key.startsWith(`${h.kind}:`));
+    if (!handler) return null;
+    const charge = await handler.find(key.slice(handler.kind.length + 1));
+    return charge ? { handler, charge } : null;
+  }
+
+  /**
+   * Intent Banorte de un cobro externo. Mismas reglas que `createPaymentIntent`:
+   * método ofrecido por la organización, importe de la base, misma ventana de
+   * pago y misma tabla `PaymentIntent` (sin `orderId`, clave `<kind>:<id>`).
+   */
+  async createExternalPaymentIntent(
+    handler: ExternalChargeHandler,
+    charge: ExternalCharge,
+    buyer: { email: string; name: string }
+  ) {
+    const idempotencyKey = `${handler.kind}:${charge.id}`;
+    const replay = (row: {
+      metadata: Prisma.JsonValue;
+      externalId: string | null;
+      amount: Decimal;
+      currency: Currency;
+      expiresAt: Date | null;
+    }) => {
+      const meta = (row.metadata ?? {}) as Record<string, unknown>;
+      return {
+        intentId: String(meta.intentId ?? row.externalId),
+        status: 'pending' as const,
+        redirectUrl: typeof meta.redirectUrl === 'string' ? meta.redirectUrl : undefined,
+        reference: typeof meta.reference === 'string' ? meta.reference : undefined,
+        metadata: meta,
+        amount: Number(row.amount),
+        currency: row.currency,
+        expiresAt: row.expiresAt,
+        gateway: 'BANORTE',
+        replayed: true,
+      };
+    };
+    const existing = await this.prisma.paymentIntent.findUnique({ where: { idempotencyKey } });
+    if (existing) return replay(existing);
+
+    const method = String(charge.paymentMethod ?? 'CARD').toUpperCase();
+    if (method !== 'CARD' && method !== 'SPEI' && method !== 'OXXO') {
+      throw new BadRequestException(`El método de pago ${method} no está disponible`);
+    }
+    const org = await this.prisma.organization.findUnique({
+      where: { id: charge.organizationId },
+      select: { settings: true },
+    });
+    if (!checkoutMethodOffered(org?.settings, method)) {
+      throw new ForbiddenException(`El método de pago ${method} no está disponible`);
+    }
+    const intent = await this.banorte.createIntent({
+      amount: charge.amount,
+      currency: charge.currency,
+      orderId: charge.id,
+      channel: 'WEB',
+      buyerEmail: buyer.email,
+      buyerName: buyer.name,
+      paymentMethod: method,
+      idempotencyKey,
+      metadata: { publicId: charge.publicId },
+    });
+    const expiresAt = paymentDeadline(method);
+    try {
+      await this.prisma.paymentIntent.create({
+        data: {
+          orderId: null,
+          provider: PaymentGateway.BANORTE,
+          externalId: intent.externalId ?? intent.intentId,
+          amount: charge.amount,
+          currency: charge.currency,
+          status: PaymentStatus.PENDING,
+          channel: 'WEB',
+          expiresAt,
+          idempotencyKey,
+          metadata: {
+            intentId: intent.intentId,
+            redirectUrl: intent.redirectUrl,
+            reference: intent.reference,
+            externalKind: handler.kind,
+            externalChargeId: charge.id,
+            ...(intent.metadata as object),
+          },
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        const raced = await this.prisma.paymentIntent.findUnique({ where: { idempotencyKey } });
+        if (raced) return replay(raced);
+      }
+      throw e;
+    }
+    return {
+      intentId: intent.intentId,
+      status: intent.status,
+      redirectUrl: intent.redirectUrl,
+      reference: intent.reference,
+      metadata: intent.metadata,
+      amount: charge.amount,
+      currency: charge.currency,
+      expiresAt,
+      gateway: 'BANORTE',
+    };
+  }
+
+  /**
+   * Asienta el cobro de un cargo externo. Idempotente ante IPN duplicado o
+   * concurrente: el primer paso es el update condicional por estado del handler
+   * (una fila bloqueada; el segundo ve 0 filas) y `Payment.externalId` es único.
+   * Lo cobrado se coteja contra lo debido igual que en `completeOrder`.
+   */
+  async settleExternalCharge(
+    handler: ExternalChargeHandler,
+    charge: ExternalCharge,
+    externalId: string,
+    settlement: { amount?: number; currency?: string; rawCode?: string; source?: string } = {}
+  ) {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const claimed = await handler.claim(tx, charge.id);
+        if (!claimed) return { charge, alreadyCompleted: true };
+
+        const mismatch = this.describeSettlementMismatch(
+          charge.currency,
+          charge.amount,
+          settlement
+        );
+        if (mismatch) {
+          const detail = {
+            chargePublicId: charge.publicId,
+            kind: handler.kind,
+            reason: mismatch,
+            expectedAmount: charge.amount,
+            settledAmount: settlement.amount ?? null,
+            expectedCurrency: charge.currency,
+            settledCurrency: settlement.currency ?? null,
+            rawCode: settlement.rawCode ?? null,
+            source: settlement.source ?? 'unknown',
+          };
+          if (isStrictSettlementMode()) {
+            throw new ExternalChargeBlockedError(
+              'payment.settlement_mismatch',
+              `Descuadre de liquidación en ${charge.publicId}: ${mismatch}. No se activa; requiere devolución.`,
+              detail
+            );
+          }
+          this.logger.error(
+            `Descuadre de liquidación (modo observación) en ${charge.publicId}: ${mismatch}`
+          );
+          await tx.auditEvent.create({
+            data: {
+              action: 'payment.settlement_mismatch',
+              entityType: 'MembershipCheckout',
+              entityId: charge.id,
+              organizationId: charge.organizationId,
+              metadata: { ...detail, externalId, observationMode: true },
+            },
+          });
+        }
+
+        const payment = await tx.payment.create({
+          data: {
+            gateway: PaymentGateway.BANORTE,
+            externalId,
+            status: PaymentStatus.COMPLETED,
+            amount: settlement.amount ?? charge.amount,
+            currency: charge.currency,
+            method: charge.paymentMethod,
+            processedAt: new Date(),
+            metadata: {
+              source: settlement.source ?? 'banorte_direct',
+              externalKind: handler.kind,
+              externalChargeId: charge.id,
+              expectedAmount: charge.amount,
+              settledAmount: settlement.amount ?? null,
+              settlementAmountKnown: settlement.amount !== undefined,
+              settledCurrency: settlement.currency ?? null,
+              rawCode: settlement.rawCode ?? null,
+              settlementMismatch: mismatch,
+            },
+          },
+        });
+        await tx.paymentIntent.updateMany({
+          where: { idempotencyKey: `${handler.kind}:${charge.id}`, status: PaymentStatus.PENDING },
+          data: { status: PaymentStatus.COMPLETED },
+        });
+        await handler.activate(tx, charge, payment.id);
+        this.logger.log(`Banorte: cobro ${handler.kind} ${charge.publicId} asentado`);
+        return {
+          charge: { ...charge, status: OrderStatus.COMPLETED },
+          payment,
+          alreadyCompleted: false,
+        };
+      });
+    } catch (error) {
+      if (error instanceof ExternalChargeBlockedError) {
+        try {
+          await handler.markPendingRefund(charge.id, error.action, {
+            ...error.metadata,
+            externalId,
+            message: error.message,
+          });
+        } catch (e) {
+          this.logger.error(`No se pudo marcar PENDING_REFUND ${charge.publicId}: ${e}`);
+        }
+        throw new ConflictException(error.message);
+      }
+      // IPN concurrente que perdió la carrera por Payment.externalId único.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return { charge, alreadyCompleted: true };
+      }
+      throw error;
+    }
   }
 
   /** Descripción del descuadre entre lo cobrado y lo debido, o `null` si cuadra. */
@@ -1108,6 +1425,26 @@ export class PaymentService {
     }
 
     if (!order) {
+      // Mismo IPN para los cobros que no son órdenes (membresías).
+      const external = await this.findExternalCharge(reference);
+      if (external) {
+        if (result.status === 'completed') {
+          await this.settleExternalCharge(
+            external.handler,
+            external.charge,
+            result.intentId ?? `banorte_${external.charge.id}`,
+            {
+              amount: result.amount,
+              currency: result.currency,
+              rawCode: result.rawCode,
+              source: 'banorte_ipn',
+            }
+          );
+        } else if (result.status === 'failed') {
+          await external.handler.markFailed(external.charge.id);
+        }
+        return { received: true, status: result.status };
+      }
       this.logger.warn(
         `Banorte webhook: ninguna orden coincide exactamente con la referencia "${reference}"; no se actúa.`
       );

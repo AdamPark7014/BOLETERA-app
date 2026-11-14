@@ -94,6 +94,56 @@ function statusName(status: string): 'pendiente' | 'cobrado' | 'reembolsado' | n
   return null;
 }
 
+type MembershipRow = {
+  id: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | string;
+  organizationName: string;
+  plan: {
+    id: string;
+    name: string;
+    tier: string;
+    description: string | null;
+    price: string;
+    currency: string;
+    billingPeriod: string;
+  };
+  startedAt: string;
+  expiresAt: string;
+  canRenew: boolean;
+  benefits: {
+    id: string;
+    name: string;
+    description: string | null;
+    redemptionLimit: number | null;
+  }[];
+};
+
+type PendingMembership = {
+  publicId: string;
+  planName: string;
+  amount: string;
+  currency: string;
+  expiresAt: string;
+};
+
+/** «Mi membresía» se carga aparte: si falla, el resto de la cuenta sigue. */
+type MembershipState =
+  | { kind: 'loading' }
+  | { kind: 'ready'; memberships: MembershipRow[]; pending: PendingMembership[] }
+  | { kind: 'error' };
+
+const MEMBERSHIP_STATUS_LABEL: Record<string, string> = {
+  ACTIVE: 'Vigente',
+  EXPIRED: 'Vencida',
+  CANCELLED: 'Cancelada',
+};
+
+function billingLabel(period: string) {
+  if (period === 'MONTHLY') return 'Mensual';
+  if (period === 'SEASON') return 'Temporada';
+  return 'Anual';
+}
+
 type LoadState = 'loading' | 'ready' | 'expired' | 'error';
 
 function seatLabel(t: TicketRow) {
@@ -119,6 +169,7 @@ export default function CuentaPage() {
   const [cfdiForm, setCfdiForm] = useState({ rfc: '', nombre: '' });
   const [cfdiBusy, setCfdiBusy] = useState(false);
   const [showTools, setShowTools] = useState(false);
+  const [membership, setMembership] = useState<MembershipState>({ kind: 'loading' });
 
   function showToast(type: 'ok' | 'err', text: string) {
     setToast({ type, text });
@@ -134,10 +185,25 @@ export default function CuentaPage() {
   const reload = useCallback(async () => {
     const headers = authHeaders();
     try {
-      const [ordersRes, transfersRes] = await Promise.all([
+      const [ordersRes, transfersRes, membershipRes] = await Promise.all([
         fetch(`${API}/orders/mine`, { headers, cache: 'no-store' }),
         fetch(`${API}/tickets/transfer/mine`, { headers, cache: 'no-store' }),
+        fetch(`${API}/memberships/mine`, { headers, cache: 'no-store' }).catch(() => null),
       ]);
+
+      if (membershipRes?.ok) {
+        const m = (await membershipRes.json()) as {
+          memberships?: MembershipRow[];
+          pending?: PendingMembership[];
+        };
+        setMembership({
+          kind: 'ready',
+          memberships: m.memberships ?? [],
+          pending: m.pending ?? [],
+        });
+      } else {
+        setMembership({ kind: 'error' });
+      }
 
       if (ordersRes.status === 401 || ordersRes.status === 403) {
         clearSession();
@@ -177,6 +243,9 @@ export default function CuentaPage() {
     if (code) {
       setTransferCode(code);
       setShowTools(true);
+    }
+    if (p.get('membresia') === 'activa') {
+      showToast('ok', 'Pago confirmado: tu membresía ya está activa.');
     }
     void reload();
   }, [router, reload]);
@@ -473,6 +542,108 @@ export default function CuentaPage() {
                 </ul>
               </section>
             )}
+
+            <section className={styles.section} aria-labelledby="membership-title">
+              <h2 id="membership-title">Mi membresía</h2>
+              {membership.kind === 'loading' && (
+                <p className={styles.loading} role="status">
+                  Cargando tu membresía…
+                </p>
+              )}
+              {membership.kind === 'error' && (
+                <p className={styles.hint} role="alert">
+                  No pudimos cargar tu membresía. Tus boletos no se ven afectados; recarga para
+                  intentarlo de nuevo.
+                </p>
+              )}
+              {membership.kind === 'ready' &&
+                membership.memberships.length === 0 &&
+                membership.pending.length === 0 && (
+                  <div className={styles.membershipEmpty}>
+                    <p className={styles.hint}>
+                      No tienes membresía. Con un plan tienes preventa y beneficios en cada evento.
+                    </p>
+                    <Link href="/membresias" className={styles.browse}>
+                      Ver planes
+                    </Link>
+                  </div>
+                )}
+              {membership.kind === 'ready' && membership.pending.length > 0 && (
+                <ul className={styles.list}>
+                  {membership.pending.map((p) => (
+                    <li key={p.publicId}>
+                      <div>
+                        <strong>{p.planName}</strong>
+                        <span className={styles.status}>Pendiente de pago</span>
+                      </div>
+                      <p>
+                        {formatMoney(p.amount, p.currency)} · paga antes del{' '}
+                        {formatShortDate(p.expiresAt)}
+                      </p>
+                      <div className={styles.orderLinks}>
+                        <Link href={`/membresias/pago/${p.publicId}`}>Continuar pago</Link>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {membership.kind === 'ready' &&
+                membership.memberships.map((m) => (
+                  <article key={m.id} className={styles.membershipCard}>
+                    <div className={styles.membershipHead}>
+                      <div>
+                        <p className={styles.eyebrow}>
+                          {m.organizationName} · {m.plan.tier} ·{' '}
+                          {billingLabel(m.plan.billingPeriod)}
+                        </p>
+                        <strong className={styles.walletTitle}>{m.plan.name}</strong>
+                      </div>
+                      {m.status === 'ACTIVE' ? (
+                        <NamedStatus status="cobrado" />
+                      ) : (
+                        <span className={styles.status}>
+                          {MEMBERSHIP_STATUS_LABEL[m.status] ?? m.status}
+                        </span>
+                      )}
+                    </div>
+                    <dl className={styles.membershipFacts}>
+                      <div>
+                        <dt>{m.status === 'ACTIVE' ? 'Vigente hasta' : 'Venció el'}</dt>
+                        <dd>{formatShortDate(m.expiresAt)}</dd>
+                      </div>
+                      <div>
+                        <dt>Miembro desde</dt>
+                        <dd>{formatShortDate(m.startedAt)}</dd>
+                      </div>
+                      <div>
+                        <dt>Precio del plan</dt>
+                        <dd>{formatMoney(m.plan.price, m.plan.currency)}</dd>
+                      </div>
+                    </dl>
+                    {m.benefits.length > 0 ? (
+                      <ul className={styles.membershipBenefits} aria-label="Beneficios">
+                        {m.benefits.map((b) => (
+                          <li key={b.id}>
+                            <span>{b.name}</span>
+                            {b.redemptionLimit != null && (
+                              <small>
+                                {b.redemptionLimit} {b.redemptionLimit === 1 ? 'uso' : 'usos'}
+                              </small>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className={styles.hint}>Este plan aún no tiene beneficios publicados.</p>
+                    )}
+                    {m.canRenew && (
+                      <Link href="/membresias" className={styles.browse}>
+                        {m.status === 'ACTIVE' ? 'Renovar membresía' : 'Volver a contratar'}
+                      </Link>
+                    )}
+                  </article>
+                ))}
+            </section>
 
             <section className={styles.wallet} aria-labelledby="wallet-title">
               <div className={styles.walletHead}>

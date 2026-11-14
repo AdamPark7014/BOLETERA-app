@@ -425,3 +425,83 @@
   white-space: nowrap;
   border: 0;
 }
+
+// —— Mi membresía ——
+.membershipEmpty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.membershipCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
+}
+
+.membershipHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+}
+
+.membershipFacts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  dt {
+    color: var(--text-secondary);
+    font: var(--body-sm);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text);
+    font: var(--mono);
+    text-align: right;
+  }
+}
+
+.membershipBenefits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--text);
+    font: var(--body-sm);
+  }
+
+  small {
+    color: var(--text-tertiary);
+    font: var(--mono);
+    white-space: nowrap;
+  }
+}

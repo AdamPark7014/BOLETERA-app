@@ -52,6 +52,11 @@ function PagoContent() {
   const [gatewayDemo, setGatewayDemo] = useState(demo);
   const [orderMeta, setOrderMeta] = useState<OrderMeta | null>(null);
 
+  // Payworks regresa siempre a /orders/{publicId}/pago; las membresías (MEM-) tienen su página.
+  useEffect(() => {
+    if (publicId?.startsWith('MEM-')) router.replace(`/membresias/pago/${publicId}`);
+  }, [publicId, router]);
+
   useEffect(() => {
     if (!publicId) return;
     setToken(resolveOrderAccessToken(publicId, urlToken));

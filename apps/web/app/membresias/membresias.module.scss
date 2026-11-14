@@ -1,0 +1,112 @@
+// Membresías en el lenguaje Black Ticket: misma columna, tipo y tokens que el
+// checkout. Sin fondos propios: el lienzo lo pone `BlackTicketRoot`.
+
+.plans {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  text-align: left;
+  font: var(--body);
+  color: var(--text);
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    background: var(--gold-wash);
+    box-shadow: inset 2px 0 0 var(--gold);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    color: var(--text-tertiary);
+  }
+}
+
+.planHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+
+  strong {
+    font-weight: 560;
+  }
+}
+
+.planPrice {
+  font: var(--money);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.planMeta {
+  color: var(--text-tertiary);
+  font: var(--caption);
+  letter-spacing: var(--caption-tracking);
+}
+
+.planText {
+  color: var(--text-secondary);
+  font: var(--body-sm);
+}
+
+.benefit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: var(--text);
+}
+
+.facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  dt {
+    color: var(--text-secondary);
+    font: var(--body);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text);
+    font: var(--mono);
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+.copyValue {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px 16px;
+
+  button {
+    font: var(--body-sm);
+    min-height: 44px;
+  }
+}
