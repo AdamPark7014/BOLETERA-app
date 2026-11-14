@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Worker de Boletera: libera holds vencidos y reconcilia SPEI.
 #
 # Se ejecuta con `tsx` en lugar de `node dist/index.js` a propósito:
@@ -13,8 +14,11 @@ WORKDIR /app
 # Monorepo completo: el worker depende de @boletera/database (workspace).
 COPY . .
 
-RUN npm install -g pnpm@10.30.3 && \
-    pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=boletera-pnpm,target=/root/.local/share/pnpm/store \
+    apk add --no-cache openssl && \
+    npm install -g pnpm@10.30.3 && \
+    pnpm install --frozen-lockfile && \
+    pnpm -r --filter "./packages/**" --if-present run build
 
 ENV NODE_ENV=production
 

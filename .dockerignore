@@ -1,33 +1,37 @@
-node_modules
+# Sin `**/` un patrón solo aplica en la raíz: los node_modules, .next y dist de
+# cada app y paquete se colaban al contexto (en Windows, enlaces de pnpm que
+# Docker no puede copiar). turbo.json, pnpm-workspace.yaml y tsconfig.json SÍ
+# entran: sin ellos pnpm no ve el workspace y los paquetes no compilan.
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+**/coverage
+**/test-results
+**/*.log
 npm-debug.log
 .git
 .gitignore
-.env
-.env.local
-.env.*.local
-dist
+.gitattributes
+# Ningún .env entra a la imagen, en ninguna carpeta: el API carga apps/api/.env
+# con override y pisaba DATABASE_URL del compose; además son secretos.
+**/.env
+**/.env.*
+**/*.env.docker-backup
+!**/.env.example
 build
-.next
 out
 .DS_Store
-*.log
 .vscode
 .idea
 *.swp
 *.swo
 *~
-.turbo
-.turbo/cache
-coverage
-test-results
 e2e
 docs
 .github
-.prettierrc
-turbo.json
-pnpm-workspace.yaml
-tsconfig.json
-README.md
-*.md
-.env.example
-.gitattributes
+.ai
+.claude
+.cursor
+prototypes

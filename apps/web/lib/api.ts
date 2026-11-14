@@ -1,4 +1,12 @@
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api/v1';
+const PUBLIC_API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api/v1';
+
+/**
+ * En el servidor (SSR) el API puede vivir en otra dirección que la que ve el
+ * navegador: dentro de Docker `localhost:4000` es el propio contenedor web.
+ * API_INTERNAL_URL (p. ej. http://api:4000/api/v1) solo se lee en el servidor;
+ * sin ella todo sigue igual que antes.
+ */
+const API = typeof window === 'undefined' ? process.env.API_INTERNAL_URL || PUBLIC_API : PUBLIC_API;
 
 /**
  * Host del visitante para que el API resuelva el tenant correcto.

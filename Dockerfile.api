@@ -1,45 +1,40 @@
-# Build stage
-FROM node:22-alpine AS builder
+# syntax=docker/dockerfile:1
+# API de Boletera (NestJS).
+#
+# Una sola etapa a propósito: `dist` importa paquetes del workspace
+# (@boletera/database, @boletera/shared, …) que pnpm enlaza con symlinks a
+# packages/*. La versión anterior copiaba solo dist + node_modules raíz, así que
+# esos enlaces quedaban rotos, y `npm run build || true` escondía si el build
+# fallaba: la imagen se armaba igual y el contenedor moría al arrancar.
 
-WORKDIR /app
-
-# Copy entire monorepo
-COPY . .
-
-# Install dependencies
-RUN npm install -g pnpm@10.30.3 && \
-    pnpm install --frozen-lockfile
-
-# Install Nest CLI globally and build the API directly
-RUN npm install -g @nestjs/cli && \
-    cd apps/api && \
-    npm run build || true
-
-# Production stage
 FROM node:22-alpine
 
+# Prisma necesita OpenSSL en Alpine para su motor de consultas.
+RUN apk add --no-cache openssl && npm install -g pnpm@10.30.3
+
 WORKDIR /app
 
-# Install pnpm in production image
-RUN npm install -g pnpm@10.30.3
+COPY . .
 
-# Copy everything from builder
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+# postinstall genera el cliente de Prisma para esta plataforma (linux-musl).
+# Almacén de pnpm compartido entre imágenes: solo la primera descarga los paquetes.
+RUN --mount=type=cache,id=boletera-pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Set environment variables
+# Paquetes del workspace cuyo main apunta a dist/ (no se versiona). pnpm -r
+# respeta el orden de dependencias. Si un build falla, la imagen no se arma.
+RUN pnpm -r --filter "./packages/**" --if-present run build && \
+    pnpm --filter @boletera/api run build
+
 ENV NODE_ENV=production \
     API_PORT=4000 \
-    API_HOST=0.0.0.0 \
-    CORS_ORIGIN="http://localhost:3000,http://localhost:3001"
+    API_HOST=0.0.0.0
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:4000/api/v1/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+WORKDIR /app/apps/api
 
-# Expose port
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:4000/api/v1/health', (r) => {if (r.statusCode !== 200) process.exit(1)}).on('error', () => process.exit(1))"
+
 EXPOSE 4000
 
-# Start the API
 CMD ["node", "dist/main.js"]
