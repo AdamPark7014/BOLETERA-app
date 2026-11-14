@@ -6,6 +6,7 @@
 
 ## Hecho
 
+- 2026-11-14 claude-code: prueba al límite de web, admin, taquilla, rendimiento y carga sobre la demo Docker (reporte e inventario de capacidades fuera del repo: `C:\dev\tmp\boletera-demo\PRUEBA-AL-LIMITE.md` e `INVENTARIO.md`). Arreglado: compra GA bajo carga con `FOR UPDATE SKIP LOCKED` (2,000 compradores sin pérdidas), la zona del asiento manda el precio, soltar apartado de invitado (403 al dueño), saturación de BD → 503 + Retry-After, confirmación demo del comprador (órdenes y membresías; 404 en producción), reventa con dueño/vendedor verificados y QR invalidado, POS y puerta acotados a organización y función (WRONG_EVENT), rangos de rol en equipo e invitaciones (un PROMOTER se hacía SUPER_ADMIN), sesiones múltiples ya no se revocan, hash del enlace fuera de `GET /admin/orders/:id`, login de admin, 14 bugs de taquilla y varios de web.
 - 2026-11-14 claude-code: la plataforma completa corre en Docker Compose. Arreglados Dockerfile.api (build que fallaba en silencio, paquetes del workspace rotos), Dockerfile.web (CMD sin expandir APP_NAME), Dockerfile.worker, `.dockerignore` (metía `apps/api/.env` con secretos y pisaba DATABASE_URL; excluía turbo.json/pnpm-workspace.yaml) y build de paquetes con main en `dist/`. Web en SSR usa `API_INTERNAL_URL` si existe; fechas con `America/Mexico_City` (sin eso, error de hidratación #418 con el servidor en UTC).
 - 2026-11-14 claude-code: demo local en Docker (fuera del repo): `C:\dev\tmp\boletera-demo` (override con taquilla y nombres `boletera-demo-*`, `demo.env` con secretos aleatorios, galería de capturas). Levantar: `docker compose -p boletera-demo --env-file C:\dev\tmp\boletera-demo\demo.env -f docker-compose.yml -f C:\dev\tmp\boletera-demo\docker-compose.demo.yml up -d`; apagar: `docker compose -p boletera-demo down`.
 
@@ -60,9 +61,11 @@ Lenguaje visual de Black Ticket en `@boletera/ui`.
 
 ## Siguiente
 
+Prueba al límite, pendientes (detalle en `PRUEBA-AL-LIMITE.md`): preventa con código bloqueada (el apartado no manda el código y la web no lo captura); reventa sin cobro/pago ni compra en web; no existe `POST /admin/venues` (ni `auth/refresh`, `auth/logout`, `sponsorships/*`); ficha del evento sin edición/publicación; cupo ≠ aforo bloquea publicar; matriz de permisos del admin (FINANCE/AFFILIATE/SUPERVISOR sin menú, menú igual para todos); CFDI con UUID aleatorio; abono sin cobro; `GUEST_SESSION_STRICT=true` en producción; cartelera y ficha sin caché (~110/170 rps) y pool de 20 conexiones (385 × 503 con 5,000 compradores); `e2e/load/concurrent-hold` reusa la butaca ganada en su sub-prueba de idempotencia y `oversell` no falla con 5xx.
+Demo: «Simular pago» del comprador ya funciona (ruta demo); el API de la demo corre con throttle 100000.
+
 Antes de desplegar: `prisma migrate deploy` (cinco migraciones nuevas desde el 11-11) y actualizar las fotos de eventos si la base vieja aún apunta a las de Unsplash que daban 404.
 Membresías: sin correo de confirmación (no hay plantilla); sus cobros no aparecen en conciliación ni reportes (se arman desde órdenes). SEASON vale 12 meses. `/membresias` no tiene enlace en la navegación.
-Demo: «Simular pago» falla con 403 para el comprador (POST /payments/confirm exige ADMIN), igual en órdenes y membresías.
 Repaso: quedan esperados el 401/404 de `auth/me`/`auth/refresh` en el login de admin (sondeo de sesión por cookie; no quitarlo: la sesión vive en cookie, no en localStorage), la serie del seed de otra organización (404) y `/venues/[id]/3d` que nunca llega a networkidle (worker de troika).
 Precios: `PATCH /pricing/rates` (cargos e IVA) sigue abierto a PROMOTER; no es aplicar precio de oferta, pero conviene confirmarlo con Adam.
 IA: sin chat ni acciones persistentes en el API (el chat es local, por plantillas). Aprobación de pagos, accesos, comparables, abandono e impacto estimado sin fuente.
