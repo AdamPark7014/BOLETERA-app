@@ -104,8 +104,14 @@ export function EventPosterArt({
       />
       {showDate && d && (
         <div className={styles.date}>
-          <strong>{d.toLocaleDateString('es-MX', { day: '2-digit' })}</strong>
-          <span>{d.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '')}</span>
+          <strong>
+            {d.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', day: '2-digit' })}
+          </strong>
+          <span>
+            {d
+              .toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', month: 'short' })
+              .replace('.', '')}
+          </span>
         </div>
       )}
     </div>

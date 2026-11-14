@@ -22,6 +22,7 @@ function releaseItem(item: CartItem) {
 function fmtDate(iso?: string) {
   if (!iso) return null;
   return new Date(iso).toLocaleString('es-MX', {
+    timeZone: 'America/Mexico_City',
     weekday: 'short',
     day: 'numeric',
     month: 'short',

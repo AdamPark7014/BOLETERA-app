@@ -91,6 +91,7 @@ export function formatDeadline(iso: string | null | undefined): string | null {
   const date = new Date(iso);
   if (!Number.isFinite(date.getTime())) return null;
   const formatted = date.toLocaleString('es-MX', {
+    timeZone: 'America/Mexico_City',
     weekday: 'short',
     day: 'numeric',
     month: 'short',

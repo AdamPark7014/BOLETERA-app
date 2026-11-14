@@ -70,11 +70,16 @@ export function EventStage({
   const [stage, setStage] = useState<'ficha' | 'zona'>('ficha');
   const when = new Date(startsAt);
   const dateLabel = when.toLocaleDateString('es-MX', {
+    timeZone: 'America/Mexico_City',
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   });
-  const timeLabel = when.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const timeLabel = when.toLocaleTimeString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
   const place = [venueName, venueCity].filter(Boolean).join(' · ');
   const announced = minPriceAllIn && minPriceAllIn > 0 ? minPriceAllIn : minPrice;
   const hasOffer = offers.length > 0;

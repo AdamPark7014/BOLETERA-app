@@ -676,15 +676,30 @@ export default function CuentaPage() {
                   return (
                     <li key={o.publicId} className={styles.walletCard}>
                       <div className={styles.walletDateBlock} aria-hidden="true">
-                        <strong>{when.toLocaleDateString('es-MX', { day: '2-digit' })}</strong>
+                        <strong>
+                          {when.toLocaleDateString('es-MX', {
+                            timeZone: 'America/Mexico_City',
+                            day: '2-digit',
+                          })}
+                        </strong>
                         <span>
-                          {when.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '')}
+                          {when
+                            .toLocaleDateString('es-MX', {
+                              timeZone: 'America/Mexico_City',
+                              month: 'short',
+                            })
+                            .replace('.', '')}
                         </span>
                       </div>
                       <div className={styles.walletBody}>
                         <p className={styles.walletDate}>
-                          {when.toLocaleDateString('es-MX', { weekday: 'short' })} ·{' '}
+                          {when.toLocaleDateString('es-MX', {
+                            timeZone: 'America/Mexico_City',
+                            weekday: 'short',
+                          })}{' '}
+                          ·{' '}
                           {when.toLocaleTimeString('es-MX', {
+                            timeZone: 'America/Mexico_City',
                             hour: '2-digit',
                             minute: '2-digit',
                           })}

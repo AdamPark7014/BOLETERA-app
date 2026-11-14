@@ -6,7 +6,8 @@ const PUBLIC_API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api
  * API_INTERNAL_URL (p. ej. http://api:4000/api/v1) solo se lee en el servidor;
  * sin ella todo sigue igual que antes.
  */
-const API = typeof window === 'undefined' ? process.env.API_INTERNAL_URL || PUBLIC_API : PUBLIC_API;
+export const API_BASE =
+  typeof window === 'undefined' ? process.env.API_INTERNAL_URL || PUBLIC_API : PUBLIC_API;
 
 /**
  * Host del visitante para que el API resuelva el tenant correcto.
@@ -53,7 +54,7 @@ export function clientTenantHostHeaders(): Record<string, string> {
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const tenantHeaders = await getTenantHostHeaders();
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',

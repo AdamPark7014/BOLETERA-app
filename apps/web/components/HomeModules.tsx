@@ -24,6 +24,7 @@ type VenueHit = {
 function fmtDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString('es-MX', {
+    timeZone: 'America/Mexico_City',
     weekday: 'short',
     day: 'numeric',
     month: 'short',

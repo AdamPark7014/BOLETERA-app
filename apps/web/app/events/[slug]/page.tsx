@@ -74,6 +74,7 @@ export async function generateMetadata({
     ]);
     const when = new Date(event.startsAt);
     const dateLabel = when.toLocaleDateString('es-MX', {
+      timeZone: 'America/Mexico_City',
       day: 'numeric',
       month: 'long',
       year: 'numeric',

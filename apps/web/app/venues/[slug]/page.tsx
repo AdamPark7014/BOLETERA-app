@@ -30,6 +30,7 @@ type VenueDetail = {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-MX', {
+    timeZone: 'America/Mexico_City',
     weekday: 'short',
     day: 'numeric',
     month: 'short',

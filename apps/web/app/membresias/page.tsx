@@ -1,11 +1,9 @@
 import { SiteHeader } from '@/components/SiteHeader';
-import { getTenantHostHeaders } from '@/lib/api';
+import { API_BASE as API, getTenantHostHeaders } from '@/lib/api';
 import { fetchTenantCurrent } from '@/lib/tenant';
 import purchase from '@/components/purchase/purchase.module.scss';
 import { PlanesClient } from './PlanesClient';
 import type { PublicPlan } from './types';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api/v1';
 
 type PlansState =
   | { kind: 'ok'; plans: PublicPlan[]; organization: string }

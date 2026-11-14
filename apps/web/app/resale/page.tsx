@@ -4,7 +4,7 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from './resale.module.scss';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_BASE as API } from '@/lib/api';
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await fetchTenantCurrent();
@@ -142,6 +142,7 @@ export default async function ResalePage() {
                       <p className={styles.meta}>
                         {when
                           ? when.toLocaleDateString('es-MX', {
+                              timeZone: 'America/Mexico_City',
                               weekday: 'short',
                               day: 'numeric',
                               month: 'short',

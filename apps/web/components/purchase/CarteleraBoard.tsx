@@ -34,11 +34,16 @@ function advertised(event: EventHit): number {
 function whenLabel(iso: string) {
   const date = new Date(iso);
   const day = date.toLocaleDateString('es-MX', {
+    timeZone: 'America/Mexico_City',
     weekday: 'short',
     day: 'numeric',
     month: 'short',
   });
-  const time = date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const time = date.toLocaleTimeString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
   return `${day} · ${time}`;
 }
 

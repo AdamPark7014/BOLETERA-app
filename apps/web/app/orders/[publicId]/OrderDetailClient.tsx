@@ -275,12 +275,18 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
               {when && (
                 <p>
                   {when.toLocaleDateString('es-MX', {
+                    timeZone: 'America/Mexico_City',
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
                   })}{' '}
-                  · {when.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                  ·{' '}
+                  {when.toLocaleTimeString('es-MX', {
+                    timeZone: 'America/Mexico_City',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </p>
               )}
               {order.event.venue && (
