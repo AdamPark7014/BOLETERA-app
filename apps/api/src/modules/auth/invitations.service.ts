@@ -7,6 +7,9 @@ import {
 import { UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { invalidateUserAuthCache } from './jwt.strategy';
+// Jerarquía única de roles (nadie concede por encima de su rango): la comparte
+// el cambio de rol del personal en organization/team-role.
+import { canGrantRole } from '../organization/team-role';
 
 /**
  * F2-02 — Única vía de elevación de rol.
@@ -19,22 +22,6 @@ import { invalidateUserAuthCache } from './jwt.strategy';
 
 /** Caducidad por defecto de una invitación, en días. */
 export const DEFAULT_INVITATION_TTL_DAYS = 7;
-
-/**
- * Jerarquía de roles para acotar quién puede conceder qué.
- * Nadie puede invitar por encima de su propio rango, así un PROMOTER no se
- * fabrica un ADMIN de su organización.
- */
-const ROLE_RANK: Record<string, number> = {
-  CUSTOMER: 0,
-  SCANNER: 1,
-  TAQUILLA: 2,
-  ARTIST: 2,
-  VENUE_MANAGER: 3,
-  PROMOTER: 4,
-  ADMIN: 5,
-  SUPER_ADMIN: 6,
-};
 
 /**
  * SUPER_ADMIN es transversal a toda la plataforma: no es un rol de
@@ -129,9 +116,9 @@ export class InvitationsService {
       throw new ForbiddenException('Cannot invite into another organization');
     }
 
-    const inviterRank = ROLE_RANK[input.inviterRole] ?? 0;
-    if ((ROLE_RANK[input.role] ?? 99) > inviterRank) {
-      throw new ForbiddenException('Cannot grant a role above your own');
+    // La misma regla que el cambio de rol del personal (organization/team-role).
+    if (!canGrantRole(input.inviterRole, input.role)) {
+      throw new ForbiddenException('No puedes conceder un rol por encima del tuyo.');
     }
 
     const organization = await this.prisma.organization.findUnique({

@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -6,6 +16,7 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { OrgAccessGuard } from '../auth/org-access.guard';
 import { OrganizationService } from './organization.service';
+import type { RoleActor } from './team-role';
 
 @ApiTags('Organization')
 @ApiBearerAuth()
@@ -54,6 +65,7 @@ export class OrganizationController {
   @Post(':orgId/team')
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
   invite(
+    @Request() req: { user: RoleActor },
     @Param('orgId') orgId: string,
     @Body()
     body: {
@@ -64,17 +76,18 @@ export class OrganizationController {
       password: string;
     }
   ) {
-    return this.orgService.inviteTeamMember(orgId, body);
+    return this.orgService.inviteTeamMember(orgId, body, req.user);
   }
 
   @Patch(':orgId/team/:userId')
   @Roles('ADMIN', 'SUPER_ADMIN', 'PROMOTER')
   updateMember(
+    @Request() req: { user: RoleActor },
     @Param('orgId') orgId: string,
     @Param('userId') userId: string,
     @Body() body: { role?: UserRole; active?: boolean }
   ) {
-    return this.orgService.updateTeamMember(orgId, userId, body);
+    return this.orgService.updateTeamMember(orgId, userId, body, req.user);
   }
 
   @Get(':orgId/audit')

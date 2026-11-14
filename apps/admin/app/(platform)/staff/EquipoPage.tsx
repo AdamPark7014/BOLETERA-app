@@ -9,7 +9,7 @@ import {
   type UserRoleValue,
 } from '@boletera/shared';
 import { ParameterCard, TicketButton } from '@boletera/ui';
-import { ApiError, adminApi } from '@/lib/api';
+import { ApiError, adminApi, decodeToken } from '@/lib/api';
 import {
   CAPABILITY_LABELS,
   INVITABLE_ROLES,
@@ -55,7 +55,48 @@ const KEY_NAME: Record<PermissionKeyValue, string> = {
 };
 
 const INVITE = new Set<string>(INVITABLE_ROLES);
-const ROLE_OPTIONS = USER_ROLE_VALUES.map((role) => ({ value: role, label: ROLE_NAME[role] }));
+
+/**
+ * Espejo de `ROLE_RANK` en apps/api/src/modules/organization/team-role.ts.
+ * El API responde 403 a lo que esta tabla no ofrece: nadie concede por encima
+ * de su rango, nadie toca a alguien de su rango o mayor, solo SUPER_ADMIN
+ * concede o toca SUPER_ADMIN, y nadie se cambia su propio rol.
+ */
+const ROLE_RANK: Record<UserRoleValue, number> = {
+  CUSTOMER: 0,
+  AFFILIATE: 1,
+  SCANNER: 1,
+  TAQUILLA: 2,
+  ARTIST: 2,
+  SUPPORT: 2,
+  TAQUILLA_SUPERVISOR: 3,
+  TAQUILLA_ADMIN: 3,
+  MARKETING: 3,
+  AUDITOR: 3,
+  VENUE_MANAGER: 3,
+  FINANCE: 4,
+  PROMOTER: 4,
+  ADMIN: 5,
+  SUPER_ADMIN: 6,
+};
+
+function rankOf(role: string | null | undefined): number {
+  return role && role in ROLE_RANK ? ROLE_RANK[role as UserRoleValue] : 0;
+}
+
+function grantableOptions(actorRole: string | null) {
+  const isSuper = actorRole === 'SUPER_ADMIN';
+  return USER_ROLE_VALUES.filter(
+    (role) => isSuper || (role !== 'SUPER_ADMIN' && rankOf(role) <= rankOf(actorRole))
+  ).map((role) => ({ value: role, label: ROLE_NAME[role] }));
+}
+
+function canModify(actorRole: string | null, actorId: string | null, person: Person): boolean {
+  if (actorId && actorId === person.id) return false;
+  if (actorRole === 'SUPER_ADMIN') return true;
+  if (person.role === 'SUPER_ADMIN') return false;
+  return rankOf(person.role) < rankOf(actorRole);
+}
 
 type Person = {
   id: string;
@@ -125,6 +166,8 @@ function EquipoBody() {
   const [nonce, setNonce] = useState(0);
   const token = session.token;
   const orgId = session.orgId;
+  const actorId = token ? (decodeToken(token)?.sub ?? null) : null;
+  const roleOptions = grantableOptions(session.role);
   const menu = USER_ROLE_VALUES.filter((role) => isKnownRole(role));
   const hidden = USER_ROLE_VALUES.filter((role) => !isKnownRole(role));
   const invitable = USER_ROLE_VALUES.filter((role) => INVITE.has(role));
@@ -235,17 +278,25 @@ function EquipoBody() {
                     value={roleName(draft)}
                     effect={`${person.email}. Se guarda en su rol.`}
                   >
-                    <SheetSelect
-                      label={`Rol de ${person.firstName} ${person.lastName}`}
-                      value={isCatalogRole(draft) ? draft : ''}
-                      placeholder={roleName(person.role)}
-                      options={ROLE_OPTIONS}
-                      onChange={(next) => {
-                        if (!isCatalogRole(next)) return;
-                        setDrafts((current) => ({ ...current, [person.id]: next }));
-                        setNotice(null);
-                      }}
-                    />
+                    {canModify(session.role, actorId, person) ? (
+                      <SheetSelect
+                        label={`Rol de ${person.firstName} ${person.lastName}`}
+                        value={isCatalogRole(draft) ? draft : ''}
+                        placeholder={roleName(person.role)}
+                        options={roleOptions}
+                        onChange={(next) => {
+                          if (!isCatalogRole(next)) return;
+                          setDrafts((current) => ({ ...current, [person.id]: next }));
+                          setNotice(null);
+                        }}
+                      />
+                    ) : (
+                      <p className={frame.quiet}>
+                        {actorId === person.id
+                          ? 'Tu propio rol lo cambia otra persona.'
+                          : 'Su rango es igual o mayor que el tuyo.'}
+                      </p>
+                    )}
                   </ParameterCard>
                 </Param>
               );

@@ -40,13 +40,15 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.validateUser(email, password);
-    // El sello de lastLogin se escribe ANTES de firmar: cualquier escritura
-    // sobre User refresca `updatedAt`, y JwtStrategy invalida los tokens
-    // emitidos antes de la última modificación (F2-07). Firmar primero haría
-    // que el token naciera ya obsoleto.
+    // JwtStrategy invalida los tokens emitidos antes del último `updatedAt` de
+    // User (F2-07: cambio de rol, baja, reset). Sellar `lastLogin` NO es un
+    // cambio de cuenta: se conserva `updatedAt` explícitamente (Prisma respeta
+    // un valor dado en @updatedAt). Sin esto, entrar en otro dispositivo o
+    // pestaña revocaba todas las demás sesiones del mismo usuario.
+    // El sello sigue antes de firmar por si algún día deja de preservarse.
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { lastLogin: new Date() },
+      data: { lastLogin: new Date(), updatedAt: user.updatedAt },
     });
     const org = user.organizationId
       ? await this.prisma.organization.findUnique({
@@ -202,6 +204,9 @@ export class AuthService {
           emailVerified: true,
           emailVerifiedAt: user.emailVerifiedAt ?? new Date(),
           lastLogin: new Date(),
+          // Vincular el proveedor y sellar el acceso no revoca las otras
+          // sesiones (ver `login`); una elevación por invitación sí lo hace.
+          updatedAt: user.updatedAt,
         },
       });
     }

@@ -46,7 +46,10 @@ export class EventManagementService {
   ) {}
 
   private slugify(text: string) {
+    // Sin quitar acentos, "Límite" daba "l-mite" y "Año" daba "a-o" en la URL.
     return `${text
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;

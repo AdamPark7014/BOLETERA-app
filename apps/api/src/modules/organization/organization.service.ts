@@ -8,7 +8,12 @@ import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../../common/audit.service';
-import { assertCatalogRole } from './team-role';
+import {
+  assertCanGrant,
+  assertCanModifyMember,
+  assertCatalogRole,
+  type RoleActor,
+} from './team-role';
 
 const TEAM_ROLES: UserRole[] = [
   UserRole.PROMOTER,
@@ -104,11 +109,13 @@ export class OrganizationService {
       role: UserRole;
       password: string;
     },
-    actorId?: string
+    actor: RoleActor
   ) {
     if (!TEAM_ROLES.includes(data.role)) {
       throw new BadRequestException('Invalid team role');
     }
+    // Un PROMOTER no da de alta a un ADMIN: mismo tope que las invitaciones.
+    assertCanGrant(actor, data.role);
     const exists = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (exists) throw new ConflictException('Email already registered');
 
@@ -140,7 +147,7 @@ export class OrganizationService {
       entityType: 'User',
       entityId: user.id,
       organizationId: orgId,
-      userId: actorId,
+      userId: actor.sub ?? undefined,
       metadata: { email: data.email, role: data.role },
     });
 
@@ -151,13 +158,15 @@ export class OrganizationService {
     orgId: string,
     userId: string,
     data: { role?: UserRole; active?: boolean },
-    actorId?: string
+    actor: RoleActor
   ) {
     const role = assertCatalogRole(data.role);
     const user = await this.prisma.user.findFirst({
       where: { id: userId, organizationId: orgId },
     });
     if (!user) throw new NotFoundException('Team member not found');
+    // Sin esto, un PROMOTER podía nombrarse SUPER_ADMIN o degradar al ADMIN.
+    assertCanModifyMember(actor, user, { role, active: data.active });
 
     const updated = await this.prisma.user.update({
       where: { id: userId },
@@ -180,7 +189,7 @@ export class OrganizationService {
       entityType: 'User',
       entityId: userId,
       organizationId: orgId,
-      userId: actorId,
+      userId: actor.sub ?? undefined,
       metadata: data as Record<string, unknown>,
     });
 
