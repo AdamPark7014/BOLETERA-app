@@ -73,6 +73,13 @@ export default function TaquillaLoginPage() {
         cashierId: user.id,
       });
 
+      // La puerta no maneja caja: abrir turno pedía /terminal/init-org, que un
+      // SCANNER no puede llamar, y el login se quedaba en «Forbidden resource».
+      if (user.role === 'SCANNER') {
+        router.replace('/acceso');
+        return;
+      }
+
       const float = Number(openingCash);
       await openShift({
         organizationId: user.organizationId,

@@ -136,8 +136,10 @@ export default function BuscarPage() {
     try {
       await voidOrder(result.orderId, 'Anulación desde taquilla', pin);
       setPrompt(null);
-      setResult({ ...result, status: 'REFUNDED', valid: false });
       showToast('Venta anulada y registrada en el corte');
+      // Se relee del API: antes sólo cambiaba la etiqueta de la orden y los
+      // boletos seguían diciendo SOLD aunque ya estaban liberados.
+      void runLookup(result.publicId || result.orderId);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'No se pudo anular');
     }
@@ -153,8 +155,16 @@ export default function BuscarPage() {
         managerPin: pin,
       });
       setPrompt(null);
-      setResult({ ...result, status: 'REFUNDED', valid: false });
-      showToast(`Cambio realizado · diferencia ${money(Number(data.delta ?? 0))}`);
+      showToast(
+        `Cambio realizado${data.publicId ? ` · nuevo folio ${data.publicId}` : ''} · diferencia ${money(Number(data.delta ?? 0))}`
+      );
+      // Muestra la orden NUEVA (sus boletos son los que valen en la puerta).
+      if (data.publicId) {
+        setQuery(data.publicId);
+        void runLookup(data.publicId);
+      } else {
+        void runLookup(result.publicId || result.orderId);
+      }
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'El cambio falló');
     }

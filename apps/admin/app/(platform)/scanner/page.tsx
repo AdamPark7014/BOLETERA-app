@@ -25,13 +25,16 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { Field, NamedStatus, ParameterCard, TicketButton } from '@boletera/ui';
 import { ApiError, adminApi, getStoredToken } from '@/lib/api';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param } from '../events/_ticket/controls';
+import { Param, SheetSelect } from '../events/_ticket/controls';
 import frame from '../events/_ticket/frame.module.scss';
 import { CameraScanner } from './CameraScanner';
 import styles from './scanner.module.scss';
 
 const QUEUE_KEY = 'boletera_offline_scans';
 const ZONE_KEY = 'boletera_scanner_zone';
+const EVENT_KEY = 'boletera_scanner_event';
+
+type GateEvent = { id: string; title: string; startsAt: string };
 
 type QueuedScan = {
   id: string;
@@ -40,6 +43,7 @@ type QueuedScan = {
   /** Sólo disponible cuando el origen fue un QR: el payload lleva el id. */
   ticketId?: string;
   zoneId?: string;
+  eventId?: string;
 };
 
 /** Veredicto que ve el operador. El color y el texto salen de aquí, no del HTTP. */
@@ -131,6 +135,8 @@ function ScannerBody() {
   const [queued, setQueued] = useState(0);
   const [online, setOnline] = useState(true);
   const [zoneId, setZoneId] = useState('');
+  const [eventId, setEventId] = useState('');
+  const [events, setEvents] = useState<GateEvent[]>([]);
   const [syncReport, setSyncReport] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -145,6 +151,15 @@ function ScannerBody() {
     setOnline(navigator.onLine);
     setQueued(readQueue().length);
     setZoneId(localStorage.getItem(ZONE_KEY) ?? '');
+    setEventId(localStorage.getItem(EVENT_KEY) ?? '');
+    const token = getStoredToken();
+    if (token) {
+      // Funciones de la organización del operador (JWT). La puerta controla UNA:
+      // sin ella el API aceptaba boletos de cualquier otro evento.
+      adminApi<GateEvent[]>('/taquilla/events', token)
+        .then((list) => setEvents(Array.isArray(list) ? list : []))
+        .catch(() => setEvents([]));
+    }
     for (const item of readQueue()) seenRef.current.set(item.raw, item.at);
 
     const onOnline = () => setOnline(true);
@@ -158,6 +173,11 @@ function ScannerBody() {
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
     };
+  }, []);
+
+  const persistEvent = useCallback((value: string) => {
+    setEventId(value);
+    localStorage.setItem(EVENT_KEY, value);
   }, []);
 
   const persistZone = useCallback((value: string) => {
@@ -217,6 +237,7 @@ function ScannerBody() {
             ...scanBody(item.raw),
             channel: 'ADMIN',
             zoneId: item.zoneId || undefined,
+            eventId: item.eventId || undefined,
           }),
         });
         applied += 1;
@@ -244,6 +265,14 @@ function ScannerBody() {
       const token = getStoredToken();
       const trimmed = raw.trim();
       if (!token || !trimmed) return;
+      if (!eventId) {
+        setVerdict({
+          kind: 'invalid',
+          reason: 'Elige la función de esta puerta antes de escanear.',
+        });
+        feedback(false);
+        return;
+      }
       setLoading(true);
       setVerdict(null);
       setSyncReport(null);
@@ -269,6 +298,7 @@ function ScannerBody() {
           at: now,
           ticketId: extractTicketId(trimmed),
           zoneId: zoneId || undefined,
+          eventId,
         });
         writeQueue(queue);
         seenRef.current.set(trimmed, now);
@@ -298,6 +328,7 @@ function ScannerBody() {
             ...scanBody(trimmed),
             channel: 'ADMIN',
             zoneId: zoneId || undefined,
+            eventId,
           }),
         });
         seenRef.current.set(trimmed, new Date().toISOString());
@@ -334,7 +365,7 @@ function ScannerBody() {
         inputRef.current?.focus();
       }
     },
-    [zoneId]
+    [zoneId, eventId]
   );
 
   /** Texto plano del veredicto, para que el lector de pantalla lo anuncie. */
@@ -375,6 +406,27 @@ function ScannerBody() {
       ) : null}
 
       <div className={frame.stack}>
+        <Param name="Función">
+          <ParameterCard
+            name="Función"
+            value={events.find((e) => e.id === eventId)?.title ?? 'Sin función'}
+            effect="Sólo entran boletos de esta función."
+          >
+            <SheetSelect
+              label="Función"
+              value={eventId}
+              placeholder="Elige la función"
+              options={events.map((e) => ({
+                value: e.id,
+                label: `${e.title} · ${new Date(e.startsAt).toLocaleDateString('es-MX', {
+                  day: 'numeric',
+                  month: 'short',
+                })}`,
+              }))}
+              onChange={persistEvent}
+            />
+          </ParameterCard>
+        </Param>
         <Param name="Zona del escaneo">
           <ParameterCard
             name="Zona del escaneo"

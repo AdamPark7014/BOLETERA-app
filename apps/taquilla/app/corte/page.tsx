@@ -150,7 +150,8 @@ export default function CortePage() {
       setDropAmount('');
       setDropNote('');
       setPrompt(null);
-      showToast(`Retiro de ${money(amount)} registrado — autorizado con PIN ${pin.slice(0, 1)}•••`);
+      // Sin pistas del PIN en pantalla (antes mostraba su primer dígito).
+      showToast(`Retiro de ${money(amount)} registrado y autorizado`);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'No se pudo registrar el retiro');
     } finally {

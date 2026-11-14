@@ -8,7 +8,7 @@ import { AccessService } from './access.service';
 /** Roles que operan una puerta o una ventanilla. */
 const GATE_ROLES = ['SCANNER', 'TAQUILLA', 'ADMIN', 'SUPER_ADMIN'] as const;
 
-type JwtUser = { sub: string; email?: string; role?: string };
+type JwtUser = { sub: string; email?: string; role?: string; organizationId?: string | null };
 
 @ApiTags('Access')
 @Controller('access')
@@ -27,6 +27,7 @@ export class AccessController {
       qrPayload?: string;
       zoneId?: string;
       channel?: string;
+      eventId?: string;
     }
   ) {
     // Los campos se copian uno a uno a propósito. Antes se hacía `...body`, así
@@ -38,6 +39,9 @@ export class AccessController {
       zoneId: body.zoneId,
       scannedBy: req.user.sub,
       channel: body.channel ?? 'TAQUILLA',
+      eventId: typeof body.eventId === 'string' && body.eventId ? body.eventId : undefined,
+      scannerOrganizationId: req.user.organizationId ?? null,
+      scannerRole: req.user.role,
     });
   }
 

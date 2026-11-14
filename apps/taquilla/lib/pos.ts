@@ -375,6 +375,12 @@ export async function fetchReceipt(orderId: string, terminalId: string) {
   return { ...rec, orderId };
 }
 
+const PAYMENT_LABEL: Record<string, string> = {
+  CASH: 'Efectivo',
+  CARD: 'Tarjeta',
+  COMP: 'Cortesía',
+};
+
 export async function printReceipt(receipt: PosReceipt) {
   const lines = [
     receipt.receiptNumber,
@@ -387,7 +393,7 @@ export async function printReceipt(receipt: PosReceipt) {
     `Cargos: $${receipt.fees.toFixed(2)}`,
     `IVA: $${receipt.taxes.toFixed(2)}`,
     `TOTAL: $${receipt.total.toFixed(2)}`,
-    `Pago: ${receipt.paymentMethod}`,
+    `Pago: ${PAYMENT_LABEL[receipt.paymentMethod] ?? receipt.paymentMethod}`,
     ...(receipt.cashReceived != null
       ? [
           `Recibido: $${receipt.cashReceived.toFixed(2)}`,
@@ -559,7 +565,7 @@ export function exchangeOrder(params: {
   managerPin?: string;
 }) {
   return ensurePosSession(resolveOrgId(), getCashierId()).then(({ terminalId, sessionId }) =>
-    apiJson<{ delta?: number }>('/taquilla/exchange', {
+    apiJson<{ delta?: number; publicId?: string }>('/taquilla/exchange', {
       method: 'POST',
       body: JSON.stringify({
         ...params,

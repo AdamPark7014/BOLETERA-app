@@ -2,7 +2,7 @@ import { Injectable, Logger, BadRequestException, ForbiddenException } from '@ne
 import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
-import { Prisma, SalesChannel } from '@prisma/client';
+import { EventStatus, Prisma, SalesChannel } from '@prisma/client';
 import { InventoryService } from '../inventory/inventory.service';
 import { OrdersService } from '../orders/orders.service';
 
@@ -97,6 +97,66 @@ export class TaquillaPosService {
     };
   }
 
+  /**
+   * Funciones que vende ESTA taquilla: las de la organización del cajero
+   * (JWT), no las del dominio. Antes se usaba `/discovery/events` (tenant por
+   * host) y un cajero de Arena Norte veía y vendía funciones de otra empresa.
+   */
+  async listPosEvents(organizationId?: string) {
+    const events = await this.prisma.event.findMany({
+      where: {
+        ...(organizationId ? { organizationId } : {}),
+        status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
+        startsAt: { gte: new Date(Date.now() - 12 * 3600 * 1000) },
+      },
+      orderBy: { startsAt: 'asc' },
+      take: 100,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        category: true,
+        startsAt: true,
+        venue: { select: { name: true } },
+        offers: {
+          where: { isAvailable: true },
+          orderBy: [{ basePrice: 'desc' }, { name: 'asc' }],
+          select: {
+            id: true,
+            name: true,
+            zone: true,
+            basePrice: true,
+            remainingQuantity: true,
+            isAvailable: true,
+          },
+        },
+      },
+    });
+    return events;
+  }
+
+  /**
+   * La venta sólo puede salir de una terminal de la organización del cajero y
+   * para una función de esa misma organización.
+   */
+  private async assertSaleScope(terminalId: string, eventId: string, organizationId?: string) {
+    const [terminal, event] = await Promise.all([
+      this.prisma.posTerminal.findUnique({
+        where: { id: terminalId },
+        select: { organizationId: true },
+      }),
+      this.prisma.event.findUnique({ where: { id: eventId }, select: { organizationId: true } }),
+    ]);
+    if (!terminal) throw new BadRequestException('Terminal no encontrada');
+    if (!event) throw new BadRequestException('Función no encontrada');
+    if (organizationId && terminal.organizationId !== organizationId) {
+      throw new ForbiddenException('La terminal es de otra organización');
+    }
+    if (event.organizationId !== terminal.organizationId) {
+      throw new ForbiddenException('Esta función no se vende en esta taquilla');
+    }
+  }
+
   async quickCheckout(
     terminalId: string,
     sessionId: string,
@@ -117,10 +177,13 @@ export class TaquillaPosService {
       managerPin?: string;
       clientSaleId?: string;
       holdIds?: string[];
-    }
+    },
+    organizationId?: string
   ) {
     const startTime = Date.now();
     const isComp = data.isComp || data.paymentMethod === 'COMP';
+
+    await this.assertSaleScope(terminalId, data.eventId, organizationId);
 
     if (isComp) {
       const terminal = await this.prisma.posTerminal.findUnique({ where: { id: terminalId } });
@@ -263,7 +326,7 @@ export class TaquillaPosService {
     };
   }
 
-  async generateReceipt(orderId: string, terminalId: string) {
+  async generateReceipt(orderId: string, terminalId: string, organizationId?: string) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -271,13 +334,18 @@ export class TaquillaPosService {
         items: { include: { tickets: true } },
       },
     });
-    if (!order) throw new BadRequestException('Order not found');
+    if (!order || (organizationId && order.organizationId !== organizationId)) {
+      throw new BadRequestException('Order not found');
+    }
+    const isComp = Boolean((order as { posOps?: { isComp?: boolean } }).posOps?.isComp);
 
     return {
       receiptNumber: `RCP-${order.publicId}`,
       orderId: order.id,
       publicId: order.publicId,
-      timestamp: new Date().toISOString(),
+      // Hora de la VENTA, no de la consulta: una reimpresión decía la hora en
+      // que se reimprimió como si fuera la de la compra.
+      timestamp: (order.completedAt ?? order.createdAt).toISOString(),
       terminalId,
       eventName: order.event.title,
       quantity: order.items.reduce((s, i) => s + i.quantity, 0),
@@ -285,7 +353,9 @@ export class TaquillaPosService {
       fees: Number(order.fees),
       taxes: Number(order.taxAmount),
       total: Number(order.totalAmount),
-      paymentMethod: order.paymentMethod,
+      // La cortesía se guarda como CASH a $0 (el enum no tiene COMP); el
+      // ticket debe decir cortesía, no efectivo.
+      paymentMethod: isComp ? 'COMP' : order.paymentMethod,
       ticketCodes: order.items.flatMap((item) =>
         item.tickets.map((t) => ({
           barcode: t.code,
@@ -295,10 +365,13 @@ export class TaquillaPosService {
     };
   }
 
-  async scanBarcode(_terminalId: string, barcode: string) {
+  async scanBarcode(_terminalId: string, rawBarcode: string, organizationId?: string) {
+    // El folio que ve e imprime el cajero es «RCP-ORD-…»: se acepta tal cual.
+    const barcode = rawBarcode.trim().replace(/^RCP-/i, '');
     const ticket = await this.prisma.ticket.findFirst({
       where: {
         OR: [{ code: barcode }, { id: barcode }],
+        ...(organizationId ? { event: { organizationId } } : {}),
       },
       include: {
         event: { select: { title: true } },
@@ -323,6 +396,7 @@ export class TaquillaPosService {
       const order = await this.prisma.order.findFirst({
         where: {
           OR: [{ publicId: barcode }, { id: barcode }],
+          ...(organizationId ? { organizationId } : {}),
         },
         include: {
           event: { select: { title: true } },
@@ -378,7 +452,7 @@ export class TaquillaPosService {
       include: { items: { include: { tickets: true } } },
     });
     if (!order) throw new BadRequestException('Order not found');
-    if (order.channel !== SalesChannel.TAQUILLA) {
+    if (order.channel !== SalesChannel.TAQUILLA && order.channel !== SalesChannel.COURTESY) {
       throw new ForbiddenException('Only taquilla orders can be voided here');
     }
     if (data.cashierId && order.cashierId && order.cashierId !== data.cashierId) {
@@ -467,10 +541,14 @@ export class TaquillaPosService {
 
   async syncOfflineTransactions(
     terminalId: string,
-    transactions: Array<{ checkoutData: unknown; sessionId: string; clientSaleId?: string }>
+    transactions: Array<{ checkoutData: unknown; sessionId: string; clientSaleId?: string }>,
+    organizationId?: string
   ) {
     const terminal = await this.prisma.posTerminal.findUnique({ where: { id: terminalId } });
     if (!terminal) throw new BadRequestException('Terminal not found');
+    if (organizationId && terminal.organizationId !== organizationId) {
+      throw new ForbiddenException('La terminal es de otra organización');
+    }
 
     let synced = 0;
     const failed: string[] = [];
@@ -506,10 +584,15 @@ export class TaquillaPosService {
           synced++;
           continue;
         }
-        await this.quickCheckout(terminalId, txn.sessionId, {
-          ...data,
-          clientSaleId,
-        });
+        await this.quickCheckout(
+          terminalId,
+          txn.sessionId,
+          {
+            ...data,
+            clientSaleId,
+          },
+          organizationId
+        );
         synced++;
       } catch (e) {
         // Race: another sync created the same sale between findUnique and create.
@@ -560,7 +643,9 @@ export class TaquillaPosService {
 
     const orders = await this.prisma.order.findMany({
       where: {
-        channel: SalesChannel.TAQUILLA,
+        // Las cortesías se crean con canal COURTESY: filtrando sólo TAQUILLA el
+        // corte decía «Cortesías 0» aunque el turno hubiera regalado boletos.
+        channel: { in: [SalesChannel.TAQUILLA, SalesChannel.COURTESY] },
         status: 'COMPLETED',
         createdAt: { gte: session.startedAt },
         cashierId: session.cashierId,
@@ -690,7 +775,7 @@ export class TaquillaPosService {
   }
 
   async willcallLookup(q: string, organizationId?: string) {
-    const needle = q.trim();
+    const needle = q.trim().replace(/^RCP-/i, '');
     if (!needle) throw new BadRequestException('Query required');
 
     const orders = await this.prisma.order.findMany({
@@ -752,9 +837,18 @@ export class TaquillaPosService {
     });
   }
 
-  async willcallFulfill(orderId: string, cashierId: string, terminalId?: string) {
+  async willcallFulfill(
+    orderId: string,
+    cashierId: string,
+    terminalId?: string,
+    organizationId?: string
+  ) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order || order.status !== 'COMPLETED') {
+      throw new BadRequestException('Completed order required');
+    }
+    if (organizationId && order.organizationId !== organizationId) {
+      // Misma respuesta que "no existe": no se confirma que el folio sea de otra org.
       throw new BadRequestException('Completed order required');
     }
     const prev = ((order as { posOps?: Record<string, unknown> }).posOps || {}) as Record<
@@ -897,6 +991,26 @@ export class TaquillaPosService {
     if (!session) throw new BadRequestException('Session not found');
     await this.assertManagerPin(session.terminal.organizationId, data.managerPin);
 
+    // El cajero entrante se escribe como id o correo. Se resuelve ANTES de
+    // cerrar: antes un correo llegaba tal cual a `cashierShift.userId` (FK a
+    // User), fallaba DESPUÉS de cerrar el turno saliente y la caja quedaba sin
+    // turno abierto.
+    const wanted = data.toCashierId?.trim() ?? '';
+    const incoming = wanted
+      ? await this.prisma.user.findFirst({
+          where: {
+            organizationId: session.terminal.organizationId,
+            OR: [{ id: wanted }, { email: { equals: wanted, mode: 'insensitive' } }],
+          },
+          select: { id: true },
+        })
+      : null;
+    if (!incoming) {
+      throw new BadRequestException(
+        'El cajero entrante no existe en esta organización. Escribe su correo.'
+      );
+    }
+
     const closed = await this.endCashierSession(
       data.sessionId,
       data.fromCashierId,
@@ -906,7 +1020,7 @@ export class TaquillaPosService {
 
     const next = await this.startCashierSession(
       session.terminalId,
-      data.toCashierId,
+      incoming.id,
       data.openingCash ?? closed.expectedCash
     );
 

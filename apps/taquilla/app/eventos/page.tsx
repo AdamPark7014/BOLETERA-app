@@ -44,7 +44,7 @@ export default function EventosTaquillaPage() {
   }, [router]);
 
   useEffect(() => {
-    apiJson<EventRow[]>('/discovery/events')
+    apiJson<EventRow[]>('/taquilla/events')
       .then(setEvents)
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));

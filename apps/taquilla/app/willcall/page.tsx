@@ -193,7 +193,13 @@ export default function WillcallPage() {
           {selected ? (
             <>
               <p className={styles.buyer}>{selected.buyerName || 'Sin nombre'}</p>
-              <p className={styles.meta}>{selected.buyerEmail || 'Sin correo'}</p>
+              <p className={styles.meta}>
+                {/* El correo sintético de venta en mostrador no es del cliente y,
+                    sin espacios, desbordaba el panel con scroll horizontal. */}
+                {selected.buyerEmail && !selected.buyerEmail.endsWith('@pos.boletera.local')
+                  ? selected.buyerEmail
+                  : 'Sin correo'}
+              </p>
               <ul className={styles.tickets}>
                 {selected.tickets.map((t) => (
                   <li key={t.code}>

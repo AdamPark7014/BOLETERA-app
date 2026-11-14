@@ -44,7 +44,8 @@ export function PosSeatMap({
   eventId: string;
   mapData: PosMapData | null;
   selected: string[];
-  onToggle: (seatId: string) => void;
+  /** `offerId` es la oferta de la sección del asiento (si se pudo resolver). */
+  onToggle: (seatId: string, offerId?: string) => void;
   offers?: { id: string; zone: string; name?: string; basePrice: string | number }[];
 }) {
   const [statusBySeat, setStatusBySeat] = useState<Record<string, string>>({});
@@ -78,6 +79,7 @@ export function PosSeatMap({
         sectionName: section?.name ?? s.sectionId,
         sectionColor: s.color || section?.color || '#5b9fd4',
         price: offer ? Number(offer.basePrice) : undefined,
+        offerId: offer?.id,
       };
     });
   }, [projected.seats, map.sections, offers]);
@@ -221,11 +223,23 @@ export function PosSeatMap({
     return '#17171A';
   }
 
-  function onKeyDown(e: KeyboardEvent, seatId: string, disabled: boolean) {
+  function onKeyDown(
+    e: KeyboardEvent,
+    seatId: string,
+    disabled: boolean,
+    offerId: string | undefined
+  ) {
     if (disabled) return;
+    // Enter sobre un asiento YA elegido no lo suelta: sigue hasta el atajo
+    // global «Enter → Cobrar». Antes, clic en el asiento (queda con el foco) y
+    // Enter para cobrar lo deseleccionaba y dejaba el cobro en $0.00.
+    // Espacio alterna siempre; Enter sólo elige.
+    if (e.key === 'Enter' && selected.includes(seatId)) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onToggle(seatId);
+      // Que el atajo global no procese la misma tecla además del asiento.
+      e.stopPropagation();
+      onToggle(seatId, offerId);
     }
   }
 
@@ -711,8 +725,8 @@ export function PosSeatMap({
                     aria-pressed={selected.includes(s.id)}
                     aria-disabled={disabled}
                     onFocus={() => setFocusedId(s.id)}
-                    onClick={() => !disabled && onToggle(s.id)}
-                    onKeyDown={(e) => onKeyDown(e, s.id, disabled)}
+                    onClick={() => !disabled && onToggle(s.id, s.offerId)}
+                    onKeyDown={(e) => onKeyDown(e, s.id, disabled, s.offerId)}
                   />
                 </g>
               );

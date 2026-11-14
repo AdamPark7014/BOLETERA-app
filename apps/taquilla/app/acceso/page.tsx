@@ -72,7 +72,7 @@ export default function AccesoPage() {
 
   useEffect(() => {
     setZoneId(localStorage.getItem(ZONE_KEY) || '');
-    apiJson<EventRow[]>('/discovery/events')
+    apiJson<EventRow[]>('/taquilla/events')
       .then((data) => {
         const sorted = [...data].sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
         setEvents(sorted);
@@ -164,6 +164,17 @@ export default function AccesoPage() {
         return;
       }
 
+      if (eventId && qr.eventId && qr.eventId !== eventId) {
+        pushOutcome({
+          verdict: 'INVALID',
+          title: 'OTRA FUNCIÓN',
+          detail: 'El QR es de otra función.',
+          extra: 'No se registró la entrada.',
+          at: Date.now(),
+        });
+        return;
+      }
+
       const previous = await getLocalScan(qr.ticketId);
       if (previous) {
         pushOutcome({
@@ -229,13 +240,24 @@ export default function AccesoPage() {
       });
       refreshLocal();
     },
-    [pushOutcome, zoneId, refreshLocal]
+    [pushOutcome, zoneId, eventId, refreshLocal]
   );
 
   const scan = useCallback(
     async (raw: string) => {
       const value = raw.trim();
       if (!value || busy) return;
+      if (!eventId) {
+        // Sin función elegida la puerta no puede saber si el boleto es de esta
+        // noche: el API lo aceptaría aunque fuera de otro evento.
+        pushOutcome({
+          verdict: 'INVALID',
+          title: 'ELIGE LA FUNCIÓN',
+          detail: 'Elige la función de esta puerta antes de escanear.',
+          at: Date.now(),
+        });
+        return;
+      }
       setBusy(true);
       setCode('');
       try {
@@ -258,7 +280,7 @@ export default function AccesoPage() {
             };
           }>('/access/scan', {
             method: 'POST',
-            body: JSON.stringify({ ...body, zoneId: zoneId || undefined }),
+            body: JSON.stringify({ ...body, zoneId: zoneId || undefined, eventId }),
           });
           const t = data.ticket;
           pushOutcome({
@@ -284,7 +306,20 @@ export default function AccesoPage() {
             firstScanZoneId?: string;
             firstScanBy?: string;
             message?: string;
+            ticketEventTitle?: string;
           };
+          if (err.status === 400 && payload.code === 'WRONG_EVENT') {
+            pushOutcome({
+              verdict: 'INVALID',
+              title: 'OTRA FUNCIÓN',
+              detail: payload.ticketEventTitle
+                ? `Este boleto es de «${payload.ticketEventTitle}».`
+                : 'Este boleto es de otra función.',
+              extra: 'No se marcó como usado. Indica al portador su puerta o fecha.',
+              at: Date.now(),
+            });
+            return;
+          }
           if (err.status === 409 && payload.code === 'TICKET_ALREADY_SCANNED') {
             // 409 ≠ 400: "ya escaneado" se resuelve llamando a supervisión;
             // "no válido" se resuelve rechazando al portador.
@@ -294,10 +329,7 @@ export default function AccesoPage() {
               detail: payload.firstScanAt
                 ? `Primer paso: ${new Date(payload.firstScanAt).toLocaleString('es-MX')}`
                 : 'Este boleto ya entró.',
-              extra: [
-                payload.firstScanZoneId ? `Puerta ${payload.firstScanZoneId}` : null,
-                payload.firstScanBy ? `Operador ${payload.firstScanBy}` : null,
-              ]
+              extra: [payload.firstScanZoneId ? `Puerta ${payload.firstScanZoneId}` : null]
                 .filter(Boolean)
                 .join(' · '),
               at: Date.now(),
@@ -309,6 +341,17 @@ export default function AccesoPage() {
               verdict: 'UNKNOWN',
               title: 'NO EXISTE',
               detail: 'Ese boleto no está en el sistema.',
+              at: Date.now(),
+            });
+            return;
+          }
+          if (/Unknown access zone/i.test(payload.message || err.message)) {
+            // No es culpa del boleto: la zona escrita en esta puerta no existe.
+            pushOutcome({
+              verdict: 'INVALID',
+              title: 'ZONA DESCONOCIDA',
+              detail: 'La zona de acceso escrita no existe. Corrígela o déjala vacía.',
+              extra: 'El boleto no se marcó como usado.',
               at: Date.now(),
             });
             return;
@@ -326,7 +369,7 @@ export default function AccesoPage() {
         inputRef.current?.focus();
       }
     },
-    [busy, zoneId, scanOffline, pushOutcome]
+    [busy, zoneId, eventId, scanOffline, pushOutcome]
   );
 
   const hotkeys = useMemo<Hotkey[]>(
@@ -377,7 +420,7 @@ export default function AccesoPage() {
             name="Zona de acceso"
             value={zoneId.trim() || '—'}
             valueStyle="mono"
-            effect="Texto libre de esta ventanilla. Viaja con el escaneo."
+            effect="Si se escribe, tiene que ser una zona que ya existe. Vacío, el escaneo no lleva zona."
           >
             <Field
               id="access-zone"

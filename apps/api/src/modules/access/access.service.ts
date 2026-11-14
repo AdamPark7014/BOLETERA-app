@@ -82,7 +82,19 @@ export class AccessService {
     channel: string;
     /** Hora real del escaneo. Solo la usa la conciliación offline. */
     scannedAt?: Date;
+    /**
+     * Función que controla esta puerta. Si viene, un boleto de otra función se
+     * rechaza ANTES de marcarlo usado: sin esto, un boleto de otro evento
+     * entraba («Éxito») y además quedaba quemado para su propia función.
+     */
+    eventId?: string;
+    /** Organización y rol del escáner (del JWT) para acotar `eventId`. */
+    scannerOrganizationId?: string | null;
+    scannerRole?: string;
   }) {
+    if (params.eventId) {
+      await this.assertGateEvent(params.eventId, params.scannerOrganizationId, params.scannerRole);
+    }
     const scannedAt = params.scannedAt ?? new Date();
     // Se valida antes de tocar el boleto: `TicketScan.zoneId` es clave foránea y
     // una zona inventada convertiría el registro del escaneo en un 500.
@@ -141,6 +153,17 @@ export class AccessService {
     if (!ticket) {
       await this.recordScan(ticketId ?? '', context, false, 'Ticket not found', scannedAt);
       throw new NotFoundException('Ticket not found');
+    }
+
+    if (params.eventId && ticket.eventId !== params.eventId) {
+      await this.recordScan(ticket.id, context, false, 'Wrong event', scannedAt);
+      throw new BadRequestException({
+        statusCode: 400,
+        code: 'WRONG_EVENT',
+        message: `El boleto es de otra función: ${ticket.event.title}`,
+        ticketCode: ticket.code,
+        ticketEventTitle: ticket.event.title,
+      });
     }
 
     const claimed = await this.claimTicket(ticket.id, scannedAt);
@@ -480,6 +503,26 @@ export class AccessService {
       firstScanZoneId: firstScan?.zoneId ?? null,
       firstScanBy: firstScan?.scannedBy ?? null,
     };
+  }
+
+  /**
+   * La puerta sólo puede controlar funciones de SU organización: si no, un
+   * escáner de otro inquilino podría quemar boletos ajenos pidiendo su evento.
+   */
+  private async assertGateEvent(
+    eventId: string,
+    organizationId: string | null | undefined,
+    role: string | undefined
+  ) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { organizationId: true },
+    });
+    if (!event) throw new NotFoundException('Función no encontrada');
+    if (role === 'SUPER_ADMIN') return;
+    if (!organizationId || event.organizationId !== organizationId) {
+      throw new ForbiddenException('Esta función es de otra organización');
+    }
   }
 
   /** El QR debe ser JSON compacto `{v,t,e,s}`; `v` es opcional para los QR v1. */

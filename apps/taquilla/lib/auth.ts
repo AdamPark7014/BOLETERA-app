@@ -119,6 +119,7 @@ export function clearTaquillaSession() {
   localStorage.removeItem('boletera_cashier_id');
   localStorage.removeItem('boletera_opening_cash');
   localStorage.removeItem('boletera_last_receipt');
+  localStorage.removeItem('boletera_pos_events');
 }
 
 // ---------------------------------------------------------------------------

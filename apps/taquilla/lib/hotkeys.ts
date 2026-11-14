@@ -50,6 +50,11 @@ export function useHotkeys(hotkeys: Hotkey[], enabled = true) {
     if (!enabled) return;
     function onKey(e: KeyboardEvent) {
       if (e.repeat) return;
+      // Con un diálogo de autorización abierto (reautenticación, PIN de
+      // gerente) las teclas son SUYAS: si no, Enter en el campo de contraseña
+      // disparaba «Cobrar» de la pantalla de abajo y, al cancelar el envío del
+      // formulario con preventDefault, el diálogo nunca se enviaba.
+      if (document.querySelector('[role="alertdialog"][aria-modal="true"]')) return;
       const typing = isTypingTarget(e.target);
       for (const hk of ref.current) {
         if (!hk.run || hk.displayOnly) continue;

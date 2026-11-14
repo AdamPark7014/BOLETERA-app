@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Request,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -24,6 +34,22 @@ import type {
   WillcallFulfillDto,
   WillcallLookupDto,
 } from './taquilla-pos.dto';
+
+type JwtUser = { sub: string; role?: string; organizationId?: string | null };
+
+/**
+ * Organización con la que se acotan búsquedas de boletos y will-call. Sale del
+ * JWT, nunca del cuerpo: antes `willcall/lookup` tomaba `organizationId` del
+ * body y, si se omitía, buscaba por nombre/correo en TODAS las organizaciones.
+ * SUPER_ADMIN puede pedir otra org explícita (o ninguna). Sin org → 403.
+ */
+export function posOrgScope(user: JwtUser | undefined, requested?: string): string | undefined {
+  if (user?.role === 'SUPER_ADMIN') return requested || user.organizationId || undefined;
+  if (!user?.organizationId) {
+    throw new ForbiddenException('Usuario sin organización asignada');
+  }
+  return user.organizationId;
+}
 
 @ApiTags('Taquilla / POS')
 @ApiBearerAuth()
@@ -69,15 +95,26 @@ export class TaquillaPosController {
     return await this.posService.releaseHolds(data.holdIds);
   }
 
+  @Get('events')
+  @ApiOperation({ summary: 'Events on sale at this box office (JWT organization)' })
+  async events(@Request() req: { user: JwtUser }) {
+    return await this.posService.listPosEvents(posOrgScope(req.user));
+  }
+
   @Post('checkout')
   @ApiOperation({ summary: 'Checkout at box office (GA or reserved seats)' })
-  async quickCheckout(@Body() data: QuickCheckoutDto) {
-    return await this.posService.quickCheckout(data.terminalId, data.sessionId, data.checkoutData);
+  async quickCheckout(@Request() req: { user: JwtUser }, @Body() data: QuickCheckoutDto) {
+    return await this.posService.quickCheckout(
+      data.terminalId,
+      data.sessionId,
+      data.checkoutData,
+      posOrgScope(req.user)
+    );
   }
 
   @Post('terminal/init-org')
   @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
-  @Roles('TAQUILLA', 'PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
+  @Roles('TAQUILLA', 'TAQUILLA_SUPERVISOR', 'PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER')
   @ApiOperation({ summary: 'Initialize POS terminal for organization' })
   async initTerminalOrg(
     @Body()
@@ -100,16 +137,24 @@ export class TaquillaPosController {
   @Get('receipt/:orderId')
   @ApiOperation({ summary: 'Generate receipt' })
   async generateReceipt(
+    @Request() req: { user: JwtUser },
     @Param('orderId') orderId: string,
     @Query('terminalId') terminalId: string
   ) {
-    return await this.posService.generateReceipt(orderId, terminalId ?? 'terminal');
+    return await this.posService.generateReceipt(
+      orderId,
+      terminalId ?? 'terminal',
+      posOrgScope(req.user)
+    );
   }
 
   @Post('scan')
   @ApiOperation({ summary: 'Scan ticket barcode or order publicId' })
-  async scanBarcode(@Body() data: { terminalId: string; barcode: string }) {
-    return await this.posService.scanBarcode(data.terminalId, data.barcode);
+  async scanBarcode(
+    @Request() req: { user: JwtUser },
+    @Body() data: { terminalId: string; barcode: string }
+  ) {
+    return await this.posService.scanBarcode(data.terminalId, data.barcode, posOrgScope(req.user));
   }
 
   @Post('void')
@@ -128,14 +173,19 @@ export class TaquillaPosController {
 
   @Post('willcall/lookup')
   @ApiOperation({ summary: 'Lookup orders for will-call pickup' })
-  async willcallLookup(@Body() data: WillcallLookupDto) {
-    return await this.posService.willcallLookup(data.q, data.organizationId);
+  async willcallLookup(@Request() req: { user: JwtUser }, @Body() data: WillcallLookupDto) {
+    return await this.posService.willcallLookup(data.q, posOrgScope(req.user, data.organizationId));
   }
 
   @Post('willcall/fulfill')
   @ApiOperation({ summary: 'Mark will-call order as picked up' })
-  async willcallFulfill(@Body() data: WillcallFulfillDto) {
-    return await this.posService.willcallFulfill(data.orderId, data.cashierId, data.terminalId);
+  async willcallFulfill(@Request() req: { user: JwtUser }, @Body() data: WillcallFulfillDto) {
+    return await this.posService.willcallFulfill(
+      data.orderId,
+      data.cashierId,
+      data.terminalId,
+      posOrgScope(req.user)
+    );
   }
 
   @Post('exchange')
@@ -197,8 +247,16 @@ export class TaquillaPosController {
 
   @Post('offline/sync/:terminalId')
   @ApiOperation({ summary: 'Sync offline transactions' })
-  async syncOffline(@Param('terminalId') terminalId: string, @Body() data: SyncOfflineDto) {
-    return await this.posService.syncOfflineTransactions(terminalId, data.transactions);
+  async syncOffline(
+    @Request() req: { user: JwtUser },
+    @Param('terminalId') terminalId: string,
+    @Body() data: SyncOfflineDto
+  ) {
+    return await this.posService.syncOfflineTransactions(
+      terminalId,
+      data.transactions,
+      posOrgScope(req.user)
+    );
   }
 
   @Post('session/end')

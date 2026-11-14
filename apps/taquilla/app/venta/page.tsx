@@ -64,6 +64,23 @@ type Stage = 'EVENT' | 'ZONE' | 'TICKETS' | 'TENDER' | 'DONE';
 type PendingAuth = null | 'COMP' | 'DISCOUNT';
 
 const QTY_TYPING_WINDOW_MS = 900;
+const EVENTS_CACHE_KEY = 'boletera_pos_events';
+
+/**
+ * Zonas en orden ESTABLE (precio descendente, luego nombre). El catálogo llega
+ * sin `orderBy` y Postgres reordena las ofertas cada vez que una venta toca
+ * `remainingQuantity`: la tecla «3» elegía Balcón en una venta y Luneta en la
+ * siguiente.
+ */
+function sellableOffers(list: Offer[] | undefined): Offer[] {
+  return (list ?? [])
+    .filter((o) => o.isAvailable !== false)
+    .sort(
+      (a, b) =>
+        Number(b.basePrice) - Number(a.basePrice) ||
+        (a.name || a.zone || '').localeCompare(b.name || b.zone || '', 'es')
+    );
+}
 
 function VentaFlow() {
   const router = useRouter();
@@ -112,6 +129,12 @@ function VentaFlow() {
   const [releaseAsk, setReleaseAsk] = useState(false);
 
   const holdRef = useRef<string[]>([]);
+  /**
+   * Cancelación del cobro con tarjeta. Antes Esc sólo apagaba el aviso y
+   * `loading`, pero la promesa seguía y la venta SE COBRABA igual (y con
+   * `loading` en false se podía cobrar otra vez encima).
+   */
+  const cardCancelRef = useRef<'idle' | 'waiting' | 'sent' | 'cancelled'>('idle');
   const qtyBuffer = useRef({ value: '', at: 0 });
   const filterRef = useRef<HTMLInputElement>(null);
   const chargeRef = useRef<HTMLButtonElement>(null);
@@ -140,25 +163,40 @@ function VentaFlow() {
   // --- catálogo -----------------------------------------------------------
   useEffect(() => {
     setEventsLoading(true);
-    apiJson<EventRow[]>('/discovery/events')
+    const show = (data: EventRow[]) => {
+      const now = Date.now();
+      const sorted = [...data].sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
+      // Primero lo que se vende hoy: un evento de dentro de tres meses no
+      // debería robarle la tecla "1" al de esta noche.
+      const soon = sorted.filter((e) => +new Date(e.startsAt) >= now - 12 * 3600 * 1000);
+      setEvents(soon.length ? soon : sorted);
+    };
+    apiJson<EventRow[]>('/taquilla/events')
       .then((data) => {
-        const now = Date.now();
-        const sorted = [...data].sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
-        // Primero lo que se vende hoy: un evento de dentro de tres meses no
-        // debería robarle la tecla "1" al de esta noche.
-        const soon = sorted.filter((e) => +new Date(e.startsAt) >= now - 12 * 3600 * 1000);
-        setEvents(soon.length ? soon : sorted);
+        show(data);
+        try {
+          localStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify(data));
+        } catch {
+          /* sin cuota: el catálogo en caché es una comodidad */
+        }
       })
-      .catch(() => setEvents([]))
+      .catch(() => {
+        // Sin red tras recargar, la venta offline necesita el catálogo: antes
+        // la pantalla decía «No hay funciones publicadas» aunque hubiera cupo
+        // local para vender.
+        try {
+          const cached = JSON.parse(localStorage.getItem(EVENTS_CACHE_KEY) || '[]') as EventRow[];
+          show(Array.isArray(cached) ? cached : []);
+        } catch {
+          setEvents([]);
+        }
+      })
       .finally(() => setEventsLoading(false));
   }, []);
 
   const event = useMemo(() => events.find((e) => e.id === eventId) ?? null, [events, eventId]);
 
-  const offers = useMemo(
-    () => (event?.offers ?? []).filter((o) => o.isAvailable !== false),
-    [event]
-  );
+  const offers = useMemo(() => sellableOffers(event?.offers), [event]);
 
   const offer = useMemo(
     () => offers.find((o) => o.id === offerId) ?? offers[0] ?? null,
@@ -282,7 +320,10 @@ function VentaFlow() {
 
   // --- borrador -----------------------------------------------------------
   useEffect(() => {
-    if (stage === 'DONE' || !eventId || !offerId) return;
+    // Tras cobrar, `reset()` vuelve a EVENT pero conserva evento y zona: sin
+    // este corte se guardaba un borrador vacío y cada recarga anunciaba «Venta
+    // recuperada» sin venta alguna.
+    if (stage === 'DONE' || stage === 'EVENT' || !eventId || !offerId) return;
     saveSaleDraft({
       eventId,
       eventTitle: event?.title,
@@ -320,7 +361,7 @@ function VentaFlow() {
   const selectEvent = useCallback(
     (row: EventRow) => {
       setEventId(row.id);
-      const list = (row.offers ?? []).filter((o) => o.isAvailable !== false);
+      const list = sellableOffers(row.offers);
       setOfferId(list[0]?.id ?? '');
       setSelectedSeats([]);
       void releaseHolds();
@@ -427,6 +468,7 @@ function VentaFlow() {
 
     setLoading(true);
     if (method === 'CARD') setCardWaiting(true);
+    cardCancelRef.current = method === 'CARD' ? 'waiting' : 'idle';
     const clientSaleId = crypto.randomUUID();
 
     try {
@@ -448,6 +490,13 @@ function VentaFlow() {
       if (method === 'CARD') {
         // Hueco del pinpad: el flujo real lo cierra el integrador de Banorte.
         await new Promise((r) => setTimeout(r, 800));
+        // Esc lo cambia durante la espera; TS no ve esa mutación del ref.
+        const cardState = cardCancelRef.current as 'idle' | 'waiting' | 'sent' | 'cancelled';
+        if (cardState === 'cancelled') {
+          showToast('Pago con tarjeta cancelado. No se cobró.');
+          return;
+        }
+        cardCancelRef.current = 'sent';
       }
 
       const result = await posCheckout({
@@ -799,9 +848,12 @@ function VentaFlow() {
           match: (e) => e.key === 'Escape',
           run: () => {
             if (cardWaiting) {
-              setCardWaiting(false);
-              setLoading(false);
-              showToast('Pago con tarjeta cancelado');
+              if (cardCancelRef.current === 'waiting') {
+                cardCancelRef.current = 'cancelled';
+                setCardWaiting(false);
+              } else {
+                showToast('El cobro ya se envió; espera la respuesta.');
+              }
               return;
             }
             back();
@@ -967,7 +1019,13 @@ function VentaFlow() {
               ) : (
                 <ul className={styles.list}>
                   {filteredEvents.map((row, i) => {
-                    const price = Number(row.offers?.[0]?.basePrice ?? 0);
+                    // «Desde» es el precio MÁS BAJO, no el de la primera oferta
+                    // que devuelva el catálogo (Ballet decía «Desde $532» con
+                    // Balcón a $285).
+                    const prices = sellableOffers(row.offers)
+                      .map((o) => Number(o.basePrice))
+                      .filter((n) => Number.isFinite(n) && n > 0);
+                    const price = prices.length ? Math.min(...prices) : 0;
                     const when = new Date(row.startsAt);
                     return (
                       <li key={row.id}>
@@ -1077,11 +1135,26 @@ function VentaFlow() {
                     eventId={eventId}
                     mapData={mapData}
                     selected={selectedSeats}
-                    onToggle={(id) => {
+                    onToggle={(id, seatOfferId) => {
+                      void releaseHolds();
+                      // El precio sale de la ZONA elegida: un asiento de otra
+                      // sección cobrado con la oferta actual se vendía al precio
+                      // equivocado (Luneta $532 cobrada como Balcón $285). Al
+                      // tocar un asiento de otra zona, la venta pasa a esa zona.
+                      if (seatOfferId && offer && seatOfferId !== offer.id) {
+                        const next = offers.find((o) => o.id === seatOfferId);
+                        setOfferId(seatOfferId);
+                        setSelectedSeats([id]);
+                        if (next) {
+                          showToast(
+                            `Zona ${next.name || next.zone || 'General'} · ${formatTicketAmount(Number(next.basePrice))}`
+                          );
+                        }
+                        return;
+                      }
                       setSelectedSeats((prev) =>
                         prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
                       );
-                      void releaseHolds();
                     }}
                     offers={offers.map((o) => ({
                       id: o.id,
