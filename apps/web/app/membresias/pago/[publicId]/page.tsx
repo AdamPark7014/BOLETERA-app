@@ -110,20 +110,18 @@ export default function MembresiaPagoPage() {
     return () => clearInterval(poll);
   }, [pending, load]);
 
-  /** Solo demo: la misma confirmación manual que usan las órdenes. */
+  /** Solo demo: confirmación del propio comprador (misma lógica que las órdenes). */
   async function simulate() {
     if (!checkout) return;
     setSimulating(true);
     setSimError(null);
     try {
-      const res = await fetch(`${API}/payments/confirm`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({
-          orderId: checkout.id,
-          externalId: `banorte_demo_${checkout.publicId}`,
-        }),
-      });
+      // Ruta del comprador (solo demo). `/payments/confirm` es de administración
+      // y respondía 401 a cualquier comprador.
+      const res = await fetch(
+        `${API}/memberships/checkout/${encodeURIComponent(checkout.publicId)}/demo-confirm`,
+        { method: 'POST', headers: { ...authHeaders() }, cache: 'no-store' }
+      );
       if (!res.ok) {
         const info = await readApiError(res, 'No se pudo simular el pago');
         setSimError(info.message);

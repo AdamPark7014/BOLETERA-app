@@ -375,6 +375,41 @@ export class PaymentService {
     throw new BadRequestException('En producción la confirmación llega vía IPN Banorte (webhook).');
   }
 
+  /**
+   * ¿Existe la confirmación del comprador? Solo con la pasarela en demo y fuera
+   * de producción. En cualquier otro caso la ruta no existe (404), para no
+   * anunciar en producción que hay un atajo de pago.
+   */
+  isBuyerDemoConfirmAvailable(): boolean {
+    return process.env.NODE_ENV !== 'production' && getBanorteConfig().isDemo;
+  }
+
+  /**
+   * Confirmación demo pedida por el propio comprador (orden o membresía). El
+   * llamador YA acreditó que la compra es suya; aquí solo se reusa el camino de
+   * `confirmBanortePayment`. Devuelve el estado, nunca la orden completa (que
+   * trae el hash del token de acceso).
+   */
+  async confirmBuyerDemoPurchase(
+    chargeId: string,
+    publicId: string
+  ): Promise<{ publicId: string; status: string }> {
+    if (!this.isBuyerDemoConfirmAvailable()) throw new NotFoundException();
+    await this.confirmBanortePayment({
+      orderId: chargeId,
+      externalId: `banorte_demo_${publicId}`,
+    });
+    // Las formas de respuesta de órdenes y cobros externos difieren: el estado
+    // se relee de la base para devolver siempre lo mismo.
+    const order = await this.prisma.order.findUnique({
+      where: { id: chargeId },
+      select: { status: true },
+    });
+    if (order) return { publicId, status: order.status };
+    const external = await this.findExternalCharge(chargeId);
+    return { publicId, status: external?.charge.status ?? OrderStatus.COMPLETED };
+  }
+
   // ==================== COBROS QUE NO SON ÓRDENES (membresías) ==============
 
   private externalHandlers: ExternalChargeHandler[] = [];

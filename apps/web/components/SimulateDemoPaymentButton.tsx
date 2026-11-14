@@ -4,22 +4,22 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TicketButton } from '@boletera/ui';
 import { networkError, readApiError } from '@/lib/api-errors';
-import { fetchOrderResource, orderPath, readStoredOrderAccessToken } from '@/lib/order-access';
+import { authHeaders } from '@/lib/auth';
+import { orderApiUrl, orderPath, readStoredOrderAccessToken } from '@/lib/order-access';
 import styles from './SimulateDemoPaymentButton.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api/v1';
 
 /**
  * Control solo-demo: completa una orden SPEI/OXXO pendiente vía
- * `POST /payments/confirm`. El llamador solo debe renderizarlo con Banorte en
- * modo demo.
+ * `POST /orders/:publicId/demo-confirm`, la ruta del comprador (solo existe con
+ * Banorte en demo). Acredita como la lectura de la orden: JWT de la sesión o el
+ * `accessToken` del enlace. `/payments/confirm` es de administración y
+ * respondía 401 al comprador.
  *
- * Si no recibe `orderId` tiene que leer la orden para obtenerlo, y esa lectura
- * ya exige credencial: sin el `accessToken` devolvía 403 y el botón fallaba en
- * el mismo flujo de invitado que existe para probar.
+ * `orderId` se conserva por compatibilidad con los llamadores; ya no hace falta.
  */
 export function SimulateDemoPaymentButton({
-  orderId,
   publicId,
   accessToken,
   className,
@@ -35,32 +35,14 @@ export function SimulateDemoPaymentButton({
 
   const token = accessToken ?? readStoredOrderAccessToken(publicId);
 
-  async function resolveOrderId(): Promise<string> {
-    if (orderId) return orderId;
-    const res = await fetchOrderResource<{ id?: string }>(API, publicId, '', token);
-    if (!res.ok) {
-      throw new Error(
-        res.forbidden
-          ? 'Abre la orden desde el enlace del correo para simular el pago.'
-          : res.message
-      );
-    }
-    if (!res.data.id) throw new Error('Orden sin id');
-    return res.data.id;
-  }
-
   async function simulate() {
     setBusy(true);
     setError('');
     try {
-      const resolvedId = await resolveOrderId();
-      const res = await fetch(`${API}/payments/confirm`, {
+      const res = await fetch(orderApiUrl(API, publicId, '/demo-confirm', token), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: resolvedId,
-          externalId: `banorte_demo_${publicId}`,
-        }),
+        headers: { ...authHeaders() },
+        cache: 'no-store',
       });
       if (!res.ok) {
         const info = await readApiError(res, 'No se pudo simular el acreditamiento');

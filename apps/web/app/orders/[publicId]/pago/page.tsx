@@ -9,9 +9,11 @@ import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors'
 import {
   ORDER_TOKEN_PARAM,
   fetchOrderResource,
+  orderApiUrl,
   orderPath,
   resolveOrderAccessToken,
 } from '@/lib/order-access';
+import { authHeaders } from '@/lib/auth';
 import { DeferredPaymentPanel } from '../DeferredPaymentPanel';
 import { OrderAccessGate } from '../OrderAccessGate';
 import styles from '../order.module.scss';
@@ -110,10 +112,12 @@ function PagoContent() {
           if (!cancelled) router.replace(orderPath(publicId, token));
           return;
         }
-        const res = await fetch(`${API}/payments/confirm`, {
+        // Ruta del comprador (solo demo): acredita con la misma credencial que
+        // la lectura de la orden. `/payments/confirm` es de administración.
+        const res = await fetch(orderApiUrl(API, publicId, '/demo-confirm', token), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: order.id, externalId: `banorte_demo_${publicId}` }),
+          headers: { ...authHeaders() },
+          cache: 'no-store',
         });
         if (!res.ok) {
           const info = await readApiError(res, 'No se pudo confirmar el pago demo');

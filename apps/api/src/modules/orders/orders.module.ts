@@ -5,6 +5,7 @@ import { CampaignExecutionModule } from '../campaign-execution/campaign-executio
 import { ChannelManagementModule } from '../channel-management/channel-management.module';
 import { FraudModule } from '../fraud/fraud.module';
 import { NotificationModule } from '../notification/notification.module';
+import { PaymentModule } from '../payment/payment.module';
 import { PricingModule } from '../pricing/pricing.module';
 import { BuyerSelfServiceService } from './buyer-self-service.service';
 import { OrdersController } from './orders.controller';
@@ -19,6 +20,7 @@ import { OrdersService } from './orders.service';
     PricingModule,
     FraudModule,
     NotificationModule,
+    PaymentModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService, BuyerSelfServiceService],

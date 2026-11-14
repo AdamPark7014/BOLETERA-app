@@ -5,6 +5,7 @@ import {
   Headers,
   Header,
   HttpCode,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -12,6 +13,7 @@ import {
   Request,
   Res,
   StreamableFile,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -20,6 +22,7 @@ import type { Response } from 'express';
 import { parseSalesChannel } from '../../common/sales-channel';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
+import { PaymentService } from '../payment/payment.service';
 import { BuyerSelfServiceService } from './buyer-self-service.service';
 import { CreateOrderDto, RefundPayoutClabeDto, type OrderRequester } from './orders.dto';
 import { OrdersService } from './orders.service';
@@ -31,7 +34,8 @@ type OptionalAuthRequest = { user?: { sub: string; email?: string; role?: string
 export class OrdersController {
   constructor(
     private orders: OrdersService,
-    private selfService: BuyerSelfServiceService
+    private selfService: BuyerSelfServiceService,
+    private payments: PaymentService
   ) {}
 
   @Post()
@@ -172,6 +176,31 @@ export class OrdersController {
       this.requester(req, accessToken),
       body
     );
+  }
+
+  /**
+   * Solo demo: el comprador confirma el pago de SU orden (la pasarela demo no
+   * manda IPN). Fuera de demo, o en producción, la ruta no existe (404). Sin
+   * credencial, 401; con credencial ajena, 403 (misma regla que leer la orden).
+   * La confirmación administrativa `/payments/confirm` no cambia.
+   */
+  @Post(':publicId/demo-confirm')
+  @HttpCode(200)
+  @UseGuards(OptionalJwtAuthGuard)
+  async demoConfirm(
+    @Param('publicId') publicId: string,
+    @Request() req: OptionalAuthRequest,
+    @Query('accessToken') accessToken?: string
+  ) {
+    if (!this.payments.isBuyerDemoConfirmAvailable()) throw new NotFoundException();
+    if (!req.user?.sub && !accessToken?.trim()) {
+      throw new UnauthorizedException('Inicia sesión o abre la orden desde el enlace del correo.');
+    }
+    const order = await this.orders.authorizeBuyerAction(
+      publicId,
+      this.requester(req, accessToken)
+    );
+    return this.payments.confirmBuyerDemoPurchase(order.id, order.publicId);
   }
 
   @Get(':publicId')
