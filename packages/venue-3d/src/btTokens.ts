@@ -35,7 +35,8 @@ function clamp(n: number, min: number, max: number) {
  * fija la luminosidad en una franja media. Colores no hex (p. ej. `rgb()`) se devuelven tal cual.
  */
 export function toneZoneColor(input: string | undefined | null): string | undefined {
-  return toneColor(input, 0.3, 0.56, 0.68);
+  // Franja media-baja: la butaca elegida (dorado con brillo) y la del cursor (hueso) resaltan sobre ella.
+  return toneColor(input, 0.32, 0.42, 0.54);
 }
 
 /**

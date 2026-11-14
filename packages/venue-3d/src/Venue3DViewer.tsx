@@ -41,6 +41,16 @@ function heatScale(stops: string[]): CSSProperties {
   return { background: `linear-gradient(90deg, ${stops.map((c) => toneHeatColor(c)).join(', ')})` };
 }
 
+/** Muestra de la leyenda «Libre»: franjas con los tonos reales de las zonas (máx. 4). */
+function zoneSwatch(colors: string[]): CSSProperties | undefined {
+  const list = Array.from(new Set(colors.filter(Boolean))).slice(0, 4);
+  if (list.length === 0) return undefined;
+  if (list.length === 1) return { background: list[0] };
+  const step = 100 / list.length;
+  const stops = list.map((c, i) => `${c} ${i * step}% ${(i + 1) * step}%`).join(', ');
+  return { background: `linear-gradient(90deg, ${stops})` };
+}
+
 export type Venue3DHeatMode = 'off' | 'price' | 'view';
 
 export interface Seat3D extends BowlSeat {
@@ -667,7 +677,20 @@ function ChairSeat({
     seat.status === 'sold' || seat.status === 'blocked' || seat.status === 'held' || blockedView;
   const zoneBase = seat.visibility?.premiumView ? BT.bonePressed : seat.color || BT.seatAccess;
   const base = heatColor || (restricted ? BT.textTertiary : zoneBase);
-  const color = selected ? BT.text : hovered ? BT.bonePressed : base;
+  // Cada estado se distingue por luminosidad y opacidad, no solo por matiz (la zona ya usa el matiz):
+  // libre = tono de la zona; apartada = gris cálido translúcido; vendida = sólido oscuro; bloqueada = casi
+  // invisible; elegida = dorado con brillo (el acento de selección de Black Ticket).
+  const look: { color: string; opacity: number } = blockedView
+    ? { color: BT.inkOverlay, opacity: 0.32 }
+    : seat.status === 'sold'
+      ? { color: BT.seatSold, opacity: 1 }
+      : seat.status === 'held'
+        ? { color: BT.seatSoldLine, opacity: 0.5 }
+        : { color: base, opacity: 1 };
+  // Si una butaca elegida deja de estar libre (la apartó o vendió otra persona), manda su estado real.
+  const showSelected = selected && !disabled;
+  const color = showSelected ? BT.gold : hovered && !disabled ? BT.bonePressed : look.color;
+  const translucent = look.opacity < 1;
   const lift = selected ? 0.08 : hovered ? 0.045 : 0;
 
   return (
@@ -694,23 +717,27 @@ function ChairSeat({
         <boxGeometry args={[0.26, 0.08, 0.24]} />
         <meshStandardMaterial
           color={color}
-          emissive={selected ? BT.goldDeep : '#000000'}
-          emissiveIntensity={selected ? 0.35 : 0}
+          emissive={showSelected ? BT.gold : '#000000'}
+          emissiveIntensity={showSelected ? 0.5 : 0}
           roughness={0.55}
           metalness={0.08}
-          opacity={disabled ? 0.28 : 1}
-          transparent={disabled}
+          opacity={translucent ? look.opacity : 1}
+          transparent={translucent}
+          depthWrite={!translucent}
         />
       </mesh>
       {/* Backrest behind the sitter (local +Z); layout aims local +Z toward stage */}
       <mesh castShadow position={[0, 0.16, 0.09]}>
         <boxGeometry args={[0.26, 0.18, 0.05]} />
         <meshStandardMaterial
-          color={selected ? BT.text : hovered ? BT.bonePressed : base}
+          color={color}
+          emissive={showSelected ? BT.gold : '#000000'}
+          emissiveIntensity={showSelected ? 0.5 : 0}
           roughness={0.6}
           metalness={0.06}
-          opacity={disabled ? 0.28 : 1}
-          transparent={disabled}
+          opacity={translucent ? look.opacity : 1}
+          transparent={translucent}
+          depthWrite={!translucent}
         />
       </mesh>
     </group>
@@ -1257,12 +1284,12 @@ export function Venue3DViewer({
                 ? ` · vista ${sightlineMeta.gradeBySeat.get(hover.id)}`
                 : ''}
             </span>
-            <em>Clic para {selectedSet.has(hover.id) ? 'quitar' : 'elegir'}</em>
+            {onToggleSeat && <em>Clic para {selectedSet.has(hover.id) ? 'quitar' : 'elegir'}</em>}
           </div>
         )}
 
         <div className={styles.overlayBottom}>
-          <ul className={styles.legend}>
+          <ul className={styles.legend} aria-label="Leyenda de asientos">
             <li>
               <i
                 className={styles.legAvail}
@@ -1271,17 +1298,22 @@ export function Venue3DViewer({
                     ? heatScale(VIEW_HEAT_STOPS)
                     : heatMode === 'price'
                       ? heatScale(PRICE_HEAT_STOPS)
-                      : undefined
+                      : zoneSwatch(sections.map((s) => s.color))
                 }
-              />{' '}
+              />
               {heatMode === 'view'
-                ? 'Color = vista'
+                ? 'Libre · por vista'
                 : heatMode === 'price'
-                  ? 'Color = precio'
-                  : 'Color = zona'}
+                  ? 'Libre · por precio'
+                  : 'Libre'}
             </li>
+            {onToggleSeat && (
+              <li>
+                <i className={styles.legSel} /> Elegido
+              </li>
+            )}
             <li>
-              <i className={styles.legSel} /> Elegido
+              <i className={styles.legHeld} /> Apartado
             </li>
             <li>
               <i className={styles.legSold} /> No disponible

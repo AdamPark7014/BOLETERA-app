@@ -109,8 +109,8 @@
 
 .legend i,
 .sections i {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   display: inline-block;
   flex: none;
@@ -121,8 +121,15 @@
 }
 
 .legSel {
-  background: var(--text, #f3f0e8);
-  box-shadow: 0 0 0 1px var(--gold, #c6a56d);
+  background: var(--gold, #c6a56d);
+}
+
+/* Apartado: gris cálido translúcido con la diagonal del plano 2D (SeatMapViewer, «Apartada»). */
+.legHeld {
+  background:
+    linear-gradient(135deg, transparent 42%, var(--ink, #0b0b0c) 42% 58%, transparent 58%),
+    var(--seat-sold-line, #6a6258);
+  opacity: 0.85;
 }
 
 .legSold {
