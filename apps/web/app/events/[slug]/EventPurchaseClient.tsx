@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
 import { SeatMapViewer, type SelectedSeatInfo } from '@/components/SeatMapViewer';
 import {
@@ -107,6 +107,8 @@ export function EventPurchaseClient({
   const [allIn, setAllIn] = useState<number | null>(null);
   const [pricingLoading, setPricingLoading] = useState(false);
   const [totalMoved, setTotalMoved] = useState(false);
+  /** Última cotización: «El total cambió» solo si cambia SIN tocar la selección. */
+  const lastQuote = useRef<{ key: string; total: number } | null>(null);
 
   const focusedOffer = useMemo(() => {
     if (zonePick) {
@@ -280,12 +282,17 @@ export function EventPurchaseClient({
           return;
         }
         const next = pricingTotal(data);
-        setAllIn((previous) => {
-          if (previous != null && previous > 0 && Math.abs(previous - next) >= 0.01) {
-            queueMicrotask(() => setTotalMoved(true));
-          }
-          return next;
-        });
+        // Agregar o quitar una butaca cambia el total y no es una sorpresa: el
+        // aviso es para el precio que se mueve con la MISMA selección (precio
+        // dinámico). Antes saltaba al elegir la segunda butaca y no se quitaba.
+        const previous = lastQuote.current;
+        if (previous && previous.key === selectionKey) {
+          if (Math.abs(previous.total - next) >= 0.01) setTotalMoved(true);
+        } else {
+          setTotalMoved(false);
+        }
+        lastQuote.current = { key: selectionKey, total: next };
+        setAllIn(next);
       })
       .finally(() => {
         if (!controller.signal.aborted) setPricingLoading(false);

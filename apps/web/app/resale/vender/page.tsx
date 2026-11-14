@@ -11,6 +11,37 @@ import styles from './vender.module.scss';
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 const LOGIN_BACK = '/login?next=%2Fresale%2Fvender';
 
+/**
+ * El API de reventa responde varios mensajes en inglés («Price must be between
+ * 560.00 and 2240.00»). Aquí se traducen a algo que el vendedor entienda; lo
+ * que ya viene en español pasa tal cual.
+ */
+function resaleErrorMessage(status: number, raw?: string | string[]): string {
+  const message = (Array.isArray(raw) ? raw.join('. ') : raw)?.trim() ?? '';
+  const range = /price must be between ([\d.]+) and ([\d.]+)/i.exec(message);
+  if (range) {
+    const fmt = (v: string) =>
+      Number(v).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+    return `El precio debe estar entre ${fmt(range[1])} y ${fmt(range[2])}.`;
+  }
+  if (/ticket not found/i.test(message) || status === 404) {
+    return 'No encontramos ese código de boleto. Cópialo tal cual del detalle de tu orden.';
+  }
+  if (/must be in sold status/i.test(message)) {
+    return 'Ese boleto no se puede publicar: ya está en reventa, se usó o se reembolsó.';
+  }
+  if (/order history/i.test(message)) {
+    return 'Ese boleto no viene de una compra y no se puede revender.';
+  }
+  if (/resale not allowed/i.test(message)) {
+    return 'Este evento no permite reventa.';
+  }
+  // Mensajes con acentos o eñes ya vienen en español desde el API.
+  if (message && /[áéíóúñ¿¡]/i.test(message)) return message;
+  if (status === 403) return 'Solo el dueño del boleto puede publicarlo en reventa.';
+  return 'No pudimos publicar el boleto. Revisa el código y el precio.';
+}
+
 export default function ResaleSellPage() {
   const router = useRouter();
   const [ticketCode, setTicketCode] = useState('');
@@ -35,17 +66,17 @@ export default function ResaleSellPage() {
           askingPrice: Number(askingPrice),
         }),
       });
-      // Con la sesión de 2 h, caducar a mitad del formulario es normal.
-      if (res.status === 401 || res.status === 403) {
+      // Con la sesión de 2 h, caducar a mitad del formulario es normal. Solo el
+      // 401 es sesión caducada: el 403 es «ese boleto no es tuyo» y antes
+      // cerraba la sesión del comprador por teclear mal un código.
+      if (res.status === 401) {
         clearSession();
         setError('Tu sesión caducó. Vuelve a entrar y podrás publicar el boleto.');
         return;
       }
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as { message?: string | string[] };
       if (!res.ok) {
-        throw new Error(
-          data.message ?? 'No pudimos publicar el boleto. Revisa el código y el precio.'
-        );
+        throw new Error(resaleErrorMessage(res.status, data.message));
       }
       router.push('/resale');
     } catch (err) {

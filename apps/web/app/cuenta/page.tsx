@@ -155,6 +155,32 @@ function seatLabel(t: TicketRow) {
   return parts.length ? parts.join(' · ') : null;
 }
 
+/**
+ * PDF de boletos con la sesión. Un `<a href>` no manda la cabecera
+ * `Authorization` y el API respondía 403 al propio comprador; se pide por
+ * `fetch` y se entrega el archivo. Si falla, se abre la orden, que tiene su
+ * propia descarga y explica qué pasó.
+ */
+async function downloadTicketsPdf(publicId: string) {
+  try {
+    const res = await fetch(`${API}/orders/${encodeURIComponent(publicId)}/tickets.pdf`, {
+      headers: { ...authHeaders() },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    const url = URL.createObjectURL(await res.blob());
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `boletos-${publicId}.pdf`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  } catch {
+    window.location.href = `/orders/${encodeURIComponent(publicId)}`;
+  }
+}
+
 export default function CuentaPage() {
   const router = useRouter();
   const brand = useTenantBrand();
@@ -250,13 +276,24 @@ export default function CuentaPage() {
     void reload();
   }, [router, reload]);
 
+  /*
+   * Solo lo que el API deja transferir: boleto activo (`SOLD`) y sin otra
+   * transferencia pendiente. Antes salían también los publicados en reventa
+   * (`RESOLD`), los usados y los ya ofrecidos a alguien, y el comprador se
+   * topaba con un error genérico al enviarlos.
+   */
+  const pendingTransferCodes = new Set(
+    transfers.filter((t) => t.status === 'PENDING').map((t) => t.ticket?.code)
+  );
   const myTickets = orders.flatMap(
     (o) =>
       o.items?.flatMap((i) =>
-        (i.tickets ?? []).map((t) => ({
-          ...t,
-          eventTitle: o.event.title,
-        }))
+        (i.tickets ?? [])
+          .filter((t) => (!t.status || t.status === 'SOLD') && !pendingTransferCodes.has(t.code))
+          .map((t) => ({
+            ...t,
+            eventTitle: o.event.title,
+          }))
       ) ?? []
   );
 
@@ -915,11 +952,19 @@ export default function CuentaPage() {
                           {ORDER_STATUS_LABEL[o.status] ?? o.status}
                         </span>
                       </div>
-                      <p>${o.totalAmount}</p>
+                      <p>{formatMoney(o.totalAmount, o.currency ?? 'MXN')}</p>
                       <div className={styles.orderLinks}>
                         <Link href={`/orders/${o.publicId}`}>Ver detalle</Link>
                         {o.status === 'COMPLETED' && (
-                          <a href={`${API}/orders/${o.publicId}/tickets.pdf`}>PDF de boletos</a>
+                          <a
+                            href={`${API}/orders/${o.publicId}/tickets.pdf`}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              void downloadTicketsPdf(o.publicId);
+                            }}
+                          >
+                            PDF de boletos
+                          </a>
                         )}
                       </div>
                     </li>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Field, TicketButton, formatTicketAmount } from '@boletera/ui';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
@@ -74,6 +74,29 @@ export function CarteleraBoard({
   const [active, setActive] = useState(0);
   const [sheet, setSheet] = useState<'category' | 'city' | null>(null);
   const [cityQuery, setCityQuery] = useState('');
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  /*
+   * La hoja de categoría/ciudad es un diálogo: Escape la cierra, el foco entra
+   * al abrirla y vuelve al botón que la abrió al cerrarla. Antes Escape no hacía
+   * nada y con teclado había que recorrer toda la lista para salir.
+   */
+  useEffect(() => {
+    if (!sheet) return;
+    const opener = document.activeElement as HTMLElement | null;
+    sheetRef.current?.querySelector<HTMLElement>('button[aria-pressed="true"], button')?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setSheet(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      opener?.focus?.();
+    };
+  }, [sheet]);
 
   const cities = useMemo(() => {
     const names = new Set<string>();
@@ -250,8 +273,10 @@ export function CarteleraBoard({
       {sheet ? (
         <div className={styles.sheet} role="presentation" onClick={() => setSheet(null)}>
           <div
+            ref={sheetRef}
             className={styles.sheetPanel}
             role="dialog"
+            aria-modal="true"
             aria-label={sheet === 'category' ? 'Categoría' : 'Ciudad'}
             onClick={(event) => event.stopPropagation()}
           >
