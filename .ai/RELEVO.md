@@ -1,10 +1,18 @@
 # RELEVO
 
 - **Último turno:** claude-code
-- **Fecha:** 2026-11-11
+- **Fecha:** 2026-11-13
 - **Rama:** main
 
 ## Hecho
+
+- 2026-11-13 claude-code: precios: solo ADMIN y SUPER_ADMIN aplican, generan, aprueban o rechazan (decisión de Adam); PROMOTER y VENUE_MANAGER consultan (403 en escritura, prueba de roles). La pantalla usa la misma lista y muestra aviso de solo lectura.
+- 2026-11-13 claude-code: doble ajuste de precio: si la última `applied_recommendation` de la oferta sigue igual a `basePrice` y está vigente, el checkout cobra `basePrice` sin surge ni multiplicador por tiempo (regla en `pricing.service.ts`).
+- 2026-11-13 claude-code: compra de membresías en web (`/membresias`, «Mi membresía» en `/cuenta`): `MembershipCheckout` (migración `20261113230000`) se cobra por el mismo camino que las órdenes (PaymentIntent Banorte → IPN o confirmación demo → Payment); punto de extensión en PaymentService sin cambiar el flujo de órdenes.
+- 2026-11-13 claude-code: migración `20261113000000` crea `TenantTheme.siteContent` (faltaba; IF NOT EXISTS). Con base vacía, `migrate deploy` + `migrate diff` contra el schema sale vacío.
+- 2026-11-13 claude-code: visor 3D distingue libre/elegido/apartado/vendido; la compra web pinta los asientos con el color de su zona; borrados los `.js` compilados viejos de `packages/venue-3d/src`.
+- 2026-11-13 claude-code: el editor del plano pedía `/layout/workflow` en bucle (429): callback por ref en LayoutPublishPanel.
+- 2026-11-13 claude-code: repaso de 107 rutas contra base nueva: sin errores salvo los esperados (abajo).
 
 - 2026-11-11 claude-code (2.ª tanda): series con lista, detalle, vista previa, extender y estado (`events/schedule/*`); crear serie ya guarda `EventSeries`.
 - 2026-11-11 claude-code: membresías (módulo nuevo, migración `20261111230000_memberships`) y recomendaciones de precio deterministas con cola de aprobación (migración `20261111231000_pricing_recommendations`). `update-dynamic`, `revenue-estimate` e historial de oferta ahora exigen sesión y organización.
@@ -49,10 +57,11 @@ Lenguaje visual de Black Ticket en `@boletera/ui`.
 
 ## Siguiente
 
-Antes de desplegar: correr las tres migraciones nuevas (`prisma migrate deploy`) y volver a sembrar o actualizar las fotos de eventos si la base vieja aún apunta a las de Unsplash que daban 404.
-Permisos del front: `price:write` depende de VENUES_EDIT y `memberships.manage` de EVENTS_READ en `apps/admin/lib/use-session.ts`; el promotor ve Precios en solo lectura aunque el API le deja aplicar. Decidir con Adam.
-Membresías: renovar y dar de alta solo registran un cobro hecho fuera; falta el flujo de compra en web. SEASON vale 12 meses (el plan no tiene fechas de temporada).
-Precios: con `enableDynamic`, el checkout aplica su propio surge encima del `basePrice` ya ajustado por una recomendación (posible doble ajuste).
+Antes de desplegar: `prisma migrate deploy` (cinco migraciones nuevas desde el 11-11) y actualizar las fotos de eventos si la base vieja aún apunta a las de Unsplash que daban 404.
+Membresías: sin correo de confirmación (no hay plantilla); sus cobros no aparecen en conciliación ni reportes (se arman desde órdenes). SEASON vale 12 meses. `/membresias` no tiene enlace en la navegación.
+Demo: «Simular pago» falla con 403 para el comprador (POST /payments/confirm exige ADMIN), igual en órdenes y membresías.
+Repaso: quedan esperados el 401/404 de `auth/me`/`auth/refresh` en el login de admin (sondeo de sesión por cookie; no quitarlo: la sesión vive en cookie, no en localStorage), la serie del seed de otra organización (404) y `/venues/[id]/3d` que nunca llega a networkidle (worker de troika).
+Precios: `PATCH /pricing/rates` (cargos e IVA) sigue abierto a PROMOTER; no es aplicar precio de oferta, pero conviene confirmarlo con Adam.
 IA: sin chat ni acciones persistentes en el API (el chat es local, por plantillas). Aprobación de pagos, accesos, comparables, abandono e impacto estimado sin fuente.
 Series: `scheduling-api.ts` apunta a más rutas `events/schedule/*` que no existen (alta directa, funciones sueltas, ventanas, calendario, bloqueos); ninguna pantalla actual las llama. Crear serie no crea Offer.
 Visor 3D: también lo usan la compra web, InventoryPanel y venue-3d-studio; revisar ahí los colores nuevos. Quedan `.js` compilados viejos en `packages/venue-3d/src/`.
