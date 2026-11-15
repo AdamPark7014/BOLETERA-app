@@ -334,7 +334,11 @@ export function PosShell({
           <span className={styles.whoMain}>
             {whoMain ?? `${terminalLabel}${orgName ? ` · ${orgName}` : ''}`}
           </span>
-          <span className={styles.whoSub}>{whoSub ?? shiftLine}</span>
+          {fill && headerExtra && !whoSub ? (
+            <div className={styles.whoExtra}>{headerExtra}</div>
+          ) : (
+            <span className={styles.whoSub}>{whoSub ?? shiftLine}</span>
+          )}
         </div>
         <div className={styles.topRight}>
           <NetStatus status={status} />

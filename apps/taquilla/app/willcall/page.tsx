@@ -132,7 +132,6 @@ export default function WillcallPage() {
   return (
     <PosShell
       title="Entregar boletos"
-      eyebrow="Compras para recoger en taquilla"
       backHref="/venta"
       size="wide"
       hotkeys={hotkeys}
@@ -235,9 +234,7 @@ export default function WillcallPage() {
               </button>
             </>
           ) : (
-            <p className={styles.note}>
-              Busca por nombre, correo o folio y elige la compra para entregar.
-            </p>
+            <span aria-hidden="true" />
           )}
           <TicketButton
             id="entregar"

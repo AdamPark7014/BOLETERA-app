@@ -1,6 +1,6 @@
 'use client';
 
-import { formatDayMonth } from '@boletera/ui';
+import { formatDayMonth, formatPrice } from '@boletera/ui';
 import { formatTime as uiTime } from '@boletera/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -31,7 +31,7 @@ type EventRow = {
 };
 
 function money(n: number) {
-  return `$${n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return formatPrice(n);
 }
 
 export default function EventosTaquillaPage() {
@@ -101,7 +101,6 @@ export default function EventosTaquillaPage() {
   return (
     <PosShell
       title="Selecciona evento y zona"
-      eyebrow="Funciones en venta"
       backHref="/"
       size="md"
       hotkeys={hotkeys}
@@ -117,12 +116,6 @@ export default function EventosTaquillaPage() {
           inputSize="lg"
           shortcut="F2"
         />
-        <p className={styles.searchHint}>
-          <Badge tone="neutral" variant="outline" size="sm">
-            1–9
-          </Badge>
-          <span>Venta rápida al evento en la lista</span>
-        </p>
       </Card>
 
       {loading ? (

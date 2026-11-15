@@ -172,3 +172,16 @@
     background: var(--bg-deep);
   }
 }
+
+.who {
+  display: block;
+  margin-top: 6px;
+  color: var(--text, #fff);
+  font-weight: 600;
+}
+
+/* Botones en píldora, como el resto de Black Ticket. */
+.actions button {
+  min-height: 48px;
+  border-radius: 999px;
+}

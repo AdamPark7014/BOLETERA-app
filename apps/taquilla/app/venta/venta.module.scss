@@ -982,3 +982,50 @@
 .cashBox:focus-within {
   border-color: #fff;
 }
+
+/* Tarjetas de función parejas y precio sin cortar. */
+.events {
+  grid-auto-rows: 1fr;
+}
+
+.eventText small {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* «Cambiar función» como secundario estándar. */
+.moreEvents {
+  width: auto;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--line-strong, #34343a);
+  border-radius: 999px;
+  color: var(--text, #fff);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+
+  &:hover {
+    border-color: var(--text-secondary, #a8a29a);
+    background: var(--card, #1a1a1a);
+  }
+}
+
+/* En teléfono, «Cobrar» siempre a la vista: barra fija abajo. */
+@media (max-width: 767px) {
+  .charge {
+    padding-bottom: 104px;
+  }
+
+  .chargeBtn {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    z-index: 30;
+    height: 60px;
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.7);
+  }
+}

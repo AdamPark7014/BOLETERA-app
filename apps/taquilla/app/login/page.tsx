@@ -5,11 +5,18 @@ import { formatTime as uiTime } from '@boletera/ui';
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BrandLogo, Field, StageArt, TicketButton } from '@boletera/ui';
-import { getTaquillaToken, getTaquillaUser, loginRequest, saveTaquillaSession } from '@/lib/auth';
+import {
+  ApiError,
+  getTaquillaToken,
+  getTaquillaUser,
+  loginRequest,
+  saveTaquillaSession,
+} from '@/lib/auth';
 import { getSessionId, openShift } from '@/lib/pos';
 import styles from './login.module.scss';
 
 export default function TaquillaLoginPage() {
+  const [fieldErrors, setFieldErrors] = useState({ terminal: '', email: '', password: '' });
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,12 +68,19 @@ export default function TaquillaLoginPage() {
       router.replace('/venta');
       return;
     }
+    const missing = {
+      terminal: terminalId.trim() ? '' : 'Escribe el nombre de esta caja.',
+      email: email.trim() ? '' : 'Escribe tu correo.',
+      password: password ? '' : 'Escribe tu contraseña.',
+    };
+    setFieldErrors(missing);
+    if (missing.terminal || missing.email || missing.password) return;
     setLoading(true);
     setError('');
     try {
       const { accessToken, user } = await loginRequest(email, password);
       if (!user?.organizationId) {
-        throw new Error('Usuario sin organización asignada');
+        throw new Error('Esta cuenta no tiene taquilla asignada. Pide acceso a tu gerente.');
       }
 
       saveTaquillaSession(accessToken, {
@@ -92,19 +106,20 @@ export default function TaquillaLoginPage() {
 
       router.replace('/venta');
     } catch (err) {
-      setError(friendlyError(err, 'Error de conexión'));
+      setError(
+        err instanceof ApiError && (err.status === 401 || err.status === 400)
+          ? 'Correo o contraseña incorrectos.'
+          : friendlyError(err, 'No se pudo abrir el turno. Intenta de nuevo.')
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  const ready =
-    alreadyOpen || (terminalId.trim().length > 0 && email.trim().length > 0 && password.length > 0);
-
   return (
     <main className={styles.page}>
       <header className={styles.bar}>
-        <BrandLogo tone="gold" size={26} />
+        <BrandLogo tone="white" size={26} />
         <span className={styles.barLabel}>Taquilla</span>
         <p className={styles.clock}>{time}</p>
         <span className={styles.chip}>
@@ -125,6 +140,7 @@ export default function TaquillaLoginPage() {
             <Field
               label="Terminal"
               value={terminalId}
+              error={fieldErrors.terminal || undefined}
               onChange={(e) => setTerminalId(e.target.value.toUpperCase())}
               placeholder="TAQ-01"
               required
@@ -135,6 +151,7 @@ export default function TaquillaLoginPage() {
               type="email"
               autoComplete="username"
               value={email}
+              error={fieldErrors.email || undefined}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
@@ -143,6 +160,7 @@ export default function TaquillaLoginPage() {
               type="password"
               autoComplete="current-password"
               value={password}
+              error={fieldErrors.password || undefined}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
@@ -161,7 +179,7 @@ export default function TaquillaLoginPage() {
         {sessionExpired ? <p className={styles.error}>La sesión expiró. Vuelve a entrar.</p> : null}
         {error ? <p className={styles.error}>{error}</p> : null}
 
-        <TicketButton type="submit" fullWidth disabled={!ready || loading}>
+        <TicketButton type="submit" fullWidth disabled={loading}>
           {loading ? 'Abriendo turno' : alreadyOpen ? 'Entrar al turno' : 'Abrir turno'}
         </TicketButton>
       </form>

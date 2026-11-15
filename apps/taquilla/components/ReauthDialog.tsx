@@ -2,7 +2,7 @@
 
 import { friendlyError } from '@/lib/errors';
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   clearTaquillaSession,
   onReauthRequired,
@@ -21,6 +21,7 @@ import styles from './Dialog.module.scss';
  */
 export function ReauthDialog() {
   const router = useRouter();
+  const pathname = usePathname();
   const [request, setRequest] = useState<ReauthRequest | null>(null);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -40,7 +41,8 @@ export function ReauthDialog() {
     return undefined;
   }, [request]);
 
-  if (!request) return null;
+  // En la pantalla de entrada no hay sesión que reanudar.
+  if (!request || pathname?.startsWith('/login')) return null;
 
   function finish(ok: boolean) {
     const resolve = request?.resolve;
@@ -88,20 +90,13 @@ export function ReauthDialog() {
       }}
     >
       <form className={styles.dialog} onSubmit={(e) => void submit(e)}>
-        <p className={styles.eyebrow}>Sesión caducada</p>
         <h2 id="reauth-title" className={styles.title}>
-          Vuelve a identificarte
+          Tu sesión terminó
         </h2>
         <p className={styles.lead}>
-          La sesión del API caduca cada 2 horas.{' '}
-          <strong>La venta en curso y el turno siguen abiertos</strong>: escribe tu contraseña (
-          {request.email}) y la operación continúa.
+          Escribe tu contraseña para seguir; la venta no se pierde.
+          {request.email ? <span className={styles.who}>{request.email}</span> : null}
         </p>
-
-        <label className={styles.field}>
-          <small>Cajero</small>
-          <input value={request.email} readOnly tabIndex={-1} />
-        </label>
 
         <label className={styles.field}>
           <small>Contraseña</small>
@@ -119,15 +114,12 @@ export function ReauthDialog() {
 
         <div className={styles.actions}>
           <button type="button" onClick={abortSession} disabled={busy}>
-            Salir e ir al login
+            Salir
           </button>
           <button type="submit" className={styles.primary} disabled={busy || !password.trim()}>
             {busy ? 'Reanudando…' : 'Continuar'}
           </button>
         </div>
-        <p className={styles.hint}>
-          <kbd>Enter</kbd> continuar · <kbd>Esc</kbd> salir a la pantalla de entrada
-        </p>
       </form>
     </div>
   );

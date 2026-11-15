@@ -69,7 +69,7 @@ export default function AjustesPage() {
   }
 
   return (
-    <PosShell title="Ajustes" eyebrow="Terminal" backHref="/" size="md">
+    <PosShell title="Ajustes" backHref="/" size="md">
       {msg && <p className={styles.msg}>{msg}</p>}
 
       <section className={styles.section}>
@@ -84,7 +84,7 @@ export default function AjustesPage() {
           .
         </p>
         <p>Estado: {serialOk ? 'conectada' : 'sin conectar'}</p>
-        <Button type="button" variant="secondary" onClick={() => void connectPrinter()}>
+        <Button type="button" variant="secondary" size="lg" onClick={() => void connectPrinter()}>
           Conectar impresora USB
         </Button>
       </section>
@@ -106,10 +106,6 @@ export default function AjustesPage() {
             ))}
           </ul>
         )}
-        <p className={styles.note}>
-          La lista descargada permite validar boletos sin red. No verifica la firma del QR ni conoce
-          cancelaciones posteriores a la descarga.
-        </p>
         {Object.keys(quotas).length > 0 && (
           <ul className={styles.list}>
             {Object.entries(quotas).map(([eventId, qty]) => (
@@ -164,13 +160,9 @@ export default function AjustesPage() {
         <section className={styles.section}>
           <h2>Permisos de esta terminal</h2>
           <p>
-            Sesión de <strong>{roleLabel(role)}</strong>. Puedes vender, entregar boletos apartados,
-            consultar boletos y hacer tu corte.
+            Sesión de <strong>{roleLabel(role)}</strong>.
           </p>
-          <p className={styles.note}>
-            No puedes editar precios, cambiar el PIN de gerente ni autorizar anulaciones, cortesías,
-            descuentos o retiros: esas operaciones piden PIN de gerencia y quedan auditadas.
-          </p>
+          <p className={styles.note}>Precios, PIN y anulaciones los autoriza gerencia.</p>
         </section>
       )}
     </PosShell>

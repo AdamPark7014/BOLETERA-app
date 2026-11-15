@@ -682,3 +682,40 @@
     padding: 0 18px;
   }
 }
+
+/* Aviso clicable en la barra: descargar la lista para validar sin red. */
+.downloadChip {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--warn, #f5a524);
+  border-radius: 999px;
+  background: var(--warn-wash, rgba(245, 165, 36, 0.12));
+  color: var(--warn, #f5a524);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(245, 165, 36, 0.2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus, #d9c2a3);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+/* Teclas como pista gris solo en escritorio; en táctil, etiqueta limpia. */
+@media (max-width: 1023px) {
+  .pill kbd,
+  .linkBtn kbd {
+    display: none;
+  }
+}

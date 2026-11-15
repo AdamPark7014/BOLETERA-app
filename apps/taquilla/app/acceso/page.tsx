@@ -477,7 +477,19 @@ export default function AccesoPage() {
       whoSub={
         manifest
           ? `Lista descargada · ${manifest.count.toLocaleString('es-MX')} boletos${manifest.complete ? '' : ' (incompleta)'}`
-          : 'Lista sin descargar'
+          : ''
+      }
+      headerExtra={
+        !manifest && eventId ? (
+          <button
+            type="button"
+            className={styles.downloadChip}
+            disabled={downloading != null}
+            onClick={() => void doDownload()}
+          >
+            {downloading != null ? 'Descargando lista…' : 'Descargar lista para trabajar sin red'}
+          </button>
+        ) : null
       }
     >
       <div className={styles.door}>
@@ -647,18 +659,18 @@ export default function AccesoPage() {
                 <p className={styles.idleTitle}>
                   {eventId ? 'Listo para escanear' : 'Elige la función de esta puerta'}
                 </p>
-                <p className={styles.idleText}>
-                  {eventId
-                    ? 'Acerca el QR al lector'
-                    : 'Ábrela en «Ajustes de la puerta» para empezar.'}
-                </p>
+                {eventId ? null : (
+                  <p className={styles.idleText}>Ábrela en «Ajustes de la puerta».</p>
+                )}
               </>
             )}
           </div>
 
-          <button type="button" className={styles.nextBtn} onClick={nextScan}>
-            Escanear siguiente
-          </button>
+          {outcome ? (
+            <button type="button" className={styles.nextBtn} onClick={nextScan}>
+              Escanear siguiente
+            </button>
+          ) : null}
         </div>
 
         <aside className={styles.side}>
@@ -752,6 +764,7 @@ export default function AccesoPage() {
                 <button
                   type="button"
                   className={styles.pill}
+                  aria-label="Descargar lista de boletos (F5)"
                   disabled={downloading != null || !eventId}
                   onClick={() => void doDownload()}
                 >
@@ -841,6 +854,7 @@ function EventPick({
       <button
         type="button"
         className={styles.trigger}
+        aria-label={`Cambiar función: ${current?.title ?? 'sin función'}`}
         aria-expanded={open}
         aria-haspopup="listbox"
         onClick={() => setOpen((next) => !next)}

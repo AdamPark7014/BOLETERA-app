@@ -255,7 +255,6 @@ export default function BuscarPage() {
   return (
     <PosShell
       title="Buscar boleto u orden"
-      eyebrow="Consulta y posventa"
       backHref="/"
       size="md"
       hotkeys={hotkeys}
@@ -268,17 +267,12 @@ export default function BuscarPage() {
         </p>
       )}
 
-      <p className={styles.lead}>
-        Consulta boletos, reimprime y gestiona posventa con PIN de gerente.
-      </p>
-
       <form onSubmit={(e) => void submit(e)} className={styles.searchForm}>
         <Field
           ref={inputRef}
           id="lookup-input"
           kind="search"
           label="Código u orden"
-          hint="El lector funciona sin foco en el campo. F3 enfoca."
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -371,21 +365,13 @@ export default function BuscarPage() {
             )}
           </div>
 
-          <p className={styles.note}>
-            Anulación y cambio requieren PIN de gerente. El cajero no puede modificar precios ni
-            emitir devoluciones por su cuenta.
-          </p>
+          <p className={styles.note}>Anular y cambiar piden PIN de gerente.</p>
         </section>
       )}
 
       {!result && !loading && !error && (
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>Busca un boleto o orden</p>
-          <p className={styles.note}>Escanea el código impreso o teclea el folio de la orden.</p>
-          <ul className={styles.hints}>
-            <li>F7 reimprime cuando hay resultado</li>
-            <li>F9 anula con PIN de gerente</li>
-          </ul>
         </div>
       )}
 
