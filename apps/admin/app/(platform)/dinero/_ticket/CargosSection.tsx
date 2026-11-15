@@ -69,9 +69,10 @@ export function CargosSection({
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Cargos</h1>
+        <h1 className={styles.sectionTitle}>Cargos por servicio</h1>
         <p className={styles.quiet}>
-          Una tasa para toda la organización. Vacío, el checkout sigue la del entorno.
+          Lo que paga el comprador encima del precio del boleto. Una tasa para toda la organización;
+          si no la defines, se usa la de Black Ticket.
         </p>
       </header>
       <div className={styles.stack}>
@@ -83,7 +84,7 @@ export function CargosSection({
             effect={
               feeDirty || rates.serviceFeeSaved
                 ? 'Se suma al precio base de cada boleto. No hay cargo distinto por evento, zona o promotor.'
-                : 'Sin tasa guardada. Vacío, el checkout sigue con esta tasa del entorno.'
+                : 'Sin tasa propia: el pago usa esta, la de Black Ticket.'
             }
           >
             {canSave ? (
@@ -148,7 +149,7 @@ export function CargosSection({
             {feeDirty ? 'Sin guardar' : (notice ?? '')}
           </p>
           <TicketButton disabled={!feeDirty || saving} onClick={() => void save()}>
-            Guardar sección
+            Guardar cambios
           </TicketButton>
         </div>
       ) : null}

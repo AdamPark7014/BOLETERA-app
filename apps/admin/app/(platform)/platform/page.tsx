@@ -107,10 +107,10 @@ function PlataformaBody() {
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Plataforma</h1>
+        <h1 className={styles.sectionTitle}>Plan y módulos</h1>
         <p className={styles.quiet}>
-          Límite, ráfaga y SSO los fija el entorno. El API no los lee ni los escribe. No hay nada
-          que guardar.
+          Límites de uso e inicio de sesión de tu cuenta. Los configura Black Ticket; aquí solo se
+          consultan.
         </p>
       </header>
       <div className={styles.stack}>

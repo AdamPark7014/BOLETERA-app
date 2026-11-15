@@ -94,7 +94,7 @@ function CrmBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>CRM</h1>
+          <h1 className={styles.sectionTitle}>Clientes</h1>
           <p className={styles.quiet}>
             Tu rol no incluye la lectura de pedidos que alimenta el CRM.
           </p>
@@ -233,34 +233,35 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
   }).length;
   const analyticsRevenue = workspace.analytics.data?.metrics?.totalRevenue ?? null;
 
-  return (
-    <section>
-      <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>CRM</h1>
-        <p className={styles.quiet}>
-          Cartera armada con los pedidos completados de {rangeLabel(url.range).toLowerCase()}.
-          Segmentos, riesgo de abandono y recomendaciones suman lista de espera, claves partner e IA
-          cuando responden.
-        </p>
-      </header>
+  const segmentTotal = segments.reduce((sum, segment) => sum + segment.spend, 0);
+  const seriesMax = Math.max(1, ...series.map((point) => point.value));
 
-      <div className={own.toolbar}>
-        <div className={own.seg}>
+  return (
+    <section className={styles.page}>
+      <header className={styles.pageHead}>
+        <div className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Clientes</h1>
+          <p className={styles.quiet}>
+            Quién te compra, cuánto gasta y quién dejó de volver. Se arma con los pedidos
+            completados de {rangeLabel(url.range).toLowerCase()}.
+          </p>
+        </div>
+        <div className={styles.toolbar} style={{ alignItems: 'center' }}>
           <Segment
             label="Rango"
             value={url.range}
             options={RANGE_OPTIONS}
             onChange={url.setRange}
           />
+          <TicketButton
+            variant="ghost"
+            disabled={workspace.orders.isFetching}
+            onClick={() => void workspace.refetchAll()}
+          >
+            {workspace.orders.isFetching ? 'Actualizando' : 'Actualizar'}
+          </TicketButton>
         </div>
-        <TicketButton
-          variant="ghost"
-          disabled={workspace.orders.isFetching}
-          onClick={() => void workspace.refetchAll()}
-        >
-          {workspace.orders.isFetching ? 'Actualizando' : 'Actualizar'}
-        </TicketButton>
-      </div>
+      </header>
 
       {auxFailures.length > 0 ? (
         <div className={own.notes}>
@@ -279,156 +280,186 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
           onRetry={() => void workspace.orders.refetch()}
         />
       ) : loading && customers.length === 0 ? (
-        <p className={styles.quiet}>Cargando clientes.</p>
+        <div className={styles.stack} aria-busy="true" aria-label="Cargando clientes">
+          <div className={styles.skeleton} style={{ height: 120 }} />
+          <div className={styles.skeleton} style={{ height: 360 }} />
+        </div>
       ) : (
         <>
-          <div className={own.tiles} aria-label="Indicadores del CRM">
-            <div className={own.tile}>
-              <p className={styles.rowMeta}>Clientes</p>
-              <p className={own.tileFigure}>{formatCount(kpis.customers)}</p>
-              <p className={styles.tertiary}>{formatCount(kpis.active)} activos</p>
+          <div className={`${styles.kpis} ${own.kpiGrid}`} aria-label="Indicadores de clientes">
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Clientes</p>
+              <p className={styles.kpiValue}>{formatCount(kpis.customers)}</p>
+              <p className={styles.kpiNote}>{formatCount(kpis.active)} activos</p>
             </div>
-            <div className={own.tile}>
-              <p className={styles.rowMeta}>LTV promedio</p>
-              <p className={own.tileFigure}>{formatMoney(kpis.avgLtv)}</p>
-              <p className={styles.tertiary}>Gasto total {formatMoney(kpis.spend)}</p>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Gasto promedio</p>
+              <p className={styles.kpiValue}>{formatMoney(kpis.avgLtv)}</p>
+              <p className={styles.kpiNote}>total {formatMoney(kpis.spend)}</p>
             </div>
-            <div className={own.tile}>
-              <p className={styles.rowMeta}>Recurrencia</p>
-              <p className={own.tileFigure}>{formatShare(kpis.retention)}</p>
-              <p className={styles.tertiary}>Con 2 o más pedidos pagados</p>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Vuelven a comprar</p>
+              <p className={styles.kpiValue}>{formatShare(kpis.retention)}</p>
+              <p className={styles.kpiNote}>con 2 o más pedidos</p>
             </div>
-            <div className={own.tile}>
-              <p className={styles.rowMeta}>Frecuentes</p>
-              <p className={own.tileFigure}>{formatCount(kpis.frequent)}</p>
-              <p className={styles.tertiary}>3 o más pedidos completados</p>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Frecuentes</p>
+              <p className={styles.kpiValue}>{formatCount(kpis.frequent)}</p>
+              <p className={styles.kpiNote}>3 o más pedidos</p>
             </div>
-            <div className={own.tile}>
-              <p className={styles.rowMeta}>Riesgo de abandono alto</p>
-              <p className={own.tileFigure}>{formatCount(kpis.churnHigh)}</p>
-              <p className={styles.tertiary}>Por días sin comprar</p>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>En riesgo</p>
+              <p
+                className={styles.kpiValue}
+                style={kpis.churnHigh > 0 ? { color: 'var(--warn)' } : undefined}
+              >
+                {formatCount(kpis.churnHigh)}
+              </p>
+              <p className={styles.kpiNote}>muchos días sin comprar</p>
             </div>
-            <div className={own.tile}>
-              <p className={styles.rowMeta}>Pedidos completados</p>
-              <p className={own.tileFigure}>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Pedidos completados</p>
+              <p className={styles.kpiValue}>
                 {workspace.ordersMetrics.isPending ? '—' : formatCount(completed?.value ?? 0)}
               </p>
-              <p className={styles.tertiary}>{deltaText(completed?.deltaPercent)}</p>
+              <p className={styles.kpiNote}>{deltaText(completed?.deltaPercent)}</p>
             </div>
           </div>
 
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Segmentos</h2>
-              <p className={styles.tertiary}>Tocar un segmento filtra la cartera.</p>
-            </div>
-            {customers.length === 0 ? (
+          {customers.length === 0 ? (
+            <div className={styles.empty}>
+              <p className={styles.emptyTitle}>Aún no hay clientes en este periodo</p>
               <p className={styles.quiet}>
-                Sin clientes todavía. Aparecen cuando hay pedidos completados.{' '}
-                <Link href="/orders" className={own.link}>
-                  Ver órdenes
-                </Link>{' '}
-                ·{' '}
-                <Link href="/events/new" className={own.link}>
-                  Crear evento
-                </Link>
+                Aparecen en cuanto haya pedidos completados. Amplía el rango o revisa tus órdenes.
               </p>
-            ) : (
-              <div className={styles.stack}>
-                {segments.map((segment) => {
-                  const active = url.segments.includes(segment.id);
-                  return (
-                    <button
-                      key={segment.id}
-                      type="button"
-                      aria-pressed={active}
-                      className={
-                        active ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton
-                      }
-                      onClick={() => url.toggleSegment(segment.id)}
-                    >
-                      <span>
-                        {segment.label} · {segment.description}
-                      </span>
-                      <span className={own.zoneSide}>
-                        <span className={own.num}>{formatCount(segment.count)}</span>
-                        <span className={styles.figure}>{formatMoney(segment.spend)}</span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Compradores frecuentes</h2>
-              <p className={styles.tertiary}>2 o más pedidos completados</p>
+              <Link href="/orders" className={styles.ghostLink}>
+                Ver órdenes
+              </Link>
             </div>
-            {frequent.length === 0 ? (
-              <p className={styles.quiet}>Sin frecuentes aún.</p>
-            ) : (
-              <div className={styles.rows}>
-                {frequent.map((row) => (
-                  <div key={row.id} className={styles.row}>
-                    <div className={styles.rowMain}>
-                      <p className={styles.rowTitle}>{row.name}</p>
-                      <p className={styles.rowMeta}>
-                        {formatCount(row.completedOrders)} pedidos · {SEGMENT_LABEL[row.segment]}
-                      </p>
-                    </div>
-                    <TicketButton variant="ghost" onClick={() => url.setSelectedId(row.id)}>
-                      Ver perfil
-                    </TicketButton>
-                    <p className={styles.figure}>{formatMoney(row.totalSpend)}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          ) : null}
 
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Riesgo de abandono</h2>
-              <p className={styles.tertiary}>Por días sin comprar. No es un modelo predictivo.</p>
+          <div className={styles.split}>
+            <div className={`${styles.panel} ${styles.splitWide}`}>
+              <div className={styles.panelHead}>
+                <h2 className={styles.panelTitle}>Segmentos</h2>
+                <p className={styles.tertiary}>Toca uno para filtrar la cartera.</p>
+              </div>
+              {segments.length === 0 ? (
+                <p className={styles.quiet}>Sin segmentos todavía.</p>
+              ) : (
+                <ul className={own.segments}>
+                  {segments.map((segment) => {
+                    const active = url.segments.includes(segment.id);
+                    const share = segmentTotal > 0 ? (segment.spend / segmentTotal) * 100 : 0;
+                    return (
+                      <li key={segment.id}>
+                        <button
+                          type="button"
+                          aria-pressed={active}
+                          className={active ? `${own.segment} ${own.segmentOn}` : own.segment}
+                          onClick={() => url.toggleSegment(segment.id)}
+                        >
+                          <span className={own.segmentText}>
+                            <strong>{segment.label}</strong>
+                            <span className={styles.rowMeta}>{segment.description}</span>
+                          </span>
+                          <span className={own.segmentBar}>
+                            <span className={styles.bar} style={{ display: 'block', height: 6 }}>
+                              <span
+                                className={styles.barFill}
+                                style={{ display: 'block', width: `${Math.max(share, 1)}%` }}
+                              />
+                            </span>
+                          </span>
+                          <span className={own.segmentNum}>{formatCount(segment.count)}</span>
+                          <span className={own.segmentMoney}>{formatMoney(segment.spend)}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
-            {churnList.length === 0 ? (
-              <p className={styles.quiet}>Sin señales medias o altas.</p>
-            ) : (
-              <div className={styles.rows}>
-                {churnList.map((row) => (
-                  <div key={row.id} className={styles.row}>
-                    <div className={styles.rowMain}>
-                      <p className={styles.rowTitle}>{row.name}</p>
-                      <p className={styles.rowMeta}>
-                        {formatRelativeDay(row.lastOrderAt)} · LTV {formatMoney(row.totalSpend)}
-                      </p>
-                    </div>
-                    <TicketButton variant="ghost" onClick={() => url.setSelectedId(row.id)}>
-                      Ver perfil
-                    </TicketButton>
-                    <p className={own.state}>
-                      {CHURN_LABEL[row.churnBand]} · {formatChurnPct(row.churnRisk)}
-                    </p>
-                  </div>
-                ))}
+            <div className={styles.splitNarrow}>
+              <div className={styles.panel}>
+                <div className={styles.panelHead}>
+                  <h2 className={styles.panelTitle}>En riesgo de no volver</h2>
+                </div>
+                {churnList.length === 0 ? (
+                  <p className={styles.quiet}>Nadie con riesgo medio o alto.</p>
+                ) : (
+                  <ul className={own.mini}>
+                    {churnList.map((row) => (
+                      <li key={row.id}>
+                        <button
+                          type="button"
+                          className={own.miniRow}
+                          onClick={() => url.setSelectedId(row.id)}
+                        >
+                          <span className={own.miniMain}>
+                            <strong>{row.name}</strong>
+                            <span className={styles.rowMeta}>
+                              {formatRelativeDay(row.lastOrderAt)} · {formatMoney(row.totalSpend)}
+                            </span>
+                          </span>
+                          <span
+                            className={
+                              row.churnBand === 'high' ? styles.chipDanger : styles.chipWarn
+                            }
+                          >
+                            {CHURN_LABEL[row.churnBand]}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            )}
+              <div className={styles.panel}>
+                <div className={styles.panelHead}>
+                  <h2 className={styles.panelTitle}>Compradores frecuentes</h2>
+                </div>
+                {frequent.length === 0 ? (
+                  <p className={styles.quiet}>Aún nadie con 2 o más pedidos.</p>
+                ) : (
+                  <ul className={own.mini}>
+                    {frequent.map((row) => (
+                      <li key={row.id}>
+                        <button
+                          type="button"
+                          className={own.miniRow}
+                          onClick={() => url.setSelectedId(row.id)}
+                        >
+                          <span className={own.miniMain}>
+                            <strong>{row.name}</strong>
+                            <span className={styles.rowMeta}>
+                              {formatCount(row.completedOrders)} pedidos ·{' '}
+                              {SEGMENT_LABEL[row.segment]}
+                            </span>
+                          </span>
+                          <span className={own.segmentMoney}>{formatMoney(row.totalSpend)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Cartera</h2>
+          <div className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2 className={styles.panelTitle}>Cartera</h2>
               <p className={styles.tertiary} role="status">
-                {formatCount(filtered.length)} de {formatCount(customers.length)} clientes · por LTV
+                {formatCount(filtered.length)} de {formatCount(customers.length)} clientes · por
+                gasto
               </p>
             </div>
             <div className={own.filters}>
               <Field
                 label="Buscar"
                 kind="search"
-                placeholder="Cliente, correo, RFM o evento"
+                placeholder="Cliente, correo o evento"
                 value={url.q}
                 onChange={(event) => url.setSearch(event.target.value)}
               />
@@ -461,165 +492,182 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
             {filtered.length === 0 ? (
               <p className={styles.quiet}>
                 {customers.length === 0
-                  ? 'Aún no hay cartera. Se arma con los pedidos de la organización.'
-                  : 'Nada con ese criterio.'}
+                  ? 'Aún no hay cartera en este periodo.'
+                  : 'Ningún cliente coincide. Quita algún filtro.'}
               </p>
             ) : (
-              <div className={styles.stack}>
-                {selected && !visible.some((row) => row.id === selected.id) ? (
-                  <Cliente row={selected} open onToggle={() => url.setSelectedId(null)} />
-                ) : null}
-                {visible.map((row) => (
-                  <Cliente
-                    key={row.id}
-                    row={row}
-                    open={url.selectedId === row.id}
-                    onToggle={() => url.setSelectedId(url.selectedId === row.id ? null : row.id)}
-                  />
-                ))}
-                {filtered.length > shown ? (
-                  <div>
-                    <TicketButton
-                      variant="secondary"
-                      onClick={() => setShown((current) => current + PAGE)}
+              <div className={styles.tableWrap} style={{ border: 0, maxHeight: 'none' }}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th scope="col">Cliente</th>
+                      <th scope="col">Segmento</th>
+                      <th scope="col" className={styles.num}>
+                        Pedidos
+                      </th>
+                      <th scope="col">Última compra</th>
+                      <th scope="col" className={styles.num}>
+                        Gasto
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selected && !visible.some((row) => row.id === selected.id) ? (
+                      <Cliente row={selected} open onToggle={() => url.setSelectedId(null)} />
+                    ) : null}
+                    {visible.map((row) => (
+                      <Cliente
+                        key={row.id}
+                        row={row}
+                        open={url.selectedId === row.id}
+                        onToggle={() =>
+                          url.setSelectedId(url.selectedId === row.id ? null : row.id)
+                        }
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {filtered.length > shown ? (
+              <div style={{ marginTop: 12 }}>
+                <TicketButton
+                  variant="secondary"
+                  onClick={() => setShown((current) => current + PAGE)}
+                >
+                  Mostrar {formatCount(Math.min(PAGE, filtered.length - shown))} más
+                </TicketButton>
+              </div>
+            ) : null}
+          </div>
+
+          <div className={styles.split}>
+            <div className={`${styles.panel} ${styles.splitWide}`}>
+              <div className={styles.panelHead}>
+                <h2 className={styles.panelTitle}>Pedidos por día</h2>
+                <p className={styles.tertiary}>{rangeLabel(url.range)}</p>
+              </div>
+              {workspace.timeseries.isPending ? (
+                <div className={styles.skeleton} style={{ height: 200 }} />
+              ) : series.length === 0 ? (
+                <p className={styles.quiet}>Sin pedidos en el periodo.</p>
+              ) : (
+                <div
+                  className={own.bars}
+                  role="img"
+                  aria-label={`Pedidos por día en ${rangeLabel(url.range).toLowerCase()}`}
+                >
+                  {series.map((point, index) => (
+                    <div
+                      key={`${point.label}-${index}`}
+                      className={own.barCol}
+                      title={`${point.label}: ${formatCount(point.value)}`}
                     >
-                      Mostrar {formatCount(Math.min(PAGE, filtered.length - shown))} más
-                    </TicketButton>
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </div>
-
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Pedidos por día</h2>
-              <p className={styles.tertiary}>{rangeLabel(url.range)}</p>
-            </div>
-            {workspace.timeseries.isPending ? (
-              <p className={styles.quiet}>Cargando serie.</p>
-            ) : series.length === 0 ? (
-              <p className={styles.quiet}>Sin pedidos en el periodo.</p>
-            ) : (
-              <div className={styles.rows}>
-                {series.map((point, index) => (
-                  <div key={`${point.label}-${index}`} className={styles.row}>
-                    <p className={styles.rowTitle}>{point.label}</p>
-                    <span />
-                    <p className={own.num}>{formatCount(point.value)}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Recomendaciones</h2>
-              <p className={styles.tertiary}>
-                {workspace.aiRecommendations.data?.recommendations.length
-                  ? 'De la cartera y de la IA'
-                  : 'De los conteos observados'}
-              </p>
-            </div>
-            {recommendations.length === 0 ? (
-              <p className={styles.quiet}>Sin recomendaciones.</p>
-            ) : (
-              <div className={styles.rows}>
-                {recommendations.slice(0, 8).map((rec) => (
-                  <div key={rec.id} className={own.item}>
-                    <p className={styles.rowMeta}>
-                      Prioridad {priorityLabel(rec.priority).toLowerCase()} ·{' '}
-                      {rec.source === 'ai' ? 'IA' : 'Derivada'}
-                    </p>
-                    <p className={styles.rowTitle}>{rec.title}</p>
-                    <p className={styles.quiet}>{rec.rationale}</p>
-                    <p className={styles.tertiary}>Acción: {rec.action}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Señales de demanda</h2>
-            </div>
-            <div className={styles.rows}>
-              <div className={styles.row}>
-                <div className={styles.rowMain}>
-                  <p className={styles.rowTitle}>Lista de espera</p>
-                  {typeof waitlistMetricTotal === 'number' ? (
-                    <p className={styles.rowMeta}>
-                      Métrica de pendientes {formatCount(waitlistMetricTotal)}
-                    </p>
-                  ) : null}
+                      <span className={own.barTrack}>
+                        <span
+                          className={own.barNow}
+                          style={{ height: `${(point.value / seriesMax) * 100}%` }}
+                        />
+                      </span>
+                      <span className={own.barLabel}>
+                        {series.length > 12 && index % Math.ceil(series.length / 8) !== 0
+                          ? ''
+                          : point.label}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <span />
-                <p className={styles.figure}>{formatCount(waiting)}</p>
-              </div>
-              <div className={styles.row}>
-                <p className={styles.rowTitle}>Claves partner activas</p>
-                <span />
-                <p className={styles.figure}>{formatCount(activeKeys)}</p>
-              </div>
-              <div className={styles.row}>
-                <p className={styles.rowTitle}>Ingreso del mes en analítica</p>
-                <span />
-                <p className={styles.figure}>
-                  {analyticsRevenue != null ? formatMoney(analyticsRevenue) : '—'}
+              )}
+            </div>
+            <div className={`${styles.panel} ${styles.splitNarrow}`}>
+              <h2 className={styles.panelTitle}>Señales de demanda</h2>
+              <dl className={own.signals}>
+                <div>
+                  <dt>Personas en lista de espera</dt>
+                  <dd>
+                    {formatCount(waiting)}
+                    {typeof waitlistMetricTotal === 'number' ? (
+                      <span className={styles.rowMeta}>
+                        {' '}
+                        · {formatCount(waitlistMetricTotal)} pendientes en métricas
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Socios con llave activa</dt>
+                  <dd>{formatCount(activeKeys)}</dd>
+                </div>
+                <div>
+                  <dt>Ingreso del mes</dt>
+                  <dd>{analyticsRevenue != null ? formatMoney(analyticsRevenue) : 'Sin dato'}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <div className={styles.split}>
+            <div className={`${styles.panel} ${styles.splitWide}`}>
+              <div className={styles.panelHead}>
+                <h2 className={styles.panelTitle}>Qué hacer</h2>
+                <p className={styles.tertiary}>
+                  {workspace.aiRecommendations.data?.recommendations.length
+                    ? 'De tu cartera y del asistente'
+                    : 'De tu cartera'}
                 </p>
               </div>
-            </div>
-          </div>
-
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Actividad</h2>
-              <p className={styles.tertiary}>Pedidos recientes y auditoría</p>
-            </div>
-            {workspace.audit.isPending && activity.length === 0 ? (
-              <p className={styles.quiet}>Cargando actividad.</p>
-            ) : activity.length === 0 ? (
-              <p className={styles.quiet}>Sin actividad.</p>
-            ) : (
-              <div className={styles.rows}>
-                {activity.map((item) => (
-                  <div key={item.id} className={styles.row}>
-                    <div className={styles.rowMain}>
-                      <p className={styles.rowTitle}>
-                        {item.actor} {item.action}
-                      </p>
-                      <p className={styles.rowMeta}>
-                        {item.target} · {whenShort(item.timestamp)}
-                      </p>
+              {recommendations.length === 0 ? (
+                <p className={styles.quiet}>Sin recomendaciones por ahora.</p>
+              ) : (
+                <div className={own.recs}>
+                  {recommendations.slice(0, 6).map((rec) => (
+                    <div key={rec.id} className={own.rec}>
+                      <span
+                        className={
+                          rec.priority === 'high'
+                            ? styles.chipDanger
+                            : rec.priority === 'medium'
+                              ? styles.chipWarn
+                              : styles.chip
+                        }
+                      >
+                        Prioridad {priorityLabel(rec.priority).toLowerCase()}
+                      </span>
+                      <p className={styles.rowTitle}>{rec.title}</p>
+                      <p className={styles.quiet}>{rec.rationale}</p>
+                      <p className={styles.tertiary}>{rec.action}</p>
                     </div>
-                    <span />
-                    <p className={own.num}>{item.detail ?? ''}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className={own.block}>
-            <div className={own.blockHead}>
-              <h2 className={own.blockTitle}>Límites de los datos</h2>
+                  ))}
+                </div>
+              )}
             </div>
-            <ul className={own.limits}>
-              <li>
-                No hay API de CRM: cada perfil es la suma local de los pedidos de la organización.
-              </li>
-              <li>Los pedidos llegan sin paginar; LTV y RFM cubren solo la muestra recibida.</li>
-              <li>
-                El riesgo de abandono local sale de los días sin comprar; el de la IA se usa solo si
-                el correo coincide con su segmentación.
-              </li>
-              <li>
-                Lista de espera, partners y auditoría aportan contexto; no son un CRM de contactos.
-              </li>
-            </ul>
+            <div className={`${styles.panel} ${styles.splitNarrow}`}>
+              <h2 className={styles.panelTitle}>Actividad reciente</h2>
+              {workspace.audit.isPending && activity.length === 0 ? (
+                <div className={styles.skeleton} style={{ height: 160 }} />
+              ) : activity.length === 0 ? (
+                <p className={styles.quiet}>Sin actividad.</p>
+              ) : (
+                <ul className={own.mini}>
+                  {activity.slice(0, 8).map((item) => (
+                    <li key={item.id} className={own.activity}>
+                      <strong>
+                        {item.actor} {item.action}
+                      </strong>
+                      <span className={styles.rowMeta}>
+                        {item.target} · {whenShort(item.timestamp)}
+                        {item.detail ? ` · ${item.detail}` : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
+          <p className={styles.tertiary}>
+            Los perfiles se arman con las órdenes completadas del periodo; el riesgo de no volver se
+            calcula por los días sin comprar.
+          </p>
         </>
       )}
     </section>
@@ -636,58 +684,68 @@ function Cliente({
   onToggle: () => void;
 }) {
   return (
-    <div className={styles.stack}>
-      <button
-        type="button"
-        className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-        aria-expanded={open}
-        onClick={onToggle}
-      >
-        <span>
-          {row.name} · {SEGMENT_LABEL[row.segment]}
-        </span>
-        <span className={styles.figure}>{formatMoney(row.totalSpend, row.currency)}</span>
-      </button>
+    <>
+      <tr>
+        <td>
+          <button
+            type="button"
+            className={styles.rowToggle}
+            aria-expanded={open}
+            onClick={onToggle}
+          >
+            {row.name}
+          </button>
+          <p className={styles.rowMeta}>{row.email}</p>
+        </td>
+        <td>
+          <span className={styles.chipGold}>{SEGMENT_LABEL[row.segment]}</span>
+        </td>
+        <td className={styles.num}>{formatCount(row.completedOrders)}</td>
+        <td className={styles.quiet}>{formatRelativeDay(row.lastOrderAt)}</td>
+        <td className={styles.num}>
+          <strong>{formatMoney(row.totalSpend, row.currency)}</strong>
+        </td>
+      </tr>
       {open ? (
-        <div className={own.detail}>
-          <div className={styles.rows}>
-            <Dato name="Correo" value={row.email} />
-            <Dato
-              name="RFM"
-              value={`${formatRfm(row.rfm)} · ${row.rfmScore.toLocaleString('es-MX', { maximumFractionDigits: 1 })}`}
-            />
-            <Dato
-              name="Pedidos completados"
-              value={`${formatCount(row.completedOrders)} de ${formatCount(row.ordersCount)}`}
-            />
-            <Dato
-              name="Riesgo de abandono"
-              value={
-                row.aiChurnProbability != null
-                  ? `${formatChurnPct(row.aiChurnProbability)} según IA`
-                  : `${CHURN_LABEL[row.churnBand]} · ${formatChurnPct(row.churnRisk)}`
-              }
-            />
-            {row.aiSegment ? (
-              <Dato name="Segmento de IA" value={aiSegmentLabel(row.aiSegment)} />
-            ) : null}
-            <Dato name="Primera compra" value={formatRelativeDay(row.firstOrderAt)} />
-            <Dato name="Última compra" value={formatRelativeDay(row.lastOrderAt)} />
-            <Dato name="Canales" value={row.channels || '—'} />
-            <Dato name="Evento top" value={row.topEvent || '—'} />
-          </div>
-        </div>
+        <tr>
+          <td colSpan={5} className={styles.detailCell}>
+            <dl className={own.facts}>
+              <Dato name="Correo" value={row.email} />
+              <Dato
+                name="Puntaje RFM"
+                value={`${formatRfm(row.rfm)} · ${row.rfmScore.toLocaleString('es-MX', { maximumFractionDigits: 1 })}`}
+              />
+              <Dato
+                name="Pedidos completados"
+                value={`${formatCount(row.completedOrders)} de ${formatCount(row.ordersCount)}`}
+              />
+              <Dato
+                name="Riesgo de no volver"
+                value={
+                  row.aiChurnProbability != null
+                    ? `${formatChurnPct(row.aiChurnProbability)} según el asistente`
+                    : `${CHURN_LABEL[row.churnBand]} · ${formatChurnPct(row.churnRisk)}`
+                }
+              />
+              {row.aiSegment ? (
+                <Dato name="Segmento del asistente" value={aiSegmentLabel(row.aiSegment)} />
+              ) : null}
+              <Dato name="Primera compra" value={formatRelativeDay(row.firstOrderAt)} />
+              <Dato name="Canales" value={row.channels || '—'} />
+              <Dato name="Evento favorito" value={row.topEvent || '—'} />
+            </dl>
+          </td>
+        </tr>
       ) : null}
-    </div>
+    </>
   );
 }
 
 function Dato({ name, value }: { name: string; value: string }) {
   return (
-    <div className={styles.row}>
-      <p className={styles.rowMeta}>{name}</p>
-      <span />
-      <p className={own.value}>{value}</p>
+    <div>
+      <dt>{name}</dt>
+      <dd>{value}</dd>
     </div>
   );
 }

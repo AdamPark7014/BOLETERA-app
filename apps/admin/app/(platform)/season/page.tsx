@@ -507,7 +507,7 @@ function AbonosBody() {
                       disabled={!dirty || savingId === pass.id}
                       onClick={() => void save(pass.id)}
                     >
-                      Guardar sección
+                      Guardar cambios
                     </TicketButton>
                   </div>
                 </>

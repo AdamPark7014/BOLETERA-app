@@ -6,6 +6,7 @@ import { adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../../events/_shared/api-state';
 import { AdminFrame } from '../../events/_ticket/AdminFrame';
+import { MoneyTabs } from './MoneyTabs';
 import styles from '../../events/_ticket/frame.module.scss';
 import { CargosSection } from './CargosSection';
 import { ComisionesSection } from './ComisionesSection';
@@ -31,6 +32,7 @@ export function MoneyPage({ section }: { section: MoneySection }) {
   return (
     <Suspense fallback={null}>
       <AdminFrame>
+        <MoneyTabs current={section} />
         <MoneyBody section={section} />
       </AdminFrame>
     </Suspense>

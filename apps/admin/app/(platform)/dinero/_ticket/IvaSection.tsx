@@ -61,7 +61,8 @@ export function IvaSection({
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>IVA</h1>
         <p className={styles.quiet}>
-          Una tasa para toda la organización. Vacío, el checkout sigue la del entorno.
+          El impuesto que se suma en el pago. Una tasa para toda la organización; si no la defines,
+          se usa la de Black Ticket.
         </p>
       </header>
       <div className={styles.stack}>
@@ -73,7 +74,7 @@ export function IvaSection({
             effect={
               taxDirty || rates.taxSaved
                 ? 'El IVA de un CFDI sale de esta tasa. No se captura aparte en la factura.'
-                : 'Sin tasa guardada. Vacío, el checkout sigue con esta tasa del entorno.'
+                : 'Sin tasa propia: el pago usa esta, la de Black Ticket.'
             }
           >
             {canSave ? (
@@ -103,7 +104,7 @@ export function IvaSection({
             {taxDirty ? 'Sin guardar' : (notice ?? '')}
           </p>
           <TicketButton disabled={!taxDirty || saving} onClick={() => void save()}>
-            Guardar sección
+            Guardar cambios
           </TicketButton>
         </div>
       ) : null}

@@ -427,7 +427,7 @@ function FacturacionBody() {
               : (notice ?? '')}
         </p>
         <TicketButton disabled={!ready || saving} onClick={() => void save()}>
-          Guardar sección
+          Guardar cambios
         </TicketButton>
       </div>
       <header className={styles.sectionHead}>

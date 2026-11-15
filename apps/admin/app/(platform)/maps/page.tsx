@@ -498,7 +498,7 @@ function MapaBody() {
             {step ? 'Sin guardar' : (notice ?? '')}
           </p>
           <TicketButton disabled={!step || saving} onClick={() => void save()}>
-            Guardar sección
+            Guardar cambios
           </TicketButton>
         </div>
       ) : null}

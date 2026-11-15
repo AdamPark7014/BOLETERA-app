@@ -369,7 +369,7 @@ export function ZonesSection({
             {dirty ? 'Sin guardar' : (notice ?? '')}
           </p>
           <TicketButton disabled={!dirty || !priceOk || saving} onClick={() => void save()}>
-            Guardar sección
+            Guardar cambios
           </TicketButton>
         </div>
       ) : null}

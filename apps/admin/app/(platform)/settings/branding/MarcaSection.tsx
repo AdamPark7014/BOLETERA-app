@@ -394,7 +394,7 @@ export function MarcaBody() {
           {dirty ? 'Sin guardar' : (notice ?? '')}
         </p>
         <TicketButton disabled={!dirty || saving} onClick={() => void save()}>
-          Guardar sección
+          Guardar cambios
         </TicketButton>
       </div>
     </section>

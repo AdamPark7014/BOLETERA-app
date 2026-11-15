@@ -158,7 +158,7 @@ export function ChannelsSection({
             {dirty ? 'Sin guardar' : (notice ?? '')}
           </p>
           <TicketButton disabled={!ready || saving} onClick={() => void save()}>
-            Guardar sección
+            Guardar cambios
           </TicketButton>
         </div>
       ) : null}

@@ -743,7 +743,7 @@ export function PhasesSection({
                 : (notice ?? '')}
           </p>
           <TicketButton disabled={!dirty || !valid || saving} onClick={() => void save()}>
-            Guardar sección
+            Guardar cambios
           </TicketButton>
         </div>
       ) : null}

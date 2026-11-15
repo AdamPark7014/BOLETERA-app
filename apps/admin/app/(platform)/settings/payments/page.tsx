@@ -272,7 +272,7 @@ function PagosBody() {
             : (notice ?? 'Efectivo se cobra en taquilla y no está en esta pasarela.')}
         </p>
         <TicketButton disabled={!dirty || saving} onClick={() => void save()}>
-          Guardar sección
+          Guardar cambios
         </TicketButton>
       </div>
     </section>

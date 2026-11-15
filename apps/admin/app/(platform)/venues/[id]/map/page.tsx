@@ -297,7 +297,7 @@ function EditorBody() {
           {dirty ? 'Sin guardar' : (notice ?? '')}
         </p>
         <TicketButton disabled={!dirty || saving || readOnly} onClick={() => void save()}>
-          Guardar sección
+          Guardar cambios
         </TicketButton>
       </div>
     </section>
