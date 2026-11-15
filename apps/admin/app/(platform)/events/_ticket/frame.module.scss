@@ -1460,3 +1460,53 @@ button.row:hover {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+.swatchCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.swatchDot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 999px;
+}
+
+.plainList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    min-height: 44px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
+  }
+
+  li:first-child {
+    border-top: 0;
+  }
+}
+
+button.tab,
+button.tabOn {
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button.tab {
+  background: transparent;
+}
+
+button.tabOn {
+  border: 0;
+}

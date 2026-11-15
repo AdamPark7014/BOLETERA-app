@@ -512,3 +512,83 @@
     transition: none;
   }
 }
+
+/* Editor de plano: encabezado compacto con una sola acción principal. */
+.mapPage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mapHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mapMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.mapActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mapEventPick {
+  width: min(260px, 100%);
+}
+
+.mapNotices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mapMore {
+  border-radius: 16px;
+  background: var(--card);
+
+  > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0 16px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    list-style: none;
+    transition: color 160ms ease;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after {
+      content: '+';
+    }
+
+    &:hover {
+      color: var(--text);
+    }
+  }
+
+  &[open] {
+    padding-bottom: 16px;
+  }
+
+  &[open] > summary::after {
+    content: '−';
+  }
+
+  > :not(summary) {
+    margin: 0 16px 12px;
+  }
+}

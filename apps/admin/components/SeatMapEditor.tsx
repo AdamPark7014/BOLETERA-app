@@ -109,7 +109,7 @@ const ISSUE_CODE_LABELS: Partial<Record<GeometryIssueCode, string>> = {
   accessible_no_companion: 'Sin acompañante',
   accessible_orphan_companion: 'Acompañante huérfano',
   unreachable_section: 'Sin ruta',
-  long_egress: 'Egress largo',
+  long_egress: 'Evacuación larga',
   egress_bottleneck: 'Cuello de botella',
   slow_clearance: 'Vaciado lento',
   no_exits: 'Sin salidas',
@@ -201,6 +201,87 @@ type Props = {
 };
 
 const TIERS = ['standard', 'premium', 'economy'] as const;
+
+/** Nombre visible de cada categoría de butaca (el valor guardado no cambia). */
+const TIER_LABEL: Record<(typeof TIERS)[number], string> = {
+  standard: 'Estándar',
+  premium: 'Preferente',
+  economy: 'Económica',
+};
+
+type RailIconName =
+  | 'select'
+  | 'pan'
+  | 'move'
+  | 'ga'
+  | 'aisle'
+  | 'obstacle'
+  | 'stairs'
+  | 'exit'
+  | 'focus'
+  | 'undo'
+  | 'redo'
+  | 'zoomIn'
+  | 'zoomOut'
+  | 'fit';
+
+const RAIL_ICON: Record<RailIconName, string> = {
+  select: 'M5 3l12 8-5.5 1.2L14 18l-2.5 1-2.6-5.7L5 17z',
+  pan: 'M8 11V5.5a1.5 1.5 0 013 0V10m0-1.5V4a1.5 1.5 0 013 0v6m0-3.5a1.5 1.5 0 013 0V13a7 7 0 01-7 7h-1a6 6 0 01-5-2.7L3.5 14a1.5 1.5 0 012.4-1.8L8 14',
+  move: 'M12 3v18M3 12h18M12 3l-3 3m3-3l3 3M12 21l-3-3m3 3l3-3M3 12l3-3m-3 3l3 3M21 12l-3-3m3 3l-3 3',
+  ga: 'M4 6h3M10 6h4M17 6h3v3M20 12v3M20 18v2h-3M14 20h-4M7 20H4v-3M4 14v-4M4 7V6',
+  aisle: 'M4 20c4-2 4-6 8-8s4-6 8-8',
+  obstacle: 'M5 5h14v14H5zM5 5l14 14M19 5L5 19',
+  stairs: 'M4 20h4v-4h4v-4h4V8h4',
+  exit: 'M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10',
+  focus: 'M12 4v3M12 17v3M4 12h3M17 12h3M12 9a3 3 0 110 6 3 3 0 010-6z',
+  undo: 'M9 7L4 12l5 5M4 12h11a5 5 0 010 10h-2',
+  redo: 'M15 7l5 5-5 5M20 12H9a5 5 0 000 10h2',
+  zoomIn: 'M11 4a7 7 0 110 14 7 7 0 010-14zM20 20l-4-4M11 8v6M8 11h6',
+  zoomOut: 'M11 4a7 7 0 110 14 7 7 0 010-14zM20 20l-4-4M8 11h6',
+  fit: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
+};
+
+/** Botón del riel: icono con nombre accesible y tooltip nativo. */
+function RailButton({
+  icon,
+  label,
+  active,
+  disabled,
+  onClick,
+}: {
+  icon: RailIconName;
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={active ? `${styles.railBtn} ${styles.railBtnOn}` : styles.railBtn}
+      aria-label={label}
+      aria-pressed={active ?? undefined}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      <svg
+        aria-hidden="true"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d={RAIL_ICON[icon]} />
+      </svg>
+    </button>
+  );
+}
 const TEMPLATES = [
   { id: 'arena' as const, label: 'Arena' },
   { id: 'theater' as const, label: 'Teatro' },
@@ -1009,7 +1090,7 @@ export function SeatMapEditor({
       URL.revokeObjectURL(url);
     } catch (e) {
       // eslint-disable-next-line no-alert
-      window.alert(e instanceof Error ? e.message : 'Error al exportar egress');
+      window.alert(e instanceof Error ? e.message : 'No se pudo exportar la evacuación');
     }
   }
 
@@ -1786,7 +1867,7 @@ export function SeatMapEditor({
     });
     if (!filled.length) {
       // eslint-disable-next-line no-alert
-      window.alert('No cupieron asientos en el contorno con el pitch actual.');
+      window.alert('No cupieron asientos en el contorno con la separación actual.');
       return;
     }
     updateSections(
@@ -1936,7 +2017,7 @@ export function SeatMapEditor({
     const id = `tmp-sec-${Date.now()}`;
     const sec: SeatMapSection = {
       id,
-      name: `Zona GA ${idx + 1}`,
+      name: `Zona general ${idx + 1}`,
       slug: `ga-${idx}`,
       color: 'var(--bl-warning)',
       seats: [],
@@ -2386,7 +2467,7 @@ export function SeatMapEditor({
 
   return (
     <div className={styles.designer}>
-      <aside className={styles.sidebar}>
+      <aside className={styles.sidebar} aria-label="Propiedades del plano">
         <h3>Secciones</h3>
         <ul className={styles.secList}>
           {map.sections.map((s) => (
@@ -2405,7 +2486,7 @@ export function SeatMapEditor({
                   onChange={(e) => renameSection(s.id, e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                 />
-                <em>{s.seats.length || (s.shape ? 'GA' : 0)}</em>
+                <em>{s.seats.length || (s.shape ? 'General' : 0)}</em>
               </button>
               <button
                 type="button"
@@ -2450,951 +2531,6 @@ export function SeatMapEditor({
               </span>
             </label>
           </>
-        )}
-
-        <h3>CAD / constraints</h3>
-        <div className={styles.stageTools}>
-          {(
-            [
-              ['aisles', 'Pasillos'],
-              ['obstacles', 'Obstáculos'],
-              ['stairs', 'Escaleras'],
-              ['exits', 'Salidas'],
-              ['stage', 'Escenario'],
-              ['furniture', 'Mobiliario'],
-              ['focusPoints', 'Focos'],
-            ] as const
-          ).map(([key, label]) => (
-            <label key={key} className={styles.paramField}>
-              <span>
-                <input
-                  type="checkbox"
-                  checked={Boolean(cadLocks[key])}
-                  onChange={(e) => patchCadLocks({ [key]: e.target.checked || undefined })}
-                />{' '}
-                Lock {label}
-              </span>
-            </label>
-          ))}
-          <label className={styles.paramField}>
-            <span>
-              <input
-                type="checkbox"
-                checked={Boolean(cadLocks.strictOverlaps)}
-                onChange={(e) => patchCadLocks({ strictOverlaps: e.target.checked || undefined })}
-              />{' '}
-              Solapes = error (bloquea guardar)
-            </span>
-          </label>
-        </div>
-
-        <h3>Niveles</h3>
-        <div className={styles.stageTools}>
-          <button type="button" onClick={addLevel}>
-            + Nivel
-          </button>
-          <select
-            value={levelFilter}
-            onChange={(e) => setLevelFilter(e.target.value as string | 'ALL')}
-            aria-label="Filtrar nivel"
-          >
-            <option value="ALL">Todos</option>
-            {(map.venue?.levels ?? []).map((lv) => (
-              <option key={lv.id} value={lv.id}>
-                {lv.name} (Z {lv.elevation})
-              </option>
-            ))}
-          </select>
-        </div>
-        {(map.venue?.levels ?? []).map((lv) => (
-          <div
-            key={lv.id}
-            style={{
-              display: 'flex',
-              gap: '0.35rem',
-              alignItems: 'center',
-              marginBottom: 6,
-              flexWrap: 'wrap',
-            }}
-          >
-            <input
-              value={lv.name}
-              aria-label={`Nombre nivel ${lv.id}`}
-              onChange={(e) => updateLevel(lv.id, { name: e.target.value })}
-              style={{ flex: '1 1 100px', minWidth: 0 }}
-            />
-            <label className={styles.paramField} style={{ margin: 0, flex: '0 0 auto' }}>
-              Z
-              <input
-                type="number"
-                value={lv.elevation}
-                aria-label={`Elevación ${lv.name}`}
-                onChange={(e) => updateLevel(lv.id, { elevation: Number(e.target.value) || 0 })}
-                style={{ width: 72 }}
-              />
-            </label>
-            <button
-              type="button"
-              className={styles.iconBtn}
-              onClick={() => deleteLevel(lv.id)}
-              title="Eliminar nivel"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-        {activeSection && (
-          <label className={styles.paramField}>
-            Nivel de sección activa
-            <select
-              value={activeSection.levelId ?? ''}
-              onChange={(e) => assignSectionLevel(e.target.value || undefined)}
-            >
-              <option value="">— sin nivel —</option>
-              {(map.venue?.levels ?? []).map((lv) => (
-                <option key={lv.id} value={lv.id}>
-                  {lv.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <p className={styles.sideHint}>
-          Con filtro de nivel activo, pasillos/escaleras/salidas nuevas heredan ese nivel.
-          Escaleras: desde = filtro, hacia = siguiente nivel.
-        </p>
-
-        <h3>Importar plano</h3>
-        <label className={styles.paramField}>
-          SVG (secciones / pasillos / obstáculos)
-          <input
-            type="file"
-            accept=".svg,image/svg+xml"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) importSvgFile(file);
-              e.target.value = '';
-            }}
-          />
-        </label>
-        <label className={styles.paramField}>
-          DXF ASCII (capas: aisle / obstacle / stage / stairs)
-          <input
-            type="file"
-            accept=".dxf,application/dxf,image/vnd.dxf"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) importDxfFile(file);
-              e.target.value = '';
-            }}
-          />
-        </label>
-        <p className={styles.sideHint}>
-          SVG/DXF abren un panel de revisión: reclasifica o omite entidades antes de aplicar. Capas:
-          aisle / obstacle / stage / stairs / exit|salida.
-        </p>
-        <div className={styles.stageTools}>
-          <button type="button" onClick={exportDxf}>
-            Exportar DXF
-          </button>
-          <button type="button" onClick={exportSvg}>
-            Exportar SVG
-          </button>
-          <button
-            type="button"
-            onClick={exportEgressCsv}
-            title="Exporta resumen, secciones y cuellos de botella de egress"
-          >
-            Exportar egress CSV
-          </button>
-        </div>
-
-        <h3>Plantillas</h3>
-        <div className={styles.templateGrid}>
-          {TEMPLATES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              disabled={!onApplyTemplate}
-              onClick={() => void handleTemplate(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <h3>Escenario y mobiliario</h3>
-        <div className={styles.stageTools}>
-          <button type="button" onClick={() => addFurniture('led')}>
-            + LED wall
-          </button>
-          <button type="button" onClick={() => addFurniture('speaker')}>
-            + Speaker
-          </button>
-          {selectedFurnitureId && (
-            <button
-              type="button"
-              className={styles.dangerBtn}
-              onClick={() => removeFurniture(selectedFurnitureId)}
-            >
-              Quitar seleccionado
-            </button>
-          )}
-        </div>
-        {selectedFurnitureId && (map.venue?.levels?.length ?? 0) > 0 && (
-          <label className={styles.paramField}>
-            Nivel del mobiliario
-            <select
-              value={furniture.find((f) => f.id === selectedFurnitureId)?.levelId ?? ''}
-              disabled={Boolean(cadLocks.furniture)}
-              onChange={(e) =>
-                patchFurniture(selectedFurnitureId, {
-                  levelId: e.target.value || undefined,
-                })
-              }
-            >
-              <option value="">— todos / sin nivel —</option>
-              {(map.venue?.levels ?? []).map((lv) => (
-                <option key={lv.id} value={lv.id}>
-                  {lv.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <p className={styles.sideHint}>
-          Arrastra el escenario o el mobiliario directamente en el lienzo.
-        </p>
-
-        <h3>Bloque paramétrico</h3>
-        <div className={styles.paramGrid}>
-          {(
-            [
-              ['rows', 'Filas'],
-              ['cols', 'Cols'],
-              ['seatPitch', 'Seat pitch'],
-              ['rowPitch', 'Row pitch'],
-              ['rake', 'Rake (Z)'],
-              ['curvature', 'Curvatura'],
-            ] as const
-          ).map(([key, label]) => (
-            <label key={key} className={styles.paramField}>
-              {label}
-              <input
-                type="number"
-                value={blockParams[key]}
-                min={key === 'curvature' ? 0 : 1}
-                step={key === 'curvature' || key === 'rake' ? 1 : 1}
-                onChange={(e) =>
-                  setBlockParams((p) => ({ ...p, [key]: Number(e.target.value) || 0 }))
-                }
-              />
-            </label>
-          ))}
-          <label className={styles.paramField} style={{ gridColumn: '1 / -1' }}>
-            Pasillo (cols vacías)
-            <input
-              type="text"
-              value={blockParams.skipColumns}
-              placeholder="6,7 o every:8"
-              onChange={(e) => setBlockParams((p) => ({ ...p, skipColumns: e.target.value }))}
-              title="Índices de columna a omitir (0-based), o every:N"
-            />
-          </label>
-        </div>
-        <button
-          type="button"
-          onClick={() => addGrid(blockParams.rows, blockParams.cols)}
-          disabled={!activeSection}
-        >
-          Insertar bloque
-        </button>
-        <button
-          type="button"
-          onClick={applyParamsToActiveBlocks}
-          disabled={!activeSection?.blocks?.length || activeSection?.locked}
-          title="Actualiza los bloques de la sección con estos parámetros y regenera asientos"
-        >
-          Aplicar a bloques
-        </button>
-        <div className={styles.stageTools}>
-          <button
-            type="button"
-            onClick={() => rotateActiveBlocks(-15)}
-            disabled={!activeSection?.blocks?.length || activeSection?.locked}
-            title="Rotar bloques −15° y regenerar"
-          >
-            Rotar −15°
-          </button>
-          <button
-            type="button"
-            onClick={() => rotateActiveBlocks(15)}
-            disabled={!activeSection?.blocks?.length || activeSection?.locked}
-            title="Rotar bloques +15° y regenerar"
-          >
-            Rotar +15°
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={fillActiveShape}
-          disabled={!activeSection?.shape?.points?.length}
-          title="Rellena el contorno de la sección activa con asientos"
-        >
-          Rellenar zona
-        </button>
-        <button
-          type="button"
-          onClick={regenerateActiveFromBlocks}
-          disabled={!activeSection?.blocks?.length || activeSection?.locked}
-          title="Regenera asientos de la sección activa desde sus bloques paramétricos"
-        >
-          Regen. sección
-        </button>
-        <button
-          type="button"
-          onClick={regenerateAllFromBlocks}
-          title="Regenera asientos de todas las secciones con bloques (respeta bloqueos)"
-        >
-          Regen. bloques
-        </button>
-        <button type="button" onClick={applyMetricDefaults} title="Pitch ~0.52m / fila ~0.9m">
-          Pitches métricos
-        </button>
-        <label
-          className={styles.paramField}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
-        >
-          <input
-            type="checkbox"
-            checked={snapEnabled}
-            onChange={(e) => setSnapEnabled(e.target.checked)}
-          />
-          Snap ({snapPitch}u ≈ {(snapPitch / mapScale).toFixed(2)}m)
-        </label>
-        <button
-          type="button"
-          onClick={() => {
-            const result = applySightlines();
-            const rowBlocked = result.scores.filter((s) => s.rowBlocked).length;
-            const occluded = result.scores.filter((s) => s.occluded).length;
-            const levelLabel =
-              levelFilter === 'ALL'
-                ? 'todos los niveles'
-                : (map.venue?.levels?.find((l) => l.id === levelFilter)?.name ?? levelFilter);
-            setViewHeat(true);
-            // eslint-disable-next-line no-alert
-            window.alert(
-              `Vistas calculadas (${levelLabel})\nAsientos: ${result.scores.length}\nFocos: ${result.focuses.length}\nPremium: ${result.summary.premium}\nGood: ${result.summary.good}\nFair: ${result.summary.fair}\nRestricted: ${result.summary.restricted}\nBlocked: ${result.summary.blocked}\nFila delante: ${rowBlocked}\nObstáculo: ${occluded}`
-            );
-          }}
-          disabled={!allSeats.length}
-          title={
-            levelFilter === 'ALL'
-              ? 'Calcula calidad de vista en todo el venue'
-              : 'Calcula calidad de vista solo en el nivel filtrado (otros niveles no se tocan)'
-          }
-        >
-          Calcular vistas
-        </button>
-        <label
-          className={styles.paramField}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
-        >
-          <input
-            type="checkbox"
-            checked={viewHeat}
-            onChange={(e) => setViewHeat(e.target.checked)}
-            disabled={!allSeats.length}
-          />
-          Heat de vista
-        </label>
-        <label
-          className={styles.paramField}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
-        >
-          <input
-            type="checkbox"
-            checked={showCirculation}
-            onChange={(e) => setShowCirculation(e.target.checked)}
-            aria-controls="egress-legend egress-status"
-          />
-          Grafo circulación / salidas
-        </label>
-        {showCirculation && (
-          <ul id="egress-legend" className={styles.egressLegend} aria-label="Leyenda de salidas">
-            <li>
-              <span className={`${styles.swatch} ${styles.swatchExit}`} aria-hidden />
-              Salida
-            </li>
-            <li>
-              <span className={`${styles.swatch} ${styles.swatchAisle}`} aria-hidden />
-              Pasillo
-            </li>
-            <li>
-              <span className={`${styles.swatch} ${styles.swatchStair}`} aria-hidden />
-              Escalera
-            </li>
-            <li>
-              <span className={`${styles.swatch} ${styles.swatchRoute}`} aria-hidden />
-              Ruta
-            </li>
-            <li>
-              <span className={`${styles.swatch} ${styles.swatchRouteActive}`} aria-hidden />
-              Ruta activa
-            </li>
-            <li>
-              <span className={`${styles.swatch} ${styles.swatchBottleneck}`} aria-hidden />
-              Cuello de botella
-            </li>
-          </ul>
-        )}
-        {showCirculation && egressOverlay && (
-          <p id="egress-status" className={styles.egressHint} role="status" aria-live="polite">
-            {egressOverlay.hasNetwork
-              ? `Rutas de salida · ${egressOverlay.paths.length} sección(es)${
-                  egressOverlay.clearanceMinutes != null
-                    ? ` · vaciado ~${egressOverlay.clearanceMinutes.toFixed(1)} min`
-                    : ''
-                }`
-              : 'Sin red de pasillos/salidas para calcular rutas'}
-          </p>
-        )}
-        {unreachableOnLevelCount > 0 && (
-          <p className={styles.sideHint}>
-            {unreachableOnLevelCount} sección(es) sin ruta a salida
-            {levelFilter !== 'ALL' ? ' (nivel actual)' : ''}
-          </p>
-        )}
-        {showCirculation && circulation?.egress && circulation.hasNetwork && (
-          <div className={styles.sideHint} style={{ marginTop: '0.35rem' }}>
-            <strong>Egress</strong>
-            <div>
-              semillas:{' '}
-              {circulation.seedMode === 'exits'
-                ? `${circulation.exitCount} salida(s)`
-                : circulation.seedMode === 'stage'
-                  ? 'escenario (sin salidas)'
-                  : 'red pasillos'}
-            </div>
-            <div>
-              max ruta:{' '}
-              {circulation.egress.maxPathLength != null
-                ? `${Math.round(circulation.egress.maxPathLength)}u`
-                : '—'}
-              {' · '}
-              avg:{' '}
-              {circulation.egress.avgPathLength != null
-                ? `${Math.round(circulation.egress.avgPathLength)}u`
-                : '—'}
-            </div>
-            <div>
-              con salida: {circulation.egress.totalSeatsWithPath} · sin:{' '}
-              {circulation.egress.totalSeatsWithoutPath}
-            </div>
-            {bottlenecksView[0] && (
-              <div>
-                bottleneck: {bottlenecksView[0].kind}{' '}
-                {Math.round(bottlenecksView[0].utilization * 100)}% ({bottlenecksView[0].seatLoad}/
-                {bottlenecksView[0].capacity}, ancho {bottlenecksView[0].width}u)
-              </div>
-            )}
-            {circulation.egress.clearanceMinutes != null && (
-              <div>
-                vaciado estimado: {circulation.egress.clearanceMinutes.toFixed(1)} min
-                {circulation.egress.maxWalkMinutes != null
-                  ? ` · caminata max ${circulation.egress.maxWalkMinutes.toFixed(1)} min`
-                  : ''}
-              </div>
-            )}
-            {activeEgressPath && (
-              <div>
-                ruta sección activa:{' '}
-                {activeEgressPath.length != null ? `${Math.round(activeEgressPath.length)}u` : '—'}
-                {(() => {
-                  const secEg = circulation.egress.sections.find(
-                    (s) => s.sectionId === activeSection?.id
-                  );
-                  return secEg?.clearanceMinutes != null
-                    ? ` · ~${secEg.clearanceMinutes.toFixed(1)} min`
-                    : '';
-                })()}
-              </div>
-            )}
-
-            <div style={{ marginTop: '0.55rem', maxHeight: 160, overflow: 'auto' }}>
-              <strong>Secciones</strong>
-              <table
-                style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', marginTop: 4 }}
-              >
-                <thead>
-                  <tr style={{ textAlign: 'left', opacity: 0.75 }}>
-                    <th>Zona</th>
-                    <th>N</th>
-                    <th>Ruta</th>
-                    <th>min</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {egressSectionsView.slice(0, 12).map((s) => (
-                    <tr
-                      key={s.sectionId}
-                      style={{
-                        background:
-                          s.sectionId === activeSection?.id ? 'rgba(251,191,36,0.12)' : undefined,
-                      }}
-                    >
-                      <td style={{ padding: '1px 2px' }}>
-                        {(s.sectionName ?? s.sectionId).slice(0, 14)}
-                      </td>
-                      <td style={{ padding: '1px 2px' }}>{s.seatCount}</td>
-                      <td style={{ padding: '1px 2px' }}>
-                        {s.pathLength != null ? Math.round(s.pathLength) : '—'}
-                      </td>
-                      <td style={{ padding: '1px 2px' }}>
-                        {s.clearanceMinutes != null ? s.clearanceMinutes.toFixed(1) : '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {bottlenecksView.length > 0 && (
-              <div style={{ marginTop: '0.45rem', maxHeight: 110, overflow: 'auto' }}>
-                <strong>Bottlenecks</strong>
-                <ul style={{ margin: '4px 0 0', paddingLeft: '1.1rem' }}>
-                  {bottlenecksView.slice(0, 5).map((b) => (
-                    <li key={b.edgeId}>
-                      {b.kind} · {Math.round(b.utilization * 100)}% · {b.seatLoad}/{b.capacity} · ~
-                      {b.clearanceMinutes.toFixed(1)} min
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className={styles.paramGrid} style={{ marginTop: '0.5rem' }}>
-              <label className={styles.paramField}>
-                Vaciado max (min)
-                <input
-                  type="number"
-                  min={1}
-                  max={60}
-                  step={0.5}
-                  value={resolveEgressPolicy(map.venue?.egressPolicy).slowClearanceMinutes}
-                  onChange={(e) =>
-                    patchEgressPolicy({
-                      slowClearanceMinutes: Math.max(1, Number(e.target.value) || 8),
-                    })
-                  }
-                />
-              </label>
-              <label className={styles.paramField}>
-                Ruta larga (u)
-                <input
-                  type="number"
-                  min={100}
-                  max={5000}
-                  step={50}
-                  value={resolveEgressPolicy(map.venue?.egressPolicy).longPathUnits}
-                  onChange={(e) =>
-                    patchEgressPolicy({
-                      longPathUnits: Math.max(100, Number(e.target.value) || 900),
-                    })
-                  }
-                />
-              </label>
-              <label className={styles.paramField}>
-                Util. bottleneck
-                <input
-                  type="number"
-                  min={0.5}
-                  max={1}
-                  step={0.05}
-                  value={resolveEgressPolicy(map.venue?.egressPolicy).bottleneckUtilization}
-                  onChange={(e) =>
-                    patchEgressPolicy({
-                      bottleneckUtilization: Math.min(
-                        1,
-                        Math.max(0.5, Number(e.target.value) || 0.85)
-                      ),
-                    })
-                  }
-                />
-              </label>
-              <label className={styles.paramField}>
-                Carga bottleneck
-                <input
-                  type="number"
-                  min={20}
-                  max={2000}
-                  step={10}
-                  value={resolveEgressPolicy(map.venue?.egressPolicy).bottleneckSeatLoad}
-                  onChange={(e) =>
-                    patchEgressPolicy({
-                      bottleneckSeatLoad: Math.max(20, Number(e.target.value) || 120),
-                    })
-                  }
-                />
-              </label>
-            </div>
-            <button type="button" onClick={exportEgressCsv} style={{ marginTop: '0.35rem' }}>
-              Descargar CSV (local)
-            </button>
-            {venueId && (
-              <div className={styles.stageTools} style={{ marginTop: '0.35rem' }}>
-                <button
-                  type="button"
-                  onClick={() => void exportEgressCsvFromServer('draft')}
-                  title="Analiza el mapa actual (aunque no esté guardado) vía API"
-                >
-                  CSV API (borrador)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void exportEgressCsvFromServer('saved')}
-                  title="Descarga el reporte del layout guardado en servidor"
-                >
-                  CSV API (guardado)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void exportEgressPdfFromServer('draft')}
-                  title="PDF del mapa actual vía API"
-                >
-                  PDF (borrador)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void exportEgressPdfFromServer('saved')}
-                  title="PDF del layout guardado"
-                >
-                  PDF (guardado)
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-        {aisles.length > 0 && (
-          <div style={{ marginTop: '0.5rem' }}>
-            <strong className={styles.sideHint}>Pasillos</strong>
-            {aisles.map((a) => (
-              <div key={a.id} style={{ marginBottom: 6 }}>
-                <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                  <label className={styles.paramField} style={{ flex: 1, margin: 0 }}>
-                    {a.id.replace(/^tmp-poly-/, 'pasillo-').slice(0, 18)} · ancho
-                    <input
-                      type="number"
-                      min={8}
-                      max={120}
-                      value={a.width ?? 24}
-                      disabled={Boolean(cadLocks.aisles)}
-                      onChange={(e) =>
-                        patchAisle(a.id, { width: Math.max(8, Number(e.target.value) || 24) })
-                      }
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className={styles.iconBtn}
-                    disabled={Boolean(cadLocks.aisles)}
-                    onClick={() => removeAisle(a.id)}
-                    title="Eliminar pasillo"
-                  >
-                    ×
-                  </button>
-                </div>
-                {(map.venue?.levels?.length ?? 0) > 0 && (
-                  <label className={styles.paramField}>
-                    Nivel
-                    <select
-                      value={a.levelId ?? ''}
-                      disabled={Boolean(cadLocks.aisles)}
-                      onChange={(e) => patchAisle(a.id, { levelId: e.target.value || undefined })}
-                    >
-                      <option value="">— auto / todos —</option>
-                      {(map.venue?.levels ?? []).map((lv) => (
-                        <option key={lv.id} value={lv.id}>
-                          {lv.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        {stairs.length > 0 && (
-          <div style={{ marginTop: '0.35rem' }}>
-            <strong className={styles.sideHint}>Escaleras / vomitorios</strong>
-            {stairs.map((s) => (
-              <div
-                key={s.id}
-                style={{ marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #e5e5e5' }}
-              >
-                <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                  <label className={styles.paramField} style={{ flex: 1, margin: 0 }}>
-                    {s.id.replace(/^tmp-poly-/, '').slice(0, 14)} · ancho
-                    <input
-                      type="number"
-                      min={8}
-                      max={120}
-                      value={s.width ?? 28}
-                      disabled={Boolean(cadLocks.stairs)}
-                      onChange={(e) =>
-                        patchStair(s.id, { width: Math.max(8, Number(e.target.value) || 28) })
-                      }
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className={styles.iconBtn}
-                    disabled={Boolean(cadLocks.stairs)}
-                    onClick={() => removeStair(s.id)}
-                    title="Eliminar escalera"
-                  >
-                    ×
-                  </button>
-                </div>
-                <label className={styles.paramField}>
-                  Tipo
-                  <select
-                    value={s.kind ?? 'stairs'}
-                    disabled={Boolean(cadLocks.stairs)}
-                    onChange={(e) =>
-                      patchStair(s.id, {
-                        kind: e.target.value as 'stairs' | 'vomitoria' | 'ramp',
-                      })
-                    }
-                  >
-                    <option value="stairs">Escalera</option>
-                    <option value="vomitoria">Vomitorio</option>
-                    <option value="ramp">Rampa</option>
-                  </select>
-                </label>
-                <label className={styles.paramField}>
-                  Desde nivel
-                  <select
-                    value={s.fromLevelId ?? ''}
-                    disabled={Boolean(cadLocks.stairs)}
-                    onChange={(e) => patchStair(s.id, { fromLevelId: e.target.value || undefined })}
-                  >
-                    <option value="">— auto —</option>
-                    {(map.venue?.levels ?? []).map((lv) => (
-                      <option key={lv.id} value={lv.id}>
-                        {lv.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className={styles.paramField}>
-                  Hacia nivel
-                  <select
-                    value={s.toLevelId ?? ''}
-                    disabled={Boolean(cadLocks.stairs)}
-                    onChange={(e) => patchStair(s.id, { toLevelId: e.target.value || undefined })}
-                  >
-                    <option value="">— auto —</option>
-                    {(map.venue?.levels ?? []).map((lv) => (
-                      <option key={lv.id} value={lv.id}>
-                        {lv.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            ))}
-          </div>
-        )}
-        {obstacles.length > 0 && (
-          <div style={{ marginTop: '0.35rem' }}>
-            <strong className={styles.sideHint}>Obstáculos</strong>
-            {obstacles.map((o) => (
-              <div key={o.id} style={{ marginBottom: 6 }}>
-                <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                  <label className={styles.paramField} style={{ flex: 1, margin: 0 }}>
-                    {o.id.replace(/^tmp-poly-/, 'obs-').slice(0, 16)} · alto
-                    <input
-                      type="number"
-                      min={20}
-                      max={400}
-                      value={o.height ?? 120}
-                      disabled={Boolean(cadLocks.obstacles)}
-                      onChange={(e) =>
-                        patchObstacle(o.id, {
-                          height: Math.max(20, Number(e.target.value) || 120),
-                        })
-                      }
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className={styles.iconBtn}
-                    disabled={Boolean(cadLocks.obstacles)}
-                    onClick={() => removeObstacle(o.id)}
-                    title="Eliminar obstáculo"
-                  >
-                    ×
-                  </button>
-                </div>
-                {(map.venue?.levels?.length ?? 0) > 0 && (
-                  <label className={styles.paramField}>
-                    Nivel
-                    <select
-                      value={o.levelId ?? ''}
-                      disabled={Boolean(cadLocks.obstacles)}
-                      onChange={(e) =>
-                        patchObstacle(o.id, { levelId: e.target.value || undefined })
-                      }
-                    >
-                      <option value="">— auto / todos —</option>
-                      {(map.venue?.levels ?? []).map((lv) => (
-                        <option key={lv.id} value={lv.id}>
-                          {lv.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        <div style={{ marginTop: '0.5rem' }}>
-          <strong className={styles.sideHint}>Salidas (egress)</strong>
-          <p className={styles.sideHint}>
-            Tool Salida + click en el mapa. Las rutas de vaciado van a estas puertas.
-          </p>
-          {exits.map((ex) => (
-            <div key={ex.id} style={{ marginBottom: 6 }}>
-              <div
-                style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: 4 }}
-              >
-                <input
-                  value={ex.label ?? ''}
-                  disabled={Boolean(cadLocks.exits)}
-                  placeholder="Nombre"
-                  onChange={(e) => patchExit(ex.id, { label: e.target.value || undefined })}
-                  style={{ flex: 1, minWidth: 0 }}
-                  aria-label={`Nombre salida ${ex.id}`}
-                />
-                <input
-                  type="number"
-                  min={8}
-                  max={120}
-                  title="Ancho"
-                  value={ex.width ?? 32}
-                  disabled={Boolean(cadLocks.exits)}
-                  onChange={(e) =>
-                    patchExit(ex.id, { width: Math.max(8, Number(e.target.value) || 32) })
-                  }
-                  style={{ width: 64 }}
-                />
-                <button
-                  type="button"
-                  className={styles.iconBtn}
-                  disabled={Boolean(cadLocks.exits)}
-                  onClick={() => removeExit(ex.id)}
-                  title="Eliminar salida"
-                >
-                  ×
-                </button>
-              </div>
-              {(map.venue?.levels?.length ?? 0) > 0 && (
-                <label className={styles.paramField}>
-                  Nivel
-                  <select
-                    value={ex.levelId ?? ''}
-                    disabled={Boolean(cadLocks.exits)}
-                    onChange={(e) => patchExit(ex.id, { levelId: e.target.value || undefined })}
-                  >
-                    <option value="">— auto / todos —</option>
-                    {(map.venue?.levels ?? []).map((lv) => (
-                      <option key={lv.id} value={lv.id}>
-                        {lv.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className={styles.stageTools}>
-          <button
-            type="button"
-            onClick={seedStageFocuses}
-            disabled={Boolean(cadLocks.focusPoints)}
-            title="3 focos L/C/R sobre el escenario"
-          >
-            Focos L/C/R
-          </button>
-          <button
-            type="button"
-            onClick={clearFocuses}
-            disabled={Boolean(cadLocks.focusPoints) || !map.venue?.focusPoints?.length}
-          >
-            Quitar focos
-          </button>
-        </div>
-        {(map.venue?.focusPoints?.length ?? 0) > 0 && (
-          <ul
-            className={styles.sideHint}
-            style={{ listStyle: 'none', padding: 0, margin: '0.35rem 0' }}
-          >
-            {map.venue!.focusPoints!.map((f) => (
-              <li key={f.id} style={{ marginBottom: 6 }}>
-                <div
-                  style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: 4 }}
-                >
-                  <input
-                    value={f.label ?? ''}
-                    onChange={(e) => renameFocus(f.id, e.target.value)}
-                    style={{ flex: 1, minWidth: 0 }}
-                    disabled={Boolean(cadLocks.focusPoints)}
-                    aria-label={`Nombre foco ${f.id}`}
-                  />
-                  <button
-                    type="button"
-                    className={styles.iconBtn}
-                    onClick={() => removeFocus(f.id)}
-                    disabled={Boolean(cadLocks.focusPoints)}
-                    title="Eliminar foco"
-                  >
-                    ×
-                  </button>
-                </div>
-                {(map.venue?.levels?.length ?? 0) > 0 && (
-                  <label className={styles.paramField}>
-                    Nivel
-                    <select
-                      value={f.levelId ?? ''}
-                      disabled={Boolean(cadLocks.focusPoints)}
-                      onChange={(e) => patchFocus(f.id, { levelId: e.target.value || undefined })}
-                    >
-                      <option value="">— auto / todos —</option>
-                      {(map.venue?.levels ?? []).map((lv) => (
-                        <option key={lv.id} value={lv.id}>
-                          {lv.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        {(map.venue?.focusPoints?.length ?? 0) > 0 && (
-          <p className={styles.sideHint}>
-            {map.venue!.focusPoints!.length} focos · sightlines toma el mejor por asiento
-            {tool === 'focus' && !cadLocks.focusPoints
-              ? ' · click mapa = nuevo, click foco = borrar'
-              : ''}
-            {cadLocks.focusPoints ? ' · bloqueados (CAD lock)' : ''}
-          </p>
         )}
 
         {selected.size > 0 && (
@@ -3615,7 +2751,1089 @@ export function SeatMapEditor({
             </>
           )}
         </div>
+        <p className={styles.advancedTitle}>Avanzado</p>
+        <details className={styles.advancedGroup}>
+          <summary>Restricciones</summary>
+          <div className={styles.stageTools}>
+            {(
+              [
+                ['aisles', 'Pasillos'],
+                ['obstacles', 'Obstáculos'],
+                ['stairs', 'Escaleras'],
+                ['exits', 'Salidas'],
+                ['stage', 'Escenario'],
+                ['furniture', 'Mobiliario'],
+                ['focusPoints', 'Focos'],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className={styles.paramField}>
+                <span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(cadLocks[key])}
+                    onChange={(e) => patchCadLocks({ [key]: e.target.checked || undefined })}
+                  />{' '}
+                  Fijar {label.toLowerCase()}
+                </span>
+              </label>
+            ))}
+            <label className={styles.paramField}>
+              <span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(cadLocks.strictOverlaps)}
+                  onChange={(e) => patchCadLocks({ strictOverlaps: e.target.checked || undefined })}
+                />{' '}
+                Tratar solapes como error
+              </span>
+            </label>
+          </div>
+        </details>
+        <details className={styles.advancedGroup}>
+          <summary>Niveles</summary>
+          <div className={styles.stageTools}>
+            <button type="button" onClick={addLevel}>
+              + Nivel
+            </button>
+            <select
+              value={levelFilter}
+              onChange={(e) => setLevelFilter(e.target.value as string | 'ALL')}
+              aria-label="Filtrar nivel"
+            >
+              <option value="ALL">Todos</option>
+              {(map.venue?.levels ?? []).map((lv) => (
+                <option key={lv.id} value={lv.id}>
+                  {lv.name} (Z {lv.elevation})
+                </option>
+              ))}
+            </select>
+          </div>
+          {(map.venue?.levels ?? []).map((lv) => (
+            <div
+              key={lv.id}
+              style={{
+                display: 'flex',
+                gap: '0.35rem',
+                alignItems: 'center',
+                marginBottom: 6,
+                flexWrap: 'wrap',
+              }}
+            >
+              <input
+                value={lv.name}
+                aria-label={`Nombre nivel ${lv.id}`}
+                onChange={(e) => updateLevel(lv.id, { name: e.target.value })}
+                style={{ flex: '1 1 100px', minWidth: 0 }}
+              />
+              <label className={styles.paramField} style={{ margin: 0, flex: '0 0 auto' }}>
+                Z
+                <input
+                  type="number"
+                  value={lv.elevation}
+                  aria-label={`Elevación ${lv.name}`}
+                  onChange={(e) => updateLevel(lv.id, { elevation: Number(e.target.value) || 0 })}
+                  style={{ width: 72 }}
+                />
+              </label>
+              <button
+                type="button"
+                className={styles.iconBtn}
+                onClick={() => deleteLevel(lv.id)}
+                title="Eliminar nivel"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {activeSection && (
+            <label className={styles.paramField}>
+              Nivel de sección activa
+              <select
+                value={activeSection.levelId ?? ''}
+                onChange={(e) => assignSectionLevel(e.target.value || undefined)}
+              >
+                <option value="">— sin nivel —</option>
+                {(map.venue?.levels ?? []).map((lv) => (
+                  <option key={lv.id} value={lv.id}>
+                    {lv.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <p className={styles.sideHint}>
+            Con filtro de nivel activo, pasillos/escaleras/salidas nuevas heredan ese nivel.
+            Escaleras: desde = filtro, hacia = siguiente nivel.
+          </p>
+        </details>
+        <details className={styles.advancedGroup}>
+          <summary>Importar y exportar</summary>
+          <label className={styles.paramField}>
+            SVG (secciones / pasillos / obstáculos)
+            <input
+              type="file"
+              accept=".svg,image/svg+xml"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) importSvgFile(file);
+                e.target.value = '';
+              }}
+            />
+          </label>
+          <label className={styles.paramField}>
+            DXF ASCII (capas: aisle / obstacle / stage / stairs)
+            <input
+              type="file"
+              accept=".dxf,application/dxf,image/vnd.dxf"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) importDxfFile(file);
+                e.target.value = '';
+              }}
+            />
+          </label>
+          <p className={styles.sideHint}>
+            SVG/DXF abren un panel de revisión: reclasifica o omite entidades antes de aplicar.
+            Capas: aisle / obstacle / stage / stairs / exit|salida.
+          </p>
+          <div className={styles.stageTools}>
+            <button type="button" onClick={exportDxf}>
+              Exportar DXF
+            </button>
+            <button type="button" onClick={exportSvg}>
+              Exportar SVG
+            </button>
+            <button
+              type="button"
+              onClick={exportEgressCsv}
+              title="Resumen, secciones y cuellos de botella de la evacuación"
+            >
+              Exportar evacuación (CSV)
+            </button>
+          </div>
+        </details>
+        <details className={styles.advancedGroup}>
+          <summary>Plantillas</summary>
+          <div className={styles.templateGrid}>
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                disabled={!onApplyTemplate}
+                onClick={() => void handleTemplate(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </details>
+        <details className={styles.advancedGroup}>
+          <summary>Escenario y mobiliario</summary>
+          <div className={styles.stageTools}>
+            <button type="button" onClick={() => addFurniture('led')}>
+              + Pantalla LED
+            </button>
+            <button type="button" onClick={() => addFurniture('speaker')}>
+              + Bocina
+            </button>
+            {selectedFurnitureId && (
+              <button
+                type="button"
+                className={styles.dangerBtn}
+                onClick={() => removeFurniture(selectedFurnitureId)}
+              >
+                Quitar seleccionado
+              </button>
+            )}
+          </div>
+          {selectedFurnitureId && (map.venue?.levels?.length ?? 0) > 0 && (
+            <label className={styles.paramField}>
+              Nivel del mobiliario
+              <select
+                value={furniture.find((f) => f.id === selectedFurnitureId)?.levelId ?? ''}
+                disabled={Boolean(cadLocks.furniture)}
+                onChange={(e) =>
+                  patchFurniture(selectedFurnitureId, {
+                    levelId: e.target.value || undefined,
+                  })
+                }
+              >
+                <option value="">— todos / sin nivel —</option>
+                {(map.venue?.levels ?? []).map((lv) => (
+                  <option key={lv.id} value={lv.id}>
+                    {lv.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <p className={styles.sideHint}>
+            Arrastra el escenario o el mobiliario directamente en el lienzo.
+          </p>
+        </details>
+        <details className={styles.advancedGroup}>
+          <summary>Bloques, vistas y evacuación</summary>
+          <div className={styles.paramGrid}>
+            {(
+              [
+                ['rows', 'Filas'],
+                ['cols', 'Columnas'],
+                ['seatPitch', 'Entre asientos'],
+                ['rowPitch', 'Entre filas'],
+                ['rake', 'Desnivel'],
+                ['curvature', 'Curvatura'],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className={styles.paramField}>
+                {label}
+                <input
+                  type="number"
+                  value={blockParams[key]}
+                  min={key === 'curvature' ? 0 : 1}
+                  step={key === 'curvature' || key === 'rake' ? 1 : 1}
+                  onChange={(e) =>
+                    setBlockParams((p) => ({ ...p, [key]: Number(e.target.value) || 0 }))
+                  }
+                />
+              </label>
+            ))}
+            <label className={styles.paramField} style={{ gridColumn: '1 / -1' }}>
+              Columnas de pasillo
+              <input
+                type="text"
+                value={blockParams.skipColumns}
+                placeholder="6,7 o every:8"
+                onChange={(e) => setBlockParams((p) => ({ ...p, skipColumns: e.target.value }))}
+                title="Índices de columna a omitir (0-based), o every:N"
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={() => addGrid(blockParams.rows, blockParams.cols)}
+            disabled={!activeSection}
+          >
+            Insertar bloque
+          </button>
+          <button
+            type="button"
+            onClick={applyParamsToActiveBlocks}
+            disabled={!activeSection?.blocks?.length || activeSection?.locked}
+            title="Actualiza los bloques de la sección con estos parámetros y regenera asientos"
+          >
+            Aplicar a bloques
+          </button>
+          <div className={styles.stageTools}>
+            <button
+              type="button"
+              onClick={() => rotateActiveBlocks(-15)}
+              disabled={!activeSection?.blocks?.length || activeSection?.locked}
+              title="Rotar bloques −15° y regenerar"
+            >
+              Rotar −15°
+            </button>
+            <button
+              type="button"
+              onClick={() => rotateActiveBlocks(15)}
+              disabled={!activeSection?.blocks?.length || activeSection?.locked}
+              title="Rotar bloques +15° y regenerar"
+            >
+              Rotar +15°
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={fillActiveShape}
+            disabled={!activeSection?.shape?.points?.length}
+            title="Rellena el contorno de la sección activa con asientos"
+          >
+            Rellenar zona
+          </button>
+          <button
+            type="button"
+            onClick={regenerateActiveFromBlocks}
+            disabled={!activeSection?.blocks?.length || activeSection?.locked}
+            title="Regenera asientos de la sección activa desde sus bloques paramétricos"
+          >
+            Regenerar sección
+          </button>
+          <button
+            type="button"
+            onClick={regenerateAllFromBlocks}
+            title="Regenera asientos de todas las secciones con bloques (respeta bloqueos)"
+          >
+            Regenerar bloques
+          </button>
+          <button type="button" onClick={applyMetricDefaults} title="Asiento ~0.52 m, fila ~0.9 m">
+            Medidas estándar
+          </button>
+          <label
+            className={styles.paramField}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <input
+              type="checkbox"
+              checked={snapEnabled}
+              onChange={(e) => setSnapEnabled(e.target.checked)}
+            />
+            Ajustar a la rejilla ({(snapPitch / mapScale).toFixed(2)} m)
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              const result = applySightlines();
+              const rowBlocked = result.scores.filter((s) => s.rowBlocked).length;
+              const occluded = result.scores.filter((s) => s.occluded).length;
+              const levelLabel =
+                levelFilter === 'ALL'
+                  ? 'todos los niveles'
+                  : (map.venue?.levels?.find((l) => l.id === levelFilter)?.name ?? levelFilter);
+              setViewHeat(true);
+              // eslint-disable-next-line no-alert
+              window.alert(
+                `Vistas calculadas (${levelLabel})\nAsientos: ${result.scores.length}\nFocos: ${result.focuses.length}\nExcelente: ${result.summary.premium}\nBuena: ${result.summary.good}\nRegular: ${result.summary.fair}\nLimitada: ${result.summary.restricted}\nBloqueada: ${result.summary.blocked}\nFila delante: ${rowBlocked}\nObstáculo: ${occluded}`
+              );
+            }}
+            disabled={!allSeats.length}
+            title={
+              levelFilter === 'ALL'
+                ? 'Calcula la calidad de vista en todo el recinto'
+                : 'Calcula calidad de vista solo en el nivel filtrado (otros niveles no se tocan)'
+            }
+          >
+            Calcular vistas
+          </button>
+          <label
+            className={styles.paramField}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <input
+              type="checkbox"
+              checked={viewHeat}
+              onChange={(e) => setViewHeat(e.target.checked)}
+              disabled={!allSeats.length}
+            />
+            Mapa de calor de la vista
+          </label>
+          <label
+            className={styles.paramField}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <input
+              type="checkbox"
+              checked={showCirculation}
+              onChange={(e) => setShowCirculation(e.target.checked)}
+              aria-controls="egress-legend egress-status"
+            />
+            Rutas de evacuación
+          </label>
+          {showCirculation && (
+            <ul id="egress-legend" className={styles.egressLegend} aria-label="Leyenda de salidas">
+              <li>
+                <span className={`${styles.swatch} ${styles.swatchExit}`} aria-hidden />
+                Salida
+              </li>
+              <li>
+                <span className={`${styles.swatch} ${styles.swatchAisle}`} aria-hidden />
+                Pasillo
+              </li>
+              <li>
+                <span className={`${styles.swatch} ${styles.swatchStair}`} aria-hidden />
+                Escalera
+              </li>
+              <li>
+                <span className={`${styles.swatch} ${styles.swatchRoute}`} aria-hidden />
+                Ruta
+              </li>
+              <li>
+                <span className={`${styles.swatch} ${styles.swatchRouteActive}`} aria-hidden />
+                Ruta activa
+              </li>
+              <li>
+                <span className={`${styles.swatch} ${styles.swatchBottleneck}`} aria-hidden />
+                Cuello de botella
+              </li>
+            </ul>
+          )}
+          {showCirculation && egressOverlay && (
+            <p id="egress-status" className={styles.egressHint} role="status" aria-live="polite">
+              {egressOverlay.hasNetwork
+                ? `Rutas de salida · ${egressOverlay.paths.length} sección(es)${
+                    egressOverlay.clearanceMinutes != null
+                      ? ` · vaciado ~${egressOverlay.clearanceMinutes.toFixed(1)} min`
+                      : ''
+                  }`
+                : 'Sin red de pasillos/salidas para calcular rutas'}
+            </p>
+          )}
+          {unreachableOnLevelCount > 0 && (
+            <p className={styles.sideHint}>
+              {unreachableOnLevelCount} sección(es) sin ruta a salida
+              {levelFilter !== 'ALL' ? ' (nivel actual)' : ''}
+            </p>
+          )}
+          {showCirculation && circulation?.egress && circulation.hasNetwork && (
+            <div className={styles.sideHint} style={{ marginTop: '0.35rem' }}>
+              <strong>Evacuación</strong>
+              <div>
+                semillas:{' '}
+                {circulation.seedMode === 'exits'
+                  ? `${circulation.exitCount} salida(s)`
+                  : circulation.seedMode === 'stage'
+                    ? 'escenario (sin salidas)'
+                    : 'red pasillos'}
+              </div>
+              <div>
+                max ruta:{' '}
+                {circulation.egress.maxPathLength != null
+                  ? `${Math.round(circulation.egress.maxPathLength)}u`
+                  : '—'}
+                {' · '}
+                avg:{' '}
+                {circulation.egress.avgPathLength != null
+                  ? `${Math.round(circulation.egress.avgPathLength)}u`
+                  : '—'}
+              </div>
+              <div>
+                con salida: {circulation.egress.totalSeatsWithPath} · sin:{' '}
+                {circulation.egress.totalSeatsWithoutPath}
+              </div>
+              {bottlenecksView[0] && (
+                <div>
+                  cuello de botella: {bottlenecksView[0].kind}{' '}
+                  {Math.round(bottlenecksView[0].utilization * 100)}% ({bottlenecksView[0].seatLoad}
+                  /{bottlenecksView[0].capacity}, ancho {bottlenecksView[0].width}u)
+                </div>
+              )}
+              {circulation.egress.clearanceMinutes != null && (
+                <div>
+                  vaciado estimado: {circulation.egress.clearanceMinutes.toFixed(1)} min
+                  {circulation.egress.maxWalkMinutes != null
+                    ? ` · caminata max ${circulation.egress.maxWalkMinutes.toFixed(1)} min`
+                    : ''}
+                </div>
+              )}
+              {activeEgressPath && (
+                <div>
+                  ruta sección activa:{' '}
+                  {activeEgressPath.length != null
+                    ? `${Math.round(activeEgressPath.length)}u`
+                    : '—'}
+                  {(() => {
+                    const secEg = circulation.egress.sections.find(
+                      (s) => s.sectionId === activeSection?.id
+                    );
+                    return secEg?.clearanceMinutes != null
+                      ? ` · ~${secEg.clearanceMinutes.toFixed(1)} min`
+                      : '';
+                  })()}
+                </div>
+              )}
+
+              <div style={{ marginTop: '0.55rem', maxHeight: 160, overflow: 'auto' }}>
+                <strong>Secciones</strong>
+                <table
+                  style={{ width: '100%', fontSize: 10, borderCollapse: 'collapse', marginTop: 4 }}
+                >
+                  <thead>
+                    <tr style={{ textAlign: 'left', opacity: 0.75 }}>
+                      <th>Zona</th>
+                      <th>N</th>
+                      <th>Ruta</th>
+                      <th>min</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {egressSectionsView.slice(0, 12).map((s) => (
+                      <tr
+                        key={s.sectionId}
+                        style={{
+                          background:
+                            s.sectionId === activeSection?.id ? 'rgba(251,191,36,0.12)' : undefined,
+                        }}
+                      >
+                        <td style={{ padding: '1px 2px' }}>
+                          {(s.sectionName ?? s.sectionId).slice(0, 14)}
+                        </td>
+                        <td style={{ padding: '1px 2px' }}>{s.seatCount}</td>
+                        <td style={{ padding: '1px 2px' }}>
+                          {s.pathLength != null ? Math.round(s.pathLength) : '—'}
+                        </td>
+                        <td style={{ padding: '1px 2px' }}>
+                          {s.clearanceMinutes != null ? s.clearanceMinutes.toFixed(1) : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {bottlenecksView.length > 0 && (
+                <div style={{ marginTop: '0.45rem', maxHeight: 110, overflow: 'auto' }}>
+                  <strong>Cuellos de botella</strong>
+                  <ul style={{ margin: '4px 0 0', paddingLeft: '1.1rem' }}>
+                    {bottlenecksView.slice(0, 5).map((b) => (
+                      <li key={b.edgeId}>
+                        {b.kind} · {Math.round(b.utilization * 100)}% · {b.seatLoad}/{b.capacity} ·
+                        ~{b.clearanceMinutes.toFixed(1)} min
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className={styles.paramGrid} style={{ marginTop: '0.5rem' }}>
+                <label className={styles.paramField}>
+                  Vaciado max (min)
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    step={0.5}
+                    value={resolveEgressPolicy(map.venue?.egressPolicy).slowClearanceMinutes}
+                    onChange={(e) =>
+                      patchEgressPolicy({
+                        slowClearanceMinutes: Math.max(1, Number(e.target.value) || 8),
+                      })
+                    }
+                  />
+                </label>
+                <label className={styles.paramField}>
+                  Ruta larga (u)
+                  <input
+                    type="number"
+                    min={100}
+                    max={5000}
+                    step={50}
+                    value={resolveEgressPolicy(map.venue?.egressPolicy).longPathUnits}
+                    onChange={(e) =>
+                      patchEgressPolicy({
+                        longPathUnits: Math.max(100, Number(e.target.value) || 900),
+                      })
+                    }
+                  />
+                </label>
+                <label className={styles.paramField}>
+                  Util. bottleneck
+                  <input
+                    type="number"
+                    min={0.5}
+                    max={1}
+                    step={0.05}
+                    value={resolveEgressPolicy(map.venue?.egressPolicy).bottleneckUtilization}
+                    onChange={(e) =>
+                      patchEgressPolicy({
+                        bottleneckUtilization: Math.min(
+                          1,
+                          Math.max(0.5, Number(e.target.value) || 0.85)
+                        ),
+                      })
+                    }
+                  />
+                </label>
+                <label className={styles.paramField}>
+                  Carga bottleneck
+                  <input
+                    type="number"
+                    min={20}
+                    max={2000}
+                    step={10}
+                    value={resolveEgressPolicy(map.venue?.egressPolicy).bottleneckSeatLoad}
+                    onChange={(e) =>
+                      patchEgressPolicy({
+                        bottleneckSeatLoad: Math.max(20, Number(e.target.value) || 120),
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <button type="button" onClick={exportEgressCsv} style={{ marginTop: '0.35rem' }}>
+                Descargar CSV (local)
+              </button>
+              {venueId && (
+                <div className={styles.stageTools} style={{ marginTop: '0.35rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => void exportEgressCsvFromServer('draft')}
+                    title="Analiza el mapa actual (aunque no esté guardado) vía API"
+                  >
+                    CSV API (borrador)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void exportEgressCsvFromServer('saved')}
+                    title="Descarga el reporte del layout guardado en servidor"
+                  >
+                    CSV API (guardado)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void exportEgressPdfFromServer('draft')}
+                    title="PDF del mapa actual vía API"
+                  >
+                    PDF (borrador)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void exportEgressPdfFromServer('saved')}
+                    title="PDF del layout guardado"
+                  >
+                    PDF (guardado)
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </details>
+        <details className={styles.advancedGroup}>
+          <summary>Pasillos, escaleras y salidas</summary>
+          {aisles.length > 0 && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <strong className={styles.sideHint}>Pasillos</strong>
+              {aisles.map((a) => (
+                <div key={a.id} style={{ marginBottom: 6 }}>
+                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                    <label className={styles.paramField} style={{ flex: 1, margin: 0 }}>
+                      {a.id.replace(/^tmp-poly-/, 'pasillo-').slice(0, 18)} · ancho
+                      <input
+                        type="number"
+                        min={8}
+                        max={120}
+                        value={a.width ?? 24}
+                        disabled={Boolean(cadLocks.aisles)}
+                        onChange={(e) =>
+                          patchAisle(a.id, { width: Math.max(8, Number(e.target.value) || 24) })
+                        }
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      disabled={Boolean(cadLocks.aisles)}
+                      onClick={() => removeAisle(a.id)}
+                      title="Eliminar pasillo"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {(map.venue?.levels?.length ?? 0) > 0 && (
+                    <label className={styles.paramField}>
+                      Nivel
+                      <select
+                        value={a.levelId ?? ''}
+                        disabled={Boolean(cadLocks.aisles)}
+                        onChange={(e) => patchAisle(a.id, { levelId: e.target.value || undefined })}
+                      >
+                        <option value="">— auto / todos —</option>
+                        {(map.venue?.levels ?? []).map((lv) => (
+                          <option key={lv.id} value={lv.id}>
+                            {lv.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {stairs.length > 0 && (
+            <div style={{ marginTop: '0.35rem' }}>
+              <strong className={styles.sideHint}>Escaleras / vomitorios</strong>
+              {stairs.map((s) => (
+                <div
+                  key={s.id}
+                  style={{ marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #e5e5e5' }}
+                >
+                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                    <label className={styles.paramField} style={{ flex: 1, margin: 0 }}>
+                      {s.id.replace(/^tmp-poly-/, '').slice(0, 14)} · ancho
+                      <input
+                        type="number"
+                        min={8}
+                        max={120}
+                        value={s.width ?? 28}
+                        disabled={Boolean(cadLocks.stairs)}
+                        onChange={(e) =>
+                          patchStair(s.id, { width: Math.max(8, Number(e.target.value) || 28) })
+                        }
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      disabled={Boolean(cadLocks.stairs)}
+                      onClick={() => removeStair(s.id)}
+                      title="Eliminar escalera"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <label className={styles.paramField}>
+                    Tipo
+                    <select
+                      value={s.kind ?? 'stairs'}
+                      disabled={Boolean(cadLocks.stairs)}
+                      onChange={(e) =>
+                        patchStair(s.id, {
+                          kind: e.target.value as 'stairs' | 'vomitoria' | 'ramp',
+                        })
+                      }
+                    >
+                      <option value="stairs">Escalera</option>
+                      <option value="vomitoria">Vomitorio</option>
+                      <option value="ramp">Rampa</option>
+                    </select>
+                  </label>
+                  <label className={styles.paramField}>
+                    Desde nivel
+                    <select
+                      value={s.fromLevelId ?? ''}
+                      disabled={Boolean(cadLocks.stairs)}
+                      onChange={(e) =>
+                        patchStair(s.id, { fromLevelId: e.target.value || undefined })
+                      }
+                    >
+                      <option value="">— auto —</option>
+                      {(map.venue?.levels ?? []).map((lv) => (
+                        <option key={lv.id} value={lv.id}>
+                          {lv.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={styles.paramField}>
+                    Hacia nivel
+                    <select
+                      value={s.toLevelId ?? ''}
+                      disabled={Boolean(cadLocks.stairs)}
+                      onChange={(e) => patchStair(s.id, { toLevelId: e.target.value || undefined })}
+                    >
+                      <option value="">— auto —</option>
+                      {(map.venue?.levels ?? []).map((lv) => (
+                        <option key={lv.id} value={lv.id}>
+                          {lv.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
+          {obstacles.length > 0 && (
+            <div style={{ marginTop: '0.35rem' }}>
+              <strong className={styles.sideHint}>Obstáculos</strong>
+              {obstacles.map((o) => (
+                <div key={o.id} style={{ marginBottom: 6 }}>
+                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                    <label className={styles.paramField} style={{ flex: 1, margin: 0 }}>
+                      {o.id.replace(/^tmp-poly-/, 'obs-').slice(0, 16)} · alto
+                      <input
+                        type="number"
+                        min={20}
+                        max={400}
+                        value={o.height ?? 120}
+                        disabled={Boolean(cadLocks.obstacles)}
+                        onChange={(e) =>
+                          patchObstacle(o.id, {
+                            height: Math.max(20, Number(e.target.value) || 120),
+                          })
+                        }
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      disabled={Boolean(cadLocks.obstacles)}
+                      onClick={() => removeObstacle(o.id)}
+                      title="Eliminar obstáculo"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {(map.venue?.levels?.length ?? 0) > 0 && (
+                    <label className={styles.paramField}>
+                      Nivel
+                      <select
+                        value={o.levelId ?? ''}
+                        disabled={Boolean(cadLocks.obstacles)}
+                        onChange={(e) =>
+                          patchObstacle(o.id, { levelId: e.target.value || undefined })
+                        }
+                      >
+                        <option value="">— auto / todos —</option>
+                        {(map.venue?.levels ?? []).map((lv) => (
+                          <option key={lv.id} value={lv.id}>
+                            {lv.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ marginTop: '0.5rem' }}>
+            <strong className={styles.sideHint}>Salidas</strong>
+            <p className={styles.sideHint}>
+              Tool Salida + click en el mapa. Las rutas de vaciado van a estas puertas.
+            </p>
+            {exits.map((ex) => (
+              <div key={ex.id} style={{ marginBottom: 6 }}>
+                <div
+                  style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: 4 }}
+                >
+                  <input
+                    value={ex.label ?? ''}
+                    disabled={Boolean(cadLocks.exits)}
+                    placeholder="Nombre"
+                    onChange={(e) => patchExit(ex.id, { label: e.target.value || undefined })}
+                    style={{ flex: 1, minWidth: 0 }}
+                    aria-label={`Nombre salida ${ex.id}`}
+                  />
+                  <input
+                    type="number"
+                    min={8}
+                    max={120}
+                    title="Ancho"
+                    value={ex.width ?? 32}
+                    disabled={Boolean(cadLocks.exits)}
+                    onChange={(e) =>
+                      patchExit(ex.id, { width: Math.max(8, Number(e.target.value) || 32) })
+                    }
+                    style={{ width: 64 }}
+                  />
+                  <button
+                    type="button"
+                    className={styles.iconBtn}
+                    disabled={Boolean(cadLocks.exits)}
+                    onClick={() => removeExit(ex.id)}
+                    title="Eliminar salida"
+                  >
+                    ×
+                  </button>
+                </div>
+                {(map.venue?.levels?.length ?? 0) > 0 && (
+                  <label className={styles.paramField}>
+                    Nivel
+                    <select
+                      value={ex.levelId ?? ''}
+                      disabled={Boolean(cadLocks.exits)}
+                      onChange={(e) => patchExit(ex.id, { levelId: e.target.value || undefined })}
+                    >
+                      <option value="">— auto / todos —</option>
+                      {(map.venue?.levels ?? []).map((lv) => (
+                        <option key={lv.id} value={lv.id}>
+                          {lv.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className={styles.stageTools}>
+            <button
+              type="button"
+              onClick={seedStageFocuses}
+              disabled={Boolean(cadLocks.focusPoints)}
+              title="3 focos L/C/R sobre el escenario"
+            >
+              Focos L/C/R
+            </button>
+            <button
+              type="button"
+              onClick={clearFocuses}
+              disabled={Boolean(cadLocks.focusPoints) || !map.venue?.focusPoints?.length}
+            >
+              Quitar focos
+            </button>
+          </div>
+          {(map.venue?.focusPoints?.length ?? 0) > 0 && (
+            <ul
+              className={styles.sideHint}
+              style={{ listStyle: 'none', padding: 0, margin: '0.35rem 0' }}
+            >
+              {map.venue!.focusPoints!.map((f) => (
+                <li key={f.id} style={{ marginBottom: 6 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.35rem',
+                      alignItems: 'center',
+                      marginBottom: 4,
+                    }}
+                  >
+                    <input
+                      value={f.label ?? ''}
+                      onChange={(e) => renameFocus(f.id, e.target.value)}
+                      style={{ flex: 1, minWidth: 0 }}
+                      disabled={Boolean(cadLocks.focusPoints)}
+                      aria-label={`Nombre foco ${f.id}`}
+                    />
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      onClick={() => removeFocus(f.id)}
+                      disabled={Boolean(cadLocks.focusPoints)}
+                      title="Eliminar foco"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {(map.venue?.levels?.length ?? 0) > 0 && (
+                    <label className={styles.paramField}>
+                      Nivel
+                      <select
+                        value={f.levelId ?? ''}
+                        disabled={Boolean(cadLocks.focusPoints)}
+                        onChange={(e) => patchFocus(f.id, { levelId: e.target.value || undefined })}
+                      >
+                        <option value="">— auto / todos —</option>
+                        {(map.venue?.levels ?? []).map((lv) => (
+                          <option key={lv.id} value={lv.id}>
+                            {lv.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {(map.venue?.focusPoints?.length ?? 0) > 0 && (
+            <p className={styles.sideHint}>
+              {map.venue!.focusPoints!.length} focos · sightlines toma el mejor por asiento
+              {tool === 'focus' && !cadLocks.focusPoints
+                ? ' · click mapa = nuevo, click foco = borrar'
+                : ''}
+              {cadLocks.focusPoints ? ' · bloqueados (CAD lock)' : ''}
+            </p>
+          )}
+        </details>
       </aside>
+
+      <nav className={styles.rail} aria-label="Herramientas del plano">
+        <div className={styles.railGroup} role="group" aria-label="Seleccionar y mover">
+          <RailButton
+            icon="select"
+            label="Seleccionar"
+            active={tool === 'select'}
+            onClick={() => setTool('select')}
+          />
+          <RailButton
+            icon="pan"
+            label="Mover la vista"
+            active={tool === 'pan'}
+            onClick={() => setTool('pan')}
+          />
+          <RailButton
+            icon="move"
+            label="Mover sección completa"
+            active={tool === 'move-section'}
+            disabled={!map.sections.length}
+            onClick={() => setTool('move-section')}
+          />
+        </div>
+        <div className={styles.railGroup} role="group" aria-label="Dibujar">
+          <RailButton
+            icon="ga"
+            label="Zona general (sin asientos)"
+            active={tool === 'ga'}
+            disabled={destructiveLocked || readOnly}
+            onClick={() => setTool(tool === 'ga' ? 'select' : 'ga')}
+          />
+          <RailButton
+            icon="aisle"
+            label="Pasillo"
+            active={tool === 'aisle'}
+            disabled={Boolean(cadLocks.aisles)}
+            onClick={() => {
+              setPolyDraft([]);
+              setTool(tool === 'aisle' ? 'select' : 'aisle');
+            }}
+          />
+          <RailButton
+            icon="obstacle"
+            label="Obstáculo"
+            active={tool === 'obstacle'}
+            disabled={Boolean(cadLocks.obstacles)}
+            onClick={() => {
+              setPolyDraft([]);
+              setTool(tool === 'obstacle' ? 'select' : 'obstacle');
+            }}
+          />
+          <RailButton
+            icon="stairs"
+            label="Escalera o vomitorio"
+            active={tool === 'stairs'}
+            disabled={Boolean(cadLocks.stairs)}
+            onClick={() => {
+              setPolyDraft([]);
+              setTool(tool === 'stairs' ? 'select' : 'stairs');
+            }}
+          />
+          <RailButton
+            icon="exit"
+            label="Salida"
+            active={tool === 'exit'}
+            disabled={Boolean(cadLocks.exits)}
+            onClick={() => setTool(tool === 'exit' ? 'select' : 'exit')}
+          />
+          <RailButton
+            icon="focus"
+            label="Punto de vista"
+            active={tool === 'focus'}
+            disabled={Boolean(cadLocks.focusPoints)}
+            onClick={() => setTool(tool === 'focus' ? 'select' : 'focus')}
+          />
+        </div>
+        <div className={styles.railGroup} role="group" aria-label="Historial">
+          <RailButton
+            icon="undo"
+            label={
+              undoLabel(history) ? `Deshacer: ${undoLabel(history)} (Ctrl+Z)` : 'Deshacer (Ctrl+Z)'
+            }
+            disabled={!canUndo(history)}
+            onClick={undo}
+          />
+          <RailButton
+            icon="redo"
+            label={
+              redoLabel(history)
+                ? `Rehacer: ${redoLabel(history)} (Ctrl+Shift+Z)`
+                : 'Rehacer (Ctrl+Shift+Z)'
+            }
+            disabled={!canRedo(history)}
+            onClick={redo}
+          />
+        </div>
+        <div className={styles.railGroup} role="group" aria-label="Zoom">
+          <RailButton
+            icon="zoomIn"
+            label="Acercar"
+            onClick={() => setScale((v) => Math.min(3, v * 1.15))}
+          />
+          <RailButton
+            icon="zoomOut"
+            label="Alejar"
+            onClick={() => setScale((v) => Math.max(0.35, v / 1.15))}
+          />
+          <RailButton
+            icon="fit"
+            label="Centrar la vista"
+            onClick={() => {
+              setScale(1);
+              setTx(40);
+              setTy(40);
+            }}
+          />
+        </div>
+      </nav>
 
       <div className={styles.main}>
         {(destructiveLocked || readOnly) && (
@@ -3630,98 +3848,12 @@ export function SeatMapEditor({
             }}
           >
             {readOnly
-              ? 'Mapa archivado — solo lectura. Usa el historial de versiones para restaurar un borrador.'
-              : 'Mapa publicado con ventas — edición destructiva bloqueada (eliminar butacas/secciones, plantillas). Puedes ajustar posiciones y metadatos.'}
+              ? 'Plano archivado: solo lectura. Restaura un borrador desde el historial.'
+              : 'Plano con ventas: no se pueden borrar butacas ni secciones; sí ajustar posiciones y datos.'}
           </div>
         )}
         <div className={styles.toolbar}>
           <div className={styles.toolGroup}>
-            <button
-              type="button"
-              className={tool === 'select' ? styles.primary : ''}
-              onClick={() => setTool('select')}
-            >
-              Seleccionar
-            </button>
-            <button
-              type="button"
-              className={tool === 'pan' ? styles.primary : ''}
-              onClick={() => setTool('pan')}
-            >
-              Pan
-            </button>
-            <button
-              type="button"
-              className={tool === 'move-section' ? styles.primary : ''}
-              onClick={() => setTool('move-section')}
-              disabled={!map.sections.length}
-              title="Arrastra una zona completa (asientos + forma)"
-            >
-              Mover sección
-            </button>
-            <button
-              type="button"
-              className={tool === 'ga' ? styles.primary : ''}
-              onClick={() => setTool(tool === 'ga' ? 'select' : 'ga')}
-              disabled={destructiveLocked || readOnly}
-              title="Dibuja una zona sin asientos (pista/festival)"
-            >
-              Zona GA
-            </button>
-            <button
-              type="button"
-              className={tool === 'aisle' ? styles.primary : ''}
-              onClick={() => {
-                setPolyDraft([]);
-                setTool(tool === 'aisle' ? 'select' : 'aisle');
-              }}
-              disabled={Boolean(cadLocks.aisles)}
-              title="Dibuja un pasillo (polilínea)"
-            >
-              Pasillo
-            </button>
-            <button
-              type="button"
-              className={tool === 'obstacle' ? styles.primary : ''}
-              onClick={() => {
-                setPolyDraft([]);
-                setTool(tool === 'obstacle' ? 'select' : 'obstacle');
-              }}
-              disabled={Boolean(cadLocks.obstacles)}
-              title="Dibuja un obstáculo (polígono)"
-            >
-              Obstáculo
-            </button>
-            <button
-              type="button"
-              className={tool === 'stairs' ? styles.primary : ''}
-              onClick={() => {
-                setPolyDraft([]);
-                setTool(tool === 'stairs' ? 'select' : 'stairs');
-              }}
-              disabled={Boolean(cadLocks.stairs)}
-              title="Dibuja escalera / vomitorio"
-            >
-              Escalera
-            </button>
-            <button
-              type="button"
-              className={tool === 'exit' ? styles.primary : ''}
-              onClick={() => setTool(tool === 'exit' ? 'select' : 'exit')}
-              disabled={Boolean(cadLocks.exits)}
-              title="Click en el mapa para colocar una salida"
-            >
-              Salida
-            </button>
-            <button
-              type="button"
-              className={tool === 'focus' ? styles.primary : ''}
-              onClick={() => setTool(tool === 'focus' ? 'select' : 'focus')}
-              disabled={Boolean(cadLocks.focusPoints)}
-              title="Click en el mapa para colocar un foco de vista"
-            >
-              Foco
-            </button>
             {tool === 'ga' && (
               <>
                 <button type="button" onClick={finishGaZone} disabled={gaDraft.length < 3}>
@@ -3756,7 +3888,7 @@ export function SeatMapEditor({
               aria-keyshortcuts="Control+Shift+G"
               title="Generadores paramétricos (sección, filas, plantillas…)"
             >
-              Generadores <kbd className={styles.kbd}>Ctrl+⇧+G</kbd>
+              Generadores
             </button>
             <button
               type="button"
@@ -3770,7 +3902,7 @@ export function SeatMapEditor({
               onClick={() => addGrid(5, 12)}
               disabled={!activeSection || destructiveLocked || readOnly}
             >
-              + Grid 5×12
+              + Bloque 5×12
             </button>
             <button
               type="button"
@@ -3788,11 +3920,17 @@ export function SeatMapEditor({
               onClick={deleteSelected}
               disabled={!selected.size || destructiveLocked || readOnly}
             >
-              Eliminar ({selected.size})
+              Eliminar{selected.size ? ` (${selected.size.toLocaleString('es-MX')})` : ''}
             </button>
             {TIERS.map((t) => (
-              <button key={t} type="button" onClick={() => applyTier(t)} disabled={!selected.size}>
-                {t}
+              <button
+                key={t}
+                type="button"
+                onClick={() => applyTier(t)}
+                disabled={!selected.size}
+                title={`Marcar la selección como ${TIER_LABEL[t].toLowerCase()}`}
+              >
+                {TIER_LABEL[t]}
               </button>
             ))}
             {/*
@@ -3815,52 +3953,15 @@ export function SeatMapEditor({
             <button type="button" onClick={() => rotateSelected(15)} disabled={!selected.size}>
               Rotar +15°
             </button>
-            {/*
-              El atajo va en el propio botón, no solo en `title`: un tooltip no
-              se ve con teclado ni con lector de pantalla, y deshacer es la
-              función que más se busca cuando una edición masiva sale mal.
-            */}
-            <button
-              type="button"
-              onClick={undo}
-              disabled={!canUndo(history)}
-              aria-keyshortcuts="Control+Z"
-              title={undoLabel(history) ? `Deshacer: ${undoLabel(history)}` : 'Nada que deshacer'}
-            >
-              ↶ Deshacer <kbd className={styles.kbd}>Ctrl+Z</kbd>
-            </button>
-            <button
-              type="button"
-              onClick={redo}
-              disabled={!canRedo(history)}
-              aria-keyshortcuts="Control+Shift+Z Control+Y"
-              title={redoLabel(history) ? `Rehacer: ${redoLabel(history)}` : 'Nada que rehacer'}
-            >
-              ↷ Rehacer <kbd className={styles.kbd}>Ctrl+Shift+Z</kbd>
-            </button>
-            {/* Qué se deshará exactamente, sin tener que pasar el ratón. */}
-            {(undoLabel(history) || redoLabel(history)) && (
-              <span className={styles.historyHint} aria-live="polite">
-                {undoLabel(history) ? `Deshace: ${undoLabel(history)}` : 'Nada que deshacer'}
-              </span>
-            )}
           </div>
 
           <div className={styles.toolGroup}>
             <button
               type="button"
-              onClick={selectActiveSectionSeats}
-              disabled={!activeSection}
-              title="Seleccionar todas las butacas de la zona activa"
-            >
-              Sel. zona
-            </button>
-            <button
-              type="button"
               onClick={() => setSelected(EMPTY_SELECTION)}
               disabled={!selected.size}
             >
-              Limpiar sel.
+              Quitar selección
             </button>
             {map.sections.length > 1 && (
               <select
@@ -3882,25 +3983,6 @@ export function SeatMapEditor({
             )}
           </div>
 
-          <div className={styles.toolGroup}>
-            <button type="button" onClick={() => setScale((s) => Math.min(3, s * 1.15))}>
-              +
-            </button>
-            <button type="button" onClick={() => setScale((s) => Math.max(0.35, s / 1.15))}>
-              −
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setScale(1);
-                setTx(40);
-                setTy(40);
-              }}
-            >
-              Reset vista
-            </button>
-          </div>
-
           {hideSaveButton ? null : (
             <button
               type="button"
@@ -3916,13 +3998,13 @@ export function SeatMapEditor({
         {onAiSuggest && (
           <div className={styles.ai}>
             <Field
-              label="Sugerencia"
+              label="Describe la sala"
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               placeholder="Describe la sala"
             />
             <TicketButton variant="secondary" onClick={() => void handleAi()}>
-              Generar con prompt
+              Generar con IA
             </TicketButton>
           </div>
         )}
@@ -3931,7 +4013,9 @@ export function SeatMapEditor({
           ref={viewportRef}
           className={styles.viewport}
           role="img"
-          aria-label={showCirculation ? 'Mapa del venue con rutas de salida' : 'Mapa del venue'}
+          aria-label={
+            showCirculation ? 'Plano del recinto con rutas de salida' : 'Plano del recinto'
+          }
           aria-describedby={showCirculation ? 'egress-legend egress-status' : undefined}
           onWheel={(e) => {
             e.preventDefault();
@@ -4807,10 +4891,9 @@ export function SeatMapEditor({
             </g>
           </svg>
           <p className={styles.hint}>
-            {seatCount.toLocaleString('es-MX')} asientos · {map.sections.length} zonas · {lodLabel}{' '}
-            · zoom rueda · arrastra en vacío para seleccionar por área · Delete · Ctrl+Z · Shift
-            multi
-            {selected.size ? ` · ${selected.size.toLocaleString('es-MX')} sel.` : ''}
+            {seatCount.toLocaleString('es-MX')} asientos · {map.sections.length} zonas
+            {lodLabel !== 'butacas' ? ` · ${lodLabel}` : ''}
+            {selected.size ? ` · ${selected.size.toLocaleString('es-MX')} seleccionados` : ''}
             {analyzing ? ' · analizando…' : ''}
             {accessibility.capacity > 0 && (
               <span
@@ -4825,11 +4908,9 @@ export function SeatMapEditor({
                 · ♿ {accessibility.wheelchairSpaces}/{accessibility.requiredWheelchairSpaces}
               </span>
             )}
-            {tool === 'ga' ? ' · click para agregar vértices, doble-click o Enter para cerrar' : ''}
-            {tool === 'focus' ? ' · click para colocar foco · click en un foco para borrarlo' : ''}
-            {tool === 'exit'
-              ? ' · click para colocar salida · click en una salida para borrarla'
-              : ''}
+            {tool === 'ga' ? ' · clic para agregar vértices; doble clic o Enter para cerrar' : ''}
+            {tool === 'focus' ? ' · clic para colocar un punto de vista' : ''}
+            {tool === 'exit' ? ' · clic para colocar una salida' : ''}
           </p>
         </div>
       </div>

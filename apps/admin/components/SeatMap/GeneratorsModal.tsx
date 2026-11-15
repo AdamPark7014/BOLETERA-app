@@ -425,7 +425,7 @@ export function GeneratorsModal({
                 </div>
                 <div className={styles.fieldRow}>
                   <label className={styles.field}>
-                    <span>Seat pitch</span>
+                    <span>Entre asientos</span>
                     {numInput(
                       sectionParams.seatPitch,
                       (n) => setSectionParams((p) => ({ ...p, seatPitch: Math.max(8, n) })),
@@ -433,7 +433,7 @@ export function GeneratorsModal({
                     )}
                   </label>
                   <label className={styles.field}>
-                    <span>Row pitch</span>
+                    <span>Entre filas</span>
                     {numInput(
                       sectionParams.rowPitch,
                       (n) => setSectionParams((p) => ({ ...p, rowPitch: Math.max(8, n) })),
@@ -443,7 +443,7 @@ export function GeneratorsModal({
                 </div>
                 <div className={styles.fieldRow}>
                   <label className={styles.field}>
-                    <span>Rake (Z)</span>
+                    <span>Desnivel</span>
                     {numInput(
                       sectionParams.rake,
                       (n) => setSectionParams((p) => ({ ...p, rake: n })),
@@ -532,7 +532,7 @@ export function GeneratorsModal({
                     )}
                   </label>
                   <label className={styles.field}>
-                    <span>Seat pitch</span>
+                    <span>Entre asientos</span>
                     {numInput(
                       rowParams.seatPitch,
                       (n) => setRowParams((p) => ({ ...p, seatPitch: Math.max(8, n) })),
@@ -592,7 +592,7 @@ export function GeneratorsModal({
                     )}
                   </label>
                   <label className={styles.field}>
-                    <span>Seat pitch</span>
+                    <span>Entre asientos</span>
                     {numInput(
                       curvedParams.seatPitch,
                       (n) => setCurvedParams((p) => ({ ...p, seatPitch: Math.max(8, n) })),
@@ -685,7 +685,7 @@ export function GeneratorsModal({
                   </label>
                 </div>
                 <label className={styles.field}>
-                  <span>Aforo GA</span>
+                  <span>Aforo de zona general</span>
                   {numInput(
                     gaParams.capacity,
                     (n) => setGaParams((p) => ({ ...p, capacity: Math.max(1, n) })),

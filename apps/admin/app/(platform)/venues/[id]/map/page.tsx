@@ -179,81 +179,114 @@ function EditorBody() {
   const authToken: string = token;
   const version = workflow?.version;
 
+  const canPublish = events.length > 0 && validation.ok && Boolean(publishEventId) && !publishing;
+  const primaryIsSave = dirty || events.length === 0;
+
   return (
-    <section>
-      <header className={frame.sectionHead}>
-        <h1 className={frame.sectionTitle}>Mapa</h1>
-        <p className={frame.quiet}>
-          {venueName} · {STATUS_LABEL[publishStatus]}
-          {version != null ? ` · v${version}` : ''}
-          {destructiveLocked ? ' · Ventas activas' : ''}
-          {!validation.ok
-            ? ` · ${validation.errorCount} errores`
-            : validation.warningCount > 0
-              ? ` · ${validation.warningCount} avisos`
-              : ''}
-        </p>
+    <section className={styles.mapPage}>
+      <header className={styles.mapHead}>
+        <div className={frame.sectionHead} style={{ marginBottom: 0 }}>
+          <h1 className={frame.sectionTitle}>{venueName || 'Plano'}</h1>
+          <div className={styles.mapMeta}>
+            <span
+              className={
+                publishStatus === 'PUBLISHED'
+                  ? frame.chipOk
+                  : publishStatus === 'ARCHIVED'
+                    ? frame.chip
+                    : frame.chipWarn
+              }
+            >
+              {STATUS_LABEL[publishStatus]}
+              {version != null ? ` · v${version}` : ''}
+            </span>
+            {destructiveLocked ? <span className={frame.chipGold}>Con ventas</span> : null}
+            {!validation.ok ? (
+              <span className={frame.chipDanger}>
+                {validation.errorCount} {validation.errorCount === 1 ? 'error' : 'errores'}
+              </span>
+            ) : validation.warningCount > 0 ? (
+              <span className={frame.chipWarn}>
+                {validation.warningCount} {validation.warningCount === 1 ? 'aviso' : 'avisos'}
+              </span>
+            ) : (
+              <span className={frame.chipOk}>Sin errores</span>
+            )}
+          </div>
+        </div>
+        <div className={styles.mapActions}>
+          {events.length > 1 ? (
+            <div className={styles.mapEventPick}>
+              <SheetSelect
+                label="Evento"
+                value={publishEventId}
+                placeholder="Elige la función"
+                options={events.map((event) => ({ value: event.id, label: event.title }))}
+                onChange={(next) => {
+                  setPublishEventId(next);
+                  setPublishMsg(null);
+                }}
+              />
+            </div>
+          ) : null}
+          <TicketButton
+            variant="ghost"
+            onClick={() => router.push(`/venues/${venueId}/3d?v=${layoutVersion}`)}
+          >
+            Vista 3D
+          </TicketButton>
+          {primaryIsSave ? (
+            <>
+              {events.length > 0 ? (
+                <TicketButton variant="secondary" disabled>
+                  Publicar inventario
+                </TicketButton>
+              ) : null}
+              <TicketButton disabled={!dirty || saving || readOnly} onClick={() => void save()}>
+                {saving ? 'Guardando…' : 'Guardar cambios'}
+              </TicketButton>
+            </>
+          ) : (
+            <TicketButton disabled={!canPublish} onClick={() => void publishInventory()}>
+              {publishing ? 'Publicando…' : 'Publicar inventario'}
+            </TicketButton>
+          )}
+        </div>
       </header>
 
-      <div className={styles.legend} aria-label="Leyenda del plano">
-        <NamedStatus status="libre" />
-        <NamedStatus status="apartado" />
-        <NamedStatus status="vendido" />
-        <NamedStatus status="bloqueado" />
-        <NamedStatus status="accesible" />
-      </div>
-      <p className={frame.quiet}>
-        Seleccionado es el anillo de esta sesión. No hay degradado de ocupación.
-      </p>
-
-      <LayoutPublishPanel
-        venueId={venueId}
-        token={authToken}
-        validationOk={validation.ok}
-        validationErrorCount={validation.errorCount}
-        onWorkflowChange={(next) => {
-          setWorkflow(next);
-          setPublishStatus(next.publishStatus);
-        }}
-        onMapReload={() => void reloadLayout()}
-      />
-
-      <div className={styles.editorActions}>
-        {events.length > 1 ? (
-          <SheetSelect
-            label="Evento"
-            value={publishEventId}
-            placeholder="Elige la función"
-            options={events.map((event) => ({ value: event.id, label: event.title }))}
-            onChange={(next) => {
-              setPublishEventId(next);
-              setPublishMsg(null);
-            }}
-          />
-        ) : null}
-        {events.length > 0 ? (
-          <TicketButton
-            variant="secondary"
-            disabled={!validation.ok || !publishEventId || publishing}
-            onClick={() => void publishInventory()}
-          >
-            {publishing ? 'Publicando…' : 'Publicar inventario'}
-          </TicketButton>
-        ) : null}
-        <TicketButton
-          variant="secondary"
-          onClick={() => router.push(`/venues/${venueId}/3d?v=${layoutVersion}`)}
-        >
-          Vista 3D
-        </TicketButton>
-      </div>
-
-      {publishMsg ? <p className={frame.quiet}>{publishMsg}</p> : null}
-      {actionError ? (
-        <p className={frame.danger} role="alert">
-          {actionError}
-        </p>
+      {publishMsg || notice || actionError ? (
+        <div className={styles.mapNotices}>
+          {publishMsg ? <p className={frame.quiet}>{publishMsg}</p> : null}
+          {notice && !dirty ? <p className={frame.chipOk}>{notice}</p> : null}
+          {actionError ? (
+            <p className={frame.danger} role="alert">
+              {actionError}
+            </p>
+          ) : null}
+        </div>
       ) : null}
+
+      <details className={styles.mapMore}>
+        <summary>Revisión, versiones y leyenda</summary>
+        <div className={styles.legend} aria-label="Leyenda del plano">
+          <NamedStatus status="libre" />
+          <NamedStatus status="apartado" />
+          <NamedStatus status="vendido" />
+          <NamedStatus status="bloqueado" />
+          <NamedStatus status="accesible" />
+        </div>
+        <LayoutPublishPanel
+          venueId={venueId}
+          token={authToken}
+          validationOk={validation.ok}
+          validationErrorCount={validation.errorCount}
+          onWorkflowChange={(next) => {
+            setWorkflow(next);
+            setPublishStatus(next.publishStatus);
+          }}
+          onMapReload={() => void reloadLayout()}
+        />
+      </details>
 
       <SeatMapEditor
         initial={map}
@@ -291,15 +324,6 @@ function EditorBody() {
               }
         }
       />
-
-      <div className={frame.saveBar}>
-        <p className={frame.quiet} aria-live="polite">
-          {dirty ? 'Sin guardar' : (notice ?? '')}
-        </p>
-        <TicketButton disabled={!dirty || saving || readOnly} onClick={() => void save()}>
-          Guardar cambios
-        </TicketButton>
-      </div>
     </section>
   );
 }

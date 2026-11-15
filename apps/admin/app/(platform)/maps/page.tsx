@@ -3,12 +3,12 @@
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { NamedStatus, ParameterCard, TicketButton } from '@boletera/ui';
+import { TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param, Segment } from '../events/_ticket/controls';
+import { Segment } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
 import { asRecord, formatCount, formatWhen, readNumber, readString } from '../events/_ticket/read';
 
@@ -153,7 +153,6 @@ function MapaBody() {
   const [venueId, setVenueId] = useState<string | null>(null);
   const [layout, setLayout] = useState<LayoutView | null>(null);
   const [status, setStatus] = useState('DRAFT');
-  const [openSection, setOpenSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [layoutError, setLayoutError] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -248,7 +247,7 @@ function MapaBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Mapa</h1>
+          <h1 className={styles.sectionTitle}>Planos de butacas</h1>
           <NoAccess />
         </header>
       </section>
@@ -263,244 +262,219 @@ function MapaBody() {
       />
     );
   }
-  if (loading || !token) return <p className={styles.quiet}>Cargando mapas.</p>;
+  if (loading || !token) {
+    return <div className={styles.skeleton} style={{ height: 420 }} aria-label="Cargando planos" />;
+  }
 
   const seats = layout?.sections.reduce((sum, section) => sum + section.seats, 0) ?? 0;
+  const accessible = layout?.sections.reduce((sum, section) => sum + section.accessible, 0) ?? 0;
   const who = layout?.publishedBy ?? layout?.archivedBy;
+  const current = venues.find((item) => item.id === venueId);
+  const statusChip = (value: string) =>
+    value === 'PUBLISHED'
+      ? styles.chipOk
+      : value === 'IN_REVIEW'
+        ? styles.chipGold
+        : value === 'ARCHIVED'
+          ? styles.chip
+          : styles.chipWarn;
 
   return (
-    <section>
-      <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Mapa</h1>
-        <p className={styles.quiet}>
-          El estado se guarda con el paso que el API ya tiene. La geometría se ajusta en el plano.
-        </p>
+    <section className={styles.page}>
+      <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
+        <h1 className={styles.sectionTitle}>Planos de butacas</h1>
       </header>
-      {venues.length === 0 ? <p className={styles.quiet}>No hay recintos.</p> : null}
-      <div className={styles.stack}>
-        {venues.map((venue) => {
-          const open = venue.id === venueId;
-          return (
+
+      {venues.length === 0 ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Todavía no hay recintos</p>
+          <p className={styles.quiet}>Cada recinto tiene su plano de butacas.</p>
+          <Link href="/venues" className={styles.ghostLink}>
+            Ver recintos
+          </Link>
+        </div>
+      ) : (
+        <nav className={styles.tabs} aria-label="Recinto">
+          {venues.map((venue) => (
             <button
               key={venue.id}
               type="button"
-              className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-              aria-expanded={open}
+              className={venue.id === venueId ? styles.tabOn : styles.tab}
+              aria-pressed={venue.id === venueId}
               onClick={() => {
                 setVenueId(venue.id);
                 setNotice(null);
               }}
             >
-              <span>{venue.name}</span>
-              <span className={styles.figure}>{open ? 'Abierto' : 'Abrir'}</span>
+              {venue.name}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </nav>
+      )}
+
       {layoutError ? (
         <p className={styles.danger} role="alert">
           {layoutError}
         </p>
       ) : null}
-      {venueId &&
-      venues.find((item) => item.id === venueId)?.hasLayout &&
-      !layout &&
-      !layoutError ? (
-        <p className={styles.quiet}>Cargando plano.</p>
+      {current?.hasLayout && !layout && !layoutError ? (
+        <div className={styles.skeleton} style={{ height: 320 }} aria-label="Cargando plano" />
       ) : null}
-      {venueId && venues.find((item) => item.id === venueId)?.hasLayout === false ? (
-        <div className={styles.stack}>
-          <p className={styles.quiet}>Este recinto no tiene plano.</p>
-          <Link href={`/venues/${venueId}/map`} className={styles.link}>
-            Abrir el plano
-          </Link>
+      {current && current.hasLayout === false ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>{current.name} aún no tiene plano</p>
+          <p className={styles.quiet}>Dibújalo con secciones, filas y pasillos.</p>
+          {canEdit ? (
+            <Link href={`/venues/${current.id}/map`} className={styles.goldLink}>
+              Crear plano
+            </Link>
+          ) : null}
         </div>
       ) : null}
-      {layout ? (
-        <div className={styles.stack}>
-          <Param name="Nombre del plano">
-            <ParameterCard
-              name="Nombre del plano"
-              value={layout.name}
-              effect="No se edita desde aquí."
-            />
-          </Param>
-          <Param name="Versión">
-            <ParameterCard
-              name="Versión"
-              value={formatCount(layout.version)}
-              valueStyle="tabular"
-              effect="Sube al publicar."
-            />
-          </Param>
-          <Param name="Geometría">
-            <ParameterCard
-              name="Geometría"
-              value={`${formatCount(layout.sections.length)} secciones · ${formatCount(seats)} butacas`}
-              valueStyle="tabular"
-              effect="Fila, butaca, posición y accesible se ajustan en el plano. La foto de la compra no viene en esta lectura."
-            >
-              {venueId ? (
-                <Link href={`/venues/${venueId}/map`} className={styles.link}>
-                  Abrir el plano
-                </Link>
-              ) : null}
-            </ParameterCard>
-          </Param>
-          <Param name="Leyenda">
-            <ParameterCard
-              name="Leyenda"
-              value="Libre · Apartado · Vendido · Bloqueado · Accesible · Seleccionado"
-              effect="Seleccionado es el anillo de esta sesión. No hay degradado de ocupación."
-            >
-              <NamedStatus status="libre" />
-              <NamedStatus status="apartado" />
-              <NamedStatus status="vendido" />
-              <NamedStatus status="bloqueado" />
-              <NamedStatus status="accesible" />
-            </ParameterCard>
-          </Param>
-          <Param name="Estado del plano">
-            <ParameterCard
-              name="Estado del plano"
-              value={word(status)}
-              effect="Borrador, en revisión, publicado o archivo."
-            >
-              {canEdit ? (
-                <Segment
-                  label="Estado del plano"
-                  value={status}
-                  options={STATUS_ORDER.map((value) => ({ value, label: word(value) }))}
-                  onChange={(next) => {
-                    setStatus(next);
-                    setNotice(null);
-                    setActionError(null);
-                  }}
-                />
-              ) : null}
-            </ParameterCard>
-          </Param>
-          <Param name="Quién publicó o archivó">
-            <ParameterCard
-              name="Quién publicó o archivó"
-              value={who ?? '—'}
-              valueStyle="mono"
-              effect="Identificador que guardó el servicio."
-            />
-          </Param>
-          {layout.sections.map((section) => {
-            const open = openSection === section.id;
-            return (
-              <div key={section.id} className={styles.stack}>
-                <button
-                  type="button"
-                  className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-                  aria-expanded={open}
-                  onClick={() => setOpenSection(open ? null : section.id)}
-                >
-                  <span>{section.name}</span>
-                  <span className={styles.figure}>{formatCount(section.seats)}</span>
-                </button>
-                {open ? (
-                  <div className={styles.stack}>
-                    <Param name="Nombre de la sección">
-                      <ParameterCard
-                        name="Nombre de la sección"
-                        value={section.name}
-                        effect="La zona del plano se nombra."
-                      />
-                    </Param>
-                    <Param name="Clave de la sección">
-                      <ParameterCard
-                        name="Clave de la sección"
-                        value={section.slug}
-                        valueStyle="mono"
-                        effect="Único en el plano."
-                      />
-                    </Param>
-                    <Param name="Color de la sección">
-                      <ParameterCard
-                        name="Color de la sección"
-                        value={section.color}
-                        valueStyle="mono"
-                        effect="La columna existe. El plano no rellena la zona con este color."
-                      />
-                    </Param>
-                    <Param name="Orden de la sección">
-                      <ParameterCard
-                        name="Orden de la sección"
-                        value={formatCount(section.sortOrder)}
-                        valueStyle="tabular"
-                        effect="Orden guardado."
-                      />
-                    </Param>
-                    <Param name="Silueta">
-                      <ParameterCard
-                        name="Silueta"
-                        value={section.shaped ? 'En el plano' : '—'}
-                        effect="El contorno no se teclea aquí."
-                      />
-                    </Param>
-                    <Param name="Accesible">
-                      <ParameterCard
-                        name="Accesible"
-                        value={formatCount(section.accessible)}
-                        valueStyle="tabular"
-                        effect="Butacas con el glifo. El interruptor de cada una está en el plano."
-                      />
-                    </Param>
-                  </div>
-                ) : null}
+
+      {layout && current ? (
+        <>
+          <div className={styles.panelHead} style={{ marginBottom: 0 }}>
+            <div>
+              <h2 className={styles.panelTitle}>{layout.name}</h2>
+              <p className={styles.kpiNote} style={{ marginTop: 6 }}>
+                <span className={statusChip(layout.status)}>{word(layout.status)}</span>
+                <span>v{formatCount(layout.version)}</span>
+                {who ? <span className={styles.mono}>{who}</span> : null}
+              </p>
+            </div>
+            <div className={styles.toolbar} style={{ alignItems: 'center' }}>
+              <Link href={`/venues/${current.id}/3d?studio=1`} className={styles.ghostLink}>
+                Vista 3D
+              </Link>
+              <Link href={`/venues/${current.id}/map`} className={styles.goldLink}>
+                {canEdit ? 'Abrir editor' : 'Ver plano'}
+              </Link>
+            </div>
+          </div>
+
+          <div className={styles.kpis}>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Butacas</p>
+              <p className={styles.kpiValue}>{formatCount(seats)}</p>
+            </div>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Secciones</p>
+              <p className={styles.kpiValue}>{formatCount(layout.sections.length)}</p>
+            </div>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Accesibles</p>
+              <p
+                className={styles.kpiValue}
+                style={accessible === 0 ? { color: 'var(--warn)' } : undefined}
+              >
+                {formatCount(accessible)}
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Sección</th>
+                  <th scope="col">Clave</th>
+                  <th scope="col" className={styles.num}>
+                    Butacas
+                  </th>
+                  <th scope="col" className={styles.num}>
+                    Accesibles
+                  </th>
+                  <th scope="col">Contorno</th>
+                </tr>
+              </thead>
+              <tbody>
+                {layout.sections.map((section) => (
+                  <tr key={section.id} data-param={section.name}>
+                    <td>
+                      <span className={styles.swatchCell}>
+                        <span
+                          className={styles.swatchDot}
+                          style={{ background: section.color }}
+                          aria-hidden="true"
+                        />
+                        <strong>{section.name}</strong>
+                      </span>
+                    </td>
+                    <td>
+                      <span className={styles.mono}>{section.slug}</span>
+                    </td>
+                    <td className={styles.num}>{formatCount(section.seats)}</td>
+                    <td className={styles.num}>
+                      {section.accessible > 0 ? formatCount(section.accessible) : '—'}
+                    </td>
+                    <td className={styles.quiet}>{section.shaped ? 'Dibujado' : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.split}>
+            <div className={`${styles.panel} ${styles.splitWide}`}>
+              <div className={styles.panelHead}>
+                <h2 className={styles.panelTitle}>Versiones guardadas</h2>
               </div>
-            );
-          })}
-          {layout.snapshots.length === 0 ? (
-            <Param name="Etiqueta del snapshot">
-              <ParameterCard
-                name="Etiqueta del snapshot"
-                value="Ninguna"
-                effect="Aún no hay una instantánea."
-              />
-            </Param>
-          ) : (
-            layout.snapshots.map((snapshot) => (
-              <Param key={snapshot.id} name="Etiqueta del snapshot">
-                <ParameterCard
-                  name="Etiqueta del snapshot"
-                  value={snapshot.label ?? 'Sin etiqueta'}
-                  effect={`Versión ${formatCount(snapshot.version)} · ${formatWhen(snapshot.createdAt)}`}
-                />
-              </Param>
-            ))
-          )}
-          <Param name="Foto del evento">
-            <ParameterCard
-              name="Foto del evento"
-              value="—"
-              effect="La sala que ve la compra es otra fila. Esta lectura es el plano vivo."
-            />
-          </Param>
-        </div>
-      ) : null}
-      {illegal ? (
-        <p className={styles.danger} role="alert">
-          Ese cambio de estado no lo hace el API.
-        </p>
-      ) : null}
-      {actionError ? (
-        <p className={styles.danger} role="alert">
-          {actionError}
-        </p>
-      ) : null}
-      {canEdit && layout ? (
-        <div className={styles.saveBar}>
-          <p className={styles.quiet} aria-live="polite">
-            {step ? 'Sin guardar' : (notice ?? '')}
-          </p>
-          <TicketButton disabled={!step || saving} onClick={() => void save()}>
-            Guardar cambios
-          </TicketButton>
-        </div>
+              {layout.snapshots.length === 0 ? (
+                <p className={styles.quiet}>Aún no hay versiones guardadas.</p>
+              ) : (
+                <ul className={styles.plainList}>
+                  {layout.snapshots.map((snapshot) => (
+                    <li key={snapshot.id}>
+                      <strong>v{formatCount(snapshot.version)}</strong>
+                      <span>{snapshot.label ?? 'Sin etiqueta'}</span>
+                      <span className={styles.quiet}>{formatWhen(snapshot.createdAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className={`${styles.panel} ${styles.splitNarrow}`}>
+              <h2 className={styles.panelTitle}>Estado del plano</h2>
+              {canEdit ? (
+                <>
+                  <Segment
+                    label="Estado del plano"
+                    value={status}
+                    options={STATUS_ORDER.map((value) => ({ value, label: word(value) }))}
+                    onChange={(next) => {
+                      setStatus(next);
+                      setNotice(null);
+                      setActionError(null);
+                    }}
+                  />
+                  {illegal ? (
+                    <p className={styles.danger} role="alert">
+                      Ese paso no está permitido desde {word(layout.status).toLowerCase()}.
+                    </p>
+                  ) : null}
+                  {actionError ? (
+                    <p className={styles.danger} role="alert">
+                      {actionError}
+                    </p>
+                  ) : null}
+                  <div className={styles.toolbar} style={{ alignItems: 'center' }}>
+                    <TicketButton
+                      variant="secondary"
+                      disabled={!step || saving}
+                      onClick={() => void save()}
+                    >
+                      {saving ? 'Guardando' : 'Cambiar estado'}
+                    </TicketButton>
+                    {notice && !step ? <span className={styles.chipOk}>{notice}</span> : null}
+                  </div>
+                </>
+              ) : (
+                <p className={styles.quiet}>{word(layout.status)}</p>
+              )}
+            </div>
+          </div>
+        </>
       ) : null}
     </section>
   );

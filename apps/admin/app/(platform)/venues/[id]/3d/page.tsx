@@ -99,31 +99,34 @@ function Venue3DBody() {
 
   return (
     <section>
-      <header className={frame.sectionHead}>
-        <h1 className={frame.sectionTitle}>Vista 3D · {venueName}</h1>
-        <p className={frame.quiet}>
-          {STATUS_LABEL[publishStatus]}
-          {layoutVersionParam !== '0' ? ` · layout v${layoutVersionParam}` : ''} ·{' '}
-          {formatCount(seats.length)} asientos
-        </p>
-        <p className={frame.tertiary}>
-          Vista interactiva del layout guardado. Se lee aquí; se edita en el mapa 2D.
-        </p>
-        <p className={styles.links}>
-          <Link href={`/venues/${venueId}/map`} className={styles.inlineLink}>
-            Editar mapa 2D
-          </Link>
-          <Link href="/venues" className={styles.inlineLink}>
+      <header className={frame.pageHead} style={{ marginBottom: 24 }}>
+        <div className={frame.sectionHead}>
+          <h1 className={frame.sectionTitle}>{venueName}</h1>
+          <p className={frame.kpiNote}>
+            <span className={frame.chipGold}>Vista 3D</span>
+            <span>{STATUS_LABEL[publishStatus]}</span>
+            {layoutVersionParam !== '0' ? <span>v{layoutVersionParam}</span> : null}
+            <span>{formatCount(seats.length)} asientos</span>
+          </p>
+        </div>
+        <div className={frame.toolbar} style={{ alignItems: 'center' }}>
+          <Link href="/venues" className={frame.ghostLink}>
             Recintos
           </Link>
-        </p>
+          <Link href={`/venues/${venueId}/map`} className={frame.goldLink}>
+            Editar plano
+          </Link>
+        </div>
       </header>
 
       {seats.length === 0 ? (
-        <p className={frame.quiet}>
-          Este recinto todavía no tiene asientos en su layout. Ve al editor de mapa y aplica una
-          plantilla.
-        </p>
+        <div className={frame.empty}>
+          <p className={frame.emptyTitle}>Este plano aún no tiene asientos</p>
+          <p className={frame.quiet}>Agrega secciones o una plantilla en el editor.</p>
+          <Link href={`/venues/${venueId}/map`} className={frame.goldLink}>
+            Abrir editor
+          </Link>
+        </div>
       ) : (
         <div className={styles.viewer}>
           <Venue3DViewer
