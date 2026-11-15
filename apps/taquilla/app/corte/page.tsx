@@ -1,5 +1,7 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
+import { formatDateTime } from '@boletera/ui';
 import { formatTime as uiTime } from '@boletera/ui';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -63,6 +65,14 @@ function readMoney(value: unknown): number | null {
   return Number.isFinite(n) ? round2(n) : null;
 }
 
+/** Nombre de caja legible: las terminales viejas se guardaron con el agente del navegador. */
+function terminalDisplay(name: unknown, cashierId: unknown): string {
+  const raw = typeof name === 'string' ? name.trim() : '';
+  if (raw && !/^POS-Mozilla/i.test(raw)) return raw;
+  if (raw) return 'Caja 1';
+  return typeof cashierId === 'string' && cashierId ? cashierId : '—';
+}
+
 export default function CortePage() {
   const router = useRouter();
   const [report, setReport] = useState<SessionSummary | null>(null);
@@ -107,9 +117,7 @@ export default function CortePage() {
     if (!sessionId) return;
     fetchSessionSummary(sessionId)
       .then(setReport)
-      .catch((err: unknown) =>
-        showToast(err instanceof Error ? err.message : 'No se pudo cargar el turno')
-      );
+      .catch((err: unknown) => showToast(friendlyError(err, 'No se pudo cargar el turno')));
   }, [showToast]);
 
   useEffect(() => {
@@ -153,7 +161,7 @@ export default function CortePage() {
       // Sin pistas del PIN en pantalla (antes mostraba su primer dígito).
       showToast(`Retiro de ${money(amount)} registrado y autorizado`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'No se pudo registrar el retiro');
+      showToast(friendlyError(err, 'No se pudo registrar el retiro'));
     } finally {
       setLoading(false);
     }
@@ -175,7 +183,7 @@ export default function CortePage() {
         localStorage.removeItem('boletera_pos_session');
         printCorte({ ...(report ?? {}), ...data });
       } catch (err) {
-        showToast(err instanceof Error ? err.message : 'No se pudo cerrar el turno');
+        showToast(friendlyError(err, 'No se pudo cerrar el turno'));
       } finally {
         setLoading(false);
       }
@@ -213,7 +221,7 @@ export default function CortePage() {
       showToast('Turno entregado. El cajero entrante debe identificarse.');
       setTimeout(() => router.replace('/login'), 1200);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'No se pudo entregar el turno');
+      showToast(friendlyError(err, 'No se pudo entregar el turno'));
       setLoading(false);
     }
   }
@@ -228,8 +236,8 @@ export default function CortePage() {
       'CORTE DE CAJA',
       `Terminal: ${terminal}`,
       `Responsable: ${cashierName} (${getCashierId()})`,
-      `Inicio: ${r.startTime ? new Date(r.startTime).toLocaleString('es-MX') : '—'}`,
-      `Fin: ${new Date(r.endTime ?? Date.now()).toLocaleString('es-MX')}`,
+      `Inicio: ${r.startTime ? formatDateTime(r.startTime) : '—'}`,
+      `Fin: ${formatDateTime(r.endTime ?? Date.now())}`,
       '',
       `Transacciones: ${r.totalTransactions ?? 0}`,
       `Total ventas: ${money(Number(r.totalRevenue ?? 0))}`,
@@ -387,11 +395,10 @@ export default function CortePage() {
               </div>
               <div>
                 <dt>Retiros</dt>
-                <dd>−{money(report.dropsTotal ?? 0)}</dd>
-              </div>
-              <div className={styles.strong}>
-                <dt>Esperado en caja</dt>
-                <dd>{money(expected)}</dd>
+                <dd>
+                  {(report.dropsTotal ?? 0) > 0 ? '−' : ''}
+                  {money(report.dropsTotal ?? 0)}
+                </dd>
               </div>
               <div>
                 <dt>Ventas con tarjeta</dt>
@@ -500,18 +507,51 @@ export default function CortePage() {
         </>
       )}
 
+      {/* Los campos de retiro y traspaso viven FUERA del diálogo: el importe y el
+          cajero entrante se teclean antes de pedir el PIN, no después. */}
+      {!closed && report && (
+        <Card padding="md" className={styles.section}>
+          <CardHeader title="Retiro o entrega de turno" />
+          <div className={styles.inlineFields}>
+            <Input
+              id="drop-amount"
+              type="number"
+              label="Importe a retirar"
+              min={0}
+              step="0.01"
+              value={dropAmount}
+              onChange={(e) => setDropAmount(e.target.value)}
+              inputSize="lg"
+            />
+            <Input
+              id="drop-note"
+              label="Nota del retiro"
+              value={dropNote}
+              onChange={(e) => setDropNote(e.target.value)}
+            />
+            <Input
+              id="handoff-cashier"
+              label="Cajero entrante (correo)"
+              value={handoffCashier}
+              onChange={(e) => setHandoffCashier(e.target.value)}
+              placeholder="Correo del cajero que recibe"
+            />
+          </div>
+        </Card>
+      )}
+
       {!closed && report && (
         <div className={styles.actions}>
           <Button variant="secondary" size="lg" onClick={() => setPrompt('DROP')}>
-            Retiro parcial · F9
+            Retiro parcial
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             size="lg"
             disabled={!countEntered}
             onClick={() => setPrompt('HANDOFF')}
           >
-            Entregar turno · F10
+            Entregar turno
           </Button>
           <TicketButton
             fullWidth
@@ -550,10 +590,8 @@ export default function CortePage() {
           <CardHeader title="Cortes anteriores" />
           <ul className={styles.zList}>
             {zReports.map((z) => {
-              const when = z.closedAt
-                ? new Date(z.closedAt).toLocaleString('es-MX')
-                : z.id.slice(0, 8);
-              const who = String(z.terminalName ?? z.cashierId ?? '—');
+              const when = z.closedAt ? formatDateTime(z.closedAt) : z.id.slice(0, 8);
+              const who = terminalDisplay(z.terminalName, z.cashierId);
               const diff = z.variance;
               if (diff == null || !Number.isFinite(diff)) {
                 return (
@@ -614,39 +652,6 @@ export default function CortePage() {
         onCancel={() => setPrompt(null)}
         onConfirm={(pin) => doHandoff(pin)}
       />
-
-      {/* Los campos de retiro y traspaso viven FUERA del diálogo: el importe y el
-          cajero entrante se teclean antes de pedir el PIN, no después. */}
-      {!closed && report && (
-        <Card padding="md" className={styles.section}>
-          <CardHeader title="Datos para retiro / traspaso" />
-          <div className={styles.inlineFields}>
-            <Input
-              id="drop-amount"
-              type="number"
-              label="Importe a retirar"
-              min={0}
-              step="0.01"
-              value={dropAmount}
-              onChange={(e) => setDropAmount(e.target.value)}
-              inputSize="lg"
-            />
-            <Input
-              id="drop-note"
-              label="Nota del retiro"
-              value={dropNote}
-              onChange={(e) => setDropNote(e.target.value)}
-            />
-            <Input
-              id="handoff-cashier"
-              label="Cajero entrante (correo)"
-              value={handoffCashier}
-              onChange={(e) => setHandoffCashier(e.target.value)}
-              placeholder="Correo del cajero que recibe"
-            />
-          </div>
-        </Card>
-      )}
     </PosShell>
   );
 }

@@ -219,3 +219,16 @@
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
+
+/* Un solo dorado por vista: «Ver zonas» es texto neutro, la fila entera es el botón. */
+.cta {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary, #a8a29a);
+  font-weight: 500;
+}
+
+.ctaSecondary {
+  border-radius: 999px;
+}

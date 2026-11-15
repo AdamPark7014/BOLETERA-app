@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
 import { formatTime as uiTime } from '@boletera/ui';
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -91,7 +92,7 @@ export default function TaquillaLoginPage() {
 
       router.replace('/venta');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error de conexión');
+      setError(friendlyError(err, 'Error de conexión'));
     } finally {
       setLoading(false);
     }

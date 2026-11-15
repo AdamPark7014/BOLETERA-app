@@ -95,20 +95,17 @@
   }
 }
 
-/* Botón discreto que abre la hoja de atajos. */
+/* Botón «?» en la barra superior: abre la hoja de atajos; nunca tapa contenido. */
 .helpButton {
-  position: fixed;
-  left: 20px;
-  bottom: 20px;
-  z-index: 40;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
+  flex: none;
   border: 1px solid var(--line-strong, #34343a);
   border-radius: 999px;
-  background: var(--card, #1a1a1a);
+  background: transparent;
   color: var(--text-secondary, #a39e94);
   font: inherit;
   font-size: 16px;
@@ -129,7 +126,7 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 1023px) {
   .helpButton {
     display: none;
   }

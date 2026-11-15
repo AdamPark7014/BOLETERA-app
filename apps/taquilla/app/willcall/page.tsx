@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
 import { formatTime as uiTime } from '@boletera/ui';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -95,7 +96,7 @@ export default function WillcallPage() {
       setVerified({});
       setSelectedId(data[0]?.orderId ?? null);
     } catch (err) {
-      setToast(err instanceof Error ? err.message : 'No se pudo buscar');
+      setToast(friendlyError(err, 'No se pudo buscar'));
       setRows([]);
       setSelectedId(null);
     } finally {
@@ -119,7 +120,7 @@ export default function WillcallPage() {
       setVerified((v) => ({ ...v, [orderId]: false }));
       searchRef.current?.focus();
     } catch (err) {
-      setToast(err instanceof Error ? err.message : 'No se pudo entregar');
+      setToast(friendlyError(err, 'No se pudo entregar'));
     }
   }
 

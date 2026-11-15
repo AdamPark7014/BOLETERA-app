@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDateTime } from '@boletera/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@boletera/ui';
@@ -98,8 +99,7 @@ export default function AjustesPage() {
               <li key={m.eventId}>
                 <strong>{m.eventTitle ?? m.eventId}</strong>
                 <span>
-                  {m.count.toLocaleString('es-MX')} boletos · emitido{' '}
-                  {new Date(m.issuedAt).toLocaleString('es-MX')}
+                  {m.count.toLocaleString('es-MX')} boletos · emitido {formatDateTime(m.issuedAt)}
                   {m.complete ? '' : ' · incompleta'}
                 </span>
               </li>

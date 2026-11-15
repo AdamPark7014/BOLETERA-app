@@ -416,3 +416,35 @@
     font-weight: 600;
   }
 }
+
+/* Cortes anteriores a 390: la fecha arriba, caja e importe abajo; sin desbordes. */
+.zList li > * {
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .zList li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 4px;
+  }
+
+  .zList li > strong {
+    grid-column: 1 / -1;
+  }
+
+  .zList em.zDiff {
+    flex-wrap: wrap;
+  }
+}
+
+/* Etiquetas en oración, sin mayúsculas espaciadas. */
+.hero > div > span:first-child {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+}
+
+/* Barra del desglose en blanco tenue: el dorado queda para «Cerrar corte». */
+.bar span {
+  background: rgba(255, 255, 255, 0.7);
+}

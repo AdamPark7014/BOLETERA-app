@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   calculateSightlines,
@@ -182,7 +183,7 @@ export function PosSeatMap({
         })
         .catch((err: unknown) => {
           if (!signal.cancelled) {
-            setConnError(err instanceof Error ? err.message : 'Sin disponibilidad');
+            setConnError(friendlyError(err, 'Sin disponibilidad'));
           }
         });
     };

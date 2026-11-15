@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
 import { formatDateTime as uiDateTime, formatTime as uiTime } from '@boletera/ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -169,7 +170,7 @@ export default function AccesoPage() {
         `${result.applied} aplicados · ${result.conflicts} conflictos · ${result.rejected} rechazados`
       );
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'No se pudo sincronizar');
+      showToast(friendlyError(err, 'No se pudo sincronizar'));
     }
   }, [zoneId, refreshLocal, showToast]);
 
@@ -191,7 +192,7 @@ export default function AccesoPage() {
       refreshLocal();
       showToast(`Lista descargada: ${meta.count} boletos`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'No se pudo descargar la lista de boletos');
+      showToast(friendlyError(err, 'No se pudo descargar la lista de boletos'));
     } finally {
       setDownloading(null);
     }
@@ -776,7 +777,7 @@ export default function AccesoPage() {
                           ? `Rechazado: ${conflict.reason ?? 'sin motivo'}`
                           : `Ya usado · primer paso ${
                               conflict.firstScanAt
-                                ? new Date(conflict.firstScanAt).toLocaleString('es-MX')
+                                ? uiDateTime(new Date(conflict.firstScanAt))
                                 : 'desconocido'
                             }${conflict.firstScanZoneId ? ` · puerta ${conflict.firstScanZoneId}` : ''}${
                               conflict.firstScanBy ? ` · operador ${conflict.firstScanBy}` : ''

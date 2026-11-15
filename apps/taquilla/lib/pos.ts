@@ -1,4 +1,5 @@
 import {
+  getTerminalLabel,
   apiFetch,
   apiJson,
   getCashierId as getAuthCashierId,
@@ -192,7 +193,7 @@ export async function ensurePosSession(organizationId: string, cashierId: string
       body: JSON.stringify({
         organizationId,
         locationName: 'Mostrador principal',
-        terminalName: `POS-${typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 12) : 'term'}`,
+        terminalName: getTerminalLabel() || 'Caja 1',
       }),
     });
     terminalId = terminal.id;

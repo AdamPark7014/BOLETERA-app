@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Field, NamedStatus, TicketButton, formatTicketAmount } from '@boletera/ui';
@@ -118,7 +119,7 @@ export default function BuscarPage() {
       const data = await scanTicket(code);
       setResult(data as ScanResult);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No encontrado');
+      setError(friendlyError(err, 'No se pudo buscar.', 'No encontramos ese boleto u orden.'));
     } finally {
       setLoading(false);
     }
@@ -166,7 +167,7 @@ export default function BuscarPage() {
       await printReceipt(rec);
       showToast('Reimprimiendo…');
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'No se pudo reimprimir');
+      showToast(friendlyError(err, 'No se pudo reimprimir.'));
     }
   }
 
@@ -180,7 +181,7 @@ export default function BuscarPage() {
       // boletos seguían diciendo SOLD aunque ya estaban liberados.
       void runLookup(result.publicId || result.orderId);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'No se pudo anular');
+      showToast(friendlyError(err, 'No se pudo anular.'));
     }
   }
 
@@ -205,7 +206,7 @@ export default function BuscarPage() {
         void runLookup(result.publicId || result.orderId);
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'El cambio falló');
+      showToast(friendlyError(err, 'No se pudo hacer el cambio.'));
     }
   }
 

@@ -303,3 +303,75 @@
   background: var(--gold-wash, rgba(198, 165, 109, 0.1));
   box-shadow: inset 2px 0 0 var(--gold, #c6a56d);
 }
+
+/* Menú de pantallas en la barra (para tableta sin teclado). */
+.menuWrap {
+  position: relative;
+}
+
+button.topBtn {
+  font: inherit;
+  cursor: pointer;
+}
+
+.menuScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  padding: 6px;
+  border: 1px solid var(--line-strong, #34343a);
+  border-radius: 14px;
+  background: var(--card, #1a1a1a);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+
+.menuItem,
+.menuItemOn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--text, #fff);
+  font-size: 15px;
+  text-decoration: none;
+  transition: background-color 160ms ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--elevated, #242424);
+  }
+
+  kbd {
+    color: var(--text-secondary, #a8a29a);
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+  }
+}
+
+.menuItemOn {
+  background: var(--elevated, #242424);
+  font-weight: 600;
+}
+
+@media (max-width: 1023px) {
+  .menuItem kbd,
+  .menuItemOn kbd {
+    display: none;
+  }
+}

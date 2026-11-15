@@ -2,7 +2,7 @@
 
 import { formatTime as uiTime } from '@boletera/ui';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { BrandLogo, formatTicketAmount } from '@boletera/ui';
 import { getOrgName, getTerminalLabel, getTaquillaToken, getTaquillaUser } from '@/lib/auth';
@@ -18,6 +18,15 @@ import { useHotkeys, type Hotkey } from '@/lib/hotkeys';
 import { HotkeyBar } from './HotkeyBar';
 import { NetStatus, useOpsStatus } from './NetStatus';
 import styles from './PosShell.module.scss';
+
+const NAV_ITEMS = [
+  { href: '/venta', label: 'Venta', keys: 'F1' },
+  { href: '/willcall', label: 'Entregar boletos', keys: 'F4' },
+  { href: '/buscar', label: 'Buscar boleto', keys: 'F3' },
+  { href: '/acceso', label: 'Puerta', keys: 'F6' },
+  { href: '/corte', label: 'Corte de caja', keys: 'F12' },
+  { href: '/ajustes', label: 'Ajustes', keys: '' },
+] as const;
 
 type PaletteItem = {
   label: string;
@@ -65,7 +74,32 @@ export function PosShell({
   whoSub?: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const status = useOpsStatus();
+  const [isDoorRole, setIsDoorRole] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Guardia por rol en el cliente: el personal de puerta solo usa /acceso.
+  // (El API también debe rechazar venta y turno para SCANNER.)
+  useEffect(() => {
+    const role = getTaquillaUser()?.role ?? '';
+    const doorOnly = role === 'SCANNER';
+    setIsDoorRole(doorOnly);
+    if (doorOnly && pathname !== '/acceso') router.replace('/acceso');
+  }, [pathname, router]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
   const width = size ?? (wide ? 'wide' : 'sm');
   const pageClass =
     width === 'wide' ? styles.pageWide : width === 'md' ? styles.pageMd : styles.page;
@@ -289,8 +323,12 @@ export function PosShell({
   return (
     <div className={fill ? styles.shellFill : styles.shell}>
       <header className={styles.topbar}>
-        <Link href="/venta" className={styles.brand} aria-label="Black Ticket, venta">
-          <BrandLogo tone="gold" size={26} />
+        <Link
+          href={isDoorRole ? '/acceso' : '/venta'}
+          className={styles.brand}
+          aria-label={isDoorRole ? 'Black Ticket, puerta' : 'Black Ticket, venta'}
+        >
+          <BrandLogo tone="white" size={26} />
         </Link>
         <div className={styles.who}>
           <span className={styles.whoMain}>
@@ -310,16 +348,43 @@ export function PosShell({
               </strong>
             </div>
           ) : null}
-          {door ? null : (
-            <>
-              <Link href="/willcall" className={styles.topBtn}>
-                Entregar boletos <kbd>F4</kbd>
-              </Link>
-              <Link href="/corte" className={styles.topBtn}>
-                Corte <kbd>F12</kbd>
-              </Link>
-            </>
+          {door || isDoorRole ? null : (
+            <div className={styles.menuWrap}>
+              <button
+                type="button"
+                className={styles.topBtn}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                Menú
+              </button>
+              {menuOpen ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.menuScrim}
+                    aria-label="Cerrar menú"
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <nav className={styles.menu} aria-label="Pantallas de la taquilla">
+                    {NAV_ITEMS.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={pathname === item.href ? styles.menuItemOn : styles.menuItem}
+                        aria-current={pathname === item.href ? 'page' : undefined}
+                      >
+                        <span>{item.label}</span>
+                        <kbd>{item.keys}</kbd>
+                      </Link>
+                    ))}
+                  </nav>
+                </>
+              ) : null}
+            </div>
           )}
+          <HotkeyBar hotkeys={merged} enabled={hotkeysEnabled && !menuOpen} />
           <p className={styles.clock}>{time}</p>
         </div>
       </header>
@@ -334,11 +399,11 @@ export function PosShell({
             </header>
           )}
           {fill ? <h1 className={styles.srOnly}>{title}</h1> : null}
-          <div className={fill ? styles.bodyFill : styles.body}>{children}</div>
+          <div className={fill ? styles.bodyFill : styles.body}>
+            {isDoorRole && pathname !== '/acceso' ? null : children}
+          </div>
         </div>
       </div>
-
-      <HotkeyBar hotkeys={merged} enabled={hotkeysEnabled} />
 
       {paletteOpen ? (
         <div

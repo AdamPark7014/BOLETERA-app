@@ -1,5 +1,7 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
+import { formatEventDate, formatEventDateTime } from '@boletera/ui';
 import { formatTime as uiTime } from '@boletera/ui';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -586,7 +588,7 @@ function VentaFlow() {
           showToast('No se pudo registrar la venta ni en local');
         }
       } else {
-        showToast(err instanceof Error ? err.message : 'No se pudo cobrar');
+        showToast(friendlyError(err, 'No se pudo cobrar'));
       }
     } finally {
       setLoading(false);
@@ -940,7 +942,7 @@ function VentaFlow() {
       setHoldExpiresAt(new Date(hold.expiresAt).getTime());
       showToast(`${hold.holdIds.length} lugares apartados`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'No se pudieron apartar');
+      showToast(friendlyError(err, 'No se pudieron apartar'));
     }
   }
 
@@ -959,7 +961,7 @@ function VentaFlow() {
       setHoldExpiresAt(new Date(hold.expiresAt).getTime());
       showToast(`${hold.holdIds.length} lugares juntos apartados`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Sin lugares juntos disponibles');
+      showToast(friendlyError(err, 'Sin lugares juntos disponibles'));
     }
   }
 
@@ -970,11 +972,7 @@ function VentaFlow() {
     (method !== 'CASH' || cash.sufficient) &&
     (method !== 'COMP' || Boolean(managerPin));
   const functionLine = event
-    ? `${new Date(event.startsAt).toLocaleString('es-MX', {
-        weekday: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      })} · ${event.title}${event.venue?.name ? ` · ${event.venue.name}` : ''}`
+    ? `${formatEventDateTime(event.startsAt)} · ${event.title}${event.venue?.name ? ` · ${event.venue.name}` : ''}`
     : null;
   const whenLabel = (iso: string) => {
     const d = new Date(iso);
@@ -982,7 +980,7 @@ function VentaFlow() {
     const sameDay = d.toDateString() === today.toDateString();
     const time = uiTime(d);
     if (sameDay) return `Hoy · ${time}`;
-    return `${d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })} · ${time}`;
+    return `${formatEventDate(d)} · ${time}`;
   };
   const offerName = (o: Offer | null) => (o ? o.name || o.zone || 'General' : 'Sin sección');
   const subtotal = inSale ? (quote?.subtotal ?? (method === 'COMP' ? 0 : estimate)) : 0;
@@ -1376,8 +1374,8 @@ function VentaFlow() {
               <button
                 key={m.id}
                 type="button"
-                aria-pressed={method === m.id}
-                className={method === m.id ? styles.methodOn : styles.method}
+                aria-pressed={method === m.id && inSale}
+                className={method === m.id && inSale ? styles.methodOn : styles.method}
                 onClick={() => {
                   setMethod(m.id);
                   if (m.id === 'COMP' && !managerPin) setPendingAuth('COMP');
@@ -1514,14 +1512,14 @@ function VentaFlow() {
             }}
           >
             {releaseAsk
-              ? 'Soltar apartado (Enter)'
+              ? 'Soltar apartado'
               : loading
                 ? cardWaiting
                   ? 'Esperando terminal…'
                   : 'Cobrando…'
                 : method === 'COMP'
-                  ? 'Emitir cortesía e imprimir (Enter)'
-                  : 'Cobrar e imprimir (Enter)'}
+                  ? 'Emitir cortesía e imprimir'
+                  : 'Cobrar e imprimir'}
           </button>
         </aside>
       </div>

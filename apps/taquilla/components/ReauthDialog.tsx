@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -68,7 +69,7 @@ export function ReauthDialog() {
       await reauthenticateSameCashier(request.email, password);
       finish(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo reanudar la sesión');
+      setError(friendlyError(err, 'No se pudo reanudar la sesión'));
       setBusy(false);
     }
   }

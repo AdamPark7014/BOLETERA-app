@@ -964,3 +964,21 @@
     min-height: 48px;
   }
 }
+
+/* Un solo dorado por vista («Cobrar»): lo elegido se marca en blanco. */
+.eventOn,
+.eventCurrent,
+.sectionOn,
+.methodOn {
+  border-color: #fff;
+}
+
+.plus {
+  border: 1px solid var(--line-strong, #34343a);
+  background: var(--elevated, #242424);
+  color: var(--text, #fff);
+}
+
+.cashBox:focus-within {
+  border-color: #fff;
+}

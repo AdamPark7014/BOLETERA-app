@@ -1,5 +1,6 @@
 'use client';
 
+import { friendlyError } from '@/lib/errors';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { verifyManagerPin } from '@/lib/pos';
 import styles from './Dialog.module.scss';
@@ -66,7 +67,7 @@ export function ManagerPinDialog({
     try {
       await onConfirm(pin);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'La operación falló');
+      setError(friendlyError(err, 'La operación falló'));
       setBusy(false);
       return;
     }

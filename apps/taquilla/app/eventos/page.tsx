@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDayMonth } from '@boletera/ui';
 import { formatTime as uiTime } from '@boletera/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -165,10 +166,8 @@ export default function EventosTaquillaPage() {
                       aria-hidden="true"
                     />
                     <div className={styles.cardDate}>
-                      <strong>{date.toLocaleDateString('es-MX', { day: '2-digit' })}</strong>
-                      <span>
-                        {date.toLocaleDateString('es-MX', { month: 'short' }).toUpperCase()}
-                      </span>
+                      <strong>{formatDayMonth(date).split(' ')[0]}</strong>
+                      <span>{formatDayMonth(date).split(' ')[1] ?? ''}</span>
                     </div>
                     <div className={styles.cardInfo}>
                       <strong>{e.title}</strong>
@@ -178,7 +177,7 @@ export default function EventosTaquillaPage() {
                     </div>
                     <div className={styles.cardMeta}>
                       {offers.length > 0 ? (
-                        <Badge tone="accent" variant="soft" size="sm">
+                        <Badge tone="neutral" variant="soft" size="sm">
                           {offers.length} zona{offers.length === 1 ? '' : 's'}
                         </Badge>
                       ) : (
@@ -187,7 +186,7 @@ export default function EventosTaquillaPage() {
                         </Badge>
                       )}
                       <span className={open ? styles.ctaSecondary : styles.cta}>
-                        {open ? 'Cerrar' : 'Zonas'}
+                        {open ? 'Cerrar' : 'Ver zonas ›'}
                       </span>
                     </div>
                   </button>
