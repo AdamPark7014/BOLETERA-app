@@ -1,14 +1,15 @@
 'use client';
 
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
+import Link from 'next/link';
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { formatLocalDateTime, parseLocalDateTime, zonedTimeToUtc } from '@boletera/shared';
-import { Field, ParameterCard, TicketButton } from '@boletera/ui';
+import { Field, TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param, SheetSelect, Stepper, Switch } from '../events/_ticket/controls';
+import { SheetSelect, Stepper, Switch } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
 import {
   asRecord,
@@ -446,7 +447,11 @@ function RecintoBody() {
         setDrafts(base);
         setBaselines(base);
         setOpenId((current) =>
-          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
+          current && next.some((item) => item.id === current)
+            ? current
+            : next.length === 1
+              ? (next[0]?.id ?? null)
+              : null
         );
       })
       .catch((cause: unknown) => {
@@ -531,7 +536,7 @@ function RecintoBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Recinto</h1>
+          <h1 className={styles.sectionTitle}>Recintos</h1>
           <NoAccess />
         </header>
       </section>
@@ -546,76 +551,236 @@ function RecintoBody() {
       />
     );
   }
-  if (loading || !token) return <p className={styles.quiet}>Cargando recintos.</p>;
+  if (loading || !token) {
+    return (
+      <div className={styles.stack} aria-busy="true" aria-label="Cargando recintos">
+        <div className={styles.skeleton} style={{ height: 48, maxWidth: 320 }} />
+        <div className={styles.skeleton} style={{ height: 360 }} />
+      </div>
+    );
+  }
 
-  return (
-    <section>
-      <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Recinto</h1>
-        <p className={styles.quiet}>
-          {canEdit
-            ? 'Guarda los datos de la sala y las fechas bloqueadas.'
-            : 'Se lee. La guarda quien edita el mapa.'}
-        </p>
-      </header>
-      {venues.length === 0 ? <p className={styles.quiet}>No hay recintos.</p> : null}
-      <div className={styles.stack}>
-        {venues.map((venue) => {
-          const open = openId === venue.id;
-          const draft = drafts[venue.id];
-          const baseline = baselines[venue.id];
-          const dirty = draft && baseline ? comparable(draft) !== comparable(baseline) : false;
-          return (
-            <div key={venue.id} className={styles.stack}>
+  const openVenue = openId ? venues.find((venue) => venue.id === openId) : undefined;
+  const draft = openVenue ? drafts[openVenue.id] : undefined;
+
+  if (openVenue && draft) {
+    const baseline = baselines[openVenue.id];
+    const dirty = baseline ? comparable(draft) !== comparable(baseline) : false;
+    const where = [draft.city, draft.state]
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .join(', ');
+    return (
+      <section className={styles.page}>
+        <header className={styles.pageHead}>
+          <div className={styles.sectionHead}>
+            {venues.length > 1 ? (
               <button
                 type="button"
-                className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-                aria-expanded={open}
-                onClick={() => setOpenId(open ? null : venue.id)}
+                className={styles.panelLinkButton}
+                onClick={() => setOpenId(null)}
               >
-                <span>{draft?.name.trim() || venue.name}</span>
-                <span className={styles.figure}>
-                  {formatCount(draft?.totalCapacity ?? venue.totalCapacity)}
-                </span>
+                ‹ Todos los recintos
               </button>
-              {open && draft ? (
-                <VenueCards
-                  venue={venue}
-                  draft={draft}
-                  canEdit={canEdit}
-                  onChange={(recipe) => touch(venue.id, recipe)}
-                  onAddBlackout={() =>
-                    touch(venue.id, (current) => ({
-                      ...current,
-                      blackouts: [...current.blackouts, emptyBlackout(`nuevo-${Date.now()}`)],
-                    }))
-                  }
-                />
-              ) : null}
-              {open && draft && canEdit ? (
-                <>
-                  {actionError && openId === venue.id ? (
-                    <p className={styles.danger} role="alert">
-                      {actionError}
-                    </p>
-                  ) : null}
-                  <div className={styles.saveBar}>
-                    <p className={styles.quiet} aria-live="polite">
-                      {dirty ? 'Sin guardar' : notice?.id === venue.id ? notice.text : ''}
-                    </p>
-                    <TicketButton
-                      disabled={!dirty || savingId === venue.id}
-                      onClick={() => void save(venue.id)}
-                    >
-                      Guardar sección
-                    </TicketButton>
-                  </div>
-                </>
-              ) : null}
+            ) : null}
+            <h1 className={styles.sectionTitle}>{draft.name.trim() || openVenue.name}</h1>
+            <p className={styles.quiet}>
+              {[where || null, ZONE_LABEL[draft.timezone] ?? null].filter(Boolean).join(' · ') ||
+                'Sin ubicación capturada'}
+            </p>
+          </div>
+          <div className={styles.toolbar}>
+            <Link href={`/venues/${openVenue.id}/map`} className={styles.ghostLink}>
+              Plano de butacas
+            </Link>
+            <Link href={`/venues/${openVenue.id}/3d?studio=1`} className={styles.ghostLink}>
+              Vista 3D
+            </Link>
+          </div>
+        </header>
+
+        <div className={styles.kpis}>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Aforo total</p>
+            <p className={styles.kpiValue}>{formatCount(draft.totalCapacity)}</p>
+            <p className={styles.kpiNote}>personas</p>
+          </div>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Generales</p>
+            <p className={styles.kpiValue}>{formatCount(draft.generalSeats)}</p>
+            <p className={styles.kpiNote}>butacas declaradas</p>
+          </div>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Premium</p>
+            <p className={styles.kpiValue}>{formatCount(draft.premiumSeats)}</p>
+            <p className={styles.kpiNote}>butacas declaradas</p>
+          </div>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Accesibles</p>
+            <p className={styles.kpiValue}>{formatCount(draft.accessibilitySeats)}</p>
+            <p className={styles.kpiNote}>
+              <span className={draft.accessibilitySeats > 0 ? styles.up : styles.down}>
+                {draft.accessibilitySeats > 0 ? 'declaradas' : 'sin plazas accesibles'}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <VenueCards
+          venue={openVenue}
+          draft={draft}
+          canEdit={canEdit}
+          onChange={(recipe) => touch(openVenue.id, recipe)}
+          onAddBlackout={() =>
+            touch(openVenue.id, (current) => ({
+              ...current,
+              blackouts: [...current.blackouts, emptyBlackout(`nuevo-${Date.now()}`)],
+            }))
+          }
+        />
+
+        {canEdit ? (
+          <>
+            {actionError ? (
+              <p className={styles.danger} role="alert">
+                {actionError}
+              </p>
+            ) : null}
+            <div className={styles.saveBar}>
+              <p className={styles.quiet} aria-live="polite">
+                {dirty ? 'Cambios sin guardar' : notice?.id === openVenue.id ? notice.text : ''}
+              </p>
+              <TicketButton
+                disabled={!dirty || savingId === openVenue.id}
+                onClick={() => void save(openVenue.id)}
+              >
+                {savingId === openVenue.id ? 'Guardando' : 'Guardar cambios'}
+              </TicketButton>
             </div>
-          );
-        })}
-      </div>
+          </>
+        ) : (
+          <p className={styles.tertiary}>
+            Solo lectura: los datos del recinto los edita administración.
+          </p>
+        )}
+      </section>
+    );
+  }
+
+  const totalCapacity = venues.reduce((sum, venue) => sum + (venue.totalCapacity ?? 0), 0);
+
+  return (
+    <section className={styles.page}>
+      <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
+        <h1 className={styles.sectionTitle}>Recintos</h1>
+        <p className={styles.quiet}>
+          Salas donde se presentan tus eventos: datos, cupo declarado y fechas bloqueadas.
+        </p>
+      </header>
+
+      {venues.length === 0 ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Todavía no hay recintos</p>
+          <p className={styles.quiet}>
+            Los recintos los da de alta Black Ticket junto con su plano. Escríbenos para agregar
+            uno.
+          </p>
+          <Link href="/maps" className={styles.ghostLink}>
+            Ver planos de butacas
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className={styles.kpis}>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Recintos</p>
+              <p className={styles.kpiValue}>{formatCount(venues.length)}</p>
+              <p className={styles.kpiNote}>en tu organización</p>
+            </div>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Aforo combinado</p>
+              <p className={styles.kpiValue}>{formatCount(totalCapacity)}</p>
+              <p className={styles.kpiNote}>personas</p>
+            </div>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Fechas bloqueadas</p>
+              <p className={styles.kpiValue}>
+                {formatCount(venues.reduce((sum, venue) => sum + venue.blackouts.length, 0))}
+              </p>
+              <p className={styles.kpiNote}>en todos los recintos</p>
+            </div>
+          </div>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Recinto</th>
+                  <th scope="col" className={styles.num}>
+                    Aforo
+                  </th>
+                  <th scope="col" className={styles.num}>
+                    Accesibles
+                  </th>
+                  <th scope="col">Bloqueos</th>
+                  <th scope="col">
+                    <span className={styles.srOnly}>Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {venues.map((venue) => (
+                  <tr key={venue.id}>
+                    <td>
+                      <button
+                        type="button"
+                        className={styles.rowToggle}
+                        onClick={() => setOpenId(venue.id)}
+                      >
+                        {drafts[venue.id]?.name.trim() || venue.name}
+                      </button>
+                      <p className={styles.rowMeta}>
+                        {[venue.city, venue.state].filter(Boolean).join(', ') || 'Sin ciudad'}
+                      </p>
+                    </td>
+                    <td className={styles.num}>{formatCount(venue.totalCapacity)}</td>
+                    <td className={styles.num}>
+                      {venue.accessibilitySeats ? (
+                        formatCount(venue.accessibilitySeats)
+                      ) : (
+                        <span className={styles.chipWarn}>Sin plazas</span>
+                      )}
+                    </td>
+                    <td>
+                      {venue.blackouts.length > 0 ? (
+                        <span className={styles.chipGold}>
+                          {venue.blackouts.length}{' '}
+                          {venue.blackouts.length === 1 ? 'fecha' : 'fechas'}
+                        </span>
+                      ) : (
+                        <span className={styles.quiet}>—</span>
+                      )}
+                    </td>
+                    <td className={styles.num}>
+                      <div className={styles.cellActions}>
+                        <Link href={`/venues/${venue.id}/map`} className={styles.panelLink}>
+                          Plano
+                        </Link>
+                        <button
+                          type="button"
+                          className={styles.panelLinkButton}
+                          onClick={() => setOpenId(venue.id)}
+                        >
+                          Abrir ficha
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </section>
   );
 }
@@ -638,252 +803,150 @@ function VenueCards({
   const set = <K extends keyof VenueDraft>(key: K, value: VenueDraft[K]) =>
     onChange((current) => ({ ...current, [key]: value }));
   const hasBlank = draft.blackouts.some((item) => blankBlackout(item));
+  const input = (label: string, key: keyof VenueDraft, extra?: { inputMode?: 'decimal' }) => (
+    <Item label={label} value={text(String(draft[key] ?? ''))} editing={canEdit}>
+      <Field
+        label={label}
+        inputMode={extra?.inputMode}
+        value={String(draft[key] ?? '')}
+        onChange={(event) => set(key, event.target.value as VenueDraft[typeof key])}
+      />
+    </Item>
+  );
+  const stepper = (
+    label: string,
+    key: 'totalCapacity' | 'accessibilitySeats' | 'premiumSeats' | 'generalSeats'
+  ) => (
+    <Item label={label} value={formatCount(draft[key])} editing={canEdit}>
+      <p className={styles.rowMeta}>{label}</p>
+      <Stepper
+        label={label}
+        value={draft[key]}
+        min={0}
+        max={null}
+        editable
+        onChange={(next) => set(key, next)}
+      />
+    </Item>
+  );
 
   return (
-    <div className={styles.stack}>
-      <Card
-        name="Nombre del recinto"
-        value={text(draft.name)}
-        effect="Nombre de la sala."
-        editing={canEdit}
-      >
-        <Field
-          label="Nombre del recinto"
-          value={draft.name}
-          onChange={(event) => set('name', event.target.value)}
-        />
-      </Card>
-      <Card
-        name="Dirección web del recinto"
-        value={text(venue.slug)}
-        style="mono"
-        effect="Se definió al crear el recinto."
-      />
-      <Card
-        name="Descripción del recinto"
-        value={text(draft.description)}
-        effect="Texto corto."
-        editing={canEdit}
-      >
-        <Field
-          label="Descripción del recinto"
-          value={draft.description}
-          onChange={(event) => set('description', event.target.value)}
-        />
-      </Card>
-      <Card name="Dirección" value={text(draft.address)} effect="Calle y número." editing={canEdit}>
-        <Field
-          label="Dirección"
-          value={draft.address}
-          onChange={(event) => set('address', event.target.value)}
-        />
-      </Card>
-      <Card
-        name="Ciudad del recinto"
-        value={text(draft.city)}
-        effect="Ciudad de la sala."
-        editing={canEdit}
-      >
-        <Field
-          label="Ciudad del recinto"
-          value={draft.city}
-          onChange={(event) => set('city', event.target.value)}
-        />
-      </Card>
-      <Card name="Estado del recinto" value={text(draft.state)} effect="Entidad." editing={canEdit}>
-        <Field
-          label="Estado del recinto"
-          value={draft.state}
-          onChange={(event) => set('state', event.target.value)}
-        />
-      </Card>
-      <Card name="País del recinto" value={text(draft.country)} effect="País." editing={canEdit}>
-        <Field
-          label="País del recinto"
-          value={draft.country}
-          onChange={(event) => set('country', event.target.value)}
-        />
-      </Card>
-      <Card
-        name="Código postal del recinto"
-        value={text(draft.postalCode)}
-        effect="CP."
-        editing={canEdit}
-      >
-        <Field
-          label="Código postal del recinto"
-          value={draft.postalCode}
-          onChange={(event) => set('postalCode', event.target.value)}
-        />
-      </Card>
-      <Card
-        name="Latitud"
-        value={coordLabel(draft.latitude)}
-        style="tabular"
-        effect="Coordenada de la sala."
-        editing={canEdit}
-      >
-        <Field
-          label="Latitud"
-          inputMode="decimal"
-          value={draft.latitude}
-          onChange={(event) => set('latitude', event.target.value)}
-        />
-      </Card>
-      <Card
-        name="Longitud"
-        value={coordLabel(draft.longitude)}
-        style="tabular"
-        effect="Par de la latitud."
-        editing={canEdit}
-      >
-        <Field
-          label="Longitud"
-          inputMode="decimal"
-          value={draft.longitude}
-          onChange={(event) => set('longitude', event.target.value)}
-        />
-      </Card>
-      <Card
-        name="Zona horaria del recinto"
-        value={ZONE_LABEL[draft.timezone] ?? text(draft.timezone)}
-        effect="Horas de la sala."
-        editing={canEdit}
-      >
-        <SheetSelect
-          label="Zona horaria del recinto"
-          value={draft.timezone}
-          placeholder="Zona horaria"
-          options={options}
-          onChange={(next) => set('timezone', next)}
-        />
-      </Card>
-      <Card
-        name="Aforo total"
-        value={formatCount(draft.totalCapacity)}
-        style="tabular"
-        effect="Cupo del recinto."
-        editing={canEdit}
-      >
-        <Stepper
-          label="Aforo total"
-          value={draft.totalCapacity}
-          min={0}
-          max={null}
-          onChange={(next) => set('totalCapacity', next)}
-        />
-      </Card>
-      <Card
-        name="Butacas accesibles"
-        value={formatCount(draft.accessibilitySeats)}
-        style="tabular"
-        effect="Cupo accesible declarado."
-        editing={canEdit}
-      >
-        <Stepper
-          label="Butacas accesibles"
-          value={draft.accessibilitySeats}
-          min={0}
-          max={null}
-          onChange={(next) => set('accessibilitySeats', next)}
-        />
-      </Card>
-      <Card
-        name="Butacas premium"
-        value={formatCount(draft.premiumSeats)}
-        style="tabular"
-        effect="Cupo premium declarado."
-        editing={canEdit}
-      >
-        <Stepper
-          label="Butacas premium"
-          value={draft.premiumSeats}
-          min={0}
-          max={null}
-          onChange={(next) => set('premiumSeats', next)}
-        />
-      </Card>
-      <Card
-        name="Butacas generales"
-        value={formatCount(draft.generalSeats)}
-        style="tabular"
-        effect="Cupo general declarado."
-        editing={canEdit}
-      >
-        <Stepper
-          label="Butacas generales"
-          value={draft.generalSeats}
-          min={0}
-          max={null}
-          onChange={(next) => set('generalSeats', next)}
-        />
-      </Card>
-      <Card
-        name="Teléfono del recinto"
-        value={text(draft.phone)}
-        effect="Contacto."
-        editing={canEdit}
-      >
-        <Field
-          label="Teléfono del recinto"
-          value={draft.phone}
-          onChange={(event) => set('phone', event.target.value)}
-        />
-      </Card>
-      <Card
-        name="Correo del recinto"
-        value={text(draft.email)}
-        effect="Contacto."
-        editing={canEdit}
-      >
-        <Field
-          label="Correo del recinto"
-          value={draft.email}
-          onChange={(event) => set('email', event.target.value)}
-        />
-      </Card>
-      <Card name="Sitio del recinto" value={text(draft.website)} effect="Web." editing={canEdit}>
-        <Field
-          label="Sitio del recinto"
-          value={draft.website}
-          onChange={(event) => set('website', event.target.value)}
-        />
-      </Card>
-      <Card
-        name="Imagen del recinto"
-        value={draft.image.trim() ? draft.image.trim() : 'Sin imagen'}
-        effect="Dirección de la foto."
-        editing={canEdit}
-      >
-        <Field
-          label="Imagen del recinto"
-          value={draft.image}
-          onChange={(event) => set('image', event.target.value)}
-        />
-      </Card>
-      {draft.blackouts.map((item, index) => (
-        <BlackoutCards
-          key={item.key}
-          item={item}
-          index={index}
-          total={draft.blackouts.length}
-          zone={zone}
-          canEdit={canEdit}
-          onChange={(patch) =>
-            onChange((current) => ({
-              ...current,
-              blackouts: current.blackouts.map((row) =>
-                row.key === item.key ? { ...row, ...patch } : row
-              ),
-            }))
-          }
-        />
-      ))}
-      {canEdit && !hasBlank ? (
-        <TicketButton variant="secondary" onClick={onAddBlackout}>
-          Agregar blackout
-        </TicketButton>
-      ) : null}
+    <div className={styles.stack} style={{ gap: 16 }}>
+      <div className={styles.panel}>
+        <h2 className={styles.panelTitle}>Datos generales</h2>
+        <div className={styles.formGrid}>
+          {input('Nombre del recinto', 'name')}
+          {input('Descripción', 'description')}
+          <Item label="Dirección web" value={venue.slug ? `/${venue.slug}` : '—'} />
+        </div>
+      </div>
+      <div className={styles.panel}>
+        <h2 className={styles.panelTitle}>Ubicación</h2>
+        <div className={styles.formGrid}>
+          {input('Calle y número', 'address')}
+          {input('Ciudad', 'city')}
+          {input('Estado', 'state')}
+          {input('País', 'country')}
+          {input('Código postal', 'postalCode')}
+          <Item
+            label="Zona horaria"
+            value={ZONE_LABEL[draft.timezone] ?? text(draft.timezone)}
+            editing={canEdit}
+          >
+            <p className={styles.rowMeta}>Zona horaria</p>
+            <SheetSelect
+              label="Zona horaria del recinto"
+              value={draft.timezone}
+              placeholder="Zona horaria"
+              options={options}
+              onChange={(next) => set('timezone', next)}
+            />
+          </Item>
+          <Item label="Latitud" value={coordLabel(draft.latitude)} editing={canEdit}>
+            <Field
+              label="Latitud"
+              inputMode="decimal"
+              value={draft.latitude}
+              onChange={(event) => set('latitude', event.target.value)}
+            />
+          </Item>
+          <Item label="Longitud" value={coordLabel(draft.longitude)} editing={canEdit}>
+            <Field
+              label="Longitud"
+              inputMode="decimal"
+              value={draft.longitude}
+              onChange={(event) => set('longitude', event.target.value)}
+            />
+          </Item>
+        </div>
+      </div>
+      <div className={styles.panel}>
+        <h2 className={styles.panelTitle}>Cupo declarado</h2>
+        <div className={styles.formGrid}>
+          {stepper('Aforo total', 'totalCapacity')}
+          {stepper('Butacas generales', 'generalSeats')}
+          {stepper('Butacas premium', 'premiumSeats')}
+          {stepper('Butacas accesibles', 'accessibilitySeats')}
+        </div>
+      </div>
+      <div className={styles.panel}>
+        <h2 className={styles.panelTitle}>Contacto e imagen</h2>
+        <div className={styles.formGrid}>
+          {input('Teléfono', 'phone')}
+          {input('Correo', 'email')}
+          {input('Sitio web', 'website')}
+          <Item
+            label="Imagen (dirección de la foto)"
+            value={draft.image.trim() ? draft.image.trim() : 'Sin imagen'}
+            editing={canEdit}
+          >
+            <Field
+              label="Imagen (dirección de la foto)"
+              value={draft.image}
+              onChange={(event) => set('image', event.target.value)}
+            />
+          </Item>
+        </div>
+      </div>
+      <div className={styles.panel}>
+        <div className={styles.panelHead}>
+          <div>
+            <h2 className={styles.panelTitle}>Fechas bloqueadas</h2>
+            <p className={styles.rowMeta}>
+              Días en que la sala no recibe funciones (mantenimiento, evento privado…).
+            </p>
+          </div>
+          {canEdit && !hasBlank ? (
+            <TicketButton variant="secondary" onClick={onAddBlackout}>
+              Agregar fecha bloqueada
+            </TicketButton>
+          ) : null}
+        </div>
+        {draft.blackouts.length === 0 ? (
+          <p className={styles.quiet}>No hay fechas bloqueadas.</p>
+        ) : (
+          <div className={styles.stack} style={{ gap: 12 }}>
+            {draft.blackouts.map((item, index) => (
+              <BlackoutCards
+                key={item.key}
+                item={item}
+                index={index}
+                total={draft.blackouts.length}
+                zone={zone}
+                canEdit={canEdit}
+                onChange={(patch) =>
+                  onChange((current) => ({
+                    ...current,
+                    blackouts: current.blackouts.map((row) =>
+                      row.key === item.key ? { ...row, ...patch } : row
+                    ),
+                  }))
+                }
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -903,76 +966,70 @@ function BlackoutCards({
   canEdit: boolean;
   onChange: (patch: Partial<BlackoutDraft>) => void;
 }) {
-  const reason = blackoutLabel('Motivo del blackout', index, total);
-  const from = blackoutLabel('Blackout desde', index, total);
-  const until = blackoutLabel('Blackout hasta', index, total);
-  const blocking = blackoutLabel('Blackout bloquea', index, total);
+  const reason = blackoutLabel('Motivo', index, total);
+  const from = blackoutLabel('Desde', index, total);
+  const until = blackoutLabel('Hasta', index, total);
+  const blocking = blackoutLabel('Impide programar', index, total);
   return (
-    <>
-      <Card
-        name={reason}
-        value={text(item.reason)}
-        effect="Por qué la sala no recibe función."
-        editing={canEdit}
-      >
+    <div className={styles.blackout}>
+      <Item label={reason} value={text(item.reason)} editing={canEdit}>
         <Field
           label={reason}
           value={item.reason}
           onChange={(event) => onChange({ reason: event.target.value })}
         />
-      </Card>
-      <Card name={from} value={shownWhen(item.startsAt, zone)} effect="Inicio." editing={canEdit}>
+      </Item>
+      <Item label={from} value={shownWhen(item.startsAt, zone)} editing={canEdit}>
         <Field
           label={from}
           type="datetime-local"
           value={item.startsAt}
           onChange={(event) => onChange({ startsAt: event.target.value })}
         />
-      </Card>
-      <Card name={until} value={shownWhen(item.endsAt, zone)} effect="Fin." editing={canEdit}>
+      </Item>
+      <Item label={until} value={shownWhen(item.endsAt, zone)} editing={canEdit}>
         <Field
           label={until}
           type="datetime-local"
           value={item.endsAt}
           onChange={(event) => onChange({ endsAt: event.target.value })}
         />
-      </Card>
-      <Card
-        name={blocking}
-        value={yesNo(item.blocking)}
-        effect="Encendido impide programar. Apagado advierte."
+      </Item>
+      <Item
+        label={blocking}
+        value={item.blocking ? 'Sí, bloquea' : 'No, solo avisa'}
         editing={canEdit}
       >
+        <p className={styles.rowMeta}>{blocking}</p>
         <Switch
           on={item.blocking}
           label={blocking}
           onChange={(next) => onChange({ blocking: next })}
         />
-      </Card>
-    </>
+      </Item>
+    </div>
   );
 }
 
-function Card({
-  name,
+/** Un dato de la ficha: control si se edita, valor si solo se lee. */
+function Item({
+  label,
   value,
-  effect,
-  style,
   editing,
   children,
 }: {
-  name: string;
+  label: string;
   value: string;
-  effect: string;
-  style?: 'tabular' | 'mono';
   editing?: boolean;
   children?: ReactNode;
 }) {
+  if (editing && children) {
+    return <div className={styles.formItem}>{children}</div>;
+  }
   return (
-    <Param name={name}>
-      <ParameterCard name={name} value={value} valueStyle={style} effect={effect}>
-        {editing ? children : null}
-      </ParameterCard>
-    </Param>
+    <div className={styles.formItem}>
+      <p className={styles.rowMeta}>{label}</p>
+      <p className={styles.formValue}>{value}</p>
+    </div>
   );
 }

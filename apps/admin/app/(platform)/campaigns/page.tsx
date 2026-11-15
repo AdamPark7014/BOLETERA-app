@@ -1,13 +1,14 @@
 'use client';
 
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
+import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { Field, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param, Segment, Stepper, Switch } from '../events/_ticket/controls';
+import { Param, Segment, SheetSelect, Stepper, Switch } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
 import { asRecord, formatCount, formatWhen, readNumber, readString } from '../events/_ticket/read';
 
@@ -95,8 +96,8 @@ function loyaltyCard(campaigns: Campaign[], now = new Date()): { value: string; 
   });
   if (rules.length === 0) {
     return {
-      value: 'Sin efecto',
-      effect: 'Sin programa de lealtad activo en tus campañas.',
+      value: 'Apagados',
+      effect: 'sin programa de lealtad activo',
     };
   }
   const charging = rules.find((entry) => loyaltyIsCharging(entry.item, now));
@@ -194,7 +195,6 @@ function DescuentosBody() {
   const [eventId, setEventId] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [paused, setPaused] = useState<Record<string, boolean>>({});
-  const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -250,9 +250,6 @@ function DescuentosBody() {
         });
         setCampaigns(next);
         setPaused(Object.fromEntries(next.map((item) => [item.id, item.status === 'PAUSED'])));
-        setOpenId((current) =>
-          current && next.some((item) => item.id === current) ? current : (next[0]?.id ?? null)
-        );
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -326,7 +323,7 @@ function DescuentosBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Descuentos</h1>
+          <h1 className={styles.sectionTitle}>Campañas y códigos</h1>
           <NoAccess />
         </header>
       </section>
@@ -341,172 +338,195 @@ function DescuentosBody() {
       />
     );
   }
-  if (loading || !token) return <p className={styles.quiet}>Cargando descuentos.</p>;
+  if (loading || !token) {
+    return (
+      <div className={styles.skeleton} style={{ height: 400 }} aria-label="Cargando campañas" />
+    );
+  }
 
   const event = events.find((item) => item.id === eventId) ?? null;
   const loyalty = loyaltyCard(campaigns);
 
+  const redeemedTotal = campaigns.reduce((sum, item) => sum + item.redeemed, 0);
+  const activeCount = campaigns.filter(
+    (item) => item.status === 'ACTIVE' && !(paused[item.id] ?? false)
+  ).length;
+  const codesTotal = campaigns.reduce((sum, item) => sum + item.codes.length, 0);
+
   return (
-    <section>
-      <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Descuentos</h1>
-        <p className={styles.quiet}>
-          Campañas que el evento ya guarda. El alta escribe porcentaje o monto fijo. 2×1, envío y
-          cashback no tienen cobro detrás.
-        </p>
-      </header>
-      {events.length === 0 ? <p className={styles.quiet}>No hay eventos.</p> : null}
-      <div className={styles.stack}>
-        {events.map((item) => {
-          const open = item.id === eventId;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-              aria-expanded={open}
-              onClick={() => {
-                setEventId(item.id);
+    <section className={styles.page}>
+      <header className={styles.pageHead}>
+        <div className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Campañas y códigos</h1>
+          <p className={styles.quiet}>
+            Preventas y descuentos por evento: porcentaje o monto fijo, con cupo, tope por persona y
+            vigencia.
+          </p>
+        </div>
+        {events.length > 0 ? (
+          <div className={styles.formItem} style={{ width: 'min(360px, 100%)' }}>
+            <p className={styles.rowMeta}>Evento</p>
+            <SheetSelect
+              label="Evento"
+              value={eventId ?? ''}
+              placeholder="Elige un evento"
+              options={events.map((item) => ({ value: item.id, label: item.title }))}
+              onChange={(next) => {
+                setEventId(next);
                 setNotice(null);
               }}
-            >
-              <span>{item.title}</span>
-              <span className={styles.figure}>{open ? 'Abierta' : 'Abrir'}</span>
-            </button>
-          );
-        })}
-      </div>
-      {event && campaigns.length === 0 ? <p className={styles.quiet}>No hay descuentos.</p> : null}
-      <div className={styles.stack}>
-        {campaigns.map((item) => {
-          const open = openId === item.id;
-          const isPaused = paused[item.id] ?? false;
-          const code = item.codes[0] ?? 'Ninguno';
-          return (
-            <div key={item.id} className={styles.stack}>
-              <button
-                type="button"
-                className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-                aria-expanded={open}
-                onClick={() => setOpenId(open ? null : item.id)}
-              >
-                <span>{item.name}</span>
-                <span className={styles.figure}>
-                  {discountLabel(item.discountType, item.discountValue)}
-                </span>
-              </button>
-              {open ? (
-                <div className={styles.stack}>
-                  <Param name="Código">
-                    <ParameterCard
-                      name="Código"
-                      value={code}
-                      valueStyle="mono"
-                      effect={
-                        item.codes.length > 1
-                          ? `Hay ${formatCount(item.codes.length)} códigos. El servicio los generó.`
-                          : 'El servicio lo genera en la preventa. No se teclea.'
-                      }
-                    />
-                  </Param>
-                  <Param name="Nombre del descuento">
-                    <ParameterCard
-                      name="Nombre del descuento"
-                      value={item.name}
-                      effect="Nombre interno. No se edita desde aquí."
-                    />
-                  </Param>
-                  <Param name="Tipo">
-                    <ParameterCard
-                      name="Tipo"
-                      value={item.discountType === 'fixed' ? 'Monto fijo' : 'Porcentaje'}
-                      effect={`Campaña ${word(CAMPAIGN_TYPE, item.type)}.`}
-                    />
-                  </Param>
-                  <Param name="Valor del descuento">
-                    <ParameterCard
-                      name="Valor del descuento"
-                      value={discountLabel(item.discountType, item.discountValue)}
-                      valueStyle="tabular"
-                      effect="Descuento ya guardado. No se edita desde aquí."
-                    />
-                  </Param>
-                  <Param name="Cupo de preventa">
-                    <ParameterCard
-                      name="Cupo de preventa"
-                      value={formatCount(item.allocation)}
-                      valueStyle="tabular"
-                      effect="Tope de 0 a 100 que el alta ya guardó."
-                    />
-                  </Param>
-                  <Param name="Usos por persona">
-                    <ParameterCard
-                      name="Usos por persona"
-                      value={formatCount(item.quantityPerUser)}
-                      valueStyle="tabular"
-                      effect="Tope por persona de esta campaña."
-                    />
-                  </Param>
-                  <Param name="Canjes">
-                    <ParameterCard
-                      name="Canjes"
-                      value={formatCount(item.redeemed)}
-                      valueStyle="tabular"
-                      effect="Los cuenta el servicio."
-                    />
-                  </Param>
-                  <Param name="Descuento desde">
-                    <ParameterCard
-                      name="Descuento desde"
-                      value={formatWhen(item.startsAt)}
-                      effect="Inicio ya guardado."
-                    />
-                  </Param>
-                  <Param name="Descuento hasta">
-                    <ParameterCard
-                      name="Descuento hasta"
-                      value={formatWhen(item.endsAt)}
-                      effect="Fin ya guardado."
-                    />
-                  </Param>
-                  <Param name="Estado">
-                    <ParameterCard
-                      name="Estado"
-                      value={word(STATUS, item.status)}
-                      effect="Pausar o reanudar es lo que esta ruta escribe sobre una campaña ya hecha."
-                    >
+            />
+          </div>
+        ) : null}
+      </header>
+
+      {events.length === 0 ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Todavía no hay eventos</p>
+          <p className={styles.quiet}>Las campañas se crean dentro de cada evento.</p>
+          <Link href="/events/new" className={styles.goldLink}>
+            Crear evento
+          </Link>
+        </div>
+      ) : null}
+
+      {event ? (
+        <div className={styles.kpis}>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Campañas activas</p>
+            <p className={styles.kpiValue}>{formatCount(activeCount)}</p>
+            <p className={styles.kpiNote}>de {formatCount(campaigns.length)} en este evento</p>
+          </div>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Canjes</p>
+            <p className={styles.kpiValue}>{formatCount(redeemedTotal)}</p>
+            <p className={styles.kpiNote}>boletos con descuento</p>
+          </div>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Códigos</p>
+            <p className={styles.kpiValue}>{formatCount(codesTotal)}</p>
+            <p className={styles.kpiNote}>generados por las preventas</p>
+          </div>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Puntos de lealtad</p>
+            <p className={styles.kpiValue}>{loyalty.value}</p>
+            <p className={styles.kpiNote}>{loyalty.effect}</p>
+          </div>
+        </div>
+      ) : null}
+
+      {event && campaigns.length === 0 ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Este evento aún no tiene campañas</p>
+          <p className={styles.quiet}>
+            Crea una preventa o un descuento con el formulario de abajo.
+          </p>
+        </div>
+      ) : null}
+
+      {campaigns.length > 0 ? (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th scope="col">Campaña</th>
+                <th scope="col">Código</th>
+                <th scope="col" className={styles.num}>
+                  Descuento
+                </th>
+                <th scope="col">Canjes</th>
+                <th scope="col">Vigencia</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Pausa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {campaigns.map((item) => {
+                const isPaused = paused[item.id] ?? false;
+                const cap = item.allocation > 0 ? item.allocation : null;
+                const pct = cap ? Math.min(100, (item.redeemed / cap) * 100) : 0;
+                const chip =
+                  item.status === 'ACTIVE' && !isPaused
+                    ? styles.chipOk
+                    : item.status === 'PAUSED' || isPaused
+                      ? styles.chipWarn
+                      : item.status === 'DRAFT'
+                        ? styles.chipGold
+                        : styles.chip;
+                return (
+                  <tr key={item.id} data-param={item.name}>
+                    <td>
+                      <strong>{item.name}</strong>
+                      <p className={styles.rowMeta}>
+                        {word(CAMPAIGN_TYPE, item.type)} · máx. {formatCount(item.quantityPerUser)}{' '}
+                        por persona
+                      </p>
+                    </td>
+                    <td>
+                      {item.codes[0] ? (
+                        <span className={styles.mono}>
+                          {item.codes[0]}
+                          {item.codes.length > 1 ? ` +${item.codes.length - 1}` : ''}
+                        </span>
+                      ) : (
+                        <span className={styles.quiet}>Sin código</span>
+                      )}
+                    </td>
+                    <td className={styles.num}>
+                      <strong>{discountLabel(item.discountType, item.discountValue)}</strong>
+                    </td>
+                    <td style={{ minWidth: 150 }}>
+                      <div className={styles.shareCell}>
+                        {cap ? (
+                          <div className={styles.bar} style={{ flex: 1, height: 6 }}>
+                            <div className={styles.barFill} style={{ width: `${pct}%` }} />
+                          </div>
+                        ) : null}
+                        <span className={styles.quiet} style={{ whiteSpace: 'nowrap' }}>
+                          {formatCount(item.redeemed)}
+                          {cap ? ` / ${formatCount(cap)}` : ''}
+                        </span>
+                      </div>
+                    </td>
+                    <td className={styles.quiet} style={{ whiteSpace: 'nowrap' }}>
+                      {formatWhen(item.startsAt)}
+                      <br />
+                      {formatWhen(item.endsAt)}
+                    </td>
+                    <td>
+                      <span className={chip}>
+                        {isPaused && item.status === 'ACTIVE'
+                          ? 'En pausa'
+                          : word(STATUS, item.status)}
+                      </span>
+                    </td>
+                    <td>
                       <Switch
-                        label="Preventa en pausa"
+                        label={`Pausar ${item.name}`}
                         on={isPaused}
                         onChange={(next) => {
                           setPaused((current) => ({ ...current, [item.id]: next }));
                           setNotice(null);
                         }}
                       />
-                    </ParameterCard>
-                  </Param>
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-        <Param name="Puntos de lealtad">
-          <ParameterCard
-            name="Puntos de lealtad"
-            value={loyalty.value}
-            valueStyle={loyalty.value === 'Sin efecto' ? undefined : 'tabular'}
-            effect={loyalty.effect}
-          />
-        </Param>
-      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
       {canWrite && event ? (
         <div className={styles.stack}>
-          <h2 className={styles.sectionTitle}>Nuevo</h2>
+          <h2 className={styles.panelTitle} style={{ marginTop: 8 }}>
+            Nueva campaña para {event.title}
+          </h2>
           <Param name="Nombre del descuento">
             <ParameterCard
               name="Nombre del descuento"
               value={draft.name.trim() || '—'}
-              effect="Vacío: Guardar no crea campaña."
+              effect="Ponle nombre para poder crearla."
             >
               <Field
                 label="Nombre del descuento"
@@ -522,7 +542,7 @@ function DescuentosBody() {
             <ParameterCard
               name="Tipo de campaña"
               value={word(CAMPAIGN_TYPE, draft.type)}
-              effect="Preventa genera códigos. Anticipada también deja el descuento."
+              effect="La preventa genera códigos; la anticipada aplica el descuento a todos."
             >
               <Segment
                 label="Tipo de campaña"
@@ -539,7 +559,7 @@ function DescuentosBody() {
             <ParameterCard
               name="Tipo"
               value={draft.discountType === 'fixed' ? 'Monto fijo' : 'Porcentaje'}
-              effect="El alta solo persiste estos dos."
+              effect="Porcentaje o monto fijo por boleto."
             >
               <Segment
                 label="Tipo"
@@ -561,7 +581,7 @@ function DescuentosBody() {
                   : `${draft.discountValue || '0'}%`
               }
               valueStyle="tabular"
-              effect="Descuento que se escribe al crear."
+              effect="Cuánto se descuenta a cada boleto."
             >
               {draft.discountType === 'fixed' ? (
                 <Field
@@ -663,7 +683,7 @@ function DescuentosBody() {
             {dirty ? 'Sin guardar' : (notice ?? '')}
           </p>
           <TicketButton disabled={!dirty || saving} onClick={() => void save()}>
-            Guardar sección
+            Guardar cambios
           </TicketButton>
         </div>
       ) : null}

@@ -1213,3 +1213,41 @@ button.row:hover {
   outline: 2px solid var(--focus, var(--gold));
   outline-offset: 2px;
 }
+
+/* Fichas con formulario agrupado. */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px 20px;
+  margin-top: 14px;
+}
+
+.formItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.formValue {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.blackout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px 16px;
+  padding: 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.cellActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
