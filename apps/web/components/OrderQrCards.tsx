@@ -128,12 +128,11 @@ export function OrderQrCards({
 
   return (
     <section className={styles.section} aria-labelledby="boletos-title">
-      <h2 className={styles.title} id="boletos-title">
+      <h2 className="sr-only" id="boletos-title">
         Tus boletos
       </h2>
-      <p className={styles.hint} role="status">
-        {refreshing ? 'Actualizando códigos…' : 'El QR se renueva solo cada pocos segundos.'} No
-        uses una captura como acceso en puerta.
+      <p className="sr-only" role="status">
+        {refreshing ? 'Actualizando códigos' : ''}
       </p>
       <ul className={styles.grid}>
         {list.map((t, index) => {

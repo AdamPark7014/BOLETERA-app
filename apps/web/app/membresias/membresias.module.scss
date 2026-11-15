@@ -188,3 +188,29 @@
   line-height: 1.5;
   color: #e8e3dc;
 }
+
+/* Pasada 2: sin bordes; la selección con filete blanco (el dorado es la acción). */
+.hero {
+  border: 0;
+}
+
+.plan {
+  border: 0;
+  background: var(--card);
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--elevated);
+  }
+
+  &[aria-pressed='true'] {
+    border: 0;
+    padding: 20px;
+    background: var(--elevated);
+    box-shadow: inset 0 0 0 1px var(--text);
+  }
+}
+
+.planPrice {
+  color: var(--text);
+}

@@ -32,7 +32,7 @@ export function categoryLabel(key?: string | null): string {
   return CATEGORY_LABEL[key || ''] ?? 'Evento';
 }
 
-/** «VIE 20 MAR · 21:30» */
+/** «Vie 20 mar · 21:30» */
 export function shortWhen(iso: string): string {
   const date = new Date(iso);
   const day = date
@@ -45,7 +45,8 @@ export function shortWhen(iso: string): string {
     minute: '2-digit',
     hour12: false,
   });
-  return `${day} · ${time}`.toUpperCase();
+  const label = `${day} · ${time}`;
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 /** «sábado 14 de marzo, 21:00» */

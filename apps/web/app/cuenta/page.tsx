@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Field, NamedStatus, TicketButton } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
-import { useTenantBrand } from '@/components/TenantBrand';
 import { authHeaders, clearSession, getStoredUser, getToken } from '@/lib/auth';
 import { formatMoney } from '@/lib/pricing';
 import {
@@ -183,7 +182,6 @@ async function downloadTicketsPdf(publicId: string) {
 
 export default function CuentaPage() {
   const router = useRouter();
-  const brand = useTenantBrand();
   const [user, setUser] = useState<ReturnType<typeof getStoredUser>>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [transfers, setTransfers] = useState<TransferRow[]>([]);
@@ -482,17 +480,13 @@ export default function CuentaPage() {
         )}
 
         <header className={styles.hero}>
-          <p className={styles.eyebrow}>Cuenta {brand.name}</p>
-          <h1>Cuenta</h1>
+          <h1>Mis boletos</h1>
           {user && (
             <p className={styles.user}>
               {user.firstName} {user.lastName} · {user.email}
             </p>
           )}
           <div className={styles.heroActions}>
-            <Link href="/" className={styles.browse}>
-              Explorar eventos
-            </Link>
             <button type="button" className={styles.browse} onClick={logout}>
               Cerrar sesión
             </button>
@@ -685,9 +679,6 @@ export default function CuentaPage() {
             <section className={styles.wallet} aria-labelledby="wallet-title">
               <div className={styles.walletHead}>
                 <h2 id="wallet-title">Próximos</h2>
-                <p className={styles.hint}>
-                  Abre el detalle para ver el QR, descargar el PDF y transferir boletos.
-                </p>
               </div>
 
               {state === 'loading' && (

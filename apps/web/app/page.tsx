@@ -3,13 +3,7 @@ import type { Metadata } from 'next';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventGrid } from '@/components/home/EventGrid';
 import type { CardEvent } from '@/components/home/EventCard';
-import {
-  CategoryPlans,
-  Guarantees,
-  HomeHero,
-  HomeHeroSkeleton,
-  RankingAndMembership,
-} from '@/components/home/HomeSections';
+import { HomeHero, HomeHeroSkeleton, MembershipBand } from '@/components/home/HomeSections';
 import styles from '@/components/home/home.module.scss';
 import { api } from '@/lib/api';
 import { availability } from '@/lib/event-display';
@@ -25,11 +19,6 @@ export async function generateMetadata(): Promise<Metadata> {
     image: tenant.theme?.logoUrl || '/hero/01-festival.jpg',
   });
 }
-
-type Facets = {
-  cities?: { name: string; count: number }[];
-  categories?: { key: string; count: number }[];
-};
 
 type HomeSearch = { q?: string; city?: string };
 
@@ -55,15 +44,13 @@ async function HomeContent({ q, city }: HomeSearch) {
   if (city) params.set('city', city);
   const filtered = Boolean(q || city);
 
-  const [all, found, facets] = await Promise.all([
+  const [all, found] = await Promise.all([
     load<CardEvent[]>('/discovery/events?limit=40', []),
     filtered ? load<CardEvent[]>(`/discovery/events?${params}`, []) : Promise.resolve(null),
-    load<Facets>('/discovery/facets', {}),
   ]);
 
   const list = found ? found.value : all.value;
   const failed = found ? !found.ok : !all.ok;
-  const counts = Object.fromEntries((facets.value.categories ?? []).map((c) => [c.key, c.count]));
   const featured = pickFeatured(all.value);
 
   const title = q
@@ -80,14 +67,10 @@ async function HomeContent({ q, city }: HomeSearch) {
         failed={failed}
         title={title}
         emptyText={
-          filtered
-            ? 'No encontramos funciones con esa búsqueda. Prueba con otro artista, recinto o ciudad.'
-            : 'No hay funciones publicadas por ahora.'
+          filtered ? 'Sin resultados. Prueba con otro artista o ciudad.' : 'Pronto habrá funciones.'
         }
       />
-      <CategoryPlans counts={counts} />
-      <RankingAndMembership events={all.value} />
-      <Guarantees />
+      <MembershipBand />
     </>
   );
 }

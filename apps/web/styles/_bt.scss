@@ -34,12 +34,13 @@ $bt-phone: 720px;
   letter-spacing: 0;
 }
 
+// Etiqueta secundaria discreta (antes: mayúsculas doradas espaciadas).
 @mixin kicker {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gold);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 @mixin pill-primary {
@@ -58,10 +59,16 @@ $bt-phone: 720px;
   font-size: 17px;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
 
   &:hover {
     background: var(--gold-soft);
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 
   &:disabled,
@@ -88,6 +95,9 @@ $bt-phone: 720px;
   font-size: 15px;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 
   &:hover {
     border-color: var(--text-secondary);
@@ -107,6 +117,14 @@ $bt-phone: 720px;
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    border-color: var(--text-secondary);
+  }
 
   &[aria-pressed='true'],
   &[aria-current='page'],
@@ -118,8 +136,12 @@ $bt-phone: 720px;
   }
 }
 
+// Superficie: se separa por tono, no por borde.
 @mixin card {
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 18px;
+  border: 0;
+  border-radius: 16px;
 }
+
+$section-gap: 88px;
+$section-gap-sm: 56px;

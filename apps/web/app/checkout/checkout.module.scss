@@ -458,3 +458,161 @@
   width: 100%;
   color: var(--text-secondary);
 }
+
+/* =================================================================
+ * Pasada 2: lo mínimo para pagar, separado por espacio y tono.
+ * ================================================================= */
+
+.steps {
+  border-bottom: 0;
+}
+
+.clock {
+  border-color: var(--line-strong);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.crumbs li[aria-current='step'] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.crumbs li:first-child {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.grid {
+  gap: 64px;
+
+  @media (max-width: 960px) {
+    gap: 40px;
+  }
+}
+
+.mainCol {
+  gap: 40px;
+}
+
+.sideCol {
+  gap: 16px;
+}
+
+.eventCard {
+  background: transparent;
+  padding: 0;
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.block {
+  gap: 16px;
+}
+
+.promoToggle {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
+.method {
+  border: 0;
+  background: var(--card);
+  min-height: 56px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--elevated);
+  }
+
+  &[aria-checked='true'] {
+    border: 0;
+    padding: 10px 16px;
+    background: var(--elevated);
+    box-shadow: inset 0 0 0 1px var(--text);
+  }
+}
+
+.radio {
+  [aria-checked='true'] > & {
+    border-color: var(--text);
+
+    &::after {
+      background: var(--text);
+    }
+  }
+}
+
+.demo {
+  background: transparent;
+  padding: 0;
+  color: var(--text-secondary);
+}
+
+.breakdown {
+  padding: 24px;
+  gap: 12px;
+}
+
+.totalRow {
+  padding-top: 16px;
+  align-items: flex-end;
+
+  span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  small {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+
+  strong {
+    font-family: var(--font-ui);
+    font-stretch: normal;
+    font-weight: 600;
+    font-size: 28px;
+  }
+}
+
+.details summary {
+  color: var(--text-secondary);
+}
+
+.payButton {
+  min-height: 52px;
+  font-size: 16px;
+}
+
+.drop {
+  border: 0;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 400;
+
+  &:hover {
+    color: var(--text);
+  }
+}

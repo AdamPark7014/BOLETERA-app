@@ -4,8 +4,6 @@ import styles from './SiteFooter.module.scss';
 
 /** Pie de la maqueta: logo dorado, enlaces y métodos de pago reales. */
 export function SiteFooter() {
-  const isProd = process.env.NODE_ENV === 'production';
-
   return (
     <footer className={styles.footer}>
       <h2 className="sr-only">Pie de página</h2>
@@ -19,10 +17,9 @@ export function SiteFooter() {
           <Link href="/ciudades">Ciudades</Link>
           <Link href="/resale">Reventa</Link>
           <Link href="/membresias">Membresías</Link>
-          <Link href="/terminos">Términos{!isProd ? ' (borrador)' : ''}</Link>
-          <Link href="/privacidad">Privacidad{!isProd ? ' (borrador)' : ''}</Link>
+          <Link href="/terminos">Términos</Link>
+          <Link href="/privacidad">Privacidad</Link>
         </nav>
-        <span className={styles.pay}>Tarjeta · SPEI · OXXO</span>
       </div>
       <p className={styles.copy}>© {new Date().getFullYear()} Black Ticket · Boletos oficiales</p>
     </footer>

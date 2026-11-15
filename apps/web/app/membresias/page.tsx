@@ -44,15 +44,8 @@ export default async function MembresiasPage() {
           <StageArt seed="membresia-black" fade={false} className={styles.heroArt} />
           <span className={styles.heroShade} />
           <div className={styles.heroCopy}>
-            <span className={styles.kicker}>
-              Membresía Black ·{' '}
-              {state.kind === 'ok' ? state.organization || tenant.name : tenant.name}
-            </span>
-            <h1 className={styles.heroTitle}>Membresías</h1>
-            <p className={styles.heroLead}>
-              Elige un plan, págalo como pagas tus boletos y lo verás en tu cuenta con su vigencia y
-              beneficios.
-            </p>
+            <h1 className={styles.heroTitle}>Membresía Black</h1>
+            <p className={styles.heroLead}>Preventas y beneficios en tus eventos favoritos.</p>
           </div>
         </section>
 

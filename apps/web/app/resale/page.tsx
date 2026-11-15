@@ -64,12 +64,8 @@ export default async function ResalePage() {
       <SiteHeader />
       <main id="contenido" tabIndex={-1} className={styles.page}>
         <header className={styles.hero}>
-          <p className={styles.eyebrow}>Mercado secundario</p>
           <h1>Reventa oficial</h1>
-          <p className={styles.lead}>
-            Boletos verificados con tope de precio. El comprador recibe un QR nuevo y el original se
-            invalida.
-          </p>
+          <p className={styles.lead}>Boletos verificados, con precio tope y código nuevo.</p>
           <div className={styles.heroActions}>
             <Link href="/resale/vender" className={styles.primary}>
               Vender mi boleto
@@ -79,21 +75,6 @@ export default async function ResalePage() {
             </Link>
           </div>
         </header>
-
-        <ul className={styles.trust}>
-          <li>
-            <strong>Verificado</strong>
-            <span>Solo boletos emitidos en Black Ticket</span>
-          </li>
-          <li>
-            <strong>Precio controlado</strong>
-            <span>Tope respecto al precio original del evento</span>
-          </li>
-          <li>
-            <strong>QR seguro</strong>
-            <span>Código nuevo al completar la compra</span>
-          </li>
-        </ul>
 
         <section aria-labelledby="resale-list-title">
           <div className={styles.sectionHead}>

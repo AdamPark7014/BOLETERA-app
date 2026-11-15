@@ -250,9 +250,8 @@ export function WaitingRoomGate({
               />
             </div>
             <p className={styles.lead}>
-              El orden se sorteó al abrir la venta, así que recargar no te adelanta. La fila avanza
-              sola: {numberFormat.format(total)} personas en total. Si vuelves a entrar, conservas
-              tu lugar.
+              El orden se sorteó al abrir; recargar no te adelanta. {numberFormat.format(total)}{' '}
+              personas en la fila.
             </p>
           </div>
         )}
@@ -260,8 +259,7 @@ export function WaitingRoomGate({
         {offers.length > 0 ? (
           <div className={styles.avail}>
             <div className={styles.availHead}>
-              <span>Disponibilidad al abrir esta página</span>
-              <span>Precio final</span>
+              <span>Zonas</span>
             </div>
             <ul>
               {offers.map((offer) => {
@@ -277,7 +275,7 @@ export function WaitingRoomGate({
                     <span
                       className={out ? styles.availOut : few ? styles.availFew : styles.availOk}
                     >
-                      {out ? 'Agotado' : few ? 'Quedan pocos' : 'Disponible'}
+                      {out ? 'Agotado' : few ? 'Últimos lugares' : ''}
                     </span>
                   </li>
                 );
@@ -302,7 +300,7 @@ export function WaitingRoomGate({
                 ? 'Estamos consultando más despacio para no saturar el servidor. Tu lugar en la fila no se ve afectado.'
                 : connectionIssue === 'offline'
                   ? 'Perdimos contacto con el servidor. Seguimos reintentando; tu lugar sigue guardado.'
-                  : 'No cierres esta pantalla: te avisamos aquí mismo en cuanto sea tu turno.'}
+                  : 'Te avisamos aquí cuando sea tu turno.'}
           </p>
         </div>
       </div>

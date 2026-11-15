@@ -64,7 +64,7 @@ function SearchPill() {
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.6"
         className={styles.searchIcon}
       >
         <circle cx="11" cy="11" r="7" />
@@ -79,7 +79,7 @@ function SearchPill() {
         type="search"
         value={q}
         onChange={(event) => setQ(event.target.value)}
-        placeholder="Busca un artista, equipo o recinto"
+        placeholder="Artista, equipo o recinto"
         autoComplete="off"
       />
       <label className={styles.city}>
@@ -89,8 +89,8 @@ function SearchPill() {
           height="14"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="var(--gold)"
-          strokeWidth="2"
+          stroke="currentColor"
+          strokeWidth="1.6"
         >
           <path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z" />
           <circle cx="12" cy="10" r="2.5" />
@@ -116,7 +116,7 @@ function SearchPill() {
   );
 }
 
-/** Encabezado de la maqueta: franja de precio final, logo, categorías, buscador y cuenta. */
+/** Encabezado: logo, buscador con ciudad, Mis boletos y cuenta; categorías en fila secundaria. */
 export function SiteHeader({ compact = false }: SiteHeaderProps) {
   const pathname = usePathname();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -132,26 +132,11 @@ export function SiteHeader({ compact = false }: SiteHeaderProps) {
       <a className={styles.skip} href="#contenido">
         Saltar al contenido
       </a>
-      <p className={styles.promo}>Precio final: cargos e IVA ya incluidos</p>
       <header className={styles.header} data-compact={compact || undefined}>
         <div className={styles.inner}>
           <Link href="/" className={styles.logo} aria-label="Black Ticket, inicio">
-            <BrandLogo size={34} />
+            <BrandLogo size={30} />
           </Link>
-
-          {!compact ? (
-            <nav className={styles.nav} aria-label="Categorías">
-              {NAV_CATEGORIES.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={pathname === item.href ? 'page' : undefined}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
 
           {!compact ? (
             <Suspense fallback={<div className={styles.search} aria-hidden="true" />}>
@@ -182,6 +167,21 @@ export function SiteHeader({ compact = false }: SiteHeaderProps) {
             )}
           </div>
         </div>
+        {!compact ? (
+          <nav className={styles.nav} aria-label="Categorías">
+            <div className={styles.navInner}>
+              {NAV_CATEGORIES.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={pathname === item.href ? 'page' : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </nav>
+        ) : null}
       </header>
     </>
   );

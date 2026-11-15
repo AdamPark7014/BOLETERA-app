@@ -590,3 +590,48 @@
     }
   }
 }
+
+.listPicker {
+  summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--text-secondary, #a8a29a);
+    font-size: 14px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: var(--text, #fff);
+    }
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Compra pública: el mapa sin caja interior; lo separa el tono de la tarjeta.
+.wrap[data-compact] {
+  gap: 8px;
+
+  .viewport {
+    border: 0;
+    background: transparent;
+    height: min(62vh, 560px);
+  }
+
+  .focus {
+    padding-inline: 4px;
+    font-weight: 400;
+    color: var(--text-secondary, #a8a29a);
+  }
+}

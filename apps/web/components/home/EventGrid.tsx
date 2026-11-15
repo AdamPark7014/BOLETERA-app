@@ -11,7 +11,6 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'Todo' },
   { key: 'today', label: 'Hoy' },
   { key: 'weekend', label: 'Fin de semana' },
-  { key: 'cheap', label: 'Menos de $500' },
 ];
 
 function weekendKeys(now: Date): Set<string> {
@@ -25,7 +24,7 @@ function weekendKeys(now: Date): Set<string> {
 /** Cartelera con chips de filtro (sobre lo que ya bajó del API). */
 export function EventGrid({
   events,
-  kicker = '★ Cartelera ★',
+  kicker,
   title,
   failed = false,
   emptyText = 'No hay funciones publicadas por ahora.',
@@ -69,7 +68,7 @@ export function EventGrid({
     <section className={styles.section} id={id} aria-labelledby={`${id}-title`}>
       <div className={styles.sectionHead}>
         <div className={styles.sectionTitles}>
-          <span className={styles.kicker}>{kicker}</span>
+          {kicker ? <span className={styles.kicker}>{kicker}</span> : null}
           <Heading className={styles.h2} id={`${id}-title`}>
             {title}
           </Heading>
@@ -90,11 +89,11 @@ export function EventGrid({
 
       {failed ? (
         <p className={styles.empty} role="alert">
-          No se cargó la cartelera. Revisa tu conexión y recarga la página.
+          No pudimos cargar la cartelera. Intenta de nuevo en un momento.
         </p>
       ) : list.length === 0 ? (
         <p className={styles.empty}>
-          {filter === 'all' ? emptyText : 'Nada con ese filtro. Prueba con «Todo».'}
+          {filter === 'all' ? emptyText : 'Nada para estas fechas todavía.'}
         </p>
       ) : (
         <ul className={styles.grid}>

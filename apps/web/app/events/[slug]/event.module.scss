@@ -989,3 +989,407 @@
   justify-content: center;
   color: var(--text-secondary);
 }
+
+/* =================================================================
+ * Pasada 2: más aire, menos cajas, un solo dorado por vista.
+ * ================================================================= */
+
+.hero {
+  border: 0;
+  min-height: 520px;
+}
+
+.heroTitle {
+  font-size: 104px;
+
+  @media (max-width: 1100px) {
+    font-size: 84px;
+  }
+
+  @include bt.phone {
+    font-size: 52px;
+  }
+}
+
+.heroLine {
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: 8px;
+}
+
+.badge {
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.primary {
+  align-self: flex-start;
+  min-height: 52px;
+  font-size: 16px;
+
+  @include bt.phone {
+    align-self: stretch;
+  }
+}
+
+.fichaGrid {
+  padding-top: 72px;
+  gap: 64px;
+
+  @include bt.phone {
+    padding-top: 48px;
+    gap: 48px;
+  }
+}
+
+.fichaMain,
+.fichaSide {
+  gap: 48px;
+}
+
+.panel {
+  background: transparent;
+  padding: 0;
+  gap: 16px;
+}
+
+.h2 {
+  font-family: var(--font-ui);
+  font-stretch: normal;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.3;
+  text-transform: none;
+}
+
+.zoneRow {
+  min-height: 64px;
+  padding: 16px 0;
+  transition: opacity 0.15s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.8;
+  }
+
+  &:hover:not(:disabled) .zoneName {
+    text-decoration: none;
+  }
+}
+
+.zoneName {
+  font-weight: 500;
+}
+
+.zonePrice {
+  font-weight: 600;
+}
+
+.poster {
+  border: 0;
+  border-radius: 16px;
+}
+
+.venue {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.venueName {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.conds {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.textLink {
+  color: var(--text);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  transition: text-decoration-color 0.15s ease;
+
+  &:hover {
+    text-decoration-color: var(--text);
+  }
+}
+
+/* --- compra --- */
+
+.topInner {
+  padding-block: 16px;
+}
+
+.topTitle {
+  font-size: 24px;
+}
+
+.back {
+  border: 0;
+  background: var(--card);
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--elevated);
+  }
+}
+
+.filters {
+  border-bottom: 0;
+}
+
+.filtersInner {
+  gap: 16px;
+  padding-block: 24px 8px;
+}
+
+.segment {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--card);
+
+  button {
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+
+    &:hover {
+      color: var(--text);
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--elevated);
+      color: var(--text);
+    }
+  }
+}
+
+.stepper {
+  border: 0;
+  background: var(--card);
+
+  span {
+    min-width: 96px;
+    font-weight: 500;
+  }
+}
+
+.more {
+  position: relative;
+  margin-left: auto;
+
+  @include bt.phone {
+    margin-left: 0;
+  }
+}
+
+.moreButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    color: var(--text);
+  }
+
+  svg {
+    transition: transform 0.15s ease;
+  }
+
+  &[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+}
+
+.morePanel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  min-width: 220px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: var(--elevated);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+
+  button,
+  a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover,
+    &[aria-pressed='true'] {
+      background: var(--line);
+    }
+  }
+
+  @include bt.phone {
+    left: 0;
+    right: auto;
+  }
+}
+
+.mapCol {
+  gap: 24px;
+}
+
+.mapCard {
+  border: 0;
+  background: #0a0a0b;
+}
+
+.zoneLegend {
+  margin: 0;
+  justify-content: flex-start;
+  gap: 8px 24px;
+}
+
+.seatPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: transparent;
+  overflow: visible;
+}
+
+.seatView {
+  flex: none;
+  height: 280px;
+  min-height: 0;
+  border-radius: 16px;
+}
+
+.seatViewTag {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+}
+
+.seatChips li {
+  background: var(--card);
+  color: var(--text);
+  border: 0;
+  font-weight: 500;
+
+  button {
+    color: var(--text-secondary);
+  }
+}
+
+.side {
+  border-left: 0;
+  padding-top: 24px;
+  gap: 16px;
+}
+
+.sideTitle {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.options {
+  gap: 4px;
+}
+
+.option {
+  border: 0;
+  background: transparent;
+  padding: 16px;
+  border-radius: 12px;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--card);
+  }
+
+  &[aria-pressed='true'] {
+    border: 0;
+    background: var(--card);
+  }
+}
+
+.optionPrice {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.summary {
+  margin-top: 24px;
+  border: 0;
+  padding: 24px;
+  gap: 16px;
+
+  @media (max-width: 1100px) {
+    padding: 16px bt.$bt-gutter calc(16px + env(safe-area-inset-bottom));
+  }
+
+  @include bt.phone {
+    padding-inline: bt.$bt-gutter-sm;
+  }
+}
+
+.summaryTotal strong {
+  font-family: var(--font-ui);
+  font-stretch: normal;
+  font-weight: 600;
+  font-size: 28px;
+
+  @include bt.phone {
+    font-size: 24px;
+  }
+}
+
+.payButton {
+  min-height: 52px;
+  font-size: 16px;
+}
+
+.tool3d {
+  border-color: var(--line-strong);
+  color: var(--text);
+  font-size: 13px;
+}

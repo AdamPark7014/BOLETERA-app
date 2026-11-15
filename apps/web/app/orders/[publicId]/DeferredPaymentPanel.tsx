@@ -48,11 +48,11 @@ export function DeferredPaymentPanel({
 
   return (
     <section className={styles.section} aria-label={`Instrucciones de pago ${method}`}>
-      <h2>{isSpei ? 'Paga por transferencia SPEI' : 'Paga en cualquier OXXO'}</h2>
+      <h2>{isSpei ? 'Transferencia SPEI' : 'Pago en OXXO'}</h2>
 
       {demo && (
         <p className={styles.demoNote} role="status">
-          Modo demo: estos datos son de prueba. No transfieras dinero real.
+          Modo demostración: datos de prueba, no transfieras dinero.
         </p>
       )}
 
@@ -66,30 +66,10 @@ export function DeferredPaymentPanel({
           showDeadline
           onExpire={onExpire}
           label="Tiempo para pagar"
-          hint={
-            isSpei
-              ? 'Tus lugares están apartados hasta esta fecha'
-              : 'Tus lugares están apartados hasta esta fecha. Llévala contigo a la tienda.'
-          }
+          hint="Tus lugares siguen apartados hasta entonces."
           expiredHint="La referencia venció y los lugares volvieron a la venta. No se realizó ningún cargo."
         />
       )}
-
-      <ol className={styles.steps2}>
-        {isSpei ? (
-          <>
-            <li>Abre la app de tu banco y elige transferencia SPEI a otro banco.</li>
-            <li>Captura la CLABE y el concepto exactamente como aparecen aquí.</li>
-            <li>Transfiere el importe exacto. Otra cantidad no se acredita automáticamente.</li>
-          </>
-        ) : (
-          <>
-            <li>Ve a cualquier tienda OXXO y di que vas a hacer un pago de servicio.</li>
-            <li>Dicta la referencia al cajero.</li>
-            <li>Paga el importe exacto y conserva tu ticket hasta recibir los boletos.</li>
-          </>
-        )}
-      </ol>
 
       <div className={styles.payGrid}>
         {isSpei && clabe && (
@@ -100,16 +80,9 @@ export function DeferredPaymentPanel({
             hint="Cuenta Banorte del promotor"
           />
         )}
-        {isSpei && concept && (
-          <CopyField
-            label="Referencia"
-            value={concept}
-            primary
-            hint="App del banco, SPEI, este monto."
-          />
-        )}
+        {isSpei && concept && <CopyField label="Referencia" value={concept} primary />}
         {!isSpei && reference && (
-          <CopyField label="Referencia" value={reference} primary hint="Dísela en tienda." />
+          <CopyField label="Referencia" value={reference} primary hint="Dísela al cajero." />
         )}
         {exactAmount && (
           <div className={styles.copyField}>
@@ -117,7 +90,7 @@ export function DeferredPaymentPanel({
             <div className={styles.copyRow}>
               <strong className={styles.amount}>{exactAmount}</strong>
             </div>
-            <span className={styles.copyHint}>Incluye cargo por servicio e IVA</span>
+            <span className={styles.copyHint}>Incluye cargos e IVA</span>
           </div>
         )}
         {deadline && (
@@ -126,18 +99,9 @@ export function DeferredPaymentPanel({
             <div className={styles.copyRow}>
               <strong className={styles.amount}>{deadline}</strong>
             </div>
-            <span className={styles.copyHint}>
-              Después de esa hora la referencia deja de servir y los lugares vuelven a la venta.
-            </span>
           </div>
         )}
       </div>
-
-      <p className={styles.instructionsNote}>
-        {demo
-          ? 'En demo puedes simular el acreditamiento con el botón de abajo.'
-          : 'Actualizamos esta pantalla sola en cuanto el banco acredita tu pago. También te llega por correo.'}
-      </p>
     </section>
   );
 }

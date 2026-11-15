@@ -335,3 +335,33 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Pasada 2: neutro, sin filetes dorados. */
+.room {
+  border: 0;
+}
+
+.card {
+  border: 0;
+}
+
+.metricGold {
+  color: var(--text);
+}
+
+.secondaryAction {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.avail li {
+  border-bottom: 0;
+}
+
+.availHead span:first-child {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+}

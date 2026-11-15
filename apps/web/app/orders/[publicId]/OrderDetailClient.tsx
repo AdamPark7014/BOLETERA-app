@@ -270,9 +270,7 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
           ) : (
             <NamedStatus status="pendiente" />
           )}
-          <h1>
-            {showDeferred ? 'Falta pagar' : completed ? 'Listo, ya tienes tus boletos' : 'Tu orden'}
-          </h1>
+          <h1>{showDeferred ? 'Falta un paso' : completed ? 'Tus boletos' : 'Tu orden'}</h1>
           <p className={styles.sub}>
             Orden <code>{order.publicId}</code>
             {order.buyerEmail ? ` · ${order.buyerEmail}` : ''}
@@ -470,9 +468,6 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
               <Link href="/cuenta" className={styles.link}>
                 Ir a Mis boletos
               </Link>
-              <Link href="/" className={styles.ghost}>
-                Ver más eventos
-              </Link>
               {showDeferred && (
                 <Link
                   href={orderPath(order.publicId, token, '/pago', { method })}
@@ -482,12 +477,6 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
                 </Link>
               )}
             </div>
-
-            <ul className={styles.trust}>
-              <li>Boletos oficiales {brand.name}</li>
-              <li>Entrada con QR</li>
-              <li>Pago Banorte</li>
-            </ul>
           </aside>
         </div>
       </main>

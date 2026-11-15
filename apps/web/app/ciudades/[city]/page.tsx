@@ -40,10 +40,9 @@ export default async function CiudadPage({ params }: { params: Promise<{ city: s
         <EventGrid
           events={events}
           failed={failed}
-          kicker={'★ Ciudad ★'}
           title={`Cartelera en ${city}`}
           headingLevel={1}
-          emptyText="No hay funciones publicadas aquí por ahora. Revisa la cartelera completa."
+          emptyText="Pronto habrá funciones aquí."
         />
       </main>
     </>

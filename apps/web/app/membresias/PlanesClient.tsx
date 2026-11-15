@@ -170,15 +170,8 @@ export function PlanesClient({ plans }: { plans: PublicPlan[] }) {
               </button>
             ))}
           </div>
-          <p className={purchase.lead}>
-            {method === 'CARD'
-              ? 'Pagas con tarjeta en Banorte y vuelves a tu cuenta.'
-              : method === 'SPEI'
-                ? 'Te damos CLABE y referencia; la membresía se activa al acreditarse.'
-                : 'Te damos una referencia OXXO; la membresía se activa al acreditarse.'}
-          </p>
           {demo ? (
-            <p className={purchase.caption}>Pasarela en demostración. Este cargo no cobra.</p>
+            <p className={purchase.caption}>Modo demostración: no se hace ningún cargo.</p>
           ) : null}
           {failure ? (
             <div className={purchase.error} role="alert">

@@ -12,7 +12,6 @@ import { ensureGuestSession, renewGuestSession } from '@/components/seatmap/sess
 import { HoldErrorNotice } from '@/components/seatmap/HoldErrorNotice';
 import { flatSeats, normalizeSeatMap, resolveOfferForSection } from '@boletera/venue-engine';
 import type { Venue3DViewerProps } from '@boletera/venue-3d';
-import Image from 'next/image';
 import Link from 'next/link';
 import { StageArt, formatTicketAmount } from '@boletera/ui';
 import { useCartStore, type CartOfferLine } from '@/lib/cart-store';
@@ -530,6 +529,7 @@ export function EventPurchaseClient({
 
   void minPrice;
   void minPriceAllIn;
+  const [moreOpen, setMoreOpen] = useState(false);
   const canPayMap = selected.length > 0 && buyMode === 'map';
   const canPayQty = (buyMode === 'best' || buyMode === 'ga') && qty > 0 && Boolean(focusedOffer);
   const canApart = buyMode === 'map' ? canPayMap : canPayQty;
@@ -537,35 +537,30 @@ export function EventPurchaseClient({
   const cheapest = offers
     .filter((o) => o.isAvailable !== false && o.remainingQuantity !== 0)
     .reduce<Offer | null>((min, o) => (!min || offerPrice(o) < offerPrice(min) ? o : min), null);
-  const sectionLabel =
-    buyMode === 'map'
-      ? (selectedInfo[selectedInfo.length - 1]?.sectionName ?? focusedOffer?.name ?? null)
-      : focusedOffer?.name || focusedOffer?.zone || null;
   const summary =
     buyMode === 'map'
       ? selected.length
         ? `${selected.length} ${selected.length === 1 ? 'boleto' : 'boletos'} · ${selectedInfo
             .map((info) => (info.sectionName ? `${info.sectionName} ${info.label}` : info.label))
             .join(', ')}`
-        : 'Elige tus asientos en el mapa'
+        : null
       : focusedOffer
-        ? `${qty} ${qty === 1 ? 'boleto' : 'boletos'} · ${focusedOffer.name || focusedOffer.zone}${
-            buyMode === 'best' ? ' · mejores juntos' : ''
-          }`
-        : 'Elige una zona';
+        ? `${qty} ${qty === 1 ? 'boleto' : 'boletos'} · ${focusedOffer.name || focusedOffer.zone}`
+        : null;
   const focusedRemaining = offers.find((o) => o.id === focusedOffer?.id)?.remainingQuantity;
   const tones = offerTones(offers);
   const payLabel = loading
-    ? 'Apartando tus lugares…'
+    ? 'Apartando…'
     : buyMode === 'map' && selected.length === 0
       ? 'Elige tus asientos'
       : !focusedOffer && buyMode !== 'map'
         ? 'Elige una zona'
         : pricingLoading
-          ? 'Calculando el total…'
-          : 'Continuar al pago';
+          ? 'Calculando…'
+          : 'Continuar';
   const apart = () => (buyMode === 'map' ? void checkoutMap() : void checkoutBestOrGa());
   const payDisabled = loading || pricingLoading || !canApart || allIn == null || allIn <= 0;
+  const showSeatView = buyMode === 'map' && selected.length > 0;
 
   // --- puerta de la sala de espera -------------------------------------------
   // Todo lo de arriba son hooks y se ejecuta siempre; sólo el render se corta.
@@ -573,7 +568,7 @@ export function EventPurchaseClient({
     return (
       <div className={styles.buyBox} id="compra">
         <p className={styles.qtyMeta} role="status">
-          Comprobando la disponibilidad de este evento…
+          Un momento…
         </p>
       </div>
     );
@@ -598,35 +593,8 @@ export function EventPurchaseClient({
     <div id="compra" className={styles.buyBody}>
       <div className={styles.filters}>
         <div className={styles.filtersInner}>
-          {buyMode !== 'map' ? (
-            <>
-              <span className={styles.filterLabel}>Boletos</span>
-              <div className={styles.stepper} role="group" aria-label="Cantidad de boletos">
-                <button
-                  type="button"
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  aria-label="Quitar un boleto"
-                  disabled={qty <= 1}
-                >
-                  −
-                </button>
-                <span aria-live="polite">{qty}</span>
-                <button
-                  type="button"
-                  onClick={() => setQty((q) => Math.min(8, q + 1))}
-                  aria-label="Agregar un boleto"
-                  disabled={qty >= 8}
-                >
-                  +
-                </button>
-              </div>
-            </>
-          ) : (
-            <span className={styles.filterLabel}>Hasta 8 asientos</span>
-          )}
-
           {hasSeatMap && !isGaOffer ? (
-            <div className={styles.chipRow} role="group" aria-label="Cómo elegir">
+            <div className={styles.segment} role="group" aria-label="Cómo elegir">
               <button
                 type="button"
                 aria-pressed={buyMode === 'map'}
@@ -639,32 +607,86 @@ export function EventPurchaseClient({
                 aria-pressed={buyMode === 'best'}
                 onClick={() => setBuyMode('best')}
               >
-                Mejor disponible
-              </button>
-              <button
-                type="button"
-                aria-pressed={buyMode === 'ga'}
-                onClick={() => setBuyMode('ga')}
-              >
-                General
+                Mejores lugares
               </button>
             </div>
           ) : null}
 
-          <div className={styles.chipRow}>
-            {cheapest && offers.length > 1 ? (
+          {buyMode !== 'map' ? (
+            <div className={styles.stepper} role="group" aria-label="Boletos">
               <button
                 type="button"
-                aria-pressed={Boolean(zonePick) && focusedOffer?.id === cheapest.id}
-                onClick={() => setZonePick(cheapest.zone)}
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                aria-label="Quitar un boleto"
+                disabled={qty <= 1}
               >
-                Precio más bajo
+                −
               </button>
-            ) : null}
-            {allowResale !== false ? <Link href="/resale">Reventa oficial</Link> : null}
-          </div>
+              <span aria-live="polite">
+                {qty} {qty === 1 ? 'boleto' : 'boletos'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQty((q) => Math.min(8, q + 1))}
+                aria-label="Agregar un boleto"
+                disabled={qty >= 8}
+              >
+                +
+              </button>
+            </div>
+          ) : null}
 
-          <span className={styles.filterNote}>Todos los precios incluyen cargos e IVA</span>
+          <div className={styles.more}>
+            <button
+              type="button"
+              className={styles.moreButton}
+              aria-expanded={moreOpen}
+              aria-controls="mas-filtros"
+              onClick={() => setMoreOpen((v) => !v)}
+            >
+              Más filtros
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {moreOpen ? (
+              <div className={styles.morePanel} id="mas-filtros">
+                {hasSeatMap && !isGaOffer ? (
+                  <button
+                    type="button"
+                    aria-pressed={buyMode === 'ga'}
+                    onClick={() => {
+                      setBuyMode('ga');
+                      setMoreOpen(false);
+                    }}
+                  >
+                    Acceso general
+                  </button>
+                ) : null}
+                {cheapest && offers.length > 1 ? (
+                  <button
+                    type="button"
+                    aria-pressed={Boolean(zonePick) && focusedOffer?.id === cheapest.id}
+                    onClick={() => {
+                      setZonePick(cheapest.zone);
+                      setMoreOpen(false);
+                    }}
+                  >
+                    Precio más bajo
+                  </button>
+                ) : null}
+                {allowResale !== false ? <Link href="/resale">Reventa oficial</Link> : null}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -672,7 +694,7 @@ export function EventPurchaseClient({
         <div className={styles.mapCol}>
           {room.phase === 'admitted' && (
             <p className={styles.turn} role="status">
-              Es tu turno. Elige tus boletos.
+              Es tu turno.
             </p>
           )}
 
@@ -684,7 +706,6 @@ export function EventPurchaseClient({
                     <button
                       type="button"
                       className={styles.tool3d}
-                      aria-pressed
                       aria-label="Volver al plano"
                       onClick={() => setView3d(false)}
                     >
@@ -713,7 +734,7 @@ export function EventPurchaseClient({
                     />
                   ) : (
                     <p className={styles.loadingMap} role="status">
-                      Cargando la sala en 3D…
+                      Cargando…
                     </p>
                   )
                 ) : (
@@ -733,7 +754,6 @@ export function EventPurchaseClient({
                       <button
                         type="button"
                         className={styles.tool3d}
-                        aria-pressed={false}
                         aria-label="Vista 3D"
                         onClick={() => setView3d(true)}
                       >
@@ -748,130 +768,75 @@ export function EventPurchaseClient({
               <div className={styles.zoneHero}>
                 <StageArt seed={focusedOffer?.id ?? eventId} className={styles.cover} />
                 <div className={styles.zoneHeroCopy}>
-                  <span className={styles.kicker}>
-                    {buyMode === 'best' ? 'Mejor disponible' : 'Zona'}
-                  </span>
                   <strong className={styles.zoneHeroTitle}>
                     {focusedOffer ? focusedOffer.name || focusedOffer.zone : 'Elige una zona'}
                   </strong>
-                  <span className={styles.muted}>
-                    {focusedRemaining != null ? `${focusedRemaining} disponibles · ` : ''}
-                    {buyMode === 'best'
-                      ? 'Te damos los mejores lugares juntos; se confirman al apartar.'
-                      : 'Acceso general: tu lugar se asigna en la zona.'}
-                  </span>
+                  {focusedRemaining != null && focusedRemaining <= 20 ? (
+                    <span className={styles.muted}>Últimos lugares</span>
+                  ) : null}
                 </div>
               </div>
             )}
           </div>
 
-          {offers.length > 0 ? (
-            <ul className={styles.zoneLegend} aria-label="Colores por zona">
+          {buyMode === 'map' && hasSeatMap && offers.length > 1 ? (
+            <ul className={styles.zoneLegend} aria-label="Zonas">
               {offers.map((offer) => (
                 <li key={offer.id}>
                   <i style={{ background: tones.get(offer.id) }} aria-hidden="true" />
-                  {offer.name || offer.zone} · {formatTicketAmount(offerPrice(offer))}
+                  {offer.name || offer.zone}
                 </li>
               ))}
-              <li>
-                <i className={styles.swSoldOut} aria-hidden="true" />
-                Agotada u ocupado
-              </li>
             </ul>
           ) : null}
 
-          <div className={styles.seatPanel}>
-            <div className={styles.seatView}>
-              {buyMode === 'map' && selected.length > 0 && Venue3DViewer ? (
-                <Venue3DViewer
-                  mode="seat"
-                  chrome={false}
-                  height={260}
-                  currency={currency}
-                  seats={seatsFor3d}
-                  selectedIds={selected}
-                  stage={normalized.venue?.stage}
-                  aisles={normalized.venue?.aisles}
-                  obstacles={normalized.venue?.obstacles}
-                  stairs={normalized.venue?.stairs}
-                  exits={normalized.venue?.exits}
-                  furniture={normalized.venue?.furniture}
-                  focusPoints={normalized.venue?.focusPoints}
-                  levels={normalized.venue?.levels}
-                  mapData={normalized}
-                />
-              ) : (
-                <>
-                  <StageArt seed={sectionLabel ?? eventId} className={styles.cover} />
-                  <span className={styles.seatViewNote}>
-                    {buyMode === 'map'
-                      ? selected.length
-                        ? 'Cargando la vista desde tu asiento…'
-                        : 'Elige un asiento para ver el escenario desde ahí'
-                      : sectionLabel
-                        ? `Vista general · ${sectionLabel}`
-                        : 'Vista general del recinto'}
-                  </span>
-                </>
-              )}
-              {buyMode === 'map' && selected.length > 0 ? (
-                <span className={styles.seatViewTag}>
-                  Vista desde {selectedInfo[selectedInfo.length - 1]?.label ?? 'tu asiento'}
-                </span>
-              ) : null}
-            </div>
-            <div className={styles.seatInfo}>
-              <div className={styles.seatInfoHead}>
-                <h2 className={styles.h3}>{sectionLabel ?? 'Tu selección'}</h2>
-                <span className={styles.muted}>Escenario hacia arriba</span>
-              </div>
-              {buyMode === 'map' ? (
-                selectedInfo.length ? (
-                  <ul className={styles.seatChips} aria-label="Asientos elegidos">
-                    {selectedInfo.map((info) => (
-                      <li key={info.seatId}>
-                        <span>
-                          {info.sectionName ? `${info.sectionName} · ` : ''}
-                          {info.label}
-                        </span>
-                        <button
-                          type="button"
-                          aria-label={`Quitar ${info.label}`}
-                          onClick={() => toggleSeat(info.seatId)}
-                        >
-                          ×
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+          {showSeatView ? (
+            <div className={styles.seatPanel}>
+              <div className={styles.seatView}>
+                {Venue3DViewer ? (
+                  <Venue3DViewer
+                    mode="seat"
+                    chrome={false}
+                    height={280}
+                    currency={currency}
+                    seats={seatsFor3d}
+                    selectedIds={selected}
+                    stage={normalized.venue?.stage}
+                    aisles={normalized.venue?.aisles}
+                    obstacles={normalized.venue?.obstacles}
+                    stairs={normalized.venue?.stairs}
+                    exits={normalized.venue?.exits}
+                    furniture={normalized.venue?.furniture}
+                    focusPoints={normalized.venue?.focusPoints}
+                    levels={normalized.venue?.levels}
+                    mapData={normalized}
+                  />
                 ) : (
-                  <p className={styles.muted}>
-                    Toca una zona del mapa para acercarte y luego tus asientos. También puedes
-                    elegir por lista desde el mapa.
-                  </p>
-                )
-              ) : (
-                <p className={styles.muted}>
-                  {qty} {qty === 1 ? 'boleto' : 'boletos'} en{' '}
-                  {focusedOffer?.name || focusedOffer?.zone || 'la zona elegida'}.
-                </p>
-              )}
-              <ul className={styles.legend}>
-                <li>
-                  <i className={styles.swFree} aria-hidden="true" />
-                  Disponible
-                </li>
-                <li>
-                  <i className={styles.swSold} aria-hidden="true" />
-                  Ocupado
-                </li>
-                <li>
-                  <i className={styles.swMine} aria-hidden="true" />
-                  Tu selección
-                </li>
+                  <StageArt seed={eventId} className={styles.cover} />
+                )}
+                <span className={styles.seatViewTag}>
+                  Desde {selectedInfo[selectedInfo.length - 1]?.label ?? 'tu asiento'}
+                </span>
+              </div>
+              <ul className={styles.seatChips} aria-label="Tus asientos">
+                {selectedInfo.map((info) => (
+                  <li key={info.seatId}>
+                    <span>
+                      {info.sectionName ? `${info.sectionName} · ` : ''}
+                      {info.label}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Quitar ${info.label}`}
+                      onClick={() => toggleSeat(info.seatId)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
-          </div>
+          ) : null}
 
           {holdError ? (
             <HoldErrorNotice
@@ -885,18 +850,13 @@ export function EventPurchaseClient({
           ) : null}
         </div>
 
-        <aside className={styles.side} aria-label="Opciones y total">
-          <div className={styles.sideHead}>
-            <h2 className={styles.h3}>
-              {offers.length} {offers.length === 1 ? 'opción' : 'opciones'}
-              {buyMode !== 'map' ? ` para ${qty}` : ''}
-            </h2>
-            <span className={styles.muted}>Precio final por boleto</span>
-          </div>
+        <aside className={styles.side} aria-label="Zonas y total">
+          <h2 className={styles.sideTitle}>Zonas</h2>
           <ul className={styles.options}>
             {offers.map((offer) => {
               const active = focusedOffer?.id === offer.id;
               const out = offer.isAvailable === false || offer.remainingQuantity === 0;
+              const few = !out && offer.remainingQuantity != null && offer.remainingQuantity <= 20;
               return (
                 <li key={offer.id}>
                   <button
@@ -906,30 +866,14 @@ export function EventPurchaseClient({
                     disabled={out}
                     onClick={() => setZonePick(offer.zone)}
                   >
-                    <span className={styles.optionThumb}>
-                      {image ? (
-                        <Image src={image} alt="" fill sizes="64px" className={styles.cover} />
-                      ) : (
-                        <StageArt seed={offer.id} fade={false} className={styles.cover} />
-                      )}
-                    </span>
+                    <i
+                      className={styles.toneDot}
+                      style={{ background: tones.get(offer.id) }}
+                      aria-hidden="true"
+                    />
                     <span className={styles.optionCopy}>
-                      <strong>
-                        <i
-                          className={styles.toneDot}
-                          style={{ background: tones.get(offer.id) }}
-                          aria-hidden="true"
-                        />
-                        {offer.name || offer.zone}
-                      </strong>
-                      <span>
-                        {out
-                          ? 'Agotada'
-                          : offer.remainingQuantity != null
-                            ? `${offer.remainingQuantity} disponibles`
-                            : 'Disponible'}
-                        {offer.id === cheapest?.id && offers.length > 1 ? ' · el más bajo' : ''}
-                      </span>
+                      <strong>{offer.name || offer.zone}</strong>
+                      {out || few ? <span>{out ? 'Agotada' : 'Últimos lugares'}</span> : null}
                     </span>
                     <span className={styles.optionPrice}>
                       {formatTicketAmount(offerPrice(offer))}
@@ -941,25 +885,21 @@ export function EventPurchaseClient({
           </ul>
 
           <div className={styles.summary}>
-            <p className={styles.summaryLine}>{summary}</p>
+            {summary ? <p className={styles.summaryLine}>{summary}</p> : null}
             <div className={styles.summaryTotal}>
-              <span>Total · cargos e IVA incluidos</span>
+              <span>Total</span>
               <strong aria-live="polite">
-                {pricingLoading && allIn == null
-                  ? '…'
-                  : allIn != null && allIn > 0
-                    ? formatTicketAmount(allIn)
-                    : '$0.00'}
+                {allIn != null && allIn > 0 ? formatTicketAmount(allIn) : '—'}
               </strong>
             </div>
             {totalMoved ? (
               <p className={styles.warn} role="status">
-                El total cambió con el precio vigente.
+                El precio cambió.
               </p>
             ) : null}
             {allIn == null && canApart && !pricingLoading ? (
               <p className={styles.warn} role="status">
-                No pudimos calcular el total. Intenta de nuevo en unos segundos.
+                No pudimos calcular el total. Intenta de nuevo.
               </p>
             ) : null}
             <button
@@ -970,11 +910,6 @@ export function EventPurchaseClient({
             >
               {payLabel}
             </button>
-            {selected.length > 0 && buyMode === 'map' ? (
-              <button type="button" className={styles.release} onClick={() => setSelected([])}>
-                Soltar selección
-              </button>
-            ) : null}
           </div>
         </aside>
       </div>

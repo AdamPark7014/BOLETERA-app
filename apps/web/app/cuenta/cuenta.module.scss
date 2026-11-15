@@ -556,3 +556,42 @@
   @include bt.pill-secondary;
   text-decoration: none;
 }
+
+/* Pasada 2: sin filetes dorados; tarjetas por tono, más aire. */
+.page {
+  gap: 64px;
+}
+
+.walletList {
+  gap: 24px;
+}
+
+.walletCard {
+  border: 0;
+  padding: 24px;
+}
+
+.walletDateBlock {
+  border: 0;
+  background: var(--elevated);
+
+  span {
+    color: var(--text-secondary);
+  }
+}
+
+.walletDate {
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.walletActions {
+  border-top: 0;
+  padding-top: 4px;
+}
+
+.membershipCard {
+  border: 0;
+}

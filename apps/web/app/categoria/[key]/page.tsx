@@ -62,10 +62,9 @@ export default async function CategoriaPage({ params }: { params: Promise<{ key:
         <EventGrid
           events={events}
           failed={failed}
-          kicker={'★ Categoría ★'}
           title={CATEGORY_LABEL[key] ?? 'Cartelera'}
           headingLevel={1}
-          emptyText="No hay funciones publicadas aquí por ahora. Revisa la cartelera completa."
+          emptyText="Pronto habrá funciones aquí."
         />
       </main>
     </>

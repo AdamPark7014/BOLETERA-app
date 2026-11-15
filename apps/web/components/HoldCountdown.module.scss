@@ -102,3 +102,26 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Pasada 2: neutro; el dorado queda para la acción principal. */
+.wrap {
+  border: 0;
+  background: var(--card, #1a1a1a);
+  padding: 20px 24px;
+  border-radius: 16px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.time {
+  color: var(--text, #fff);
+  font-family: var(--font-ui);
+  font-stretch: normal;
+  font-weight: 600;
+  font-size: 28px;
+}

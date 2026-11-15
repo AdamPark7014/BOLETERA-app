@@ -227,8 +227,7 @@ function PagoContent() {
           </div>
 
           <header className={styles.hero}>
-            <p className={styles.pending}>Pendiente de pago</p>
-            <h1>Ya casi: falta pagar</h1>
+            <h1>Falta un paso</h1>
             <p className={styles.sub}>
               Orden <code>{publicId}</code>
             </p>

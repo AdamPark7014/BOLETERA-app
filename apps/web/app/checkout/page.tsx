@@ -172,6 +172,7 @@ function CheckoutForm() {
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
   const [promoValid, setPromoValid] = useState(false);
   const [promoChecking, setPromoChecking] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
   const [method, setMethod] = useState<PaymentMethodId>('CARD');
   const [loading, setLoading] = useState(false);
   const [pricing, setPricing] = useState<CartPricing | null>(null);
@@ -458,12 +459,6 @@ function CheckoutForm() {
   const payLabel = deferred ? 'Generar referencia' : `Pagar ${formatTicketAmount(payAmount)}`;
   const discount = pricing ? Number(pricing.discount) || 0 : 0;
   const ticketCount = holdIds.length;
-  const methodLine =
-    method === 'SPEI'
-      ? 'La referencia aparta los lugares hasta 12 horas. La hora exacta queda en la orden.'
-      : method === 'OXXO'
-        ? 'La referencia aparta los lugares hasta 24 horas. La hora exacta queda en la orden.'
-        : 'El cargo es en el momento. El apartado sigue mientras se paga.';
   const when = cartItem?.startsAt ? shortWhen(cartItem.startsAt) : null;
 
   function dropHold() {
@@ -571,7 +566,7 @@ function CheckoutForm() {
               />
               <Field
                 ref={emailRef}
-                label="Correo (ahí llegan tus boletos)"
+                label="Correo"
                 type="email"
                 value={email}
                 autoComplete="email"
@@ -595,34 +590,45 @@ function CheckoutForm() {
                 }}
                 error={showErrors ? fieldErrors.phone : undefined}
               />
-              <div className={styles.promo}>
-                <Field
-                  label="Código de descuento"
-                  value={promo}
-                  disabled={promoChecking}
-                  autoComplete="off"
-                  onChange={(event) => {
-                    setPromo(event.target.value);
-                    setPromoValid(false);
-                    setPromoMsg(null);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      void validatePromo();
-                    }
-                  }}
-                  error={promoMsg && !promoValid ? promoMsg : undefined}
-                />
+              {!promoOpen && !promoValid ? (
                 <button
                   type="button"
-                  className={styles.apply}
-                  disabled={!promo.trim() || promoChecking}
-                  onClick={() => void validatePromo()}
+                  className={styles.promoToggle}
+                  onClick={() => setPromoOpen(true)}
                 >
-                  {promoChecking ? 'Validando…' : 'Aplicar'}
+                  ¿Tienes un código?
                 </button>
-              </div>
+              ) : null}
+              {promoOpen || promoValid ? (
+                <div className={styles.promo}>
+                  <Field
+                    label="Código de descuento"
+                    value={promo}
+                    disabled={promoChecking}
+                    autoComplete="off"
+                    onChange={(event) => {
+                      setPromo(event.target.value);
+                      setPromoValid(false);
+                      setPromoMsg(null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        void validatePromo();
+                      }
+                    }}
+                    error={promoMsg && !promoValid ? promoMsg : undefined}
+                  />
+                  <button
+                    type="button"
+                    className={styles.apply}
+                    disabled={!promo.trim() || promoChecking}
+                    onClick={() => void validatePromo()}
+                  >
+                    {promoChecking ? 'Validando…' : 'Aplicar'}
+                  </button>
+                </div>
+              ) : null}
               {promoValid && promoMsg ? (
                 <p className={styles.ok} role="status">
                   {promoMsg}
@@ -632,7 +638,7 @@ function CheckoutForm() {
 
             <section className={styles.block} aria-labelledby="pago-title">
               <h2 className={styles.label} id="pago-title">
-                ¿Cómo pagas?
+                Pago
               </h2>
               {offered == null ? (
                 <div className={styles.methodsSkeleton} aria-hidden="true">
@@ -667,7 +673,6 @@ function CheckoutForm() {
                         <span className={styles.radio} aria-hidden="true" />
                         <span className={styles.methodCopy}>
                           <span>{item.label}</span>
-                          <small>{item.detail}</small>
                         </span>
                         <span className={styles.methodWhen}>{item.when}</span>
                       </button>
@@ -675,11 +680,8 @@ function CheckoutForm() {
                   })}
                 </div>
               ) : null}
-              {visibleMethods.some((item) => item.id === method) ? (
-                <p className={styles.muted}>{methodLine}</p>
-              ) : null}
               {gatewayInfo?.demo ? (
-                <p className={styles.demo}>Pasarela en demostración: este pago no cobra.</p>
+                <p className={styles.demo}>Modo demostración: no se hace ningún cargo.</p>
               ) : null}
             </section>
           </div>
@@ -694,10 +696,6 @@ function CheckoutForm() {
                   {pricing ? formatTicketAmount(total + discount) : '…'}
                 </span>
               </div>
-              <div className={styles.row}>
-                <span className={styles.muted}>Cargos e IVA</span>
-                <span className={styles.included}>Ya incluidos</span>
-              </div>
               {discount > 0 ? (
                 <div className={styles.row}>
                   <span className={styles.muted}>
@@ -707,7 +705,10 @@ function CheckoutForm() {
                 </div>
               ) : null}
               <div className={styles.totalRow}>
-                <span>Total</span>
+                <span>
+                  Total
+                  <small>Incluye cargos e IVA</small>
+                </span>
                 <strong aria-live="polite">{pricing ? formatTicketAmount(payAmount) : '…'}</strong>
               </div>
               {pricing ? (
@@ -756,25 +757,6 @@ function CheckoutForm() {
               </div>
             ) : null}
 
-            <p className={styles.secure}>
-              <svg
-                aria-hidden="true"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="5" y="11" width="14" height="9" rx="2" />
-                <path d="M8 11V8a4 4 0 018 0v3" />
-              </svg>
-              <span>
-                Pago con 3-D Secure. Tus boletos llegan a tu correo y a tu cuenta con un QR que
-                cambia cada 15 segundos.
-              </span>
-            </p>
-
             <div className={styles.payDock}>
               {payButton}
               <span className={styles.terms}>
@@ -784,7 +766,7 @@ function CheckoutForm() {
             </div>
 
             <button type="button" className={styles.drop} onClick={dropHold}>
-              Soltar apartado
+              Cancelar y liberar asientos
             </button>
           </aside>
         </div>

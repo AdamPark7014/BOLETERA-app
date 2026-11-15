@@ -853,8 +853,27 @@ export function SeatMapViewer({
     return <p className={styles.empty}>Mapa no disponible para este evento.</p>;
   }
 
+  // Selector por lista (teclado y lector de pantalla). En la compra pública va
+  // plegado bajo «Elegir por lista»; sigue completo y operable.
+  const accessiblePicker = (
+    <AccessibleSeatPicker
+      seats={seats}
+      sectionOrder={visibleSections.map((s) => ({ id: s.id, name: s.name }))}
+      seatIndexesBySection={seatIndexesBySection}
+      statusAt={statusAt}
+      selectedIds={selected}
+      maxSelect={maxSelect}
+      currency={currency}
+      accessibleOnly={accessibleOnly}
+      onAccessibleOnlyChange={setAccessibleOnly}
+      onToggleSeat={onToggle}
+      onFocusSeat={focusOnSeatIndex}
+      loading={feed.loadingDetail}
+    />
+  );
+
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} data-compact={compact || undefined}>
       {feed.error && (
         <p className={styles.connError} role="alert">
           {feed.error} (API: {API})
@@ -1103,9 +1122,6 @@ export function SeatMapViewer({
 
       {compact ? (
         <div className={styles.floatAnchor}>
-          <span className={feed.live ? styles.floatLive : styles.floatIdle} role="status">
-            {feed.live ? 'En vivo' : 'Actualiza cada 12 s'}
-          </span>
           <div className={styles.floatStack} role="toolbar" aria-label="Controles del mapa">
             <button
               type="button"
@@ -1120,77 +1136,6 @@ export function SeatMapViewer({
               aria-label="Alejar"
             >
               −
-            </button>
-            <button
-              type="button"
-              onClick={() => gestures.fitRect(bounds, 28, true)}
-              aria-label="Ver todo el recinto"
-              title="Ver todo el recinto"
-            >
-              <svg
-                aria-hidden="true"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              aria-pressed={accessibleOnly}
-              onClick={() => setAccessibleOnly((v) => !v)}
-              aria-label="Solo lugares accesibles"
-              title="Solo lugares accesibles"
-            >
-              ♿&#xFE0E;
-            </button>
-            <button
-              type="button"
-              aria-pressed={heatMode === 'view'}
-              onClick={() => setHeatMode((v) => (v === 'view' ? 'off' : 'view'))}
-              disabled={seats.length > SIGHTLINE_MAX_SEATS}
-              aria-label="Calidad de vista"
-              title="Calidad de vista"
-            >
-              <svg
-                aria-hidden="true"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              aria-pressed={showEgress}
-              onClick={() => setShowEgress((v) => !v)}
-              aria-controls="egress-legend egress-status"
-              disabled={
-                !projected.aisles.length && !projected.exits.length && !projected.stairs.length
-              }
-              aria-label="Rutas de salida"
-              title="Rutas de salida"
-            >
-              <svg
-                aria-hidden="true"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" />
-              </svg>
             </button>
             {controls}
           </div>
@@ -1469,7 +1414,7 @@ export function SeatMapViewer({
           </g>
         </svg>
 
-        <p className={styles.hint} id="map-help">
+        <p className={compact ? styles.srOnly : styles.hint} id="map-help">
           {canSelectByTap
             ? 'Toca una butaca para elegirla · pellizca para el zoom · doble toque para acercar'
             : 'Toca una zona para acercarte · pellizca para el zoom · las butacas aparecen al ampliar'}
@@ -1480,7 +1425,7 @@ export function SeatMapViewer({
           Quien navega con lector de pantalla llega a la butaca por el selector
           accesible, cuya opción ya lleva el detalle completo en su nombre; una
           región viva aquí haría que todo se dijera dos veces. */}
-      <p className={styles.focus}>
+      <p className={compact && !focused ? styles.srOnly : styles.focus}>
         {focused
           ? `${focused.row ? `Fila ${focused.row}, ` : ''}butaca ${focused.label}, ${focused.sectionName}, $${focused.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}${focused.accessible ? ', lugar accesible' : ''}${
               focusedStatus === 'available'
@@ -1503,64 +1448,60 @@ export function SeatMapViewer({
         {statusMessage}
       </p>
 
-      <aside className={styles.tray} aria-label="Selección">
-        <div className={styles.trayHead}>
-          <div>
-            <p className={styles.trayTitle}>
-              {selectedInfo.length
-                ? `${selectedInfo.length} asiento${selectedInfo.length === 1 ? '' : 's'}`
-                : 'Ninguno seleccionado'}
-            </p>
-            <p className={styles.traySub}>
-              {selectedInfo.length
-                ? `Total $${selectionTotalValue.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`
-                : `Máx. ${maxSelect} · elige en el mapa o en la lista`}
-            </p>
+      {!compact ? (
+        <aside className={styles.tray} aria-label="Selección">
+          <div className={styles.trayHead}>
+            <div>
+              <p className={styles.trayTitle}>
+                {selectedInfo.length
+                  ? `${selectedInfo.length} asiento${selectedInfo.length === 1 ? '' : 's'}`
+                  : 'Ninguno seleccionado'}
+              </p>
+              <p className={styles.traySub}>
+                {selectedInfo.length
+                  ? `Total $${selectionTotalValue.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`
+                  : `Máx. ${maxSelect} · elige en el mapa o en la lista`}
+              </p>
+            </div>
+            {selectedInfo.length > 0 && onClear && (
+              <button type="button" className={styles.trayClear} onClick={onClear}>
+                Limpiar
+              </button>
+            )}
           </div>
-          {selectedInfo.length > 0 && onClear && (
-            <button type="button" className={styles.trayClear} onClick={onClear}>
-              Limpiar
-            </button>
+          {selectedInfo.length > 0 && (
+            <ul className={styles.trayList}>
+              {selectedInfo.map((item) => (
+                <li key={item.seatId}>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <span>
+                      {item.sectionName} · $
+                      {item.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Quitar ${item.label}`}
+                    onClick={() => onToggle(item.seatId)}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
-        </div>
-        {selectedInfo.length > 0 && (
-          <ul className={styles.trayList}>
-            {selectedInfo.map((item) => (
-              <li key={item.seatId}>
-                <div>
-                  <strong>{item.label}</strong>
-                  <span>
-                    {item.sectionName} · $
-                    {item.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  aria-label={`Quitar ${item.label}`}
-                  onClick={() => onToggle(item.seatId)}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </aside>
+        </aside>
+      ) : null}
 
-      <AccessibleSeatPicker
-        seats={seats}
-        sectionOrder={visibleSections.map((s) => ({ id: s.id, name: s.name }))}
-        seatIndexesBySection={seatIndexesBySection}
-        statusAt={statusAt}
-        selectedIds={selected}
-        maxSelect={maxSelect}
-        currency={currency}
-        accessibleOnly={accessibleOnly}
-        onAccessibleOnlyChange={setAccessibleOnly}
-        onToggleSeat={onToggle}
-        onFocusSeat={focusOnSeatIndex}
-        loading={feed.loadingDetail}
-      />
+      {compact ? (
+        <details className={styles.listPicker}>
+          <summary>Elegir por lista</summary>
+          {accessiblePicker}
+        </details>
+      ) : (
+        accessiblePicker
+      )}
     </div>
   );
 }

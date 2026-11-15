@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { StageArt } from '@boletera/ui';
 import { WaitlistSignup } from '@/components/WaitlistSignup';
 import { Countdown } from '@/components/home/Countdown';
-import { availability, categoryLabel, longWhen, priceLabel, shortWhen } from '@/lib/event-display';
+import { availability, longWhen, priceLabel } from '@/lib/event-display';
 import { EventPurchaseClient } from './EventPurchaseClient';
 import styles from './event.module.scss';
 
@@ -32,12 +32,10 @@ export function EventStage({
   rating,
   image,
   bannerImage,
-  category,
   allowResale,
   transferAllowed,
   refundable,
   nonTransferable,
-  holdExpiration,
   offers,
   venueName,
   venueCity,
@@ -81,7 +79,6 @@ export function EventStage({
   const place = [venueName, venueCity].filter(Boolean).join(', ');
   const announced = minPriceAllIn && minPriceAllIn > 0 ? minPriceAllIn : minPrice;
   const hasOffer = offers.length > 0;
-  const minutes = Math.round((holdExpiration ?? 900) / 60);
   const stock = availability(offers);
   const doors = doorsAt
     ? new Date(doorsAt).toLocaleTimeString('es-MX', {
@@ -134,11 +131,6 @@ export function EventStage({
                 {doors ? ` · Puertas ${doors}` : ''}
               </span>
             </div>
-            <span className={styles.holdPill}>
-              <span className={styles.dot} aria-hidden="true" />
-              Apartado al continuar
-              <strong>{minutes} min</strong>
-            </span>
           </div>
         </div>
         <EventPurchaseClient
@@ -181,15 +173,9 @@ export function EventStage({
         </span>
         <span className={styles.heroShade} />
         <div className={styles.heroCopy}>
-          <div className={styles.tags}>
-            <span className={styles.tagGold}>
-              {stock.soldOut ? 'AGOTADO' : salesSoon ? 'PRÓXIMAMENTE' : 'VENTA ABIERTA'}
-            </span>
-            <span className={styles.tagLine}>{categoryLabel(category).toUpperCase()}</span>
-            {stock.label.startsWith('Últimos') ? (
-              <span className={styles.tagLine}>{stock.label.toUpperCase()}</span>
-            ) : null}
-          </div>
+          {stock.soldOut || stock.label.startsWith('Últimos') ? (
+            <span className={styles.badge}>{stock.soldOut ? 'Agotado' : 'Últimos lugares'}</span>
+          ) : null}
           <h1 className={styles.heroTitle} id="evento-title">
             {title}
           </h1>
@@ -197,22 +183,15 @@ export function EventStage({
             {[longWhen(startsAt), place].filter(Boolean).join(' · ')}
             {doors ? ` · Puertas ${doors}` : ''}
           </p>
-          <div className={styles.heroActions}>
-            {hasOffer && !stock.soldOut ? (
-              <button type="button" className={styles.primary} onClick={() => setStage('zona')}>
-                {announced > 0 ? `Ver boletos desde ${priceLabel(announced)}` : 'Elegir boletos'}
-              </button>
-            ) : null}
-            {allowResale !== false ? (
-              <Link href="/resale" className={styles.secondary}>
-                Reventa oficial
-              </Link>
-            ) : null}
-          </div>
+          {hasOffer && !stock.soldOut ? (
+            <button type="button" className={styles.primary} onClick={() => setStage('zona')}>
+              {announced > 0 ? `Boletos desde ${priceLabel(announced)}` : 'Elegir boletos'}
+            </button>
+          ) : null}
         </div>
         {salesSoon ? (
           <div className={styles.heroCount}>
-            <Countdown target={salesSoon} label="VENTA GENERAL EN" />
+            <Countdown target={salesSoon} label="La venta abre en" />
           </div>
         ) : null}
       </section>
@@ -221,20 +200,15 @@ export function EventStage({
         <div className={styles.fichaMain}>
           {!hasOffer || stock.soldOut ? (
             <section className={styles.panel}>
-              <h2 className={styles.h2}>{stock.soldOut ? 'Agotado' : 'Aún no hay boletos'}</h2>
-              <p className={styles.muted}>
-                Déjanos tu correo y te avisamos si se liberan lugares o abre una nueva fase.
-              </p>
+              <h2 className={styles.h2}>{stock.soldOut ? 'Agotado' : 'Pronto a la venta'}</h2>
+              <p className={styles.muted}>Te avisamos si se liberan lugares.</p>
               <WaitlistSignup eventId={eventId} eventTitle={title} />
             </section>
           ) : (
             <section className={styles.panel} aria-labelledby="zonas-title">
-              <div className={styles.panelHead}>
-                <h2 className={styles.h2} id="zonas-title">
-                  Zonas y precios
-                </h2>
-                <span className={styles.muted}>Precio final por boleto</span>
-              </div>
+              <h2 className={styles.h2} id="zonas-title">
+                Zonas
+              </h2>
               <ul className={styles.zoneList}>
                 {offers.map((offer) => {
                   const price = Number(offer.allInPrice ?? offer.basePrice);
@@ -251,8 +225,8 @@ export function EventStage({
                         <span className={styles.zoneLeft}>
                           {out
                             ? 'Agotada'
-                            : offer.remainingQuantity != null
-                              ? `${offer.remainingQuantity} disponibles`
+                            : offer.remainingQuantity != null && offer.remainingQuantity <= 20
+                              ? 'Últimos lugares'
                               : ''}
                         </span>
                         <span className={styles.zonePrice}>{priceLabel(price)}</span>
@@ -261,9 +235,6 @@ export function EventStage({
                   );
                 })}
               </ul>
-              <button type="button" className={styles.primaryWide} onClick={() => setStage('zona')}>
-                Elegir boletos
-              </button>
             </section>
           )}
 
@@ -297,30 +268,26 @@ export function EventStage({
               <StageArt seed={slug} className={styles.cover} />
             )}
           </div>
-          <section className={styles.panel}>
-            <span className={styles.kicker}>Recinto</span>
-            <strong className={styles.venueName}>{venueName ?? 'Por confirmar'}</strong>
+          <section className={styles.venue}>
+            <strong className={styles.venueName}>{venueName ?? 'Recinto por confirmar'}</strong>
             {venueAddress || venueCity ? (
               <span className={styles.muted}>
                 {[venueAddress, venueCity].filter(Boolean).join(', ')}
               </span>
             ) : null}
-            <span className={styles.muted}>{shortWhen(startsAt)}</span>
             {venueSlug ? (
               <Link href={`/venues/${venueSlug}`} className={styles.textLink}>
-                Ver recinto y su cartelera
+                Ver recinto
               </Link>
             ) : null}
+            <span className={styles.conds}>
+              {[
+                refundable === false ? 'No reembolsable' : 'Reembolsable',
+                nonTransferable || transferAllowed === false ? 'No transferible' : 'Transferible',
+                allowResale === false ? 'Sin reventa' : 'Reventa oficial',
+              ].join(' · ')}
+            </span>
           </section>
-          <ul className={styles.conds} aria-label="Condiciones del boleto">
-            <li>{refundable === false ? 'No reembolsable' : 'Reembolsable'}</li>
-            <li>
-              {nonTransferable || transferAllowed === false ? 'No transferible' : 'Transferible'}
-            </li>
-            <li>{allowResale === false ? 'Sin reventa' : 'Reventa oficial'}</li>
-            <li>Apartado de {minutes} min</li>
-            <li>Cargos e IVA incluidos</li>
-          </ul>
         </aside>
       </div>
     </div>

@@ -407,7 +407,7 @@ export default function CartPage() {
 
                 <p className={styles.hint}>
                   {allPriced
-                    ? 'Precio final: ya incluye cargo por servicio e IVA. Es el mismo importe que verás al pagar.'
+                    ? 'Incluye cargos e IVA.'
                     : pricingLoading
                       ? 'Calculando el total con cargo por servicio e IVA…'
                       : 'El total con cargo por servicio e IVA se muestra en el checkout, antes de cualquier cobro.'}
