@@ -2,12 +2,12 @@
 
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
-import { ParameterCard, TicketButton } from '@boletera/ui';
+import { TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../../events/_shared/api-state';
 import { AdminFrame } from '../../events/_ticket/AdminFrame';
-import { Param, Switch } from '../../events/_ticket/controls';
+import { Switch } from '../../events/_ticket/controls';
 import styles from '../../events/_ticket/frame.module.scss';
 import { asRecord, readString, yesNo } from '../../events/_ticket/read';
 
@@ -49,11 +49,6 @@ function readFlags(payload: unknown): Flags {
     speiSaved: readBool(row.speiSaved, false),
     oxxoSaved: readBool(row.oxxoSaved, false),
   };
-}
-
-function methodEffect(saved: boolean, on: boolean): string {
-  if (!saved) return 'Sin clave. Sigue activo.';
-  return on ? 'El checkout lo ofrece.' : 'El checkout no lo ofrece.';
 }
 
 export default function PaymentsPage() {
@@ -120,7 +115,7 @@ function PagosBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Pagos</h1>
+          <h1 className={styles.sectionTitle}>Pasarela de pago</h1>
           <NoAccess />
         </header>
       </section>
@@ -135,7 +130,9 @@ function PagosBody() {
       />
     );
   }
-  if (loading || !config || !flags) return <p className={styles.quiet}>Cargando pagos.</p>;
+  if (loading || !config || !flags) {
+    return <div className={styles.skeleton} style={{ height: 360 }} aria-label="Cargando pagos" />;
+  }
 
   const tarjetaDirty = tarjeta !== flags.tarjeta;
   const speiDirty = spei !== flags.SPEI;
@@ -176,90 +173,118 @@ function PagosBody() {
     }
   }
 
+  const methods = [
+    {
+      key: 'tarjeta',
+      label: 'Tarjeta',
+      detail: 'Crédito y débito, cobro inmediato.',
+      on: tarjeta,
+      saved: flags.tarjetaSaved,
+      dirty: tarjetaDirty,
+      set: setTarjeta,
+    },
+    {
+      key: 'spei',
+      label: 'SPEI',
+      detail: 'Transferencia bancaria con referencia.',
+      on: spei,
+      saved: flags.speiSaved,
+      dirty: speiDirty,
+      set: setSpei,
+    },
+    {
+      key: 'oxxo',
+      label: 'OXXO',
+      detail: 'Pago en efectivo en tienda con ficha.',
+      on: oxxo,
+      saved: flags.oxxoSaved,
+      dirty: oxxoDirty,
+      set: setOxxo,
+    },
+  ];
+  const activeCount = methods.filter((method) => method.on).length;
+  const live = config.mode === 'live';
+
   return (
-    <section>
-      <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Pagos</h1>
+    <section className={styles.page}>
+      <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
+        <h1 className={styles.sectionTitle}>Pasarela de pago</h1>
         <p className={styles.quiet}>
-          Tarjeta, SPEI y OXXO. Si la clave no está, el método sigue activo. Las credenciales no
-          entran a la ficha.
+          Qué formas de pago ve el comprador en el checkout. El efectivo de taquilla se cobra
+          aparte.
         </p>
       </header>
-      <div className={styles.stack}>
-        <Param name="Pasarela">
-          <ParameterCard
-            name="Pasarela"
-            value={config.mode === 'live' ? 'Banorte · En vivo' : 'Banorte · Demo'}
-            effect={config.settlement ?? 'Estado enmascarado. Sin el secreto.'}
-          />
-        </Param>
-        {config.clabe ? (
-          <Param name="CLABE">
-            <ParameterCard
-              name="CLABE"
-              value={config.clabe}
-              valueStyle="mono"
-              effect="Enmascarada. El secreto no se muestra."
-            />
-          </Param>
-        ) : null}
-        <Param name="Tarjeta">
-          <ParameterCard
-            name="Tarjeta"
-            value={yesNo(tarjeta)}
-            effect={
-              tarjetaDirty
-                ? methodEffect(true, tarjeta)
-                : methodEffect(flags.tarjetaSaved, flags.tarjeta)
-            }
-          >
-            <Switch
-              label="Tarjeta"
-              on={tarjeta}
-              onChange={(next) => {
-                setTarjeta(next);
-                setNotice(null);
-              }}
-            />
-          </ParameterCard>
-        </Param>
-        <Param name="SPEI">
-          <ParameterCard
-            name="SPEI"
-            value={yesNo(spei)}
-            effect={
-              speiDirty ? methodEffect(true, spei) : methodEffect(flags.speiSaved, flags.SPEI)
-            }
-          >
-            <Switch
-              label="SPEI"
-              on={spei}
-              onChange={(next) => {
-                setSpei(next);
-                setNotice(null);
-              }}
-            />
-          </ParameterCard>
-        </Param>
-        <Param name="OXXO">
-          <ParameterCard
-            name="OXXO"
-            value={yesNo(oxxo)}
-            effect={
-              oxxoDirty ? methodEffect(true, oxxo) : methodEffect(flags.oxxoSaved, flags.OXXO)
-            }
-          >
-            <Switch
-              label="OXXO"
-              on={oxxo}
-              onChange={(next) => {
-                setOxxo(next);
-                setNotice(null);
-              }}
-            />
-          </ParameterCard>
-        </Param>
+
+      <div className={styles.kpis}>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Pasarela</p>
+          <p className={styles.kpiValue}>Banorte</p>
+          <p className={styles.kpiNote}>
+            <span className={live ? styles.chipOk : styles.chipWarn}>
+              {live ? 'En vivo: cobros reales' : 'Modo demostración'}
+            </span>
+          </p>
+        </div>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Métodos activos</p>
+          <p className={styles.kpiValue}>
+            {activeCount}{' '}
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.6em' }}>/ 3</span>
+          </p>
+          <p className={styles.kpiNote}>en el checkout</p>
+        </div>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Cuenta de depósito</p>
+          <p className={styles.kpiValue} style={{ fontFamily: 'var(--font-mono)', fontSize: 22 }}>
+            {config.clabe ?? 'Sin CLABE'}
+          </p>
+          <p className={styles.kpiNote}>{config.settlement ?? 'CLABE enmascarada por seguridad'}</p>
+        </div>
       </div>
+
+      <div className={styles.tableWrap} style={{ maxHeight: 'none' }}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th scope="col">Método</th>
+              <th scope="col">En el checkout</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {methods.map((method) => (
+              <tr key={method.key} data-param={method.label}>
+                <td>
+                  <strong>{method.label}</strong>
+                  <p className={styles.rowMeta}>{method.detail}</p>
+                </td>
+                <td>
+                  <Switch
+                    label={method.label}
+                    on={method.on}
+                    onChange={(next) => {
+                      method.set(next);
+                      setNotice(null);
+                    }}
+                  />
+                </td>
+                <td>
+                  {method.dirty ? (
+                    <span className={styles.chipGold}>Sin guardar</span>
+                  ) : !method.saved ? (
+                    <span className={styles.chipOk}>Activo por omisión</span>
+                  ) : method.on ? (
+                    <span className={styles.chipOk}>Se ofrece</span>
+                  ) : (
+                    <span className={styles.chip}>Apagado</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       {saveError ? (
         <p className={styles.danger} role="alert">
           {saveError}
@@ -267,12 +292,10 @@ function PagosBody() {
       ) : null}
       <div className={styles.saveBar}>
         <p className={styles.quiet} aria-live="polite">
-          {dirty
-            ? 'Sin guardar'
-            : (notice ?? 'Efectivo se cobra en taquilla y no está en esta pasarela.')}
+          {dirty ? `Sin guardar · ${changes.join(' · ')}` : (notice ?? '')}
         </p>
         <TicketButton disabled={!dirty || saving} onClick={() => void save()}>
-          Guardar cambios
+          {saving ? 'Guardando' : 'Guardar cambios'}
         </TicketButton>
       </div>
     </section>

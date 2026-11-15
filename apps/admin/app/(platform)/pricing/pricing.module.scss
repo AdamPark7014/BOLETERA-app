@@ -33,3 +33,60 @@
   color: var(--text-secondary);
   font: var(--body-sm);
 }
+
+.queue {
+  padding: 20px;
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2a2218 0%, var(--card) 60%);
+}
+
+.rowOpen td {
+  background: var(--elevated);
+}
+
+.delta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.deltaTrack {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-width: 60px;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--line-strong);
+  overflow: hidden;
+}
+
+.deltaUp,
+.deltaDown,
+.deltaHold {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+}
+
+.deltaUp {
+  background: var(--ok);
+}
+
+.deltaDown {
+  background: var(--warn);
+}
+
+.deltaHold {
+  background: transparent;
+}
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}

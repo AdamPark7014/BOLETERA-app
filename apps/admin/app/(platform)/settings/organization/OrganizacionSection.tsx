@@ -254,8 +254,8 @@ export function OrganizacionBody() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Organización</h1>
         <p className={styles.quiet}>
-          Se guardan nombre, descripción, sitio, correo y teléfono. El resto de esta ficha se lee.
-          Comisión y reventa viven en Comisiones.
+          Datos de tu empresa que ven tus compradores. Nombre, descripción, sitio, correo y teléfono
+          se editan aquí; comisión y reventa están en Finanzas › Comisiones.
         </p>
       </header>
       <div className={styles.stack}>
@@ -263,7 +263,7 @@ export function OrganizacionBody() {
           <ParameterCard
             name="Nombre de la organización"
             value={draft.name}
-            effect="Razón visible."
+            effect="Nombre que ven tus compradores."
           >
             {canSave ? (
               <Field
@@ -367,12 +367,12 @@ export function OrganizacionBody() {
         <Read
           name="Logo de la org"
           value={org.logoUrl ?? 'Sin imagen'}
-          effect="La cartelera lee el logo de Marca."
+          effect="El logo se cambia en Marca."
         />
         <Read
           name="Banner de la org"
           value={org.bannerUrl ?? 'Sin imagen'}
-          effect="La cartelera lee Marca."
+          effect="Se cambia en Marca."
         />
         <Read
           name="Titular de la cuenta"
@@ -393,13 +393,9 @@ export function OrganizacionBody() {
           name="Número de cuenta"
           value={maskAccount(org.bankAccountNumber)}
           mono
-          effect="Enmascarado. No se copia a liquidaciones."
+          effect="Enmascarado por seguridad."
         />
-        <Read
-          name="PayPal"
-          value={text(org.paypalEmail)}
-          effect="No hay cobro PayPal al comprador."
-        />
+        <Read name="PayPal" value={text(org.paypalEmail)} effect="Solo informativo." />
         <Read
           name="Stripe"
           value="No usar"
@@ -410,7 +406,7 @@ export function OrganizacionBody() {
         <Read
           name="RFC en la org"
           value={text(org.taxId)}
-          effect="El fiscal que factura es el perfil de Facturación."
+          effect="Los datos con que se factura están en Facturación."
         />
         <Read name="Verificada" value={yesNo(org.verified)} effect="No se edita desde aquí." />
         <Read name="KYC" value={word(CHECK, org.kycStatus)} effect="No se edita desde aquí." />

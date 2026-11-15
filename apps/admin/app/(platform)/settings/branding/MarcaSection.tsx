@@ -226,9 +226,8 @@ export function MarcaBody() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Marca y contenido</h1>
         <p className={styles.quiet}>
-          Estos colores no pintan Black Ticket. Se guardan color primario, logo, subdominio y el
-          contenido que el API ya acepta. Si no había contenido, lo que se ve es la reserva de la
-          web. Lo demás se lee.
+          Tu logo, color y subdominio para tus páginas de venta, y los textos de la portada. Si aún
+          no hay contenido propio, se muestra el de Black Ticket.
         </p>
       </header>
       <div className={styles.stack}>
@@ -237,7 +236,7 @@ export function MarcaBody() {
             name="Color primario"
             value={color || '—'}
             valueStyle="mono"
-            effect="Columna de marca. No pinta el producto."
+            effect="Color de tus páginas de venta."
           >
             <Field
               label="Color primario"
@@ -261,7 +260,7 @@ export function MarcaBody() {
           <ParameterCard
             name="Logo"
             value={logo || 'Sin imagen'}
-            effect="Dirección que usa la cartelera. No es un archivo."
+            effect="Dirección web de la imagen del logo."
           >
             <Field
               label="Logo"
@@ -308,7 +307,7 @@ export function MarcaBody() {
           <ParameterCard
             name="Titular"
             value={content.heroHeadline || '—'}
-            effect="Titular del home."
+            effect="Titular de la portada."
           >
             <Field
               label="Titular"
@@ -323,7 +322,7 @@ export function MarcaBody() {
           <ParameterCard
             name="Subtítulo"
             value={content.heroSubcopy || '—'}
-            effect="Bajada del home."
+            effect="Texto bajo el titular de la portada."
           >
             <Field
               label="Subtítulo"
@@ -451,7 +450,11 @@ function CardFields({ card, onChange }: { card: Card; onChange: (next: Card) => 
   return (
     <>
       <Param name="Tarjeta, título">
-        <ParameterCard name="Tarjeta, título" value={card.title || '—'} effect="Tarjeta curada.">
+        <ParameterCard
+          name="Tarjeta, título"
+          value={card.title || '—'}
+          effect="Tarjeta destacada de la portada."
+        >
           <Field
             label="Tarjeta, título"
             value={card.title}
@@ -463,7 +466,7 @@ function CardFields({ card, onChange }: { card: Card; onChange: (next: Card) => 
         <ParameterCard
           name="Tarjeta, subtítulo"
           value={card.subtitle || '—'}
-          effect="Tarjeta curada."
+          effect="Tarjeta destacada de la portada."
         >
           <Field
             label="Tarjeta, subtítulo"

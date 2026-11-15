@@ -41,13 +41,7 @@ import {
   type PageSize,
   type PendingRow,
 } from './_lib/derive';
-import {
-  confidenceLabel,
-  describeHistoryReason,
-  directionLabel,
-  factorLabel,
-  shortId,
-} from './_lib/labels';
+import { confidenceLabel, describeHistoryReason, directionLabel, factorLabel } from './_lib/labels';
 import {
   useApplyRecommendations,
   useOfferPriceHistory,
@@ -198,7 +192,6 @@ function PreciosBody() {
     [pendingRows, url.query]
   );
 
-  const selectedEvent = eventsQ.data?.find((event) => event.id === activeEventId);
   const forbidden =
     bundleQ.error instanceof PermissionError || pendingQ.error instanceof PermissionError;
 
@@ -423,58 +416,49 @@ function PreciosBody() {
         </p>
       ) : (
         <>
-          <ul className={`${styles.rows} ${local.block}`} aria-label="Resumen de precios">
-            <li className={styles.row}>
-              <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>Ofertas evaluadas</p>
-                <p className={styles.rowMeta}>
-                  {selectedEvent?.title ?? bundleQ.data?.title ?? 'Evento elegido'}
-                </p>
-              </div>
-              <span />
-              <p className={styles.figure}>{bundleQ.data ? formatNumber(summary.total) : '—'}</p>
-            </li>
-            <li className={styles.row}>
-              <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>Pendientes de aprobación</p>
-                <p className={styles.rowMeta}>
-                  {pendingRows.some((row) => row.expired)
-                    ? 'Hay recomendaciones vencidas (más de 24 h)'
-                    : 'Cola humana'}
-                </p>
-              </div>
-              <span />
-              <p className={styles.figure}>
+          <div className={`${styles.kpis} ${local.block}`} aria-label="Resumen de precios">
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Zonas evaluadas</p>
+              <p className={styles.kpiValue}>{bundleQ.data ? formatNumber(summary.total) : '—'}</p>
+              <p className={styles.kpiNote}>
+                <span className={styles.up}>{formatNumber(summary.increases)} subir</span>
+                <span className={styles.down}>{formatNumber(summary.decreases)} bajar</span>
+                <span>{formatNumber(summary.holds)} igual</span>
+              </p>
+            </div>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Esperan aprobación</p>
+              <p
+                className={styles.kpiValue}
+                style={pendingRows.length > 0 ? { color: 'var(--gold)' } : undefined}
+              >
                 {pendingQ.data ? formatNumber(pendingRows.length) : '—'}
               </p>
-            </li>
-            <li className={styles.row}>
-              <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>Aplicables sin firma</p>
-                <p className={styles.rowMeta}>
-                  {formatNumber(summary.requiresApproval)} piden firma
-                </p>
-              </div>
-              <span />
-              <p className={styles.figure}>
+              <p className={styles.kpiNote}>
+                {pendingRows.some((row) => row.expired)
+                  ? 'hay recomendaciones vencidas (más de 24 h)'
+                  : 'cambios que firma administración'}
+              </p>
+            </div>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Se aplican sin firma</p>
+              <p className={styles.kpiValue}>
                 {bundleQ.data ? formatNumber(summary.autoApplicable) : '—'}
               </p>
-            </li>
-            <li className={styles.row}>
-              <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>Ocupación</p>
-                <p className={styles.rowMeta}>
-                  {bundleQ.data
-                    ? `${formatNumber(bundleQ.data.signals.soldTickets)} / ${formatNumber(bundleQ.data.signals.totalCapacity)} boletos`
-                    : 'Señales del motor'}
-                </p>
-              </div>
-              <span />
-              <p className={styles.figure}>
+              <p className={styles.kpiNote}>{formatNumber(summary.requiresApproval)} piden firma</p>
+            </div>
+            <div className={styles.kpi}>
+              <p className={styles.kpiLabel}>Ocupación</p>
+              <p className={styles.kpiValue}>
                 {bundleQ.data ? formatPercent(bundleQ.data.signals.occupancyPercent / 100) : '—'}
               </p>
-            </li>
-          </ul>
+              <p className={styles.kpiNote}>
+                {bundleQ.data
+                  ? `${formatNumber(bundleQ.data.signals.soldTickets)} de ${formatNumber(bundleQ.data.signals.totalCapacity)} boletos`
+                  : 'sin señales todavía'}
+              </p>
+            </div>
+          </div>
           {bundleQ.data ? (
             <p className={styles.tertiary}>
               {bundleQ.data.summary} · {generatedAgeLabel(bundleQ.data, now)} · dinámico{' '}
@@ -588,31 +572,53 @@ function PreciosBody() {
                     </div>
                   ) : (
                     <>
-                      {page.rows.map((item) => (
-                        <RecommendationItem
-                          key={item.offerId}
-                          item={item}
-                          open={url.offerId === item.offerId}
-                          canWrite={canWrite}
-                          applying={applyMutation.isPending}
-                          selected={selectedKeys.includes(item.offerId)}
-                          history={historyQ.data ?? []}
-                          historyPending={historyQ.isPending}
-                          historyError={historyQ.error}
-                          onToggle={() =>
-                            url.setOfferId(url.offerId === item.offerId ? null : item.offerId)
-                          }
-                          onSelect={(on) =>
-                            setSelectedKeys((current) =>
-                              on
-                                ? [...current, item.offerId]
-                                : current.filter((key) => key !== item.offerId)
-                            )
-                          }
-                          onApply={() => void applyOffers([item.offerId], false)}
-                          onRetryHistory={() => void historyQ.refetch()}
-                        />
-                      ))}
+                      <div className={styles.tableWrap} style={{ maxHeight: 'none' }}>
+                        <table className={styles.table}>
+                          <thead>
+                            <tr>
+                              <th scope="col">Zona</th>
+                              <th scope="col" className={styles.num}>
+                                Vigente
+                              </th>
+                              <th scope="col" className={styles.num}>
+                                Sugerido
+                              </th>
+                              <th scope="col">Cambio</th>
+                              <th scope="col">Condición</th>
+                              <th scope="col">
+                                <span className={styles.srOnly}>Detalle</span>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {page.rows.map((item) => (
+                              <RecommendationItem
+                                key={item.offerId}
+                                item={item}
+                                open={url.offerId === item.offerId}
+                                canWrite={canWrite}
+                                applying={applyMutation.isPending}
+                                selected={selectedKeys.includes(item.offerId)}
+                                history={historyQ.data ?? []}
+                                historyPending={historyQ.isPending}
+                                historyError={historyQ.error}
+                                onToggle={() =>
+                                  url.setOfferId(url.offerId === item.offerId ? null : item.offerId)
+                                }
+                                onSelect={(on) =>
+                                  setSelectedKeys((current) =>
+                                    on
+                                      ? [...current, item.offerId]
+                                      : current.filter((key) => key !== item.offerId)
+                                  )
+                                }
+                                onApply={() => void applyOffers([item.offerId], false)}
+                                onRetryHistory={() => void historyQ.refetch()}
+                              />
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                       <div className={local.toolbar}>
                         <p className={styles.tertiary}>
                           {formatNumber(page.from)}–{formatNumber(page.to)} de{' '}
@@ -687,23 +693,53 @@ function PreciosBody() {
                   ) : null}
                 </div>
               ) : (
-                <div className={styles.stack}>
-                  {[...filteredPending]
-                    .sort(
-                      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                    )
-                    .map((row) => (
-                      <PendingItem
-                        key={row.id}
-                        row={row}
-                        canWrite={canWrite}
-                        reviewing={
-                          reviewMutation.isPending &&
-                          reviewMutation.variables?.recommendationId === row.id
-                        }
-                        onReview={(decision, note) => void review(row.id, decision, note)}
-                      />
-                    ))}
+                <div className={local.queue}>
+                  <div className={styles.panelHead}>
+                    <div>
+                      <h2 className={styles.panelTitle}>Esperan aprobación</h2>
+                      <p className={styles.rowMeta}>
+                        Cambios que pasaron del tope automático. Se aprueban o se rechazan uno por
+                        uno.
+                      </p>
+                    </div>
+                    <span className={styles.chipGold}>
+                      {formatNumber(filteredPending.length)} en cola
+                    </span>
+                  </div>
+                  <div className={styles.tableWrap} style={{ border: 0, maxHeight: 'none' }}>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr>
+                          <th scope="col">Zona</th>
+                          <th scope="col">Cambio de precio</th>
+                          <th scope="col">Variación</th>
+                          <th scope="col">Vence</th>
+                          <th scope="col">
+                            <span className={styles.srOnly}>Revisar</span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...filteredPending]
+                          .sort(
+                            (a, b) =>
+                              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                          )
+                          .map((row) => (
+                            <PendingItem
+                              key={row.id}
+                              row={row}
+                              canWrite={canWrite}
+                              reviewing={
+                                reviewMutation.isPending &&
+                                reviewMutation.variables?.recommendationId === row.id
+                              }
+                              onReview={(decision, note) => void review(row.id, decision, note)}
+                            />
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -776,128 +812,176 @@ function RecommendationItem({
 }) {
   const actionable = isActionable(item);
   const label = item.zone === item.name ? item.name : `${item.zone} · ${item.name}`;
-  const marks = [
-    directionLabel(item.direction),
-    formatDelta(item.deltaPercent),
-    item.requiresApproval ? 'pide aprobación' : null,
-    item.guardrail.clamped ? 'acotada' : null,
-  ].filter(Boolean);
+  const delta = item.deltaPercent;
+  const width = Math.min(100, (Math.abs(delta) / 30) * 100);
   return (
-    <div className={styles.stack}>
-      <button
-        type="button"
-        className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-        aria-expanded={open}
-        onClick={onToggle}
-      >
-        <span>
-          {label}
-          <span className={styles.rowMeta}> · {marks.join(' · ')}</span>
-        </span>
-        <span className={styles.figure}>
-          {formatCurrency(item.currentPrice)} → {formatCurrency(item.recommendedPrice)}
-        </span>
-      </button>
-      {open ? (
-        <div className={local.detail}>
-          <p className={styles.mono}>{item.offerId}</p>
-          <ul className={styles.rows}>
-            <DetailRow name="Precio vigente" value={formatCurrency(item.currentPrice)} />
-            <DetailRow name="Recomendado" value={formatCurrency(item.recommendedPrice)} />
-            <DetailRow name="Precio base" value={formatCurrency(item.basePrice)} />
-            <DetailRow name="Variación" value={formatDelta(item.deltaPercent)} />
-            <DetailRow
-              name="Multiplicador"
-              value={`×${formatNumber(item.recommendedMultiplier, 3)}`}
-            />
-            <DetailRow name="Confianza" value={confidenceLabel(item.confidence)} />
-            <DetailRow
-              name="Banda"
-              value={`${item.guardrail.bandLabel}${item.guardrail.clamped ? ' · acotado' : ''}`}
-            />
-          </ul>
-          <p className={styles.quiet}>{item.explanation}</p>
-          <p className={styles.tertiary}>
-            {item.guardrail.clamped
-              ? `El candidato era ${formatCurrency(item.guardrail.preClampPrice)}; el motor lo recortó a ${formatCurrency(item.guardrail.floor)} – ${formatCurrency(item.guardrail.ceiling)}.`
-              : `Dentro de ${formatCurrency(item.guardrail.floor)} – ${formatCurrency(item.guardrail.ceiling)}.`}
+    <>
+      <tr className={open ? local.rowOpen : undefined}>
+        <td>
+          <strong>{label}</strong>
+          <p className={styles.rowMeta}>
+            Confianza {confidenceLabel(item.confidence).toLowerCase()}
           </p>
-
-          <p className={local.subTitle}>Factores</p>
-          {item.factors.length === 0 ? (
-            <p className={styles.quiet}>El motor no adjuntó factores para esta oferta.</p>
-          ) : (
-            <ul className={styles.rows}>
-              {item.factors.map((factor) => (
-                <li key={`${factor.code}-${factor.detail}`} className={styles.row}>
-                  <div className={styles.rowMain}>
-                    <p className={styles.rowTitle}>{factorLabel(factor.code)}</p>
-                    <p className={styles.rowMeta}>{factor.detail}</p>
-                  </div>
-                  <p className={styles.tertiary}>
-                    {factor.threshold !== undefined
-                      ? `umbral ${formatNumber(factor.threshold, 2)}`
-                      : ''}
-                  </p>
-                  <p className={styles.figure}>×{formatNumber(factor.contribution, 3)}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <p className={local.subTitle}>Historial de precios</p>
-          {historyError ? (
-            <div className={styles.stack}>
-              <p className={styles.danger} role="alert">
-                {errorText(historyError)}
+        </td>
+        <td className={styles.num}>{formatCurrency(item.currentPrice)}</td>
+        <td className={styles.num}>
+          <strong>{formatCurrency(item.recommendedPrice)}</strong>
+        </td>
+        <td style={{ minWidth: 160 }}>
+          <div className={local.delta}>
+            <span className={local.deltaTrack} aria-hidden="true">
+              <span
+                className={
+                  item.direction === 'increase'
+                    ? local.deltaUp
+                    : item.direction === 'decrease'
+                      ? local.deltaDown
+                      : local.deltaHold
+                }
+                style={{ width: `${Math.max(width, item.direction === 'hold' ? 0 : 4)}%` }}
+              />
+            </span>
+            <span
+              className={
+                item.direction === 'increase'
+                  ? styles.up
+                  : item.direction === 'decrease'
+                    ? styles.down
+                    : styles.quiet
+              }
+            >
+              {item.direction === 'hold' ? 'Igual' : formatDelta(delta)}
+            </span>
+          </div>
+        </td>
+        <td>
+          <div className={local.marks}>
+            {item.requiresApproval ? (
+              <span className={styles.chipGold}>Pide aprobación</span>
+            ) : actionable ? (
+              <span className={styles.chipOk}>Se aplica solo</span>
+            ) : (
+              <span className={styles.chip}>Sin cambio</span>
+            )}
+            {item.guardrail.clamped ? <span className={styles.chipWarn}>Acotada</span> : null}
+          </div>
+        </td>
+        <td className={styles.num}>
+          <button
+            type="button"
+            className={styles.panelLinkButton}
+            aria-expanded={open}
+            onClick={onToggle}
+          >
+            {open ? 'Cerrar' : 'Detalle'}
+          </button>
+        </td>
+      </tr>
+      {open ? (
+        <tr>
+          <td colSpan={6} className={styles.detailCell}>
+            <div className={local.detail}>
+              <ul className={styles.rows}>
+                <DetailRow name="Precio vigente" value={formatCurrency(item.currentPrice)} />
+                <DetailRow name="Recomendado" value={formatCurrency(item.recommendedPrice)} />
+                <DetailRow name="Precio base" value={formatCurrency(item.basePrice)} />
+                <DetailRow name="Variación" value={formatDelta(item.deltaPercent)} />
+                <DetailRow
+                  name="Multiplicador"
+                  value={`×${formatNumber(item.recommendedMultiplier, 3)}`}
+                />
+                <DetailRow name="Confianza" value={confidenceLabel(item.confidence)} />
+                <DetailRow
+                  name="Banda"
+                  value={`${item.guardrail.bandLabel}${item.guardrail.clamped ? ' · acotado' : ''}`}
+                />
+              </ul>
+              <p className={styles.quiet}>{item.explanation}</p>
+              <p className={styles.tertiary}>
+                {item.guardrail.clamped
+                  ? `El candidato era ${formatCurrency(item.guardrail.preClampPrice)}; el motor lo recortó a ${formatCurrency(item.guardrail.floor)} – ${formatCurrency(item.guardrail.ceiling)}.`
+                  : `Dentro de ${formatCurrency(item.guardrail.floor)} – ${formatCurrency(item.guardrail.ceiling)}.`}
               </p>
-              <div>
-                <TicketButton variant="ghost" onClick={onRetryHistory}>
-                  Reintentar
-                </TicketButton>
-              </div>
-            </div>
-          ) : historyPending ? (
-            <p className={styles.quiet}>Cargando historial.</p>
-          ) : history.length === 0 ? (
-            <p className={styles.quiet}>Sin cambios de precio registrados.</p>
-          ) : (
-            <ul className={styles.rows}>
-              {history.map((entry) => {
-                const reason = describeHistoryReason(entry.reason);
-                return (
-                  <li key={entry.id} className={styles.row}>
-                    <div className={styles.rowMain}>
-                      <p className={styles.rowTitle}>{reason.label}</p>
-                      <p className={styles.rowMeta}>
-                        {[formatDateTime(entry.createdAt), reason.detail || null]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </p>
-                    </div>
-                    <p className={styles.tertiary}>×{formatNumber(entry.priceMultiplier, 3)}</p>
-                    <p className={styles.figure}>{formatCurrency(toAmount(entry.adjustedPrice))}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
 
-          {actionable && canWrite ? (
-            <div className={local.toolbar}>
-              <Switch label={`Seleccionar ${label}`} on={selected} onChange={onSelect} />
-              <p className={styles.quiet}>Incluir en la selección</p>
-              <TicketButton variant="secondary" disabled={applying} onClick={onApply}>
-                {item.requiresApproval ? 'Encolar aprobación' : 'Aplicar cambio seguro'}
-              </TicketButton>
+              <p className={local.subTitle}>Factores</p>
+              {item.factors.length === 0 ? (
+                <p className={styles.quiet}>El motor no adjuntó factores para esta oferta.</p>
+              ) : (
+                <ul className={styles.rows}>
+                  {item.factors.map((factor) => (
+                    <li key={`${factor.code}-${factor.detail}`} className={styles.row}>
+                      <div className={styles.rowMain}>
+                        <p className={styles.rowTitle}>{factorLabel(factor.code)}</p>
+                        <p className={styles.rowMeta}>{factor.detail}</p>
+                      </div>
+                      <p className={styles.tertiary}>
+                        {factor.threshold !== undefined
+                          ? `umbral ${formatNumber(factor.threshold, 2)}`
+                          : ''}
+                      </p>
+                      <p className={styles.figure}>×{formatNumber(factor.contribution, 3)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <p className={local.subTitle}>Historial de precios</p>
+              {historyError ? (
+                <div className={styles.stack}>
+                  <p className={styles.danger} role="alert">
+                    {errorText(historyError)}
+                  </p>
+                  <div>
+                    <TicketButton variant="ghost" onClick={onRetryHistory}>
+                      Reintentar
+                    </TicketButton>
+                  </div>
+                </div>
+              ) : historyPending ? (
+                <p className={styles.quiet}>Cargando historial.</p>
+              ) : history.length === 0 ? (
+                <p className={styles.quiet}>Sin cambios de precio registrados.</p>
+              ) : (
+                <ul className={styles.rows}>
+                  {history.map((entry) => {
+                    const reason = describeHistoryReason(entry.reason);
+                    return (
+                      <li key={entry.id} className={styles.row}>
+                        <div className={styles.rowMain}>
+                          <p className={styles.rowTitle}>{reason.label}</p>
+                          <p className={styles.rowMeta}>
+                            {[formatDateTime(entry.createdAt), reason.detail || null]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </p>
+                        </div>
+                        <p className={styles.tertiary}>×{formatNumber(entry.priceMultiplier, 3)}</p>
+                        <p className={styles.figure}>
+                          {formatCurrency(toAmount(entry.adjustedPrice))}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {actionable && canWrite ? (
+                <div className={local.toolbar}>
+                  <Switch label={`Seleccionar ${label}`} on={selected} onChange={onSelect} />
+                  <p className={styles.quiet}>Incluir en la selección</p>
+                  <TicketButton variant="secondary" disabled={applying} onClick={onApply}>
+                    {item.requiresApproval ? 'Encolar aprobación' : 'Aplicar cambio seguro'}
+                  </TicketButton>
+                </div>
+              ) : null}
+              {!actionable ? (
+                <p className={styles.tertiary}>Sin cambio: no hay nada que aplicar.</p>
+              ) : null}
             </div>
-          ) : null}
-          {!actionable ? (
-            <p className={styles.tertiary}>Sin cambio: no hay nada que aplicar.</p>
-          ) : null}
-        </div>
+          </td>
+        </tr>
       ) : null}
-    </div>
+    </>
   );
 }
 
@@ -925,69 +1009,86 @@ function PendingItem({
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState('');
   return (
-    <div className={styles.stack}>
-      <button
-        type="button"
-        className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <span>
-          {row.offerName}
-          <span className={styles.rowMeta}>
-            {' '}
-            · {row.zone} · {directionLabel(row.direction)} {formatDelta(row.deltaPercent)}
-            {row.expired ? ' · vencida' : ''}
+    <>
+      <tr className={open ? local.rowOpen : undefined}>
+        <td>
+          <strong>{row.offerName}</strong>
+          <p className={styles.rowMeta}>{row.zone}</p>
+        </td>
+        <td style={{ whiteSpace: 'nowrap' }}>
+          <span className={styles.quiet}>{formatCurrency(row.currentPrice)}</span> →{' '}
+          <strong>{formatCurrency(row.adjustedPrice)}</strong>
+        </td>
+        <td>
+          <span className={row.direction === 'increase' ? styles.up : styles.down}>
+            {directionLabel(row.direction)} {formatDelta(row.deltaPercent)}
           </span>
-        </span>
-        <span className={styles.figure}>
-          {formatCurrency(row.currentPrice)} → {formatCurrency(row.adjustedPrice)}
-        </span>
-      </button>
-      {open ? (
-        <div className={local.detail}>
-          <p className={styles.mono}>{shortId(row.id)}</p>
-          <p className={styles.quiet}>
-            {row.payload?.explanation ?? 'Sin explicación adjunta; revisa el paquete vigente.'}
-          </p>
-          <p className={styles.tertiary}>
-            Creada {formatDateTime(row.createdAt)} ·{' '}
-            {row.expired
-              ? 'vencida: genera un paquete nuevo'
-              : `vence ${formatDateTime(row.expiresAt)}`}
-          </p>
-          {canWrite ? (
-            <>
-              <Field
-                label="Nota"
-                hint="Queda en la bitácora. En un rechazo, es el motivo."
-                value={note}
-                maxLength={500}
-                onChange={(event) => setNote(event.target.value)}
-              />
-              <div className={local.toolbar}>
-                <TicketButton
-                  variant="secondary"
-                  disabled={row.expired || reviewing}
-                  onClick={() => onReview('approve', note)}
-                >
-                  Aprobar
-                </TicketButton>
-                <TicketButton
-                  variant="danger"
-                  disabled={reviewing}
-                  onClick={() => onReview('reject', note)}
-                >
-                  Rechazar
-                </TicketButton>
-              </div>
-            </>
+        </td>
+        <td>
+          {row.expired ? (
+            <span className={styles.chipDanger}>Vencida</span>
           ) : (
-            <p className={styles.tertiary}>Revisar la cola lo hace administración.</p>
+            <span className={styles.quiet}>{formatDateTime(row.expiresAt)}</span>
           )}
-        </div>
+        </td>
+        <td className={styles.num}>
+          <button
+            type="button"
+            className={styles.panelLinkButton}
+            aria-expanded={open}
+            onClick={() => setOpen((current) => !current)}
+          >
+            {open ? 'Cerrar' : canWrite ? 'Revisar' : 'Ver'}
+          </button>
+        </td>
+      </tr>
+      {open ? (
+        <tr>
+          <td colSpan={5} className={styles.detailCell}>
+            <div className={local.detail}>
+              <p className={styles.quiet}>
+                {row.payload?.explanation ?? 'Sin explicación adjunta; revisa el paquete vigente.'}
+              </p>
+              <p className={styles.tertiary}>
+                Creada {formatDateTime(row.createdAt)} ·{' '}
+                {row.expired
+                  ? 'vencida: genera un paquete nuevo'
+                  : `vence ${formatDateTime(row.expiresAt)}`}
+              </p>
+              {canWrite ? (
+                <>
+                  <Field
+                    label="Nota"
+                    hint="Queda en la bitácora. En un rechazo, es el motivo."
+                    value={note}
+                    maxLength={500}
+                    onChange={(event) => setNote(event.target.value)}
+                  />
+                  <div className={local.toolbar}>
+                    <TicketButton
+                      variant="secondary"
+                      disabled={row.expired || reviewing}
+                      onClick={() => onReview('approve', note)}
+                    >
+                      Aprobar
+                    </TicketButton>
+                    <TicketButton
+                      variant="danger"
+                      disabled={reviewing}
+                      onClick={() => onReview('reject', note)}
+                    >
+                      Rechazar
+                    </TicketButton>
+                  </div>
+                </>
+              ) : (
+                <p className={styles.tertiary}>Revisar la cola lo hace administración.</p>
+              )}
+            </div>
+          </td>
+        </tr>
       ) : null}
-    </div>
+    </>
   );
 }
 
