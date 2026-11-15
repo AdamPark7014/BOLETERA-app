@@ -760,6 +760,9 @@ model Order {
   /// orden sin cuenta sin que el publicId sea, por sí solo, la credencial.
   accessTokenHash String?
   accessTokenAt   DateTime?
+  /// Hash del token anterior: sigue valiendo 24 h tras rotar al enviar el correo,
+  /// para no dejar fuera a quien tiene la orden abierta al pagar.
+  accessTokenPrevHash String?
   id              String       @id @default(cuid())
   publicId        String       @unique // Public-facing order ID
   organizationId  String

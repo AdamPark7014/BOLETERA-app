@@ -758,16 +758,19 @@ model Ticket {
 model Order {
   /// SHA-256 del token de acceso de invitado enviado por correo. Permite ver la
   /// orden sin cuenta sin que el publicId sea, por sí solo, la credencial.
-  accessTokenHash String?
-  accessTokenAt   DateTime?
-  id              String       @id @default(cuid())
-  publicId        String       @unique // Public-facing order ID
-  organizationId  String
-  organization    Organization @relation("OrgOrders", fields: [organizationId], references: [id])
-  eventId         String
-  event           Event        @relation(fields: [eventId], references: [id])
-  userId          String
-  user            User         @relation(fields: [userId], references: [id])
+  accessTokenHash     String?
+  accessTokenAt       DateTime?
+  /// Hash del token anterior: sigue valiendo 24 h tras rotar al enviar el correo,
+  /// para no dejar fuera a quien tiene la orden abierta al pagar.
+  accessTokenPrevHash String?
+  id                  String       @id @default(cuid())
+  publicId            String       @unique // Public-facing order ID
+  organizationId      String
+  organization        Organization @relation("OrgOrders", fields: [organizationId], references: [id])
+  eventId             String
+  event               Event        @relation(fields: [eventId], references: [id])
+  userId              String
+  user                User         @relation(fields: [userId], references: [id])
 
   // Status
   status OrderStatus @default(PENDING) // PENDING, COMPLETED, FAILED, REFUNDED, CANCELLED

@@ -71,6 +71,9 @@ const DEFAULT_COMMISSION_RATE = 0.15;
 /** Vigencia del enlace de consulta que recibe el comprador invitado. */
 const ACCESS_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+/** Gracia del token anterior tras rotarlo al enviar el correo de confirmación. */
+const PREV_ACCESS_TOKEN_GRACE_MS = 24 * 60 * 60 * 1000;
+
 /** Transacciones cortas: nunca deben esperar a la red (F1-07). */
 const DB_TX_TIMEOUT_MS = 10_000;
 
@@ -1059,7 +1062,13 @@ export class OrdersService {
     const order = await this.getByPublicId(publicId);
     await this.assertOrderAccess(order, requester);
     // El token nunca vuelve en una lectura: solo se entregó al crear la orden.
-    const { accessTokenHash: _hash, accessTokenAt: _issuedAt, ...safe } = order;
+    const {
+      accessTokenHash: _hash,
+      accessTokenAt: _issuedAt,
+      accessTokenPrevHash: _prev,
+      ...safe
+    } = order;
+    void _prev;
     const policies = await this.deadlineDaysByOrg([order.organizationId]);
     return { ...safe, ...this.buyerDeadlineDays(order.organizationId, policies) };
   }
@@ -1082,12 +1091,19 @@ export class OrdersService {
         paymentMethod: true,
         accessTokenHash: true,
         accessTokenAt: true,
+        accessTokenPrevHash: true,
         payment: { select: { method: true } },
       },
     });
     if (!order) throw new NotFoundException('Order not found');
     await this.assertOrderAccess(order, requester);
-    const { accessTokenHash: _hash, accessTokenAt: _issuedAt, ...safe } = order;
+    const {
+      accessTokenHash: _hash,
+      accessTokenAt: _issuedAt,
+      accessTokenPrevHash: _prev,
+      ...safe
+    } = order;
+    void _prev;
     return safe;
   }
 
@@ -1118,6 +1134,7 @@ export class OrdersService {
       buyerEmail: string;
       accessTokenHash: string | null;
       accessTokenAt: Date | null;
+      accessTokenPrevHash?: string | null;
     },
     requester: OrderRequester
   ) {
@@ -1136,6 +1153,15 @@ export class OrdersService {
     if (requester.accessToken && order.accessTokenHash && order.accessTokenAt) {
       const fresh = Date.now() - order.accessTokenAt.getTime() < ACCESS_TOKEN_TTL_MS;
       if (fresh && this.tokenMatches(requester.accessToken, order.accessTokenHash)) return;
+      // El enlace anterior vale 24 h desde la rotación (correo de confirmación).
+      const inGrace = Date.now() - order.accessTokenAt.getTime() < PREV_ACCESS_TOKEN_GRACE_MS;
+      if (
+        inGrace &&
+        order.accessTokenPrevHash &&
+        this.tokenMatches(requester.accessToken, order.accessTokenPrevHash)
+      ) {
+        return;
+      }
     }
 
     throw new ForbiddenException('No tienes acceso a esta orden');

@@ -36364,6 +36364,7 @@ export namespace Prisma {
   export type OrderMinAggregateOutputType = {
     accessTokenHash: string | null
     accessTokenAt: Date | null
+    accessTokenPrevHash: string | null
     id: string | null
     publicId: string | null
     organizationId: string | null
@@ -36397,6 +36398,7 @@ export namespace Prisma {
   export type OrderMaxAggregateOutputType = {
     accessTokenHash: string | null
     accessTokenAt: Date | null
+    accessTokenPrevHash: string | null
     id: string | null
     publicId: string | null
     organizationId: string | null
@@ -36430,6 +36432,7 @@ export namespace Prisma {
   export type OrderCountAggregateOutputType = {
     accessTokenHash: number
     accessTokenAt: number
+    accessTokenPrevHash: number
     id: number
     publicId: number
     organizationId: number
@@ -36484,6 +36487,7 @@ export namespace Prisma {
   export type OrderMinAggregateInputType = {
     accessTokenHash?: true
     accessTokenAt?: true
+    accessTokenPrevHash?: true
     id?: true
     publicId?: true
     organizationId?: true
@@ -36517,6 +36521,7 @@ export namespace Prisma {
   export type OrderMaxAggregateInputType = {
     accessTokenHash?: true
     accessTokenAt?: true
+    accessTokenPrevHash?: true
     id?: true
     publicId?: true
     organizationId?: true
@@ -36550,6 +36555,7 @@ export namespace Prisma {
   export type OrderCountAggregateInputType = {
     accessTokenHash?: true
     accessTokenAt?: true
+    accessTokenPrevHash?: true
     id?: true
     publicId?: true
     organizationId?: true
@@ -36671,6 +36677,7 @@ export namespace Prisma {
   export type OrderGroupByOutputType = {
     accessTokenHash: string | null
     accessTokenAt: Date | null
+    accessTokenPrevHash: string | null
     id: string
     publicId: string
     organizationId: string
@@ -36724,6 +36731,7 @@ export namespace Prisma {
   export type OrderSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     accessTokenHash?: boolean
     accessTokenAt?: boolean
+    accessTokenPrevHash?: boolean
     id?: boolean
     publicId?: boolean
     organizationId?: boolean
@@ -36768,6 +36776,7 @@ export namespace Prisma {
   export type OrderSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     accessTokenHash?: boolean
     accessTokenAt?: boolean
+    accessTokenPrevHash?: boolean
     id?: boolean
     publicId?: boolean
     organizationId?: boolean
@@ -36807,6 +36816,7 @@ export namespace Prisma {
   export type OrderSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     accessTokenHash?: boolean
     accessTokenAt?: boolean
+    accessTokenPrevHash?: boolean
     id?: boolean
     publicId?: boolean
     organizationId?: boolean
@@ -36846,6 +36856,7 @@ export namespace Prisma {
   export type OrderSelectScalar = {
     accessTokenHash?: boolean
     accessTokenAt?: boolean
+    accessTokenPrevHash?: boolean
     id?: boolean
     publicId?: boolean
     organizationId?: boolean
@@ -36877,7 +36888,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"accessTokenHash" | "accessTokenAt" | "id" | "publicId" | "organizationId" | "eventId" | "userId" | "status" | "buyerEmail" | "buyerName" | "buyerPhone" | "billingAddress" | "subtotal" | "fees" | "discountAmount" | "taxAmount" | "totalAmount" | "currency" | "promotionId" | "commissionAmount" | "paymentId" | "paymentMethod" | "channel" | "cashierId" | "posOps" | "clientSaleId" | "expiresAt" | "completedAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"accessTokenHash" | "accessTokenAt" | "accessTokenPrevHash" | "id" | "publicId" | "organizationId" | "eventId" | "userId" | "status" | "buyerEmail" | "buyerName" | "buyerPhone" | "billingAddress" | "subtotal" | "fees" | "discountAmount" | "taxAmount" | "totalAmount" | "currency" | "promotionId" | "commissionAmount" | "paymentId" | "paymentMethod" | "channel" | "cashierId" | "posOps" | "clientSaleId" | "expiresAt" | "completedAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     event?: boolean | EventDefaultArgs<ExtArgs>
@@ -36925,6 +36936,11 @@ export namespace Prisma {
        */
       accessTokenHash: string | null
       accessTokenAt: Date | null
+      /**
+       * Hash del token anterior: sigue valiendo 24 h tras rotar al enviar el correo,
+       * para no dejar fuera a quien tiene la orden abierta al pagar.
+       */
+      accessTokenPrevHash: string | null
       id: string
       publicId: string
       organizationId: string
@@ -37395,6 +37411,7 @@ export namespace Prisma {
   interface OrderFieldRefs {
     readonly accessTokenHash: FieldRef<"Order", 'String'>
     readonly accessTokenAt: FieldRef<"Order", 'DateTime'>
+    readonly accessTokenPrevHash: FieldRef<"Order", 'String'>
     readonly id: FieldRef<"Order", 'String'>
     readonly publicId: FieldRef<"Order", 'String'>
     readonly organizationId: FieldRef<"Order", 'String'>
@@ -82242,6 +82259,7 @@ export namespace Prisma {
   export const OrderScalarFieldEnum: {
     accessTokenHash: 'accessTokenHash',
     accessTokenAt: 'accessTokenAt',
+    accessTokenPrevHash: 'accessTokenPrevHash',
     id: 'id',
     publicId: 'publicId',
     organizationId: 'organizationId',
@@ -86095,6 +86113,7 @@ export namespace Prisma {
     NOT?: OrderWhereInput | OrderWhereInput[]
     accessTokenHash?: StringNullableFilter<"Order"> | string | null
     accessTokenAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    accessTokenPrevHash?: StringNullableFilter<"Order"> | string | null
     id?: StringFilter<"Order"> | string
     publicId?: StringFilter<"Order"> | string
     organizationId?: StringFilter<"Order"> | string
@@ -86138,6 +86157,7 @@ export namespace Prisma {
   export type OrderOrderByWithRelationInput = {
     accessTokenHash?: SortOrderInput | SortOrder
     accessTokenAt?: SortOrderInput | SortOrder
+    accessTokenPrevHash?: SortOrderInput | SortOrder
     id?: SortOrder
     publicId?: SortOrder
     organizationId?: SortOrder
@@ -86187,6 +86207,7 @@ export namespace Prisma {
     NOT?: OrderWhereInput | OrderWhereInput[]
     accessTokenHash?: StringNullableFilter<"Order"> | string | null
     accessTokenAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    accessTokenPrevHash?: StringNullableFilter<"Order"> | string | null
     organizationId?: StringFilter<"Order"> | string
     eventId?: StringFilter<"Order"> | string
     userId?: StringFilter<"Order"> | string
@@ -86228,6 +86249,7 @@ export namespace Prisma {
   export type OrderOrderByWithAggregationInput = {
     accessTokenHash?: SortOrderInput | SortOrder
     accessTokenAt?: SortOrderInput | SortOrder
+    accessTokenPrevHash?: SortOrderInput | SortOrder
     id?: SortOrder
     publicId?: SortOrder
     organizationId?: SortOrder
@@ -86270,6 +86292,7 @@ export namespace Prisma {
     NOT?: OrderScalarWhereWithAggregatesInput | OrderScalarWhereWithAggregatesInput[]
     accessTokenHash?: StringNullableWithAggregatesFilter<"Order"> | string | null
     accessTokenAt?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+    accessTokenPrevHash?: StringNullableWithAggregatesFilter<"Order"> | string | null
     id?: StringWithAggregatesFilter<"Order"> | string
     publicId?: StringWithAggregatesFilter<"Order"> | string
     organizationId?: StringWithAggregatesFilter<"Order"> | string
@@ -92536,6 +92559,7 @@ export namespace Prisma {
   export type OrderCreateInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -92574,6 +92598,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -92612,6 +92637,7 @@ export namespace Prisma {
   export type OrderUpdateInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -92650,6 +92676,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -92688,6 +92715,7 @@ export namespace Prisma {
   export type OrderCreateManyInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -92722,6 +92750,7 @@ export namespace Prisma {
   export type OrderUpdateManyMutationInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -92751,6 +92780,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateManyInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -98990,6 +99020,7 @@ export namespace Prisma {
   export type OrderCountOrderByAggregateInput = {
     accessTokenHash?: SortOrder
     accessTokenAt?: SortOrder
+    accessTokenPrevHash?: SortOrder
     id?: SortOrder
     publicId?: SortOrder
     organizationId?: SortOrder
@@ -99033,6 +99064,7 @@ export namespace Prisma {
   export type OrderMaxOrderByAggregateInput = {
     accessTokenHash?: SortOrder
     accessTokenAt?: SortOrder
+    accessTokenPrevHash?: SortOrder
     id?: SortOrder
     publicId?: SortOrder
     organizationId?: SortOrder
@@ -99066,6 +99098,7 @@ export namespace Prisma {
   export type OrderMinOrderByAggregateInput = {
     accessTokenHash?: SortOrder
     accessTokenAt?: SortOrder
+    accessTokenPrevHash?: SortOrder
     id?: SortOrder
     publicId?: SortOrder
     organizationId?: SortOrder
@@ -107658,6 +107691,7 @@ export namespace Prisma {
   export type OrderCreateWithoutOrganizationInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -107695,6 +107729,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutOrganizationInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     eventId: string
@@ -108329,6 +108364,7 @@ export namespace Prisma {
     NOT?: OrderScalarWhereInput | OrderScalarWhereInput[]
     accessTokenHash?: StringNullableFilter<"Order"> | string | null
     accessTokenAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    accessTokenPrevHash?: StringNullableFilter<"Order"> | string | null
     id?: StringFilter<"Order"> | string
     publicId?: StringFilter<"Order"> | string
     organizationId?: StringFilter<"Order"> | string
@@ -112657,6 +112693,7 @@ export namespace Prisma {
   export type OrderCreateWithoutEventInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -112694,6 +112731,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutEventInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -117146,6 +117184,7 @@ export namespace Prisma {
   export type OrderCreateWithoutItemsInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -117183,6 +117222,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutItemsInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -117359,6 +117399,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutItemsInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -117396,6 +117437,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutItemsInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -117514,6 +117556,7 @@ export namespace Prisma {
   export type OrderCreateWithoutPaymentInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -117551,6 +117594,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutPaymentInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -117614,6 +117658,7 @@ export namespace Prisma {
   export type OrderCreateWithoutRefundsInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -117651,6 +117696,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutRefundsInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -117704,6 +117750,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutRefundsInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -117741,6 +117788,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutRefundsInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -117885,6 +117933,7 @@ export namespace Prisma {
   export type OrderCreateWithoutUserInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -117922,6 +117971,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutUserInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -120049,6 +120099,7 @@ export namespace Prisma {
   export type OrderCreateWithoutPromotionInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -120086,6 +120137,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutPromotionInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -120276,6 +120328,7 @@ export namespace Prisma {
   export type OrderCreateWithoutFraudFlagsInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -120313,6 +120366,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutFraudFlagsInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -120629,6 +120683,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutFraudFlagsInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -120666,6 +120721,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutFraudFlagsInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -122700,6 +122756,7 @@ export namespace Prisma {
   export type OrderCreateWithoutCfdiInvoicesInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     status?: $Enums.OrderStatus
@@ -122737,6 +122794,7 @@ export namespace Prisma {
   export type OrderUncheckedCreateWithoutCfdiInvoicesInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -122903,6 +122961,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutCfdiInvoicesInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -122940,6 +122999,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutCfdiInvoicesInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -126237,6 +126297,7 @@ export namespace Prisma {
   export type OrderCreateManyOrganizationInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     eventId: string
@@ -126804,6 +126865,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutOrganizationInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -126841,6 +126903,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutOrganizationInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     eventId?: StringFieldUpdateOperationsInput | string
@@ -126878,6 +126941,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateManyWithoutOrganizationInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     eventId?: StringFieldUpdateOperationsInput | string
@@ -128336,6 +128400,7 @@ export namespace Prisma {
   export type OrderCreateManyEventInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -128663,6 +128728,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutEventInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -128700,6 +128766,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutEventInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -128737,6 +128804,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateManyWithoutEventInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -130301,6 +130369,7 @@ export namespace Prisma {
   export type OrderCreateManyPaymentInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -130334,6 +130403,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutPaymentInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -130371,6 +130441,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutPaymentInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -130408,6 +130479,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateManyWithoutPaymentInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -130441,6 +130513,7 @@ export namespace Prisma {
   export type OrderCreateManyUserInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -130559,6 +130632,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutUserInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -130596,6 +130670,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutUserInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -130633,6 +130708,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateManyWithoutUserInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -131057,6 +131133,7 @@ export namespace Prisma {
   export type OrderCreateManyPromotionInput = {
     accessTokenHash?: string | null
     accessTokenAt?: Date | string | null
+    accessTokenPrevHash?: string | null
     id?: string
     publicId: string
     organizationId: string
@@ -131090,6 +131167,7 @@ export namespace Prisma {
   export type OrderUpdateWithoutPromotionInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -131127,6 +131205,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateWithoutPromotionInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
@@ -131164,6 +131243,7 @@ export namespace Prisma {
   export type OrderUncheckedUpdateManyWithoutPromotionInput = {
     accessTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     accessTokenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    accessTokenPrevHash?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     publicId?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string

@@ -210,9 +210,20 @@ export class NotificationProcessor {
   private async mintAccessToken(orderId: string): Promise<string | null> {
     const token = randomBytes(32).toString('base64url');
     try {
+      // El enlace anterior (el de la pestaña donde el comprador acaba de pagar)
+      // sigue valiendo 24 h: antes, rotar aquí lo dejaba fuera de su propia
+      // orden justo al volver del pago con tarjeta.
+      const previous = await this.prisma.order.findUnique({
+        where: { id: orderId },
+        select: { accessTokenHash: true },
+      });
       await this.prisma.order.update({
         where: { id: orderId },
-        data: { accessTokenHash: this.hashToken(token), accessTokenAt: new Date() },
+        data: {
+          accessTokenHash: this.hashToken(token),
+          accessTokenAt: new Date(),
+          accessTokenPrevHash: previous?.accessTokenHash ?? null,
+        },
       });
       this.logger.log(`Credencial de acceso renovada para la orden ${orderId} (envío por correo)`);
       return token;

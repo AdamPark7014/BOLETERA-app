@@ -470,9 +470,15 @@ export class AdminService {
     if (!order) throw new NotFoundException('Order not found');
     // El hash del enlace del comprador no sale del API: con él y fuerza bruta
     // offline se podría reconstruir el acceso a la orden.
-    const { accessTokenHash: _hash, accessTokenAt: _at, ...safe } = order;
+    const {
+      accessTokenHash: _hash,
+      accessTokenAt: _at,
+      accessTokenPrevHash: _prev,
+      ...safe
+    } = order;
     void _hash;
     void _at;
+    void _prev;
     return safe;
   }
 

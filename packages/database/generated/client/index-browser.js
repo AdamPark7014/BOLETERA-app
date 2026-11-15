@@ -514,6 +514,7 @@ exports.Prisma.TicketScalarFieldEnum = {
 exports.Prisma.OrderScalarFieldEnum = {
   accessTokenHash: 'accessTokenHash',
   accessTokenAt: 'accessTokenAt',
+  accessTokenPrevHash: 'accessTokenPrevHash',
   id: 'id',
   publicId: 'publicId',
   organizationId: 'organizationId',
