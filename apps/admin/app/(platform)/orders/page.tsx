@@ -216,12 +216,11 @@ function OrdersList({
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Órdenes</h1>
         <p className={styles.quiet}>
-          Las {formatCount(orders.length)} más recientes de tu organización. Los filtros aplican
-          sobre ellas; para una orden anterior, búscala por su folio exacto.
+          {formatCount(orders.length)} más recientes
+          {hasMore || (total != null && total > orders.length)
+            ? ' · busca las anteriores por folio'
+            : ''}
         </p>
-        {hasMore || (total != null && total > orders.length) ? (
-          <p className={styles.tertiary}>Hay órdenes más antiguas que no aparecen en esta lista.</p>
-        ) : null}
       </header>
 
       <div className={styles.kpis} aria-label="Resumen de órdenes">
@@ -232,12 +231,10 @@ function OrdersList({
               ? totals.map(([cur, amount]) => formatMoney(amount, cur)).join(' · ')
               : '—'}
           </p>
-          <p className={styles.kpiNote}>completadas y con reembolso parcial</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Completadas</p>
           <p className={styles.kpiValue}>{formatCount(completedCount)}</p>
-          <p className={styles.kpiNote}>de {formatCount(orders.length)} órdenes recientes</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Requieren acción</p>
@@ -247,18 +244,15 @@ function OrdersList({
           >
             {formatCount(attention.length)}
           </p>
-          <p className={styles.kpiNote}>
-            {attention.length > 0 ? 'reembolsos obligados o pagos por revisar' : 'todo en orden'}
-          </p>
         </div>
       </div>
 
       {attention.length > 0 ? (
         <div className={bt.block}>
           <p className={styles.danger} role="alert">
-            {formatCount(attention.length)} orden(es) requieren acción. En reembolso obligado el
-            cobro entró pero no se emitieron boletos: el dinero es del cliente hasta que se
-            devuelva.
+            {attention.length === 1
+              ? '1 orden cobrada sin boletos: hay que devolver el dinero.'
+              : `${formatCount(attention.length)} órdenes cobradas sin boletos: hay que devolver el dinero.`}
           </p>
           <div className={bt.actions}>
             <TicketButton variant="ghost" onClick={() => setStatus('PENDING_REFUND')}>

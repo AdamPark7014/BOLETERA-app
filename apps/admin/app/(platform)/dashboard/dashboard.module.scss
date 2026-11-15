@@ -368,3 +368,16 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.channelMore {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.page {
+  gap: 32px;
+}

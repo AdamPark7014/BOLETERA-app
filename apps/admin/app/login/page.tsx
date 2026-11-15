@@ -56,7 +56,7 @@ export default function LoginPage() {
   const ready = email.trim().length > 0 && password.length > 0;
 
   return (
-    <AuthShell title="Entrar al panel" lead="Eventos, ventas y liquidaciones de tu organización.">
+    <AuthShell title="Entrar al panel">
       <form onSubmit={(e) => void submit(e)} className={styles.form}>
         <Field
           id="admin-email"
@@ -136,17 +136,16 @@ export default function LoginPage() {
               </TicketButton>
             ))}
           </div>
-          <p className={styles.tertiary}>Elige una cuenta y pulsa «Entrar».</p>
         </div>
       ) : null}
 
       <p className={styles.foot}>
-        ¿Eres organizador nuevo?{' '}
+        ¿Sin acceso?{' '}
         <a
           className={styles.inlineLink}
           href="mailto:soporte@boletera.com?subject=Acceso%20al%20panel"
         >
-          Contacta a tu administrador
+          Escríbenos
         </a>
       </p>
     </AuthShell>

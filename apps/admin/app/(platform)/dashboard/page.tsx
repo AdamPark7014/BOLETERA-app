@@ -14,7 +14,6 @@ import {
   channelLabel,
   formatCount,
   formatDeltaPercent,
-  formatKpiScalar,
   formatKpiValue,
   formatMxn,
   formatPercentPoints,
@@ -149,10 +148,7 @@ function TableroDatos({ canChannels, canCreate }: { canChannels: boolean; canCre
       <header className={own.head}>
         <div className={styles.sectionHead} style={{ marginBottom: 0 }}>
           <h1 className={styles.sectionTitle}>Inicio</h1>
-          <p className={styles.quiet}>
-            {range.label} · MXN
-            {data.generatedAt ? ` · actualizado ${formatRelative(data.generatedAt)}` : ''}
-          </p>
+          <p className={styles.quiet}>{range.label}</p>
         </div>
         <div className={own.toolbar}>
           <Segment
@@ -224,34 +220,45 @@ function Indicadores({ data, range }: { data: DashboardData; range: DashboardRan
     if (!data.executive.isPending) return null;
     return <div className={styles.skeleton} style={{ height: 124 }} aria-label="Cargando cifras" />;
   }
+  const keys = KPI_ORDER.filter((key) => kpis[key]);
+  const primary = keys.slice(0, 4);
+  const secondary = keys.slice(4);
   return (
-    <div className={`${styles.kpis} ${own.kpiGrid}`} aria-label="Indicadores del periodo">
-      {KPI_ORDER.map((key) => {
-        const kpi = kpis[key];
-        if (!kpi) return null;
-        const delta = kpi.deltaPercent;
-        return (
-          <div key={key} className={styles.kpi}>
-            <p className={styles.kpiLabel}>{kpi.label}</p>
-            <p className={styles.kpiValue}>{formatKpiValue(kpi)}</p>
-            <p className={styles.kpiNote}>
-              {delta == null ? (
-                <span>sin periodo previo para comparar</span>
-              ) : (
-                <>
+    <>
+      <div className={styles.kpis} aria-label="Indicadores del periodo">
+        {primary.map((key) => {
+          const kpi = kpis[key]!;
+          const delta = kpi.deltaPercent;
+          return (
+            <div key={key} className={styles.kpi}>
+              <p className={styles.kpiLabel}>{kpi.label}</p>
+              <p className={styles.kpiValue}>{formatKpiValue(kpi)}</p>
+              {delta != null ? (
+                <p className={styles.kpiNote}>
                   <span className={delta >= 0 ? styles.up : styles.down}>
                     {formatDeltaPercent(delta)}
                   </span>
-                  <span>
-                    {range.comparisonLabel} · antes {formatKpiScalar(kpi.unit, kpi.previousValue)}
-                  </span>
-                </>
-              )}
-            </p>
-          </div>
-        );
-      })}
-    </div>
+                  <span>{range.comparisonShortLabel.toLowerCase()}</span>
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      {secondary.length > 0 ? (
+        <div className={styles.kpisSecondary}>
+          {secondary.map((key) => {
+            const kpi = kpis[key]!;
+            return (
+              <div key={key} className={styles.kpiSmall}>
+                <p className={styles.kpiLabel}>{kpi.label}</p>
+                <p className={styles.kpiSmallValue}>{formatKpiValue(kpi)}</p>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -280,9 +287,6 @@ function Proyeccion({ data }: { data: DashboardData }) {
           <div className={styles.bar}>
             <div className={styles.barFill} style={{ width: `${pace}%` }} />
           </div>
-          <p className={styles.tertiary}>
-            Van {formatCount(projection.daysElapsed)} de {formatCount(projection.daysInPeriod)} días
-          </p>
         </div>
       ) : null}
     </div>
@@ -327,7 +331,6 @@ function Serie({
                   {formatDeltaPercent(delta)} {range.comparisonLabel}
                 </span>
               ) : null}
-              {stats.peakLabel ? <span>pico {stats.peakLabel}</span> : null}
             </p>
           ) : null}
         </div>
@@ -410,7 +413,7 @@ function Canales({ data }: { data: DashboardData }) {
         <p className={styles.quiet}>Sin ventas por canal en este periodo.</p>
       ) : (
         <ul className={own.channels}>
-          {channels.map((channel, index) => (
+          {channels.slice(0, 5).map((channel, index) => (
             <li key={channel.key} className={own.channel}>
               <div className={own.channelHead}>
                 <span>{channel.label}</span>
@@ -429,6 +432,14 @@ function Canales({ data }: { data: DashboardData }) {
               </div>
             </li>
           ))}
+          {channels.length > 5 ? (
+            <li className={own.channelMore}>
+              <span>Otros {channels.length - 5}</span>
+              <span className={own.channelNum}>
+                {formatMxn(channels.slice(5).reduce((sum, row) => sum + row.revenue, 0))}
+              </span>
+            </li>
+          ) : null}
         </ul>
       )}
     </div>
@@ -440,6 +451,14 @@ function Alertas({ data }: { data: DashboardData }) {
   const payload = data.alerts.data;
   const alerts = useMemo(() => filterAlerts(payload?.alerts, filter, 8), [payload?.alerts, filter]);
   const counts = payload?.countsBySeverity;
+  if (payload && payload.alerts.length === 0) {
+    return (
+      <div className={styles.panelHead} style={{ marginBottom: 0 }}>
+        <h2 className={styles.panelTitle}>Alertas</h2>
+        <span className={styles.chipOk}>Todo en orden</span>
+      </div>
+    );
+  }
   return (
     <>
       <div className={styles.panelHead}>
@@ -508,13 +527,6 @@ function Ritmo({ data }: { data: DashboardData }) {
       <div className={styles.panelHead}>
         <div>
           <h2 className={styles.panelTitle}>Ritmo de venta por evento</h2>
-          {summary.total > 0 ? (
-            <p className={styles.tertiary}>
-              {summary.atRisk > 0
-                ? `${formatCount(summary.atRisk)} en riesgo · ${formatCount(summary.onTrack)} en ritmo`
-                : `${formatCount(summary.onTrack)} de ${formatCount(summary.total)} en ritmo`}
-            </p>
-          ) : null}
         </div>
         <Link href="/events" className={styles.panelLink}>
           Ver eventos

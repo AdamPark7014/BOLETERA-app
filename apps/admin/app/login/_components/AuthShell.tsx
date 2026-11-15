@@ -25,9 +25,6 @@ export function AuthShell({
           <div className={styles.stageText}>
             <BrandLogo tone="gold" size={64} />
             <p className={styles.stageTitle}>Tu evento, en vivo</p>
-            <p className={styles.stageLead}>
-              Venta, inventario, precios y acceso de cada función en un solo panel.
-            </p>
           </div>
         </aside>
         <div className={styles.side}>
@@ -35,7 +32,6 @@ export function AuthShell({
             <span className={styles.barLogo}>
               <BrandLogo tone="gold" size={30} />
             </span>
-            <p className={styles.barNote}>Panel de organizador</p>
           </header>
           <div className={styles.column}>
             <header className={styles.head}>

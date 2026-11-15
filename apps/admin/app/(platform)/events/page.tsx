@@ -77,11 +77,13 @@ function EventsBody() {
       <header className={styles.panelHead} style={{ marginBottom: 22 }}>
         <div className={styles.sectionHead} style={{ marginBottom: 0 }}>
           <h1 className={styles.sectionTitle}>Eventos</h1>
-          <p className={styles.quiet}>
-            {loading
-              ? 'Cargando tu cartelera.'
-              : `${formatNumber(events.length)} ${events.length === 1 ? 'evento' : 'eventos'} en tu organización${needle ? ` · ${formatNumber(filtered.length)} con «${frame.query.trim()}»` : ''}.`}
-          </p>
+          {!loading ? (
+            <p className={styles.quiet}>
+              {needle
+                ? `${formatNumber(filtered.length)} de ${formatNumber(events.length)}`
+                : `${formatNumber(events.length)} ${events.length === 1 ? 'evento' : 'eventos'}`}
+            </p>
+          ) : null}
         </div>
         {canCreate ? (
           <TicketButton onClick={() => router.push('/events/new')}>Crear evento</TicketButton>
@@ -94,9 +96,7 @@ function EventsBody() {
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>Todavía no hay eventos</p>
           <p className={styles.quiet}>
-            {canCreate
-              ? 'Crea el primero: nombre, fecha, recinto y zonas con precio.'
-              : 'Cuando tu organización cree eventos aparecerán aquí.'}
+            {canCreate ? 'Crea el primero en un par de minutos.' : 'Aún no hay funciones.'}
           </p>
           {canCreate ? (
             <Link href="/events/new" className={styles.goldLink}>
@@ -108,7 +108,7 @@ function EventsBody() {
       {!loading && events.length > 0 && filtered.length === 0 ? (
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>Ningún evento coincide con la búsqueda</p>
-          <p className={styles.quiet}>Prueba con otro nombre, recinto o estado.</p>
+          <p className={styles.quiet}>Prueba con otro nombre.</p>
         </div>
       ) : null}
       {!loading && filtered.length > 0 ? (

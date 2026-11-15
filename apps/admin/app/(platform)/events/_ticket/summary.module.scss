@@ -405,3 +405,29 @@
   line-height: 1;
   color: var(--gold);
 }
+
+/* Pasada premium */
+.tip {
+  border-color: transparent;
+  background: linear-gradient(135deg, rgba(166, 138, 107, 0.18) 0%, var(--card) 65%);
+}
+
+.tipKicker {
+  color: var(--gold-soft);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.page {
+  gap: 32px;
+}
+
+.sectionRow,
+.liveRow {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+.sectionHeadRow {
+  color: #77777d;
+}

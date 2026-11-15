@@ -107,7 +107,6 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
   const image = readString(row.bannerImage) ?? readString(row.image);
   const capacity = hub?.inventory.total || readNumber(row.totalCapacity) || 0;
   const sold = hub?.inventory.sold ?? 0;
-  const available = hub?.inventory.available ?? Math.max(capacity - sold, 0);
   const occupancy = capacity > 0 ? (sold / capacity) * 100 : 0;
   const channels = useMemo(
     () =>
@@ -183,10 +182,9 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
           <p className={styles.kpiLabel}>Venta bruta</p>
           <p className={styles.kpiValue}>{moneyCompact(gross)}</p>
           <p className={styles.kpiNote}>
-            <span className={orders > 0 ? styles.up : undefined}>
-              {formatCount(orders)} {orders === 1 ? 'orden cobrada' : 'órdenes cobradas'}
+            <span>
+              {formatCount(orders)} {orders === 1 ? 'orden' : 'órdenes'}
             </span>
-            <span>cargos incluidos</span>
           </p>
         </div>
         <div className={styles.kpi}>
@@ -196,7 +194,6 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
             <span className={occupancy >= 50 ? styles.up : styles.down}>
               {occupancy.toLocaleString('es-MX', { maximumFractionDigits: 0 })}% del aforo
             </span>
-            <span>faltan {formatCount(available)}</span>
           </p>
         </div>
         {canMetrics && eventId ? (
@@ -205,15 +202,11 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Apartados en curso</p>
             <p className={styles.kpiValue}>{formatCount(hub?.inventory.held ?? 0)}</p>
-            <p className={styles.kpiNote}>boletos retenidos ahora</p>
           </div>
         )}
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Ticket promedio</p>
           <p className={styles.kpiValue}>{average == null ? 'Sin dato' : money(average)}</p>
-          <p className={styles.kpiNote}>
-            {average == null ? 'aún no hay órdenes cobradas' : 'por orden cobrada'}
-          </p>
         </div>
       </div>
 
@@ -232,7 +225,7 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
               <div className={styles.panelHead}>
                 <h2 className={styles.panelTitle}>Boletos vendidos, acumulado</h2>
               </div>
-              <p className={styles.quiet}>Tu rol no incluye las métricas de venta por día.</p>
+              <p className={styles.quiet}>Sin acceso para tu rol.</p>
             </>
           )}
         </div>
@@ -292,7 +285,7 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
           ) : (
             <>
               <h2 className={styles.panelTitle}>Ventas en vivo</h2>
-              <p className={styles.quiet}>Tu rol no incluye el detalle de órdenes.</p>
+              <p className={styles.quiet}>Sin acceso para tu rol.</p>
             </>
           )}
           {canMetrics && eventId ? <EventAlerts eventId={eventId} /> : null}
@@ -375,9 +368,6 @@ function PaceKpi({ eventId }: { eventId: string }) {
       <div className={styles.kpi}>
         <p className={styles.kpiLabel}>Ritmo contra meta</p>
         <p className={styles.kpiValue}>{pace.isPending ? '…' : 'Sin dato'}</p>
-        <p className={styles.kpiNote}>
-          {pace.isPending ? 'calculando' : 'sin fecha de venta para comparar'}
-        </p>
       </div>
     );
   }
@@ -392,7 +382,6 @@ function PaceKpi({ eventId }: { eventId: string }) {
       </p>
       <p className={styles.kpiNote}>
         <span className={ahead ? styles.up : styles.down}>{ahead ? 'adelante' : 'atrás'}</span>
-        <span>esperado hoy {Math.round(rowData.expectedPace * 100)}% del aforo</span>
       </p>
     </div>
   );
@@ -453,11 +442,7 @@ function CumulativeChart({
       ) : points.length < 2 ? (
         <div className={own.chartEmpty}>
           <p className={own.chartEmptyFigure}>{formatCount(sold)}</p>
-          <p className={styles.quiet}>
-            {points.length === 1
-              ? `boletos vendidos; la venta empezó el ${shortDate(points[0]!.bucket, zone)}. La curva aparece con el segundo día de venta.`
-              : `${sold === 1 ? 'boleto vendido' : 'boletos vendidos'}. La curva aparece cuando haya venta en dos días distintos.`}
-          </p>
+          <p className={styles.quiet}>{sold === 1 ? 'boleto vendido' : 'boletos vendidos'}</p>
         </div>
       ) : (
         <AreaSvg points={points} capacity={capacity} zone={zone} />
@@ -581,7 +566,7 @@ function PriceTip({ eventId, canApply }: { eventId: string; canApply: boolean })
   const lower = top.recommendedPrice < top.currentPrice;
   return (
     <div className={own.tip}>
-      <p className={own.tipKicker}>RECOMENDACIÓN DE PRECIO</p>
+      <p className={own.tipKicker}>Recomendación de precio</p>
       <p className={own.tipText}>
         {top.name || top.zone}: {lower ? 'bajar' : 'subir'} de{' '}
         {formatTicketAmount(top.currentPrice)} a {formatTicketAmount(top.recommendedPrice)}.
@@ -595,9 +580,7 @@ function PriceTip({ eventId, canApply }: { eventId: string; canApply: boolean })
           Descartar
         </button>
       </div>
-      {!canApply ? (
-        <p className={styles.tertiary}>Aplicar precios lo hace administración.</p>
-      ) : null}
+      {!canApply ? <p className={styles.tertiary}>Solo administración aplica precios.</p> : null}
     </div>
   );
 }

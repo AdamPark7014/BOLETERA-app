@@ -56,12 +56,6 @@ function failText(error: unknown): string {
   return 'No respondió.';
 }
 
-function deltaText(deltaPercent: number | null | undefined): string {
-  if (deltaPercent == null || !Number.isFinite(deltaPercent)) return 'sin base previa';
-  const sign = deltaPercent > 0 ? '+' : '';
-  return `${sign}${deltaPercent.toLocaleString('es-MX', { maximumFractionDigits: 1 })} % vs. periodo previo`;
-}
-
 function whenShort(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
@@ -241,10 +235,7 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
       <header className={styles.pageHead}>
         <div className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Clientes</h1>
-          <p className={styles.quiet}>
-            Quién te compra, cuánto gasta y quién dejó de volver. Se arma con los pedidos
-            completados de {rangeLabel(url.range).toLowerCase()}.
-          </p>
+          <p className={styles.quiet}>{rangeLabel(url.range)}</p>
         </div>
         <div className={styles.toolbar} style={{ alignItems: 'center' }}>
           <Segment
@@ -286,7 +277,7 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
         </div>
       ) : (
         <>
-          <div className={`${styles.kpis} ${own.kpiGrid}`} aria-label="Indicadores de clientes">
+          <div className={styles.kpis} aria-label="Indicadores de clientes">
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>Clientes</p>
               <p className={styles.kpiValue}>{formatCount(kpis.customers)}</p>
@@ -295,17 +286,10 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>Gasto promedio</p>
               <p className={styles.kpiValue}>{formatMoney(kpis.avgLtv)}</p>
-              <p className={styles.kpiNote}>total {formatMoney(kpis.spend)}</p>
             </div>
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>Vuelven a comprar</p>
               <p className={styles.kpiValue}>{formatShare(kpis.retention)}</p>
-              <p className={styles.kpiNote}>con 2 o más pedidos</p>
-            </div>
-            <div className={styles.kpi}>
-              <p className={styles.kpiLabel}>Frecuentes</p>
-              <p className={styles.kpiValue}>{formatCount(kpis.frequent)}</p>
-              <p className={styles.kpiNote}>3 o más pedidos</p>
             </div>
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>En riesgo</p>
@@ -315,23 +299,29 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
               >
                 {formatCount(kpis.churnHigh)}
               </p>
-              <p className={styles.kpiNote}>muchos días sin comprar</p>
             </div>
-            <div className={styles.kpi}>
+          </div>
+          <div className={styles.kpisSecondary}>
+            <div className={styles.kpiSmall}>
+              <p className={styles.kpiLabel}>Frecuentes</p>
+              <p className={styles.kpiSmallValue}>{formatCount(kpis.frequent)}</p>
+            </div>
+            <div className={styles.kpiSmall}>
               <p className={styles.kpiLabel}>Pedidos completados</p>
-              <p className={styles.kpiValue}>
+              <p className={styles.kpiSmallValue}>
                 {workspace.ordersMetrics.isPending ? '—' : formatCount(completed?.value ?? 0)}
               </p>
-              <p className={styles.kpiNote}>{deltaText(completed?.deltaPercent)}</p>
+            </div>
+            <div className={styles.kpiSmall}>
+              <p className={styles.kpiLabel}>Gasto total</p>
+              <p className={styles.kpiSmallValue}>{formatMoney(kpis.spend)}</p>
             </div>
           </div>
 
           {customers.length === 0 ? (
             <div className={styles.empty}>
               <p className={styles.emptyTitle}>Aún no hay clientes en este periodo</p>
-              <p className={styles.quiet}>
-                Aparecen en cuanto haya pedidos completados. Amplía el rango o revisa tus órdenes.
-              </p>
+              <p className={styles.quiet}>Prueba con un rango más amplio.</p>
               <Link href="/orders" className={styles.ghostLink}>
                 Ver órdenes
               </Link>
@@ -342,7 +332,6 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
             <div className={`${styles.panel} ${styles.splitWide}`}>
               <div className={styles.panelHead}>
                 <h2 className={styles.panelTitle}>Segmentos</h2>
-                <p className={styles.tertiary}>Toca uno para filtrar la cartera.</p>
               </div>
               {segments.length === 0 ? (
                 <p className={styles.quiet}>Sin segmentos todavía.</p>
@@ -451,8 +440,7 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
             <div className={styles.panelHead}>
               <h2 className={styles.panelTitle}>Cartera</h2>
               <p className={styles.tertiary} role="status">
-                {formatCount(filtered.length)} de {formatCount(customers.length)} clientes · por
-                gasto
+                {formatCount(filtered.length)} de {formatCount(customers.length)}
               </p>
             </div>
             <div className={own.filters}>
@@ -545,7 +533,6 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
             <div className={`${styles.panel} ${styles.splitWide}`}>
               <div className={styles.panelHead}>
                 <h2 className={styles.panelTitle}>Pedidos por día</h2>
-                <p className={styles.tertiary}>{rangeLabel(url.range)}</p>
               </div>
               {workspace.timeseries.isPending ? (
                 <div className={styles.skeleton} style={{ height: 200 }} />
@@ -583,14 +570,11 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
               <h2 className={styles.panelTitle}>Señales de demanda</h2>
               <dl className={own.signals}>
                 <div>
-                  <dt>Personas en lista de espera</dt>
+                  <dt>En lista de espera</dt>
                   <dd>
                     {formatCount(waiting)}
-                    {typeof waitlistMetricTotal === 'number' ? (
-                      <span className={styles.rowMeta}>
-                        {' '}
-                        · {formatCount(waitlistMetricTotal)} pendientes en métricas
-                      </span>
+                    {typeof waitlistMetricTotal === 'number' && waitlistMetricTotal !== waiting ? (
+                      <span className={styles.rowMeta}> · {formatCount(waitlistMetricTotal)}</span>
                     ) : null}
                   </dd>
                 </div>
@@ -610,11 +594,6 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
             <div className={`${styles.panel} ${styles.splitWide}`}>
               <div className={styles.panelHead}>
                 <h2 className={styles.panelTitle}>Qué hacer</h2>
-                <p className={styles.tertiary}>
-                  {workspace.aiRecommendations.data?.recommendations.length
-                    ? 'De tu cartera y del asistente'
-                    : 'De tu cartera'}
-                </p>
               </div>
               {recommendations.length === 0 ? (
                 <p className={styles.quiet}>Sin recomendaciones por ahora.</p>
@@ -635,7 +614,6 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
                       </span>
                       <p className={styles.rowTitle}>{rec.title}</p>
                       <p className={styles.quiet}>{rec.rationale}</p>
-                      <p className={styles.tertiary}>{rec.action}</p>
                     </div>
                   ))}
                 </div>
@@ -664,10 +642,6 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
               )}
             </div>
           </div>
-          <p className={styles.tertiary}>
-            Los perfiles se arman con las órdenes completadas del periodo; el riesgo de no volver se
-            calcula por los días sin comprar.
-          </p>
         </>
       )}
     </section>
