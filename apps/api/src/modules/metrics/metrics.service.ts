@@ -92,7 +92,7 @@ export class MetricsService {
     const avgCur = cur.tickets > 0 ? cur.revenue / cur.tickets : 0;
     const avgPrev = prev.tickets > 0 ? prev.revenue / prev.tickets : 0;
 
-    const [completedCur, completedPrev, failedCur] = await Promise.all([
+    const [completedCur, completedPrev, failedCur, failedPrev] = await Promise.all([
       this.prisma.order.count({
         where: {
           ...this.orderWhere(params.organizationId, range, params.eventId),
@@ -118,10 +118,23 @@ export class MetricsService {
           status: 'FAILED',
         },
       }),
+      this.prisma.order.count({
+        where: {
+          ...this.orderWhere(
+            params.organizationId,
+            { from: range.comparisonFrom, to: range.comparisonTo },
+            params.eventId
+          ),
+          status: 'FAILED',
+        },
+      }),
     ]);
     const conversionCur =
       completedCur + failedCur > 0 ? completedCur / (completedCur + failedCur) : 0;
-    const conversionPrev = completedPrev > 0 ? completedPrev / (completedPrev + 1) : 0;
+    // Mismo cálculo que el periodo actual (antes: completedPrev/(completedPrev+1),
+    // una cifra de relleno que fabricaba la variación).
+    const conversionPrev =
+      completedPrev + failedPrev > 0 ? completedPrev / (completedPrev + failedPrev) : 0;
 
     const channelMap = new Map<string, number>();
     for (const order of current) {
@@ -169,7 +182,7 @@ export class MetricsService {
         ),
         conversionRate: buildKpi(
           'conversionRate',
-          'Tasa de conversión',
+          'Pagos aprobados',
           Number((conversionCur * 100).toFixed(2)),
           Number((conversionPrev * 100).toFixed(2)),
           'percent'

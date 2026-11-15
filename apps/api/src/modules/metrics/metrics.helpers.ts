@@ -39,7 +39,12 @@ export function parseMetricsRange(from?: string, to?: string, now = new Date()):
     comparisonFrom,
     comparisonTo,
     daysInPeriod: Math.max(1, Math.ceil(windowMs / DAY_MS)),
-    daysElapsed: Math.max(1, Math.ceil((now.getTime() - fromDate.getTime()) / DAY_MS)),
+    // Acotado al periodo: con ceil podía dar 31 de 30 días y la proyección
+    // del cierre salía por debajo de lo ya vendido.
+    daysElapsed: Math.min(
+      Math.max(1, Math.ceil(windowMs / DAY_MS)),
+      Math.max(1, Math.ceil((now.getTime() - fromDate.getTime()) / DAY_MS))
+    ),
   };
 }
 
