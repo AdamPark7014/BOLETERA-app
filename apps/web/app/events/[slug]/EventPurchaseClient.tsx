@@ -854,7 +854,7 @@ export function EventPurchaseClient({
           <h2 className={styles.sideTitle}>Zonas</h2>
           <ul className={styles.options}>
             {offers.map((offer) => {
-              const active = focusedOffer?.id === offer.id;
+              const active = Boolean(zonePick) && focusedOffer?.id === offer.id;
               const out = offer.isAvailable === false || offer.remainingQuantity === 0;
               const few = !out && offer.remainingQuantity != null && offer.remainingQuantity <= 20;
               return (
@@ -886,12 +886,12 @@ export function EventPurchaseClient({
 
           <div className={styles.summary}>
             {summary ? <p className={styles.summaryLine}>{summary}</p> : null}
-            <div className={styles.summaryTotal}>
-              <span>Total</span>
-              <strong aria-live="polite">
-                {allIn != null && allIn > 0 ? formatTicketAmount(allIn) : '—'}
-              </strong>
-            </div>
+            {allIn != null && allIn > 0 ? (
+              <div className={styles.summaryTotal}>
+                <span>Total</span>
+                <strong aria-live="polite">{formatTicketAmount(allIn)}</strong>
+              </div>
+            ) : null}
             {totalMoved ? (
               <p className={styles.warn} role="status">
                 El precio cambió.

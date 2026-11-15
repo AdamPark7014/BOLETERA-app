@@ -168,7 +168,7 @@
   gap: 8px;
 
   button {
-    min-height: 40px;
+    min-height: 44px;
     padding: 0 16px;
     border: 0;
     border-radius: 999px;
@@ -404,5 +404,15 @@
     font-weight: 500;
     color: var(--text-secondary);
     margin-left: 4px;
+  }
+}
+
+/* Titular de página (categoría, ciudad): el mismo de todas las páginas. */
+.pageTitle {
+  @include bt.headline(56px);
+  line-height: 0.92;
+
+  @include bt.phone {
+    font-size: 40px;
   }
 }

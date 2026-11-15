@@ -1,6 +1,13 @@
 'use client';
 
-import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
+import {
+  forwardRef,
+  useId,
+  useState,
+  type FormEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from 'react';
 import { cx } from '../../lib/cx';
 import type { Density } from '../../styles/tokens';
 import { useTicketDensity } from './BlackTicketRoot';
@@ -49,7 +56,12 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   const inputId = id ?? `${generatedId}-field`;
   const hintId = `${inputId}-hint`;
   const errorId = `${inputId}-error`;
-  const invalid = Boolean(error);
+  // Si el formulario se envía con el campo vacío o inválido, el navegador
+  // dispara `invalid`: en vez de su globo, se muestra el error aquí y en
+  // español. Un `error` explícito siempre gana.
+  const [nativeError, setNativeError] = useState<string | null>(null);
+  const shownError = error ?? nativeError ?? undefined;
+  const invalid = Boolean(shownError);
   const resolved = useTicketDensity(density);
   const describedBy = [hint && !invalid ? hintId : null, invalid ? errorId : null]
     .filter(Boolean)
@@ -86,6 +98,30 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
           inputMode={inputMode ?? (kind === 'money' ? 'decimal' : undefined)}
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy || undefined}
+          onInvalid={(event: FormEvent<HTMLInputElement>) => {
+            rest.onInvalid?.(event);
+            event.preventDefault();
+            const input = event.currentTarget;
+            const v = input.validity;
+            setNativeError(
+              v.valueMissing
+                ? 'Este dato es obligatorio.'
+                : v.typeMismatch && input.type === 'email'
+                  ? 'Ese correo no parece válido.'
+                  : v.tooShort
+                    ? `Usa al menos ${input.minLength} caracteres.`
+                    : v.rangeUnderflow || v.rangeOverflow
+                      ? 'Revisa el valor.'
+                      : 'Revisa este dato.'
+            );
+            // El primer campo inválido del formulario recibe el foco.
+            const first = input.form?.querySelector<HTMLInputElement>(':invalid');
+            if (first === input) input.focus();
+          }}
+          onInput={(event) => {
+            rest.onInput?.(event);
+            if (nativeError && event.currentTarget.validity.valid) setNativeError(null);
+          }}
         />
         {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
       </div>
@@ -96,7 +132,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
       ) : null}
       {invalid ? (
         <p id={errorId} className={styles.error} role="alert">
-          {error}
+          {shownError}
         </p>
       ) : null}
     </div>

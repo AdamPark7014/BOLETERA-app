@@ -31,42 +31,33 @@ export function OrderAccessGate({
         <div className={styles.empty}>
           <h1>
             {notFound
-              ? 'No encontramos esa orden'
+              ? 'No encontramos esa compra'
               : failed
-                ? 'No pudimos cargar tu orden'
-                : 'Este enlace no incluye tu credencial de acceso'}
+                ? 'No pudimos cargar tu compra'
+                : 'Inicia sesión para ver tus boletos'}
           </h1>
           <p>
-            {notFound ? (
-              <>
-                Revisa que el identificador <code>{publicId}</code> sea el del correo de
-                confirmación.
-              </>
-            ) : failed ? (
-              (message ?? 'Vuelve a intentarlo en unos segundos.')
-            ) : (
-              <>
-                Ábrelo desde el correo de confirmación —ese enlace sí la lleva— o inicia sesión con
-                el correo con el que hiciste la compra. Tus boletos siguen ahí; lo único que falta
-                es acreditar que la orden es tuya.
-              </>
-            )}
+            {notFound
+              ? 'Revisa el enlace de tu correo de confirmación.'
+              : failed
+                ? (message ?? 'Intenta de nuevo en unos segundos.')
+                : 'Usa el correo con el que compraste o abre el enlace de tu correo.'}
           </p>
-          {!notFound && !failed && (
-            <p className={styles.gateNote}>
-              Si abriste el enlace en otro dispositivo o borraste los datos del navegador, la
-              credencial se quedó en el correo. Búscalo como «Tu compra {publicId}».
-            </p>
-          )}
           <div className={styles.actions}>
-            <Link href="/login" className={styles.link}>
-              Iniciar sesión
-            </Link>
-            <Link href="/cuenta" className={styles.secondary}>
-              Ir a mis boletos
-            </Link>
+            {notFound || failed ? (
+              <Link href="/cuenta" className={styles.secondary}>
+                Ir a mis boletos
+              </Link>
+            ) : (
+              <Link
+                href={`/login?next=${encodeURIComponent(`/orders/${publicId}`)}`}
+                className={styles.primaryLink}
+              >
+                Entrar
+              </Link>
+            )}
             <Link href="/ayuda" className={styles.ghost}>
-              Necesito ayuda
+              Ayuda
             </Link>
           </div>
         </div>

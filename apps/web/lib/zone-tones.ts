@@ -1,8 +1,19 @@
-// Color por zona de la maqueta (Evento.dc.html): bronce oscuro para lo más
-// barato hasta dorado claro para lo más caro. Si todas las zonas cuestan lo
-// mismo, se reparte la rampa por zona para que cada una se distinga.
+// Color por zona: tonos neutros y fríos que se distinguen entre sí (el dorado
+// queda solo para «Tu selección», que es la acción). Por precio de menor a
+// mayor; si todas cuestan lo mismo, uno por zona.
 
-const RAMP = ['#4A3F33', '#5C4E3E', '#8A7359', '#A68A6B', '#C2A57F', '#D9C2A3'];
+const RAMP = ['#6F7F8F', '#8C9DB0', '#A9B9C9', '#C7D2DC', '#E3E8EC'];
+/** Paleta categórica cuando el precio no ordena: contrastes claros entre vecinas. */
+const DISTINCT = [
+  '#9DB4CC',
+  '#B7A6C9',
+  '#93BFAE',
+  '#D3C3A5',
+  '#C9A3A3',
+  '#A9B3BD',
+  '#C4C9A0',
+  '#8FA7B8',
+];
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -37,7 +48,6 @@ export function offerTones(offers: readonly PricedOffer[]): Map<string, string> 
     for (const o of priced) tones.set(o.id, rampAt((o.price - min) / (max - min)));
     return tones;
   }
-  const n = priced.length;
-  for (const o of priced) tones.set(o.id, rampAt(n === 1 ? 0.6 : o.index / (n - 1)));
+  for (const o of priced) tones.set(o.id, DISTINCT[o.index % DISTINCT.length]);
   return tones;
 }

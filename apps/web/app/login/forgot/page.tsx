@@ -44,9 +44,6 @@ export default function ForgotPasswordPage() {
       <main id="contenido" tabIndex={-1} className={styles.page}>
         <form className={styles.simpleCard} onSubmit={onSubmit}>
           <h1>Recuperar contraseña</h1>
-          <p className={styles.sub}>
-            Escribe el correo de tu cuenta y te mandamos un enlace para crear una contraseña nueva.
-          </p>
           <Field
             id="forgot-email"
             name="email"

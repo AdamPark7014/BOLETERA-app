@@ -1,0 +1,43 @@
+.wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+
+.titles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display, 'Archivo', sans-serif);
+  font-stretch: var(--headline-stretch, 72%);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.92;
+  font-size: clamp(36px, 5vw, 56px);
+  color: var(--text, #fff);
+  overflow-wrap: anywhere;
+
+  [data-density='admin'] & {
+    font-size: clamp(28px, 3vw, 40px);
+  }
+}
+
+.meta {
+  font-size: 15px;
+  color: var(--text-secondary, #a8a29a);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

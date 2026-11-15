@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Field, StageArt, formatTicketAmount } from '@boletera/ui';
+import { Field, StageArt, TicketState, formatTicketAmount } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import { authHeaders, getStoredUser } from '@/lib/auth';
@@ -480,6 +480,28 @@ function CheckoutForm() {
     </button>
   );
 
+  // Sin apartado no hay nada que pagar: un estado claro con salida, nunca
+  // un formulario con «Pagar $0.00».
+  if (holdIds.length === 0) {
+    return (
+      <>
+        <SiteHeader />
+        <main id="contenido" tabIndex={-1} className={styles.page}>
+          <TicketState
+            title="No tienes un apartado activo"
+            body="Elige tus asientos y aquí verás tu pago."
+            minHeight={420}
+            action={
+              <Link href="/" className={styles.emptyAction}>
+                Ver cartelera
+              </Link>
+            }
+          />
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <SiteHeader compact />
@@ -760,8 +782,8 @@ function CheckoutForm() {
             <div className={styles.payDock}>
               {payButton}
               <span className={styles.terms}>
-                Al pagar aceptas los <Link href="/terminos">términos</Link> y la política de
-                reembolso.
+                Al pagar aceptas los <Link href="/terminos">términos</Link> y la{' '}
+                <Link href="/terminos#reembolsos">política de reembolso</Link>.
               </span>
             </div>
 

@@ -522,7 +522,8 @@ $bt-money-in: string.unquote('#4CC38A');
 $bt-money-out: string.unquote('#E5484D');
 $bt-danger: $bt-money-out;
 $bt-danger-wash: string.unquote('rgba(229, 72, 77, 0.14)');
-$bt-focus: $bt-gold;
+// Foco y selección en blanco: el dorado queda para la acción principal.
+$bt-focus: #ffffff;
 $bt-seat-free: string.unquote('#1A1A1A');
 $bt-seat-sold: string.unquote('#3A342C');
 $bt-seat-sold-line: string.unquote('#6A6258');
@@ -571,7 +572,7 @@ $bt-radius-xl: 24px;
 
 $bt-control-compra: 48px;
 $bt-control-taquilla: 56px;
-$bt-control-admin: 36px;
+$bt-control-admin: 44px;
 $bt-seat-target: 28px;
 $bt-status-height: 24px;
 $bt-dot: 6px;
@@ -588,7 +589,7 @@ $bt-ease: cubic-bezier(0.2, 0, 0, 1);
 $bt-shadow-sheet: string.unquote('0 12px 32px rgba(0, 0, 0, 0.45)');
 $bt-glass: string.unquote('rgba(26, 26, 26, 0.92)');
 $bt-glass-blur: 12px;
-$bt-focus-width: 1.5px;
+$bt-focus-width: 2px;
 $bt-focus-offset: 2px;
 
 // Mockup «Boletera: propuesta de rediseño» (14-11-2026): titulares en Archivo

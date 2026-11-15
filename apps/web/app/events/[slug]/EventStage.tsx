@@ -223,6 +223,18 @@ export function EventStage({
                               : ''}
                         </span>
                         <span className={styles.zonePrice}>{priceLabel(price)}</span>
+                        <svg
+                          aria-hidden="true"
+                          className={styles.chevron}
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                        >
+                          <path d="M9 6l6 6-6 6" />
+                        </svg>
                       </button>
                     </li>
                   );
@@ -247,20 +259,17 @@ export function EventStage({
         </div>
 
         <aside className={styles.fichaSide}>
-          <div className={styles.poster}>
-            {poster ? (
+          {poster && poster !== hero ? (
+            <div className={styles.poster}>
               <Image
                 src={poster}
                 alt={`Póster de ${title}`}
                 fill
-                priority
                 sizes="(max-width: 720px) 100vw, 420px"
                 className={styles.cover}
               />
-            ) : (
-              <StageArt seed={slug} className={styles.cover} />
-            )}
-          </div>
+            </div>
+          ) : null}
           <section className={styles.venue}>
             <strong className={styles.venueName}>{venueName ?? 'Recinto por confirmar'}</strong>
             {venueAddress || venueCity ? (
@@ -279,6 +288,10 @@ export function EventStage({
                 nonTransferable || transferAllowed === false ? 'No transferible' : 'Transferible',
                 allowResale === false ? 'Sin reventa' : 'Reventa oficial',
               ].join(' · ')}
+              {' · '}
+              <Link href="/terminos#reembolsos" className={styles.policyLink}>
+                Política de reembolso
+              </Link>
             </span>
           </section>
         </aside>

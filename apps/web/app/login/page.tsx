@@ -26,9 +26,32 @@ export default function LoginPage() {
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+  const fieldErrors = {
+    firstName: mode === 'register' && !firstName.trim() ? 'Escribe tu nombre.' : undefined,
+    lastName: mode === 'register' && !lastName.trim() ? 'Escribe tu apellido.' : undefined,
+    email: !email.trim()
+      ? 'Escribe tu correo.'
+      : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+        ? 'Ese correo no parece válido.'
+        : undefined,
+    password: !password
+      ? 'Escribe tu contraseña.'
+      : mode === 'register' && password.length < 8
+        ? 'Usa al menos 8 caracteres.'
+        : undefined,
+  };
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    setShowErrors(true);
+    const firstInvalid = (Object.keys(fieldErrors) as (keyof typeof fieldErrors)[]).find(
+      (key) => fieldErrors[key]
+    );
+    if (firstInvalid) {
+      document.getElementById(`login-${firstInvalid}`)?.focus();
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -61,67 +84,78 @@ export default function LoginPage() {
     <>
       <SiteHeader />
       <main id="contenido" tabIndex={-1} className={purchase.column}>
-        <h1 className={purchase.title}>Entrar</h1>
-        <form onSubmit={submit} className={purchase.stack}>
+        <h1 className={purchase.title}>{mode === 'login' ? 'Entrar' : 'Crear cuenta'}</h1>
+        <form onSubmit={submit} className={purchase.stack} noValidate>
           {mode === 'register' ? (
             <>
               <Field
+                id="login-firstName"
                 label="Nombre"
                 value={firstName}
                 autoComplete="given-name"
                 onChange={(e) => setFirstName(e.target.value)}
+                error={showErrors ? fieldErrors.firstName : undefined}
                 required
               />
               <Field
+                id="login-lastName"
                 label="Apellido"
                 value={lastName}
                 autoComplete="family-name"
                 onChange={(e) => setLastName(e.target.value)}
+                error={showErrors ? fieldErrors.lastName : undefined}
                 required
               />
             </>
           ) : null}
           <Field
+            id="login-email"
             label="Correo"
             type="email"
             value={email}
             autoComplete="email"
             placeholder="nombre@dominio.com"
             onChange={(e) => setEmail(e.target.value)}
+            error={showErrors ? fieldErrors.email : undefined}
             required
           />
           <Field
+            id="login-password"
             label="Contraseña"
             type="password"
             value={password}
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             onChange={(e) => setPassword(e.target.value)}
+            error={showErrors ? fieldErrors.password : undefined}
             required
             minLength={8}
           />
+          {mode === 'login' ? (
+            <Link href="/login/forgot" className={purchase.link}>
+              Olvidé la contraseña
+            </Link>
+          ) : null}
           {error ? (
             <p className={purchase.error} role="alert">
               <span>{error}</span>
             </p>
           ) : null}
-          <TicketButton type="submit" disabled={loading || !email.trim() || !password.trim()}>
+          <TicketButton type="submit" disabled={loading}>
             {mode === 'login' ? 'Entrar' : 'Crear cuenta'}
           </TicketButton>
         </form>
         <div className={purchase.actions}>
-          <Link href="/login/forgot" className={purchase.link}>
-            Olvidé la contraseña
-          </Link>
           <button
             type="button"
             className={purchase.link}
-            onClick={() => setMode((current) => (current === 'login' ? 'register' : 'login'))}
+            onClick={() => {
+              setShowErrors(false);
+              setError('');
+              setMode((current) => (current === 'login' ? 'register' : 'login'));
+            }}
           >
-            {mode === 'login' ? 'Crear cuenta' : 'Ya tengo cuenta'}
+            {mode === 'login' ? '¿No tienes cuenta? Créala' : 'Ya tengo cuenta'}
           </button>
-          <Link href="/" className={purchase.link}>
-            Atrás
-          </Link>
         </div>
       </main>
     </>

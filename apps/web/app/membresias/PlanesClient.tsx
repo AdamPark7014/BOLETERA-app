@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Money, TicketButton } from '@boletera/ui';
+import { TicketButton } from '@boletera/ui';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import { authHeaders, clearSession, getToken } from '@/lib/auth';
 import purchase from '@/components/purchase/purchase.module.scss';
@@ -184,13 +184,16 @@ export function PlanesClient({ plans }: { plans: PublicPlan[] }) {
       {plan ? (
         <div className={purchase.dock}>
           <div className={purchase.dockInner}>
-            <Money label="Total" amount={Number(plan.price)} currency />
+            <span className={styles.dockTotal}>
+              <small>Total</small>
+              {formatPrice(Number(plan.price))}
+            </span>
             {signedIn ? (
               <TicketButton type="button" onClick={() => void buy()} disabled={busy}>
                 {busy ? 'Preparando pago' : 'Pagar membresía'}
               </TicketButton>
             ) : (
-              <Link href={LOGIN_BACK} className={purchase.link}>
+              <Link href={LOGIN_BACK} className={styles.dockCta}>
                 Entrar para comprar
               </Link>
             )}

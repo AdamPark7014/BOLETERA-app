@@ -48,12 +48,20 @@ function ResetForm() {
     }
   }
 
+  if (!token || !email) {
+    return (
+      <div className={styles.simpleCard}>
+        <h1>Este enlace ya no es válido</h1>
+        <Link href="/login/forgot" className={styles.primaryLink}>
+          Pedir otro enlace
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <form className={styles.simpleCard} onSubmit={onSubmit}>
       <h1>Crear contraseña nueva</h1>
-      <p className={styles.sub}>
-        Elige una contraseña de al menos 8 caracteres para la cuenta de abajo.
-      </p>
       <Field id="reset-email" name="email" label="Correo" type="email" value={email} readOnly />
       <Field
         id="reset-password"

@@ -9,6 +9,7 @@ const STATUS = {
   accesible: { label: 'Accesible', dot: 'steel' },
   pendiente: { label: 'Pendiente', dot: null },
   cobrado: { label: 'Cobrado', dot: 'sage' },
+  pagado: { label: 'Pagado', dot: 'sage' },
   reembolsado: { label: 'Reembolsado', dot: 'clay' },
   cuadrado: { label: 'Cuadrado', dot: null },
   descuadrado: { label: 'Descuadrado', dot: 'clay' },

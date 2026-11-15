@@ -232,3 +232,12 @@
   font: var(--mono);
   color: var(--text-tertiary);
 }
+
+/* Acción principal de la vista: píldora dorada. */
+.primary {
+  @include bt.pill-primary;
+  height: auto;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
+}

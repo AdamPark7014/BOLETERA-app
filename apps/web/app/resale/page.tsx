@@ -66,7 +66,6 @@ export default async function ResalePage() {
       <main id="contenido" tabIndex={-1} className={styles.page}>
         <header className={styles.hero}>
           <h1>Reventa oficial</h1>
-          <p className={styles.lead}>Boletos verificados, con precio tope y código nuevo.</p>
           <div className={styles.heroActions}>
             <Link href="/resale/vender" className={styles.primary}>
               Vender mi boleto
@@ -80,18 +79,13 @@ export default async function ResalePage() {
         <section aria-labelledby="resale-list-title">
           <div className={styles.sectionHead}>
             <h2 id="resale-list-title">Disponibles ahora</h2>
-            {!failed && (
-              <span>
-                {listings.length} listado{listings.length === 1 ? '' : 's'}
-              </span>
-            )}
           </div>
 
           {failed ? (
             <TicketState
               kind="error"
               title="No pudimos cargar los listados"
-              body="Es un problema temporal. Vuelve a intentarlo en unos minutos; si querías publicar un boleto, puedes hacerlo de todos modos."
+              body="Intenta de nuevo en unos minutos."
               action={
                 <Link href="/resale/vender" className="bt-action">
                   Vender mi boleto
@@ -124,7 +118,11 @@ export default async function ResalePage() {
                 return (
                   <li key={l.id} className={styles.card}>
                     <div>
-                      <p className={styles.status}>{LISTING_STATUS_LABEL[l.status] ?? l.status}</p>
+                      {l.status !== 'ACTIVE' ? (
+                        <p className={styles.status}>
+                          {LISTING_STATUS_LABEL[l.status] ?? l.status}
+                        </p>
+                      ) : null}
                       <h3>{event?.title || 'Evento'}</h3>
                       <p className={styles.meta}>
                         {when ? formatEventDateTime(when) : 'Fecha por confirmar'}

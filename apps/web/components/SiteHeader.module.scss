@@ -226,8 +226,8 @@
 
 .avatar,
 .avatarSlot {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   flex: none;
   border-radius: 999px;
 }
@@ -245,5 +245,39 @@
 
   &:hover {
     background: var(--line-strong);
+  }
+}
+
+/* Áreas táctiles de 44 px como mínimo (auditoría). */
+.skip {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search {
+  height: 48px;
+
+  input {
+    min-height: 44px;
+  }
+}
+
+.city {
+  height: 44px;
+}
+
+.tickets,
+.enter,
+.navInner a {
+  min-width: 44px;
+  justify-content: center;
+}
+
+/* A 390 la fila de categorías se desvanece al borde: pista de que se desliza. */
+@include bt.phone {
+  .navInner {
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
   }
 }

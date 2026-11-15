@@ -48,6 +48,9 @@ export function formatCurrency(value: number, fractionDigits = 2): string {
  */
 export function formatTicketAmount(value: number): string {
   if (!Number.isFinite(value)) return '';
+  // Redondeo a centavos antes del signo: −0.001 no se pinta «−$0.00».
+  value = Math.round(value * 100) / 100;
+  if (Object.is(value, -0)) value = 0;
   const body = numberFormatter({
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -212,8 +215,13 @@ export function formatDateRange(
   return `${formatDayMonth(a)} – ${formatDayMonth(b)}`;
 }
 
-/** Precio anunciado: "$1,250" si no hay centavos, "$1,270.08" si los hay. */
+/**
+ * Precio anunciado. Siempre con centavos («$441.00», «$1,270.08») para que una
+ * retícula nunca mezcle formatos ni redondee hacia abajo un precio final.
+ */
 export function formatPrice(value: number): string {
-  const full = formatTicketAmount(value);
-  return full.endsWith('.00') ? full.slice(0, -3) : full;
+  return formatTicketAmount(value);
 }
+
+/** Alias de `formatPrice` para titulares «desde»: misma regla, siempre con centavos. */
+export const formatPriceFrom = formatPrice;

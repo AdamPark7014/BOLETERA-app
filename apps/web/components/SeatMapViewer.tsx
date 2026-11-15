@@ -418,7 +418,7 @@ export function SeatMapViewer({
       const seat = seats[index];
       // Paleta de la maqueta: libre en bronce/dorado según precio, ocupado en
       // gris, tu selección en blanco con anillo dorado.
-      if (status === 'selected') return '#FFFFFF';
+      if (status === 'selected') return '#A68A6B';
       if (dimmed) return '#141416';
       if (status === 'unknown') return '#1C1C1F';
       if (status === 'blocked' || status === 'sold' || status === 'held') return '#2A2A2E';
@@ -1001,8 +1001,8 @@ export function SeatMapViewer({
               disabled={seats.length > SIGHTLINE_MAX_SEATS}
               title={
                 seats.length > SIGHTLINE_MAX_SEATS
-                  ? 'El heat de vista no está disponible en recintos de más de 12.000 butacas'
-                  : 'Calor de calidad de vista (sightlines)'
+                  ? 'La calidad de vista no está disponible en recintos de más de 12,000 butacas'
+                  : 'Calidad de vista'
               }
             >
               Vista
@@ -1053,7 +1053,7 @@ export function SeatMapViewer({
           <div className={styles.heatScale} aria-hidden />
           <div className={styles.heatLabels}>
             <span>${priceRange.min.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
-            <span>Heat de precio</span>
+            <span>Mapa de precios</span>
             <span>${priceRange.max.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
           </div>
           <label className={styles.priceFilter}>
@@ -1078,7 +1078,7 @@ export function SeatMapViewer({
           <div className={styles.viewHeatScale} aria-hidden />
           <div className={styles.heatLabels}>
             <span>Restringida</span>
-            <span>Heat de vista</span>
+            <span>Calidad de vista</span>
             <span>Premium</span>
           </div>
         </div>
@@ -1279,9 +1279,11 @@ export function SeatMapViewer({
         aria-describedby="map-help"
         onKeyDown={onMapKeyDown}
       >
-        <div className={styles.stageBanner}>
-          <span>Escenario</span>
-        </div>
+        {!compact ? (
+          <div className={styles.stageBanner}>
+            <span>Escenario</span>
+          </div>
+        ) : null}
 
         {/* Capa estructural inferior — pocos nodos, se queda en SVG. */}
         <svg
@@ -1304,18 +1306,20 @@ export function SeatMapViewer({
               height={20}
               rx={2}
               fill="url(#stageGrad)"
-              stroke="rgba(166,138,107,0.6)"
-              strokeWidth={1}
             />
-            <rect
-              x={stage.x + stage.width * 0.22}
-              y={stage.y - 4}
-              width={stage.width * 0.56}
-              height={3}
-              rx={1}
-              fill="#A68A6B"
-              opacity={0.9}
-            />
+            {/* Un solo rótulo, dentro de la forma del escenario. */}
+            <text
+              x={stage.x + stage.width / 2}
+              y={stage.y + 14}
+              textAnchor="middle"
+              fontFamily="Roboto, system-ui, sans-serif"
+              fontWeight={600}
+              fontSize={11}
+              letterSpacing={2}
+              fill="#111113"
+            >
+              ESCENARIO
+            </text>
             {projected.aisles.map((aisle) =>
               levelFilter !== 'ALL' && aisle.levelId && aisle.levelId !== levelFilter ? null : (
                 <polyline

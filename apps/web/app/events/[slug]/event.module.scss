@@ -700,7 +700,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    min-height: 40px;
+    min-height: 44px;
     padding: 0 4px 0 14px;
     border-radius: 999px;
     background: #fff;
@@ -1159,7 +1159,7 @@
   background: var(--card);
 
   button {
-    min-height: 40px;
+    min-height: 44px;
     padding: 0 18px;
     border: 0;
     border-radius: 999px;
@@ -1392,4 +1392,37 @@
   border-color: var(--line-strong);
   color: var(--text);
   font-size: 13px;
+}
+
+.chevron {
+  flex: none;
+  color: var(--text-secondary);
+  transition: transform 0.15s ease;
+}
+
+.zoneRow {
+  padding-inline: 12px;
+  margin-inline: -12px;
+  width: calc(100% + 24px);
+  border-radius: 12px;
+  border-bottom-color: transparent;
+
+  &:hover:not(:disabled) {
+    opacity: 1;
+    background: var(--card);
+  }
+
+  &:hover:not(:disabled) .chevron {
+    transform: translateX(2px);
+  }
+}
+
+.policyLink {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+
+  &:hover {
+    color: var(--text);
+  }
 }

@@ -726,3 +726,8 @@
 .stepActive {
   border-bottom-color: var(--text);
 }
+
+.primaryLink {
+  @include bt.pill-primary;
+  min-height: 48px;
+}

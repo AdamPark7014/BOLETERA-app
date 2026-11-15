@@ -76,8 +76,8 @@
 
 .segment button[aria-pressed='true'] {
   color: var(--text);
-  border-color: var(--gold);
-  background: var(--gold-wash);
+  border-color: var(--text);
+  background: var(--elevated);
 }
 
 .list {
@@ -321,6 +321,10 @@
 }
 
 .link {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
   color: var(--text);
   text-decoration: underline;
   text-underline-offset: 3px;

@@ -278,7 +278,7 @@ function PagoContent() {
       <main className={styles.page}>
         <header className={styles.hero}>
           <p className={styles.pending}>Pago en proceso</p>
-          <h1>{isDemoFlow ? 'Confirmando pago demo' : 'Confirmando pago Banorte'}</h1>
+          <h1>Confirmando tu pago</h1>
           <p className={styles.sub}>
             Orden <code>{publicId}</code>
           </p>

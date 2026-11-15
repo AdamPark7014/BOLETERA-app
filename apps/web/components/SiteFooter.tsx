@@ -9,7 +9,7 @@ export function SiteFooter() {
       <h2 className="sr-only">Pie de página</h2>
       <div className={styles.inner}>
         <Link href="/" className={styles.logo} aria-label="Black Ticket, inicio">
-          <BrandLogo tone="gold" size={32} />
+          <BrandLogo tone="white" size={32} />
         </Link>
         <nav className={styles.nav} aria-label="Enlaces del sitio">
           <Link href="/ayuda">Ayuda</Link>

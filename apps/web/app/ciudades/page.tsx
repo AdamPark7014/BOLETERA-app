@@ -39,7 +39,6 @@ export default async function CiudadesPage() {
         </nav>
         <header className={styles.hero}>
           <h1>Ciudades</h1>
-          <p>Explora eventos por ciudad en México.</p>
         </header>
 
         {failed ? (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { TicketState } from '@boletera/ui';
 import { advertisedPrice, localDay } from '@/lib/event-display';
 import { EventCard, type CardEvent } from './EventCard';
@@ -70,22 +71,24 @@ export function EventGrid({
       <div className={styles.sectionHead}>
         <div className={styles.sectionTitles}>
           {kicker ? <span className={styles.kicker}>{kicker}</span> : null}
-          <Heading className={styles.h2} id={`${id}-title`}>
+          <Heading className={headingLevel === 1 ? styles.pageTitle : styles.h2} id={`${id}-title`}>
             {title}
           </Heading>
         </div>
-        <div className={styles.chips} role="group" aria-label="Filtrar cartelera">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              aria-pressed={filter === f.key}
-              onClick={() => setFilter(f.key)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        {events.length > 0 ? (
+          <div className={styles.chips} role="group" aria-label="Filtrar cartelera">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                aria-pressed={filter === f.key}
+                onClick={() => setFilter(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {failed ? (
@@ -99,6 +102,13 @@ export function EventGrid({
         <TicketState
           title={filter === 'all' ? emptyText : 'Nada para estas fechas todavía'}
           minHeight={320}
+          action={
+            filter === 'all' ? (
+              <Link href="/" className="bt-action">
+                Ver toda la cartelera
+              </Link>
+            ) : undefined
+          }
         />
       ) : (
         <ul className={styles.grid}>

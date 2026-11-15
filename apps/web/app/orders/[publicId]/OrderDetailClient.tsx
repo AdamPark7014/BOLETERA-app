@@ -266,7 +266,7 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
           {refunded ? (
             <NamedStatus status="reembolsado" />
           ) : completed ? (
-            <NamedStatus status="cobrado" />
+            <NamedStatus status="pagado" />
           ) : (
             <NamedStatus status="pendiente" />
           )}
@@ -383,7 +383,7 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
                     </p>
                   )}
                   <p className={styles.amount}>
-                    {completed ? 'Cobrado' : refunded ? 'Reembolso' : 'Total'} ·{' '}
+                    {completed ? 'Pagado' : refunded ? 'Reembolso' : 'Total'} ·{' '}
                     {formatMoney(order.totalAmount, order.currency)}
                   </p>
                   {order.event.slug && (

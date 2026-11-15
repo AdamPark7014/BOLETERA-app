@@ -31,7 +31,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { key: raw } = await params;
   const key = raw.toUpperCase();
-  const label = CATEGORY_LABEL[key] ?? key;
+  if (!ALLOWED.has(key)) return { title: 'Página no encontrada', robots: { index: false } };
+  const label = CATEGORY_LABEL[key];
   const tenant = await fetchTenantCurrent();
   return buildHubMetadata({
     title: label,

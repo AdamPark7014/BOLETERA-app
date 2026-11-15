@@ -81,7 +81,7 @@ type TransferRow = {
 
 /** Etiquetas de estado en español: la API devuelve constantes en inglés. */
 const ORDER_STATUS_LABEL: Record<string, string> = {
-  COMPLETED: 'Cobrado',
+  COMPLETED: 'Pagado',
   PENDING: 'Pendiente',
   PROCESSING: 'Pendiente',
   CANCELLED: 'Cancelada',
@@ -91,14 +91,6 @@ const ORDER_STATUS_LABEL: Record<string, string> = {
   EXPIRED: 'Vencida',
   FAILED: 'Falló',
 };
-
-function statusName(status: string): 'pendiente' | 'cobrado' | 'reembolsado' | null {
-  if (status === 'COMPLETED') return 'cobrado';
-  if (status === 'REFUNDED' || status === 'PARTIALLY_REFUNDED') return 'reembolsado';
-  if (status === 'PENDING' || status === 'PROCESSING' || status === 'PENDING_REFUND')
-    return 'pendiente';
-  return null;
-}
 
 type MembershipRow = {
   id: string;
@@ -151,15 +143,6 @@ function billingLabel(period: string) {
 }
 
 type LoadState = 'loading' | 'ready' | 'expired' | 'error';
-
-function seatLabel(t: TicketRow) {
-  const parts = [
-    t.section,
-    t.row ? `Fila ${t.row}` : null,
-    t.seatNumber ? `Asiento ${t.seatNumber}` : null,
-  ].filter(Boolean);
-  return parts.length ? parts.join(' · ') : null;
-}
 
 /**
  * PDF de boletos con la sesión. Un `<a href>` no manda la cabecera
@@ -310,6 +293,18 @@ export default function CuentaPage() {
       .filter((o) => new Date(o.event.startsAt).getTime() >= now - 6 * 60 * 60 * 1000)
       .sort((a, b) => new Date(a.event.startsAt).getTime() - new Date(b.event.startsAt).getTime());
   }, [completedOrders]);
+
+  /** Una tarjeta por función: varias compras del mismo evento se agrupan. */
+  const upcomingGroups = useMemo(() => {
+    const groups = new Map<string, { key: string; orders: typeof upcoming }>();
+    for (const order of upcoming) {
+      const key = `${order.event.slug ?? order.event.title}|${order.event.startsAt}`;
+      const group = groups.get(key);
+      if (group) group.orders.push(order);
+      else groups.set(key, { key, orders: [order] });
+    }
+    return Array.from(groups.values());
+  }, [upcoming]);
 
   const past = useMemo(() => {
     const upcomingIds = new Set(upcoming.map((o) => o.publicId));
@@ -476,6 +471,14 @@ export default function CuentaPage() {
     router.push('/');
   }
 
+  // Sesión vencida: se limpia la local (el encabezado deja de mostrar la cuenta)
+  // y se va directo a entrar; al volver, regresa aquí.
+  useEffect(() => {
+    if (state !== 'expired') return;
+    clearSession();
+    router.replace(LOGIN_BACK);
+  }, [state, router]);
+
   return (
     <div className={styles.shell}>
       <SiteHeader />
@@ -502,12 +505,7 @@ export default function CuentaPage() {
 
         {state === 'expired' ? (
           <section className={styles.sessionExpired} role="alert" aria-labelledby="expired-title">
-            <h2 id="expired-title">Tu sesión caducó</h2>
-            <p>
-              Por seguridad, cerramos la sesión después de un rato o cuando cambian los datos de tu
-              cuenta. Tus boletos siguen guardados: vuelve a entrar y regresarás a esta misma
-              página.
-            </p>
+            <h2 id="expired-title">Tu sesión terminó</h2>
             <Link href={LOGIN_BACK} className={styles.browse}>
               Volver a entrar
             </Link>
@@ -637,7 +635,7 @@ export default function CuentaPage() {
                         <strong className={styles.walletTitle}>{m.plan.name}</strong>
                       </div>
                       {m.status === 'ACTIVE' ? (
-                        <NamedStatus status="cobrado" />
+                        <NamedStatus status="pagado" />
                       ) : (
                         <span className={styles.status}>
                           {MEMBERSHIP_STATUS_LABEL[m.status] ?? m.status}
@@ -694,7 +692,7 @@ export default function CuentaPage() {
                 </p>
               )}
 
-              {state === 'ready' && upcoming.length === 0 && (
+              {state === 'ready' && upcomingGroups.length === 0 && (
                 <TicketState
                   title="Aún no tienes boletos próximos"
                   action={
@@ -706,14 +704,23 @@ export default function CuentaPage() {
               )}
 
               <ul className={styles.walletList}>
-                {upcoming.map((o, index) => {
+                {upcomingGroups.map((group, index) => {
+                  const o = group.orders[0];
                   const when = new Date(o.event.startsAt);
-                  const tickets = o.items?.flatMap((i) => i.tickets ?? []) ?? [];
+                  const tickets = group.orders.flatMap(
+                    (order) => order.items?.flatMap((i) => i.tickets ?? []) ?? []
+                  );
                   const count =
-                    tickets.length || o.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) || 0;
+                    tickets.length ||
+                    group.orders.reduce(
+                      (sum, order) =>
+                        sum + (order.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ?? 0),
+                      0
+                    );
                   const cancelled = o.event.status === 'CANCELLED';
+                  const actionLabel = cancelled ? 'Ver reembolso' : 'Ver boletos';
                   return (
-                    <li key={o.publicId} className={styles.walletCard}>
+                    <li key={group.key} className={styles.walletCard}>
                       <div className={styles.walletDateBlock} aria-hidden="true">
                         <strong>{formatDayMonth(when).split(' ')[0]}</strong>
                         <span>{formatDayMonth(when).split(' ')[1]}</span>
@@ -723,7 +730,6 @@ export default function CuentaPage() {
                         <strong className={styles.walletTitle}>{o.event.title}</strong>
                         <p className={styles.walletMeta}>
                           {o.event.venue?.name}
-                          {o.event.venue?.city ? ` · ${o.event.venue.city}` : ''}
                           {count ? ` · ${count} boleto${count === 1 ? '' : 's'}` : ''}
                         </p>
                         {/*
@@ -738,16 +744,9 @@ export default function CuentaPage() {
                             {o.event.cancelledAt
                               ? ` el ${formatShortDate(o.event.cancelledAt)}`
                               : ''}
-                            . Tus boletos ya no sirven para entrar y la devolución la iniciamos
-                            nosotros: no tienes que hacer ningún trámite.
+                            . Te devolvemos tu dinero sin que hagas ningún trámite.
                           </p>
                         )}
-                        {!cancelled &&
-                          tickets.slice(0, 2).map((t) => (
-                            <p key={t.id} className={styles.walletSeat}>
-                              {seatLabel(t) || t.code}
-                            </p>
-                          ))}
                       </div>
                       {/*
                         De un evento cancelado no se ofrece «Ver QR» ni el PDF:
@@ -756,22 +755,41 @@ export default function CuentaPage() {
                         comprador a la puerta con un código muerto.
                       */}
                       <div className={styles.walletActions}>
-                        {statusName(o.status) ? (
-                          <NamedStatus status={statusName(o.status)!} />
+                        {group.orders.length === 1 ? (
+                          index === 0 ? (
+                            <TicketButton
+                              type="button"
+                              onClick={() => router.push(`/orders/${o.publicId}`)}
+                            >
+                              {actionLabel}
+                            </TicketButton>
+                          ) : (
+                            <Link href={`/orders/${o.publicId}`} className="bt-action">
+                              {actionLabel}
+                            </Link>
+                          )
                         ) : (
-                          <span>{ORDER_STATUS_LABEL[o.status] ?? o.status}</span>
-                        )}
-                        {index === 0 ? (
-                          <TicketButton
-                            type="button"
-                            onClick={() => router.push(`/orders/${o.publicId}`)}
-                          >
-                            {cancelled ? 'Ver reembolso' : 'Ver boleto'}
-                          </TicketButton>
-                        ) : (
-                          <Link href={`/orders/${o.publicId}`}>
-                            {cancelled ? 'Ver reembolso' : 'Ver boleto'}
-                          </Link>
+                          <details className={styles.walletOrders}>
+                            <summary>
+                              {actionLabel} · {group.orders.length} compras
+                            </summary>
+                            <ul>
+                              {group.orders.map((order) => {
+                                const n =
+                                  order.items?.flatMap((i) => i.tickets ?? []).length ||
+                                  order.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ||
+                                  0;
+                                return (
+                                  <li key={order.publicId}>
+                                    <Link href={`/orders/${order.publicId}`}>
+                                      {n} boleto{n === 1 ? '' : 's'}
+                                      <span>{order.publicId}</span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </details>
                         )}
                       </div>
                     </li>
@@ -933,7 +951,13 @@ export default function CuentaPage() {
                       </div>
                       <p>{formatMoney(o.totalAmount, o.currency ?? 'MXN')}</p>
                       <div className={styles.orderLinks}>
-                        <Link href={`/orders/${o.publicId}`}>Ver detalle</Link>
+                        {o.status === 'PENDING' ? (
+                          <Link href={`/orders/${o.publicId}`} className="bt-action">
+                            Completar pago
+                          </Link>
+                        ) : (
+                          <Link href={`/orders/${o.publicId}`}>Ver detalle</Link>
+                        )}
                         {o.status === 'COMPLETED' && (
                           <a
                             href={`${API}/orders/${o.publicId}/tickets.pdf`}

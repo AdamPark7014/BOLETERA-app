@@ -62,6 +62,11 @@ body {
   --panel: #{$bt-ink-sunken};
   --r-pill: #{$bt-radius-pill};
   --r-card: #{$bt-radius-card};
+  /* Selección y foco en blanco; el dorado es solo la acción principal. */
+  --selected: #ffffff;
+  /* Alturas mínimas: control táctil y botón principal. */
+  --control-h: 44px;
+  --cta-h: 48px;
   /* Titular de cartel: Archivo condensado, negro, mayúsculas. */
   --headline-stretch: 72%;
   --headline-weight: 900;

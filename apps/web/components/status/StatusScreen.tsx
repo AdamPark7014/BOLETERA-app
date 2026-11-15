@@ -4,9 +4,9 @@ import { StageArt } from '@boletera/ui';
 import styles from './StatusScreen.module.scss';
 
 type StatusScreenProps = {
-  kicker: string;
+  kicker?: string;
   title: string;
-  body: string;
+  body?: string;
   /** Acción principal; por omisión vuelve a la cartelera. */
   action?: ReactNode;
 };
@@ -16,12 +16,12 @@ export function StatusScreen({ kicker, title, body, action }: StatusScreenProps)
   return (
     <main id="contenido" tabIndex={-1} className={styles.wrap}>
       <section className={styles.hero}>
-        <StageArt seed={kicker} className={styles.art} />
+        <StageArt seed={kicker ?? title} className={styles.art} />
         <div className={styles.shade} />
         <div className={styles.copy}>
-          <span className={styles.kicker}>{kicker}</span>
+          {kicker ? <span className={styles.kicker}>{kicker}</span> : null}
           <h1 className={styles.title}>{title}</h1>
-          <p className={styles.body}>{body}</p>
+          {body ? <p className={styles.body}>{body}</p> : null}
           <div className={styles.actions}>
             {action}
             <Link href="/" className={action ? styles.secondary : styles.primary}>

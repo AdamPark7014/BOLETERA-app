@@ -11,11 +11,7 @@ export default function NotFound() {
   return (
     <>
       <SiteHeader />
-      <StatusScreen
-        kicker="Error 404"
-        title="Esta función no está en cartelera"
-        body="La página que buscas no existe o el evento ya no está a la venta. Revisa la cartelera para ver lo que sí hay."
-      />
+      <StatusScreen title="No encontramos esta página" />
     </>
   );
 }

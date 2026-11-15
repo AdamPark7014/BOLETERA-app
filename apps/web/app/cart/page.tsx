@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { NamedStatus, TicketButton } from '@boletera/ui';
+import { NamedStatus, TicketButton, TicketState, formatEventDateTime } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventPosterArt } from '@/components/EventPosterArt';
 import { normalizeCartItem, secondsUntil, useCartStore, type CartItem } from '@/lib/cart-store';
@@ -11,7 +11,6 @@ import { formatCountdown } from '@/lib/payment-window';
 import { releaseHolds } from '@/lib/release-holds';
 import { fetchCartPricing, formatMoney, type CartPricing } from '@/lib/pricing';
 import styles from './cart.module.scss';
-import { formatEventDateTime } from '@boletera/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -168,34 +167,26 @@ export default function CartPage() {
       <main id="contenido" tabIndex={-1} className={styles.page}>
         <nav className={styles.steps} aria-label="Progreso de compra">
           <span className={styles.stepActive} aria-current="step">
-            1 Carrito
+            Asientos
           </span>
-          <span className={styles.stepTodo}>2 Pago</span>
-          <span className={styles.stepTodo}>3 Boletos</span>
+          <span className={styles.stepTodo}>Pago</span>
+          <span className={styles.stepTodo}>Boletos</span>
         </nav>
 
         <header className={styles.hero}>
-          <h1>Carrito</h1>
-          <p className={styles.lead}>
-            {items.length
-              ? 'Tus lugares están apartados. Completa el pago antes de que venza el tiempo.'
-              : 'Cuando elijas asientos, aparecerán aquí listos para pagar.'}
-          </p>
+          <h1>Tu apartado</h1>
         </header>
 
         {!items.length ? (
-          <section className={styles.empty} aria-label="Carrito vacío">
-            <p className={styles.emptyTitle}>Carrito vacío</p>
-            <p className={styles.lead}>Explora la cartelera y aparta tus lugares en vivo.</p>
-            <div className={styles.emptyActions}>
-              <TicketButton type="button" onClick={() => router.push('/events')}>
-                Ver eventos
+          <TicketState
+            title="Tu carrito está vacío"
+            minHeight={360}
+            action={
+              <TicketButton type="button" onClick={() => router.push('/')}>
+                Ver cartelera
               </TicketButton>
-              <Link href="/" className={styles.textLink}>
-                Ir al inicio
-              </Link>
-            </div>
-          </section>
+            }
+          />
         ) : (
           <div className={styles.grid}>
             <section className={styles.list} aria-label="Reservas en carrito">

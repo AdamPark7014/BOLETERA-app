@@ -317,7 +317,8 @@
 }
 
 .walletSeat {
-  font: var(--mono);
+  font: var(--body-sm);
+  font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
 }
 
@@ -523,7 +524,8 @@
   dd {
     margin: 0;
     color: var(--text);
-    font: var(--mono);
+    font: var(--body-sm);
+    font-variant-numeric: tabular-nums;
     text-align: right;
   }
 }
@@ -594,4 +596,62 @@
 
 .membershipCard {
   border: 0;
+}
+
+/* Varias compras de la misma función: una tarjeta, compras plegadas. */
+.walletOrders {
+  width: 100%;
+
+  summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 20px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  ul {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    min-height: 44px;
+    padding: 0 4px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 15px;
+
+    span {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    &:hover {
+      color: #fff;
+    }
+  }
+}
+
+.walletSeat,
+.monoValue {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
 }

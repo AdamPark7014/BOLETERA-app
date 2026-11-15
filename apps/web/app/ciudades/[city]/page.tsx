@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/SiteHeader';
 import { EventGrid } from '@/components/home/EventGrid';
 import homeStyles from '@/components/home/home.module.scss';
@@ -32,6 +33,16 @@ export default async function CiudadPage({ params }: { params: Promise<{ city: s
   } catch {
     failed = true;
   }
+  // Una ciudad que no existe en la cartelera es un 404, no una lista vacía.
+  if (!failed && events.length === 0) {
+    const facets = await api<{ cities?: { name: string }[] }>('/discovery/facets').catch(
+      () => null
+    );
+    const known = facets?.cities?.some(
+      (c) => c.name.toLocaleLowerCase('es-MX') === city.toLocaleLowerCase('es-MX')
+    );
+    if (facets && !known) notFound();
+  }
 
   return (
     <>
@@ -40,7 +51,7 @@ export default async function CiudadPage({ params }: { params: Promise<{ city: s
         <EventGrid
           events={events}
           failed={failed}
-          title={`Cartelera en ${city}`}
+          title={city}
           headingLevel={1}
           emptyText="Pronto habrá funciones aquí."
         />

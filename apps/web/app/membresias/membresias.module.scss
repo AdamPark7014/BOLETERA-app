@@ -214,3 +214,21 @@
 .planPrice {
   color: var(--text);
 }
+
+.dockTotal {
+  display: flex;
+  flex-direction: column;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+}
+
+.dockCta {
+  @include bt.pill-primary;
+}

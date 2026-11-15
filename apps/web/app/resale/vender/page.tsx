@@ -1,13 +1,12 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Field, TicketButton } from '@boletera/ui';
+import { Field, TicketButton, formatEventDateTime, formatTicketAmount } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { authHeaders, clearSession, getToken } from '@/lib/auth';
 import styles from './vender.module.scss';
-import { formatTicketAmount } from '@boletera/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 const LOGIN_BACK = '/login?next=%2Fresale%2Fvender';
@@ -42,9 +41,69 @@ function resaleErrorMessage(status: number, raw?: string | string[]): string {
   return 'No pudimos publicar el boleto. Revisa el código y el precio.';
 }
 
+type MyTicket = {
+  code: string;
+  label: string;
+  when: string;
+};
+
+type MineResponse = {
+  status: string;
+  event: { title: string; startsAt: string };
+  items?: {
+    tickets?: {
+      code: string;
+      status: string;
+      section?: string | null;
+      row?: string | null;
+      seatNumber?: string | null;
+    }[];
+  }[];
+}[];
+
 export default function ResaleSellPage() {
   const router = useRouter();
   const [ticketCode, setTicketCode] = useState('');
+  const [mine, setMine] = useState<MyTicket[] | null>(null);
+
+  // Con sesión, se elige el boleto de la lista en vez de teclear su código.
+  useEffect(() => {
+    if (!getToken()) {
+      setMine([]);
+      return;
+    }
+    const controller = new AbortController();
+    fetch(`${API}/orders/mine`, { headers: authHeaders(), signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((orders: MineResponse) => {
+        const now = Date.now();
+        const list: MyTicket[] = [];
+        for (const order of Array.isArray(orders) ? orders : []) {
+          if (order.status !== 'COMPLETED') continue;
+          if (new Date(order.event.startsAt).getTime() < now) continue;
+          for (const item of order.items ?? []) {
+            for (const t of item.tickets ?? []) {
+              if (t.status && t.status !== 'SOLD') continue;
+              const seat = [
+                t.section,
+                t.row ? `Fila ${t.row}` : null,
+                t.seatNumber ? `Asiento ${t.seatNumber}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ');
+              list.push({
+                code: t.code,
+                label: `${order.event.title}${seat ? ` · ${seat}` : ''}`,
+                when: formatEventDateTime(order.event.startsAt),
+              });
+            }
+          }
+        }
+        setMine(list);
+      })
+      .catch(() => setMine([]));
+    return () => controller.abort();
+  }, []);
   const [askingPrice, setAskingPrice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -94,24 +153,44 @@ export default function ResaleSellPage() {
     <>
       <SiteHeader />
       <main id="contenido" tabIndex={-1} className={styles.page}>
-        <p className={styles.eyebrow}>Reventa oficial</p>
         <h1>Vender boleto</h1>
-        <p className={styles.lead}>
-          Publica un boleto de tu cuenta. El precio debe respetar el tope máximo que fija el evento.
-        </p>
 
         <form onSubmit={submit} className={styles.form}>
-          <Field
-            id="ticket-code"
-            name="ticketCode"
-            label="Código del boleto"
-            value={ticketCode}
-            onChange={(e) => setTicketCode(e.target.value)}
-            placeholder="BL-XXXX"
-            hint="Lo encuentras en el detalle de la orden, junto al QR."
-            autoComplete="off"
-            required
-          />
+          {mine && mine.length > 0 ? (
+            <fieldset className={styles.picker}>
+              <legend>Tu boleto</legend>
+              {mine.map((t) => (
+                <label
+                  key={t.code}
+                  className={styles.pick}
+                  data-checked={ticketCode === t.code || undefined}
+                >
+                  <input
+                    type="radio"
+                    name="ticketPick"
+                    value={t.code}
+                    checked={ticketCode === t.code}
+                    onChange={() => setTicketCode(t.code)}
+                  />
+                  <span>
+                    <strong>{t.label}</strong>
+                    <small>{t.when}</small>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+          ) : (
+            <Field
+              id="ticket-code"
+              name="ticketCode"
+              label="Código del boleto"
+              value={ticketCode}
+              onChange={(e) => setTicketCode(e.target.value)}
+              placeholder="BL-XXXX"
+              autoComplete="off"
+              required
+            />
+          )}
 
           <Field
             id="asking-price"

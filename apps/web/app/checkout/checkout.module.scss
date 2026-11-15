@@ -355,7 +355,7 @@
   gap: 8px;
 
   summary {
-    min-height: 32px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -615,4 +615,8 @@
   &:hover {
     color: var(--text);
   }
+}
+
+.emptyAction {
+  @include bt.pill-primary;
 }

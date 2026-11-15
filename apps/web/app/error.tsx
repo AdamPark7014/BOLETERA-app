@@ -19,9 +19,8 @@ export default function ErrorPage({
     <>
       <SiteHeader />
       <StatusScreen
-        kicker="Algo falló"
         title="No pudimos cargar esta pantalla"
-        body="Fue un problema de nuestro lado o de tu conexión. Tus boletos y apartados no se pierden: intenta de nuevo."
+        body="Tus boletos y apartados siguen a salvo."
         action={
           <button type="button" onClick={() => reset()}>
             Intentar de nuevo
