@@ -52,9 +52,20 @@ a {
  * daría 4.2:1 contra negro pero puede caer sobre zonas rojas del póster.
  */
 :focus-visible {
-  outline: var(--focus-ring-width) solid var(--color-focus);
-  outline-offset: var(--focus-ring-offset);
-  box-shadow: 0 0 0 5px var(--color-focus-halo);
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Microinteracciones: enlaces y botones responden en 150 ms. */
+a,
+button,
+summary {
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 /*

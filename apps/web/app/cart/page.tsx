@@ -11,6 +11,7 @@ import { formatCountdown } from '@/lib/payment-window';
 import { releaseHolds } from '@/lib/release-holds';
 import { fetchCartPricing, formatMoney, type CartPricing } from '@/lib/pricing';
 import styles from './cart.module.scss';
+import { formatEventDateTime } from '@boletera/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -21,14 +22,7 @@ function releaseItem(item: CartItem) {
 
 function fmtDate(iso?: string) {
   if (!iso) return null;
-  return new Date(iso).toLocaleString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatEventDateTime(iso);
 }
 
 function seatSummary(item: CartItem) {

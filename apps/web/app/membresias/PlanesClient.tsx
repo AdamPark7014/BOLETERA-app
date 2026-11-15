@@ -9,6 +9,7 @@ import { authHeaders, clearSession, getToken } from '@/lib/auth';
 import purchase from '@/components/purchase/purchase.module.scss';
 import styles from './membresias.module.scss';
 import { periodLabel, periodSuffix, type CheckoutStatus, type PublicPlan } from './types';
+import { formatPrice } from '@boletera/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api/v1';
 const LOGIN_BACK = '/login?next=%2Fmembresias';
@@ -21,10 +22,7 @@ const METHODS = [
 type MethodId = (typeof METHODS)[number]['id'];
 
 function priceLine(plan: PublicPlan) {
-  const amount = Number(plan.price).toLocaleString('es-MX', {
-    style: 'currency',
-    currency: plan.currency || 'MXN',
-  });
+  const amount = formatPrice(Number(plan.price));
   return `${amount} ${periodSuffix(plan.billingPeriod)}`;
 }
 

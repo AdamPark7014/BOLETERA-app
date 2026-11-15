@@ -6,6 +6,12 @@
 
 const LOCALE = 'es-MX';
 
+/**
+ * Zona horaria de toda la plataforma. Sin ella, el servidor (UTC) y el
+ * navegador pintaban horas distintas y React marcaba error de hidratación.
+ */
+export const TIME_ZONE = 'America/Mexico_City';
+
 const numberCache = new Map<string, Intl.NumberFormat>();
 
 function numberFormatter(options: Intl.NumberFormatOptions): Intl.NumberFormat {
@@ -73,7 +79,7 @@ function dateFormatter(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat
   const key = JSON.stringify(options);
   let formatter = dateCache.get(key);
   if (!formatter) {
-    formatter = new Intl.DateTimeFormat(LOCALE, options);
+    formatter = new Intl.DateTimeFormat(LOCALE, { timeZone: TIME_ZONE, ...options });
     dateCache.set(key, formatter);
   }
   return formatter;
@@ -95,14 +101,15 @@ export function formatDateTime(value: Date | string | number): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hourCycle: 'h23',
   }).format(date);
 }
 
-/** Solo la hora: "19:40". */
+/** Solo la hora, reloj de 24 h: "19:40". */
 export function formatTime(value: Date | string | number): string {
   const date = toDate(value);
   if (!date) return '';
-  return dateFormatter({ hour: '2-digit', minute: '2-digit' }).format(date);
+  return dateFormatter({ hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date);
 }
 
 /** Dia completo para agrupadores: "jueves, 12 de marzo de 2026". */
@@ -120,4 +127,93 @@ export function formatDelta(ratio: number, fractionDigits = 1): string {
   if (ratio > 0) return `+${formatted}`;
   if (ratio < 0) return `\u2212${formatted}`;
   return formatted;
+}
+
+// ---------------------------------------------------------------------------
+// Formatos de evento (Black Ticket). Un solo criterio en web, admin y taquilla:
+// es-MX, America/Mexico_City, reloj de 24 h, sin puntos de abreviatura.
+// ---------------------------------------------------------------------------
+
+function capitalize(text: string): string {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+}
+
+function clean(text: string): string {
+  return text.replace(/\./g, '').replace(/,/g, '').replace(/\s+/g, ' ').trim();
+}
+
+/** "Sáb 12 dic" */
+export function formatEventDate(value: Date | string | number): string {
+  const date = toDate(value);
+  if (!date) return '';
+  return capitalize(
+    clean(dateFormatter({ weekday: 'short', day: 'numeric', month: 'short' }).format(date))
+  );
+}
+
+/** "Sáb 12 dic · 21:00" */
+export function formatEventDateTime(value: Date | string | number): string {
+  const date = toDate(value);
+  if (!date) return '';
+  return `${formatEventDate(date)} · ${formatTime(date)}`;
+}
+
+/** "Sábado, 12 de diciembre, 21:00" */
+export function formatEventLong(value: Date | string | number): string {
+  const date = toDate(value);
+  if (!date) return '';
+  const day = dateFormatter({ weekday: 'long', day: 'numeric', month: 'long' }).format(date);
+  return `${capitalize(day)}, ${formatTime(date)}`;
+}
+
+/** "12 dic" (sin día de la semana). */
+export function formatDayMonth(value: Date | string | number): string {
+  const date = toDate(value);
+  if (!date) return '';
+  return clean(dateFormatter({ day: 'numeric', month: 'short' }).format(date));
+}
+
+/** "12 de diciembre de 2026" */
+export function formatDateLong(value: Date | string | number): string {
+  const date = toDate(value);
+  if (!date) return '';
+  return dateFormatter({ day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+}
+
+/** Clave AAAA-MM-DD del día en la zona de la plataforma (agrupar, comparar «hoy»). */
+export function dayKey(value: Date | string | number): string {
+  const date = toDate(value);
+  if (!date) return '';
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(date);
+}
+
+/**
+ * Rango de fechas: "12–14 dic", "30 nov – 2 dic", "12 dic 2026 – 3 ene 2027".
+ * Si ambos extremos son el mismo día: "Sáb 12 dic · 19:00–23:00".
+ */
+export function formatDateRange(
+  start: Date | string | number,
+  end: Date | string | number | null | undefined
+): string {
+  const a = toDate(start);
+  if (!a) return '';
+  const b = end != null ? toDate(end) : null;
+  if (!b) return formatEventDateTime(a);
+  if (dayKey(a) === dayKey(b)) return `${formatEventDate(a)} · ${formatTime(a)}–${formatTime(b)}`;
+  const yearA = dateFormatter({ year: 'numeric' }).format(a);
+  const yearB = dateFormatter({ year: 'numeric' }).format(b);
+  const monthA = dateFormatter({ month: 'short' }).format(a);
+  const monthB = dateFormatter({ month: 'short' }).format(b);
+  const dayA = dateFormatter({ day: 'numeric' }).format(a);
+  if (yearA !== yearB) {
+    return `${formatDayMonth(a)} ${yearA} – ${formatDayMonth(b)} ${yearB}`;
+  }
+  if (monthA === monthB) return `${dayA}–${formatDayMonth(b)}`;
+  return `${formatDayMonth(a)} – ${formatDayMonth(b)}`;
+}
+
+/** Precio anunciado: "$1,250" si no hay centavos, "$1,270.08" si los hay. */
+export function formatPrice(value: number): string {
+  const full = formatTicketAmount(value);
+  return full.endsWith('.00') ? full.slice(0, -3) : full;
 }

@@ -255,6 +255,45 @@ export function SeatMapViewer({
     return { x: bounds.minX + (bounds.width - width) / 2, y: bounds.minY - 34, width };
   }, [projected.stage, bounds]);
 
+  /**
+   * Encuadre: lo que de verdad se dibuja (butacas, zonas y escenario), no el
+   * lienzo declarado del recinto, que en estadios trae mucho vacío y dejaba el
+   * plano diminuto.
+   */
+  const fitBounds = useMemo(() => {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    const add = (x: number, y: number) => {
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    };
+    for (const seat of seats) add(seat.x, seat.y);
+    for (const shape of sectionShapes) for (const [x, y] of shape.points) add(x, y);
+    add(stage.x, stage.y);
+    add(stage.x + stage.width, stage.y + 20);
+    if (!Number.isFinite(minX)) return bounds;
+    const pad = Math.max(seatPitch, 4);
+    return {
+      minX: minX - pad,
+      minY: minY - pad,
+      width: maxX - minX + pad * 2,
+      height: maxY - minY + pad * 2,
+    };
+  }, [seats, sectionShapes, stage, bounds, seatPitch]);
+
+  /** Margen del encuadre según el ancho disponible. */
+  const fitPadding = () => {
+    const w = gestures.containerRef.current?.clientWidth ?? 800;
+    return w < 520 ? 16 : 32;
+  };
+  /** Mientras el usuario no mueva el mapa, se reencuadra al cambiar el tamaño. */
+  const autoFitRef = useRef(true);
+
   // ---------------------------------------------------------------------------
   // Estado de UI
   // ---------------------------------------------------------------------------
@@ -266,6 +305,7 @@ export function SeatMapViewer({
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [viewScale, setViewScale] = useState(1);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [panning, setPanning] = useState(false);
   const [ready, setReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -449,7 +489,7 @@ export function SeatMapViewer({
         fill: mixColor(tier, '#2A2A2E', occupancy >= 1 ? 1 : occupancy * 0.35),
         outline: sectionFilter === shape.id ? '#FFFFFF' : '#000000',
         dimmed,
-        title: shorten(shape.name),
+        title: shorten(shape.name, 32),
         subtitle:
           stat.free > 0
             ? `${stat.free} libres${price ? ` · $${price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}` : ''}`
@@ -574,9 +614,9 @@ export function SeatMapViewer({
 
   const minScale = useMemo(() => {
     // Nunca por debajo de lo que hace falta para ver el recinto entero.
-    const fit = Math.min(1, 320 / Math.max(bounds.width, bounds.height));
+    const fit = Math.min(1, 320 / Math.max(fitBounds.width, fitBounds.height));
     return Math.max(fit * 0.5, 0.02);
-  }, [bounds.width, bounds.height]);
+  }, [fitBounds.width, fitBounds.height]);
 
   const maxScale = useMemo(() => {
     // Siempre alcanzable el doble del umbral de selección, sea cual sea la
@@ -626,13 +666,16 @@ export function SeatMapViewer({
     (id: string | 'ALL') => {
       setSectionFilter(id);
       if (id === 'ALL') {
-        gestures.fitRect(bounds, 28, true);
+        autoFitRef.current = true;
+        gestures.fitRect(fitBounds, fitPadding(), true);
         return;
       }
+      autoFitRef.current = false;
       const sec = map.sections.find((s) => s.id === id);
       if (sec) gestures.fitRect(sectionBounds(sec, 28), 28, true);
     },
-    [bounds, map.sections, gestures]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fitBounds, map.sections, gestures]
   );
 
   const tryToggle = useCallback(
@@ -723,18 +766,27 @@ export function SeatMapViewer({
         seatCtxRef.current = prepareCanvas(seatCanvasRef.current, sizeRef.current);
       }
       sectionSigRef.current = '';
-      if (!ready) {
-        gestures.fitRect(bounds, 28, false);
-        setReady(true);
+      if (!ready || autoFitRef.current) {
+        gestures.fitRect(fitBounds, fitPadding(), false);
+        if (!ready) setReady(true);
       }
       gestures.requestFrame();
     };
     apply();
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(apply) : null;
     ro?.observe(el);
-    return () => ro?.disconnect();
+    const stopAutoFit = () => {
+      autoFitRef.current = false;
+    };
+    el.addEventListener('pointerdown', stopAutoFit);
+    el.addEventListener('wheel', stopAutoFit, { passive: true });
+    return () => {
+      ro?.disconnect();
+      el.removeEventListener('pointerdown', stopAutoFit);
+      el.removeEventListener('wheel', stopAutoFit);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bounds, ready]);
+  }, [fitBounds, ready]);
 
   // Cualquier cambio de datos o filtros pide un frame; el rAF hace el resto.
   useEffect(() => {
@@ -790,7 +842,8 @@ export function SeatMapViewer({
           gestures.zoomBy(1 / 1.25, undefined, undefined, true);
           return;
         case '0':
-          gestures.fitRect(bounds, 28, true);
+          autoFitRef.current = true;
+          gestures.fitRect(fitBounds, fitPadding(), true);
           return;
         default:
           return;
@@ -800,7 +853,7 @@ export function SeatMapViewer({
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [bounds]
+    [fitBounds]
   );
 
   const focusOnSeatIndex = useCallback(
@@ -983,7 +1036,10 @@ export function SeatMapViewer({
             </button>
             <button
               type="button"
-              onClick={() => gestures.fitRect(bounds, 28, true)}
+              onClick={() => {
+                autoFitRef.current = true;
+                gestures.fitRect(fitBounds, fitPadding(), true);
+              }}
               aria-label="Ajustar al recinto"
             >
               Encajar
@@ -1138,6 +1194,71 @@ export function SeatMapViewer({
               −
             </button>
             {controls}
+            <div className={styles.toolsWrap}>
+              <button
+                type="button"
+                aria-label="Más herramientas del mapa"
+                aria-expanded={toolsOpen}
+                aria-haspopup="menu"
+                onClick={() => setToolsOpen((v) => !v)}
+              >
+                <svg
+                  aria-hidden="true"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <circle cx="5" cy="12" r="1.6" />
+                  <circle cx="12" cy="12" r="1.6" />
+                  <circle cx="19" cy="12" r="1.6" />
+                </svg>
+              </button>
+              {toolsOpen ? (
+                <div className={styles.toolsMenu} role="menu">
+                  <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={heatMode === 'view'}
+                    disabled={seats.length > SIGHTLINE_MAX_SEATS}
+                    onClick={() => {
+                      setHeatMode((v) => (v === 'view' ? 'off' : 'view'));
+                      setToolsOpen(false);
+                    }}
+                  >
+                    Calidad de vista
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={showEgress}
+                    aria-controls="egress-legend egress-status"
+                    disabled={
+                      !projected.aisles.length &&
+                      !projected.exits.length &&
+                      !projected.stairs.length
+                    }
+                    onClick={() => {
+                      setShowEgress((v) => !v);
+                      setToolsOpen(false);
+                    }}
+                  >
+                    Salidas
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      autoFitRef.current = true;
+                      gestures.fitRect(fitBounds, fitPadding(), true);
+                      setToolsOpen(false);
+                    }}
+                  >
+                    Ver todo el recinto
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       ) : null}

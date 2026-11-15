@@ -14,6 +14,8 @@
  * cambio.)
  */
 
+import { formatDateLong, formatDayLabel } from '@boletera/ui';
+
 export type RefundPolicy = {
   /** Días hábiles que nos damos para liquidarlo en el portal del banco. */
   settlementBusinessDays: number;
@@ -93,13 +95,7 @@ export function refundDeadlines(from: Date, policy: RefundPolicy = REFUND_POLICY
 
 export function formatPolicyDate(date: Date): string {
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  return formatDayLabel(date);
 }
 
 /** Fecha corta para listados, donde no cabe la larga. */
@@ -107,12 +103,7 @@ export function formatShortDate(value: string | Date | null | undefined): string
   if (!value) return '—';
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  return formatDateLong(date);
 }
 
 /** Por qué medio vuelve el dinero. Mismo criterio que el API. */

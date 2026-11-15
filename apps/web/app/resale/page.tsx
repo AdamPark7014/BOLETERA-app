@@ -1,3 +1,4 @@
+import { formatEventDateTime, formatPrice } from '@boletera/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
@@ -121,22 +122,12 @@ export default async function ResalePage() {
                       <p className={styles.status}>{LISTING_STATUS_LABEL[l.status] ?? l.status}</p>
                       <h3>{event?.title || 'Evento'}</h3>
                       <p className={styles.meta}>
-                        {when
-                          ? when.toLocaleDateString('es-MX', {
-                              timeZone: 'America/Mexico_City',
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : 'Fecha por confirmar'}
+                        {when ? formatEventDateTime(when) : 'Fecha por confirmar'}
                         {seat ? ` · ${seat}` : ''}
                       </p>
                       {typeof original === 'number' && original > 0 && (
                         <p className={styles.compare}>
-                          Precio original $
-                          {original.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                          Precio original {formatPrice(original)}
                           {Number.isFinite(markup) && (
                             <> · {markup > 0 ? `+${markup}%` : `${markup}%`} respecto al original</>
                           )}
@@ -144,10 +135,7 @@ export default async function ResalePage() {
                       )}
                     </div>
                     <div className={styles.side}>
-                      <strong>
-                        ${price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                        <span> MXN</span>
-                      </strong>
+                      <strong>{formatPrice(price)}</strong>
                       {event?.slug ? (
                         <Link href={`/events/${event.slug}`}>Ver evento</Link>
                       ) : (

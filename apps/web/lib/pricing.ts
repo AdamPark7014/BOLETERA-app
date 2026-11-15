@@ -1,3 +1,4 @@
+import { formatPrice, formatTicketAmount } from '@boletera/ui';
 /**
  * Precio total al comprador, desde la primera pantalla.
  *
@@ -30,17 +31,15 @@ export type CartPricingRequest = {
 export function formatMoney(value: number | string, currency = 'MXN'): string {
   const n = typeof value === 'string' ? Number(value) : value;
   if (!Number.isFinite(n)) return '—';
-  return `$${n.toLocaleString('es-MX', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} ${currency}`;
+  // Formato único de @boletera/ui; el código de moneda solo si no es MXN.
+  return currency === 'MXN' ? formatTicketAmount(n) : `${formatTicketAmount(n)} ${currency}`;
 }
 
 /** Sin decimales, para titulares tipo «desde $450». */
 export function formatMoneyShort(value: number | string, currency = 'MXN'): string {
   const n = typeof value === 'string' ? Number(value) : value;
   if (!Number.isFinite(n)) return '—';
-  return `$${n.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`;
+  return currency === 'MXN' ? formatPrice(n) : `${formatPrice(n)} ${currency}`;
 }
 
 export function pricingTotal(pricing: CartPricing | null | undefined): number {

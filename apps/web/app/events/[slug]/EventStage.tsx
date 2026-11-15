@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { StageArt } from '@boletera/ui';
+import { StageArt, formatTime } from '@boletera/ui';
 import { WaitlistSignup } from '@/components/WaitlistSignup';
 import { Countdown } from '@/components/home/Countdown';
 import { availability, longWhen, priceLabel } from '@/lib/event-display';
@@ -80,14 +80,7 @@ export function EventStage({
   const announced = minPriceAllIn && minPriceAllIn > 0 ? minPriceAllIn : minPrice;
   const hasOffer = offers.length > 0;
   const stock = availability(offers);
-  const doors = doorsAt
-    ? new Date(doorsAt).toLocaleTimeString('es-MX', {
-        timeZone: 'America/Mexico_City',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })
-    : null;
+  const doors = doorsAt ? formatTime(doorsAt) : null;
   const salesSoon =
     salesStartAt && new Date(salesStartAt).getTime() > Date.now() ? salesStartAt : null;
   const hero = bannerImage || image;

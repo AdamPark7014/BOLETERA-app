@@ -1,9 +1,14 @@
 // Formatos de la maqueta para fechas, precios y disponibilidad de un evento.
 // Todo en America/Mexico_City para que SSR (UTC) y navegador coincidan.
 
-import { formatTicketAmount } from '@boletera/ui';
-
-const TZ = 'America/Mexico_City';
+import {
+  TIME_ZONE,
+  dayKey,
+  formatDayMonth,
+  formatEventDateTime,
+  formatEventLong,
+  formatPrice,
+} from '@boletera/ui';
 
 export type OfferLite = {
   remainingQuantity?: number | null;
@@ -32,62 +37,25 @@ export function categoryLabel(key?: string | null): string {
   return CATEGORY_LABEL[key || ''] ?? 'Evento';
 }
 
-/** «Vie 20 mar · 21:30» */
-export function shortWhen(iso: string): string {
-  const date = new Date(iso);
-  const day = date
-    .toLocaleDateString('es-MX', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' })
-    .replace(/\./g, '')
-    .replace(',', '');
-  const time = date.toLocaleTimeString('es-MX', {
-    timeZone: TZ,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  const label = `${day} · ${time}`;
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
+/** «Vie 20 mar · 21:30» (formato compartido de @boletera/ui). */
+export const shortWhen = (iso: string): string => formatEventDateTime(iso);
 
-/** «sábado 14 de marzo, 21:00» */
-export function longWhen(iso: string): string {
-  const date = new Date(iso);
-  const day = date.toLocaleDateString('es-MX', {
-    timeZone: TZ,
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-  const time = date.toLocaleTimeString('es-MX', {
-    timeZone: TZ,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  return `${day.charAt(0).toUpperCase()}${day.slice(1)}, ${time}`;
-}
+/** «Sábado, 14 de marzo, 21:00» */
+export const longWhen = (iso: string): string => formatEventLong(iso);
 
-/** «14 MAR» */
-export function dayMonth(iso: string): string {
-  return new Date(iso)
-    .toLocaleDateString('es-MX', { timeZone: TZ, day: 'numeric', month: 'short' })
-    .replace(/\./g, '')
-    .toUpperCase();
-}
+/** «14 mar» */
+export const dayMonth = (iso: string): string => formatDayMonth(iso);
 
 /** Fecha local AAAA-MM-DD y día de la semana (0 = domingo) en la zona del evento. */
 export function localDay(date: Date): { key: string; weekday: number } {
-  const key = date.toLocaleDateString('en-CA', { timeZone: TZ });
-  const weekdayName = date.toLocaleDateString('en-US', { timeZone: TZ, weekday: 'short' });
+  const key = dayKey(date);
+  const weekdayName = date.toLocaleDateString('en-US', { timeZone: TIME_ZONE, weekday: 'short' });
   const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekdayName);
   return { key, weekday };
 }
 
 /** Precio sin centavos cuando son cero: «$1,250». */
-export function priceLabel(amount: number): string {
-  const full = formatTicketAmount(amount);
-  return full.endsWith('.00') ? full.slice(0, -3) : full;
-}
+export const priceLabel = (amount: number): string => formatPrice(amount);
 
 export function advertisedPrice(event: {
   minPriceAllIn?: number | null;

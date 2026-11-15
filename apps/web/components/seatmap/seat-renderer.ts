@@ -189,33 +189,90 @@ export function drawSectionLayer(
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (const paint of paints) {
-    if (paint.dimmed) continue;
-    const cx = paint.shape.centroid[0] * scale + tx;
-    const cy = paint.shape.centroid[1] * scale + ty;
+  const TITLE_FONT = '600 12px Roboto, system-ui, -apple-system, "Segoe UI", sans-serif';
+  const SUB_FONT = '500 10px Roboto, system-ui, -apple-system, "Segoe UI", sans-serif';
+  // Etiquetas legibles a cualquier escala: se recortan al ancho de su zona,
+  // pierden el subtítulo si no caben, nunca se salen del lienzo y no se
+  // encimar unas con otras (gana la zona más grande).
+  const drawn: { x0: number; y0: number; x1: number; y1: number }[] = [];
+  const order = paints
+    .filter((p) => !p.dimmed && p.shape.points.length >= 3)
+    .map((p) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (const [x, y] of p.shape.points) {
+        const sx = x * scale + tx;
+        const sy = y * scale + ty;
+        if (sx < minX) minX = sx;
+        if (sx > maxX) maxX = sx;
+        if (sy < minY) minY = sy;
+        if (sy > maxY) maxY = sy;
+      }
+      return { paint: p, w: maxX - minX, h: maxY - minY };
+    })
+    .sort((a, b) => b.w * b.h - a.w * a.h);
+
+  for (const { paint, w, h } of order) {
+    if (w < 28 || h < 14) continue;
+    let cx = paint.shape.centroid[0] * scale + tx;
+    let cy = paint.shape.centroid[1] * scale + ty;
     if (cx < -120 || cy < -60 || cx > size.width + 120 || cy > size.height + 60) continue;
 
-    ctx.font = '700 11px system-ui, -apple-system, "Segoe UI", sans-serif';
-    const titleWidth = ctx.measureText(paint.title).width;
-    ctx.font = '600 9.5px system-ui, -apple-system, "Segoe UI", sans-serif';
+    const room = Math.max(w * 1.1, 56);
+    ctx.font = TITLE_FONT;
+    let title = paint.title;
+    while (title.length > 3 && ctx.measureText(title).width + 16 > room) {
+      title = `${title.slice(0, -2).trimEnd()}…`;
+    }
+    const titleWidth = ctx.measureText(title).width;
+    ctx.font = SUB_FONT;
     const subWidth = ctx.measureText(paint.subtitle).width;
-    const boxW = Math.max(titleWidth, subWidth) + 14;
+    const withSub = h >= 34 && subWidth + 16 <= room;
+    const boxW = Math.max(titleWidth, withSub ? subWidth : 0) + 16;
+    const boxH = withSub ? 32 : 20;
+
+    cx = Math.min(Math.max(cx, boxW / 2 + 4), size.width - boxW / 2 - 4);
+    cy = Math.min(Math.max(cy, boxH / 2 + 4), size.height - boxH / 2 - 4);
+    const rect = { x0: cx - boxW / 2, y0: cy - boxH / 2, x1: cx + boxW / 2, y1: cy + boxH / 2 };
+    if (drawn.some((r) => rect.x0 < r.x1 && rect.x1 > r.x0 && rect.y0 < r.y1 && rect.y1 > r.y0)) {
+      continue;
+    }
+    drawn.push(rect);
 
     // Placa opaca detrás del texto: sobre el relleno de zona el contraste no
     // llegaría a 4.5:1 en las zonas claras.
-    ctx.fillStyle = 'rgba(9,9,11,0.86)';
-    ctx.fillRect(cx - boxW / 2, cy - 15, boxW, 30);
-    ctx.strokeStyle = withAlpha(paint.outline, 0.55);
-    ctx.lineWidth = 1;
-    ctx.strokeRect(cx - boxW / 2, cy - 15, boxW, 30);
+    ctx.fillStyle = 'rgba(9,9,11,0.82)';
+    roundRect(ctx, rect.x0, rect.y0, boxW, boxH, 6);
+    ctx.fill();
 
     ctx.fillStyle = '#fafafa';
-    ctx.font = '700 11px system-ui, -apple-system, "Segoe UI", sans-serif';
-    ctx.fillText(paint.title, cx, cy - 5);
-    ctx.fillStyle = 'rgba(250,250,250,0.78)';
-    ctx.font = '600 9.5px system-ui, -apple-system, "Segoe UI", sans-serif';
-    ctx.fillText(paint.subtitle, cx, cy + 7);
+    ctx.font = TITLE_FONT;
+    ctx.fillText(title, cx, withSub ? cy - 6 : cy + 0.5);
+    if (withSub) {
+      ctx.fillStyle = 'rgba(250,250,250,0.72)';
+      ctx.font = SUB_FONT;
+      ctx.fillText(paint.subtitle, cx, cy + 8);
+    }
   }
+}
+
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+): void {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 // ---------------------------------------------------------------------------
@@ -385,6 +442,8 @@ export function drawSeatLayer(
       const sx = seat.x * scale + tx;
       const sy = seat.y * scale + ty;
       if (sx < 0 || sy < 0 || sx > size.width || sy > size.height) return;
+      // Sin encimar: si la etiqueta es más ancha que el paso de butaca, no va.
+      if (ctx.measureText(seat.label).width > seatPx * 1.1) return;
       ctx.fillText(seat.label, sx, sy + hh + 2);
     });
   }

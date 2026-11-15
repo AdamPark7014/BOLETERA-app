@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { TicketState } from '@boletera/ui';
 import { advertisedPrice, localDay } from '@/lib/event-display';
 import { EventCard, type CardEvent } from './EventCard';
 import styles from './home.module.scss';
@@ -88,13 +89,17 @@ export function EventGrid({
       </div>
 
       {failed ? (
-        <p className={styles.empty} role="alert">
-          No pudimos cargar la cartelera. Intenta de nuevo en un momento.
-        </p>
+        <TicketState
+          kind="error"
+          title="No pudimos cargar la cartelera"
+          body="Intenta de nuevo en un momento."
+          minHeight={320}
+        />
       ) : list.length === 0 ? (
-        <p className={styles.empty}>
-          {filter === 'all' ? emptyText : 'Nada para estas fechas todavía.'}
-        </p>
+        <TicketState
+          title={filter === 'all' ? emptyText : 'Nada para estas fechas todavía'}
+          minHeight={320}
+        />
       ) : (
         <ul className={styles.grid}>
           {list.map((event) => (

@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { formatDateLong } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { AffiliateRefCapture } from '@/components/AffiliateRefCapture';
 import { EventStage } from './EventStage';
@@ -76,13 +77,7 @@ export async function generateMetadata({
       getSiteOrigin(),
       fetchTenantCurrent(),
     ]);
-    const when = new Date(event.startsAt);
-    const dateLabel = when.toLocaleDateString('es-MX', {
-      timeZone: 'America/Mexico_City',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+    const dateLabel = formatDateLong(event.startsAt);
     const venue = [event.venue?.name, event.venue?.city].filter(Boolean).join(', ');
     const title = `${event.title} | Boletos oficiales`;
     const description =

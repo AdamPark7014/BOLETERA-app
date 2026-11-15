@@ -3,7 +3,13 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Field, NamedStatus, TicketButton } from '@boletera/ui';
+import {
+  Field,
+  NamedStatus,
+  TicketButton,
+  formatDayMonth,
+  formatEventDateTime,
+} from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { authHeaders, clearSession, getStoredUser, getToken } from '@/lib/auth';
 import { formatMoney } from '@/lib/pricing';
@@ -704,34 +710,11 @@ export default function CuentaPage() {
                   return (
                     <li key={o.publicId} className={styles.walletCard}>
                       <div className={styles.walletDateBlock} aria-hidden="true">
-                        <strong>
-                          {when.toLocaleDateString('es-MX', {
-                            timeZone: 'America/Mexico_City',
-                            day: '2-digit',
-                          })}
-                        </strong>
-                        <span>
-                          {when
-                            .toLocaleDateString('es-MX', {
-                              timeZone: 'America/Mexico_City',
-                              month: 'short',
-                            })
-                            .replace('.', '')}
-                        </span>
+                        <strong>{formatDayMonth(when).split(' ')[0]}</strong>
+                        <span>{formatDayMonth(when).split(' ')[1]}</span>
                       </div>
                       <div className={styles.walletBody}>
-                        <p className={styles.walletDate}>
-                          {when.toLocaleDateString('es-MX', {
-                            timeZone: 'America/Mexico_City',
-                            weekday: 'short',
-                          })}{' '}
-                          ·{' '}
-                          {when.toLocaleTimeString('es-MX', {
-                            timeZone: 'America/Mexico_City',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
+                        <p className={styles.walletDate}>{formatEventDateTime(when)}</p>
                         <strong className={styles.walletTitle}>{o.event.title}</strong>
                         <p className={styles.walletMeta}>
                           {o.event.venue?.name}

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { SiteHeader } from '@/components/SiteHeader';
-import { NamedStatus } from '@boletera/ui';
+import { NamedStatus, formatEventLong } from '@boletera/ui';
 import { useTenantBrand } from '@/components/TenantBrand';
 import { OrderQrCards } from '@/components/OrderQrCards';
 import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButton';
@@ -375,23 +375,7 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
                 <div>
                   <p className={styles.kicker}>Evento</p>
                   <h2>{order.event.title}</h2>
-                  {when && (
-                    <p>
-                      {when.toLocaleDateString('es-MX', {
-                        timeZone: 'America/Mexico_City',
-                        weekday: 'long',
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })}{' '}
-                      ·{' '}
-                      {when.toLocaleTimeString('es-MX', {
-                        timeZone: 'America/Mexico_City',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  )}
+                  {when && <p>{formatEventLong(when)}</p>}
                   {order.event.venue && (
                     <p>
                       {order.event.venue.name}

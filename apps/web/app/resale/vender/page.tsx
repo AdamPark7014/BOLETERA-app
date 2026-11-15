@@ -7,6 +7,7 @@ import { Field, TicketButton } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { authHeaders, clearSession, getToken } from '@/lib/auth';
 import styles from './vender.module.scss';
+import { formatTicketAmount } from '@boletera/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 const LOGIN_BACK = '/login?next=%2Fresale%2Fvender';
@@ -20,8 +21,7 @@ function resaleErrorMessage(status: number, raw?: string | string[]): string {
   const message = (Array.isArray(raw) ? raw.join('. ') : raw)?.trim() ?? '';
   const range = /price must be between ([\d.]+) and ([\d.]+)/i.exec(message);
   if (range) {
-    const fmt = (v: string) =>
-      Number(v).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+    const fmt = (v: string) => formatTicketAmount(Number(v));
     return `El precio debe estar entre ${fmt(range[1])} y ${fmt(range[2])}.`;
   }
   if (/ticket not found/i.test(message) || status === 404) {
