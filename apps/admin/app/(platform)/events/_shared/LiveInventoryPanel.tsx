@@ -12,6 +12,7 @@
  * los agregados (que son decenas de números) viajan por el estado de React.
  */
 
+import { formatTime as uiTime } from '@boletera/ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   applyDelta,
@@ -289,10 +290,7 @@ export function LiveInventoryPanel({
           <span className={styles.dot} aria-hidden="true" />
           {connectionLabel[connection]}
           {lastEventAt && connection === 'live' && (
-            <span className={styles.muted}>
-              {' '}
-              · último cambio {new Date(lastEventAt).toLocaleTimeString('es-MX')}
-            </span>
+            <span className={styles.muted}> · último cambio {uiTime(new Date(lastEventAt))}</span>
           )}
         </p>
         <button type="button" className={styles.refreshBtn} onClick={reload}>

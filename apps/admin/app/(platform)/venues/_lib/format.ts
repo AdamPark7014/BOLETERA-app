@@ -1,3 +1,4 @@
+import { formatDateTime as uiDateTime } from '@boletera/ui';
 import type { BadgeTone } from '@boletera/ui';
 import type { EgressOverviewVenue } from '@/lib/platform-api';
 import type { VenueRow } from '@/lib/queries/venues';
@@ -53,10 +54,7 @@ export function formatRelativeDate(iso: string | null): string {
   if (!iso) return '—';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleString('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  return uiDateTime(date);
 }
 
 export function formatClearance(minutes: number | null | undefined): string {

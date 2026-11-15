@@ -1,5 +1,6 @@
 'use client';
 
+import { formatTime as uiTime } from '@boletera/ui';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -464,7 +465,7 @@ export default function CortePage() {
                   <li key={`${d.at ?? i}`}>
                     <strong>{money(Number(d.amount))}</strong>
                     <span>{d.note || 'Sin nota'}</span>
-                    <em>{d.at ? new Date(d.at).toLocaleTimeString('es-MX') : ''}</em>
+                    <em>{d.at ? uiTime(new Date(d.at)) : ''}</em>
                   </li>
                 ))}
               </ul>

@@ -17,7 +17,7 @@ import { AnonymousView, NoOrgView, useSession } from '../../_shared/api-state';
 import { AdminFrame } from '../../_ticket/AdminFrame';
 import { Param, Segment, Stepper } from '../../_ticket/controls';
 import frame from '../../_ticket/frame.module.scss';
-import { formatCount } from '../../_ticket/read';
+import { formatCount, formatInZone } from '../../_ticket/read';
 import { describeFailure } from '../_lib/errors';
 import { KIND_LABELS, STATUS_LABELS } from '../_lib/labels';
 import styles from '../series.module.scss';
@@ -32,11 +32,7 @@ function parseTab(value: string | null): DetailTab {
 }
 
 function formatUpcomingDate(iso: string, timezone: string): string {
-  return new Date(iso).toLocaleString('es-MX', {
-    dateStyle: 'full',
-    timeStyle: 'short',
-    timeZone: timezone,
-  });
+  return formatInZone(iso, timezone, 'daylabel');
 }
 
 function failMessage(err: unknown, fallback: string): string {
@@ -327,12 +323,8 @@ function SeriesDetailBody() {
                       </Link>
                     </p>
                     <p className={frame.rowMeta}>
-                      {new Date(event.startsAt).toLocaleTimeString('es-MX', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        timeZone: timezone,
-                      })}{' '}
-                      · {SALE_STATE_LABELS[event.sale.state]} · {formatCount(event.counts.orders)}{' '}
+                      {formatInZone(event.startsAt, timezone, 'time')} ·{' '}
+                      {SALE_STATE_LABELS[event.sale.state]} · {formatCount(event.counts.orders)}{' '}
                       órdenes
                     </p>
                   </div>

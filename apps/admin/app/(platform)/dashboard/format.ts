@@ -1,3 +1,8 @@
+import {
+  formatDateLong as uiDateLong,
+  formatDayMonth as uiDayMonth,
+  formatTime as uiTime,
+} from '@boletera/ui';
 import type { MetricsAlertSeverity, MetricsGranularity, MetricsKpi } from '@boletera/shared';
 
 const MXN = new Intl.NumberFormat('es-MX', {
@@ -69,21 +74,13 @@ export function formatRelative(iso: string | undefined | null): string {
 function formatDayShort(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    day: 'numeric',
-    month: 'short',
-  });
+  return uiDayMonth(date);
 }
 
 function formatHourShort(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleTimeString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return uiTime(date);
 }
 
 /** Etiqueta de un bucket de serie, acorde a la granularidad del rango. */
@@ -92,11 +89,7 @@ export function formatBucket(iso: string, granularity: MetricsGranularity): stri
   if (granularity === 'month') {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return iso;
-    return date.toLocaleDateString('es-MX', {
-      timeZone: 'America/Mexico_City',
-      month: 'short',
-      year: '2-digit',
-    });
+    return uiDateLong(date);
   }
   return formatDayShort(iso);
 }

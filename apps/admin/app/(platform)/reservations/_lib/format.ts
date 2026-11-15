@@ -1,3 +1,4 @@
+import { formatDateTime as uiDateTime } from '@boletera/ui';
 import { formatCurrency, formatNumber, formatPercent } from '@boletera/ui';
 import type { RangeKey } from './types';
 
@@ -49,12 +50,7 @@ export function formatRelative(iso: string | null): string {
   if (minutes < 60) return `Hace ${minutes} min`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `Hace ${hours} h`;
-  return date.toLocaleString('es-MX', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return uiDateTime(date);
 }
 
 export function formatExpiry(iso: string | null): string {

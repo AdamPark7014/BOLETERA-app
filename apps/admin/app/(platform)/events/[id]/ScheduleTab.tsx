@@ -22,6 +22,7 @@ import {
 import { useToast } from '@/components/Toast/ToastProvider';
 import { statusTone } from './format';
 import styles from './event-hub.module.scss';
+import { formatInZone } from '../_ticket/read';
 
 const PHASE_KINDS: { value: SalePhaseKind; label: string }[] = [
   { value: 'PRESALE', label: 'Preventa con código' },
@@ -43,11 +44,7 @@ function fromLocalInput(value: string, timezone: string) {
 
 function formatWhen(iso: string | null | undefined, timezone: string) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleString('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: timezone,
-  });
+  return formatInZone(iso, timezone);
 }
 
 type WindowFields = {

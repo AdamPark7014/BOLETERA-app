@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDateTime as uiDateTime, formatTime as uiTime } from '@boletera/ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Field } from '@boletera/ui';
@@ -53,11 +54,7 @@ function toneOf(o: ScanOutcomeView): 'ok' | 'bad' | 'warn' {
 }
 
 function clock(ms: number) {
-  return new Date(ms).toLocaleTimeString('es-MX', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
+  return uiTime(new Date(ms));
 }
 
 function seatShort(o: ScanOutcomeView) {
@@ -68,7 +65,7 @@ function agoLabel(iso: string) {
   const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
   if (mins < 1) return 'hace menos de un minuto';
   if (mins < 120) return `hace ${mins} min`;
-  return `el ${new Date(iso).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}`;
+  return `el ${uiDateTime(new Date(iso))}`;
 }
 
 export default function AccesoPage() {
@@ -386,10 +383,7 @@ export default function AccesoPage() {
               detail: payload.firstScanAt
                 ? `Este boleto se usó ${agoLabel(payload.firstScanAt)}${
                     payload.firstScanZoneId ? ` en la puerta ${payload.firstScanZoneId}` : ''
-                  } (${new Date(payload.firstScanAt).toLocaleTimeString('es-MX', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}).`
+                  } (${uiTime(new Date(payload.firstScanAt))}).`
                 : 'Este boleto ya entró.',
               extra: 'Posible reventa o reingreso. Habla con la persona o llama a supervisión.',
               code: payload.ticketCode,
@@ -750,7 +744,7 @@ export default function AccesoPage() {
                   </strong>
                   <span>
                     {manifest
-                      ? `${manifest.count.toLocaleString('es-MX')} boletos · ${new Date(manifest.issuedAt).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}`
+                      ? `${manifest.count.toLocaleString('es-MX')} boletos · ${uiDateTime(new Date(manifest.issuedAt))}`
                       : 'Descárgala antes de abrir puertas para validar sin red.'}
                   </span>
                 </div>
@@ -789,7 +783,7 @@ export default function AccesoPage() {
                             }`}
                       </span>
                       <span className={styles.recentMeta}>
-                        {new Date(conflict.attemptedAt).toLocaleTimeString('es-MX')}
+                        {uiTime(new Date(conflict.attemptedAt))}
                       </span>
                     </li>
                   ))}

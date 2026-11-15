@@ -1,5 +1,6 @@
 'use client';
 
+import { formatTime as uiTime } from '@boletera/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { stockImageForCategory } from '@boletera/shared';
@@ -172,8 +173,7 @@ export default function EventosTaquillaPage() {
                     <div className={styles.cardInfo}>
                       <strong>{e.title}</strong>
                       <span>
-                        {e.venue?.name} ·{' '}
-                        {date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                        {e.venue?.name} · {uiTime(date)}
                       </span>
                     </div>
                     <div className={styles.cardMeta}>

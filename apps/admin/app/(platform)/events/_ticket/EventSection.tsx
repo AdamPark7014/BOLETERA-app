@@ -20,6 +20,7 @@ import {
   asRecord,
   categoryLabel,
   formatCount,
+  formatInZone,
   formatWhen,
   readNumber,
   readOffers,
@@ -84,18 +85,13 @@ function moneyCompact(value: number): string {
 function shortDate(iso: string, timeZone: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone });
+  return formatInZone(date, timeZone, 'daymonth');
 }
 
 function timeOf(iso: string, timeZone: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString('es-MX', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone,
-  });
+  return formatInZone(date, timeZone, 'time');
 }
 
 /** Resumen del evento, en el lenguaje de la maqueta. Solo datos que ya traen las consultas. */

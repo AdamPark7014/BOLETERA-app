@@ -1,5 +1,6 @@
 'use client';
 
+import { formatTime as uiTime } from '@boletera/ui';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Field, NamedStatus, TicketButton, formatTicketAmount } from '@boletera/ui';
@@ -222,12 +223,7 @@ export default function WillcallPage() {
                   Identificación revisada
                 </button>
               ) : (
-                <p className={styles.meta}>
-                  {new Date(selected.pickedUpAt).toLocaleTimeString('es-MX', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
+                <p className={styles.meta}>{uiTime(new Date(selected.pickedUpAt))}</p>
               )}
               <button
                 type="button"

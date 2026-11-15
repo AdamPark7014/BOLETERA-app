@@ -1,3 +1,4 @@
+import { formatDateLong as uiDateLong, formatDateTime as uiDateTime } from '@boletera/ui';
 /**
  * Formato de dinero y fechas para las pantallas de dinero.
  *
@@ -80,20 +81,14 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   if (!value) return '—';
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString('es-MX', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return uiDateTime(d);
 }
 
 export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return '—';
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  return uiDateLong(d);
 }
 
 /** `hace 3 min` — para el panel en vivo, donde la frescura del dato importa. */

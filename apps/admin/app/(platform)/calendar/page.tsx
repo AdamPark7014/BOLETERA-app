@@ -8,6 +8,11 @@
  * completa) y guarda vista, rango y filtros en la URL.
  */
 
+import {
+  formatDateLong as uiDateLong,
+  formatDayLabel as uiDayLabel,
+  formatDayMonth as uiDayMonth,
+} from '@boletera/ui';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -135,13 +140,13 @@ function formatRangeTitle(view: CalendarView, anchor: Date) {
   if (view === 'week') {
     const from = startOfWeek(anchor);
     const to = addDays(from, 6);
-    return `${from.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} – ${to.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    return `${uiDayMonth(from)} – ${uiDateLong(to)}`;
   }
   return new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(anchor);
 }
 
 function longDay(date: string) {
-  return new Date(`${date}T12:00:00`).toLocaleDateString('es-MX', { dateStyle: 'full' });
+  return uiDayLabel(new Date(`${date}T12:00:00`));
 }
 
 function errorText(error: unknown): string {
@@ -490,7 +495,7 @@ function CalendarContent() {
                     key={date}
                     type="button"
                     role="gridcell"
-                    aria-label={`${day.toLocaleDateString('es-MX', { dateStyle: 'full' })}, ${events.length} eventos`}
+                    aria-label={`${uiDayLabel(day)}, ${events.length} eventos`}
                     aria-selected={selectedDate === date}
                     className={classes}
                     onClick={() => setSelectedDate(selectedDate === date ? null : date)}

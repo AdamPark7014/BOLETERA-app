@@ -1,5 +1,6 @@
 'use client';
 
+import { formatTime as uiTime } from '@boletera/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -121,7 +122,7 @@ export function PosShell({
   useEffect(() => {
     const tick = () => {
       const d = new Date();
-      setTime(d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }));
+      setTime(uiTime(d));
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -276,9 +277,7 @@ export function PosShell({
   );
   useHotkeys(merged, hotkeysEnabled);
 
-  const openedAt = shift?.startTime
-    ? new Date(shift.startTime).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-    : null;
+  const openedAt = shift?.startTime ? uiTime(new Date(shift.startTime)) : null;
   const shiftLine = [
     cashierShort ? `Turno de ${cashierShort}` : cashierName,
     openedAt ? `abierto ${openedAt}` : null,

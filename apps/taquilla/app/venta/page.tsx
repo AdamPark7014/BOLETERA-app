@@ -1,5 +1,6 @@
 'use client';
 
+import { formatTime as uiTime } from '@boletera/ui';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiJson, getTaquillaToken } from '@/lib/auth';
@@ -979,7 +980,7 @@ function VentaFlow() {
     const d = new Date(iso);
     const today = new Date();
     const sameDay = d.toDateString() === today.toDateString();
-    const time = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    const time = uiTime(d);
     if (sameDay) return `Hoy · ${time}`;
     return `${d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })} · ${time}`;
   };

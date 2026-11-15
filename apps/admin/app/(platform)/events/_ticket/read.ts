@@ -1,3 +1,11 @@
+import {
+  TIME_ZONE,
+  formatDateTime as uiDateTime,
+  formatDayLabel as uiDayLabel,
+  formatDayMonth as uiDayMonth,
+  formatTime as uiTime,
+} from '@boletera/ui';
+
 export function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -17,16 +25,56 @@ export function readString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value : null;
 }
 
-export function formatWhen(value: unknown, timeZone = 'America/Mexico_City'): string {
+export type ZonedFormat = 'datetime' | 'time' | 'daymonth' | 'daylabel';
+
+/**
+ * Fechas con la zona del evento. En la zona de la plataforma usa los formateadores
+ * de @boletera/ui (24 h, mismo estilo en las tres apps); en otra zona, el mismo
+ * estilo calculado en esa zona.
+ */
+export function formatInZone(
+  value: Date | string | number,
+  timeZone: string,
+  kind: ZonedFormat = 'datetime'
+): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  if (timeZone === TIME_ZONE) {
+    if (kind === 'time') return uiTime(date);
+    if (kind === 'daymonth') return uiDayMonth(date);
+    if (kind === 'daylabel') return `${uiDayLabel(date)}, ${uiTime(date)}`;
+    return uiDateTime(date);
+  }
+  const opts: Intl.DateTimeFormatOptions =
+    kind === 'time'
+      ? { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }
+      : kind === 'daymonth'
+        ? { day: 'numeric', month: 'short' }
+        : kind === 'daylabel'
+          ? {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hourCycle: 'h23',
+            }
+          : {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hourCycle: 'h23',
+            };
+  return new Intl.DateTimeFormat('es-MX', { ...opts, timeZone }).format(date).replace(/\./g, '');
+}
+
+export function formatWhen(value: unknown, timeZone: string = TIME_ZONE): string {
   const raw = value instanceof Date ? value.toISOString() : readString(value);
   if (!raw) return '—';
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleString('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone,
-  });
+  return formatInZone(raw, timeZone) || '—';
 }
 
 export function formatCount(value: number | null): string {

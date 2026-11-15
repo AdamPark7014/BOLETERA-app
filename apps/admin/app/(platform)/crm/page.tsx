@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDateTime as uiDateTime } from '@boletera/ui';
 import Link from 'next/link';
 import { Suspense, useDeferredValue, useMemo, useState } from 'react';
 import { Field, TicketButton } from '@boletera/ui';
@@ -59,11 +60,7 @@ function failText(error: unknown): string {
 function whenShort(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleString('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'America/Mexico_City',
-  });
+  return uiDateTime(date);
 }
 
 export default function CrmPage() {

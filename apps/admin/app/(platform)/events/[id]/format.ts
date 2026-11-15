@@ -1,3 +1,4 @@
+import { formatDateTime as uiDateTime, formatDayMonth as uiDayMonth } from '@boletera/ui';
 import type { BadgeTone } from '@boletera/ui';
 import type { MetricsAlertSeverity } from '@boletera/shared';
 
@@ -35,21 +36,13 @@ export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleString('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'America/Mexico_City',
-  });
+  return uiDateTime(date);
 }
 
 export function formatDayShort(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    day: 'numeric',
-    month: 'short',
-  });
+  return uiDayMonth(date);
 }
 
 export function formatRelative(iso: string | null | undefined): string {

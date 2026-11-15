@@ -8,6 +8,7 @@
  * Se conservan las dos escrituras de antes: crear plan y renovar membresía.
  */
 
+import { formatDateLong as uiDateLong } from '@boletera/ui';
 import { Suspense, useDeferredValue, useMemo, useState, type FormEvent } from 'react';
 import { Field, ParameterCard, TicketButton } from '@boletera/ui';
 import { HttpError } from '@/lib/http';
@@ -384,8 +385,7 @@ function MembresiasBody({ orgId }: { orgId: string }) {
                       <div className={styles.rowMain}>
                         <p className={styles.rowTitle}>{item.memberName}</p>
                         <p className={styles.rowMeta}>
-                          {item.planName} · vence{' '}
-                          {new Date(item.expiresAt).toLocaleDateString('es-MX')} ·{' '}
+                          {item.planName} · vence {uiDateLong(new Date(item.expiresAt))} ·{' '}
                           {renewalStatusMeta(item.status).label}
                         </p>
                       </div>

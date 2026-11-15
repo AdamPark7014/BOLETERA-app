@@ -18,6 +18,7 @@
  * se sabía.
  */
 
+import { formatDateTime as uiDateTime } from '@boletera/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { Badge, Button, Card, CardHeader, EmptyState } from '@boletera/ui';
 import { ApiError, adminApi, getStoredToken } from '@/lib/api';
@@ -54,8 +55,7 @@ type Verdict = {
 const money = (value: number, currency: string) =>
   `$${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 
-const fecha = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+const fecha = (iso: string | null) => (iso ? uiDateTime(new Date(iso)) : '—');
 
 export function CompliancePanel({ eventId, canWrite }: { eventId: string; canWrite: boolean }) {
   const [preview, setPreview] = useState<Preview | null>(null);

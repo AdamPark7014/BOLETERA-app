@@ -7,6 +7,7 @@
  * a la organización. El API acepta `DAY | WEEK | MONTH` como periodo.
  */
 
+import { formatDateLong as uiDateLong } from '@boletera/ui';
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -60,7 +61,7 @@ function count(value: number | null | undefined): string {
 function day(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('es-MX', { dateStyle: 'medium', timeZone: 'America/Mexico_City' });
+  return uiDateLong(date);
 }
 
 export default function AnalyticsPage() {

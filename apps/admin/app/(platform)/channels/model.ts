@@ -1,3 +1,4 @@
+import { formatDayMonth as uiDayMonth } from '@boletera/ui';
 import type { BadgeTone } from '@boletera/ui';
 import type { MetricsGranularity, SalesChannel } from '@boletera/shared';
 import type { ChannelConfiguration } from '@/lib/queries';
@@ -98,11 +99,7 @@ export function formatDateShort(iso: string | null | undefined): string {
   if (!iso) return '—';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    day: 'numeric',
-    month: 'short',
-  });
+  return uiDayMonth(date);
 }
 
 // --------------------------------------------------- lectura defensiva

@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDateLong as uiDateLong } from '@boletera/ui';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -32,7 +33,7 @@ import styles from './series.module.scss';
 
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-MX', { dateStyle: 'medium' });
+  return uiDateLong(new Date(iso));
 }
 
 export default function SeriesListPage() {

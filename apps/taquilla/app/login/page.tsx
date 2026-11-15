@@ -1,5 +1,6 @@
 'use client';
 
+import { formatTime as uiTime } from '@boletera/ui';
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BrandLogo, Field, StageArt, TicketButton } from '@boletera/ui';
@@ -46,7 +47,7 @@ export default function TaquillaLoginPage() {
 
   useEffect(() => {
     const tick = () => {
-      setTime(new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }));
+      setTime(uiTime(new Date()));
     };
     tick();
     const i = setInterval(tick, 1000);

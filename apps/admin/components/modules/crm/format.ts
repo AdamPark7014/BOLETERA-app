@@ -1,3 +1,4 @@
+import { formatDateLong as uiDateLong } from '@boletera/ui';
 import { formatCurrency, formatNumber, formatPercent } from '@boletera/ui';
 
 /** `deltaPercent` de la API viene en puntos (p. ej. 12.5 → +12.5 %). */
@@ -36,7 +37,7 @@ export function formatRelativeDay(iso: string | null): string {
   if (days === 1) return 'Ayer';
   if (days < 30) return `Hace ${days} días`;
   if (days < 365) return `Hace ${Math.floor(days / 30)} meses`;
-  return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  return uiDateLong(date);
 }
 
 export function daysAgoIso(days: number): string {
