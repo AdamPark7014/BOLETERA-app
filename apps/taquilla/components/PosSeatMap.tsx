@@ -738,7 +738,7 @@ export function PosSeatMap({
       <p className={styles.focusHint}>
         {focused
           ? `${focused.label}${focused.sectionName ? ` · ${focused.sectionName}` : ''}${focused.price != null ? ` · $${focused.price}` : ''}`
-          : 'Selecciona asientos · mismo mapa que web (DB)'}
+          : 'Toca los asientos para elegirlos'}
       </p>
     </div>
   );

@@ -125,7 +125,7 @@ export function ReauthDialog() {
           </button>
         </div>
         <p className={styles.hint}>
-          <kbd>Enter</kbd> continuar · <kbd>Esc</kbd> salir al login (demo: <kbd>Admin123!</kbd>)
+          <kbd>Enter</kbd> continuar · <kbd>Esc</kbd> salir a la pantalla de entrada
         </p>
       </form>
     </div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BlackTicketRoot, Field, NamedStatus, ParameterCard, TicketButton } from '@boletera/ui';
+import { Field } from '@boletera/ui';
 import { ApiError, apiJson, getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import type { Hotkey } from '@/lib/hotkeys';
@@ -35,14 +35,40 @@ type ScanOutcomeView = {
   detail: string;
   extra?: string;
   at: number;
+  /** Error del operador (falta función, zona mal escrita): ámbar, no rojo. */
+  tone?: 'warn';
+  code?: string;
+  eventTitle?: string;
+  section?: string | null;
+  row?: string | null;
+  seat?: string | null;
 };
 
 const ZONE_KEY = 'taquilla_access_zone';
 
-function resultWord(verdict: Verdict): 'Éxito' | 'Rechazo' | 'Pendiente' {
-  if (verdict === 'OK' || verdict === 'OFFLINE_OK') return 'Éxito';
-  if (verdict === 'OFFLINE_UNVERIFIABLE') return 'Pendiente';
-  return 'Rechazo';
+function toneOf(o: ScanOutcomeView): 'ok' | 'bad' | 'warn' {
+  if (o.verdict === 'OK' || o.verdict === 'OFFLINE_OK') return 'ok';
+  if (o.verdict === 'OFFLINE_UNVERIFIABLE' || o.tone === 'warn') return 'warn';
+  return 'bad';
+}
+
+function clock(ms: number) {
+  return new Date(ms).toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
+function seatShort(o: ScanOutcomeView) {
+  return [o.section, o.row ? `Fila ${o.row}` : null, o.seat].filter(Boolean).join(' · ');
+}
+
+function agoLabel(iso: string) {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return 'hace menos de un minuto';
+  if (mins < 120) return `hace ${mins} min`;
+  return `el ${new Date(iso).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}`;
 }
 
 export default function AccesoPage() {
@@ -60,6 +86,27 @@ export default function AccesoPage() {
   const [conflicts, setConflicts] = useState<ScanConflict[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [stamps, setStamps] = useState<Array<{ at: number; ok: boolean }>>([]);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [supervisorOpen, setSupervisorOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const [online, setOnline] = useState(true);
+
+  useEffect(() => {
+    const sync = () => {
+      setNow(Date.now());
+      setOnline(navigator.onLine);
+    };
+    sync();
+    const id = setInterval(sync, 10000);
+    window.addEventListener('online', sync);
+    window.addEventListener('offline', sync);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('online', sync);
+      window.removeEventListener('offline', sync);
+    };
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -100,7 +147,11 @@ export default function AccesoPage() {
 
   const pushOutcome = useCallback((next: ScanOutcomeView) => {
     setOutcome(next);
+    setDetailsOpen(false);
+    setSupervisorOpen(false);
     setHistory((prev) => [next, ...prev].slice(0, 8));
+    // Contadores de esta sesión de puerta: el API no expone el total por puerta.
+    setStamps((prev) => [...prev, { at: next.at, ok: toneOf(next) === 'ok' }].slice(-2000));
   }, []);
 
   // -------------------------------------------------------------------------
@@ -141,9 +192,9 @@ export default function AccesoPage() {
         onProgress: setDownloading,
       });
       refreshLocal();
-      showToast(`Manifiesto listo: ${meta.count} boletos`);
+      showToast(`Lista descargada: ${meta.count} boletos`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'No se pudo descargar el manifiesto');
+      showToast(err instanceof Error ? err.message : 'No se pudo descargar la lista de boletos');
     } finally {
       setDownloading(null);
     }
@@ -156,9 +207,9 @@ export default function AccesoPage() {
         // Honestidad: el manifiesto lleva ids de boleto, no códigos impresos.
         pushOutcome({
           verdict: 'OFFLINE_UNVERIFIABLE',
-          title: 'NO SE PUEDE VERIFICAR',
+          title: 'SIN VERIFICAR',
           detail:
-            'Sin red sólo se puede validar el QR. Un código escrito a mano no está en el manifiesto local.',
+            'Sin red sólo se puede validar el QR. Un código escrito a mano no está en la lista descargada.',
           at: Date.now(),
         });
         return;
@@ -168,7 +219,7 @@ export default function AccesoPage() {
         pushOutcome({
           verdict: 'INVALID',
           title: 'OTRA FUNCIÓN',
-          detail: 'El QR es de otra función.',
+          detail: 'Este QR es de otra función.',
           extra: 'No se registró la entrada.',
           at: Date.now(),
         });
@@ -179,9 +230,9 @@ export default function AccesoPage() {
       if (previous) {
         pushOutcome({
           verdict: 'DUPLICATE',
-          title: 'YA ESCANEADO AQUÍ',
-          detail: `Primer paso en esta puerta: ${new Date(previous.scannedAt).toLocaleTimeString('es-MX')}`,
-          extra: 'Duplicado detectado en local. Llama a supervisión.',
+          title: 'YA ENTRÓ',
+          detail: `Este boleto pasó por esta puerta ${agoLabel(previous.scannedAt)}.`,
+          extra: 'Repetido detectado en este equipo. Llama a supervisión.',
           at: Date.now(),
         });
         return;
@@ -193,8 +244,9 @@ export default function AccesoPage() {
       if (!entry) {
         pushOutcome({
           verdict: 'UNKNOWN',
-          title: 'NO ESTÁ EN EL MANIFIESTO',
-          detail: 'El boleto no pertenece al evento descargado o el manifiesto está incompleto.',
+          title: 'NO VÁLIDO',
+          detail: 'El boleto no está en la lista descargada de esta función.',
+          extra: 'Puede ser falso o la lista estar incompleta.',
           at: Date.now(),
         });
         await recordLocalScan({
@@ -210,16 +262,16 @@ export default function AccesoPage() {
       if (entry.st === 'U') {
         pushOutcome({
           verdict: 'DUPLICATE',
-          title: 'YA USADO',
-          detail: 'El manifiesto lo tenía como usado al descargarse.',
+          title: 'YA ENTRÓ',
+          detail: 'La lista descargada ya lo tenía como usado.',
           extra: 'Se registra igual y saldrá en conflictos al sincronizar.',
           at: Date.now(),
         });
       } else {
         pushOutcome({
           verdict: 'OFFLINE_OK',
-          title: 'VÁLIDO (SIN RED)',
-          detail: 'Pertenece al evento y estaba vendido al descargar el manifiesto.',
+          title: 'ADELANTE',
+          detail: 'Validado sin red con la lista descargada.',
           extra: 'No se verificó la firma del QR ni cancelaciones posteriores.',
           at: Date.now(),
         });
@@ -254,6 +306,7 @@ export default function AccesoPage() {
           verdict: 'INVALID',
           title: 'ELIGE LA FUNCIÓN',
           detail: 'Elige la función de esta puerta antes de escanear.',
+          tone: 'warn',
           at: Date.now(),
         });
         return;
@@ -286,12 +339,13 @@ export default function AccesoPage() {
           pushOutcome({
             verdict: 'OK',
             title: 'ADELANTE',
-            detail: t
-              ? [t.eventTitle, t.section, t.row ? `Fila ${t.row}` : null, t.seatNumber]
-                  .filter(Boolean)
-                  .join(' · ')
-              : 'Acceso registrado',
+            detail: t?.eventTitle || 'Acceso registrado',
             extra: t?.code,
+            code: t?.code,
+            eventTitle: t?.eventTitle,
+            section: t?.section,
+            row: t?.row,
+            seat: t?.seatNumber,
             at: Date.now(),
           });
         } catch (err) {
@@ -307,6 +361,7 @@ export default function AccesoPage() {
             firstScanBy?: string;
             message?: string;
             ticketEventTitle?: string;
+            ticketCode?: string;
           };
           if (err.status === 400 && payload.code === 'WRONG_EVENT') {
             pushOutcome({
@@ -316,6 +371,8 @@ export default function AccesoPage() {
                 ? `Este boleto es de «${payload.ticketEventTitle}».`
                 : 'Este boleto es de otra función.',
               extra: 'No se marcó como usado. Indica al portador su puerta o fecha.',
+              code: payload.ticketCode,
+              eventTitle: payload.ticketEventTitle,
               at: Date.now(),
             });
             return;
@@ -325,13 +382,17 @@ export default function AccesoPage() {
             // "no válido" se resuelve rechazando al portador.
             pushOutcome({
               verdict: 'DUPLICATE',
-              title: 'YA ESCANEADO',
+              title: 'YA ENTRÓ',
               detail: payload.firstScanAt
-                ? `Primer paso: ${new Date(payload.firstScanAt).toLocaleString('es-MX')}`
+                ? `Este boleto se usó ${agoLabel(payload.firstScanAt)}${
+                    payload.firstScanZoneId ? ` en la puerta ${payload.firstScanZoneId}` : ''
+                  } (${new Date(payload.firstScanAt).toLocaleTimeString('es-MX', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}).`
                 : 'Este boleto ya entró.',
-              extra: [payload.firstScanZoneId ? `Puerta ${payload.firstScanZoneId}` : null]
-                .filter(Boolean)
-                .join(' · '),
+              extra: 'Posible reventa o reingreso. Habla con la persona o llama a supervisión.',
+              code: payload.ticketCode,
               at: Date.now(),
             });
             return;
@@ -339,8 +400,9 @@ export default function AccesoPage() {
           if (err.status === 404) {
             pushOutcome({
               verdict: 'UNKNOWN',
-              title: 'NO EXISTE',
-              detail: 'Ese boleto no está en el sistema.',
+              title: 'NO VÁLIDO',
+              detail: 'Ese código no existe en el sistema.',
+              extra: 'Posible boleto falso o mal escrito.',
               at: Date.now(),
             });
             return;
@@ -349,9 +411,10 @@ export default function AccesoPage() {
             // No es culpa del boleto: la zona escrita en esta puerta no existe.
             pushOutcome({
               verdict: 'INVALID',
-              title: 'ZONA DESCONOCIDA',
+              title: 'REVISA LA ZONA',
               detail: 'La zona de acceso escrita no existe. Corrígela o déjala vacía.',
               extra: 'El boleto no se marcó como usado.',
+              tone: 'warn',
               at: Date.now(),
             });
             return;
@@ -377,11 +440,11 @@ export default function AccesoPage() {
       { keys: 'Enter', label: 'Escanear', displayOnly: true },
       {
         keys: 'F5',
-        label: 'Descargar manifiesto',
+        label: 'Descargar lista',
         whileTyping: true,
         run: () => void doDownload(),
       },
-      { keys: 'F8', label: 'Sincronizar cola', whileTyping: true, run: () => void runSync() },
+      { keys: 'F8', label: 'Subir escaneos', whileTyping: true, run: () => void runSync() },
       {
         keys: 'Esc',
         label: 'Salir',
@@ -393,200 +456,372 @@ export default function AccesoPage() {
     [doDownload, runSync, router]
   );
 
-  const word = outcome ? resultWord(outcome.verdict) : null;
+  const currentEvent = events.find((event) => event.id === eventId) ?? null;
+  const okCount = stamps.filter((s) => s.ok).length;
+  const rejectCount = stamps.length - okCount;
+  const perMinute = stamps.filter((s) => s.ok && now - s.at <= 60_000).length;
+  const tone = outcome ? toneOf(outcome) : null;
+  const hasTicketData = Boolean(outcome && (outcome.code || outcome.section || outcome.eventTitle));
+  const nextScan = () => {
+    setOutcome(null);
+    setDetailsOpen(false);
+    setSupervisorOpen(false);
+    setCode('');
+    inputRef.current?.focus();
+  };
 
   return (
-    <PosShell title="Puerta" backHref="/" size="md" hotkeys={hotkeys} escapeGoesBack={false}>
-      <BlackTicketRoot density="admin" className={styles.root}>
-        {toast ? (
-          <p className={styles.toast} role="status">
-            {toast}
-          </p>
-        ) : null}
-
-        <p className={styles.lead}>
-          Pega el código o usa el lector. Descarga el manifiesto antes de abrir sin red.
-        </p>
-
-        <div className={styles.stack}>
-          <ParameterCard
-            name="Función"
-            value={events.find((event) => event.id === eventId)?.title ?? 'Sin función'}
-            effect="El manifiesto y el escaneo son de esta función."
-          >
-            <EventPick events={events} eventId={eventId} onChange={setEventId} />
-          </ParameterCard>
-          <ParameterCard
-            name="Zona de acceso"
-            value={zoneId.trim() || '—'}
-            valueStyle="mono"
-            effect="Si se escribe, tiene que ser una zona que ya existe. Vacío, el escaneo no lleva zona."
-          >
-            <Field
-              id="access-zone"
-              label="Identificador"
-              value={zoneId}
-              onChange={(event) => {
-                setZoneId(event.target.value);
-                localStorage.setItem(ZONE_KEY, event.target.value);
-              }}
-              placeholder="Identificador de la zona"
-              autoComplete="off"
-            />
-          </ParameterCard>
-          <ParameterCard
-            name="Manifiesto"
-            value={manifest ? (manifest.complete ? 'Completo' : 'Incompleto') : 'Sin manifiesto'}
-            effect={
-              manifest
-                ? `${manifest.count.toLocaleString('es-MX')} boletos · emitido ${new Date(manifest.issuedAt).toLocaleString('es-MX')}`
-                : 'Sin él no se valida sin red.'
-            }
-          />
-        </div>
-        <div className={styles.secondary}>
-          <TicketButton
-            variant="secondary"
-            disabled={downloading != null || !eventId}
-            onClick={() => void doDownload()}
-          >
-            {downloading != null ? 'Descargando…' : 'Descargar manifiesto'}
-          </TicketButton>
-        </div>
-
-        <ParameterCard
-          name="Código del boleto"
-          value={code.trim() || '—'}
-          valueStyle="mono"
-          effect="QR o código escrito."
-        >
-          <Field
-            ref={inputRef}
-            autoFocus
-            id="access-scan"
-            label="Código"
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                void scan(code);
-              }
-            }}
-            placeholder="Código del boleto"
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </ParameterCard>
-
-        {outcome && word ? (
-          <div role="status" aria-live="assertive">
-            <ParameterCard
-              name="Resultado"
-              value={word === 'Pendiente' ? <NamedStatus status="pendiente" /> : word}
-              effect={outcome.detail}
-            />
-            {outcome.extra ? (
-              <ParameterCard
-                name={word === 'Rechazo' ? 'Motivo del rechazo' : 'Nota'}
-                value={outcome.extra}
-                valueStyle="mono"
-                effect="Lo que acompañó a este escaneo."
-              />
-            ) : null}
-          </div>
-        ) : null}
-
-        <ParameterCard
-          name="Cola"
-          value={pending.toLocaleString('es-MX')}
-          valueStyle="tabular"
-          effect="Escaneos de esta puerta aún sin sincronizar."
-        />
-        <div className={styles.secondary}>
-          <TicketButton variant="secondary" onClick={() => void runSync()}>
-            Sincronizar
-          </TicketButton>
-        </div>
-
-        {conflicts.length > 0 ? (
-          <div className={styles.stack}>
-            <p className={styles.quiet}>
-              {conflicts.length} conflictos. El resto del lote sí se aplicó. Estos no.
+    <PosShell
+      title="Puerta"
+      backHref="/"
+      hotkeys={hotkeys}
+      escapeGoesBack={false}
+      fill
+      door
+      whoMain={`${zoneId.trim() ? `Puerta ${zoneId.trim()}` : 'Puerta'} · ${currentEvent?.title ?? 'Sin función'}`}
+      whoSub={
+        manifest
+          ? `Lista descargada · ${manifest.count.toLocaleString('es-MX')} boletos${manifest.complete ? '' : ' (incompleta)'}`
+          : 'Sin lista descargada para trabajar sin red'
+      }
+    >
+      <div className={styles.door}>
+        <div className={styles.stage}>
+          {toast ? (
+            <p className={styles.toast} role="status">
+              {toast}
             </p>
-            <ul className={styles.rows}>
-              {conflicts.slice(0, 25).map((conflict) => (
-                <li key={conflict.id} className={styles.row}>
-                  <p className={styles.mono}>{conflict.ticketId}</p>
-                  <p className={styles.quiet}>
-                    {conflict.kind === 'rejected'
-                      ? `Rechazo: ${conflict.reason ?? 'sin motivo'}`
-                      : `Ya usado · primer paso ${
-                          conflict.firstScanAt
-                            ? new Date(conflict.firstScanAt).toLocaleString('es-MX')
-                            : 'desconocido'
-                        }${conflict.firstScanZoneId ? ` · puerta ${conflict.firstScanZoneId}` : ''}${
-                          conflict.firstScanBy ? ` · operador ${conflict.firstScanBy}` : ''
-                        }`}
-                  </p>
-                  <p className={styles.mono}>
-                    {new Date(conflict.attemptedAt).toLocaleTimeString('es-MX')}
-                  </p>
-                </li>
-              ))}
-            </ul>
-            <TicketButton
-              variant="secondary"
-              onClick={() => void clearConflicts().then(refreshLocal)}
-            >
-              Marcar revisados
-            </TicketButton>
-          </div>
-        ) : null}
+          ) : null}
 
-        {history.length > 1 ? (
-          <div className={styles.stack}>
-            <p className={styles.quiet}>Últimos escaneos</p>
-            <ul className={styles.rows}>
-              {history.slice(1).map((item) => (
-                <li key={item.at} className={styles.row}>
-                  <p className={styles.name}>
-                    {resultWord(item.verdict) === 'Pendiente' ? (
-                      <NamedStatus status="pendiente" />
+          <form
+            className={styles.scanRow}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void scan(code);
+            }}
+          >
+            <label className={styles.scanField}>
+              <span>Código del boleto</span>
+              <input
+                ref={inputRef}
+                autoFocus
+                id="access-scan"
+                aria-label="Código"
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                placeholder="Escanea el QR o escribe el código"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </label>
+            <button type="submit" className={styles.validate} disabled={busy || !code.trim()}>
+              {busy ? 'Validando…' : 'Validar'}
+            </button>
+          </form>
+
+          <div
+            className={
+              tone === 'ok'
+                ? styles.resultOk
+                : tone === 'bad'
+                  ? styles.resultBad
+                  : tone === 'warn'
+                    ? styles.resultWarn
+                    : styles.resultIdle
+            }
+            role="status"
+            aria-live="assertive"
+            aria-atomic="true"
+          >
+            {outcome ? (
+              <>
+                {tone === 'ok' ? (
+                  <svg aria-hidden="true" className={styles.icon} viewBox="0 0 24 24">
+                    <path d="M5 12.5l4.5 4.5L19 7.5" />
+                  </svg>
+                ) : tone === 'bad' ? (
+                  <svg aria-hidden="true" className={styles.icon} viewBox="0 0 24 24">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                ) : (
+                  <svg aria-hidden="true" className={styles.icon} viewBox="0 0 24 24">
+                    <path d="M12 7v6M12 17h.01" />
+                  </svg>
+                )}
+                <p className={styles.verdict}>{outcome.title}</p>
+                {tone === 'ok' ? (
+                  <>
+                    <p className={styles.holder}>
+                      {outcome.eventTitle || outcome.detail}
+                      {outcome.verdict === 'OFFLINE_OK' ? ' · validado sin red' : ''}
+                    </p>
+                    {outcome.section || outcome.row || outcome.seat ? (
+                      <div className={styles.seatRow}>
+                        {outcome.section ? (
+                          <span className={styles.seatChip}>
+                            <small>Sección</small>
+                            <strong>{outcome.section}</strong>
+                          </span>
+                        ) : null}
+                        {outcome.row ? (
+                          <span className={styles.seatChip}>
+                            <small>Fila</small>
+                            <strong>{outcome.row}</strong>
+                          </span>
+                        ) : null}
+                        {outcome.seat ? (
+                          <span className={styles.seatChip}>
+                            <small>Asiento</small>
+                            <strong>{outcome.seat}</strong>
+                          </span>
+                        ) : null}
+                      </div>
                     ) : (
-                      resultWord(item.verdict)
+                      <span className={styles.seatChip}>
+                        <small>Acceso</small>
+                        <strong>General</strong>
+                      </span>
                     )}
-                  </p>
-                  <p className={styles.quiet}>{item.detail}</p>
-                </li>
-              ))}
-            </ul>
+                    {outcome.code ? <code className={styles.code}>{outcome.code}</code> : null}
+                  </>
+                ) : (
+                  <>
+                    <p className={styles.reason}>{outcome.detail}</p>
+                    {outcome.extra ? <p className={styles.reasonSub}>{outcome.extra}</p> : null}
+                    {tone === 'bad' ? (
+                      <div className={styles.resultActions}>
+                        <button
+                          type="button"
+                          className={styles.whiteBtn}
+                          onClick={() => setSupervisorOpen((v) => !v)}
+                        >
+                          Llamar supervisor
+                        </button>
+                        {hasTicketData ? (
+                          <button
+                            type="button"
+                            className={styles.ghostBtn}
+                            aria-expanded={detailsOpen}
+                            onClick={() => setDetailsOpen((v) => !v)}
+                          >
+                            Ver boleto
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {detailsOpen && hasTicketData ? (
+                      <dl className={styles.ticketData}>
+                        {outcome.code ? (
+                          <>
+                            <dt>Código</dt>
+                            <dd>{outcome.code}</dd>
+                          </>
+                        ) : null}
+                        {outcome.eventTitle ? (
+                          <>
+                            <dt>Función</dt>
+                            <dd>{outcome.eventTitle}</dd>
+                          </>
+                        ) : null}
+                        {seatShort(outcome) ? (
+                          <>
+                            <dt>Lugar</dt>
+                            <dd>{seatShort(outcome)}</dd>
+                          </>
+                        ) : null}
+                      </dl>
+                    ) : null}
+                    {supervisorOpen ? (
+                      <div className={styles.ticketData}>
+                        <p>
+                          Dicta al supervisor por radio: «{outcome.title.toLowerCase()}»
+                          {outcome.code ? `, código ${outcome.code}` : ''}, {clock(outcome.at)}
+                          {zoneId.trim() ? `, puerta ${zoneId.trim()}` : ''}. Detén a la persona a
+                          un lado de la fila mientras llega.
+                        </p>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <svg aria-hidden="true" className={styles.iconIdle} viewBox="0 0 24 24">
+                  <path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M7 12h10" />
+                </svg>
+                <p className={styles.idleTitle}>
+                  {eventId ? 'Listo para escanear' : 'Elige la función de esta puerta'}
+                </p>
+                <p className={styles.idleText}>
+                  {eventId
+                    ? 'Acerca el QR al lector o escribe el código y pulsa Enter.'
+                    : 'Ábrela en «Ajustes de la puerta» para empezar.'}
+                </p>
+              </>
+            )}
           </div>
-        ) : null}
 
-        <div className={styles.stack}>
-          <p className={styles.name}>Sin red</p>
-          <ul className={styles.notes}>
-            <li>El id pertenecía a la función cuando se descargó el manifiesto.</li>
-            <li>El estado (vendido o ya usado) es el de ese instante.</li>
-            <li>Detecta duplicados del mismo boleto en este equipo.</li>
-            <li>Nada se pierde: se encola y se concilia al volver la red.</li>
-            <li>No verifica la firma del QR. El secreto está en el servidor.</li>
-            <li>No conoce reembolsos ni cancelaciones posteriores a la descarga.</li>
-            <li>No detecta duplicados de otra puerta que también esté sin red.</li>
-            <li>No resuelve códigos escritos a mano: el manifiesto lleva ids.</li>
-          </ul>
+          <button type="button" className={styles.nextBtn} onClick={nextScan}>
+            Escanear siguiente
+          </button>
         </div>
 
-        <div className={styles.bar}>
-          <p className={styles.quiet}>
-            {busy ? 'Validando…' : `${pending.toLocaleString('es-MX')} en cola`}
-          </p>
-          <TicketButton disabled={busy || !code.trim()} onClick={() => void scan(code)}>
-            Validar
-          </TicketButton>
-        </div>
-      </BlackTicketRoot>
+        <aside className={styles.side}>
+          <div className={styles.counters}>
+            <div className={styles.counter}>
+              <span>Entradas</span>
+              <strong>{okCount.toLocaleString('es-MX')}</strong>
+            </div>
+            <div className={styles.counter}>
+              <span>Por minuto</span>
+              <strong>{perMinute.toLocaleString('es-MX')}</strong>
+            </div>
+            <div className={styles.counter}>
+              <span>Rechazos</span>
+              <strong>{rejectCount.toLocaleString('es-MX')}</strong>
+            </div>
+          </div>
+          <p className={styles.counterNote}>Contadores de esta sesión en este equipo.</p>
+
+          <div className={pending > 0 ? styles.netWarn : styles.netOk}>
+            <span className={styles.dot} aria-hidden="true" />
+            <span>
+              {online ? 'En línea' : 'Sin red'}
+              {pending > 0 ? ` · ${pending.toLocaleString('es-MX')} por subir` : ' · todo subido'}
+            </span>
+            <button type="button" className={styles.linkBtn} onClick={() => void runSync()}>
+              Subir ahora <kbd>F8</kbd>
+            </button>
+          </div>
+
+          <section aria-label="Últimos escaneos">
+            <h2 className={styles.label}>Últimos escaneos</h2>
+            {history.length === 0 ? (
+              <p className={styles.quiet}>Aún no hay escaneos en esta sesión.</p>
+            ) : (
+              <ul className={styles.recent}>
+                {history.slice(0, 6).map((item) => {
+                  const t = toneOf(item);
+                  return (
+                    <li key={item.at}>
+                      <span
+                        className={
+                          t === 'ok' ? styles.dotOk : t === 'bad' ? styles.dotBad : styles.dotWarn
+                        }
+                        aria-hidden="true"
+                      />
+                      <span className={styles.recentMain}>
+                        {t === 'ok' ? item.code || 'Adelante' : item.title.toLowerCase()}
+                      </span>
+                      <span className={styles.recentMeta}>{seatShort(item) || '—'}</span>
+                      <span className={styles.recentMeta}>{clock(item.at)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
+          <details className={styles.settings} open={!eventId}>
+            <summary>Ajustes de la puerta</summary>
+            <div className={styles.settingsBody}>
+              <div>
+                <span className={styles.label}>Función</span>
+                <EventPick events={events} eventId={eventId} onChange={setEventId} />
+              </div>
+              <Field
+                id="access-zone"
+                label="Zona de acceso"
+                hint="Vacío si la puerta no tiene zona registrada"
+                value={zoneId}
+                onChange={(event) => {
+                  setZoneId(event.target.value);
+                  localStorage.setItem(ZONE_KEY, event.target.value);
+                }}
+                placeholder="Identificador de la zona"
+                autoComplete="off"
+              />
+              <div className={styles.manifest}>
+                <div>
+                  <strong>
+                    {manifest
+                      ? manifest.complete
+                        ? 'Lista completa'
+                        : 'Lista incompleta'
+                      : 'Sin lista descargada'}
+                  </strong>
+                  <span>
+                    {manifest
+                      ? `${manifest.count.toLocaleString('es-MX')} boletos · ${new Date(manifest.issuedAt).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}`
+                      : 'Descárgala antes de abrir puertas para validar sin red.'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className={styles.pill}
+                  disabled={downloading != null || !eventId}
+                  onClick={() => void doDownload()}
+                >
+                  {downloading != null ? `Descargando… ${downloading}` : 'Descargar'} <kbd>F5</kbd>
+                </button>
+              </div>
+            </div>
+          </details>
+
+          {conflicts.length > 0 ? (
+            <details className={styles.settings} open>
+              <summary>
+                {conflicts.length} {conflicts.length === 1 ? 'conflicto' : 'conflictos'} al subir
+              </summary>
+              <div className={styles.settingsBody}>
+                <p className={styles.quiet}>El resto del lote sí se aplicó. Estos no.</p>
+                <ul className={styles.conflicts}>
+                  {conflicts.slice(0, 25).map((conflict) => (
+                    <li key={conflict.id}>
+                      <code>{conflict.ticketId}</code>
+                      <span>
+                        {conflict.kind === 'rejected'
+                          ? `Rechazado: ${conflict.reason ?? 'sin motivo'}`
+                          : `Ya usado · primer paso ${
+                              conflict.firstScanAt
+                                ? new Date(conflict.firstScanAt).toLocaleString('es-MX')
+                                : 'desconocido'
+                            }${conflict.firstScanZoneId ? ` · puerta ${conflict.firstScanZoneId}` : ''}${
+                              conflict.firstScanBy ? ` · operador ${conflict.firstScanBy}` : ''
+                            }`}
+                      </span>
+                      <span className={styles.recentMeta}>
+                        {new Date(conflict.attemptedAt).toLocaleTimeString('es-MX')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  className={styles.pill}
+                  onClick={() => void clearConflicts().then(refreshLocal)}
+                >
+                  Marcar revisados
+                </button>
+              </div>
+            </details>
+          ) : null}
+
+          <details className={styles.settings}>
+            <summary>Qué valida sin red</summary>
+            <ul className={styles.notes}>
+              <li>Que el boleto pertenecía a la función al descargar la lista.</li>
+              <li>El estado (vendido o ya usado) es el de ese momento.</li>
+              <li>Detecta repetidos del mismo boleto en este equipo.</li>
+              <li>Nada se pierde: se guarda y se concilia al volver la red.</li>
+              <li>No verifica la firma del QR: esa validación vive en el servidor.</li>
+              <li>No conoce reembolsos ni cancelaciones posteriores a la descarga.</li>
+              <li>No detecta repetidos de otra puerta que también esté sin red.</li>
+              <li>No resuelve códigos escritos a mano: la lista lleva el QR.</li>
+            </ul>
+          </details>
+        </aside>
+      </div>
     </PosShell>
   );
 }

@@ -81,10 +81,16 @@
 
 .resultMeta,
 .rawStatus {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 16px;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--r-pill, 999px);
+  border: 1px solid var(--line-strong);
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .resultMeta {

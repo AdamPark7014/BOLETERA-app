@@ -148,3 +148,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--r-pill, 999px);
+  border: 1px solid var(--line-strong, #34343a);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #a8a29a);
+  white-space: nowrap;
+}

@@ -1,5 +1,46 @@
 .bt-app {
   min-height: 100vh;
+  background: var(--ink, #000);
+
+  /* Tokens heredados de pantallas antiguas, apuntados a la paleta Black Ticket
+     (maqueta 14-11-2026): tarjetas #1A1A1A, bordes #26262A, dorado #A68A6B. */
+  --bg: var(--ink, #000);
+  --bg-deep: var(--panel, #0c0c0d);
+  --surface: var(--card, #1a1a1a);
+  --surface-2: var(--elevated, #242424);
+  --border: var(--line, #26262a);
+  --border-strong: var(--line-strong, #34343a);
+  --muted: var(--text-secondary, #a8a29a);
+  --muted-2: var(--text-tertiary, #8a857c);
+  --accent: var(--gold, #a68a6b);
+  --accent-hover: var(--gold-soft, #d9c2a3);
+  --accent-fg: #000;
+  --success: var(--ok, #4cc38a);
+  --success-bg: var(--ok-wash, rgba(76, 195, 138, 0.12));
+  --success-border: var(--ok, #4cc38a);
+  --warn-bg: var(--warn-wash, rgba(245, 165, 36, 0.12));
+  --warn-border: var(--warn, #f5a524);
+  --danger-bg: var(--danger-wash, rgba(229, 72, 77, 0.14));
+  --danger-border: var(--danger, #e5484d);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --bl-accent: var(--gold, #a68a6b);
+  --bl-accent-hover: var(--gold-soft, #d9c2a3);
+  --bl-accent-border: var(--gold, #a68a6b);
+  --bl-accent-subtle: var(--gold-wash, rgba(166, 138, 107, 0.14));
+  --bl-accent-text: var(--gold-soft, #d9c2a3);
+  --bl-on-accent: #000;
+  --bl-focus-ring: var(--gold, #a68a6b);
+  --bl-surface: var(--card, #1a1a1a);
+  --bl-surface-hover: var(--elevated, #242424);
+  --bl-surface-sunken: var(--panel, #0c0c0d);
+  --bl-elevated: var(--card, #1a1a1a);
+  --bl-border: var(--line, #26262a);
+  --bl-border-strong: var(--line-strong, #34343a);
+  --bl-border-subtle: var(--line, #26262a);
+  --bl-radius-sm: 10px;
+  --bl-radius-md: 14px;
+  --bl-radius-lg: 20px;
 }
 
 :root {
@@ -37,8 +78,8 @@
 body {
   margin: var(--bl-space-0);
   font-family: var(--font-roboto, 'Roboto'), 'Helvetica Neue', system-ui, sans-serif;
-  background: #0b0b0c;
-  color: #f3f0e8;
+  background: #000;
+  color: #fff;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }

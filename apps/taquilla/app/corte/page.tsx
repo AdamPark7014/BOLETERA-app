@@ -9,7 +9,6 @@ import {
   CardHeader,
   EmptyState,
   Input,
-  Money,
   NamedStatus,
   SegmentedControl,
   TicketButton,
@@ -187,7 +186,7 @@ export default function CortePage() {
   async function doHandoff(pin: string) {
     const next = handoffCashier.trim();
     if (!next) {
-      showToast('Indica el id o email del cajero entrante');
+      showToast('Indica el correo del cajero entrante');
       return;
     }
     setLoading(true);
@@ -334,6 +333,59 @@ export default function CortePage() {
             })}
           </p>
 
+          <section className={styles.hero} role="group" aria-label="Esperado, contado y diferencia">
+            <div className={styles.heroCell}>
+              <span>Esperado en caja</span>
+              <strong>{formatTicketAmount(shownExpected)}</strong>
+              <small>
+                Fondo {formatTicketAmount(Number(report.openingCash) || 0)} + efectivo{' '}
+                {formatTicketAmount(Number(report.cashSales) || 0)}
+                {report.dropsTotal ? ` − retiros ${formatTicketAmount(report.dropsTotal)}` : ''}
+              </small>
+            </div>
+            <div className={styles.heroCell}>
+              <span>Contado</span>
+              {hasCount ? (
+                <strong>{formatTicketAmount(shownCounted)}</strong>
+              ) : (
+                <strong className={styles.heroPending}>Sin contar</strong>
+              )}
+              <small>{hasCount ? 'Lo que hay en el cajón' : 'Cuenta el cajón abajo'}</small>
+            </div>
+            <div
+              className={
+                !hasCount
+                  ? styles.heroCell
+                  : shownVariance === 0
+                    ? styles.heroOk
+                    : shownVariance > 0
+                      ? styles.heroWarn
+                      : styles.heroBad
+              }
+            >
+              <span>Diferencia</span>
+              {hasCount ? (
+                <strong>
+                  {shownVariance > 0 ? '+' : ''}
+                  {formatTicketAmount(shownVariance)}
+                </strong>
+              ) : (
+                <strong className={styles.heroPending}>—</strong>
+              )}
+              <small>
+                {!hasCount ? (
+                  <NamedStatus status="pendiente" />
+                ) : shownVariance === 0 ? (
+                  'Caja cuadrada'
+                ) : (
+                  `${shownVariance > 0 ? 'Sobrante' : 'Faltante'} · más de ${formatTicketAmount(
+                    VARIANCE_PIN_THRESHOLD
+                  )} pide PIN de gerente`
+                )}
+              </small>
+            </div>
+          </section>
+
           <Card padding="md" className={styles.section}>
             <CardHeader
               title="Arqueo de efectivo"
@@ -418,39 +470,6 @@ export default function CortePage() {
                 )}
               </>
             )}
-
-            <div
-              className={styles.reconcile}
-              role="group"
-              aria-label="Esperado, contado y diferencia"
-            >
-              <Money label="Esperado" amount={shownExpected} />
-              {hasCount ? (
-                <Money label="Contado" amount={shownCounted} />
-              ) : (
-                <div className={styles.pendingCell}>
-                  <p className={styles.pendingLabel}>Contado</p>
-                  <NamedStatus status="pendiente" />
-                </div>
-              )}
-              {hasCount ? (
-                <div className={styles.varianceCell}>
-                  <Money
-                    label="Diferencia"
-                    amount={shownVariance}
-                    currency
-                    direction={shownVariance === 0 ? 'neutral' : shownVariance > 0 ? 'in' : 'out'}
-                  />
-                  <NamedStatus status={shownVariance === 0 ? 'cuadrado' : 'descuadrado'} />
-                </div>
-              ) : (
-                <div className={styles.pendingCell}>
-                  <p className={styles.pendingLabel}>Diferencia</p>
-                  <NamedStatus status="pendiente" />
-                </div>
-              )}
-            </div>
-            <p className={styles.pinNote}>Umbral · {formatTicketAmount(VARIANCE_PIN_THRESHOLD)}</p>
           </Card>
 
           {report.cashDrops && report.cashDrops.length > 0 && (
@@ -525,9 +544,7 @@ export default function CortePage() {
             {handoffDone ? 'Turno entregado' : 'Turno cerrado'}
           </Badge>
           <p>
-            {handoffDone
-              ? 'Turno entregado al cajero entrante.'
-              : 'Corte Z archivado en el sistema.'}
+            {handoffDone ? 'Turno entregado al cajero entrante.' : 'Corte guardado en el sistema.'}
           </p>
           <div className={styles.doneActions}>
             <TicketButton
@@ -547,7 +564,7 @@ export default function CortePage() {
         <Card padding="md" className={styles.section}>
           <CardHeader
             title="Cortes anteriores"
-            description="Últimos reportes Z de esta organización."
+            description="Últimos cortes cerrados de esta organización."
           />
           <ul className={styles.zList}>
             {zReports.map((z) => {
@@ -643,10 +660,10 @@ export default function CortePage() {
             />
             <Input
               id="handoff-cashier"
-              label="Cajero entrante (id o email)"
+              label="Cajero entrante (correo)"
               value={handoffCashier}
               onChange={(e) => setHandoffCashier(e.target.value)}
-              placeholder="cajero2@boletera.com"
+              placeholder="Correo del cajero que recibe"
             />
           </div>
         </Card>

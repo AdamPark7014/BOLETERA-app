@@ -46,8 +46,47 @@ function StatusMark({ status }: { status: string }) {
   return named ? (
     <NamedStatus status={named} />
   ) : (
-    <span className={styles.rawStatus}>{status}</span>
+    <span className={styles.rawStatus}>{statusLabel(status)}</span>
   );
+}
+
+/** Estados y métodos del API en palabras de ventanilla. */
+function statusLabel(status: string) {
+  const names: Record<string, string> = {
+    COMPLETED: 'Cobrada',
+    PENDING: 'Pendiente',
+    CANCELLED: 'Anulada',
+    REFUNDED: 'Reembolsada',
+    SOLD: 'Vendido',
+    USED: 'Ya entró',
+    SCANNED: 'Ya entró',
+    VOID: 'Anulado',
+    VOIDED: 'Anulado',
+    TRANSFERRED: 'Transferido',
+    RESERVED: 'Apartado',
+  };
+  return names[status] ?? status.charAt(0) + status.slice(1).toLowerCase();
+}
+
+function methodLabel(method: string) {
+  const names: Record<string, string> = {
+    CASH: 'Efectivo',
+    CARD: 'Tarjeta',
+    COMP: 'Cortesía',
+    COURTESY: 'Cortesía',
+    TRANSFER: 'Transferencia',
+    ONLINE: 'En línea',
+  };
+  return names[method] ?? method;
+}
+
+/** «Preferente Oeste-A-1» → «Preferente Oeste · Fila A · Asiento 1»; «GA» → «General». */
+function seatLabel(raw: string) {
+  if (!raw || raw === 'ORDER') return null;
+  if (raw === 'GA') return 'General';
+  const parts = raw.split('-');
+  if (parts.length === 3) return `${parts[0]} · Fila ${parts[1]} · Asiento ${parts[2]}`;
+  return parts.join(' · ');
 }
 
 export default function BuscarPage() {
@@ -274,10 +313,10 @@ export default function BuscarPage() {
           </div>
 
           <dl className={styles.details}>
-            {result.seatInfo && (
+            {result.seatInfo && seatLabel(result.seatInfo) && (
               <div>
                 <dt>Lugar</dt>
-                <dd>{result.seatInfo}</dd>
+                <dd>{seatLabel(result.seatInfo)}</dd>
               </div>
             )}
             {result.publicId && (
@@ -294,8 +333,8 @@ export default function BuscarPage() {
             )}
             {result.paymentMethod && (
               <div>
-                <dt>Pago</dt>
-                <dd className={styles.mono}>{result.paymentMethod}</dd>
+                <dt>Forma de pago</dt>
+                <dd>{methodLabel(result.paymentMethod)}</dd>
               </div>
             )}
           </dl>
@@ -307,8 +346,8 @@ export default function BuscarPage() {
                 {result.tickets.map((t) => (
                   <li key={t.code}>
                     <code>{t.code}</code>
-                    <span>{t.seatInfo || '—'}</span>
-                    <span className={styles.rawStatus}>{t.status}</span>
+                    <span>{seatLabel(t.seatInfo) || '—'}</span>
+                    <span className={styles.rawStatus}>{statusLabel(t.status)}</span>
                   </li>
                 ))}
               </ul>

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Field, TicketButton } from '@boletera/ui';
+import { BrandLogo, Field, StageArt, TicketButton } from '@boletera/ui';
 import { getTaquillaToken, getTaquillaUser, loginRequest, saveTaquillaSession } from '@/lib/auth';
 import { getSessionId, openShift } from '@/lib/pos';
 import styles from './login.module.scss';
@@ -102,7 +102,8 @@ export default function TaquillaLoginPage() {
   return (
     <main className={styles.page}>
       <header className={styles.bar}>
-        <p className={styles.wordmark}>Black Ticket</p>
+        <BrandLogo tone="gold" size={26} />
+        <span className={styles.barLabel}>Taquilla</span>
         <p className={styles.clock}>{time}</p>
         <span className={styles.chip}>
           <span className={online ? styles.dotOn : styles.dotOff} aria-hidden="true" />
@@ -110,7 +111,11 @@ export default function TaquillaLoginPage() {
         </span>
       </header>
 
+      <div className={styles.art} aria-hidden="true">
+        <StageArt seed="taquilla-black-ticket" />
+      </div>
       <form className={styles.column} onSubmit={(e) => void submit(e)}>
+        <p className={styles.eyebrow}>Ventanilla Black Ticket</p>
         <h1>{alreadyOpen ? 'Turno abierto' : 'Abrir turno'}</h1>
         {alreadyOpen ? (
           <p className={styles.read}>{cashierLabel || 'Cajero'} · fondo en esta terminal</p>
@@ -120,7 +125,7 @@ export default function TaquillaLoginPage() {
               label="Terminal"
               value={terminalId}
               onChange={(e) => setTerminalId(e.target.value.toUpperCase())}
-              hint="TAQ-01 · Mostrador"
+              hint="Nombre de esta caja, por ejemplo TAQ-01"
               required
               autoComplete="off"
             />
@@ -146,7 +151,7 @@ export default function TaquillaLoginPage() {
               inputMode="decimal"
               value={openingCash}
               onChange={(e) => setOpeningCash(e.target.value.replace(/[^\d.]/g, ''))}
-              hint="Puede ser $0.00"
+              hint="Efectivo con el que abre la caja; puede ser $0"
               required
             />
           </>
@@ -159,7 +164,7 @@ export default function TaquillaLoginPage() {
           {loading ? 'Abriendo turno' : alreadyOpen ? 'Entrar al turno' : 'Abrir turno'}
         </TicketButton>
         <p className={styles.legend}>
-          <kbd>↵</kbd> abre
+          <kbd>Enter</kbd> abre el turno
         </p>
       </form>
     </main>

@@ -74,15 +74,15 @@ export default function AjustesPage() {
       <section className={styles.section}>
         <h2>Impresora térmica</h2>
         <p>
-          Web Serial{' '}
+          Conexión por USB{' '}
           {serialSupported === null
             ? '…'
             : serialSupported
-              ? 'disponible'
-              : 'no disponible en este navegador'}
+              ? 'disponible en este navegador'
+              : 'no disponible en este navegador (usa Chrome o Edge)'}
           .
         </p>
-        <p>Estado: {serialOk ? 'conectada' : 'sin puerto'}</p>
+        <p>Estado: {serialOk ? 'conectada' : 'sin conectar'}</p>
         <Button type="button" variant="secondary" onClick={() => void connectPrinter()}>
           Conectar impresora USB
         </Button>
@@ -91,7 +91,7 @@ export default function AjustesPage() {
       <section className={styles.section}>
         <h2>Datos descargados para operar sin red</h2>
         {manifests.length === 0 ? (
-          <p>Sin manifiestos descargados. Hazlo desde Acceso (F6) antes de abrir puertas.</p>
+          <p>No hay listas de boletos descargadas. Descárgalas desde Puerta (F6) antes de abrir.</p>
         ) : (
           <ul className={styles.list}>
             {manifests.map((m) => (
@@ -100,24 +100,22 @@ export default function AjustesPage() {
                 <span>
                   {m.count.toLocaleString('es-MX')} boletos · emitido{' '}
                   {new Date(m.issuedAt).toLocaleString('es-MX')}
-                  {m.complete ? '' : ' · INCOMPLETO'}
+                  {m.complete ? '' : ' · incompleta'}
                 </span>
               </li>
             ))}
           </ul>
         )}
         <p className={styles.note}>
-          El manifiesto sirve para verificar pertenencia y estado sin red. No verifica la firma del
-          QR ni conoce cancelaciones posteriores a su emisión.
+          La lista descargada permite validar boletos sin red. No verifica la firma del QR ni conoce
+          cancelaciones posteriores a la descarga.
         </p>
         {Object.keys(quotas).length > 0 && (
           <ul className={styles.list}>
             {Object.entries(quotas).map(([eventId, qty]) => (
               <li key={eventId}>
                 <strong>Cupo local</strong>
-                <span>
-                  {eventId} · {qty} boletos vendibles sin red
-                </span>
+                <span>{qty} boletos que se pueden vender sin red</span>
               </li>
             ))}
           </ul>
@@ -166,7 +164,7 @@ export default function AjustesPage() {
         <section className={styles.section}>
           <h2>Permisos de esta terminal</h2>
           <p>
-            Sesión con rol <strong>{role || 'TAQUILLA'}</strong>. Puedes vender, entregar will-call,
+            Sesión de <strong>{roleLabel(role)}</strong>. Puedes vender, entregar boletos apartados,
             consultar boletos y hacer tu corte.
           </p>
           <p className={styles.note}>
@@ -177,4 +175,15 @@ export default function AjustesPage() {
       )}
     </PosShell>
   );
+}
+
+function roleLabel(role: string) {
+  const names: Record<string, string> = {
+    TAQUILLA: 'taquilla',
+    SCANNER: 'control de acceso',
+    SUPERVISOR: 'supervisor',
+    ADMIN: 'administración',
+    SUPER_ADMIN: 'administración',
+  };
+  return names[role] ?? 'taquilla';
 }

@@ -10,39 +10,41 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-sizing: border-box;
-  height: 24px;
-  padding-inline: 8px;
-  border: 1px solid var(--line, #2c2c2f);
-  border-radius: var(--r-s, 6px);
-  background: var(--ink-raised, #141416);
-  color: var(--text, #f3f0e8);
-  font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.02em;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong, #34343a);
+  border-radius: var(--r-pill, 999px);
+  background: transparent;
+  color: var(--ok, #4cc38a);
+  font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
+}
+
+.chipOff {
+  color: var(--warn, #f5a524);
+  border-color: var(--warn, #f5a524);
+  font-weight: 600;
 }
 
 .dotOn,
 .dotOff {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
   flex: none;
 }
 
 .dotOn {
-  background: var(--money-in, #8eae96);
+  background: var(--ok, #4cc38a);
 }
 
 .dotOff {
-  background: var(--text-tertiary, #8a857c);
+  background: var(--warn, #f5a524);
 }
 
 .meta {
-  color: var(--text-secondary, #a39e94);
+  color: var(--text-secondary, #a8a29a);
   font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.02em;
   white-space: nowrap;
 }

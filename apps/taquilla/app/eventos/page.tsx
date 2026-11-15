@@ -99,7 +99,7 @@ export default function EventosTaquillaPage() {
   return (
     <PosShell
       title="Selecciona evento y zona"
-      eyebrow="Catálogo de turno"
+      eyebrow="Funciones en venta"
       backHref="/"
       size="md"
       hotkeys={hotkeys}
@@ -111,7 +111,7 @@ export default function EventosTaquillaPage() {
           autoFocus
           value={q}
           onValueChange={setQ}
-          placeholder="Buscar por nombre o venue…"
+          placeholder="Buscar por nombre o recinto…"
           inputSize="lg"
           shortcut="F2"
         />
@@ -136,7 +136,7 @@ export default function EventosTaquillaPage() {
           description={
             events.length === 0
               ? 'Cuando haya eventos publicados para taquilla aparecerán aquí.'
-              : 'Prueba otro nombre o venue en la búsqueda.'
+              : 'Prueba con otro nombre o recinto.'
           }
           size="md"
         />

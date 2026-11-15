@@ -2,9 +2,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
-  padding: 8px 16px;
-  border-top: 1px solid var(--line, #2c2c2f);
+  gap: 6px 18px;
+  padding: 6px 22px;
+  min-height: 32px;
+  flex: none;
+  background: var(--panel, #0c0c0d);
+  border-top: 1px solid var(--line, #26262a);
   color: var(--text-secondary, #a39e94);
   font-size: 12px;
   line-height: 16px;
@@ -25,8 +28,12 @@
 .bar kbd,
 .sheet kbd {
   font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
-  font-size: 12px;
-  color: var(--text, #f3f0e8);
+  font-size: 11px;
+  color: var(--text, #fff);
+  padding: 1px 6px;
+  border: 1px solid var(--line-strong, #34343a);
+  border-radius: 6px;
+  background: var(--card, #1a1a1a);
 }
 
 .overlay {
@@ -44,17 +51,20 @@
   max-height: min(80vh, 720px);
   overflow: auto;
   padding: 16px;
-  background: var(--ink-overlay, #1c1c1f);
+  background: var(--elevated, #242424);
   border: 1px solid var(--line, #2c2c2f);
-  border-radius: 14px;
+  border-radius: 20px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   color: var(--text, #f3f0e8);
 
   h2 {
     margin: 0 0 12px;
-    font-size: 28px;
-    line-height: 34px;
-    font-weight: 560;
+    font-family: var(--font-display, 'Archivo'), sans-serif;
+    font-stretch: var(--headline-stretch, 72%);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 32px;
+    line-height: 0.9;
   }
 
   h3 {

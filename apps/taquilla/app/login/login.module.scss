@@ -10,9 +10,17 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 8px 16px;
-  background: var(--ink-raised, #141416);
-  border-bottom: 1px solid var(--line, #2c2c2f);
+  min-height: 66px;
+  padding: 8px 22px;
+  background: var(--ink, #000);
+  border-bottom: 1px solid var(--line, #26262a);
+  position: relative;
+  z-index: 1;
+}
+
+.barLabel {
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .wordmark {
@@ -23,53 +31,83 @@
 
 .clock {
   margin: 0 0 0 auto;
-  font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
-  font-size: 13px;
-  line-height: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 24px;
-  padding-inline: 8px;
-  border: 1px solid var(--line, #2c2c2f);
-  border-radius: 6px;
-  background: var(--ink-raised, #141416);
-  font-size: 12px;
+  height: 36px;
+  padding-inline: 14px;
+  border: 1px solid var(--line-strong, #34343a);
+  border-radius: var(--r-pill, 999px);
+  background: transparent;
+  font-size: 13px;
   line-height: 16px;
   letter-spacing: 0.02em;
 }
 
 .dotOn,
 .dotOff {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
 }
 
 .dotOn {
-  background: var(--money-in, #8eae96);
+  background: var(--ok, #4cc38a);
 }
 
 .dotOff {
   background: var(--text-tertiary, #8a857c);
 }
 
+.page {
+  position: relative;
+}
+
+.art {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 46vh;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .column {
+  position: relative;
   width: min(480px, calc(100% - 32px));
-  margin: 48px auto;
+  margin: 7vh auto 40px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 28px;
+  border-radius: var(--r-card, 20px);
+  background: var(--card, #1a1a1a);
+  border: 1px solid var(--line, #26262a);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
 
   h1 {
-    margin: 0;
-    font-size: 28px;
-    line-height: 34px;
-    font-weight: 560;
+    margin: 0 0 4px;
+    font-family: var(--font-display, 'Archivo'), sans-serif;
+    font-stretch: var(--headline-stretch, 72%);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 48px;
+    line-height: 0.9;
   }
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-soft, #d9c2a3);
 }
 
 .read {

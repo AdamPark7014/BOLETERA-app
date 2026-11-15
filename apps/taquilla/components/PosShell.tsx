@@ -3,9 +3,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { getOrgName, getTerminalLabel, getTaquillaUser } from '@/lib/auth';
+import { BrandLogo, formatTicketAmount } from '@boletera/ui';
+import { getOrgName, getTerminalLabel, getTaquillaToken, getTaquillaUser } from '@/lib/auth';
 import { connectSerialPrinter } from '@/lib/thermal';
-import { getLastReceipt, printReceipt } from '@/lib/pos';
+import {
+  fetchSessionSummary,
+  getLastReceipt,
+  getSessionId,
+  printReceipt,
+  type SessionSummary,
+} from '@/lib/pos';
 import { useHotkeys, type Hotkey } from '@/lib/hotkeys';
 import { HotkeyBar } from './HotkeyBar';
 import { NetStatus, useOpsStatus } from './NetStatus';
@@ -34,6 +41,10 @@ export function PosShell({
   /** `false` mientras hay un diálogo modal encima (PIN, reautenticación). */
   hotkeysEnabled = true,
   headerExtra,
+  fill = false,
+  door = false,
+  whoMain,
+  whoSub,
 }: {
   title: string;
   eyebrow?: string;
@@ -45,6 +56,12 @@ export function PosShell({
   escapeGoesBack?: boolean;
   hotkeysEnabled?: boolean;
   headerExtra?: React.ReactNode;
+  /** Pantalla de trabajo a alto completo (venta): sin título y sin desplazar la página. */
+  fill?: boolean;
+  /** Puerta de acceso: sin ventas del turno ni botones de caja. */
+  door?: boolean;
+  whoMain?: string;
+  whoSub?: string;
 }) {
   const router = useRouter();
   const status = useOpsStatus();
@@ -57,13 +74,48 @@ export function PosShell({
   const [time, setTime] = useState('');
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [paletteIndex, setPaletteIndex] = useState(0);
+  const [shift, setShift] = useState<SessionSummary | null>(null);
+  const [cashierShort, setCashierShort] = useState('');
+  const [orgName, setOrgName] = useState('');
 
   useEffect(() => {
     setTerminalLabel(getTerminalLabel());
+    const org = getOrgName();
+    setOrgName(org === 'TAQUILLA' ? '' : org);
     const user = getTaquillaUser();
     setCashierName(
       user ? [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email : getOrgName()
     );
+    setCashierShort(
+      user
+        ? [user.firstName, user.lastName ? `${user.lastName.charAt(0)}.` : '']
+            .filter(Boolean)
+            .join(' ') || user.email
+        : ''
+    );
+  }, []);
+
+  // Resumen del turno para la barra: se pide al entrar, cada 30 s y cuando la
+  // venta avisa que cobró. Sin turno abierto o sin red la barra no inventa cifras.
+  useEffect(() => {
+    let alive = true;
+    const load = () => {
+      const sessionId = getSessionId();
+      if (!sessionId || !getTaquillaToken() || !navigator.onLine) return;
+      fetchSessionSummary(sessionId)
+        .then((data) => {
+          if (alive) setShift(data);
+        })
+        .catch(() => undefined);
+    };
+    load();
+    const id = setInterval(load, 30000);
+    window.addEventListener('bt-shift-refresh', load);
+    return () => {
+      alive = false;
+      clearInterval(id);
+      window.removeEventListener('bt-shift-refresh', load);
+    };
   }, []);
 
   useEffect(() => {
@@ -224,27 +276,66 @@ export function PosShell({
   );
   useHotkeys(merged, hotkeysEnabled);
 
+  const openedAt = shift?.startTime
+    ? new Date(shift.startTime).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+    : null;
+  const shiftLine = [
+    cashierShort ? `Turno de ${cashierShort}` : cashierName,
+    openedAt ? `abierto ${openedAt}` : null,
+    shift ? `fondo ${formatTicketAmount(Number(shift.openingCash) || 0)}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
-    <div className={styles.shell}>
+    <div className={fill ? styles.shellFill : styles.shell}>
       <header className={styles.topbar}>
-        <Link href="/venta" className={styles.wordmark}>
-          Black Ticket
+        <Link href="/venta" className={styles.brand} aria-label="Black Ticket, venta">
+          <BrandLogo tone="gold" size={26} />
         </Link>
-        <p className={styles.who}>
-          {terminalLabel} · {cashierName}
-        </p>
-        <p className={styles.clock}>{time}</p>
-        <NetStatus status={status} />
+        <div className={styles.who}>
+          <span className={styles.whoMain}>
+            {whoMain ?? `${terminalLabel}${orgName ? ` · ${orgName}` : ''}`}
+          </span>
+          <span className={styles.whoSub}>{whoSub ?? shiftLine}</span>
+        </div>
+        <div className={styles.topRight}>
+          <NetStatus status={status} />
+          {shift && !door ? (
+            <div className={styles.sales}>
+              <span>Ventas del turno</span>
+              <strong>
+                {formatTicketAmount(Number(shift.totalRevenue) || 0)} ·{' '}
+                {shift.totalTransactions.toLocaleString('es-MX')}{' '}
+                {shift.totalTransactions === 1 ? 'venta' : 'ventas'}
+              </strong>
+            </div>
+          ) : null}
+          {door ? null : (
+            <>
+              <Link href="/willcall" className={styles.topBtn}>
+                Entregar boletos <kbd>F4</kbd>
+              </Link>
+              <Link href="/corte" className={styles.topBtn}>
+                Corte <kbd>F12</kbd>
+              </Link>
+            </>
+          )}
+          <p className={styles.clock}>{time}</p>
+        </div>
       </header>
 
       <div className={styles.frame}>
-        <div className={pageClass}>
-          <header className={styles.viewHead}>
-            {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
-            <h1 className={styles.viewTitle}>{title}</h1>
-            {headerExtra}
-          </header>
-          <div className={styles.body}>{children}</div>
+        <div className={fill ? styles.pageFill : pageClass}>
+          {fill ? null : (
+            <header className={styles.viewHead}>
+              {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
+              <h1 className={styles.viewTitle}>{title}</h1>
+              {headerExtra}
+            </header>
+          )}
+          {fill ? <h1 className={styles.srOnly}>{title}</h1> : null}
+          <div className={fill ? styles.bodyFill : styles.body}>{children}</div>
         </div>
       </div>
 

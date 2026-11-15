@@ -313,3 +313,88 @@
   flex-wrap: wrap;
   gap: var(--bl-space-2);
 }
+
+/* Jerarquía del corte (maqueta): esperado, contado y diferencia en grande arriba. */
+.hero {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.heroCell,
+.heroOk,
+.heroWarn,
+.heroBad {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+
+  span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  strong {
+    font-family: var(--font-display), sans-serif;
+    font-stretch: var(--headline-stretch, 72%);
+    font-weight: 900;
+    font-size: 52px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}
+
+.heroOk {
+  border-color: var(--ok);
+  background: var(--ok-wash);
+
+  span,
+  strong {
+    color: var(--ok);
+  }
+}
+
+.heroWarn {
+  border-color: var(--warn);
+  background: var(--warn-wash);
+
+  span,
+  strong {
+    color: var(--warn);
+  }
+}
+
+.heroBad {
+  border-color: var(--danger);
+  background: var(--danger-wash);
+
+  span,
+  strong {
+    color: var(--danger);
+  }
+}
+
+.heroPending {
+  color: var(--text-tertiary) !important;
+}

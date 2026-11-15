@@ -35,7 +35,8 @@ import {
   type OfflinePosPayload,
   type PosReceipt,
 } from '@/lib/pos';
-import { Field, Money, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { stockImageForCategory } from '@boletera/shared';
+import { Field, StageArt, formatTicketAmount } from '@boletera/ui';
 import styles from './venta.module.scss';
 
 type Offer = {
@@ -51,6 +52,7 @@ type EventRow = {
   id: string;
   title: string;
   startsAt: string;
+  category?: string | null;
   venue?: { name: string };
   offers?: Offer[];
 };
@@ -127,6 +129,8 @@ function VentaFlow() {
   } | null>(null);
   const [chargedLine, setChargedLine] = useState<string | null>(null);
   const [releaseAsk, setReleaseAsk] = useState(false);
+  /** Cambio del último cobro: se queda a la vista hasta la siguiente venta. */
+  const [lastChange, setLastChange] = useState<number | null>(null);
 
   const holdRef = useRef<string[]>([]);
   /**
@@ -360,6 +364,8 @@ function VentaFlow() {
 
   const selectEvent = useCallback(
     (row: EventRow) => {
+      setLastChange(null);
+      setChargedLine(null);
       setEventId(row.id);
       const list = sellableOffers(row.offers);
       setOfferId(list[0]?.id ?? '');
@@ -536,6 +542,8 @@ function VentaFlow() {
       const folio = rec?.receiptNumber || result.publicId;
       const change = method === 'CASH' ? finalCash.change : 0;
       reset(folio ? `Cobrado · ${folio}` : 'Cobrado');
+      setLastChange(method === 'CASH' ? change : null);
+      window.dispatchEvent(new Event('bt-shift-refresh'));
       if (change > 0) showToast(`Cambio ${money(change)}`);
       else if (Math.abs(realTotal - due) > 0.009 && method === 'CASH') {
         showToast(`El total final fue ${money(realTotal)}. Revisa el cambio.`);
@@ -572,6 +580,7 @@ function VentaFlow() {
           clearSaleDraft();
           showToast('No se guardó en el servidor. Quedó en la cola.');
           reset('En cola');
+          setLastChange(null);
         } catch {
           showToast('No se pudo registrar la venta ni en local');
         }
@@ -782,7 +791,7 @@ function VentaFlow() {
         },
         {
           keys: 'T',
-          label: 'Tarjeta',
+          label: 'Terminal',
           match: (e) => e.key.toLowerCase() === 't',
           run: () => setMethod('CARD'),
         },
@@ -953,10 +962,6 @@ function VentaFlow() {
     }
   }
 
-  const feePct =
-    quote && quote.subtotal > 0 ? Math.round((quote.fees / quote.subtotal) * 100) : null;
-  const taxPct =
-    quote && quote.subtotal > 0 ? Math.round((quote.taxes / quote.subtotal) * 100) : null;
   const canCharge =
     inSale &&
     ticketCount >= 1 &&
@@ -970,54 +975,92 @@ function VentaFlow() {
         minute: '2-digit',
       })} · ${event.title}${event.venue?.name ? ` · ${event.venue.name}` : ''}`
     : null;
+  const whenLabel = (iso: string) => {
+    const d = new Date(iso);
+    const today = new Date();
+    const sameDay = d.toDateString() === today.toDateString();
+    const time = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    if (sameDay) return `Hoy · ${time}`;
+    return `${d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })} · ${time}`;
+  };
+  const offerName = (o: Offer | null) => (o ? o.name || o.zone || 'General' : 'Sin sección');
+  const subtotal = inSale ? (quote?.subtotal ?? (method === 'COMP' ? 0 : estimate)) : 0;
+  const extras =
+    inSale && quote
+      ? [
+          quote.fees ? { label: 'Cargo por servicio', amount: quote.fees } : null,
+          quote.taxes ? { label: 'IVA', amount: quote.taxes } : null,
+          quote.discount ? { label: 'Descuento', amount: -quote.discount } : null,
+        ].filter((x): x is { label: string; amount: number } => x != null)
+      : [];
+
+  const pressPad = (key: string) => {
+    if (!inSale || method !== 'CASH') return;
+    if (stage === 'TICKETS') setStage('TENDER');
+    if (key === '⌫') setCashReceived((v) => v.slice(0, -1));
+    else if (key === '00') setCashReceived((v) => (v ? `${v}00`.slice(0, 9) : v));
+    else pushCashDigit(Number(key));
+  };
+
+  const changeEvent = () => {
+    if (holdRef.current.length) setReleaseAsk(true);
+    else setStage('EVENT');
+  };
 
   return (
     <PosShell
       title={
-        stage === 'ZONE' ? 'Zona' : stage === 'EVENT' || stage === 'DONE' ? 'Función' : 'Venta'
+        stage === 'ZONE' ? 'Sección' : stage === 'EVENT' || stage === 'DONE' ? 'Función' : 'Venta'
       }
       eyebrow={functionLine && stage !== 'EVENT' && stage !== 'DONE' ? functionLine : undefined}
       backHref="/venta"
       hotkeys={hotkeys}
       escapeGoesBack={false}
       hotkeysEnabled={!pendingAuth}
-      size="wide"
+      fill
     >
-      {toast ? (
-        <p className={styles.toast} role="status">
-          {toast}
-        </p>
-      ) : null}
-      {offline ? (
-        <p className={styles.note} role="status">
-          Sin red. La venta queda en cola y el folio dirá «En cola».
-        </p>
-      ) : null}
-
       <div className={styles.counter}>
         <div className={styles.main}>
-          {chargedLine && (stage === 'EVENT' || stage === 'DONE') ? (
-            <p className={styles.folio}>{chargedLine}</p>
+          {toast ? (
+            <p className={styles.toast} role="status">
+              {toast}
+            </p>
+          ) : null}
+          {offline ? (
+            <p className={styles.offline} role="status">
+              Sin red. La venta queda guardada en este equipo y el folio dirá «En cola».
+            </p>
           ) : null}
 
           {(stage === 'EVENT' || stage === 'DONE') && (
-            <section>
-              <Field
-                ref={filterRef}
-                kind="search"
-                label="Función"
-                hint="Nombre o recinto"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              />
+            <section className={styles.block} aria-label="Elige función">
+              <div className={styles.headRow}>
+                <h2 className={styles.label}>Elige función</h2>
+                <div className={styles.filter}>
+                  <Field
+                    ref={filterRef}
+                    kind="search"
+                    label="Buscar función"
+                    hint="Nombre o recinto · 1 a 9 elige"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  />
+                </div>
+              </div>
               {eventsLoading ? (
-                <p className={styles.note}>Cargando funciones.</p>
+                <ul className={styles.events} aria-hidden="true">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <li key={i} className={styles.eventSkeleton} />
+                  ))}
+                </ul>
               ) : filteredEvents.length === 0 ? (
-                <p className={styles.note}>
-                  {filter.trim() ? 'Nada con ese criterio.' : 'No hay funciones publicadas.'}
+                <p className={styles.empty}>
+                  {filter.trim()
+                    ? 'Ninguna función coincide con esa búsqueda.'
+                    : 'No hay funciones en venta en esta taquilla.'}
                 </p>
               ) : (
-                <ul className={styles.list}>
+                <ul className={styles.events}>
                   {filteredEvents.map((row, i) => {
                     // «Desde» es el precio MÁS BAJO, no el de la primera oferta
                     // que devuelva el catálogo (Ballet decía «Desde $532» con
@@ -1026,28 +1069,26 @@ function VentaFlow() {
                       .map((o) => Number(o.basePrice))
                       .filter((n) => Number.isFinite(n) && n > 0);
                     const price = prices.length ? Math.min(...prices) : 0;
-                    const when = new Date(row.startsAt);
                     return (
                       <li key={row.id}>
                         <button
                           type="button"
-                          className={styles.row}
+                          className={row.id === eventId ? styles.eventOn : styles.event}
                           onClick={() => selectEvent(row)}
                         >
-                          <span className={styles.when}>
-                            {when.toLocaleTimeString('es-MX', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                          <span className={styles.thumb}>
+                            <StageArt seed={row.id} fade={false} />
+                            <img src={stockImageForCategory(row.category, row.title)} alt="" />
                           </span>
-                          <span className={styles.rowMain}>
+                          <span className={styles.eventText}>
                             <strong>{row.title}</strong>
-                            <small>{row.venue?.name ?? 'Sin recinto'}</small>
+                            <small>{whenLabel(row.startsAt)}</small>
+                            <small>
+                              {row.venue?.name ?? 'Recinto por confirmar'}
+                              {price > 0 ? ` · desde ${formatTicketAmount(price)}` : ''}
+                            </small>
                           </span>
-                          <span className={styles.rowPrice}>
-                            {price > 0 ? `Desde ${formatTicketAmount(price)}` : '—'}
-                          </span>
-                          <kbd>{i + 1}</kbd>
+                          {i < 9 ? <kbd>{i + 1}</kbd> : null}
                         </button>
                       </li>
                     );
@@ -1057,80 +1098,199 @@ function VentaFlow() {
             </section>
           )}
 
-          {stage === 'ZONE' && (
-            <section>
+          {stage !== 'EVENT' && stage !== 'DONE' && (
+            <>
+              <div className={styles.eventBar}>
+                <div className={styles.eventCurrent}>
+                  <span className={styles.thumb}>
+                    <StageArt seed={eventId} fade={false} />
+                    {event ? (
+                      <img src={stockImageForCategory(event.category, event.title)} alt="" />
+                    ) : null}
+                  </span>
+                  <span className={styles.eventText}>
+                    <strong>{event?.title ?? 'Función'}</strong>
+                    <small>
+                      {event ? whenLabel(event.startsAt) : ''}
+                      {event?.venue?.name ? ` · ${event.venue.name}` : ''}
+                    </small>
+                  </span>
+                </div>
+                <button type="button" className={styles.moreEvents} onClick={changeEvent}>
+                  Cambiar función
+                </button>
+              </div>
+
+              <div className={styles.headRow}>
+                <h2 className={styles.label}>
+                  {stage === 'ZONE' ? 'Elige sección · 1 a 9' : 'Sección'}
+                </h2>
+                <div className={styles.pills}>
+                  {hasMap && !pickSeats && stage !== 'ZONE' ? (
+                    <button
+                      type="button"
+                      className={styles.pillOn}
+                      onClick={() => void holdBestAvailable()}
+                    >
+                      Mejor disponible
+                    </button>
+                  ) : null}
+                  {hasMap ? (
+                    <button
+                      type="button"
+                      className={styles.pill}
+                      onClick={() => {
+                        setPickSeats((v) => !v);
+                        setSelectedSeats([]);
+                        void releaseHolds();
+                      }}
+                    >
+                      {pickSeats ? 'Por cantidad' : 'Elegir en mapa'} <kbd>M</kbd>
+                    </button>
+                  ) : null}
+                  {stage !== 'ZONE' ? (
+                    <button
+                      type="button"
+                      className={buyerName ? styles.pillOn : styles.pill}
+                      aria-expanded={buyerOpen}
+                      onClick={() => setBuyerOpen((v) => !v)}
+                    >
+                      {buyerName ? buyerName : 'Nombre en el boleto'}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
               {offers.length === 0 ? (
-                <p className={styles.note}>Esta función no tiene cupo de taquilla.</p>
+                <p className={styles.empty}>Esta función no tiene boletos para taquilla.</p>
               ) : (
-                <ul className={offers.length <= 5 ? styles.segment : styles.list}>
-                  {offers.map((o, i) => (
-                    <li key={o.id}>
-                      <button
-                        type="button"
-                        className={o.id === offerId ? styles.rowOn : styles.row}
-                        disabled={o.isAvailable === false}
-                        onClick={() => selectOffer(o.id)}
-                      >
-                        <span className={styles.rowMain}>
-                          <strong>
-                            {o.name || o.zone || 'General'} ·{' '}
-                            {formatTicketAmount(Number(o.basePrice))}
-                          </strong>
-                          <small>
-                            {o.remainingQuantity != null
-                              ? `${o.remainingQuantity} libres`
-                              : 'En venta'}
-                          </small>
-                        </span>
-                        <kbd>{i + 1}</kbd>
-                      </button>
-                    </li>
-                  ))}
+                <ul className={styles.sections}>
+                  {offers.map((o, i) => {
+                    const soldOut = o.remainingQuantity === 0;
+                    const on = stage !== 'ZONE' && o.id === offer?.id;
+                    return (
+                      <li key={o.id}>
+                        <button
+                          type="button"
+                          className={
+                            soldOut ? styles.sectionOut : on ? styles.sectionOn : styles.section
+                          }
+                          disabled={soldOut || o.isAvailable === false}
+                          aria-pressed={on}
+                          onClick={() => selectOffer(o.id)}
+                        >
+                          <span className={styles.sectionName}>
+                            {offerName(o)}
+                            {i < 9 ? <kbd>{i + 1}</kbd> : null}
+                          </span>
+                          {soldOut ? (
+                            <span className={styles.sectionMeta}>Agotada</span>
+                          ) : (
+                            <span className={styles.sectionFoot}>
+                              <span className={styles.sectionPrice}>
+                                {formatTicketAmount(Number(o.basePrice))}
+                              </span>
+                              <span className={styles.sectionMeta}>
+                                {o.remainingQuantity != null
+                                  ? `${o.remainingQuantity.toLocaleString('es-MX')} libres`
+                                  : 'En venta'}
+                              </span>
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
-            </section>
-          )}
 
-          {(stage === 'TICKETS' || stage === 'TENDER') && (
-            <section className={styles.sale}>
-              <p className={styles.zoneLine}>
-                {offer
-                  ? `${offer.name || offer.zone || 'General'} · ${formatTicketAmount(unitPrice)}`
-                  : 'Sin zona'}
-                {offer?.remainingQuantity != null ? ` · ${offer.remainingQuantity} libres` : ''}
-              </p>
+              {buyerOpen && stage !== 'ZONE' ? (
+                <div className={styles.buyer}>
+                  <Field
+                    label="Nombre"
+                    hint="Nombre en el boleto"
+                    value={buyerName}
+                    onChange={(e) => setBuyerName(e.target.value)}
+                  />
+                  <Field
+                    label="Correo"
+                    type="email"
+                    value={buyerEmail}
+                    onChange={(e) => setBuyerEmail(e.target.value)}
+                  />
+                  <Field
+                    label="Teléfono"
+                    inputMode="tel"
+                    value={buyerPhone}
+                    onChange={(e) => setBuyerPhone(e.target.value.replace(/\D/g, ''))}
+                  />
+                </div>
+              ) : null}
 
-              {!seatMode ? (
-                <div className={styles.qty}>
-                  <span className={styles.qtyLabel}>Cantidad</span>
-                  <div className={styles.qtyRow}>
-                    <button
-                      type="button"
-                      className={styles.step}
-                      onClick={() => setQty((q) => Math.max(1, q - 1))}
-                      aria-label="Menos"
-                    >
-                      −
-                    </button>
-                    <strong>{qty}</strong>
-                    <button
-                      type="button"
-                      className={styles.step}
-                      onClick={() => setQty((q) => Math.min(999, q + 1))}
-                      aria-label="Más"
-                    >
-                      +
-                    </button>
+              {(stage === 'TICKETS' || stage === 'TENDER') && !seatMode ? (
+                <div className={styles.qtyPanel}>
+                  <div className={styles.qty}>
+                    <span className={styles.label}>Cantidad</span>
+                    <div className={styles.qtyRow}>
+                      <button
+                        type="button"
+                        className={styles.minus}
+                        onClick={() => setQty((q) => Math.max(1, q - 1))}
+                        aria-label="Quitar un boleto"
+                      >
+                        −
+                      </button>
+                      <strong aria-live="polite">{qty}</strong>
+                      <button
+                        type="button"
+                        className={styles.plus}
+                        onClick={() => setQty((q) => Math.min(999, q + 1))}
+                        aria-label="Agregar un boleto"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <span className={styles.divider} aria-hidden="true" />
+                  <div className={styles.qtyInfo}>
+                    <span className={styles.label}>
+                      {holdIds.length ? 'Apartados para esta caja' : 'Tu selección'}
+                    </span>
+                    <strong>
+                      {offerName(offer)} · {qty} {qty === 1 ? 'boleto' : 'boletos'}
+                    </strong>
+                    <small>
+                      {holdExpiresAt && ttlLeft > 0
+                        ? `${holdIds.length} lugares juntos apartados · ${Math.floor(ttlLeft / 60)}:${String(ttlLeft % 60).padStart(2, '0')}`
+                        : offer?.remainingQuantity != null
+                          ? `${offer.remainingQuantity.toLocaleString('es-MX')} libres en la sección · Enter pasa al cobro`
+                          : 'Enter pasa al cobro'}
+                    </small>
                   </div>
                 </div>
-              ) : (
+              ) : null}
+
+              {seatMode ? (
                 <div className={styles.mapPane}>
-                  {holdExpiresAt && ttlLeft > 0 ? (
-                    <p className={styles.note}>
-                      {holdIds.length} apartados · {Math.floor(ttlLeft / 60)}:
-                      {String(ttlLeft % 60).padStart(2, '0')}
-                    </p>
-                  ) : null}
+                  <div className={styles.mapHead}>
+                    <span>
+                      {selectedSeats.length
+                        ? `${selectedSeats.length} ${selectedSeats.length === 1 ? 'asiento elegido' : 'asientos elegidos'}`
+                        : 'Toca los asientos en el plano'}
+                      {holdExpiresAt && ttlLeft > 0
+                        ? ` · ${holdIds.length} apartados · ${Math.floor(ttlLeft / 60)}:${String(ttlLeft % 60).padStart(2, '0')}`
+                        : ''}
+                    </span>
+                    {selectedSeats.length > 0 ? (
+                      <button
+                        type="button"
+                        className={styles.pill}
+                        onClick={() => void reserveSelection()}
+                      >
+                        Apartar {selectedSeats.length}
+                      </button>
+                    ) : null}
+                  </div>
                   <PosSeatMap
                     eventId={eventId}
                     mapData={mapData}
@@ -1164,186 +1324,210 @@ function VentaFlow() {
                     }))}
                   />
                 </div>
-              )}
-
-              {hasMap ? (
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={() => {
-                    setPickSeats((v) => !v);
-                    setSelectedSeats([]);
-                    void releaseHolds();
-                  }}
-                >
-                  {pickSeats ? 'Cantidad' : 'Plano'}
-                </button>
               ) : null}
-              {hasMap && !pickSeats ? (
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={() => void holdBestAvailable()}
-                >
-                  Mejor disponible
-                </button>
-              ) : null}
-              {seatMode && selectedSeats.length > 0 ? (
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={() => void reserveSelection()}
-                >
-                  Apartar {selectedSeats.length}
-                </button>
-              ) : null}
-
-              <button
-                type="button"
-                className={styles.disclosure}
-                onClick={() => setBuyerOpen((v) => !v)}
-              >
-                Nombre en el boleto
-                {buyerName ? <small>{buyerName}</small> : null}
-              </button>
-              {buyerOpen ? (
-                <div className={styles.buyer}>
-                  <Field
-                    label="Nombre"
-                    hint="Nombre en el boleto"
-                    value={buyerName}
-                    onChange={(e) => setBuyerName(e.target.value)}
-                  />
-                  <Field
-                    label="Correo"
-                    type="email"
-                    value={buyerEmail}
-                    onChange={(e) => setBuyerEmail(e.target.value)}
-                  />
-                  <Field
-                    label="Teléfono"
-                    inputMode="tel"
-                    value={buyerPhone}
-                    onChange={(e) => setBuyerPhone(e.target.value.replace(/\D/g, ''))}
-                  />
-                </div>
-              ) : null}
-            </section>
+            </>
           )}
         </div>
 
-        <aside className={styles.charge}>
-          <div className={styles.chargeBody}>
-            {method === 'COMP' ? <p className={styles.note}>Cortesía</p> : null}
-            <div className={styles.methods} role="group" aria-label="Método">
-              {[
-                { id: 'CASH' as const, label: 'Efectivo', hot: 'E' },
-                { id: 'CARD' as const, label: 'Tarjeta', hot: 'T' },
-              ].map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  className={method === m.id ? styles.methodOn : styles.method}
-                  onClick={() => setMethod(m.id)}
-                >
-                  {m.label}
-                  <kbd>{m.hot}</kbd>
-                </button>
-              ))}
+        <aside className={styles.charge} aria-label="Cobro">
+          <div className={styles.orderHead}>
+            <span className={styles.label}>
+              {method === 'COMP' && inSale
+                ? 'Cortesía'
+                : !inSale && chargedLine
+                  ? 'Última venta'
+                  : 'Orden en curso'}
+            </span>
+            {chargedLine && !inSale ? <span className={styles.folio}>{chargedLine}</span> : null}
+          </div>
+
+          {inSale ? (
+            <div className={styles.lines}>
+              <div className={styles.line}>
+                <span>
+                  {ticketCount} × {offerName(offer)}
+                </span>
+                <span>{formatTicketAmount(subtotal)}</span>
+              </div>
+              {extras.length ? (
+                <div className={styles.lineSub}>
+                  <span>
+                    {extras.map((x) => `${x.label} ${formatTicketAmount(x.amount)}`).join(' · ')}
+                  </span>
+                </div>
+              ) : null}
             </div>
+          ) : (
+            <p className={styles.lineIdle}>
+              {stage === 'ZONE' ? 'Elige la sección.' : 'Elige la función para empezar.'}
+            </p>
+          )}
 
-            {method === 'CASH' && inSale ? (
-              <>
-                <Field
-                  label="Recibido"
-                  kind="money"
-                  value={cashReceived}
-                  onChange={(e) => setCashReceived(e.target.value.replace(/[^\d.]/g, ''))}
-                />
-                <ul className={styles.bills}>
-                  {quickCash.map((amount, i) => (
-                    <li key={`${amount}-${i}`}>
-                      <button
-                        type="button"
-                        className={styles.bill}
-                        onClick={() => setCashReceived(String(amount))}
-                      >
-                        {amount === due ? 'Exacto' : billLabel(amount)}
-                        <kbd>F{i + 1}</kbd>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <p className={styles.change}>
-                  {cash.sufficient
-                    ? `Cambio ${formatTicketAmount(cash.change)}${cash.change > 0 ? ` · ${changeBreakdownLabel(cash.change)}` : ''}`
-                    : `Faltan ${formatTicketAmount(cash.missing)}`}
-                </p>
-              </>
-            ) : null}
+          <div className={styles.total}>
+            <span>Total a cobrar</span>
+            <strong>{formatTicketAmount(due)}</strong>
+          </div>
 
-            {method === 'CARD' && inSale ? (
-              <p className={styles.note}>{cardWaiting ? 'Esperando terminal' : 'Tarjeta'}</p>
-            ) : null}
+          <div className={styles.methods} role="group" aria-label="Forma de pago">
+            {[
+              { id: 'CASH' as const, label: 'Efectivo', hot: 'E' },
+              { id: 'CARD' as const, label: 'Terminal', hot: 'T' },
+              { id: 'COMP' as const, label: 'Cortesía', hot: 'C' },
+            ].map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                aria-pressed={method === m.id}
+                className={method === m.id ? styles.methodOn : styles.method}
+                onClick={() => {
+                  setMethod(m.id);
+                  if (m.id === 'COMP' && !managerPin) setPendingAuth('COMP');
+                }}
+              >
+                {m.label}
+                <kbd>{m.hot}</kbd>
+              </button>
+            ))}
+          </div>
 
-            {method === 'COMP' && inSale ? (
+          {method === 'CASH' && inSale ? (
+            <>
+              <div className={styles.cashRow}>
+                <label className={styles.cashBox}>
+                  <span>Recibido</span>
+                  <input
+                    inputMode="decimal"
+                    autoComplete="off"
+                    placeholder="$0"
+                    value={cashReceived}
+                    onChange={(e) => setCashReceived(e.target.value.replace(/[^\d.]/g, ''))}
+                  />
+                </label>
+                <div
+                  className={cash.sufficient ? styles.changeBox : styles.missingBox}
+                  title={
+                    cash.sufficient && cash.change > 0
+                      ? changeBreakdownLabel(cash.change)
+                      : undefined
+                  }
+                >
+                  <span>{cash.sufficient ? 'Cambio' : 'Faltan'}</span>
+                  <strong>
+                    {formatTicketAmount(cash.sufficient ? cash.change : cash.missing)}
+                  </strong>
+                </div>
+              </div>
+              <ul className={styles.bills}>
+                {quickCash.slice(0, 4).map((amount, i) => (
+                  <li key={`${amount}-${i}`}>
+                    <button
+                      type="button"
+                      className={styles.bill}
+                      onClick={() => {
+                        if (stage === 'TICKETS') setStage('TENDER');
+                        setCashReceived(String(amount));
+                      }}
+                    >
+                      {amount === due ? 'Exacto' : billLabel(amount)}
+                      <kbd>F{i + 1}</kbd>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className={styles.pad} role="group" aria-label="Teclado de importe recibido">
+                {['7', '8', '9', '4', '5', '6', '1', '2', '3', '00', '0', '⌫'].map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    className={styles.key}
+                    aria-label={k === '⌫' ? 'Borrar un dígito' : undefined}
+                    onClick={() => pressPad(k)}
+                  >
+                    {k}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {method === 'CARD' && inSale ? (
+            <div className={cardWaiting ? styles.statusWait : styles.statusBox} role="status">
+              <strong>
+                {cardWaiting ? 'Esperando la terminal' : 'Cobro con terminal bancaria'}
+              </strong>
+              <span>
+                {cardWaiting
+                  ? 'Esc cancela el cobro con tarjeta mientras no se haya enviado.'
+                  : 'Pasa la tarjeta en la terminal y confirma con Enter.'}
+              </span>
+            </div>
+          ) : null}
+
+          {method === 'COMP' && inSale ? (
+            <div className={styles.compBox}>
+              <span className={styles.compState}>
+                {managerPin ? 'Autorizada por gerente' : 'Requiere PIN de gerente'}
+              </span>
               <Field
                 label="Motivo"
                 value={compReason}
                 onChange={(e) => setCompReason(e.target.value)}
               />
-            ) : null}
+            </div>
+          ) : null}
 
-            {discountUnlocked ? (
-              <Field
-                label="Código"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-              />
-            ) : null}
-
-            <Money
-              label="A cobrar"
-              amount={due}
-              currency
-              defaultOpen
-              lines={[
-                {
-                  label: 'Precio',
-                  amount: inSale ? (quote?.subtotal ?? (method === 'COMP' ? 0 : estimate)) : 0,
-                },
-                {
-                  label: feePct != null ? `Cargo · ${feePct}%` : 'Cargo',
-                  amount: inSale ? (quote?.fees ?? 0) : 0,
-                },
-                {
-                  label: taxPct != null ? `IVA · ${taxPct}%` : 'IVA',
-                  amount: inSale ? (quote?.taxes ?? 0) : 0,
-                },
-                { label: 'Descuento', amount: inSale && quote?.discount ? -quote.discount : 0 },
-              ]}
+          {discountUnlocked ? (
+            <Field
+              label="Código de descuento"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
             />
-            {releaseAsk ? <p className={styles.note}>Soltar el último apartado</p> : null}
-          </div>
-          <TicketButton
+          ) : null}
+
+          {!inSale ? (
+            <div className={styles.idle}>
+              {lastChange != null ? (
+                <div className={styles.lastChange} role="status">
+                  <span>Cambio a entregar</span>
+                  <strong>{formatTicketAmount(lastChange)}</strong>
+                  {lastChange > 0 ? <small>{changeBreakdownLabel(lastChange)}</small> : null}
+                </div>
+              ) : (
+                <p className={styles.idleText}>
+                  1 a 9 elige · Enter avanza · Esc regresa · ? muestra todos los atajos
+                </p>
+              )}
+            </div>
+          ) : null}
+
+          {releaseAsk ? (
+            <p className={styles.releaseAsk} role="alert">
+              Hay lugares apartados. Enter suelta el último apartado; Esc vuelve al cobro.
+            </p>
+          ) : null}
+
+          <button
             ref={chargeRef}
-            fullWidth
+            type="button"
+            className={styles.chargeBtn}
             disabled={releaseAsk ? false : !canCharge}
             onClick={() => {
               if (releaseAsk) void releaseLast();
               else void sell();
             }}
           >
-            {releaseAsk ? 'Soltar apartado' : `Cobrar ${formatTicketAmount(due)}`}
-          </TicketButton>
+            {releaseAsk
+              ? 'Soltar apartado (Enter)'
+              : loading
+                ? cardWaiting
+                  ? 'Esperando terminal…'
+                  : 'Cobrando…'
+                : method === 'COMP'
+                  ? 'Emitir cortesía e imprimir (Enter)'
+                  : 'Cobrar e imprimir (Enter)'}
+          </button>
         </aside>
       </div>
-
-      {cardWaiting ? (
-        <p className={styles.note} role="status">
-          Esperando terminal. Esc cancela el cobro con tarjeta.
-        </p>
-      ) : null}
 
       <ManagerPinDialog
         open={pendingAuth === 'COMP'}

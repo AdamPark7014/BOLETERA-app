@@ -60,9 +60,12 @@ export function NetStatus({ status }: { status: OpsStatus }) {
     <div className={styles.wrap}>
       <span className={status.online ? styles.chip : styles.chipOff}>
         <span className={status.online ? styles.dotOn : styles.dotOff} aria-hidden="true" />
-        {status.online ? 'En línea' : 'Sin red'}
+        {status.online
+          ? pending > 0
+            ? `En línea · ${pending} por subir`
+            : 'En línea'
+          : `Sin red${pending > 0 ? ` · ${pending} por subir` : ''}`}
       </span>
-      {pending > 0 ? <span className={styles.meta}>{pending} en cola</span> : null}
       {status.conflicts > 0 ? (
         <span className={styles.meta}>{status.conflicts} conflictos</span>
       ) : null}

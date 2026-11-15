@@ -129,7 +129,8 @@ export default function WillcallPage() {
 
   return (
     <PosShell
-      title="Entregar"
+      title="Entregar boletos"
+      eyebrow="Compras para recoger en taquilla"
       backHref="/venta"
       size="wide"
       hotkeys={hotkeys}
@@ -158,7 +159,7 @@ export default function WillcallPage() {
 
           {loading ? <p className={styles.note}>Buscando.</p> : null}
           {!loading && searched && rows.length === 0 ? (
-            <p className={styles.note}>Nada con ese criterio.</p>
+            <p className={styles.note}>Ninguna compra coincide con esa búsqueda.</p>
           ) : null}
 
           <ul className={styles.list}>
@@ -203,8 +204,8 @@ export default function WillcallPage() {
               <ul className={styles.tickets}>
                 {selected.tickets.map((t) => (
                   <li key={t.code}>
-                    <span>{t.seatInfo || t.code}</span>
-                    <span>{t.status}</span>
+                    <span>{seatText(t.seatInfo) || t.code}</span>
+                    <span className={styles.statusPill}>{ticketStatus(t.status)}</span>
                   </li>
                 ))}
               </ul>
@@ -237,7 +238,9 @@ export default function WillcallPage() {
               </button>
             </>
           ) : (
-            <p className={styles.note}>Elige una orden.</p>
+            <p className={styles.note}>
+              Busca por nombre, correo o folio y elige la compra para entregar.
+            </p>
           )}
           <TicketButton
             id="entregar"
@@ -253,4 +256,27 @@ export default function WillcallPage() {
       </div>
     </PosShell>
   );
+}
+
+function ticketStatus(status: string) {
+  const names: Record<string, string> = {
+    SOLD: 'Vendido',
+    USED: 'Ya entró',
+    SCANNED: 'Ya entró',
+    VOID: 'Anulado',
+    VOIDED: 'Anulado',
+    CANCELLED: 'Anulado',
+    REFUNDED: 'Reembolsado',
+    TRANSFERRED: 'Transferido',
+    RESERVED: 'Apartado',
+  };
+  return names[status] ?? status;
+}
+
+function seatText(raw?: string | null) {
+  if (!raw || raw === 'ORDER') return null;
+  if (raw === 'GA') return 'General';
+  const parts = raw.split('-');
+  if (parts.length === 3) return `${parts[0]} · Fila ${parts[1]} · Asiento ${parts[2]}`;
+  return parts.join(' · ');
 }

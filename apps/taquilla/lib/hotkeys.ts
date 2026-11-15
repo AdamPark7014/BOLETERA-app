@@ -122,7 +122,7 @@ export const GLOBAL_HOTKEYS: Array<{ keys: string; label: string; scope: string 
   { keys: '+ / -', label: 'Subir o bajar cantidad', scope: 'Venta · cantidad' },
   { keys: 'Enter', label: 'Continuar a cobro', scope: 'Venta · cantidad' },
   { keys: 'E', label: 'Efectivo', scope: 'Venta · cobro' },
-  { keys: 'T', label: 'Tarjeta', scope: 'Venta · cobro' },
+  { keys: 'T', label: 'Terminal (tarjeta)', scope: 'Venta · cobro' },
   { keys: 'C', label: 'Cortesía (PIN gerente)', scope: 'Venta · cobro' },
   { keys: '0-9', label: 'Teclear efectivo recibido', scope: 'Venta · cobro' },
   { keys: 'F1-F6', label: 'Billete rápido / importe exacto', scope: 'Venta · cobro' },
