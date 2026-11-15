@@ -1,100 +1,54 @@
-// Pie de página en el lenguaje Black Ticket: misma columna de 720 px y mismos
-// márgenes (48 px) que el contenido de compra, también a 390 px. Logotipo sin
-// tracking, títulos en caption sin mayúsculas, enlaces en --text-secondary.
+@use '../styles/bt' as bt;
 
 .footer {
-  margin-top: auto;
+  margin-top: 56px;
   border-top: 1px solid var(--line);
   color: var(--text-secondary);
+  font-size: 14px;
 }
 
 .inner {
-  width: min(720px, 100%);
-  margin: 0 auto;
-  padding: 40px 48px 24px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 32px 24px;
-
-  @media (max-width: 640px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.brandCol {
-  grid-column: 1 / -1;
+  @include bt.container;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px 28px;
+  padding-top: 40px;
+  padding-bottom: 20px;
 }
 
-.brand {
-  margin: 0;
-  font: var(--body-lg);
-  font-weight: 560;
-  letter-spacing: -0.01em;
-  color: var(--text);
+.logo {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
 }
 
-.tagline {
-  margin: 0;
-  color: var(--text-tertiary);
-  font: var(--body-sm);
-}
-
-.col {
-  min-width: 0;
-
-  h3 {
-    margin: 0 0 8px;
-    font: var(--caption);
-    letter-spacing: var(--caption-tracking);
-    color: var(--text-tertiary);
-  }
-
-  ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
 
   a {
     display: inline-flex;
     align-items: center;
-    min-height: 36px;
+    min-height: 44px;
     color: var(--text-secondary);
-    font: var(--body-sm);
-    text-decoration: none;
-    overflow-wrap: anywhere;
-    transition: color var(--move-state) var(--move-ease);
 
     &:hover {
       color: var(--text);
-      text-decoration: underline;
-      text-underline-offset: 3px;
     }
   }
 }
 
-.cityList {
-  min-height: 0;
+.pay {
+  color: var(--text-secondary);
 }
 
-// Margen inferior generoso: en evento y checkout la barra fija de total
-// no tapa la última línea del pie.
 .copy {
-  width: min(720px, 100%);
+  @include bt.container;
   margin: 0 auto;
-  padding: 16px 48px calc(112px + env(safe-area-inset-bottom));
-  color: var(--text-tertiary);
-  font: var(--caption);
-  letter-spacing: var(--caption-tracking);
-
-  &::before {
-    content: '';
-    display: block;
-    border-top: 1px solid var(--line);
-    margin-bottom: 16px;
-  }
+  padding-bottom: 40px;
+  font-size: 12px;
+  color: var(--text-secondary);
 }

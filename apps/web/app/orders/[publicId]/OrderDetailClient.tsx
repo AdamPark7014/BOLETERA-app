@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { SiteHeader } from '@/components/SiteHeader';
-import { Money, NamedStatus } from '@boletera/ui';
-import purchase from '@/components/purchase/purchase.module.scss';
+import { NamedStatus } from '@boletera/ui';
 import { useTenantBrand } from '@/components/TenantBrand';
 import { OrderQrCards } from '@/components/OrderQrCards';
 import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButton';
@@ -133,6 +132,7 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
   const [token, setToken] = useState<string | null>(null);
   /** Sin esto se dispararía una lectura sin credencial antes de leer el token. */
   const [tokenReady, setTokenReady] = useState(false);
+  const [eventImage, setEventImage] = useState<string | null>(null);
 
   // El token del enlace se archiva al llegar: la siguiente visita desde este
   // dispositivo ya no depende de tener el correo a mano.
@@ -194,6 +194,20 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
     return () => clearInterval(id);
   }, [pendingDeferred, publicId, load]);
 
+  // Imagen del evento para el boleto: la orden no la trae, la ficha pública sí.
+  const eventSlug = state.phase === 'ready' ? state.order.event?.slug : undefined;
+  useEffect(() => {
+    if (!eventSlug) return;
+    const controller = new AbortController();
+    fetch(`${API}/discovery/events/${encodeURIComponent(eventSlug)}`, { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { image?: string | null; bannerImage?: string | null } | null) => {
+        if (data) setEventImage(data.image || data.bannerImage || null);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [eventSlug]);
+
   if (state.phase === 'loading') {
     return (
       <div className={styles.shell}>
@@ -203,8 +217,13 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
           <div className={styles.skeleton} role="status" aria-live="polite">
             <span className={styles.srOnly}>Cargando tu orden…</span>
             <div className={styles.skelLine} />
-            <div className={styles.skelBlock} />
-            <div className={styles.skelBlock} />
+            <div className={styles.columns}>
+              <div className={styles.skelTicket} />
+              <div className={styles.detailCol}>
+                <div className={styles.skelBlock} />
+                <div className={styles.skelBlock} />
+              </div>
+            </div>
           </div>
         </main>
       </div>
@@ -231,12 +250,15 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
   return (
     <div className={styles.shell}>
       <SiteHeader />
-      <main className={styles.page}>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
         <div className={styles.steps} aria-label="Progreso">
-          <span className={styles.stepDone}>1 Carrito</span>
-          <span className={styles.stepDone}>2 Pago</span>
-          <span className={styles.stepActive} aria-current="step">
-            3 Boletos
+          <span className={styles.stepDone}>Asientos</span>
+          <span className={showDeferred ? styles.stepActive : styles.stepDone}>Pago</span>
+          <span
+            className={showDeferred ? styles.stepTodo : styles.stepActive}
+            aria-current={showDeferred ? undefined : 'step'}
+          >
+            Boletos
           </span>
         </div>
 
@@ -248,9 +270,13 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
           ) : (
             <NamedStatus status="pendiente" />
           )}
-          <h1 className={purchase.title}>{showDeferred ? 'Referencia' : 'Boleto'}</h1>
-          <p className={purchase.mono}>{order.publicId}</p>
-          {order.buyerEmail ? <p className={purchase.caption}>{order.buyerEmail}</p> : null}
+          <h1>
+            {showDeferred ? 'Falta pagar' : completed ? 'Listo, ya tienes tus boletos' : 'Tu orden'}
+          </h1>
+          <p className={styles.sub}>
+            Orden <code>{order.publicId}</code>
+            {order.buyerEmail ? ` · ${order.buyerEmail}` : ''}
+          </p>
         </header>
 
         {/* Lo excepcional va arriba: la cancelación y el dinero de vuelta. */}
@@ -267,175 +293,203 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
           }}
         />
 
-        {order.event && (
-          <section className={styles.eventCard} aria-label="Evento">
-            <div>
-              <p className={styles.kicker}>Evento</p>
-              <h2>{order.event.title}</h2>
-              {when && (
-                <p>
-                  {when.toLocaleDateString('es-MX', {
-                    timeZone: 'America/Mexico_City',
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}{' '}
-                  ·{' '}
-                  {when.toLocaleTimeString('es-MX', {
-                    timeZone: 'America/Mexico_City',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              )}
-              {order.event.venue && (
-                <p>
-                  {order.event.venue.name}
-                  {order.event.venue.city ? ` · ${order.event.venue.city}` : ''}
-                </p>
-              )}
-            </div>
-            <div className={styles.eventSide}>
-              <Money
-                label={completed ? 'Cobrado' : refunded ? 'Reembolso' : 'Pendiente'}
-                amount={Number(order.totalAmount) || 0}
-                currency
-                direction={completed ? 'in' : refunded ? 'out' : 'neutral'}
+        <div className={styles.columns}>
+          <div className={styles.ticketsCol}>
+            {completed ? (
+              <OrderQrCards
+                publicId={order.publicId}
+                accessToken={token}
+                expectedCount={tickets.length || 1}
+                seats={tickets}
+                event={
+                  order.event
+                    ? {
+                        title: order.event.title,
+                        startsAt: order.event.startsAt,
+                        venueName: order.event.venue?.name,
+                        image: eventImage,
+                        slug: order.event.slug,
+                      }
+                    : null
+                }
               />
-              {order.event.slug && (
-                <Link href={`/events/${order.event.slug}`} className={styles.textLink}>
-                  Ver evento
+            ) : null}
+
+            {showDeferred && (
+              <>
+                <DeferredPaymentPanel
+                  method={method as 'SPEI' | 'OXXO'}
+                  reference={
+                    pendingMeta?.reference || order.pendingPayment?.reference || order.publicId
+                  }
+                  clabe={pendingMeta?.clabe}
+                  concept={
+                    pendingMeta?.concept ||
+                    pendingMeta?.reference ||
+                    order.pendingPayment?.reference ||
+                    order.publicId
+                  }
+                  amount={order.totalAmount}
+                  currency={order.currency}
+                  expiresAt={order.expiresAt}
+                  demo={isDemoFlow}
+                  onExpire={() => void load()}
+                />
+                {isDemoFlow && (
+                  <SimulateDemoPaymentButton
+                    orderId={order.id}
+                    publicId={order.publicId}
+                    accessToken={token}
+                  />
+                )}
+              </>
+            )}
+
+            {!completed ? (
+              <section className={styles.section}>
+                <h2>Tus boletos ({tickets.length})</h2>
+                {(refunded || eventCancelled) && (
+                  <p className={styles.ticketsVoidNote}>
+                    Estos boletos están cancelados: ya no permiten la entrada. Los dejamos a la
+                    vista porque son el comprobante de qué se te devolvió.
+                  </p>
+                )}
+                <ul className={styles.ticketList}>
+                  {tickets.map((t) => (
+                    <li key={t.code}>
+                      <code>{t.code}</code>
+                      <span>{seatLabel(t) || 'Entrada general'}</span>
+                    </li>
+                  ))}
+                  {!tickets.length && (
+                    <li className={styles.muted}>
+                      Los códigos QR aparecerán cuando el pago se confirme.
+                    </li>
+                  )}
+                </ul>
+              </section>
+            ) : null}
+          </div>
+
+          <aside className={styles.detailCol} aria-label="Detalle de la orden">
+            {order.event && (
+              <section className={styles.eventCard} aria-label="Evento">
+                <div>
+                  <p className={styles.kicker}>Evento</p>
+                  <h2>{order.event.title}</h2>
+                  {when && (
+                    <p>
+                      {when.toLocaleDateString('es-MX', {
+                        timeZone: 'America/Mexico_City',
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}{' '}
+                      ·{' '}
+                      {when.toLocaleTimeString('es-MX', {
+                        timeZone: 'America/Mexico_City',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  )}
+                  {order.event.venue && (
+                    <p>
+                      {order.event.venue.name}
+                      {order.event.venue.city ? ` · ${order.event.venue.city}` : ''}
+                    </p>
+                  )}
+                  <p className={styles.amount}>
+                    {completed ? 'Cobrado' : refunded ? 'Reembolso' : 'Total'} ·{' '}
+                    {formatMoney(order.totalAmount, order.currency)}
+                  </p>
+                  {order.event.slug && (
+                    <Link href={`/events/${order.event.slug}`} className={styles.textLink}>
+                      Ver evento
+                    </Link>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {(completed || order.status === 'PARTIALLY_REFUNDED') && (
+              <section className={styles.section} aria-label="Acciones de tus boletos">
+                {(refunded || eventCancelled) && (
+                  <p className={styles.ticketsVoidNote}>
+                    Estos boletos están cancelados: ya no permiten la entrada.
+                  </p>
+                )}
+                <div className={styles.actions}>
+                  {completed && (
+                    <TicketsPdfLink apiBase={API} publicId={order.publicId} accessToken={token} />
+                  )}
+                  <ResendTicketButton apiBase={API} publicId={order.publicId} accessToken={token} />
+                </div>
+              </section>
+            )}
+
+            {hasBreakdown && (
+              <section className={styles.section} aria-label="Desglose del importe">
+                <h2>Desglose</h2>
+                <ul className={styles.breakdown}>
+                  <li>
+                    <span>Precio de los boletos</span>
+                    <strong>{formatMoney(order.subtotal ?? 0, order.currency)}</strong>
+                  </li>
+                  <li>
+                    <span>Cargo por servicio</span>
+                    <strong>{formatMoney(order.fees ?? 0, order.currency)}</strong>
+                  </li>
+                  <li>
+                    <span>IVA</span>
+                    <strong>{formatMoney(order.taxAmount ?? 0, order.currency)}</strong>
+                  </li>
+                  {Number(order.discountAmount ?? 0) > 0 && (
+                    <li>
+                      <span>Descuento</span>
+                      <strong>−{formatMoney(order.discountAmount ?? 0, order.currency)}</strong>
+                    </li>
+                  )}
+                  <li className={styles.breakdownTotal}>
+                    <span>{completed ? 'Total cobrado' : 'Total a pagar'}</span>
+                    <strong>{formatMoney(order.totalAmount, order.currency)}</strong>
+                  </li>
+                </ul>
+              </section>
+            )}
+
+            <OrderTimeline order={order} hasTickets={tickets.length > 0} />
+
+            <div className={styles.actions}>
+              {cal && completed && (
+                <a className={styles.secondary} href={cal} target="_blank" rel="noreferrer">
+                  Agregar al calendario
+                </a>
+              )}
+              <Link href="/cuenta" className={styles.link}>
+                Ir a Mis boletos
+              </Link>
+              <Link href="/" className={styles.ghost}>
+                Ver más eventos
+              </Link>
+              {showDeferred && (
+                <Link
+                  href={orderPath(order.publicId, token, '/pago', { method })}
+                  className={styles.ghost}
+                >
+                  Ver instrucciones completas
                 </Link>
               )}
             </div>
-          </section>
-        )}
 
-        {hasBreakdown && (
-          <section className={styles.section} aria-label="Desglose del importe">
-            <h2>Desglose</h2>
-            <ul className={styles.breakdown}>
-              <li>
-                <span>Precio de los boletos</span>
-                <strong>{formatMoney(order.subtotal ?? 0, order.currency)}</strong>
-              </li>
-              <li>
-                <span>Cargo por servicio</span>
-                <strong>{formatMoney(order.fees ?? 0, order.currency)}</strong>
-              </li>
-              <li>
-                <span>IVA</span>
-                <strong>{formatMoney(order.taxAmount ?? 0, order.currency)}</strong>
-              </li>
-              {Number(order.discountAmount ?? 0) > 0 && (
-                <li>
-                  <span>Descuento</span>
-                  <strong>−{formatMoney(order.discountAmount ?? 0, order.currency)}</strong>
-                </li>
-              )}
-              <li className={styles.breakdownTotal}>
-                <span>{completed ? 'Total cobrado' : 'Total a pagar'}</span>
-                <strong>{formatMoney(order.totalAmount, order.currency)}</strong>
-              </li>
+            <ul className={styles.trust}>
+              <li>Boletos oficiales {brand.name}</li>
+              <li>Entrada con QR</li>
+              <li>Pago Banorte</li>
             </ul>
-          </section>
-        )}
-
-        {showDeferred && (
-          <>
-            <DeferredPaymentPanel
-              method={method as 'SPEI' | 'OXXO'}
-              reference={
-                pendingMeta?.reference || order.pendingPayment?.reference || order.publicId
-              }
-              clabe={pendingMeta?.clabe}
-              concept={
-                pendingMeta?.concept ||
-                pendingMeta?.reference ||
-                order.pendingPayment?.reference ||
-                order.publicId
-              }
-              amount={order.totalAmount}
-              currency={order.currency}
-              expiresAt={order.expiresAt}
-              demo={isDemoFlow}
-              onExpire={() => void load()}
-            />
-            {isDemoFlow && (
-              <SimulateDemoPaymentButton
-                orderId={order.id}
-                publicId={order.publicId}
-                accessToken={token}
-              />
-            )}
-          </>
-        )}
-
-        <section className={styles.section}>
-          <div className={styles.sectionHead}>
-            <h2>Tus boletos ({tickets.length})</h2>
-            {(completed || order.status === 'PARTIALLY_REFUNDED') && (
-              <div className={styles.actions}>
-                {completed && (
-                  <TicketsPdfLink apiBase={API} publicId={order.publicId} accessToken={token} />
-                )}
-                <ResendTicketButton apiBase={API} publicId={order.publicId} accessToken={token} />
-              </div>
-            )}
-          </div>
-          {(refunded || eventCancelled) && (
-            <p className={styles.ticketsVoidNote}>
-              Estos boletos están cancelados: ya no permiten la entrada. Los dejamos a la vista
-              porque son el comprobante de qué se te devolvió.
-            </p>
-          )}
-          <ul className={styles.ticketList}>
-            {tickets.map((t) => (
-              <li key={t.code}>
-                <code>{t.code}</code>
-                <span>{seatLabel(t) || 'Entrada general'}</span>
-              </li>
-            ))}
-            {!tickets.length && (
-              <li className={styles.muted}>
-                Los códigos QR aparecerán cuando el pago se confirme.
-              </li>
-            )}
-          </ul>
-        </section>
-
-        <OrderTimeline order={order} hasTickets={tickets.length > 0} />
-
-        {completed && <OrderQrCards publicId={order.publicId} accessToken={token} />}
-
-        <div className={styles.actions}>
-          {cal && completed && (
-            <a className={styles.secondary} href={cal} target="_blank" rel="noreferrer">
-              Agregar al calendario
-            </a>
-          )}
-          <Link href="/cuenta" className={styles.link}>
-            Ir a Mis boletos
-          </Link>
-          <Link href="/events" className={styles.ghost}>
-            Ver más eventos
-          </Link>
-          {showDeferred && (
-            <Link
-              href={orderPath(order.publicId, token, '/pago', { method })}
-              className={styles.ghost}
-            >
-              Ver instrucciones completas
-            </Link>
-          )}
+          </aside>
         </div>
-
-        <ul className={styles.trust}>
-          <li>Boletos oficiales {brand.name}</li>
-          <li>Entrada con QR</li>
-          <li>Pago Banorte</li>
-        </ul>
       </main>
     </div>
   );

@@ -266,3 +266,10 @@
   background: var(--danger, #c9847a);
   height: 4px;
 }
+
+/* Vista desde el asiento en panel chico: solo la escena. */
+.wrap[data-chrome='off'] .overlayTop,
+.wrap[data-chrome='off'] .overlayBottom,
+.wrap[data-chrome='off'] .tooltip {
+  display: none;
+}

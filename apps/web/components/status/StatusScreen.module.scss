@@ -1,0 +1,89 @@
+@use '../../styles/bt' as bt;
+
+.wrap {
+  @include bt.container;
+  padding-top: 24px;
+}
+
+.hero {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  align-items: flex-end;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
+
+  @include bt.phone {
+    min-height: 460px;
+  }
+}
+
+.art {
+  position: absolute;
+  inset: 0;
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.55) 55%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+}
+
+.copy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+  padding: 56px;
+
+  @include bt.phone {
+    padding: 24px;
+  }
+}
+
+.kicker {
+  @include bt.kicker;
+}
+
+.title {
+  @include bt.headline(96px);
+  line-height: 0.86;
+
+  @include bt.phone {
+    font-size: 56px;
+  }
+}
+
+.body {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
+  color: #e8e3dc;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+
+  button {
+    @include bt.pill-primary;
+  }
+}
+
+.primary {
+  @include bt.pill-primary;
+}
+
+.secondary {
+  @include bt.pill-secondary;
+  min-height: 52px;
+}

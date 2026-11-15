@@ -219,11 +219,11 @@ function PagoContent() {
         <SiteHeader />
         <main className={styles.page}>
           <div className={styles.steps} aria-label="Progreso">
-            <span className={styles.stepDone}>1 Carrito</span>
+            <span className={styles.stepDone}>Asientos</span>
             <span className={styles.stepActive} aria-current="step">
-              2 Pago
+              Pago
             </span>
-            <span className={styles.stepTodo}>3 Boletos</span>
+            <span className={styles.stepTodo}>Boletos</span>
           </div>
 
           <header className={styles.hero}>

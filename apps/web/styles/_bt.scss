@@ -1,0 +1,125 @@
+// Piezas compartidas del lenguaje de la maqueta (Main/Evento/Movil/Fila/Boleto).
+// Solo mixins: los colores salen de las variables de BlackTicketRoot.
+
+$bt-max: 1330px;
+$bt-gutter: 56px;
+$bt-gutter-sm: 16px;
+$bt-phone: 720px;
+
+@mixin phone {
+  @media (max-width: $bt-phone) {
+    @content;
+  }
+}
+
+@mixin container {
+  width: 100%;
+  max-width: $bt-max + 2 * $bt-gutter;
+  margin-inline: auto;
+  padding-inline: $bt-gutter;
+
+  @include phone {
+    padding-inline: $bt-gutter-sm;
+  }
+}
+
+@mixin headline($size: 44px) {
+  margin: 0;
+  font-family: var(--font-display);
+  font-stretch: var(--headline-stretch, 72%);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.92;
+  font-size: $size;
+  letter-spacing: 0;
+}
+
+@mixin kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+@mixin pill-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: var(--r-pill, 999px);
+  background: var(--gold);
+  color: #000;
+  font: inherit;
+  font-weight: 700;
+  font-size: 17px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--gold-soft);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    background: var(--elevated);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+}
+
+@mixin pill-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill, 999px);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--text-secondary);
+  }
+}
+
+@mixin chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--r-pill, 999px);
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &[aria-pressed='true'],
+  &[aria-current='page'],
+  &[aria-selected='true'] {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+    font-weight: 600;
+  }
+}
+
+@mixin card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}

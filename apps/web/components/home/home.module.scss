@@ -1,0 +1,696 @@
+@use '../../styles/bt' as bt;
+
+.wrap {
+  @include bt.container;
+  display: flex;
+  flex-direction: column;
+}
+
+.kicker {
+  @include bt.kicker;
+}
+
+.h2 {
+  @include bt.headline(44px);
+  line-height: 1;
+
+  @include bt.phone {
+    font-size: 34px;
+  }
+}
+
+.h3 {
+  @include bt.headline(34px);
+  line-height: 1;
+  margin-bottom: 20px;
+
+  @include bt.phone {
+    font-size: 28px;
+  }
+}
+
+.primary {
+  @include bt.pill-primary;
+  min-height: 56px;
+  padding: 0 30px;
+}
+
+.secondary {
+  @include bt.pill-secondary;
+  min-height: 54px;
+  padding: 0 24px;
+  border-color: rgba(255, 255, 255, 0.4);
+  font-size: 16px;
+}
+
+.white {
+  @include bt.pill-primary;
+  align-self: flex-start;
+  background: #fff;
+  font-size: 15px;
+  min-height: 48px;
+  padding: 0 22px;
+
+  &:hover {
+    background: var(--gold-soft);
+  }
+}
+
+/* ------------------------------------------------------------ portada */
+
+.hero {
+  position: relative;
+  margin-top: 24px;
+  min-height: 600px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  background: #0b0907;
+
+  @include bt.phone {
+    min-height: 560px;
+    margin-top: 16px;
+    border-radius: 20px;
+  }
+}
+
+.heroMedia {
+  position: absolute;
+  inset: 0;
+}
+
+.heroImg {
+  position: absolute !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroShade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0) 75%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.7) 100%);
+
+  @include bt.phone {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.1) 0%,
+      rgba(0, 0, 0, 0.6) 45%,
+      rgba(0, 0, 0, 0.95) 100%
+    );
+  }
+}
+
+.heroCopy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 760px;
+  padding: 56px;
+
+  @include bt.phone {
+    padding: 20px 20px 132px;
+    gap: 14px;
+  }
+}
+
+.heroTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagGold,
+.tagLine {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.tagGold {
+  background: var(--gold);
+  color: #000;
+}
+
+.tagLine {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+}
+
+.heroTitle {
+  @include bt.headline(136px);
+  font-stretch: 66%;
+  line-height: 0.84;
+  overflow-wrap: anywhere;
+
+  @media (max-width: 1100px) {
+    font-size: 104px;
+  }
+
+  @include bt.phone {
+    font-size: 64px;
+  }
+}
+
+.heroLine {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.4;
+  color: #e8e3dc;
+
+  @include bt.phone {
+    font-size: 16px;
+  }
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-top: 6px;
+
+  @include bt.phone {
+    .primary {
+      flex: 1 1 100%;
+    }
+
+    .secondary {
+      display: none;
+    }
+  }
+}
+
+.heroCount {
+  position: absolute;
+  right: 40px;
+  bottom: 40px;
+
+  @include bt.phone {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  padding: 18px 22px;
+  width: 250px;
+
+  @include bt.phone {
+    padding: 14px 18px;
+  }
+}
+
+.countLabel {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.countDigits {
+  display: flex;
+  gap: 14px;
+  font-family: var(--font-display);
+  font-stretch: 72%;
+  font-weight: 900;
+  font-size: 38px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 3px;
+  }
+}
+
+/* ----------------------------------------------------------- secciones */
+
+.section {
+  padding-top: 52px;
+
+  @include bt.phone {
+    padding-top: 40px;
+  }
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sectionTitles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  button {
+    @include bt.chip;
+  }
+
+  @include bt.phone {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: calc(100% + 32px);
+    margin-inline: -16px;
+    padding-inline: 16px;
+    scrollbar-width: none;
+  }
+}
+
+.empty {
+  margin: 0;
+  padding: 28px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 18px;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 20px;
+
+  @include bt.phone {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  > li {
+    display: flex;
+  }
+}
+
+/* ------------------------------------------------------------ tarjeta */
+
+.card {
+  @include bt.card;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--text);
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+  }
+}
+
+.cardMedia {
+  position: relative;
+  display: block;
+  height: 230px;
+  background: #0b0907;
+  overflow: hidden;
+}
+
+.cardImg {
+  position: absolute !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.88) 100%);
+}
+
+.cardTag {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+.cardTitle {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 12px;
+  font-family: var(--font-display);
+  font-stretch: 72%;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 30px;
+  line-height: 0.95;
+}
+
+.cardBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 16px 16px;
+}
+
+.cardWhen {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+}
+
+.cardPlace {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.cardFoot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+  min-height: 46px;
+}
+
+.cardPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+
+  small {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+}
+
+.cardSoldOut {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.cardStock {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+
+  &[data-low] {
+    color: var(--gold);
+  }
+}
+
+.skel {
+  background: linear-gradient(90deg, #141416 0%, #1d1d20 50%, #141416 100%);
+  background-size: 200% 100%;
+  animation: skel 1.4s linear infinite;
+}
+
+.skelLine {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  background: var(--elevated);
+}
+
+@keyframes skel {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* -------------------------------------------------------------- planes */
+
+.plans {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+
+  @include bt.phone {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+.plan {
+  @include bt.card;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 16px;
+  color: var(--text);
+
+  &:hover {
+    border-color: var(--gold);
+  }
+}
+
+.planName {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.planCount {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ------------------------------------------------- ranking y membresía */
+
+.split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.rankCol {
+  flex: 1 1 520px;
+  min-width: 0;
+
+  .h3 {
+    margin-bottom: 8px;
+  }
+}
+
+.rank {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rankRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 84px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+
+  &:hover strong {
+    text-decoration: underline;
+  }
+}
+
+.rankNum {
+  width: 34px;
+  flex: none;
+  font-family: var(--font-display);
+  font-stretch: 72%;
+  font-weight: 900;
+  font-size: 34px;
+  color: #6a6a70;
+
+  &[data-first] {
+    color: var(--gold);
+  }
+}
+
+.rankThumb {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b0907;
+}
+
+.rankCopy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  span {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}
+
+.rankPrice {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.member {
+  flex: 1 1 420px;
+  min-width: 0;
+  position: relative;
+  min-height: 420px;
+  display: flex;
+  align-items: flex-end;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+
+  @include bt.phone {
+    min-height: 380px;
+  }
+}
+
+.memberArt {
+  position: absolute !important;
+  inset: 0;
+}
+
+.memberShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0.95) 85%);
+}
+
+.memberCopy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 30px;
+
+  @include bt.phone {
+    padding: 22px;
+  }
+}
+
+.memberTitle {
+  @include bt.headline(44px);
+  line-height: 0.95;
+}
+
+.memberText {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #e8e3dc;
+}
+
+/* ----------------------------------------------------------- garantías */
+
+.guarantees {
+  margin-top: 56px;
+  padding: 30px 34px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+
+  @include bt.phone {
+    margin-top: 40px;
+    padding: 22px;
+    gap: 22px;
+  }
+}
+
+.guarantee {
+  flex: 1 1 240px;
+  display: flex;
+  gap: 14px;
+}
+
+.guaranteeIcon {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.guaranteeCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  strong {
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  span {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+}

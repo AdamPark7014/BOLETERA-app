@@ -366,8 +366,8 @@ export function drawSeatLayer(
     ctx.strokeStyle = 'rgba(226,232,240,0.85)';
     ctx.lineWidth = Math.max(1, seatPx * 0.08);
     ctx.stroke(restrictedMarks);
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#A68A6B';
+    ctx.lineWidth = 2;
     ctx.stroke(selectedRings);
     ctx.strokeStyle = 'rgba(255,255,255,0.9)';
     ctx.lineWidth = 1.2;

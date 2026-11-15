@@ -2,12 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/SiteHeader';
-import { EventPosterArt } from '@/components/EventPosterArt';
 import { api } from '@/lib/api';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
 import { buildHubMetadata } from '@/lib/seo';
 import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../../hub.module.scss';
+import { EventCard, type CardEvent } from '@/components/home/EventCard';
+import homeStyles from '@/components/home/home.module.scss';
 
 type VenueDetail = {
   id: string;
@@ -27,17 +28,6 @@ type VenueDetail = {
   totalCapacity?: number;
   events: EventHit[];
 };
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 export async function generateMetadata({
   params,
@@ -142,23 +132,12 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
             <Link href="/">Ver otros eventos</Link>
           </div>
         ) : (
-          <ul className={styles.grid}>
+          <ul className={homeStyles.grid}>
             {venue.events.map((e) => (
               <li key={e.id}>
-                <Link href={`/events/${e.slug}`} className={styles.card}>
-                  <EventPosterArt event={e} size="sm" />
-                  <div>
-                    <strong>{e.title}</strong>
-                    <span>{fmtDate(e.startsAt)}</span>
-                  </div>
-                  <em>
-                    {Number(e.minPrice) > 0
-                      ? `$${Number(e.minPrice).toLocaleString('es-MX', {
-                          maximumFractionDigits: 0,
-                        })}`
-                      : 'Consultar'}
-                  </em>
-                </Link>
+                <EventCard
+                  event={{ ...e, venue: { name: venue.name, city: venue.city } } as CardEvent}
+                />
               </li>
             ))}
           </ul>

@@ -18,6 +18,8 @@ type EventDetail = {
   description: string | null;
   startsAt: string;
   endsAt?: string | null;
+  doorsAt?: string | null;
+  salesStartAt?: string | null;
   category?: string | null;
   genre?: string | null;
   rating?: string | null;
@@ -37,11 +39,13 @@ type EventDetail = {
     zone: string;
     name?: string;
     basePrice: string;
+    allInPrice?: number;
     remainingQuantity?: number;
     isAvailable?: boolean;
   }[];
   venue?: {
     name: string;
+    slug?: string | null;
     city: string;
     state?: string | null;
     address?: string | null;
@@ -168,6 +172,8 @@ export default async function EventPage({
           title={event.title}
           description={event.description}
           startsAt={event.startsAt}
+          doorsAt={event.doorsAt}
+          salesStartAt={event.salesStartAt}
           genre={event.genre}
           rating={event.rating}
           image={event.image}
@@ -182,6 +188,7 @@ export default async function EventPage({
           venueName={event.venue?.name}
           venueCity={event.venue?.city}
           venueAddress={event.venue?.address}
+          venueSlug={event.venue?.slug}
           minPrice={minPrice}
           minPriceAllIn={event.minPriceAllIn}
           currency={event.currency || 'MXN'}

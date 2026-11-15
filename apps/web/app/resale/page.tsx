@@ -83,7 +83,7 @@ export default async function ResalePage() {
         <ul className={styles.trust}>
           <li>
             <strong>Verificado</strong>
-            <span>Solo boletos emitidos en BOLETERA</span>
+            <span>Solo boletos emitidos en Black Ticket</span>
           </li>
           <li>
             <strong>Precio controlado</strong>

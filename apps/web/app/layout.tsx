@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const logo = tenant.theme?.logoUrl?.trim();
   return {
     metadataBase: new URL(origin),
-    title: `${tenant.name} | Boletos oficiales`,
+    title: `Black Ticket | Boletos oficiales`,
     description: `Compra boletos oficiales en ${tenant.name}: inventario real, mapa de asientos y pagos Banorte.`,
     icons: {
       icon: favicon || '/favicon.svg',

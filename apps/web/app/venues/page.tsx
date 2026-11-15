@@ -4,6 +4,7 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { api } from '@/lib/api';
 import { buildHubMetadata } from '@/lib/seo';
 import { fetchTenantCurrent } from '@/lib/tenant';
+import { StageArt } from '@boletera/ui';
 import styles from '../hub.module.scss';
 
 type VenueHit = {
@@ -71,7 +72,9 @@ export default async function VenuesPage() {
                       /* Decorativa: el nombre del recinto va en texto debajo. */
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={v.image} alt="" loading="lazy" decoding="async" />
-                    ) : null}
+                    ) : (
+                      <StageArt seed={v.slug} fade={false} />
+                    )}
                   </div>
                   <div className={styles.body}>
                     <strong>{v.name}</strong>

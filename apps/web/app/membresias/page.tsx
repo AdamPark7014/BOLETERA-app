@@ -1,7 +1,9 @@
 import { SiteHeader } from '@/components/SiteHeader';
 import { API_BASE as API, getTenantHostHeaders } from '@/lib/api';
 import { fetchTenantCurrent } from '@/lib/tenant';
+import { StageArt } from '@boletera/ui';
 import purchase from '@/components/purchase/purchase.module.scss';
+import styles from './membresias.module.scss';
 import { PlanesClient } from './PlanesClient';
 import type { PublicPlan } from './types';
 
@@ -37,17 +39,22 @@ export default async function MembresiasPage() {
   return (
     <>
       <SiteHeader />
-      <main id="contenido" className={purchase.column}>
-        <div className={purchase.stack}>
-          <p className={purchase.caption}>
-            Membresías {state.kind === 'ok' ? state.organization || tenant.name : tenant.name}
-          </p>
-          <h1 className={purchase.title}>Membresías</h1>
-          <p className={purchase.lead}>
-            Elige un plan, págalo como pagas tus boletos y lo verás en tu cuenta con su vigencia y
-            beneficios.
-          </p>
-        </div>
+      <main id="contenido" tabIndex={-1} className={styles.page}>
+        <section className={styles.hero}>
+          <StageArt seed="membresia-black" fade={false} className={styles.heroArt} />
+          <span className={styles.heroShade} />
+          <div className={styles.heroCopy}>
+            <span className={styles.kicker}>
+              Membresía Black ·{' '}
+              {state.kind === 'ok' ? state.organization || tenant.name : tenant.name}
+            </span>
+            <h1 className={styles.heroTitle}>Membresías</h1>
+            <p className={styles.heroLead}>
+              Elige un plan, págalo como pagas tus boletos y lo verás en tu cuenta con su vigencia y
+              beneficios.
+            </p>
+          </div>
+        </section>
 
         {state.kind === 'error' ? (
           <div className={purchase.error} role="alert">

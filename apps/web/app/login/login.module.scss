@@ -1,10 +1,17 @@
+@use '../../styles/bt' as bt;
+
 // Recuperar y crear contraseña en el lenguaje Black Ticket: misma columna y
 // controles (`Field`, `TicketButton`) que /login. Sin tarjeta ni fondo propio.
 
 .page {
-  width: min(720px, 100%);
+  width: 100%;
+  max-width: 1442px;
   margin: 0 auto;
-  padding: 32px 48px 96px;
+  padding: 40px 56px 96px;
+
+  @media (max-width: 720px) {
+    padding: 24px 16px 96px;
+  }
 }
 
 .simpleCard {
@@ -13,9 +20,8 @@
   gap: 24px;
 
   h1 {
-    margin: 0;
-    font: var(--title);
-    font-weight: 560;
+    @include bt.headline(56px);
+    line-height: 0.92;
     color: var(--text);
   }
 }

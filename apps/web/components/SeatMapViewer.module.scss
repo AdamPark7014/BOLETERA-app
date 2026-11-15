@@ -316,7 +316,7 @@
 }
 
 .secActive {
-  background: rgba(225, 29, 72, 0.16);
+  background: rgba(166, 138, 107, 0.2);
   border-color: var(--bl-accent);
   color: var(--bl-text-inverse);
 
@@ -337,7 +337,7 @@
   overscroll-behavior: contain;
   cursor: grab;
   background:
-    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(225, 29, 72, 0.08), transparent 60%), #09090b;
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(166, 138, 107, 0.1), transparent 60%), #09090b;
   border: 1px solid #1c1c1f;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -526,4 +526,67 @@
   font-size: var(--bl-text-md);
   padding: var(--bl-space-6);
   text-align: center;
+}
+
+// —— Compra pública: controles flotantes sobre el mapa (maqueta) ——
+.floatAnchor {
+  position: relative;
+  height: 0;
+  z-index: 4;
+}
+
+.floatLive,
+.floatIdle {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.7);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.floatLive {
+  color: var(--ok, #4cc38a);
+}
+
+.floatIdle {
+  color: var(--text-secondary, #a8a29a);
+}
+
+.floatStack {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  button {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid var(--line-strong, #34343a);
+    background: var(--card, #1a1a1a);
+    color: var(--text, #fff);
+    font: inherit;
+    font-size: 20px;
+    cursor: pointer;
+
+    &[aria-pressed='true'] {
+      border-color: var(--gold, #a68a6b);
+      color: var(--gold, #a68a6b);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
 }

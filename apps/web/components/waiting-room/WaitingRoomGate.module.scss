@@ -1,275 +1,337 @@
-// Panel oscuro a propósito: la sala sustituye al selector de butacas y debe
-// leerse como "otro sitio", no como un bloque más de la ficha del evento.
-// Todos los pares de color están por encima de 4.5:1 sobre $panel (WCAG 2.2 AA).
-$panel: var(--bl-gray-950);
-$panel-2: var(--bl-gray-900);
-$paper: var(--bl-gray-25); // 19.2:1 sobre $panel
-$mute: #c9c9c9; // 11.4:1 sobre $panel
-$accent: var(--bl-accent-hover); // 8.1:1 sobre $panel
-$accent-soft: rgba(251, 113, 133, 0.14);
-$line: rgba(250, 250, 250, 0.14);
+// Fila virtual (Fila.dc.html): imagen arriba con degradado a negro, «Estás en
+// la fila», personas delante enormes, espera en dorado, barra de avance y
+// disponibilidad por zona.
+@use '../../styles/bt' as bt;
 
 .room {
-  display: flex;
-  flex-direction: column;
-  gap: var(--bl-space-4);
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  border-radius: var(--bl-radius-2xl);
-  background: linear-gradient(180deg, $panel-2 0%, $panel 100%);
-  color: $paper;
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--ink);
+  color: var(--text);
+
+  @include bt.phone {
+    border-radius: 0;
+    border-width: 0;
+    margin-inline: -16px;
+  }
 
   :focus-visible {
-    outline: 2px solid $accent;
+    outline: 2px solid var(--gold);
     outline-offset: 3px;
-    border-radius: var(--bl-radius-md);
   }
 }
 
-.eyebrow {
+.hero {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 330px;
+  background: #0b0907;
+}
+
+.cover {
+  position: absolute !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, #000 100%);
+}
+
+.top {
+  position: relative;
+  padding: 18px 20px 0;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: var(--bl-space-2);
-  margin: var(--bl-space-0);
-  font-size: var(--bl-text-sm);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: $accent;
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .pulse {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: $accent;
-  animation: breathe 2.4s ease-in-out infinite;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--ok);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.body {
+  position: relative;
+  padding: 26px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 721px) {
+    padding: 40px 32px 28px;
+  }
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eyebrow {
+  @include bt.kicker;
 }
 
 .title {
-  margin: var(--bl-space-0);
-  font-size: clamp(1.5rem, 3.5vw, 2.125rem);
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  @include bt.headline(40px);
+  line-height: 0.95;
+
+  @include bt.phone {
+    font-size: 34px;
+  }
 }
 
-.lead {
-  margin: var(--bl-space-0);
-  font-size: var(--bl-text-md);
-  line-height: 1.55;
-  color: $mute;
+.eventMeta {
+  font-size: 13px;
+  color: #e8e3dc;
 }
 
 .notice {
-  margin: var(--bl-space-0);
-  padding: var(--bl-space-3) var(--bl-space-4);
-  border: 1px solid rgba(251, 113, 133, 0.4);
-  border-radius: var(--bl-radius-lg);
-  background: $accent-soft;
-  font-size: var(--bl-text-md);
-  line-height: 1.5;
-  color: var(--bl-accent-border); // 9.6:1 sobre el fondo del aviso
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--warn-wash);
+  color: var(--warn);
+  font-size: 14px;
 }
 
-// --- antes de la apertura ----------------------------------------------------
-
-.countdown {
+.card {
+  background: rgba(26, 26, 26, 0.92);
+  border: 1px solid var(--line-strong);
+  border-radius: 22px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: var(--bl-space-1-5);
-  padding: var(--bl-space-5) var(--bl-space-5);
-  border: 1px solid $line;
-  border-radius: var(--bl-radius-xl);
-  background: rgba(250, 250, 250, 0.04);
+  gap: 14px;
 }
-
-.countdownLabel {
-  font-size: var(--bl-text-sm);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: $mute;
-}
-
-.countdownValue {
-  font-size: clamp(2.25rem, 8vw, 3.5rem);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-
-.fairness {
-  padding: var(--bl-space-4) var(--bl-space-5);
-  border-left: 3px solid $accent;
-  border-radius: 0 0.75rem 0.75rem 0;
-  background: rgba(250, 250, 250, 0.04);
-
-  h3 {
-    margin: var(--bl-space-0) var(--bl-space-0) var(--bl-space-1-5);
-    font-size: var(--bl-text-lg);
-    font-weight: 650;
-  }
-
-  p {
-    margin: var(--bl-space-0);
-    font-size: var(--bl-text-md);
-    line-height: 1.55;
-    color: $mute;
-  }
-
-  strong {
-    color: $paper;
-    font-weight: 650;
-  }
-}
-
-// --- fila abierta ------------------------------------------------------------
 
 .metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: var(--bl-space-3);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.metric,
-.metricMain {
+.metricMain,
+.metricSide {
   display: flex;
   flex-direction: column;
-  gap: var(--bl-space-1);
-  padding: var(--bl-space-4) var(--bl-space-5);
-  border: 1px solid $line;
-  border-radius: var(--bl-radius-xl);
-  background: rgba(250, 250, 250, 0.04);
+  gap: 2px;
 }
 
-.metricMain {
-  border-color: rgba(251, 113, 133, 0.45);
-  background: $accent-soft;
+.metricSide {
+  align-items: flex-end;
+  text-align: right;
 }
 
 .metricLabel {
-  font-size: var(--bl-text-xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: $mute;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
-.metricValue {
-  font-size: var(--bl-text-3xl);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+.metricHuge {
+  font-family: var(--font-display);
+  font-stretch: 72%;
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 0.9;
   font-variant-numeric: tabular-nums;
 }
 
+.metricGold {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
 .progressTrack {
-  height: 0.5rem;
-  border-radius: var(--bl-radius-full);
-  background: rgba(250, 250, 250, 0.12);
+  height: 8px;
+  border-radius: 8px;
+  background: var(--line-strong);
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  min-width: 0.5rem;
-  border-radius: var(--bl-radius-full);
-  background: linear-gradient(90deg, $accent, #f43f5e);
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold));
   transition: width 0.6s ease;
 }
 
-// --- pie ---------------------------------------------------------------------
+.lead {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.countdownValue {
+  font-family: var(--font-display);
+  font-stretch: 72%;
+  font-weight: 900;
+  font-size: 56px;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.fairness {
+  h3 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  strong {
+    color: var(--text);
+  }
+}
+
+.avail {
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+.availHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 4px;
+
+  span:first-child {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  span:last-child {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+}
+
+.availName {
+  flex: 1;
+  font-size: 14px;
+}
+
+.availPrice {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.availOk,
+.availFew,
+.availOut {
+  width: 96px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.availOk {
+  color: var(--ok);
+}
+
+.availFew {
+  color: var(--warn);
+}
+
+.availOut {
+  color: var(--text-secondary);
+}
 
 .footer {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--bl-space-3);
-  padding-top: 0.75rem;
-  border-top: 1px solid $line;
-}
-
-.footNote {
-  flex: 1 1 16rem;
-  margin: var(--bl-space-0);
-  font-size: var(--bl-text-sm);
-  line-height: 1.5;
-  color: $mute;
-}
-
-.primaryAction,
-.secondaryAction {
-  min-height: 2.75rem; // objetivo táctil cómodo (WCAG 2.2 AA, 2.5.8)
-  padding: var(--bl-space-0) var(--bl-space-5);
-  border-radius: var(--bl-radius-full);
-  font: inherit;
-  font-size: var(--bl-text-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .primaryAction {
-  align-self: flex-start;
-  border: 0;
-  background: $paper;
-  color: $panel; // 19.2:1
-
-  &:hover {
-    background: var(--bl-elevated);
-  }
+  @include bt.pill-primary;
+  width: 100%;
+  min-height: 54px;
 }
 
 .secondaryAction {
-  border: 1px solid rgba(250, 250, 250, 0.38);
-  background: transparent;
-  color: $paper;
+  @include bt.pill-secondary;
+  width: 100%;
+  min-height: 54px;
+  border-color: var(--gold);
+  color: var(--gold);
+}
 
-  &:hover {
-    border-color: $paper;
-    background: rgba(250, 250, 250, 0.08);
-  }
+.footNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .srOnly {
   position: absolute;
   width: 1px;
   height: 1px;
+  padding: 0;
   margin: -1px;
-  padding: var(--bl-space-0);
   overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-@keyframes breathe {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.45;
-    transform: scale(0.82);
-  }
-}
-
-// Esperar ya es bastante molesto: para quien pide menos movimiento, ni el
-// punto respira ni la barra se desliza. Los datos siguen actualizándose igual.
-@media (prefers-reduced-motion: reduce) {
-  .pulse {
-    animation: none;
-  }
-
-  .progressFill {
-    transition: none;
-  }
-
-  .primaryAction,
-  .secondaryAction {
-    transition: none;
-  }
 }

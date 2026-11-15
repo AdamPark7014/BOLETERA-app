@@ -65,6 +65,8 @@ export interface Venue3DViewerProps {
   selectedIds?: string[];
   onToggleSeat?: (seatId: string) => void;
   mode?: 'orbit' | 'seat';
+  /** `false` oculta las barras superpuestas (vista desde el asiento en un panel chico). */
+  chrome?: boolean;
   className?: string;
   height?: number;
   currency?: string;
@@ -815,6 +817,7 @@ function Scene({
   onHoverSeat,
   mode,
   selectedSeat,
+  seatLookAt,
   autoOrbit,
   onUserInteract,
 }: {
@@ -864,6 +867,8 @@ function Scene({
   onHoverSeat: (seat: LaidOutSeat | null) => void;
   mode: 'orbit' | 'seat';
   selectedSeat?: { x: number; y: number; z: number };
+  /** Solo cuando el visor deduce el asiento: mirar al escenario. */
+  seatLookAt?: { x: number; y: number; z: number };
   autoOrbit: boolean;
   onUserInteract: () => void;
 }) {
@@ -907,7 +912,7 @@ function Scene({
       </Suspense>
 
       {mode === 'seat' && selectedSeat ? (
-        <SeatViewCamera target={selectedSeat} />
+        <SeatViewCamera target={selectedSeat} lookAt={seatLookAt} />
       ) : (
         <>
           <PerspectiveCamera makeDefault position={[0, 11, 13.5]} fov={40} />
@@ -924,6 +929,7 @@ export function Venue3DViewer({
   selectedIds = [],
   onToggleSeat,
   mode = 'orbit',
+  chrome = true,
   className,
   height = 520,
   currency = 'MXN',
@@ -1120,8 +1126,23 @@ export function Venue3DViewer({
 
   const wrapStyle = { ['--venue-h' as string]: `${height}px` } as CSSProperties;
 
+  // Vista desde el asiento: si el llamador no da coordenadas, se usa el último
+  // asiento elegido ya colocado en la escena (mismas unidades que la cámara).
+  const seatTarget = useMemo(() => {
+    if (selectedSeat) return selectedSeat;
+    if (mode !== 'seat' || selectedIds.length === 0) return undefined;
+    const lastId = selectedIds[selectedIds.length - 1];
+    const seat = laidOutAll.find((s) => s.id === lastId);
+    return seat ? { x: seat.px, y: seat.py, z: seat.pz } : undefined;
+  }, [selectedSeat, mode, selectedIds, laidOutAll]);
+  const seatLookAt = useMemo(() => ({ x: 0, y: 0.8, z: stageZ }), [stageZ]);
+
   return (
-    <div className={`${styles.wrap} ${className ?? ''}`} style={wrapStyle}>
+    <div
+      className={`${styles.wrap} ${className ?? ''}`}
+      style={wrapStyle}
+      data-chrome={chrome ? undefined : 'off'}
+    >
       <div className={styles.canvas}>
         <Canvas shadows dpr={[1, 1.75]} gl={{ antialias: true, alpha: false }}>
           <Scene
@@ -1142,7 +1163,8 @@ export function Venue3DViewer({
             onToggleSeat={onToggleSeat}
             onHoverSeat={setHover}
             mode={mode}
-            selectedSeat={selectedSeat}
+            selectedSeat={seatTarget}
+            seatLookAt={selectedSeat ? undefined : seatLookAt}
             autoOrbit={autoOrbit && selectedIds.length === 0}
             onUserInteract={() => setAutoOrbit(false)}
           />

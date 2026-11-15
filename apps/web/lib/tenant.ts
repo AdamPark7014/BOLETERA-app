@@ -12,14 +12,20 @@ export type TenantThemeSnapshot = {
 
 export type TenantCurrent = {
   id: string;
+  /** Marca visible: siempre Black Ticket. */
   name: string;
+  /** Nombre del tenant en la base, solo para metadatos. */
+  tenantName?: string;
   slug: string;
   theme: TenantThemeSnapshot | null;
 };
 
+/** Un solo nombre visible en toda la web. */
+export const BRAND_NAME = 'Black Ticket';
+
 export const FALLBACK_TENANT: TenantCurrent = {
   id: '',
-  name: 'BOLETERA',
+  name: BRAND_NAME,
   slug: 'boletera',
   theme: null,
 };
@@ -31,7 +37,8 @@ export const fetchTenantCurrent = cache(async (): Promise<TenantCurrent> => {
     if (data.error || !data.name) return FALLBACK_TENANT;
     return {
       id: data.id,
-      name: data.name,
+      name: BRAND_NAME,
+      tenantName: data.name,
       slug: data.slug,
       theme: data.theme ?? null,
     };

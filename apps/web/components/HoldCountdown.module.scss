@@ -1,3 +1,6 @@
+// Reloj de apartado / tiempo para pagar en el lenguaje Black Ticket: tarjeta
+// oscura con filete dorado (antes era una tarjeta blanca que rompía el tema).
+
 .wrap {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -5,99 +8,84 @@
     'label time'
     'hint hint'
     'renew renew';
-  gap: var(--bl-space-0-5) var(--bl-space-4);
-  margin-bottom: 1.25rem;
-  padding: var(--bl-space-3) var(--bl-space-4);
-  background: var(--bl-elevated);
-  border: 1px solid var(--bl-border-strong);
-  border-radius: var(--bl-radius-lg);
+  gap: 4px 16px;
+  padding: 16px 18px;
+  background: var(--card, #1a1a1a);
+  border: 1px solid var(--gold, #a68a6b);
+  border-radius: 18px;
 }
 
 .label {
   grid-area: label;
-  font-size: var(--bl-text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  /* 4.6:1 sobre #fff — var(--bl-gray-500) se quedaba en 4.2:1 (WCAG 2.2 AA) */
-  color: var(--bl-text-secondary);
   align-self: end;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #a8a29a);
 }
 
 .time {
   grid-area: time;
-  font-size: var(--bl-text-3xl);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  color: var(--bl-text-primary);
+  font-family: var(--font-display);
+  font-stretch: 72%;
+  font-weight: 900;
+  font-size: 36px;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold, #a68a6b);
 }
 
 .hint {
   grid-area: hint;
-  font-size: var(--bl-text-sm);
-  color: var(--bl-text-secondary);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary, #a8a29a);
 }
 
 .renew {
   grid-area: renew;
   justify-self: start;
-  margin-top: 0.5rem;
-  padding: var(--bl-space-2) var(--bl-space-3);
-  border: 1px solid var(--bl-gray-400);
-  border-radius: var(--bl-radius-sm);
-  background: var(--bl-elevated);
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong, #34343a);
+  border-radius: 999px;
+  background: transparent;
   font: inherit;
-  font-size: var(--bl-text-sm);
-  font-weight: 700;
-  color: var(--bl-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #fff);
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: var(--bl-gray-600);
+    border-color: var(--text-secondary, #a8a29a);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-
-  &:focus-visible {
-    outline: 2px solid #0f172a;
-    outline-offset: 2px;
-  }
 }
 
 .urgent {
-  border-color: var(--bl-warning);
-  background: var(--bl-warning-subtle);
+  border-color: var(--warn, #f5a524);
+  background: var(--warn-wash, rgba(245, 165, 36, 0.12));
 
-  .time {
-    /* var(--bl-warning-text) sobre var(--bl-warning-subtle) ≈ 4.6:1; se mantiene y se refuerza el borde */
-    color: var(--bl-warning-text);
-  }
-
+  .time,
   .label {
-    color: var(--bl-warning-text);
-  }
-
-  .hint {
-    color: #78350f;
+    color: var(--warn, #f5a524);
   }
 }
 
 .expired {
-  border-color: var(--bl-danger-text);
-  background: var(--bl-danger-subtle);
+  border-color: var(--danger, #e5484d);
+  background: var(--danger-wash, rgba(229, 72, 77, 0.12));
 
   .time,
-  .label {
-    color: var(--bl-danger-text);
-  }
-
+  .label,
   .hint {
-    color: var(--bl-danger-text);
+    color: var(--danger, #e5484d);
   }
 }
 
@@ -107,7 +95,7 @@
   width: 1px;
   height: 1px;
   margin: -1px;
-  padding: var(--bl-space-0);
+  padding: 0;
   overflow: hidden;
   clip: rect(0 0 0 0);
   clip-path: inset(50%);

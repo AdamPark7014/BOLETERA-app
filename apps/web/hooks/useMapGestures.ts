@@ -402,6 +402,9 @@ export function useMapGestures(options: GestureOptions): GestureController {
   useEffect(() => {
     return () => {
       if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
+      // Sin esto, el doble montaje de React (modo estricto) dejaba el id viejo
+      // y `requestFrame` no volvía a pintar nunca el mapa.
+      frameRef.current = null;
     };
   }, []);
 

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { SiteHeader } from '@/components/SiteHeader';
-import { CarteleraBoard } from '@/components/purchase/CarteleraBoard';
+import { EventGrid } from '@/components/home/EventGrid';
+import homeStyles from '@/components/home/home.module.scss';
 import { api } from '@/lib/api';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
 import { buildHubMetadata } from '@/lib/seo';
-import { fetchSiteContent } from '@/lib/site-content';
 import { fetchTenantCurrent } from '@/lib/tenant';
 
 export async function generateMetadata({
@@ -33,18 +33,17 @@ export default async function CiudadPage({ params }: { params: Promise<{ city: s
     failed = true;
   }
 
-  const site = await fetchSiteContent();
-
   return (
     <>
       <SiteHeader />
-      <main id="contenido" tabIndex={-1}>
-        <CarteleraBoard
-          initial={events}
-          initialFailed={failed}
-          headline={site.heroHeadline?.trim() || 'Cartelera'}
-          subcopy={site.heroSubcopy?.trim() || undefined}
-          presetCity={city}
+      <main id="contenido" tabIndex={-1} className={homeStyles.wrap}>
+        <EventGrid
+          events={events}
+          failed={failed}
+          kicker={'★ Ciudad ★'}
+          title={`Cartelera en ${city}`}
+          headingLevel={1}
+          emptyText="No hay funciones publicadas aquí por ahora. Revisa la cartelera completa."
         />
       </main>
     </>

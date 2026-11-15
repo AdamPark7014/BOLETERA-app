@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { offerTones } from '@/lib/zone-tones';
 import {
   flatSeats,
   normalizeSeatMap,
@@ -128,6 +129,8 @@ export function SeatMapViewer({
   focusZone,
   conflictSeatIds,
   resyncToken = 0,
+  compact = false,
+  controls,
 }: {
   eventId: string;
   mapData: unknown;
@@ -144,6 +147,14 @@ export function SeatMapViewer({
   conflictSeatIds?: readonly string[];
   /** Cambiar este número fuerza una resincronización del inventario. */
   resyncToken?: number;
+  /**
+   * Compra pública: controles flotantes sobre el mapa (zoom, encajar,
+   * accesibles, vista, salidas) en vez de la barra y la fila de secciones;
+   * la zona se elige en la lista de opciones de al lado.
+   */
+  compact?: boolean;
+  /** Botones extra para la pila flotante (p. ej. 3D). */
+  controls?: ReactNode;
 }) {
   // ---------------------------------------------------------------------------
   // Geometría (idéntica a la versión SVG: aquí no se re-maqueta nada)
@@ -268,6 +279,8 @@ export function SeatMapViewer({
   );
   const conflictUntilRef = useRef(0);
 
+  const tones = useMemo(() => offerTones(offers), [offers]);
+
   const priceRange = useMemo(() => {
     const prices = map.sections
       .map((s) => priceOf(s.id))
@@ -363,16 +376,21 @@ export function SeatMapViewer({
   const fillAt = useCallback(
     (index: number, status: SeatStatus, dimmed: boolean): string => {
       const seat = seats[index];
-      if (status === 'selected') return '#282522';
+      // Paleta de la maqueta: libre en bronce/dorado según precio, ocupado en
+      // gris, tu selección en blanco con anillo dorado.
+      if (status === 'selected') return '#FFFFFF';
       if (dimmed) return '#141416';
-      if (status === 'unknown') return '#17171A';
-      if (status === 'blocked') return '#141416';
-      if (status === 'sold') return '#3A342C';
-      if (status === 'held') return '#17171A';
-      if (seat.accessible && (status === 'available' || status === 'held')) return '#17171A';
-      return '#17171A';
+      if (status === 'unknown') return '#1C1C1F';
+      if (status === 'blocked' || status === 'sold' || status === 'held') return '#2A2A2E';
+      // «Vista»: calidad de visión del asiento sobre la misma rampa dorada.
+      const score = heatMode === 'view' ? sightlineBySeat?.get(seat.id) : undefined;
+      if (typeof score === 'number') {
+        const t = score > 1 ? score / 100 : score;
+        return mixColor('#3A2F25', '#F2E6D2', Math.max(0, Math.min(1, t)));
+      }
+      return tones.get(seat.offerId) || '#5C4E3E';
     },
-    [seats, heatMode, priceRange.min, priceRange.max, sightlineBySeat]
+    [seats, tones, heatMode, sightlineBySeat]
   );
 
   /**
@@ -418,16 +436,18 @@ export function SeatMapViewer({
     return sectionShapes.map((shape) => {
       const stat = derived.bySection.get(shape.id) ?? { free: 0, total: shape.seatCount };
       const occupancy = stat.total ? 1 - stat.free / stat.total : 1;
-      const base = '#17171A';
       const dimmed =
         (levelFilter !== 'ALL' && (shape.levelId ?? '') !== levelFilter) ||
         (sectionFilter !== 'ALL' && sectionFilter !== shape.id);
       const price = priceOf(shape.id);
+      // Color de su zona (maqueta): por precio y, si todas cuestan igual, por zona.
+      const meta = sectionMeta.get(shape.id);
+      const zoneOffer = resolveOfferForSection(offers, meta?.slug ?? '', meta?.name);
+      const tier = (zoneOffer && tones.get(zoneOffer.id)) || '#5C4E3E';
       return {
         shape,
-        // Cuanto más llena, más se apaga hacia el gris del fondo.
-        fill: mixColor(base, '#27272a', occupancy * 0.8),
-        outline: base,
+        fill: mixColor(tier, '#2A2A2E', occupancy >= 1 ? 1 : occupancy * 0.35),
+        outline: sectionFilter === shape.id ? '#FFFFFF' : '#000000',
         dimmed,
         title: shorten(shape.name),
         subtitle:
@@ -442,10 +462,10 @@ export function SeatMapViewer({
   }, [
     sectionShapes,
     derived.bySection,
-    heatMode,
+    tones,
+    offers,
+    sectionMeta,
     priceOf,
-    priceRange.min,
-    priceRange.max,
     levelFilter,
     sectionFilter,
   ]);
@@ -856,100 +876,102 @@ export function SeatMapViewer({
         </div>
       )}
 
-      <div className={styles.toolbar}>
-        <ul className={styles.legend} aria-label="Leyenda de estados">
-          <li>
-            <LegendMark kind="available" />
-            Libre <em>{derived.counts.available}</em>
-          </li>
-          <li>
-            <LegendMark kind="held" />
-            Apartada <em>{derived.counts.held}</em>
-          </li>
-          <li>
-            <LegendMark kind="sold" />
-            No disponible <em>{derived.counts.sold}</em>
-          </li>
-          <li>
-            <LegendMark kind="selected" />
-            Tuya <em>{selected.length}</em>
-          </li>
-          <li>
-            <LegendMark kind="accessible" />
-            Accesible <em>{derived.counts.accessibleFree}</em>
-          </li>
-        </ul>
-        <div className={styles.zoomBtns}>
-          <span className={feed.live ? styles.liveOn : styles.liveOff} role="status">
-            {feed.live ? 'En vivo' : 'Actualizando cada 12 s'}
-          </span>
-          <button
-            type="button"
-            className={accessibleOnly ? styles.toggleOn : undefined}
-            onClick={() => setAccessibleOnly((v) => !v)}
-            aria-pressed={accessibleOnly}
-            title="Mostrar solo lugares accesibles"
-          >
-            ♿ Accesibles
-          </button>
-          <button
-            type="button"
-            className={heatMode === 'price' ? styles.toggleOn : undefined}
-            onClick={() => setHeatMode((v) => (v === 'price' ? 'off' : 'price'))}
-            aria-pressed={heatMode === 'price'}
-          >
-            Precio
-          </button>
-          <button
-            type="button"
-            className={heatMode === 'view' ? styles.toggleOn : undefined}
-            onClick={() => setHeatMode((v) => (v === 'view' ? 'off' : 'view'))}
-            aria-pressed={heatMode === 'view'}
-            disabled={seats.length > SIGHTLINE_MAX_SEATS}
-            title={
-              seats.length > SIGHTLINE_MAX_SEATS
-                ? 'El heat de vista no está disponible en recintos de más de 12.000 butacas'
-                : 'Calor de calidad de vista (sightlines)'
-            }
-          >
-            Vista
-          </button>
-          <button
-            type="button"
-            className={showEgress ? styles.toggleOn : undefined}
-            onClick={() => setShowEgress((v) => !v)}
-            aria-pressed={showEgress}
-            aria-controls="egress-legend egress-status"
-            title="Rutas de salida por sección"
-            disabled={
-              !projected.aisles.length && !projected.exits.length && !projected.stairs.length
-            }
-          >
-            Salidas
-          </button>
-          <button
-            type="button"
-            onClick={() => gestures.zoomBy(1.25, undefined, undefined, true)}
-            aria-label="Acercar"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            onClick={() => gestures.zoomBy(1 / 1.25, undefined, undefined, true)}
-            aria-label="Alejar"
-          >
-            −
-          </button>
-          <button
-            type="button"
-            onClick={() => gestures.fitRect(bounds, 28, true)}
-            aria-label="Ajustar al recinto"
-          >
-            Encajar
-          </button>
+      {!compact ? (
+        <div className={styles.toolbar}>
+          <ul className={styles.legend} aria-label="Leyenda de estados">
+            <li>
+              <LegendMark kind="available" />
+              Libre <em>{derived.counts.available}</em>
+            </li>
+            <li>
+              <LegendMark kind="held" />
+              Apartada <em>{derived.counts.held}</em>
+            </li>
+            <li>
+              <LegendMark kind="sold" />
+              No disponible <em>{derived.counts.sold}</em>
+            </li>
+            <li>
+              <LegendMark kind="selected" />
+              Tuya <em>{selected.length}</em>
+            </li>
+            <li>
+              <LegendMark kind="accessible" />
+              Accesible <em>{derived.counts.accessibleFree}</em>
+            </li>
+          </ul>
+          <div className={styles.zoomBtns}>
+            <span className={feed.live ? styles.liveOn : styles.liveOff} role="status">
+              {feed.live ? 'En vivo' : 'Actualizando cada 12 s'}
+            </span>
+            <button
+              type="button"
+              className={accessibleOnly ? styles.toggleOn : undefined}
+              onClick={() => setAccessibleOnly((v) => !v)}
+              aria-pressed={accessibleOnly}
+              title="Mostrar solo lugares accesibles"
+            >
+              ♿ Accesibles
+            </button>
+            <button
+              type="button"
+              className={heatMode === 'price' ? styles.toggleOn : undefined}
+              onClick={() => setHeatMode((v) => (v === 'price' ? 'off' : 'price'))}
+              aria-pressed={heatMode === 'price'}
+            >
+              Precio
+            </button>
+            <button
+              type="button"
+              className={heatMode === 'view' ? styles.toggleOn : undefined}
+              onClick={() => setHeatMode((v) => (v === 'view' ? 'off' : 'view'))}
+              aria-pressed={heatMode === 'view'}
+              disabled={seats.length > SIGHTLINE_MAX_SEATS}
+              title={
+                seats.length > SIGHTLINE_MAX_SEATS
+                  ? 'El heat de vista no está disponible en recintos de más de 12.000 butacas'
+                  : 'Calor de calidad de vista (sightlines)'
+              }
+            >
+              Vista
+            </button>
+            <button
+              type="button"
+              className={showEgress ? styles.toggleOn : undefined}
+              onClick={() => setShowEgress((v) => !v)}
+              aria-pressed={showEgress}
+              aria-controls="egress-legend egress-status"
+              title="Rutas de salida por sección"
+              disabled={
+                !projected.aisles.length && !projected.exits.length && !projected.stairs.length
+              }
+            >
+              Salidas
+            </button>
+            <button
+              type="button"
+              onClick={() => gestures.zoomBy(1.25, undefined, undefined, true)}
+              aria-label="Acercar"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => gestures.zoomBy(1 / 1.25, undefined, undefined, true)}
+              aria-label="Alejar"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              onClick={() => gestures.fitRect(bounds, 28, true)}
+              aria-label="Ajustar al recinto"
+            >
+              Encajar
+            </button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {heatMode === 'price' && priceRange.max > priceRange.min && (
         <div className={styles.heatBar}>
@@ -1048,7 +1070,7 @@ export function SeatMapViewer({
         </div>
       )}
 
-      {visibleSections.length > 0 && (
+      {!compact && visibleSections.length > 0 && (
         <div className={styles.sections} role="toolbar" aria-label="Secciones">
           <button
             type="button"
@@ -1079,6 +1101,102 @@ export function SeatMapViewer({
         </div>
       )}
 
+      {compact ? (
+        <div className={styles.floatAnchor}>
+          <span className={feed.live ? styles.floatLive : styles.floatIdle} role="status">
+            {feed.live ? 'En vivo' : 'Actualiza cada 12 s'}
+          </span>
+          <div className={styles.floatStack} role="toolbar" aria-label="Controles del mapa">
+            <button
+              type="button"
+              onClick={() => gestures.zoomBy(1.25, undefined, undefined, true)}
+              aria-label="Acercar"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => gestures.zoomBy(1 / 1.25, undefined, undefined, true)}
+              aria-label="Alejar"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              onClick={() => gestures.fitRect(bounds, 28, true)}
+              aria-label="Ver todo el recinto"
+              title="Ver todo el recinto"
+            >
+              <svg
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              aria-pressed={accessibleOnly}
+              onClick={() => setAccessibleOnly((v) => !v)}
+              aria-label="Solo lugares accesibles"
+              title="Solo lugares accesibles"
+            >
+              ♿&#xFE0E;
+            </button>
+            <button
+              type="button"
+              aria-pressed={heatMode === 'view'}
+              onClick={() => setHeatMode((v) => (v === 'view' ? 'off' : 'view'))}
+              disabled={seats.length > SIGHTLINE_MAX_SEATS}
+              aria-label="Calidad de vista"
+              title="Calidad de vista"
+            >
+              <svg
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              aria-pressed={showEgress}
+              onClick={() => setShowEgress((v) => !v)}
+              aria-controls="egress-legend egress-status"
+              disabled={
+                !projected.aisles.length && !projected.exits.length && !projected.stairs.length
+              }
+              aria-label="Rutas de salida"
+              title="Rutas de salida"
+            >
+              <svg
+                aria-hidden="true"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" />
+              </svg>
+            </button>
+            {controls}
+          </div>
+        </div>
+      ) : null}
+
       <div
         ref={gestures.containerRef}
         className={`${styles.viewport} ${panning ? styles.dragging : ''}`}
@@ -1108,8 +1226,8 @@ export function SeatMapViewer({
         >
           <defs>
             <linearGradient id="stageGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2a1218" />
-              <stop offset="100%" stopColor="#12080c" />
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="100%" stopColor="#D9D4CC" />
             </linearGradient>
           </defs>
           <g ref={svgBaseGroupRef}>
@@ -1120,7 +1238,7 @@ export function SeatMapViewer({
               height={20}
               rx={2}
               fill="url(#stageGrad)"
-              stroke="rgba(225,29,72,0.45)"
+              stroke="rgba(166,138,107,0.6)"
               strokeWidth={1}
             />
             <rect
@@ -1129,7 +1247,7 @@ export function SeatMapViewer({
               width={stage.width * 0.56}
               height={3}
               rx={1}
-              fill="#e11d48"
+              fill="#A68A6B"
               opacity={0.9}
             />
             {projected.aisles.map((aisle) =>
@@ -1332,7 +1450,7 @@ export function SeatMapViewer({
                     cy={f.y}
                     r={6}
                     fill="rgba(250,250,250,0.92)"
-                    stroke="#e11d48"
+                    stroke="#A68A6B"
                     strokeWidth={2}
                   />
                   <text

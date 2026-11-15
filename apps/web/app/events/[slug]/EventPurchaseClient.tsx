@@ -12,11 +12,13 @@ import { ensureGuestSession, renewGuestSession } from '@/components/seatmap/sess
 import { HoldErrorNotice } from '@/components/seatmap/HoldErrorNotice';
 import { flatSeats, normalizeSeatMap, resolveOfferForSection } from '@boletera/venue-engine';
 import type { Venue3DViewerProps } from '@boletera/venue-3d';
-import { Money, TicketButton, formatTicketAmount } from '@boletera/ui';
+import Image from 'next/image';
+import Link from 'next/link';
+import { StageArt, formatTicketAmount } from '@boletera/ui';
 import { useCartStore, type CartOfferLine } from '@/lib/cart-store';
 import { fetchCartPricing, pricingTotal } from '@/lib/pricing';
-import purchase from '@/components/purchase/purchase.module.scss';
 import { useWaitingRoom } from '@/components/waiting-room/useWaitingRoom';
+import { offerTones } from '@/lib/zone-tones';
 import { WaitingRoomGate } from '@/components/waiting-room/WaitingRoomGate';
 import { isQueueRejection } from '@/components/waiting-room/queue-client';
 import styles from './event.module.scss';
@@ -28,7 +30,9 @@ type Offer = {
   zone: string;
   name?: string;
   basePrice: string;
+  allInPrice?: number;
   remainingQuantity?: number;
+  isAvailable?: boolean;
 };
 
 type HoldResponse = {
@@ -59,6 +63,8 @@ export function EventPurchaseClient({
   minPriceAllIn,
   currency = 'MXN',
   focusZone = null,
+  image = null,
+  allowResale,
 }: {
   eventId: string;
   eventTitle?: string;
@@ -73,6 +79,9 @@ export function EventPurchaseClient({
   minPriceAllIn?: number;
   currency?: string;
   focusZone?: string | null;
+  /** Miniatura del evento para la lista de opciones. */
+  image?: string | null;
+  allowResale?: boolean;
 }) {
   const router = useRouter();
   const addToCart = useCartStore((s) => s.addItem);
@@ -162,8 +171,11 @@ export function EventPurchaseClient({
     else setBuyMode((m) => (m === 'ga' ? 'map' : m));
   }, [hasSeatMap, isGaOffer]);
 
+  // La vista desde el asiento usa el mismo visor 3D: se carga al elegir butaca.
+  const want3d = view3d || (buyMode === 'map' && selected.length > 0);
+
   useEffect(() => {
-    if (!view3d || Venue3DViewer || viewer3dError) return;
+    if (!want3d || Venue3DViewer || viewer3dError) return;
     let cancelled = false;
     import('@boletera/venue-3d')
       .then((m) => {
@@ -178,7 +190,7 @@ export function EventPurchaseClient({
     return () => {
       cancelled = true;
     };
-  }, [view3d, Venue3DViewer, viewer3dError]);
+  }, [want3d, Venue3DViewer, viewer3dError]);
 
   useEffect(() => {
     fetch(`${API}/3d/events/${eventId}/interactive`)
@@ -521,10 +533,39 @@ export function EventPurchaseClient({
   const canPayMap = selected.length > 0 && buyMode === 'map';
   const canPayQty = (buyMode === 'best' || buyMode === 'ga') && qty > 0 && Boolean(focusedOffer);
   const canApart = buyMode === 'map' ? canPayMap : canPayQty;
-  const apartLabel =
-    allIn != null && allIn > 0 ? `Apartar · ${formatTicketAmount(allIn)}` : 'Apartar';
-  const zoneChoices = offers.slice(0, 5);
-  const zoneOverflow = offers.length > 5;
+  const offerPrice = (offer: Offer) => Number(offer.allInPrice ?? offer.basePrice);
+  const cheapest = offers
+    .filter((o) => o.isAvailable !== false && o.remainingQuantity !== 0)
+    .reduce<Offer | null>((min, o) => (!min || offerPrice(o) < offerPrice(min) ? o : min), null);
+  const sectionLabel =
+    buyMode === 'map'
+      ? (selectedInfo[selectedInfo.length - 1]?.sectionName ?? focusedOffer?.name ?? null)
+      : focusedOffer?.name || focusedOffer?.zone || null;
+  const summary =
+    buyMode === 'map'
+      ? selected.length
+        ? `${selected.length} ${selected.length === 1 ? 'boleto' : 'boletos'} · ${selectedInfo
+            .map((info) => (info.sectionName ? `${info.sectionName} ${info.label}` : info.label))
+            .join(', ')}`
+        : 'Elige tus asientos en el mapa'
+      : focusedOffer
+        ? `${qty} ${qty === 1 ? 'boleto' : 'boletos'} · ${focusedOffer.name || focusedOffer.zone}${
+            buyMode === 'best' ? ' · mejores juntos' : ''
+          }`
+        : 'Elige una zona';
+  const focusedRemaining = offers.find((o) => o.id === focusedOffer?.id)?.remainingQuantity;
+  const tones = offerTones(offers);
+  const payLabel = loading
+    ? 'Apartando tus lugares…'
+    : buyMode === 'map' && selected.length === 0
+      ? 'Elige tus asientos'
+      : !focusedOffer && buyMode !== 'map'
+        ? 'Elige una zona'
+        : pricingLoading
+          ? 'Calculando el total…'
+          : 'Continuar al pago';
+  const apart = () => (buyMode === 'map' ? void checkoutMap() : void checkoutBestOrGa());
+  const payDisabled = loading || pricingLoading || !canApart || allIn == null || allIn <= 0;
 
   // --- puerta de la sala de espera -------------------------------------------
   // Todo lo de arriba son hooks y se ejecuta siempre; sólo el render se corta.
@@ -541,211 +582,401 @@ export function EventPurchaseClient({
   if (room.phase === 'queued' || room.phase === 'left') {
     return (
       <div className={styles.buyBox} id="compra">
-        <WaitingRoomGate room={room} eventTitle={eventTitle} />
+        <WaitingRoomGate
+          room={room}
+          eventTitle={eventTitle}
+          image={image}
+          startsAt={startsAt}
+          venueName={venueName}
+          offers={offers}
+        />
       </div>
     );
   }
 
   return (
-    <div id="compra" className={purchase.stack}>
-      {room.phase === 'admitted' && (
-        <p className={purchase.lead} role="status">
-          Es tu turno.
-        </p>
-      )}
-
-      {hasSeatMap && !isGaOffer ? (
-        <div className={purchase.segment} role="group" aria-label="Modo">
-          <button type="button" aria-pressed={buyMode === 'map'} onClick={() => setBuyMode('map')}>
-            Mapa
-          </button>
-          <button
-            type="button"
-            aria-pressed={buyMode === 'best'}
-            onClick={() => setBuyMode('best')}
-          >
-            Mejores
-          </button>
-          <button type="button" aria-pressed={buyMode === 'ga'} onClick={() => setBuyMode('ga')}>
-            General
-          </button>
-        </div>
-      ) : null}
-
-      {offers.length > 1 && !zoneOverflow ? (
-        <div className={purchase.segment} role="group" aria-label="Zona">
-          {zoneChoices.map((offer) => {
-            const active = focusedOffer?.id === offer.id;
-            return (
-              <button
-                key={offer.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setZonePick(offer.zone)}
-              >
-                {offer.name || offer.zone} · {formatTicketAmount(Number(offer.basePrice))}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {zoneOverflow ? (
-        <div className={purchase.stack}>
-          <button
-            type="button"
-            className={purchase.textButton}
-            onClick={() =>
-              setZonePick(zonePick ? null : (focusedOffer?.zone ?? offers[0]?.zone ?? null))
-            }
-          >
-            {focusedOffer
-              ? `${focusedOffer.name || focusedOffer.zone} · ${formatTicketAmount(Number(focusedOffer.basePrice))}`
-              : 'Zona'}
-          </button>
-          <div className={purchase.list}>
-            {offers.map((offer) => (
-              <button
-                key={offer.id}
-                type="button"
-                className={purchase.textButton}
-                aria-pressed={focusedOffer?.id === offer.id}
-                onClick={() => setZonePick(offer.zone)}
-              >
-                {offer.name || offer.zone} · {formatTicketAmount(Number(offer.basePrice))}
-                {offer.remainingQuantity != null ? ` · ${offer.remainingQuantity} libres` : ''}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {(buyMode === 'best' || buyMode === 'ga' || !hasSeatMap) && focusedOffer ? (
-        <div className={purchase.stack}>
-          <p className={purchase.lead}>
-            {focusedOffer.name || focusedOffer.zone}
-            {offers.find((offer) => offer.id === focusedOffer.id)?.remainingQuantity != null
-              ? ` · ${offers.find((offer) => offer.id === focusedOffer.id)?.remainingQuantity} libres`
-              : ''}
-          </p>
-          <p className={purchase.caption}>Mínimo 1 · máximo 8</p>
-          <div className={purchase.segment} role="group" aria-label="Cantidad">
-            <button
-              type="button"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-              aria-label="Menos"
-            >
-              −
-            </button>
-            <span className={purchase.mono}>{qty}</span>
-            <button
-              type="button"
-              onClick={() => setQty((q) => Math.min(8, q + 1))}
-              aria-label="Más"
-            >
-              +
-            </button>
-          </div>
-          {buyMode === 'best' ? (
-            <p className={purchase.caption}>La propuesta se confirma al apartar.</p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {buyMode === 'map' && !isGaOffer && hasSeatMap ? (
-        view3d ? (
-          Venue3DViewer ? (
-            <Venue3DViewer
-              mode="orbit"
-              height={520}
-              currency={currency}
-              seats={seatsFor3d}
-              selectedIds={selected}
-              onToggleSeat={toggleSeat}
-              stage={normalized.venue?.stage}
-              aisles={normalized.venue?.aisles}
-              obstacles={normalized.venue?.obstacles}
-              stairs={normalized.venue?.stairs}
-              exits={normalized.venue?.exits}
-              furniture={normalized.venue?.furniture}
-              focusPoints={normalized.venue?.focusPoints}
-              levels={normalized.venue?.levels}
-              mapData={normalized}
-            />
+    <div id="compra" className={styles.buyBody}>
+      <div className={styles.filters}>
+        <div className={styles.filtersInner}>
+          {buyMode !== 'map' ? (
+            <>
+              <span className={styles.filterLabel}>Boletos</span>
+              <div className={styles.stepper} role="group" aria-label="Cantidad de boletos">
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  aria-label="Quitar un boleto"
+                  disabled={qty <= 1}
+                >
+                  −
+                </button>
+                <span aria-live="polite">{qty}</span>
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => Math.min(8, q + 1))}
+                  aria-label="Agregar un boleto"
+                  disabled={qty >= 8}
+                >
+                  +
+                </button>
+              </div>
+            </>
           ) : (
-            <p className={purchase.lead}>Cargando la sala.</p>
-          )
-        ) : (
-          <SeatMapViewer
-            eventId={eventId}
-            mapData={normalized}
-            selected={selected}
-            offers={offers}
-            currency={currency}
-            focusZone={zonePick}
-            onToggle={toggleSeat}
-            onClear={() => setSelected([])}
-            conflictSeatIds={conflictSeatIds}
-            resyncToken={resyncToken}
-          />
-        )
-      ) : null}
+            <span className={styles.filterLabel}>Hasta 8 asientos</span>
+          )}
 
-      {buyMode === 'map' && hasSeatMap ? (
-        <TicketButton
-          type="button"
-          variant="secondary"
-          onClick={() => setView3d((value) => !value)}
-        >
-          {view3d ? 'Plano' : 'Vista 3D'}
-        </TicketButton>
-      ) : null}
-
-      {holdError ? (
-        <HoldErrorNotice
-          error={holdError}
-          onRetry={
-            holdError.kind === 'hold-limit'
-              ? undefined
-              : () => (buyMode === 'map' ? void checkoutMap() : void checkoutBestOrGa())
-          }
-          onDismiss={() => {
-            setHoldError(null);
-            setConflictSeatIds([]);
-          }}
-        />
-      ) : null}
-
-      {totalMoved ? <p className={purchase.lead}>El total cambió.</p> : null}
-      {allIn == null && canApart && !pricingLoading ? (
-        <p className={purchase.lead}>El total no está disponible.</p>
-      ) : null}
-
-      <div className={purchase.dock}>
-        <div className={purchase.dockInner}>
-          <p className={purchase.dockSummary}>
-            {buyMode === 'map'
-              ? selected.length
-                ? `${selected.length} ${selected.length === 1 ? 'butaca' : 'butacas'}`
-                : 'Ninguna butaca'
-              : focusedOffer
-                ? `${qty} · ${focusedOffer.name || focusedOffer.zone}`
-                : 'Sin zona'}
-          </p>
-          {allIn != null ? <Money label="Total" amount={allIn} currency /> : null}
-          {selected.length > 0 && buyMode === 'map' ? (
-            <TicketButton type="button" variant="secondary" onClick={() => setSelected([])}>
-              Soltar
-            </TicketButton>
+          {hasSeatMap && !isGaOffer ? (
+            <div className={styles.chipRow} role="group" aria-label="Cómo elegir">
+              <button
+                type="button"
+                aria-pressed={buyMode === 'map'}
+                onClick={() => setBuyMode('map')}
+              >
+                En el mapa
+              </button>
+              <button
+                type="button"
+                aria-pressed={buyMode === 'best'}
+                onClick={() => setBuyMode('best')}
+              >
+                Mejor disponible
+              </button>
+              <button
+                type="button"
+                aria-pressed={buyMode === 'ga'}
+                onClick={() => setBuyMode('ga')}
+              >
+                General
+              </button>
+            </div>
           ) : null}
-          <TicketButton
-            type="button"
-            disabled={loading || pricingLoading || !canApart || allIn == null || allIn <= 0}
-            onClick={() => (buyMode === 'map' ? void checkoutMap() : void checkoutBestOrGa())}
-          >
-            {loading ? 'Apartando' : apartLabel}
-          </TicketButton>
+
+          <div className={styles.chipRow}>
+            {cheapest && offers.length > 1 ? (
+              <button
+                type="button"
+                aria-pressed={Boolean(zonePick) && focusedOffer?.id === cheapest.id}
+                onClick={() => setZonePick(cheapest.zone)}
+              >
+                Precio más bajo
+              </button>
+            ) : null}
+            {allowResale !== false ? <Link href="/resale">Reventa oficial</Link> : null}
+          </div>
+
+          <span className={styles.filterNote}>Todos los precios incluyen cargos e IVA</span>
         </div>
+      </div>
+
+      <div className={styles.layout}>
+        <div className={styles.mapCol}>
+          {room.phase === 'admitted' && (
+            <p className={styles.turn} role="status">
+              Es tu turno. Elige tus boletos.
+            </p>
+          )}
+
+          <div className={styles.mapCard}>
+            {buyMode === 'map' && !isGaOffer && hasSeatMap ? (
+              <>
+                {view3d ? (
+                  <div className={styles.mapTools}>
+                    <button
+                      type="button"
+                      className={styles.tool3d}
+                      aria-pressed
+                      aria-label="Volver al plano"
+                      onClick={() => setView3d(false)}
+                    >
+                      2D
+                    </button>
+                  </div>
+                ) : null}
+                {view3d ? (
+                  Venue3DViewer ? (
+                    <Venue3DViewer
+                      mode="orbit"
+                      height={560}
+                      currency={currency}
+                      seats={seatsFor3d}
+                      selectedIds={selected}
+                      onToggleSeat={toggleSeat}
+                      stage={normalized.venue?.stage}
+                      aisles={normalized.venue?.aisles}
+                      obstacles={normalized.venue?.obstacles}
+                      stairs={normalized.venue?.stairs}
+                      exits={normalized.venue?.exits}
+                      furniture={normalized.venue?.furniture}
+                      focusPoints={normalized.venue?.focusPoints}
+                      levels={normalized.venue?.levels}
+                      mapData={normalized}
+                    />
+                  ) : (
+                    <p className={styles.loadingMap} role="status">
+                      Cargando la sala en 3D…
+                    </p>
+                  )
+                ) : (
+                  <SeatMapViewer
+                    eventId={eventId}
+                    mapData={normalized}
+                    selected={selected}
+                    offers={offers}
+                    currency={currency}
+                    focusZone={zonePick}
+                    onToggle={toggleSeat}
+                    onClear={() => setSelected([])}
+                    conflictSeatIds={conflictSeatIds}
+                    resyncToken={resyncToken}
+                    compact
+                    controls={
+                      <button
+                        type="button"
+                        className={styles.tool3d}
+                        aria-pressed={false}
+                        aria-label="Vista 3D"
+                        onClick={() => setView3d(true)}
+                      >
+                        3D
+                      </button>
+                    }
+                  />
+                )}
+                {viewer3dError ? <p className={styles.muted}>{viewer3dError}</p> : null}
+              </>
+            ) : (
+              <div className={styles.zoneHero}>
+                <StageArt seed={focusedOffer?.id ?? eventId} className={styles.cover} />
+                <div className={styles.zoneHeroCopy}>
+                  <span className={styles.kicker}>
+                    {buyMode === 'best' ? 'Mejor disponible' : 'Zona'}
+                  </span>
+                  <strong className={styles.zoneHeroTitle}>
+                    {focusedOffer ? focusedOffer.name || focusedOffer.zone : 'Elige una zona'}
+                  </strong>
+                  <span className={styles.muted}>
+                    {focusedRemaining != null ? `${focusedRemaining} disponibles · ` : ''}
+                    {buyMode === 'best'
+                      ? 'Te damos los mejores lugares juntos; se confirman al apartar.'
+                      : 'Acceso general: tu lugar se asigna en la zona.'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {offers.length > 0 ? (
+            <ul className={styles.zoneLegend} aria-label="Colores por zona">
+              {offers.map((offer) => (
+                <li key={offer.id}>
+                  <i style={{ background: tones.get(offer.id) }} aria-hidden="true" />
+                  {offer.name || offer.zone} · {formatTicketAmount(offerPrice(offer))}
+                </li>
+              ))}
+              <li>
+                <i className={styles.swSoldOut} aria-hidden="true" />
+                Agotada u ocupado
+              </li>
+            </ul>
+          ) : null}
+
+          <div className={styles.seatPanel}>
+            <div className={styles.seatView}>
+              {buyMode === 'map' && selected.length > 0 && Venue3DViewer ? (
+                <Venue3DViewer
+                  mode="seat"
+                  chrome={false}
+                  height={260}
+                  currency={currency}
+                  seats={seatsFor3d}
+                  selectedIds={selected}
+                  stage={normalized.venue?.stage}
+                  aisles={normalized.venue?.aisles}
+                  obstacles={normalized.venue?.obstacles}
+                  stairs={normalized.venue?.stairs}
+                  exits={normalized.venue?.exits}
+                  furniture={normalized.venue?.furniture}
+                  focusPoints={normalized.venue?.focusPoints}
+                  levels={normalized.venue?.levels}
+                  mapData={normalized}
+                />
+              ) : (
+                <>
+                  <StageArt seed={sectionLabel ?? eventId} className={styles.cover} />
+                  <span className={styles.seatViewNote}>
+                    {buyMode === 'map'
+                      ? selected.length
+                        ? 'Cargando la vista desde tu asiento…'
+                        : 'Elige un asiento para ver el escenario desde ahí'
+                      : sectionLabel
+                        ? `Vista general · ${sectionLabel}`
+                        : 'Vista general del recinto'}
+                  </span>
+                </>
+              )}
+              {buyMode === 'map' && selected.length > 0 ? (
+                <span className={styles.seatViewTag}>
+                  Vista desde {selectedInfo[selectedInfo.length - 1]?.label ?? 'tu asiento'}
+                </span>
+              ) : null}
+            </div>
+            <div className={styles.seatInfo}>
+              <div className={styles.seatInfoHead}>
+                <h2 className={styles.h3}>{sectionLabel ?? 'Tu selección'}</h2>
+                <span className={styles.muted}>Escenario hacia arriba</span>
+              </div>
+              {buyMode === 'map' ? (
+                selectedInfo.length ? (
+                  <ul className={styles.seatChips} aria-label="Asientos elegidos">
+                    {selectedInfo.map((info) => (
+                      <li key={info.seatId}>
+                        <span>
+                          {info.sectionName ? `${info.sectionName} · ` : ''}
+                          {info.label}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={`Quitar ${info.label}`}
+                          onClick={() => toggleSeat(info.seatId)}
+                        >
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={styles.muted}>
+                    Toca una zona del mapa para acercarte y luego tus asientos. También puedes
+                    elegir por lista desde el mapa.
+                  </p>
+                )
+              ) : (
+                <p className={styles.muted}>
+                  {qty} {qty === 1 ? 'boleto' : 'boletos'} en{' '}
+                  {focusedOffer?.name || focusedOffer?.zone || 'la zona elegida'}.
+                </p>
+              )}
+              <ul className={styles.legend}>
+                <li>
+                  <i className={styles.swFree} aria-hidden="true" />
+                  Disponible
+                </li>
+                <li>
+                  <i className={styles.swSold} aria-hidden="true" />
+                  Ocupado
+                </li>
+                <li>
+                  <i className={styles.swMine} aria-hidden="true" />
+                  Tu selección
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {holdError ? (
+            <HoldErrorNotice
+              error={holdError}
+              onRetry={holdError.kind === 'hold-limit' ? undefined : apart}
+              onDismiss={() => {
+                setHoldError(null);
+                setConflictSeatIds([]);
+              }}
+            />
+          ) : null}
+        </div>
+
+        <aside className={styles.side} aria-label="Opciones y total">
+          <div className={styles.sideHead}>
+            <h2 className={styles.h3}>
+              {offers.length} {offers.length === 1 ? 'opción' : 'opciones'}
+              {buyMode !== 'map' ? ` para ${qty}` : ''}
+            </h2>
+            <span className={styles.muted}>Precio final por boleto</span>
+          </div>
+          <ul className={styles.options}>
+            {offers.map((offer) => {
+              const active = focusedOffer?.id === offer.id;
+              const out = offer.isAvailable === false || offer.remainingQuantity === 0;
+              return (
+                <li key={offer.id}>
+                  <button
+                    type="button"
+                    className={styles.option}
+                    aria-pressed={active}
+                    disabled={out}
+                    onClick={() => setZonePick(offer.zone)}
+                  >
+                    <span className={styles.optionThumb}>
+                      {image ? (
+                        <Image src={image} alt="" fill sizes="64px" className={styles.cover} />
+                      ) : (
+                        <StageArt seed={offer.id} fade={false} className={styles.cover} />
+                      )}
+                    </span>
+                    <span className={styles.optionCopy}>
+                      <strong>
+                        <i
+                          className={styles.toneDot}
+                          style={{ background: tones.get(offer.id) }}
+                          aria-hidden="true"
+                        />
+                        {offer.name || offer.zone}
+                      </strong>
+                      <span>
+                        {out
+                          ? 'Agotada'
+                          : offer.remainingQuantity != null
+                            ? `${offer.remainingQuantity} disponibles`
+                            : 'Disponible'}
+                        {offer.id === cheapest?.id && offers.length > 1 ? ' · el más bajo' : ''}
+                      </span>
+                    </span>
+                    <span className={styles.optionPrice}>
+                      {formatTicketAmount(offerPrice(offer))}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className={styles.summary}>
+            <p className={styles.summaryLine}>{summary}</p>
+            <div className={styles.summaryTotal}>
+              <span>Total · cargos e IVA incluidos</span>
+              <strong aria-live="polite">
+                {pricingLoading && allIn == null
+                  ? '…'
+                  : allIn != null && allIn > 0
+                    ? formatTicketAmount(allIn)
+                    : '$0.00'}
+              </strong>
+            </div>
+            {totalMoved ? (
+              <p className={styles.warn} role="status">
+                El total cambió con el precio vigente.
+              </p>
+            ) : null}
+            {allIn == null && canApart && !pricingLoading ? (
+              <p className={styles.warn} role="status">
+                No pudimos calcular el total. Intenta de nuevo en unos segundos.
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className={styles.payButton}
+              disabled={payDisabled}
+              onClick={apart}
+            >
+              {payLabel}
+            </button>
+            {selected.length > 0 && buyMode === 'map' ? (
+              <button type="button" className={styles.release} onClick={() => setSelected([])}>
+                Soltar selección
+              </button>
+            ) : null}
+          </div>
+        </aside>
       </div>
     </div>
   );

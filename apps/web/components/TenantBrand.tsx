@@ -11,7 +11,7 @@ export type TenantBrand = {
 };
 
 /** Same literal as FALLBACK_TENANT.name in lib/tenant.ts */
-const DEFAULT_BRAND: TenantBrand = { name: 'BOLETERA' };
+const DEFAULT_BRAND: TenantBrand = { name: 'Black Ticket' };
 
 const TenantBrandContext = createContext<TenantBrand>(DEFAULT_BRAND);
 

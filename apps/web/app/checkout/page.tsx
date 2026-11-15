@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Field, Money, NamedStatus, TicketButton, formatTicketAmount } from '@boletera/ui';
+import Image from 'next/image';
+import { Field, StageArt, formatTicketAmount } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import { authHeaders, getStoredUser } from '@/lib/auth';
@@ -21,7 +22,8 @@ import {
   type PaymentMethodId,
 } from '@/lib/payment-window';
 import { releaseHolds } from '@/lib/release-holds';
-import purchase from '@/components/purchase/purchase.module.scss';
+import { shortWhen } from '@/lib/event-display';
+import styles from './checkout.module.scss';
 import { fetchCartPricing, pricingTotal, sameTotal, type CartPricing } from '@/lib/pricing';
 import { clearAffiliateRef, getAffiliateRefForEvent } from '@/lib/affiliate-ref';
 
@@ -71,21 +73,24 @@ function readOffered(data: GatewayInfo | null): PaymentMethodId[] {
   return data.methods.filter(isCheckoutMethod);
 }
 
-const METHODS: { id: PaymentMethodId; label: string; detail: string }[] = [
+const METHODS: { id: PaymentMethodId; label: string; detail: string; when: string }[] = [
   {
     id: 'CARD',
-    label: 'Tarjeta',
-    detail: 'Visa / Mastercard · Payworks 3-D Secure',
+    label: 'Tarjeta de crédito o débito',
+    detail: 'Visa o Mastercard · 3-D Secure',
+    when: 'Al instante',
   },
   {
     id: 'SPEI',
-    label: 'SPEI',
-    detail: 'Transferencia a CLABE Banorte del promotor',
+    label: 'Transferencia SPEI',
+    detail: 'A la CLABE Banorte del promotor',
+    when: 'Hasta 12 h',
   },
   {
     id: 'OXXO',
-    label: 'OXXO',
+    label: 'Efectivo en OXXO',
     detail: 'Paga en tienda con referencia',
+    when: 'Hasta 24 h',
   },
 ];
 
@@ -177,7 +182,7 @@ function CheckoutForm() {
   const [failure, setFailure] = useState<ApiErrorInfo | null>(null);
   const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
   const [offered, setOffered] = useState<PaymentMethodId[] | null>(null);
-  const [step, setStep] = useState<'apartado' | 'datos' | 'pago'>('apartado');
+  const [eventImage, setEventImage] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
   const nameRef = useRef<HTMLInputElement>(null);
@@ -214,6 +219,20 @@ function CheckoutForm() {
       });
     return () => controller.abort();
   }, [eventId]);
+
+  // Miniatura del evento: el carrito no la guarda, la ficha pública sí.
+  const cartSlug = rawCart?.slug;
+  useEffect(() => {
+    if (!cartSlug) return;
+    const controller = new AbortController();
+    fetch(`${API}/discovery/events/${encodeURIComponent(cartSlug)}`, { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { image?: string | null; bannerImage?: string | null } | null) => {
+        if (data) setEventImage(data.image || data.bannerImage || null);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [cartSlug]);
 
   useEffect(() => {
     if (!offered?.length || offered.includes(method)) return;
@@ -433,48 +452,19 @@ function CheckoutForm() {
   void tick;
   const expired = holdExpired || (Boolean(expiresAt) && remain <= 0);
   const canPay =
-    !loading &&
-    !expired &&
-    holdIds.length > 0 &&
-    step === 'pago' &&
-    offered != null &&
-    offered.includes(method);
+    !loading && !expired && holdIds.length > 0 && offered != null && offered.includes(method);
   const deferred = isDeferredMethod(method);
   const payAmount = priceChange ? priceChange.to : total;
   const payLabel = deferred ? 'Generar referencia' : `Pagar ${formatTicketAmount(payAmount)}`;
-  const moneyLines = pricing
-    ? [
-        { label: 'Base', amount: Number(pricing.subtotal) || 0 },
-        { label: 'Cargo', amount: Number(pricing.fees) || 0 },
-        { label: 'IVA', amount: Number(pricing.taxes) || 0 },
-        ...(Number(pricing.discount) > 0
-          ? [{ label: 'Descuento', amount: -Number(pricing.discount) }]
-          : []),
-      ]
-    : undefined;
+  const discount = pricing ? Number(pricing.discount) || 0 : 0;
+  const ticketCount = holdIds.length;
   const methodLine =
     method === 'SPEI'
       ? 'La referencia aparta los lugares hasta 12 horas. La hora exacta queda en la orden.'
       : method === 'OXXO'
         ? 'La referencia aparta los lugares hasta 24 horas. La hora exacta queda en la orden.'
         : 'El cargo es en el momento. El apartado sigue mientras se paga.';
-
-  function goDatos() {
-    if (expired) return;
-    setStep('datos');
-  }
-
-  function goPago() {
-    const errors = validate(name, email, phone);
-    setFieldErrors(errors);
-    setShowErrors(true);
-    if (Object.keys(errors).length) {
-      focusFirstError(errors);
-      return;
-    }
-    if (expired) return;
-    setStep('pago');
-  }
+  const when = cartItem?.startsAt ? shortWhen(cartItem.startsAt) : null;
 
   function dropHold() {
     releaseHolds(holdIds);
@@ -484,217 +474,321 @@ function CheckoutForm() {
 
   const backHref = cartItem?.slug ? `/events/${cartItem.slug}` : '/';
 
+  const payButton = (
+    <button
+      type="button"
+      className={styles.payButton}
+      disabled={!canPay || !pricing || pricingLoading}
+      onClick={() => void pay()}
+    >
+      {loading ? 'Procesando…' : payLabel}
+    </button>
+  );
+
   return (
     <>
-      <SiteHeader />
-      <main id="contenido" className={purchase.column}>
-        <div className={purchase.stack}>
-          <div className={purchase.chips}>
-            <NamedStatus status="apartado" />
-            <span className={purchase.clock}>{expired ? '0:00' : formatCountdown(remain)}</span>
-          </div>
-          <h1 className={purchase.title}>
-            {step === 'apartado' ? 'Apartado' : step === 'datos' ? 'Datos' : 'Pago'}
-          </h1>
-          {cartItem ? <p className={purchase.lead}>{cartItem.eventTitle}</p> : null}
+      <SiteHeader compact />
+      <div className={styles.steps}>
+        <div className={styles.stepsInner}>
+          <Link href={backHref} className={styles.back} aria-label="Volver al mapa">
+            <svg
+              aria-hidden="true"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+            >
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </Link>
+          <ol className={styles.crumbs} aria-label="Pasos de la compra">
+            <li>Asientos</li>
+            <li aria-current="step">Pago</li>
+            <li>Boletos</li>
+          </ol>
+          <span className={styles.clock} role="timer" aria-label="Tiempo de apartado">
+            {expired ? '00:00' : formatCountdown(remain)}
+          </span>
         </div>
+      </div>
 
-        {expired ? (
-          <div className={purchase.error} role="alert">
-            <span>El apartado venció.</span>
-            <span>Elige de nuevo.</span>
-            {seatLabels.map((label) => (
-              <span key={label} className={purchase.mono}>
-                {label}
+      <main id="contenido" tabIndex={-1} className={styles.page}>
+        <h1 className="sr-only">Pago</h1>
+        <div className={styles.grid}>
+          <div className={styles.mainCol}>
+            <section className={styles.eventCard} aria-label="Tu compra">
+              <span className={styles.thumb}>
+                {eventImage ? (
+                  <Image src={eventImage} alt="" fill sizes="72px" className={styles.cover} />
+                ) : (
+                  <StageArt
+                    seed={cartItem?.slug ?? eventId}
+                    fade={false}
+                    className={styles.cover}
+                  />
+                )}
               </span>
-            ))}
-          </div>
-        ) : null}
+              <span className={styles.eventCopy}>
+                <strong className={styles.eventTitle}>
+                  {cartItem?.eventTitle ?? 'Tu apartado'}
+                </strong>
+                <span className={styles.muted}>
+                  {[when, cartItem?.venueName].filter(Boolean).join(' · ')}
+                </span>
+                <span className={styles.seats}>
+                  {ticketCount} {ticketCount === 1 ? 'boleto' : 'boletos'}
+                  {seatLabels.length ? ` · ${seatLabels.join(', ')}` : ''}
+                </span>
+              </span>
+            </section>
 
-        {step === 'apartado' ? (
-          <ul className={purchase.seatList}>
-            {(seatLabels.length ? seatLabels : holdIds).map((label, index) => (
-              <li key={`${label}-${index}`}>
-                <span className={purchase.mono}>{label}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
-        {step === 'datos' ? (
-          <div className={purchase.stack}>
-            <Field
-              ref={nameRef}
-              label="Nombre en el boleto"
-              value={name}
-              autoComplete="name"
-              onChange={(event) => {
-                setName(event.target.value);
-                if (showErrors) setFieldErrors(validate(event.target.value, email, phone));
-              }}
-              error={showErrors ? fieldErrors.name : undefined}
-            />
-            <Field
-              ref={emailRef}
-              label="Correo"
-              type="email"
-              value={email}
-              autoComplete="email"
-              placeholder="nombre@dominio.com"
-              onChange={(event) => {
-                setEmail(event.target.value);
-                if (showErrors) setFieldErrors(validate(name, event.target.value, phone));
-              }}
-              error={showErrors ? fieldErrors.email : undefined}
-            />
-            <Field
-              ref={phoneRef}
-              label="Teléfono"
-              type="tel"
-              value={phone}
-              autoComplete="tel"
-              placeholder="10 dígitos"
-              onChange={(event) => {
-                setPhone(event.target.value);
-                if (showErrors) setFieldErrors(validate(name, email, event.target.value));
-              }}
-              error={showErrors ? fieldErrors.phone : undefined}
-            />
-            <p className={purchase.caption}>
-              {promoValid && promo.trim()
-                ? `Código · ${promo.trim().toUpperCase()}`
-                : 'Código · ninguno'}
-            </p>
-            <Field
-              label="Código"
-              value={promo}
-              disabled={promoChecking}
-              autoComplete="off"
-              onChange={(event) => {
-                setPromo(event.target.value);
-                setPromoValid(false);
-                setPromoMsg(null);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  void validatePromo();
-                }
-              }}
-              error={promoMsg && !promoValid ? promoMsg : undefined}
-            />
-          </div>
-        ) : null}
-
-        {step === 'pago' ? (
-          <div className={purchase.stack}>
-            {offered == null ? <p className={purchase.caption}>Cargando métodos.</p> : null}
-            {offered != null && visibleMethods.length === 0 ? (
-              <p className={purchase.caption}>No hay un método de pago para esta función.</p>
-            ) : null}
-            {visibleMethods.length > 0 ? (
-              <div className={purchase.segment} role="radiogroup" aria-label="Método de pago">
-                {visibleMethods.map((item, index) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={method === item.id}
-                    tabIndex={method === item.id ? 0 : -1}
-                    ref={(element) => {
-                      methodRefs.current[index] = element;
-                    }}
-                    onKeyDown={(event) => onMethodKeyDown(event, index)}
-                    aria-pressed={method === item.id}
-                    onClick={() => setMethod(item.id)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+            {expired ? (
+              <div className={styles.alert} role="alert">
+                <strong>El apartado venció.</strong>
+                <span>Tus lugares se liberaron. Vuelve al mapa y elige de nuevo.</span>
+                <Link href={backHref} className={styles.alertLink}>
+                  Volver al mapa
+                </Link>
               </div>
             ) : null}
-            {visibleMethods.some((item) => item.id === method) ? (
-              <p className={purchase.lead}>{methodLine}</p>
+
+            <section className={styles.block} aria-labelledby="datos-title">
+              <h2 className={styles.label} id="datos-title">
+                Tus datos
+              </h2>
+              <Field
+                ref={nameRef}
+                label="Nombre en el boleto"
+                value={name}
+                autoComplete="name"
+                onChange={(event) => {
+                  setName(event.target.value);
+                  if (showErrors) setFieldErrors(validate(event.target.value, email, phone));
+                }}
+                error={showErrors ? fieldErrors.name : undefined}
+              />
+              <Field
+                ref={emailRef}
+                label="Correo (ahí llegan tus boletos)"
+                type="email"
+                value={email}
+                autoComplete="email"
+                placeholder="nombre@dominio.com"
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  if (showErrors) setFieldErrors(validate(name, event.target.value, phone));
+                }}
+                error={showErrors ? fieldErrors.email : undefined}
+              />
+              <Field
+                ref={phoneRef}
+                label="Teléfono (opcional)"
+                type="tel"
+                value={phone}
+                autoComplete="tel"
+                placeholder="10 dígitos"
+                onChange={(event) => {
+                  setPhone(event.target.value);
+                  if (showErrors) setFieldErrors(validate(name, email, event.target.value));
+                }}
+                error={showErrors ? fieldErrors.phone : undefined}
+              />
+              <div className={styles.promo}>
+                <Field
+                  label="Código de descuento"
+                  value={promo}
+                  disabled={promoChecking}
+                  autoComplete="off"
+                  onChange={(event) => {
+                    setPromo(event.target.value);
+                    setPromoValid(false);
+                    setPromoMsg(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      void validatePromo();
+                    }
+                  }}
+                  error={promoMsg && !promoValid ? promoMsg : undefined}
+                />
+                <button
+                  type="button"
+                  className={styles.apply}
+                  disabled={!promo.trim() || promoChecking}
+                  onClick={() => void validatePromo()}
+                >
+                  {promoChecking ? 'Validando…' : 'Aplicar'}
+                </button>
+              </div>
+              {promoValid && promoMsg ? (
+                <p className={styles.ok} role="status">
+                  {promoMsg}
+                </p>
+              ) : null}
+            </section>
+
+            <section className={styles.block} aria-labelledby="pago-title">
+              <h2 className={styles.label} id="pago-title">
+                ¿Cómo pagas?
+              </h2>
+              {offered == null ? (
+                <div className={styles.methodsSkeleton} aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              ) : null}
+              {offered != null && visibleMethods.length === 0 ? (
+                <p className={styles.muted}>
+                  No hay un método de pago disponible para esta función.
+                </p>
+              ) : null}
+              {visibleMethods.length > 0 ? (
+                <div className={styles.methods} role="radiogroup" aria-label="Método de pago">
+                  {visibleMethods.map((item, index) => {
+                    const active = method === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        tabIndex={active ? 0 : -1}
+                        ref={(element) => {
+                          methodRefs.current[index] = element;
+                        }}
+                        onKeyDown={(event) => onMethodKeyDown(event, index)}
+                        onClick={() => setMethod(item.id)}
+                        className={styles.method}
+                      >
+                        <span className={styles.radio} aria-hidden="true" />
+                        <span className={styles.methodCopy}>
+                          <span>{item.label}</span>
+                          <small>{item.detail}</small>
+                        </span>
+                        <span className={styles.methodWhen}>{item.when}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+              {visibleMethods.some((item) => item.id === method) ? (
+                <p className={styles.muted}>{methodLine}</p>
+              ) : null}
+              {gatewayInfo?.demo ? (
+                <p className={styles.demo}>Pasarela en demostración: este pago no cobra.</p>
+              ) : null}
+            </section>
+          </div>
+
+          <aside className={styles.sideCol} aria-label="Resumen del pago">
+            <section className={styles.breakdown}>
+              <div className={styles.row}>
+                <span className={styles.muted}>
+                  {ticketCount} {ticketCount === 1 ? 'boleto' : 'boletos'}
+                </span>
+                <span className={styles.num}>
+                  {pricing ? formatTicketAmount(total + discount) : '…'}
+                </span>
+              </div>
+              <div className={styles.row}>
+                <span className={styles.muted}>Cargos e IVA</span>
+                <span className={styles.included}>Ya incluidos</span>
+              </div>
+              {discount > 0 ? (
+                <div className={styles.row}>
+                  <span className={styles.muted}>
+                    Descuento{promo.trim() ? ` · ${promo.trim().toUpperCase()}` : ''}
+                  </span>
+                  <span className={styles.num}>−{formatTicketAmount(discount)}</span>
+                </div>
+              ) : null}
+              <div className={styles.totalRow}>
+                <span>Total</span>
+                <strong aria-live="polite">{pricing ? formatTicketAmount(payAmount) : '…'}</strong>
+              </div>
+              {pricing ? (
+                <details className={styles.details}>
+                  <summary>Ver desglose</summary>
+                  <div className={styles.row}>
+                    <span className={styles.muted}>Precio base</span>
+                    <span className={styles.num}>
+                      {formatTicketAmount(Number(pricing.subtotal) || 0)}
+                    </span>
+                  </div>
+                  <div className={styles.row}>
+                    <span className={styles.muted}>Cargo por servicio</span>
+                    <span className={styles.num}>
+                      {formatTicketAmount(Number(pricing.fees) || 0)}
+                    </span>
+                  </div>
+                  <div className={styles.row}>
+                    <span className={styles.muted}>IVA</span>
+                    <span className={styles.num}>
+                      {formatTicketAmount(Number(pricing.taxes) || 0)}
+                    </span>
+                  </div>
+                </details>
+              ) : null}
+            </section>
+
+            {priceChange ? (
+              <p className={styles.warn} role="status">
+                El total cambió de {formatTicketAmount(priceChange.from)} a{' '}
+                {formatTicketAmount(priceChange.to)}. Toca pagar otra vez para confirmar.
+              </p>
             ) : null}
-            {gatewayInfo?.demo ? (
-              <p className={purchase.caption}>Pasarela en demostración. Este cargo no cobra.</p>
-            ) : null}
-            <p className={purchase.caption}>
-              {promoValid && promo.trim()
-                ? `Código · ${promo.trim().toUpperCase()}`
-                : 'Código · ninguno'}
-            </p>
-            {priceChange ? <p className={purchase.lead}>El total cambió.</p> : null}
             {failure ? (
-              <div className={purchase.error} role="alert">
+              <div className={styles.alert} role="alert">
                 <span>
                   {failure.kind === 'network'
                     ? 'No se guardó. Revisa la conexión.'
                     : failure.message}
                 </span>
                 {failure.kind === 'network' ? (
-                  <TicketButton type="button" variant="secondary" onClick={() => void pay()}>
+                  <button type="button" className={styles.alertLink} onClick={() => void pay()}>
                     Reintentar
-                  </TicketButton>
+                  </button>
                 ) : null}
               </div>
             ) : null}
-          </div>
-        ) : null}
 
-        <div className={purchase.actions}>
-          {step === 'apartado' ? (
-            <TicketButton type="button" variant="secondary" onClick={dropHold}>
+            <p className={styles.secure}>
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="5" y="11" width="14" height="9" rx="2" />
+                <path d="M8 11V8a4 4 0 018 0v3" />
+              </svg>
+              <span>
+                Pago con 3-D Secure. Tus boletos llegan a tu correo y a tu cuenta con un QR que
+                cambia cada 15 segundos.
+              </span>
+            </p>
+
+            <div className={styles.payDock}>
+              {payButton}
+              <span className={styles.terms}>
+                Al pagar aceptas los <Link href="/terminos">términos</Link> y la política de
+                reembolso.
+              </span>
+            </div>
+
+            <button type="button" className={styles.drop} onClick={dropHold}>
               Soltar apartado
-            </TicketButton>
-          ) : (
-            <TicketButton
-              type="button"
-              variant="secondary"
-              onClick={() => setStep(step === 'pago' ? 'datos' : 'apartado')}
-            >
-              Atrás
-            </TicketButton>
-          )}
-          {step === 'apartado' ? (
-            <Link href={backHref} className={purchase.link}>
-              Volver a la zona
-            </Link>
-          ) : null}
+            </button>
+          </aside>
         </div>
       </main>
-
-      <div className={purchase.dock}>
-        <div className={purchase.dockInner}>
-          <p className={purchase.dockSummary}>
-            {holdIds.length} {holdIds.length === 1 ? 'lugar' : 'lugares'}
-          </p>
-          <Money label="Total" amount={total} currency={Boolean(pricing)} lines={moneyLines} />
-          {step === 'apartado' ? (
-            <TicketButton
-              type="button"
-              disabled={expired || holdIds.length === 0}
-              onClick={goDatos}
-            >
-              Escribir datos
-            </TicketButton>
-          ) : null}
-          {step === 'datos' ? (
-            <TicketButton type="button" disabled={expired} onClick={goPago}>
-              Elegir pago
-            </TicketButton>
-          ) : null}
-          {step === 'pago' ? (
-            <TicketButton
-              type="button"
-              disabled={!canPay || !pricing || pricingLoading}
-              onClick={() => void pay()}
-            >
-              {loading ? 'Pagando' : payLabel}
-            </TicketButton>
-          ) : null}
-        </div>
-      </div>
     </>
   );
 }

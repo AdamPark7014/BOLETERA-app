@@ -1,18 +1,24 @@
+@use '../../../styles/bt' as bt;
+
 // Vender boleto en el lenguaje Black Ticket: misma columna y campos que el
 // checkout (`Field`, `TicketButton`).
 
 .page {
-  width: min(720px, 100%);
+  width: 100%;
+  max-width: 1442px;
   margin: 0 auto;
-  padding: 32px 48px 96px;
+  padding: 40px 56px 96px;
+
+  @media (max-width: 720px) {
+    padding: 24px 16px 96px;
+  }
   display: flex;
   flex-direction: column;
   gap: 16px;
 
   h1 {
-    margin: 0;
-    font: var(--title);
-    font-weight: 560;
+    @include bt.headline(56px);
+    line-height: 0.92;
     color: var(--text);
   }
 }

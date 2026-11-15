@@ -1,3 +1,5 @@
+@use '../../../styles/bt' as bt;
+
 // Orden, pago y acceso en el lenguaje Black Ticket. Misma columna de 720 px,
 // tipo y tokens que el checkout; el lienzo oscuro viene de app/layout.tsx.
 
@@ -6,9 +8,14 @@
 }
 
 .page {
-  width: min(720px, 100%);
+  width: 100%;
+  max-width: 1442px;
   margin: 0 auto;
-  padding: 32px 48px 96px;
+  padding: 40px 56px 96px;
+
+  @media (max-width: 720px) {
+    padding: 24px 16px 96px;
+  }
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -66,10 +73,13 @@
   }
 
   h1 {
-    margin: 0;
-    font: var(--title);
-    font-weight: 560;
+    @include bt.headline(56px);
+    line-height: 0.92;
     color: var(--text);
+
+    @include bt.phone {
+      font-size: 40px;
+    }
   }
 }
 
@@ -134,9 +144,8 @@
   }
 
   h2 {
-    margin: 0;
-    font: var(--body-lg);
-    font-weight: 560;
+    @include bt.headline(30px);
+    line-height: 0.95;
     color: var(--text);
     overflow-wrap: anywhere;
   }
@@ -152,9 +161,7 @@
 .refundKicker,
 .cancelKicker {
   margin: 0;
-  color: var(--text-tertiary);
-  font: var(--caption);
-  letter-spacing: var(--caption-tracking);
+  @include bt.kicker;
 }
 
 .eventSide {
@@ -171,9 +178,8 @@
   gap: 16px;
 
   h2 {
-    margin: 0;
-    font: var(--title);
-    font-weight: 560;
+    @include bt.headline(26px);
+    line-height: 1;
     color: var(--text);
   }
 
@@ -463,8 +469,11 @@
 }
 
 .copyValue {
-  font: var(--mono);
-  font-size: 20px;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
   color: var(--text);
   overflow-wrap: anywhere;
   min-width: 0;
@@ -497,7 +506,11 @@
 }
 
 .link,
-.secondary,
+.secondary {
+  @include bt.pill-secondary;
+  min-height: 48px;
+}
+
 .ghost,
 .textLink {
   display: inline-flex;
@@ -587,4 +600,32 @@
 .monoValue {
   font: var(--mono) !important;
   font-variant-numeric: tabular-nums;
+}
+
+// —— Columnas: boletos a la izquierda, detalle a la derecha ——
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 32px;
+  align-items: start;
+
+  @media (max-width: 1000px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ticketsCol,
+.detailCol {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.skelTicket {
+  height: 660px;
+  max-width: 380px;
+  border-radius: 24px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
 }
