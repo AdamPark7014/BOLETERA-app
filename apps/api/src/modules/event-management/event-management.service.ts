@@ -35,6 +35,19 @@ export type SalePhaseInput = {
 
 export type SalePhasePatch = Partial<SalePhaseInput>;
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_EVENT_TIME_ZONE = 'America/Mexico_City';
+
+/** AAAA-MM-DD del instante en la zona dada. */
+export function localDateKey(instant: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(instant);
+}
+
 @Injectable()
 export class EventManagementService {
   private logger = new Logger(EventManagementService.name);
@@ -544,30 +557,45 @@ export class EventManagementService {
     return campaign;
   }
 
+  /**
+   * Calendario mensual en la zona de cada evento. Antes las horas y el día se
+   * calculaban en la zona del servidor (UTC): una función de las 14:00 en
+   * México salía a las 20:00 y las posteriores a las 18:00 caían al día
+   * siguiente.
+   */
   async getEventCalendar(orgId: string, month: number, year: number) {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
+    // Margen de un día a cada lado: el filtro fino es por la fecha local.
+    const startDate = new Date(Date.UTC(year, month - 1, 1) - DAY_MS);
+    const endDate = new Date(Date.UTC(year, month, 1) + DAY_MS);
+    const monthPrefix = `${year}-${String(month).padStart(2, '0')}-`;
 
     const events = await this.prisma.event.findMany({
       where: {
         organizationId: orgId,
-        startsAt: { gte: startDate, lte: endDate },
+        startsAt: { gte: startDate, lt: endDate },
       },
       orderBy: { startsAt: 'asc' },
       include: { venue: true },
     });
 
     const calendar: Record<string, unknown[]> = {};
+    let total = 0;
     events.forEach((event) => {
-      const d = event.startsAt;
-      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const timeZone = event.timezone || DEFAULT_EVENT_TIME_ZONE;
+      const dateKey = localDateKey(event.startsAt, timeZone);
+      if (!dateKey.startsWith(monthPrefix)) return;
+      total += 1;
       if (!calendar[dateKey]) calendar[dateKey] = [];
       calendar[dateKey].push({
         id: event.id,
         title: event.title,
+        startsAt: event.startsAt.toISOString(),
+        timezone: timeZone,
         startTime: event.startsAt.toLocaleTimeString('es-MX', {
           hour: '2-digit',
           minute: '2-digit',
+          hourCycle: 'h23',
+          timeZone,
         }),
         venue: event.venue.name,
         capacity: event.totalCapacity,
@@ -576,7 +604,7 @@ export class EventManagementService {
       });
     });
 
-    return { month, year, calendar, totalEvents: events.length };
+    return { month, year, calendar, totalEvents: total };
   }
 
   async bulkUpdatePricing(eventIds: string[], priceMultiplier: number) {

@@ -107,8 +107,10 @@ const DEMO_CHANNEL_ORDERS: DemoOrderSpec[] = [
     channel: SalesChannel.WEB,
     totalAmount: 1600,
     daysAgo: 0,
-    buyerName: 'Laura Vega',
-    buyerEmail: 'laura.vega@example.com',
+    // Es la orden de comprador@ (userId): el correo debe ser el suyo o su
+    // cuenta muestra los datos de otra persona.
+    buyerName: 'Comprador Demo',
+    buyerEmail: 'comprador@demo.boletera.com',
   },
   {
     publicId: 'SEED-ORD-MOBILE-001',
