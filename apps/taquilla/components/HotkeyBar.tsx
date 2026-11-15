@@ -5,11 +5,17 @@ import { GLOBAL_HOTKEYS, useHotkeys, type Hotkey } from '@/lib/hotkeys';
 import styles from './HotkeyBar.module.scss';
 
 /**
- * Leyenda fija al pie. `?` abre la hoja de la vista.
+ * Atajos de teclado: un botón «?» discreto (o la tecla ?) abre la hoja completa.
+ * Los atajos siguen activos aunque no se muestre la leyenda.
  */
-export function HotkeyBar({ hotkeys, enabled = true }: { hotkeys: Hotkey[]; enabled?: boolean }) {
+export function HotkeyBar({
+  hotkeys: _hotkeys,
+  enabled = true,
+}: {
+  hotkeys: Hotkey[];
+  enabled?: boolean;
+}) {
   const [helpOpen, setHelpOpen] = useState(false);
-  const visible = hotkeys.filter((h) => !h.hidden).slice(0, 6);
 
   useHotkeys(
     [
@@ -43,18 +49,16 @@ export function HotkeyBar({ hotkeys, enabled = true }: { hotkeys: Hotkey[]; enab
 
   return (
     <>
-      <nav className={styles.bar} aria-label="Atajos de teclado">
-        {visible.map((hk) => (
-          <span key={`${hk.keys}-${hk.label}`} className={styles.item}>
-            <kbd>{hk.keys}</kbd>
-            {hk.label}
-          </span>
-        ))}
-        <span className={styles.help}>
-          <kbd>?</kbd>
-          leyenda
-        </span>
-      </nav>
+      <button
+        type="button"
+        className={styles.helpButton}
+        aria-label="Atajos de teclado"
+        aria-expanded={helpOpen}
+        title="Atajos de teclado (?)"
+        onClick={() => setHelpOpen((v) => !v)}
+      >
+        ?
+      </button>
 
       {helpOpen ? (
         <div

@@ -1041,7 +1041,7 @@ function VentaFlow() {
                     ref={filterRef}
                     kind="search"
                     label="Buscar función"
-                    hint="Nombre o recinto · 1 a 9 elige"
+                    placeholder="Nombre o recinto"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                   />
@@ -1122,9 +1122,7 @@ function VentaFlow() {
               </div>
 
               <div className={styles.headRow}>
-                <h2 className={styles.label}>
-                  {stage === 'ZONE' ? 'Elige sección · 1 a 9' : 'Sección'}
-                </h2>
+                <h2 className={styles.label}>{stage === 'ZONE' ? 'Elige sección' : 'Sección'}</h2>
                 <div className={styles.pills}>
                   {hasMap && !pickSeats && stage !== 'ZONE' ? (
                     <button
@@ -1493,9 +1491,7 @@ function VentaFlow() {
                   {lastChange > 0 ? <small>{changeBreakdownLabel(lastChange)}</small> : null}
                 </div>
               ) : (
-                <p className={styles.idleText}>
-                  1 a 9 elige · Enter avanza · Esc regresa · ? muestra todos los atajos
-                </p>
+                <span aria-hidden="true" />
               )}
             </div>
           ) : null}

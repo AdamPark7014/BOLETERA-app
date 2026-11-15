@@ -482,7 +482,7 @@ export default function AccesoPage() {
       whoSub={
         manifest
           ? `Lista descargada · ${manifest.count.toLocaleString('es-MX')} boletos${manifest.complete ? '' : ' (incompleta)'}`
-          : 'Sin lista descargada para trabajar sin red'
+          : 'Lista sin descargar'
       }
     >
       <div className={styles.door}>
@@ -654,7 +654,7 @@ export default function AccesoPage() {
                 </p>
                 <p className={styles.idleText}>
                   {eventId
-                    ? 'Acerca el QR al lector o escribe el código y pulsa Enter.'
+                    ? 'Acerca el QR al lector'
                     : 'Ábrela en «Ajustes de la puerta» para empezar.'}
                 </p>
               </>
@@ -681,7 +681,6 @@ export default function AccesoPage() {
               <strong>{rejectCount.toLocaleString('es-MX')}</strong>
             </div>
           </div>
-          <p className={styles.counterNote}>Contadores de esta sesión en este equipo.</p>
 
           <div className={pending > 0 ? styles.netWarn : styles.netOk}>
             <span className={styles.dot} aria-hidden="true" />
@@ -732,13 +731,12 @@ export default function AccesoPage() {
               <Field
                 id="access-zone"
                 label="Zona de acceso"
-                hint="Vacío si la puerta no tiene zona registrada"
                 value={zoneId}
                 onChange={(event) => {
                   setZoneId(event.target.value);
                   localStorage.setItem(ZONE_KEY, event.target.value);
                 }}
-                placeholder="Identificador de la zona"
+                placeholder="Zona (opcional)"
                 autoComplete="off"
               />
               <div className={styles.manifest}>

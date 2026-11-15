@@ -115,7 +115,6 @@ export default function TaquillaLoginPage() {
         <StageArt seed="taquilla-black-ticket" />
       </div>
       <form className={styles.column} onSubmit={(e) => void submit(e)}>
-        <p className={styles.eyebrow}>Ventanilla Black Ticket</p>
         <h1>{alreadyOpen ? 'Turno abierto' : 'Abrir turno'}</h1>
         {alreadyOpen ? (
           <p className={styles.read}>{cashierLabel || 'Cajero'} · fondo en esta terminal</p>
@@ -125,7 +124,7 @@ export default function TaquillaLoginPage() {
               label="Terminal"
               value={terminalId}
               onChange={(e) => setTerminalId(e.target.value.toUpperCase())}
-              hint="Nombre de esta caja, por ejemplo TAQ-01"
+              placeholder="TAQ-01"
               required
               autoComplete="off"
             />
@@ -151,7 +150,7 @@ export default function TaquillaLoginPage() {
               inputMode="decimal"
               value={openingCash}
               onChange={(e) => setOpeningCash(e.target.value.replace(/[^\d.]/g, ''))}
-              hint="Efectivo con el que abre la caja; puede ser $0"
+              placeholder="0"
               required
             />
           </>
@@ -163,9 +162,6 @@ export default function TaquillaLoginPage() {
         <TicketButton type="submit" fullWidth disabled={!ready || loading}>
           {loading ? 'Abriendo turno' : alreadyOpen ? 'Entrar al turno' : 'Abrir turno'}
         </TicketButton>
-        <p className={styles.legend}>
-          <kbd>Enter</kbd> abre el turno
-        </p>
       </form>
     </main>
   );

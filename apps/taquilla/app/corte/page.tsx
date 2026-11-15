@@ -299,7 +299,6 @@ export default function CortePage() {
   return (
     <PosShell
       title="Corte de caja"
-      eyebrow={cashierName ? `Responsable · ${cashierName}` : 'Responsable'}
       backHref="/"
       size="md"
       hotkeys={hotkeys}
@@ -325,23 +324,10 @@ export default function CortePage() {
         />
       ) : (
         <>
-          <p className={styles.shiftLine}>
-            {cashierName} · {getTerminalLabel()} ·{' '}
-            {new Date(report.startTime).toLocaleTimeString('es-MX', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
-
           <section className={styles.hero} role="group" aria-label="Esperado, contado y diferencia">
             <div className={styles.heroCell}>
               <span>Esperado en caja</span>
               <strong>{formatTicketAmount(shownExpected)}</strong>
-              <small>
-                Fondo {formatTicketAmount(Number(report.openingCash) || 0)} + efectivo{' '}
-                {formatTicketAmount(Number(report.cashSales) || 0)}
-                {report.dropsTotal ? ` − retiros ${formatTicketAmount(report.dropsTotal)}` : ''}
-              </small>
             </div>
             <div className={styles.heroCell}>
               <span>Contado</span>
@@ -350,7 +336,6 @@ export default function CortePage() {
               ) : (
                 <strong className={styles.heroPending}>Sin contar</strong>
               )}
-              <small>{hasCount ? 'Lo que hay en el cajón' : 'Cuenta el cajón abajo'}</small>
             </div>
             <div
               className={
@@ -377,20 +362,19 @@ export default function CortePage() {
                   <NamedStatus status="pendiente" />
                 ) : shownVariance === 0 ? (
                   'Caja cuadrada'
+                ) : Math.abs(shownVariance) > VARIANCE_PIN_THRESHOLD ? (
+                  `${shownVariance > 0 ? 'Sobrante' : 'Faltante'} · pide PIN`
+                ) : shownVariance > 0 ? (
+                  'Sobrante'
                 ) : (
-                  `${shownVariance > 0 ? 'Sobrante' : 'Faltante'} · más de ${formatTicketAmount(
-                    VARIANCE_PIN_THRESHOLD
-                  )} pide PIN de gerente`
+                  'Faltante'
                 )}
               </small>
             </div>
           </section>
 
           <Card padding="md" className={styles.section}>
-            <CardHeader
-              title="Arqueo de efectivo"
-              description="Cuenta el cajón y compara con el esperado."
-            />
+            <CardHeader title="Arqueo de efectivo" />
             <dl className={styles.details}>
               <div>
                 <dt>Fondo inicial</dt>
@@ -562,10 +546,7 @@ export default function CortePage() {
 
       {zReports.length > 0 && (
         <Card padding="md" className={styles.section}>
-          <CardHeader
-            title="Cortes anteriores"
-            description="Últimos cortes cerrados de esta organización."
-          />
+          <CardHeader title="Cortes anteriores" />
           <ul className={styles.zList}>
             {zReports.map((z) => {
               const when = z.closedAt
@@ -637,10 +618,7 @@ export default function CortePage() {
           cajero entrante se teclean antes de pedir el PIN, no después. */}
       {!closed && report && (
         <Card padding="md" className={styles.section}>
-          <CardHeader
-            title="Datos para retiro / traspaso"
-            description="Completa antes de confirmar con PIN de gerente."
-          />
+          <CardHeader title="Datos para retiro / traspaso" />
           <div className={styles.inlineFields}>
             <Input
               id="drop-amount"

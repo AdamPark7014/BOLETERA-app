@@ -381,3 +381,20 @@
 .page {
   gap: 32px;
 }
+
+/* La gráfica tiene alto fijo y la tarjeta se alinea con la de canales. */
+.bars {
+  flex: none;
+  height: 240px;
+  min-height: 0;
+}
+
+.chartPanel {
+  justify-content: space-between;
+}
+
+@media (max-width: 700px) {
+  .bars {
+    height: 180px;
+  }
+}

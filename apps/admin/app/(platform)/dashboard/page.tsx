@@ -186,15 +186,14 @@ function TableroDatos({ canChannels, canCreate }: { canChannels: boolean; canCre
         </div>
       ) : null}
 
-      <Indicadores data={data} range={range} />
+      <Indicadores data={data} range={range} withProjection={canChannels} />
 
       <div className={styles.split}>
         <div className={`${styles.panel} ${styles.splitWide} ${own.chartPanel}`}>
           <Serie data={data} range={range} metric={metric} onMetric={setMetric} />
         </div>
         <div className={styles.splitNarrow}>
-          {canChannels ? <Canales data={data} /> : null}
-          <Proyeccion data={data} />
+          {canChannels ? <Canales data={data} /> : <Proyeccion data={data} />}
         </div>
       </div>
 
@@ -214,7 +213,15 @@ function TableroDatos({ canChannels, canCreate }: { canChannels: boolean; canCre
   );
 }
 
-function Indicadores({ data, range }: { data: DashboardData; range: DashboardRange }) {
+function Indicadores({
+  data,
+  range,
+  withProjection,
+}: {
+  data: DashboardData;
+  range: DashboardRange;
+  withProjection: boolean;
+}) {
   const kpis = data.executive.data?.kpis;
   if (!kpis) {
     if (!data.executive.isPending) return null;
@@ -245,7 +252,7 @@ function Indicadores({ data, range }: { data: DashboardData; range: DashboardRan
           );
         })}
       </div>
-      {secondary.length > 0 ? (
+      {secondary.length > 0 || withProjection ? (
         <div className={styles.kpisSecondary}>
           {secondary.map((key) => {
             const kpi = kpis[key]!;
@@ -256,8 +263,27 @@ function Indicadores({ data, range }: { data: DashboardData; range: DashboardRan
               </div>
             );
           })}
+          {withProjection ? <ProyeccionInline data={data} /> : null}
         </div>
       ) : null}
+    </>
+  );
+}
+
+/** Cierre estimado como cifras secundarias, sin tarjeta. */
+function ProyeccionInline({ data }: { data: DashboardData }) {
+  const projection = data.executive.data?.projection;
+  if (!projection) return null;
+  return (
+    <>
+      <div className={styles.kpiSmall}>
+        <p className={styles.kpiLabel}>Cierre estimado</p>
+        <p className={styles.kpiSmallValue}>{formatMxn(projection.projectedGrossRevenue)}</p>
+      </div>
+      <div className={styles.kpiSmall}>
+        <p className={styles.kpiLabel}>Boletos estimados</p>
+        <p className={styles.kpiSmallValue}>{formatCount(projection.projectedTicketsSold)}</p>
+      </div>
     </>
   );
 }

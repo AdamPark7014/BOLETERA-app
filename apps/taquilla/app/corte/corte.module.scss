@@ -398,3 +398,21 @@
 .heroPending {
   color: var(--text-tertiary) !important;
 }
+
+/* Pasada premium: el desglose es una lista plana, sin cajas dentro de la tarjeta. */
+.details {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px 32px;
+  margin-bottom: 24px;
+
+  div {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  dd {
+    font-size: 20px;
+    font-weight: 600;
+  }
+}

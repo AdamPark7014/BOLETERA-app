@@ -94,3 +94,43 @@
     align-items: baseline;
   }
 }
+
+/* Botón discreto que abre la hoja de atajos. */
+.helpButton {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-strong, #34343a);
+  border-radius: 999px;
+  background: var(--card, #1a1a1a);
+  color: var(--text-secondary, #a39e94);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.helpButton:hover {
+  border-color: var(--text-secondary, #a39e94);
+  color: var(--text, #fff);
+}
+
+.helpButton:focus-visible {
+  outline: 2px solid var(--focus, #d9c2a3);
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .helpButton {
+    display: none;
+  }
+}
