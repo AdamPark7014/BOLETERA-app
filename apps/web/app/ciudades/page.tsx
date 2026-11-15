@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { buildHubMetadata } from '@/lib/seo';
 import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../hub.module.scss';
+import { TicketState } from '@boletera/ui';
 
 type CityFacet = { name: string; count: number };
 
@@ -42,17 +43,27 @@ export default async function CiudadesPage() {
         </header>
 
         {failed ? (
-          <div className={styles.error} role="alert">
-            <strong>No pudimos cargar las ciudades</strong>
-            <p>Vuelve a intentarlo en unos minutos.</p>
-            <Link href="/">Ver la cartelera</Link>
-          </div>
+          <TicketState
+            kind="error"
+            title="No pudimos cargar las ciudades"
+            body="Vuelve a intentarlo en unos minutos."
+            action={
+              <Link href="/" className="bt-action">
+                Ver la cartelera
+              </Link>
+            }
+          />
         ) : cities.length === 0 ? (
-          <div className={styles.empty}>
-            <strong>Aún no hay ciudades con cartelera</strong>
-            <p>En cuanto se publiquen eventos verás aquí sus ciudades.</p>
-            <Link href="/">Ver la cartelera</Link>
-          </div>
+          <TicketState
+            kind="empty"
+            title="Aún no hay ciudades con cartelera"
+            body="En cuanto se publiquen eventos verás aquí sus ciudades."
+            action={
+              <Link href="/" className="bt-action">
+                Ver la cartelera
+              </Link>
+            }
+          />
         ) : (
           <ul className={styles.cityGrid}>
             {cities.map((c) => (

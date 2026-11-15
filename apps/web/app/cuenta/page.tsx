@@ -7,6 +7,7 @@ import {
   Field,
   NamedStatus,
   TicketButton,
+  TicketState,
   formatDayMonth,
   formatEventDateTime,
 } from '@boletera/ui';
@@ -694,10 +695,14 @@ export default function CuentaPage() {
               )}
 
               {state === 'ready' && upcoming.length === 0 && (
-                <div className={styles.walletBody}>
-                  <p>No hay boletos próximos.</p>
-                  <Link href="/">Ver cartelera</Link>
-                </div>
+                <TicketState
+                  title="Aún no tienes boletos próximos"
+                  action={
+                    <Link href="/" className="bt-action">
+                      Ver cartelera
+                    </Link>
+                  }
+                />
               )}
 
               <ul className={styles.walletList}>

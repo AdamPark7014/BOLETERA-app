@@ -108,3 +108,21 @@ main:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+/* Acción secundaria dentro de un estado vacío o de error (TicketState). */
+.bt-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--line-strong, #34343a);
+  border-radius: 999px;
+  color: var(--text, #fff);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.bt-action:hover {
+  border-color: var(--text-secondary, #a8a29a);
+}

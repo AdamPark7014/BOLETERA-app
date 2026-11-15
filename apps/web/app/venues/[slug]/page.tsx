@@ -9,6 +9,7 @@ import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../../hub.module.scss';
 import { EventCard, type CardEvent } from '@/components/home/EventCard';
 import homeStyles from '@/components/home/home.module.scss';
+import { TicketState } from '@boletera/ui';
 
 type VenueDetail = {
   id: string;
@@ -126,11 +127,16 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
 
         <h2 className={styles.sectionTitle}>Próximos eventos</h2>
         {venue.events.length === 0 ? (
-          <div className={styles.empty}>
-            <strong>Sin eventos programados</strong>
-            <p>Este recinto no tiene funciones anunciadas por ahora.</p>
-            <Link href="/">Ver otros eventos</Link>
-          </div>
+          <TicketState
+            kind="empty"
+            title="Sin eventos programados"
+            body="Este recinto no tiene funciones anunciadas por ahora."
+            action={
+              <Link href="/" className="bt-action">
+                Ver otros eventos
+              </Link>
+            }
+          />
         ) : (
           <ul className={homeStyles.grid}>
             {venue.events.map((e) => (

@@ -1,4 +1,4 @@
-import { formatEventDateTime, formatPrice } from '@boletera/ui';
+import { TicketState, formatEventDateTime, formatPrice } from '@boletera/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
@@ -88,22 +88,27 @@ export default async function ResalePage() {
           </div>
 
           {failed ? (
-            <div className={styles.error} role="alert">
-              <strong>No pudimos cargar los listados</strong>
-              <p>
-                Es un problema temporal. Vuelve a intentarlo en unos minutos; si querías publicar un
-                boleto, puedes hacerlo de todos modos.
-              </p>
-              <Link href="/resale/vender">Vender mi boleto</Link>
-            </div>
+            <TicketState
+              kind="error"
+              title="No pudimos cargar los listados"
+              body="Es un problema temporal. Vuelve a intentarlo en unos minutos; si querías publicar un boleto, puedes hacerlo de todos modos."
+              action={
+                <Link href="/resale/vender" className="bt-action">
+                  Vender mi boleto
+                </Link>
+              }
+            />
           ) : !listings.length ? (
-            <div className={styles.empty}>
-              <strong>Sin listados activos</strong>
-              <p>
-                Cuando alguien ponga un boleto en reventa aparecerá aquí con su precio y asiento.
-              </p>
-              <Link href="/">Explorar la cartelera</Link>
-            </div>
+            <TicketState
+              kind="empty"
+              title="Sin listados activos"
+              body="Cuando alguien ponga un boleto en reventa aparecerá aquí con su precio y asiento."
+              action={
+                <Link href="/" className="bt-action">
+                  Explorar la cartelera
+                </Link>
+              }
+            />
           ) : (
             <ul className={styles.list}>
               {listings.map((l) => {

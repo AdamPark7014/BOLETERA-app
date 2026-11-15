@@ -4,7 +4,7 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { api } from '@/lib/api';
 import { buildHubMetadata } from '@/lib/seo';
 import { fetchTenantCurrent } from '@/lib/tenant';
-import { StageArt } from '@boletera/ui';
+import { StageArt, TicketState } from '@boletera/ui';
 import styles from '../hub.module.scss';
 
 type VenueHit = {
@@ -51,17 +51,27 @@ export default async function VenuesPage() {
         </header>
 
         {failed ? (
-          <div className={styles.error} role="alert">
-            <strong>No pudimos cargar los recintos</strong>
-            <p>Es un problema temporal de nuestro lado. Vuelve a intentarlo en unos minutos.</p>
-            <Link href="/">Ver la cartelera</Link>
-          </div>
+          <TicketState
+            kind="error"
+            title="No pudimos cargar los recintos"
+            body="Es un problema temporal de nuestro lado. Vuelve a intentarlo en unos minutos."
+            action={
+              <Link href="/" className="bt-action">
+                Ver la cartelera
+              </Link>
+            }
+          />
         ) : venues.length === 0 ? (
-          <div className={styles.empty}>
-            <strong>Aún no hay recintos publicados</strong>
-            <p>Cuando un promotor publique eventos, su recinto aparecerá aquí.</p>
-            <Link href="/">Ver la cartelera</Link>
-          </div>
+          <TicketState
+            kind="empty"
+            title="Aún no hay recintos publicados"
+            body="Cuando un promotor publique eventos, su recinto aparecerá aquí."
+            action={
+              <Link href="/" className="bt-action">
+                Ver la cartelera
+              </Link>
+            }
+          />
         ) : (
           <ul className={styles.venueGrid}>
             {venues.map((v) => (
