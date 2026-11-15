@@ -19,7 +19,6 @@
 - [`docs/FRONTEND_IMPLEMENTATION.md`](../docs/FRONTEND_IMPLEMENTATION.md) — FRONTEND IMPLEMENTATION GUIDE
 - [`docs/INTEGRACION-RAMAS.md`](../docs/INTEGRACION-RAMAS.md) — Integración `claude/auditoria-plataforma-boleteria` ↔ `enterprise-upgrade`
 - [`docs/PERSONAS.md`](../docs/PERSONAS.md) — Personas — Boletera Platform
-- [`docs/Persona-Ivan-Solis.pdf`](../docs/Persona-Ivan-Solis.pdf) — %PDF-1.4
 - [`docs/RUNBOOK_ONSALE.md`](../docs/RUNBOOK_ONSALE.md) — Runbook de onsale
 - [`docs/SYSTEM_INTEGRATION.md`](../docs/SYSTEM_INTEGRATION.md) — BOLETERA - System Integration & Webhooks Architecture
 - [`docs/UX-MAPS.md`](../docs/UX-MAPS.md) — Mapas de experiencia — Boletera Platform
