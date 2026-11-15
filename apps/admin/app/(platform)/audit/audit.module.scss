@@ -95,3 +95,10 @@
 .fixed {
   flex: 0 0 auto;
 }
+
+.actor {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

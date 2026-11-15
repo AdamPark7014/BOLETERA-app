@@ -1,14 +1,14 @@
 'use client';
 
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
+import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
-import { ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi, adminDownload } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { getEgressOverview, type EgressOverviewVenue } from '@/lib/platform-api';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
 import { channelLabel } from '../events/_ticket/holds';
 import { asRecord, formatCount, readNumber, readString } from '../events/_ticket/read';
@@ -37,20 +37,13 @@ function readSales(payload: unknown): SalesRow[] {
   });
 }
 
-function egressMeta(venue: EgressOverviewVenue): string {
-  const clearance =
-    venue.clearanceMinutes == null
-      ? null
-      : `${venue.clearanceMinutes.toLocaleString('es-MX', { maximumFractionDigits: 1 })} min`;
-  return [
-    `${formatCount(venue.sections)} secciones`,
-    `${formatCount(venue.seatsWithPath)} con camino`,
-    `${formatCount(venue.seatsWithoutPath)} sin camino`,
-    clearance,
-  ]
-    .filter((part): part is string => part != null)
-    .join(' · ');
-}
+const EGRESS_CHIP: Record<string, string> = {
+  ok: styles.chipOk,
+  warn: styles.chipWarn,
+  critical: styles.chipDanger,
+  'no-network': styles.chip,
+  empty: styles.chip,
+};
 
 function failMessage(cause: unknown): string {
   if (cause instanceof ApiError) return cause.userMessage;
@@ -167,75 +160,185 @@ function ReportesBody() {
       />
     );
   }
-  if (loading || !token) return <p className={styles.quiet}>Cargando reportes.</p>;
+  if (loading || !token) {
+    return (
+      <div className={styles.stack} aria-busy="true" aria-label="Cargando reportes">
+        <div className={styles.skeleton} style={{ height: 48, maxWidth: 320 }} />
+        <div className={styles.skeleton} style={{ height: 120 }} />
+        <div className={styles.skeleton} style={{ height: 320 }} />
+      </div>
+    );
+  }
+
+  const rows = [...(sales ?? [])].sort((a, b) => b.total - a.total);
+  const total = rows.reduce((sum, row) => sum + row.total, 0);
+  const orders = rows.reduce((sum, row) => sum + row.orders, 0);
+  const top = rows[0];
 
   return (
-    <section>
-      <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Reportes</h1>
-        <p className={styles.quiet}>Corte de venta de los últimos 30 días, y egress.</p>
-      </header>
-      <div className={styles.stack}>
-        <Param name="Analítica">
-          <ParameterCard
-            name="Analítica"
-            value="Encendida"
-            effect="Los reportes de venta se generan solos para tu organización."
-          />
-        </Param>
-      </div>
-      <header className={styles.sectionHead}>
-        <p className={styles.rowTitle}>Corte de venta</p>
-        {salesNote ? <p className={styles.tertiary}>{salesNote}</p> : null}
-      </header>
-      {sales && sales.length === 0 ? <p className={styles.quiet}>Nada con ese criterio.</p> : null}
-      {sales && sales.length > 0 ? (
-        <div className={styles.rows}>
-          <div className={styles.row}>
-            <p className={styles.rowMeta}>Canal</p>
-            <p className={styles.rowMeta}>Órdenes</p>
-            <p className={styles.rowMeta}>Total</p>
-          </div>
-          {sales.map((row) => (
-            <div key={row.channel} className={styles.row}>
-              <p className={styles.rowTitle}>{channelLabel(row.channel)}</p>
-              <p className={styles.figure}>{formatCount(row.orders)}</p>
-              <p className={styles.figure}>{formatTicketAmount(row.total)}</p>
-            </div>
-          ))}
+    <section className={styles.page}>
+      <header className={styles.pageHead}>
+        <div className={styles.sectionHead}>
+          <h1 className={styles.sectionTitle}>Reportes</h1>
+          <p className={styles.quiet}>
+            Corte de venta de los últimos 30 días y salida de público por recinto.
+          </p>
         </div>
-      ) : null}
-      {orgId ? (
-        <TicketButton variant="secondary" disabled={exporting} onClick={() => void exportSales()}>
-          Exportar ventas
-        </TicketButton>
-      ) : null}
+        {orgId && canSales ? (
+          <TicketButton disabled={exporting} onClick={() => void exportSales()}>
+            {exporting ? 'Preparando archivo' : 'Exportar ventas (CSV)'}
+          </TicketButton>
+        ) : null}
+      </header>
       {exportError ? (
         <p className={styles.danger} role="alert">
           {exportError}
         </p>
       ) : null}
-      <header className={styles.sectionHead}>
-        <p className={styles.rowTitle}>Egress</p>
-        {egressNote ? <p className={styles.tertiary}>{egressNote}</p> : null}
-      </header>
-      {venues && venues.length === 0 ? (
-        <p className={styles.quiet}>Nada con ese criterio.</p>
-      ) : null}
-      {venues && venues.length > 0 ? (
-        <div className={styles.rows}>
-          {venues.map((venue) => (
-            <div key={venue.venueId} className={styles.row}>
-              <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>{venue.venueName}</p>
-                <p className={styles.rowMeta}>{egressMeta(venue)}</p>
-              </div>
-              <span />
-              <p className={styles.figure}>{venue.statusReason}</p>
-            </div>
-          ))}
+
+      {sales ? (
+        <div className={styles.kpis}>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Venta de 30 días</p>
+            <p className={styles.kpiValue}>{formatTicketAmount(total)}</p>
+            <p className={styles.kpiNote}>órdenes cobradas, todos los canales</p>
+          </div>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Órdenes</p>
+            <p className={styles.kpiValue}>{formatCount(orders)}</p>
+            <p className={styles.kpiNote}>
+              {orders > 0 ? `${formatTicketAmount(total / orders)} en promedio` : 'sin órdenes'}
+            </p>
+          </div>
+          <div className={styles.kpi}>
+            <p className={styles.kpiLabel}>Canal principal</p>
+            <p className={styles.kpiValue}>{top ? channelLabel(top.channel) : '—'}</p>
+            <p className={styles.kpiNote}>
+              {top && total > 0
+                ? `${Math.round((top.total / total) * 100)}% de la venta`
+                : 'sin ventas todavía'}
+            </p>
+          </div>
         </div>
       ) : null}
+
+      <div className={styles.panel}>
+        <div className={styles.panelHead}>
+          <h2 className={styles.panelTitle}>Corte de venta por canal</h2>
+          {salesNote ? <p className={styles.tertiary}>{salesNote}</p> : null}
+        </div>
+        {sales && rows.length === 0 ? (
+          <p className={styles.quiet}>No hubo órdenes cobradas en los últimos 30 días.</p>
+        ) : null}
+        {rows.length > 0 ? (
+          <div className={styles.tableWrap} style={{ border: 0, background: 'transparent' }}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Canal</th>
+                  <th scope="col">Participación</th>
+                  <th scope="col" className={styles.num}>
+                    Órdenes
+                  </th>
+                  <th scope="col" className={styles.num}>
+                    Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const share = total > 0 ? (row.total / total) * 100 : 0;
+                  return (
+                    <tr key={row.channel}>
+                      <td>
+                        <strong>{channelLabel(row.channel)}</strong>
+                      </td>
+                      <td style={{ minWidth: 160 }}>
+                        <div className={styles.shareCell}>
+                          <div className={styles.bar} style={{ flex: 1, height: 6 }}>
+                            <div
+                              className={styles.barFill}
+                              style={{ width: `${Math.max(share, 1)}%` }}
+                            />
+                          </div>
+                          <span className={styles.shareNum}>{share.toFixed(0)}%</span>
+                        </div>
+                      </td>
+                      <td className={styles.num}>{formatCount(row.orders)}</td>
+                      <td className={styles.num}>
+                        <strong>{formatTicketAmount(row.total)}</strong>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </div>
+
+      <div className={styles.panel}>
+        <div className={styles.panelHead}>
+          <h2 className={styles.panelTitle}>Salida de público por recinto</h2>
+          <Link href="/reports/egress" className={styles.panelLink}>
+            Ver detalle
+          </Link>
+        </div>
+        {egressNote ? <p className={styles.tertiary}>{egressNote}</p> : null}
+        {venues && venues.length === 0 ? (
+          <p className={styles.quiet}>Ningún recinto tiene plano con rutas de salida todavía.</p>
+        ) : null}
+        {venues && venues.length > 0 ? (
+          <div className={styles.tableWrap} style={{ border: 0, background: 'transparent' }}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Recinto</th>
+                  <th scope="col" className={styles.num}>
+                    Secciones
+                  </th>
+                  <th scope="col" className={styles.num}>
+                    Butacas con ruta
+                  </th>
+                  <th scope="col" className={styles.num}>
+                    Desalojo
+                  </th>
+                  <th scope="col">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {venues.map((venue) => (
+                  <tr key={venue.venueId}>
+                    <td>
+                      <strong>{venue.venueName}</strong>
+                    </td>
+                    <td className={styles.num}>{formatCount(venue.sections)}</td>
+                    <td className={styles.num}>
+                      {formatCount(venue.seatsWithPath)}
+                      {venue.seatsWithoutPath > 0 ? (
+                        <span className={styles.rowMeta}>
+                          {' '}
+                          · {formatCount(venue.seatsWithoutPath)} sin ruta
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className={styles.num}>
+                      {venue.clearanceMinutes == null
+                        ? '—'
+                        : `${venue.clearanceMinutes.toLocaleString('es-MX', { maximumFractionDigits: 1 })} min`}
+                    </td>
+                    <td>
+                      <span className={EGRESS_CHIP[venue.status] ?? styles.chip}>
+                        {venue.statusReason}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

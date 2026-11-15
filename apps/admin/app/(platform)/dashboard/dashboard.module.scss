@@ -350,3 +350,21 @@
     gap: 3px;
   }
 }
+
+/* Seis indicadores: 6 en fila a pantalla ancha, 3×2 en medianas, 2 por fila en móvil. */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+@media (max-width: 1280px) {
+  .kpiGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -1073,3 +1073,143 @@ button.row:hover {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Fila que se abre en una tabla (detalle con acciones). */
+.rowToggle,
+.panelLinkButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowToggle {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.rowToggle:hover,
+.panelLinkButton:hover {
+  color: var(--gold-soft);
+}
+
+.panelLinkButton {
+  min-height: 32px;
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.rowToggle:focus-visible,
+.panelLinkButton:focus-visible {
+  outline: 2px solid var(--focus, var(--gold));
+  outline-offset: 2px;
+}
+
+.table tbody tr:hover td.detailCell,
+.detailCell {
+  background: var(--panel);
+}
+
+.detailRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.pageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pageHead .sectionHead {
+  margin-bottom: 0;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 700px) {
+  .table {
+    font-size: 13px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+  }
+}
+
+.shareCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shareNum {
+  width: 38px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.table th.num,
+.table td.num {
+  text-align: right;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tab,
+.tabOn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tab {
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+}
+
+.tab:hover {
+  border-color: var(--text-secondary);
+}
+
+.tabOn {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+}
+
+.tab:focus-visible,
+.tabOn:focus-visible {
+  outline: 2px solid var(--focus, var(--gold));
+  outline-offset: 2px;
+}

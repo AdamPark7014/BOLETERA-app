@@ -225,7 +225,7 @@ function Indicadores({ data, range }: { data: DashboardData; range: DashboardRan
     return <div className={styles.skeleton} style={{ height: 124 }} aria-label="Cargando cifras" />;
   }
   return (
-    <div className={styles.kpis} aria-label="Indicadores del periodo">
+    <div className={`${styles.kpis} ${own.kpiGrid}`} aria-label="Indicadores del periodo">
       {KPI_ORDER.map((key) => {
         const kpi = kpis[key];
         if (!kpi) return null;

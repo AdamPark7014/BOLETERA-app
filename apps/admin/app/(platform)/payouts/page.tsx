@@ -1,13 +1,13 @@
 'use client';
 
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
-import { Suspense, useEffect, useState } from 'react';
-import { Field, Money, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
+import Link from 'next/link';
+import { Fragment, Suspense, useEffect, useState } from 'react';
+import { Field, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
 import { asRecord, formatWhen, readNumber, readString } from '../events/_ticket/read';
 
@@ -17,6 +17,14 @@ const STATUS: Record<string, string> = {
   COMPLETED: 'Completo',
   FAILED: 'Fallido',
   CANCELLED: 'Cancelado',
+};
+
+const STATUS_CHIP: Record<string, string> = {
+  PENDING: styles.chipWarn,
+  PROCESSING: styles.chipGold,
+  COMPLETED: styles.chipOk,
+  FAILED: styles.chipDanger,
+  CANCELLED: styles.chip,
 };
 
 type Payout = {
@@ -173,170 +181,208 @@ function LiquidacionesBody() {
       />
     );
   }
-  if (loading || !token) return <p className={styles.quiet}>Cargando liquidaciones.</p>;
+  if (loading || !token) {
+    return (
+      <div className={styles.stack} aria-busy="true" aria-label="Cargando liquidaciones">
+        <div className={styles.skeleton} style={{ height: 48, maxWidth: 360 }} />
+        <div className={styles.skeleton} style={{ height: 120 }} />
+        <div className={styles.skeleton} style={{ height: 320 }} />
+      </div>
+    );
+  }
 
   const ambiguous = payouts.some((item) => item.ambiguous);
+  const sameCurrency = !ambiguous && payouts.every((item) => item.currency === 'MXN');
+  const pending = payouts.filter(
+    (item) => item.status === 'PENDING' || item.status === 'PROCESSING'
+  );
+  const done = payouts.filter((item) => item.status === 'COMPLETED');
+  const sum = (list: Payout[]) => list.reduce((total, item) => total + item.net, 0);
 
   return (
-    <section>
-      <header className={styles.sectionHead}>
+    <section className={styles.stack} style={{ gap: 20 }}>
+      <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
         <h1 className={styles.sectionTitle}>Liquidaciones</h1>
-        <p className={styles.quiet}>No hay calendario. Completar pide la referencia.</p>
+        <p className={styles.quiet}>
+          Lo que Black Ticket te transfiere por cada periodo de venta. Para completar una, captura
+          la referencia de la transferencia.
+        </p>
         {ambiguous ? (
           <p className={styles.tertiary}>
-            Hay varias monedas en las ventas. Los importes no se suman.
+            Hay ventas en varias monedas: los importes no se suman entre sí.
           </p>
         ) : null}
       </header>
-      <div className={styles.stack}>
-        <Param name="Aviso de liquidación">
-          <ParameterCard
-            name="Aviso de liquidación"
-            value="Apagado"
-            effect="Lo configura Black Ticket. Encendido, solo avisa: la transferencia al banco se hace aparte."
-          />
-        </Param>
+
+      <div className={styles.kpis}>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Por pagar</p>
+          <p className={styles.kpiValue}>{sameCurrency ? formatTicketAmount(sum(pending)) : '—'}</p>
+          <p className={styles.kpiNote}>
+            <span className={pending.length > 0 ? styles.down : undefined}>
+              {pending.length}{' '}
+              {pending.length === 1 ? 'liquidación abierta' : 'liquidaciones abiertas'}
+            </span>
+          </p>
+        </div>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Pagado</p>
+          <p className={styles.kpiValue}>{sameCurrency ? formatTicketAmount(sum(done)) : '—'}</p>
+          <p className={styles.kpiNote}>
+            <span className={done.length > 0 ? styles.up : undefined}>
+              {done.length} {done.length === 1 ? 'completada' : 'completadas'}
+            </span>
+          </p>
+        </div>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Aviso automático</p>
+          <p className={styles.kpiValue}>Apagado</p>
+          <p className={styles.kpiNote}>
+            Lo configura Black Ticket; la transferencia se hace aparte.
+          </p>
+        </div>
       </div>
-      {payouts.length === 0 ? <p className={styles.quiet}>No hay liquidaciones.</p> : null}
-      <div className={styles.stack}>
-        {payouts.map((payout) => {
-          const open = openId === payout.id;
-          const status = STATUS[payout.status] ?? payout.status;
-          const reference = refs[payout.id] ?? payout.referenceId ?? '';
-          const actionable =
-            canSettle && (payout.status === 'PENDING' || payout.status === 'PROCESSING');
-          const currency = payout.ambiguous ? 'Sin moneda' : (payout.currency ?? '—');
-          return (
-            <div key={payout.id} className={styles.stack}>
-              <button
-                type="button"
-                className={open ? `${styles.zoneButton} ${styles.zoneOpen}` : styles.zoneButton}
-                aria-expanded={open}
-                onClick={() => setOpenId(open ? null : payout.id)}
-              >
-                <span>
-                  {formatWhen(payout.periodStart)} – {formatWhen(payout.periodEnd)}
-                </span>
-                <span className={styles.figure}>
-                  {amountLabel(payout.net, payout.currency, payout.ambiguous)}
-                </span>
-              </button>
-              {open ? (
-                <>
-                  <Param name="Bruto">
-                    <ParameterCard
-                      name="Bruto"
-                      value={amountLabel(payout.gross, payout.currency, payout.ambiguous)}
-                      valueStyle="tabular"
-                      effect="Venta del periodo."
-                    />
-                  </Param>
-                  <Param name="Comisión del periodo">
-                    <ParameterCard
-                      name="Comisión del periodo"
-                      value={amountLabel(payout.commission, payout.currency, payout.ambiguous)}
-                      valueStyle="tabular"
-                      effect="Lo retenido en esta liquidación."
-                    />
-                  </Param>
-                  <Param name="Neto">
-                    <ParameterCard
-                      name="Neto"
-                      value={amountLabel(payout.net, payout.currency, payout.ambiguous)}
-                      valueStyle="tabular"
-                      effect="Es el monto de la liquidación."
-                    >
-                      {!payout.ambiguous && payout.currency === 'MXN' ? (
-                        <Money
-                          label="Neto"
-                          amount={payout.net}
-                          currency
-                          direction={payout.status === 'COMPLETED' ? 'in' : 'neutral'}
-                        />
-                      ) : null}
-                    </ParameterCard>
-                  </Param>
-                  <Param name="Moneda de la liquidación">
-                    <ParameterCard
-                      name="Moneda de la liquidación"
-                      value={currency}
-                      effect="Moneda de la liquidación."
-                    />
-                  </Param>
-                  <Param name="Estado de la liquidación">
-                    <ParameterCard
-                      name="Estado de la liquidación"
-                      value={status}
-                      effect="Pendiente, en proceso, completa, fallida o cancelada."
-                    />
-                  </Param>
-                  <Param name="Referencia">
-                    <ParameterCard
-                      name="Referencia"
-                      value={reference.trim() || payout.referenceId || '—'}
-                      valueStyle="mono"
-                      effect="Obligatoria para completar."
-                    >
-                      {actionable ? (
-                        <Field
-                          label="Referencia"
-                          hint="Obligatoria para completar."
-                          placeholder="SPEI"
-                          value={reference}
-                          onChange={(event) => {
-                            setRefs((current) => ({ ...current, [payout.id]: event.target.value }));
-                            setNotice(null);
-                          }}
-                        />
-                      ) : null}
-                    </ParameterCard>
-                  </Param>
-                  <Param name="Periodo desde">
-                    <ParameterCard
-                      name="Periodo desde"
-                      value={formatWhen(payout.periodStart)}
-                      effect="No es un calendario editable."
-                    />
-                  </Param>
-                  <Param name="Periodo hasta">
-                    <ParameterCard
-                      name="Periodo hasta"
-                      value={formatWhen(payout.periodEnd)}
-                      effect="Cierre del periodo."
-                    />
-                  </Param>
-                  {actionable ? (
-                    <div className={styles.stack}>
-                      {payout.status === 'PENDING' ? (
-                        <TicketButton
-                          variant="ghost"
-                          disabled={busy === payout.id}
-                          onClick={() => void act(payout, 'process')}
+
+      {payouts.length === 0 ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Todavía no hay liquidaciones</p>
+          <p className={styles.quiet}>
+            Se generan al cerrar cada periodo con ventas cobradas. Mientras, revisa el corte de
+            venta.
+          </p>
+          <Link href="/reports" className={styles.ghostLink}>
+            Ver reportes
+          </Link>
+        </div>
+      ) : (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th scope="col">Periodo</th>
+                <th scope="col" className={styles.num}>
+                  Bruto
+                </th>
+                <th scope="col" className={styles.num}>
+                  Comisión
+                </th>
+                <th scope="col" className={styles.num}>
+                  Neto
+                </th>
+                <th scope="col">Estado</th>
+                <th scope="col">Referencia</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payouts.map((payout) => {
+                const open = openId === payout.id;
+                const status = STATUS[payout.status] ?? payout.status;
+                const reference = refs[payout.id] ?? payout.referenceId ?? '';
+                const actionable =
+                  canSettle && (payout.status === 'PENDING' || payout.status === 'PROCESSING');
+                return (
+                  <Fragment key={payout.id}>
+                    <tr>
+                      <td>
+                        <button
+                          type="button"
+                          className={styles.rowToggle}
+                          aria-expanded={open}
+                          onClick={() => setOpenId(open ? null : payout.id)}
                         >
-                          Pasar a proceso
-                        </TicketButton>
-                      ) : null}
-                      <TicketButton
-                        variant="secondary"
-                        disabled={busy === payout.id || !reference.trim()}
-                        onClick={() => void act(payout, 'complete')}
-                      >
-                        Completar liquidación
-                      </TicketButton>
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
+                          {formatWhen(payout.periodStart)} – {formatWhen(payout.periodEnd)}
+                        </button>
+                        {payout.ambiguous ? (
+                          <p className={styles.rowMeta}>Varias monedas</p>
+                        ) : payout.currency && payout.currency !== 'MXN' ? (
+                          <p className={styles.rowMeta}>{payout.currency}</p>
+                        ) : null}
+                      </td>
+                      <td className={styles.num}>
+                        {amountLabel(payout.gross, payout.currency, payout.ambiguous)}
+                      </td>
+                      <td className={styles.num} style={{ color: 'var(--text-secondary)' }}>
+                        − {amountLabel(payout.commission, payout.currency, payout.ambiguous)}
+                      </td>
+                      <td className={styles.num}>
+                        <strong>
+                          {amountLabel(payout.net, payout.currency, payout.ambiguous)}
+                        </strong>
+                      </td>
+                      <td>
+                        <span className={STATUS_CHIP[payout.status] ?? styles.chip}>{status}</span>
+                      </td>
+                      <td>
+                        {payout.referenceId ? (
+                          <span className={styles.mono}>{payout.referenceId}</span>
+                        ) : actionable ? (
+                          <button
+                            type="button"
+                            className={styles.panelLinkButton}
+                            onClick={() => setOpenId(payout.id)}
+                          >
+                            Capturar y liquidar
+                          </button>
+                        ) : (
+                          <span className={styles.quiet}>—</span>
+                        )}
+                      </td>
+                    </tr>
+                    {open && actionable ? (
+                      <tr>
+                        <td colSpan={6} className={styles.detailCell}>
+                          <div className={styles.detailRow}>
+                            <div style={{ flex: '1 1 260px' }}>
+                              <Field
+                                label="Referencia de la transferencia"
+                                hint="Obligatoria para completar."
+                                placeholder="Clave de rastreo SPEI"
+                                value={reference}
+                                onChange={(event) => {
+                                  setRefs((current) => ({
+                                    ...current,
+                                    [payout.id]: event.target.value,
+                                  }));
+                                  setNotice(null);
+                                }}
+                              />
+                            </div>
+                            {payout.status === 'PENDING' ? (
+                              <TicketButton
+                                variant="ghost"
+                                disabled={busy === payout.id}
+                                onClick={() => void act(payout, 'process')}
+                              >
+                                Pasar a proceso
+                              </TicketButton>
+                            ) : null}
+                            <TicketButton
+                              disabled={busy === payout.id || !reference.trim()}
+                              onClick={() => void act(payout, 'complete')}
+                            >
+                              Completar liquidación
+                            </TicketButton>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       {actionError ? (
         <p className={styles.danger} role="alert">
           {actionError}
         </p>
       ) : null}
-      {notice ? <p className={styles.quiet}>{notice}</p> : null}
+      {notice ? (
+        <p className={styles.chipOk} role="status">
+          {notice}
+        </p>
+      ) : null}
     </section>
   );
 }

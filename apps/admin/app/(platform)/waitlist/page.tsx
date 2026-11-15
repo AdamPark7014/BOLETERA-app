@@ -1,13 +1,13 @@
 'use client';
 
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
+import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
-import { ParameterCard, TicketButton } from '@boletera/ui';
+import { TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
 import { asRecord, readString } from '../events/_ticket/read';
 
@@ -17,6 +17,14 @@ const STATUS: Record<string, string> = {
   CONVERTED: 'Convertido',
   EXPIRED: 'Caducado',
   CANCELLED: 'Cancelado',
+};
+
+const STATUS_CHIP: Record<string, string> = {
+  PENDING: styles.chipWarn,
+  NOTIFIED: styles.chipGold,
+  CONVERTED: styles.chipOk,
+  EXPIRED: styles.chip,
+  CANCELLED: styles.chip,
 };
 
 const SEE = ['ADMIN', 'SUPER_ADMIN', 'PROMOTER', 'VENUE_MANAGER'];
@@ -131,7 +139,7 @@ function EsperaBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Espera</h1>
+          <h1 className={styles.sectionTitle}>Lista de espera</h1>
           <NoAccess />
         </header>
       </section>
@@ -146,7 +154,15 @@ function EsperaBody() {
       />
     );
   }
-  if (loading || !token) return <p className={styles.quiet}>Cargando espera.</p>;
+  if (loading || !token) {
+    return (
+      <div className={styles.stack} aria-busy="true" aria-label="Cargando lista de espera">
+        <div className={styles.skeleton} style={{ height: 48, maxWidth: 320 }} />
+        <div className={styles.skeleton} style={{ height: 120 }} />
+        <div className={styles.skeleton} style={{ height: 280 }} />
+      </div>
+    );
+  }
 
   const groups = new Map<string, { title: string; rows: Entry[] }>();
   for (const entry of entries) {
@@ -154,51 +170,112 @@ function EsperaBody() {
     current.rows.push(entry);
     groups.set(entry.eventId, current);
   }
+  const pendingTotal = entries.filter((row) => row.status === 'PENDING').length;
+  const notifiedTotal = entries.filter((row) => row.status === 'NOTIFIED').length;
+  const convertedTotal = entries.filter((row) => row.status === 'CONVERTED').length;
 
   return (
-    <section>
+    <section className={styles.page}>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Espera</h1>
+        <h1 className={styles.sectionTitle}>Lista de espera</h1>
         <p className={styles.quiet}>
-          El estado lo escribe el servicio. No hay un guardado que lo elija. Avisar marca pendientes
-          como avisados.
+          Personas que pidieron aviso cuando se liberen boletos. «Avisar» les escribe a las que
+          siguen pendientes en ese evento.
         </p>
-        {notice ? <p className={styles.tertiary}>{notice}</p> : null}
       </header>
-      {entries.length === 0 ? <p className={styles.quiet}>No hay espera.</p> : null}
-      {[...groups.entries()].map(([eventId, group]) => {
-        const pending = group.rows.some((row) => row.status === 'PENDING');
-        return (
-          <div key={eventId || group.title} className={styles.stack}>
-            <header className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>{group.title}</h2>
-            </header>
-            {group.rows.map((row) => (
-              <Param key={row.id} name="Estado en la espera">
-                <ParameterCard
-                  name="Estado en la espera"
-                  value={word(row.status)}
-                  effect={row.email}
-                />
-              </Param>
-            ))}
-            {canNotify && pending ? (
-              <TicketButton
-                variant="secondary"
-                disabled={busy === eventId}
-                onClick={() => void notify(eventId, group.title)}
-              >
-                Avisar
-              </TicketButton>
-            ) : null}
-          </div>
-        );
-      })}
+      {notice ? (
+        <p className={styles.chipOk} role="status">
+          {notice}
+        </p>
+      ) : null}
       {actionError ? (
         <p className={styles.danger} role="alert">
           {actionError}
         </p>
       ) : null}
+
+      <div className={styles.kpis}>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>En espera</p>
+          <p className={styles.kpiValue}>{pendingTotal.toLocaleString('es-MX')}</p>
+          <p className={styles.kpiNote}>sin avisar todavía</p>
+        </div>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Avisados</p>
+          <p className={styles.kpiValue}>{notifiedTotal.toLocaleString('es-MX')}</p>
+          <p className={styles.kpiNote}>recibieron el aviso</p>
+        </div>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Compraron</p>
+          <p className={styles.kpiValue}>{convertedTotal.toLocaleString('es-MX')}</p>
+          <p className={styles.kpiNote}>
+            <span className={convertedTotal > 0 ? styles.up : undefined}>
+              {notifiedTotal + convertedTotal > 0
+                ? `${Math.round((convertedTotal / (notifiedTotal + convertedTotal)) * 100)}% de los avisados`
+                : 'aún sin avisos'}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {entries.length === 0 ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Nadie está en lista de espera</p>
+          <p className={styles.quiet}>
+            Cuando un evento se agote, los compradores podrán anotarse para recibir aviso.
+          </p>
+          <Link href="/events" className={styles.ghostLink}>
+            Ver eventos
+          </Link>
+        </div>
+      ) : null}
+
+      {[...groups.entries()].map(([eventId, group]) => {
+        const pending = group.rows.filter((row) => row.status === 'PENDING').length;
+        return (
+          <div key={eventId || group.title} className={styles.panel}>
+            <div className={styles.panelHead}>
+              <div>
+                <h2 className={styles.panelTitle}>{group.title}</h2>
+                <p className={styles.rowMeta}>
+                  {group.rows.length} {group.rows.length === 1 ? 'persona' : 'personas'} · {pending}{' '}
+                  {pending === 1 ? 'pendiente' : 'pendientes'}
+                </p>
+              </div>
+              {canNotify && pending > 0 ? (
+                <TicketButton
+                  disabled={busy === eventId}
+                  onClick={() => void notify(eventId, group.title)}
+                >
+                  {busy === eventId ? 'Avisando' : `Avisar a ${pending}`}
+                </TicketButton>
+              ) : null}
+            </div>
+            <div className={styles.tableWrap} style={{ border: 0, maxHeight: 360 }}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">Correo</th>
+                    <th scope="col">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.rows.map((row) => (
+                    <tr key={row.id} data-param={row.email}>
+                      <td>{row.email}</td>
+                      <td>
+                        <span className={STATUS_CHIP[row.status] ?? styles.chip}>
+                          {word(row.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
     </section>
   );
 }

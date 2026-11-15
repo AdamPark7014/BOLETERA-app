@@ -11,7 +11,10 @@
 }
 
 .eventPick {
-  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(360px, 100%);
 }
 
 .link {
@@ -22,4 +25,59 @@
 /* La barra «Guardar sección» va al final del reparto, en su sitio: sin sticky no tapa tarjetas. */
 div.saveBarEnd {
   position: static;
+}
+
+.of {
+  color: var(--text-secondary);
+  font-size: 0.6em;
+}
+
+.alerts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.alert,
+.alertCritical {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--warn);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.alertCritical {
+  border-color: var(--danger);
+}
+
+.mix {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mixRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mixHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.mixNum {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }

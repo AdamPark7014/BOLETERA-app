@@ -205,7 +205,7 @@ function AuditoriaBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Auditoría</h1>
+          <h1 className={styles.sectionTitle}>Bitácora</h1>
           <NoAccess />
         </header>
       </section>
@@ -220,34 +220,45 @@ function AuditoriaBody() {
       />
     );
   }
-  if (!token || (loading && rows.length === 0))
-    return <p className={styles.quiet}>Cargando auditoría.</p>;
+  if (!token || (loading && rows.length === 0)) {
+    return (
+      <div className={styles.stack} aria-busy="true" aria-label="Cargando bitácora">
+        <div className={styles.skeleton} style={{ height: 48, maxWidth: 320 }} />
+        <div className={styles.skeleton} style={{ height: 120 }} />
+        <div className={styles.skeleton} style={{ height: 320 }} />
+      </div>
+    );
+  }
 
   return (
-    <section>
-      <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Auditoría</h1>
+    <section className={styles.page}>
+      <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
+        <h1 className={styles.sectionTitle}>Bitácora</h1>
         <p className={styles.quiet}>
-          Acciones críticas de la organización. Los filtros se aplican sobre las filas traídas.
+          Quién cambió qué en tu organización: precios, reembolsos, accesos y equipo.
         </p>
       </header>
 
-      <div className={own.counts}>
-        <div className={own.count}>
-          <p className={styles.rowMeta}>Eventos traídos</p>
-          <p className={own.figure}>{formatCount(rows.length)}</p>
+      <div className={styles.kpis}>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Movimientos</p>
+          <p className={styles.kpiValue}>{formatCount(filtered.length)}</p>
+          <p className={styles.kpiNote}>de {formatCount(rows.length)} registrados en la ventana</p>
         </div>
-        <div className={own.count}>
-          <p className={styles.rowMeta}>Coinciden</p>
-          <p className={own.figure}>{formatCount(filtered.length)}</p>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Por revisar</p>
+          <p
+            className={styles.kpiValue}
+            style={alerts > 0 ? { color: 'var(--danger)' } : undefined}
+          >
+            {formatCount(alerts)}
+          </p>
+          <p className={styles.kpiNote}>descuadres, liquidaciones o inventario</p>
         </div>
-        <div className={own.count}>
-          <p className={styles.rowMeta}>Requieren revisión</p>
-          <p className={own.figure}>{formatCount(alerts)}</p>
-        </div>
-        <div className={own.count}>
-          <p className={styles.rowMeta}>Acciones distintas</p>
-          <p className={own.figure}>{formatCount(distinctActions)}</p>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Tipos de acción</p>
+          <p className={styles.kpiValue}>{formatCount(distinctActions)}</p>
+          <p className={styles.kpiNote}>distintos en la ventana</p>
         </div>
       </div>
 
@@ -338,7 +349,7 @@ function AuditoriaBody() {
           <p className={styles.tertiary}>
             {loading
               ? 'Actualizando.'
-              : `${formatCount(filtered.length)} de ${formatCount(rows.length)} eventos traídos.`}
+              : `${formatCount(filtered.length)} de ${formatCount(rows.length)} movimientos.`}
           </p>
           {anyFilter ? (
             <TicketButton variant="ghost" onClick={clearFilters}>
@@ -356,30 +367,65 @@ function AuditoriaBody() {
       </div>
 
       {filtered.length === 0 ? (
-        <p className={styles.quiet}>
-          {rows.length === 0
-            ? 'No hay eventos de auditoría para esta organización.'
-            : 'Ningún evento coincide. Amplía el rango, trae más filas o quita un filtro.'}
-        </p>
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>
+            {rows.length === 0 ? 'La bitácora está vacía' : 'Ningún movimiento coincide'}
+          </p>
+          <p className={styles.quiet}>
+            {rows.length === 0
+              ? 'Aquí quedarán los cambios de precios, reembolsos, accesos y equipo.'
+              : 'Amplía el rango, trae más filas o quita un filtro.'}
+          </p>
+          {anyFilter ? (
+            <TicketButton variant="ghost" onClick={clearFilters}>
+              Limpiar filtros
+            </TicketButton>
+          ) : null}
+        </div>
       ) : (
-        <div className={styles.rows}>
-          {filtered.map((row) => (
-            <div key={row.id} className={styles.row}>
-              <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>{labelOf(row.action)}</p>
-                <p className={styles.rowMeta}>
-                  {actorOf(row)} · <span className={own.code}>{row.action}</span>
-                </p>
-              </div>
-              <p className={styles.rowMeta}>
-                {entityLabel(row.entityType)}
-                {row.entityId ? (
-                  <span className={own.code}> {row.entityId.slice(0, 12)}</span>
-                ) : null}
-              </p>
-              <p className={own.when}>{formatWhen(row.createdAt)}</p>
-            </div>
-          ))}
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th scope="col">Cuándo</th>
+                <th scope="col">Acción</th>
+                <th scope="col">Quién</th>
+                <th scope="col">Sobre</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row) => {
+                const notable = NOTABLE_BY_VALUE.get(row.action);
+                return (
+                  <tr key={row.id}>
+                    <td style={{ whiteSpace: 'nowrap' }} className={styles.quiet}>
+                      {formatWhen(row.createdAt)}
+                    </td>
+                    <td>
+                      {notable ? (
+                        <span
+                          className={
+                            notable.severity === 'alert' ? styles.chipDanger : styles.chipGold
+                          }
+                        >
+                          {labelOf(row.action)}
+                        </span>
+                      ) : (
+                        <strong>{labelOf(row.action)}</strong>
+                      )}
+                    </td>
+                    <td className={own.actor}>{actorOf(row)}</td>
+                    <td>
+                      {entityLabel(row.entityType)}
+                      {row.entityId ? (
+                        <span className={own.code}> {row.entityId.slice(0, 12)}</span>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </section>
