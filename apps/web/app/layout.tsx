@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Bebas_Neue, Space_Grotesk } from 'next/font/google';
 import { SiteFooter } from '@/components/SiteFooter';
 import { BlackTicketRoot } from '@boletera/ui';
 import { TenantBrandProvider } from '@/components/TenantBrand';
@@ -11,17 +10,7 @@ import { fetchTenantCurrent, tenantThemeStyle } from '@/lib/tenant';
 // su reserva codificada a mano y las familias de gris no concordaban.
 import '@boletera/ui/src/styles/theme.scss';
 import './globals.css';
-
-const headingFont = Bebas_Neue({
-  subsets: ['latin'],
-  variable: '--font-heading',
-  weight: '400',
-});
-
-const bodyFont = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-body',
-});
+import { blackTicketFontVars } from './fonts';
 
 export async function generateMetadata(): Promise<Metadata> {
   const [tenant, origin] = await Promise.all([fetchTenantCurrent(), getSiteOrigin()]);
@@ -75,7 +64,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
         />
       </head>
-      <body className={`${headingFont.variable} ${bodyFont.variable}`}>
+      <body className={blackTicketFontVars}>
         <TenantBrandProvider value={brand}>
           <BlackTicketRoot density="compra" className="app-shell">
             <div className="app-shell__content">{children}</div>

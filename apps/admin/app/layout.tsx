@@ -1,18 +1,15 @@
 import type { Metadata } from 'next';
-import { Bebas_Neue, Space_Grotesk } from 'next/font/google';
 import { ToastProvider } from '@/components/Toast/ToastProvider';
 import { Providers } from './providers';
 import '@boletera/ui/src/styles/theme.scss';
 import './globals.scss';
-
-const heading = Bebas_Neue({ subsets: ['latin'], variable: '--font-heading', weight: '400' });
-const body = Space_Grotesk({ subsets: ['latin'], variable: '--font-body' });
+import { blackTicketFontVars } from './fonts';
 
 export const metadata: Metadata = {
-  title: 'Boletera Admin',
+  title: 'Black Ticket · Admin',
   description: 'Backoffice de boletería',
   manifest: '/manifest.json',
-  themeColor: '#171717',
+  themeColor: '#000000',
 };
 
 /**
@@ -27,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
-      <body className={`${heading.variable} ${body.variable}`}>
+      <body className={blackTicketFontVars}>
         <Providers>
           <ToastProvider>{children}</ToastProvider>
         </Providers>

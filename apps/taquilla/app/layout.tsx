@@ -5,6 +5,7 @@ import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import { ShiftSync } from '@/components/ShiftSync';
 import '@boletera/ui/src/styles/theme.scss';
 import './globals.scss';
+import { blackTicketFontVars } from './fonts';
 
 export const metadata: Metadata = {
   title: 'Black Ticket · Taquilla',
@@ -17,13 +18,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#0B0B0C',
+  themeColor: '#000000',
 };
 
 export default function TaquillaLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" data-theme="dark">
-      <body>
+      <body className={blackTicketFontVars}>
         <BlackTicketRoot density="taquilla" className="bt-app">
           <ServiceWorkerRegister />
           <ShiftSync />

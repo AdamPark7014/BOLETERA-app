@@ -4,6 +4,14 @@
 
 @use './variables' as *;
 
+// Alias de las familias anteriores (Bebas/Space Grotesk): next/font publica
+// --font-roboto y --font-archivo en <body>; lo que aún lea --font-heading o
+// --font-body recibe la tipografía nueva.
+body {
+  --font-heading: var(--font-archivo, 'Archivo'), sans-serif;
+  --font-body: var(--font-roboto, 'Roboto'), system-ui, sans-serif;
+}
+
 [data-black-ticket] {
   color-scheme: dark;
   background: $bt-ink;
@@ -42,6 +50,21 @@
   --control-disabled: #{$bt-control-disabled};
 
   --font-ui: #{$bt-font-ui};
+  --font-display: #{$bt-font-display};
+  --font-script: #{$bt-font-script};
+  --warn: #{$bt-warn};
+  --warn-wash: #{$bt-warn-wash};
+  --ok: #{$bt-money-in};
+  --ok-wash: #{$bt-ok-wash};
+  --gold-soft: #{$bt-gold-soft};
+  --card: #{$bt-ink-raised};
+  --elevated: #{$bt-ink-overlay};
+  --panel: #{$bt-ink-sunken};
+  --r-pill: #{$bt-radius-pill};
+  --r-card: #{$bt-radius-card};
+  /* Titular de cartel: Archivo condensado, negro, mayúsculas. */
+  --headline-stretch: 72%;
+  --headline-weight: 900;
   --font-mono: #{$bt-font-mono};
   --weight-regular: #{$bt-weight-regular};
   --weight-medium: #{$bt-weight-medium};

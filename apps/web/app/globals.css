@@ -11,9 +11,9 @@ body {
 }
 
 body {
-  color: #f3f0e8;
-  background: #0b0b0c;
-  font-family: 'Geist', 'Inter', 'Helvetica Neue', system-ui, sans-serif;
+  color: #ffffff;
+  background: #000000;
+  font-family: var(--font-roboto, 'Roboto'), 'Helvetica Neue', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 

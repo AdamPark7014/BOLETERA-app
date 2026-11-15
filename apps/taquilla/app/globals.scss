@@ -36,7 +36,7 @@
 
 body {
   margin: var(--bl-space-0);
-  font-family: 'Geist', 'Inter', 'Helvetica Neue', system-ui, sans-serif;
+  font-family: var(--font-roboto, 'Roboto'), 'Helvetica Neue', system-ui, sans-serif;
   background: #0b0b0c;
   color: #f3f0e8;
   min-height: 100vh;

@@ -116,6 +116,10 @@ export { ParameterCard } from './components/ticket/ParameterCard';
 export type { ParameterCardProps, ParameterValueStyle } from './components/ticket/ParameterCard';
 
 export { BlackTicketRoot, useTicketDensity } from './components/ticket/BlackTicketRoot';
+export { BrandLogo } from './components/ticket/BrandLogo';
+export type { BrandLogoProps } from './components/ticket/BrandLogo';
+export { StageArt } from './components/ticket/StageArt';
+export type { StageArtProps } from './components/ticket/StageArt';
 export type { BlackTicketRootProps } from './components/ticket/BlackTicketRoot';
 
 export { Input } from './components/Input';

@@ -505,38 +505,42 @@ $danger: $danger-700;
 // en `black-ticket.scss` y no pisa el tema claro/oscuro ya publicado.
 // -----------------------------------------------------------------------------
 
-$bt-ink: string.unquote('#0B0B0C');
-$bt-ink-sunken: string.unquote('#080809');
-$bt-ink-raised: string.unquote('#141416');
-$bt-ink-overlay: string.unquote('#1C1C1F');
-$bt-line: string.unquote('#2C2C2F');
-$bt-line-strong: string.unquote('#3A3A3E');
-$bt-text: string.unquote('#F3F0E8');
-$bt-text-secondary: string.unquote('#A39E94');
-$bt-text-tertiary: string.unquote('#8A857C');
-$bt-text-disabled: string.unquote('#5C5954');
-$bt-gold: string.unquote('#C6A56D');
-$bt-gold-deep: string.unquote('#8E7344');
-$bt-gold-wash: string.unquote('rgba(198, 165, 109, 0.10)');
-$bt-money-in: string.unquote('#8EAE96');
-$bt-money-out: string.unquote('#C9847A');
+$bt-ink: string.unquote('#000000');
+$bt-ink-sunken: string.unquote('#0C0C0D');
+$bt-ink-raised: string.unquote('#1A1A1A');
+$bt-ink-overlay: string.unquote('#242424');
+$bt-line: string.unquote('#26262A');
+$bt-line-strong: string.unquote('#34343A');
+$bt-text: string.unquote('#FFFFFF');
+$bt-text-secondary: string.unquote('#A8A29A');
+$bt-text-tertiary: string.unquote('#8C867E');
+$bt-text-disabled: string.unquote('#5A5A60');
+$bt-gold: string.unquote('#A68A6B');
+$bt-gold-deep: string.unquote('#8B7053');
+$bt-gold-wash: string.unquote('rgba(166, 138, 107, 0.14)');
+$bt-money-in: string.unquote('#4CC38A');
+$bt-money-out: string.unquote('#E5484D');
 $bt-danger: $bt-money-out;
-$bt-danger-wash: string.unquote('rgba(201, 132, 122, 0.10)');
+$bt-danger-wash: string.unquote('rgba(229, 72, 77, 0.14)');
 $bt-focus: $bt-gold;
-$bt-seat-free: string.unquote('#17171A');
+$bt-seat-free: string.unquote('#1A1A1A');
 $bt-seat-sold: string.unquote('#3A342C');
 $bt-seat-sold-line: string.unquote('#6A6258');
 $bt-seat-hatch: string.unquote('#5C403C');
-$bt-seat-access: string.unquote('#8EAFD0');
-$bt-bone-pressed: string.unquote('#E4E0D6');
-$bt-control-disabled: string.unquote('#2A2A2C');
+$bt-seat-access: string.unquote('#6FA8DC');
+$bt-bone-pressed: string.unquote('#E8E3DC');
+$bt-control-disabled: string.unquote('#26262A');
 
-$bt-font-ui: string.unquote('"Geist", "Inter", "Helvetica Neue", system-ui, sans-serif');
-$bt-font-mono: string.unquote('"Geist Mono", "ui-monospace", monospace');
+$bt-font-ui: string.unquote(
+  'var(--font-roboto, "Roboto"), "Helvetica Neue", system-ui, sans-serif'
+);
+$bt-font-mono: string.unquote(
+  'var(--font-roboto-mono, "Roboto Mono"), ui-monospace, "SFMono-Regular", monospace'
+);
 
-$bt-weight-regular: 420;
-$bt-weight-medium: 560;
-$bt-weight-semibold: 640;
+$bt-weight-regular: 400;
+$bt-weight-medium: 500;
+$bt-weight-semibold: 600;
 
 $bt-display-size: 40px;
 $bt-display-line: 48px;
@@ -560,10 +564,10 @@ $bt-mono-line: 16px;
 $bt-wordmark-tracking: -0.02em;
 
 $bt-radius-0: 0;
-$bt-radius-s: 6px;
-$bt-radius-m: 8px;
-$bt-radius-l: 10px;
-$bt-radius-xl: 14px;
+$bt-radius-s: 8px;
+$bt-radius-m: 12px;
+$bt-radius-l: 16px;
+$bt-radius-xl: 24px;
 
 $bt-control-compra: 48px;
 $bt-control-taquilla: 56px;
@@ -582,7 +586,20 @@ $bt-move-sheet: 220ms;
 $bt-ease: cubic-bezier(0.2, 0, 0, 1);
 
 $bt-shadow-sheet: string.unquote('0 12px 32px rgba(0, 0, 0, 0.45)');
-$bt-glass: string.unquote('rgba(28, 28, 31, 0.92)');
+$bt-glass: string.unquote('rgba(26, 26, 26, 0.92)');
 $bt-glass-blur: 12px;
 $bt-focus-width: 1.5px;
 $bt-focus-offset: 2px;
+
+// Mockup «Boletera: propuesta de rediseño» (14-11-2026): titulares en Archivo
+// condensado, alerta ámbar, píldoras y tarjetas grandes.
+$bt-font-display: string.unquote(
+  'var(--font-archivo, "Archivo"), var(--font-roboto, "Roboto"), sans-serif'
+);
+$bt-font-script: string.unquote('var(--font-script, "Pinyon Script"), cursive');
+$bt-warn: string.unquote('#F5A524');
+$bt-warn-wash: string.unquote('rgba(245, 165, 36, 0.14)');
+$bt-ok-wash: string.unquote('rgba(76, 195, 138, 0.14)');
+$bt-gold-soft: string.unquote('#D9C2A3');
+$bt-radius-pill: 999px;
+$bt-radius-card: 20px;

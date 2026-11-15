@@ -1,0 +1,26 @@
+.logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  color: var(--text, #ffffff);
+
+  &[data-tone='gold'] {
+    color: var(--gold, #a68a6b);
+  }
+}
+
+.script {
+  font-family: var(--font-script, 'Pinyon Script'), cursive;
+  font-size: var(--logo-size);
+  margin-bottom: calc(var(--logo-size) * -0.17);
+}
+
+.word {
+  font-family: var(--font-roboto, 'Roboto'), sans-serif;
+  font-weight: 500;
+  font-size: calc(var(--logo-size) * 0.3);
+  letter-spacing: 0.42em;
+  padding-left: 0.42em;
+  white-space: nowrap;
+}
