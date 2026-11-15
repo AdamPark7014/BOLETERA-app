@@ -51,19 +51,24 @@ export function posOrgScope(user: JwtUser | undefined, requested?: string): stri
   return user.organizationId;
 }
 
-@ApiTags('Taquilla / POS')
-@ApiBearerAuth()
-@Controller('taquilla')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(
+/** Roles de la puerta: el escáner solo lista funciones y escanea. */
+export const GATE_ROLES = [
   'TAQUILLA',
   'TAQUILLA_SUPERVISOR',
   'VENUE_MANAGER',
   'PROMOTER',
   'ADMIN',
   'SUPER_ADMIN',
-  'SCANNER'
-)
+  'SCANNER',
+] as const;
+
+@ApiTags('Taquilla / POS')
+@ApiBearerAuth()
+@Controller('taquilla')
+@UseGuards(JwtAuthGuard, RolesGuard)
+// SCANNER no va en la clase: con él aquí abría turno, veía cortes y podía
+// cobrar. Solo lee las funciones y escanea (métodos marcados abajo).
+@Roles('TAQUILLA', 'TAQUILLA_SUPERVISOR', 'VENUE_MANAGER', 'PROMOTER', 'ADMIN', 'SUPER_ADMIN')
 export class TaquillaPosController {
   constructor(private posService: TaquillaPosService) {}
 
@@ -96,6 +101,7 @@ export class TaquillaPosController {
   }
 
   @Get('events')
+  @Roles(...GATE_ROLES)
   @ApiOperation({ summary: 'Events on sale at this box office (JWT organization)' })
   async events(@Request() req: { user: JwtUser }) {
     return await this.posService.listPosEvents(posOrgScope(req.user));
@@ -149,6 +155,7 @@ export class TaquillaPosController {
   }
 
   @Post('scan')
+  @Roles(...GATE_ROLES)
   @ApiOperation({ summary: 'Scan ticket barcode or order publicId' })
   async scanBarcode(
     @Request() req: { user: JwtUser },
