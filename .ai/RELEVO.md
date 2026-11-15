@@ -1,5 +1,7 @@
 # RELEVO
 
+- **2026-11-14 (claude-code) — Limpieza de documentación (Adam: «quita documentación y unifica»).** Borrados 0 documentos obsoletos sin referencias (auditorías, planes y prompts viejos; están en el historial de git). Índice único del repo: `docs/INDICE.md`; índice de todos los proyectos: `C:\dev\DOCS.md`; memoria compartida de Codex/Claude/Cursor/Grok: `C:\dev\.ai\memoria`.
+
 - **Último turno:** claude-code
 - **Fecha:** 2026-11-14
 - **Rama:** main
