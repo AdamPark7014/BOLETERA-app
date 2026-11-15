@@ -7,9 +7,11 @@
 - Índice de todos los proyectos: `C:\dev\DOCS.md` · memoria compartida: `C:\dev\.ai\memoria`
 
 ## (raíz)
+
 - [`README.md`](../README.md) — Boletera Platform
 
 ## docs
+
 - [`docs/3D_VISUALIZATION_GUIDE.md`](../docs/3D_VISUALIZATION_GUIDE.md) — 3D VENUE VISUALIZATION WITH THREE.JS
 - [`docs/API_REFERENCE.md`](../docs/API_REFERENCE.md) — BOLETERA API Reference - Complete Endpoint Documentation
 - [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — Boletera Platform - Enterprise Architecture
@@ -27,33 +29,42 @@
 ## .ai
 
 ## apps/mobile-native
+
 - [`apps/mobile-native/README.md`](../apps/mobile-native/README.md) — App móvil nativa
 
 ## e2e/load
+
 - [`e2e/load/README.md`](../e2e/load/README.md) — Escenarios de carga
 
 ## infra/observability
+
 - [`infra/observability/README.md`](../infra/observability/README.md) — Observability (local)
 
 ## packages/database/prisma/migrations
+
 - [`packages/database/prisma/migrations/README.md`](../packages/database/prisma/migrations/README.md) — Migraciones de Boletera
 
 ## packages/payments
+
 - [`packages/payments/MIGRATION.md`](../packages/payments/MIGRATION.md) — @boletera/payments — migration notes
 
 ## packages/shared
+
 - [`packages/shared/DOMAIN.md`](../packages/shared/DOMAIN.md) — Domain contracts owned by `@boletera/shared`
 - [`packages/shared/MIGRATION.md`](../packages/shared/MIGRATION.md) — @boletera/shared — migration notes
 
 ## packages/ui
+
 - [`packages/ui/README.md`](../packages/ui/README.md) — `@boletera/ui`
 
 ## packages/venue-engine
+
 - [`packages/venue-engine/README.md`](../packages/venue-engine/README.md) — `@boletera/venue-engine`
 
 ## prototypes
+
 - [`prototypes/README.md`](../prototypes/README.md) — Prototipos
 
 ## prototypes/staff-mobile-expo
-- [`prototypes/staff-mobile-expo/README.md`](../prototypes/staff-mobile-expo/README.md) — Nexara App
 
+- [`prototypes/staff-mobile-expo/README.md`](../prototypes/staff-mobile-expo/README.md) — Nexara App
