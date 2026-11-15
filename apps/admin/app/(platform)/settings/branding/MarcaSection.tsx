@@ -225,10 +225,6 @@ export function MarcaBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Marca y contenido</h1>
-        <p className={styles.quiet}>
-          Tu logo, color y subdominio para tus páginas de venta, y los textos de la portada. Si aún
-          no hay contenido propio, se muestra el de Black Ticket.
-        </p>
       </header>
       <div className={styles.stack}>
         <Param name="Color primario">

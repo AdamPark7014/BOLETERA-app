@@ -358,10 +358,6 @@ function DescuentosBody() {
       <header className={styles.pageHead}>
         <div className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Campañas y códigos</h1>
-          <p className={styles.quiet}>
-            Preventas y descuentos por evento: porcentaje o monto fijo, con cupo, tope por persona y
-            vigencia.
-          </p>
         </div>
         {events.length > 0 ? (
           <div className={styles.formItem} style={{ width: 'min(360px, 100%)' }}>
@@ -400,12 +396,10 @@ function DescuentosBody() {
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Canjes</p>
             <p className={styles.kpiValue}>{formatCount(redeemedTotal)}</p>
-            <p className={styles.kpiNote}>boletos con descuento</p>
           </div>
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Códigos</p>
             <p className={styles.kpiValue}>{formatCount(codesTotal)}</p>
-            <p className={styles.kpiNote}>generados por las preventas</p>
           </div>
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Puntos de lealtad</p>

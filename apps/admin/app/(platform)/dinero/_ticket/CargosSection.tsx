@@ -70,10 +70,6 @@ export function CargosSection({
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Cargos por servicio</h1>
-        <p className={styles.quiet}>
-          Lo que paga el comprador encima del precio del boleto. Una tasa para toda la organización;
-          si no la defines, se usa la de Black Ticket.
-        </p>
       </header>
       <div className={styles.stack}>
         <Param name="Cargo por servicio">

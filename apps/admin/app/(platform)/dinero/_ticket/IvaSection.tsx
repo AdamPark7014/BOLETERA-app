@@ -60,10 +60,6 @@ export function IvaSection({
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>IVA</h1>
-        <p className={styles.quiet}>
-          El impuesto que se suma en el pago. Una tasa para toda la organización; si no la defines,
-          se usa la de Black Ticket.
-        </p>
       </header>
       <div className={styles.stack}>
         <Param name="IVA">

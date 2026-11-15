@@ -285,9 +285,6 @@ function PreciosBody() {
   const head = (
     <header className={styles.sectionHead}>
       <h1 className={styles.sectionTitle}>Precios</h1>
-      <p className={styles.quiet}>
-        Recomendaciones por oferta, cola de aprobación y señales del motor. Se calcula por evento.
-      </p>
     </header>
   );
 
@@ -434,37 +431,31 @@ function PreciosBody() {
               >
                 {pendingQ.data ? formatNumber(pendingRows.length) : '—'}
               </p>
-              <p className={styles.kpiNote}>
-                {pendingRows.some((row) => row.expired)
-                  ? 'hay recomendaciones vencidas (más de 24 h)'
-                  : 'cambios que firma administración'}
-              </p>
+              {pendingRows.some((row) => row.expired) ? (
+                <p className={styles.kpiNote}>
+                  <span className={styles.down}>hay vencidas</span>
+                </p>
+              ) : null}
             </div>
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>Se aplican sin firma</p>
               <p className={styles.kpiValue}>
                 {bundleQ.data ? formatNumber(summary.autoApplicable) : '—'}
               </p>
-              <p className={styles.kpiNote}>{formatNumber(summary.requiresApproval)} piden firma</p>
             </div>
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>Ocupación</p>
               <p className={styles.kpiValue}>
                 {bundleQ.data ? formatPercent(bundleQ.data.signals.occupancyPercent / 100) : '—'}
               </p>
-              <p className={styles.kpiNote}>
-                {bundleQ.data
-                  ? `${formatNumber(bundleQ.data.signals.soldTickets)} de ${formatNumber(bundleQ.data.signals.totalCapacity)} boletos`
-                  : 'sin señales todavía'}
-              </p>
+              {bundleQ.data ? (
+                <p className={styles.kpiNote}>
+                  {formatNumber(bundleQ.data.signals.soldTickets)} /{' '}
+                  {formatNumber(bundleQ.data.signals.totalCapacity)}
+                </p>
+              ) : null}
             </div>
           </div>
-          {bundleQ.data ? (
-            <p className={styles.tertiary}>
-              {bundleQ.data.summary} · {generatedAgeLabel(bundleQ.data, now)} · dinámico{' '}
-              {bundleQ.data.enableDynamic ? 'encendido' : 'apagado'}
-            </p>
-          ) : null}
 
           <div className={`${styles.stack} ${local.block}`}>
             <Segment
@@ -507,26 +498,17 @@ function PreciosBody() {
                       onChange={(on) => setMarks({ approval: on })}
                     />
                     <p className={styles.quiet}>
-                      Solo con aprobación · {formatNumber(summary.requiresApproval)}
+                      Piden aprobación · {formatNumber(summary.requiresApproval)}
                     </p>
                     <Switch
                       label="Solo acotadas por banda"
                       on={url.clampedOnly}
                       onChange={(on) => setMarks({ clamped: on })}
                     />
-                    <p className={styles.quiet}>
-                      Solo acotadas por banda · {formatNumber(summary.clamped)}
-                    </p>
+                    <p className={styles.quiet}>Acotadas · {formatNumber(summary.clamped)}</p>
                   </div>
-                  <p className={styles.tertiary}>
-                    {formatNumber(summary.increases)} alzas · {formatNumber(summary.decreases)}{' '}
-                    bajas · {formatNumber(summary.holds)} sin cambio
-                  </p>
                   {bundleQ.data?.enableDynamic === false ? (
-                    <p className={styles.quiet}>
-                      El evento tiene el precio dinámico apagado: nada se aplica solo, cada cambio
-                      pide aprobación. Se enciende en la ficha del evento.
-                    </p>
+                    <p className={styles.tertiary}>Precio dinámico apagado.</p>
                   ) : null}
 
                   {selectedKeys.length > 0 ? (

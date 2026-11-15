@@ -180,9 +180,6 @@ function ReportesBody() {
       <header className={styles.pageHead}>
         <div className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Reportes</h1>
-          <p className={styles.quiet}>
-            Corte de venta de los últimos 30 días y salida de público por recinto.
-          </p>
         </div>
         {orgId && canSales ? (
           <TicketButton disabled={exporting} onClick={() => void exportSales()}>
@@ -201,7 +198,6 @@ function ReportesBody() {
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Venta de 30 días</p>
             <p className={styles.kpiValue}>{formatTicketAmount(total)}</p>
-            <p className={styles.kpiNote}>órdenes cobradas, todos los canales</p>
           </div>
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Órdenes</p>

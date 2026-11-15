@@ -209,10 +209,6 @@ function PagosBody() {
     <section className={styles.page}>
       <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
         <h1 className={styles.sectionTitle}>Pasarela de pago</h1>
-        <p className={styles.quiet}>
-          Qué formas de pago ve el comprador en el checkout. El efectivo de taquilla se cobra
-          aparte.
-        </p>
       </header>
 
       <div className={styles.kpis}>
@@ -231,7 +227,6 @@ function PagosBody() {
             {activeCount}{' '}
             <span style={{ color: 'var(--text-secondary)', fontSize: '0.6em' }}>/ 3</span>
           </p>
-          <p className={styles.kpiNote}>en el checkout</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Cuenta de depósito</p>

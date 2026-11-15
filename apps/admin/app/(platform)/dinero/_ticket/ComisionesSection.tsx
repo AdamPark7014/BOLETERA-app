@@ -93,9 +93,6 @@ export function ComisionesSection({
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Comisiones</h1>
-        <p className={styles.quiet}>
-          Lo que se retiene de cada venta y de cada reventa antes de liquidarte.
-        </p>
         {limitsNote ? <p className={styles.tertiary}>{limitsNote}</p> : null}
       </header>
       <div className={styles.stack}>

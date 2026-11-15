@@ -90,3 +90,8 @@
   flex-wrap: wrap;
   gap: 4px 10px;
 }
+
+.queue {
+  border-color: transparent;
+  background: linear-gradient(135deg, rgba(166, 138, 107, 0.14) 0%, var(--card) 60%);
+}

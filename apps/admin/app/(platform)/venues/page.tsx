@@ -603,17 +603,14 @@ function RecintoBody() {
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Aforo total</p>
             <p className={styles.kpiValue}>{formatCount(draft.totalCapacity)}</p>
-            <p className={styles.kpiNote}>personas</p>
           </div>
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Generales</p>
             <p className={styles.kpiValue}>{formatCount(draft.generalSeats)}</p>
-            <p className={styles.kpiNote}>butacas declaradas</p>
           </div>
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Premium</p>
             <p className={styles.kpiValue}>{formatCount(draft.premiumSeats)}</p>
-            <p className={styles.kpiNote}>butacas declaradas</p>
           </div>
           <div className={styles.kpi}>
             <p className={styles.kpiLabel}>Accesibles</p>
@@ -673,9 +670,6 @@ function RecintoBody() {
     <section className={styles.page}>
       <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
         <h1 className={styles.sectionTitle}>Recintos</h1>
-        <p className={styles.quiet}>
-          Salas donde se presentan tus eventos: datos, cupo declarado y fechas bloqueadas.
-        </p>
       </header>
 
       {venues.length === 0 ? (
@@ -695,19 +689,16 @@ function RecintoBody() {
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>Recintos</p>
               <p className={styles.kpiValue}>{formatCount(venues.length)}</p>
-              <p className={styles.kpiNote}>en tu organización</p>
             </div>
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>Aforo combinado</p>
               <p className={styles.kpiValue}>{formatCount(totalCapacity)}</p>
-              <p className={styles.kpiNote}>personas</p>
             </div>
             <div className={styles.kpi}>
               <p className={styles.kpiLabel}>Fechas bloqueadas</p>
               <p className={styles.kpiValue}>
                 {formatCount(venues.reduce((sum, venue) => sum + venue.blackouts.length, 0))}
               </p>
-              <p className={styles.kpiNote}>en todos los recintos</p>
             </div>
           </div>
           <div className={styles.tableWrap}>

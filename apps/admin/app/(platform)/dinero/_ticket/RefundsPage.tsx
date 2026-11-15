@@ -272,10 +272,6 @@ function DeadlineEditor({
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Reembolsos</h1>
-        <p className={styles.quiet}>
-          Plazos que ven los compradores en su correo y en la web. La devolución en el banco la
-          cierra una persona y luego se marca aquí como completa.
-        </p>
       </header>
       <div className={styles.stack}>
         <Param name="Días para cerrar">

@@ -1446,3 +1446,17 @@ button.row:hover {
     padding: 10px 16px;
   }
 }
+
+/* Fichas de ajuste: solo nombre, valor y control; sin la nota al pie. */
+.canvas :global([data-param]) > section > p {
+  display: none;
+}
+
+/* Textos secundarios largos dentro de tablas: dos líneas como máximo. */
+.table .rowMeta {
+  display: -webkit-box;
+  max-width: 48ch;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}

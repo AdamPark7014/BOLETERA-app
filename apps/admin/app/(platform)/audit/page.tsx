@@ -234,9 +234,6 @@ function AuditoriaBody() {
     <section className={styles.page}>
       <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
         <h1 className={styles.sectionTitle}>Bitácora</h1>
-        <p className={styles.quiet}>
-          Quién cambió qué en tu organización: precios, reembolsos, accesos y equipo.
-        </p>
       </header>
 
       <div className={styles.kpis}>
@@ -253,12 +250,10 @@ function AuditoriaBody() {
           >
             {formatCount(alerts)}
           </p>
-          <p className={styles.kpiNote}>descuadres, liquidaciones o inventario</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Tipos de acción</p>
           <p className={styles.kpiValue}>{formatCount(distinctActions)}</p>
-          <p className={styles.kpiNote}>distintos en la ventana</p>
         </div>
       </div>
 

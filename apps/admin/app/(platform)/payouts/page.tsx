@@ -203,10 +203,6 @@ function LiquidacionesBody() {
     <section className={styles.stack} style={{ gap: 20 }}>
       <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
         <h1 className={styles.sectionTitle}>Liquidaciones</h1>
-        <p className={styles.quiet}>
-          Lo que Black Ticket te transfiere por cada periodo de venta. Para completar una, captura
-          la referencia de la transferencia.
-        </p>
         {ambiguous ? (
           <p className={styles.tertiary}>
             Hay ventas en varias monedas: los importes no se suman entre sí.
@@ -237,9 +233,6 @@ function LiquidacionesBody() {
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Aviso automático</p>
           <p className={styles.kpiValue}>Apagado</p>
-          <p className={styles.kpiNote}>
-            Lo configura Black Ticket; la transferencia se hace aparte.
-          </p>
         </div>
       </div>
 

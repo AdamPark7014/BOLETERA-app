@@ -178,10 +178,6 @@ function EsperaBody() {
     <section className={styles.page}>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Lista de espera</h1>
-        <p className={styles.quiet}>
-          Personas que pidieron aviso cuando se liberen boletos. «Avisar» les escribe a las que
-          siguen pendientes en ese evento.
-        </p>
       </header>
       {notice ? (
         <p className={styles.chipOk} role="status">
@@ -198,12 +194,10 @@ function EsperaBody() {
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>En espera</p>
           <p className={styles.kpiValue}>{pendingTotal.toLocaleString('es-MX')}</p>
-          <p className={styles.kpiNote}>sin avisar todavía</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Avisados</p>
           <p className={styles.kpiValue}>{notifiedTotal.toLocaleString('es-MX')}</p>
-          <p className={styles.kpiNote}>recibieron el aviso</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Compraron</p>

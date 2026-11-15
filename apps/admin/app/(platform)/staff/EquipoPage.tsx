@@ -209,16 +209,11 @@ function EquipoBody() {
     <section>
       <header className={frame.sectionHead}>
         <h1 className={frame.sectionTitle}>Equipo y permisos</h1>
-        <p className={frame.quiet}>
-          {people
-            ? `${people.length} ${people.length === 1 ? 'persona' : 'personas'} en tu organización. `
-            : 'Quién entra al panel y qué puede hacer cada rol. '}
-          {session.status === 'loading'
-            ? null
-            : canAssign
-              ? 'Cambia el rol de alguien y guarda.'
-              : 'Cambiar roles lo hace quien administra tu organización.'}
-        </p>
+        {people ? (
+          <p className={frame.quiet}>
+            {people.length} {people.length === 1 ? 'persona' : 'personas'}
+          </p>
+        ) : null}
       </header>
       <div className={frame.stack}>
         {canAssign ? (

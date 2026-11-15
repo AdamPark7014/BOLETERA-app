@@ -108,10 +108,6 @@ function PlataformaBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Plan y módulos</h1>
-        <p className={styles.quiet}>
-          Límites de uso e inicio de sesión de tu cuenta. Los configura Black Ticket; aquí solo se
-          consultan.
-        </p>
       </header>
       <div className={styles.stack}>
         <Param name="Límite">

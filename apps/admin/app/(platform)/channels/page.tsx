@@ -312,9 +312,6 @@ function CanalesBody() {
       <header className={styles.pageHead}>
         <div className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Canales de venta</h1>
-          <p className={styles.quiet}>
-            Cuánto inventario vende cada canal en un evento. Los canales activos deben sumar 100%.
-          </p>
         </div>
         <div className={local.eventPick}>
           <p className={styles.rowMeta}>Evento</p>
@@ -353,7 +350,6 @@ function CanalesBody() {
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Órdenes</p>
           <p className={styles.kpiValue}>{formatCount(healthSummary.totalOrders)}</p>
-          <p className={styles.kpiNote}>todos los canales de este evento</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Ingresos</p>

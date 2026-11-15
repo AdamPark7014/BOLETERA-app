@@ -253,10 +253,6 @@ export function OrganizacionBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Organización</h1>
-        <p className={styles.quiet}>
-          Datos de tu empresa que ven tus compradores. Nombre, descripción, sitio, correo y teléfono
-          se editan aquí; comisión y reventa están en Finanzas › Comisiones.
-        </p>
       </header>
       <div className={styles.stack}>
         <Param name="Nombre de la organización">
