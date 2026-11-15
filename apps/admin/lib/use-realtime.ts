@@ -16,6 +16,11 @@ export type RealtimeOptions<T> = {
   parse?: (payload: string) => T;
   merge?: (current: T | undefined, incoming: T) => T;
   maxRetries?: number;
+  /**
+   * Prepara la URL justo antes de cada conexión (p. ej. pide un ticket de SSE
+   * de vida corta). Si devuelve null, no se conecta en ese intento.
+   */
+  prepareUrl?: (url: string) => Promise<string | null>;
 };
 
 export function useRealtime<T>({
@@ -26,6 +31,7 @@ export function useRealtime<T>({
   parse = (payload) => JSON.parse(payload) as T,
   merge = (_current, incoming) => incoming,
   maxRetries = Number.POSITIVE_INFINITY,
+  prepareUrl,
 }: RealtimeOptions<T>) {
   const client = useQueryClient();
   const [status, setStatus] = useState<RealtimeStatus>('idle');
@@ -33,6 +39,8 @@ export function useRealtime<T>({
   const keyRef = useRef(queryKey);
   const parseRef = useRef(parse);
   const mergeRef = useRef(merge);
+  const prepareRef = useRef(prepareUrl);
+  prepareRef.current = prepareUrl;
   keyRef.current = queryKey;
   parseRef.current = parse;
   mergeRef.current = merge;
@@ -48,10 +56,35 @@ export function useRealtime<T>({
     let attempts = 0;
     let disposed = false;
 
-    const connect = () => {
+    const scheduleRetry = () => {
+      attempts += 1;
+      if (attempts > maxRetries) {
+        setStatus('error');
+        setError(new Error('Se agotaron los intentos de reconexión en tiempo real.'));
+        return;
+      }
+      setStatus('reconnecting');
+      const delay = Math.min(1_000 * 2 ** (attempts - 1), 30_000);
+      retryTimer = setTimeout(() => void connect(), delay);
+    };
+
+    const connect = async () => {
       if (disposed) return;
       setStatus(attempts === 0 ? 'connecting' : 'reconnecting');
-      source = new EventSource(url);
+      let target: string | null = url;
+      if (prepareRef.current) {
+        try {
+          target = await prepareRef.current(url);
+        } catch {
+          target = null;
+        }
+      }
+      if (disposed) return;
+      if (!target) {
+        scheduleRetry();
+        return;
+      }
+      source = new EventSource(target);
 
       source.onopen = () => {
         attempts = 0;
@@ -77,19 +110,11 @@ export function useRealtime<T>({
         source?.close();
         source = null;
         if (disposed) return;
-        attempts += 1;
-        if (attempts > maxRetries) {
-          setStatus('error');
-          setError(new Error('Se agotaron los intentos de reconexión en tiempo real.'));
-          return;
-        }
-        setStatus('reconnecting');
-        const delay = Math.min(1_000 * 2 ** (attempts - 1), 30_000);
-        retryTimer = setTimeout(connect, delay);
+        scheduleRetry();
       };
     };
 
-    connect();
+    void connect();
     return () => {
       disposed = true;
       source?.close();
@@ -100,9 +125,33 @@ export function useRealtime<T>({
   return { status, error };
 }
 
+/**
+ * El stream de reportes no acepta el JWT por query: hay que pedir antes un
+ * ticket de vida corta (`POST /auth/stream-ticket`) y pasarlo como `?ticket=`.
+ * Se pide uno nuevo en cada conexión porque caduca en minutos.
+ */
+async function withStreamTicket(base: string, url: string, token: string | null) {
+  if (!token) return null;
+  const response = await fetch(`${base}/auth/stream-ticket`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) return null;
+  const body = (await response.json()) as { ticket?: string; data?: { ticket?: string } };
+  const ticket = body.ticket ?? body.data?.ticket;
+  if (!ticket) return null;
+  const join = url.includes('?') ? '&' : '?';
+  return `${url}${join}ticket=${encodeURIComponent(ticket)}`;
+}
+
 export function useRealtimeDashboardUpdates(eventId?: string) {
-  const { organizationId } = useSession();
-  const base = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://127.0.0.1:4000/api/v1';
+  const { organizationId, token } = useSession();
+  const base =
+    process.env.NEXT_PUBLIC_ADMIN_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://127.0.0.1:4000/api/v1';
+  const tokenRef = useRef(token);
+  tokenRef.current = token;
   const query = eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
   const url = organizationId
     ? `${base}/reports/dashboard/realtime/${organizationId}/stream${query}`
@@ -111,5 +160,6 @@ export function useRealtimeDashboardUpdates(eventId?: string) {
     url,
     queryKey: queryKeys.analytics.realtime(organizationId ?? '', eventId),
     enabled: Boolean(organizationId),
+    prepareUrl: (target) => withStreamTicket(base, target, tokenRef.current),
   });
 }

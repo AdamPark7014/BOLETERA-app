@@ -117,14 +117,14 @@ export function ChannelsPanel({
         ) : healthLoading && healthEntries.length === 0 ? (
           <EmptyState
             title="Cargando salud…"
-            description="Consultando el endpoint de canales."
+            description="Consultando los canales."
             illustration="inbox"
             size="sm"
           />
         ) : healthEntries.length === 0 ? (
           <EmptyState
             title="Sin datos de salud"
-            description="El endpoint no devolvió estado por canal para este evento."
+            description="Aún no hay estado por canal para este evento."
             illustration="inbox"
             size="sm"
           />

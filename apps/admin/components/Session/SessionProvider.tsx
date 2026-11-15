@@ -566,7 +566,7 @@ function OrgDeniedModal({
         <p id="org-desc" className={styles.body}>
           {organizationId
             ? 'Tu cuenta no pertenece a la organización de este recurso, o tu rol fue cambiado. Si deberías tener acceso, pide a un administrador que te envíe una invitación.'
-            : 'Tu cuenta no tiene una organización asignada. El API rechaza todas las rutas de organización mientras siga así, incluso para cuentas de administrador. Pide a un administrador que te asigne una.'}
+            : 'Tu cuenta no tiene una organización asignada. Sin organización no puedes ver eventos, ventas ni ajustes, aunque seas administrador. Pide a un administrador que te asigne una.'}
         </p>
         {organizationId && (
           <p className={styles.meta}>

@@ -129,20 +129,29 @@
 
 .segment {
   display: flex;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .segment button {
-  flex: 1;
-  min-height: 36px;
-  padding: 0 8px;
-  color: var(--text-secondary);
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
 }
 
-.segmentOn {
-  color: var(--text);
-  background: var(--gold-wash);
-  box-shadow: inset 0 0 0 1px var(--gold);
+.segment button:hover {
+  border-color: var(--text-secondary);
+}
+
+.segment .segmentOn {
+  border-color: #fff;
+  background: #fff;
+  color: #000;
+  font-weight: 600;
 }
 
 .trigger {

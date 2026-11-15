@@ -1,14 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
-import {
-  CORE_PERMISSION_KEYS,
-  PermissionKey,
-  USER_ROLE_VALUES,
-  type PermissionKeyValue,
-  type UserRoleValue,
-} from '@boletera/shared';
-import { ParameterCard, TicketButton } from '@boletera/ui';
+import { USER_ROLE_VALUES, type UserRoleValue } from '@boletera/shared';
+import { TicketButton } from '@boletera/ui';
 import { ApiError, adminApi, decodeToken } from '@/lib/api';
 import {
   CAPABILITY_LABELS,
@@ -19,7 +14,7 @@ import {
 } from '@/lib/permissions';
 import { useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param, SheetSelect } from '../events/_ticket/controls';
+import { SheetSelect } from '../events/_ticket/controls';
 import frame from '../events/_ticket/frame.module.scss';
 import { asRecord, readString } from '../events/_ticket/read';
 
@@ -40,18 +35,6 @@ const ROLE_NAME: Record<UserRoleValue, string> = {
   SUPPORT: 'Soporte',
   AUDITOR: 'Auditor',
   AFFILIATE: 'Afiliado',
-};
-
-/** Las ocho llaves de `PermissionKey`. El menú no las pinta. */
-const KEY_NAME: Record<PermissionKeyValue, string> = {
-  [PermissionKey.EVENTS_READ]: 'Ver eventos',
-  [PermissionKey.EVENTS_PUBLISH]: 'Publicar eventos',
-  [PermissionKey.ORDERS_REFUND]: 'Reembolsar',
-  [PermissionKey.TICKETS_SCAN]: 'Escanear',
-  [PermissionKey.VENUES_EDIT]: 'Editar recintos',
-  [PermissionKey.REPORTS_READ]: 'Ver reportes',
-  [PermissionKey.FINANCE_EXPORT]: 'Exportar finanzas',
-  [PermissionKey.PLATFORM_ADMIN]: 'Administrar plataforma',
 };
 
 const INVITE = new Set<string>(INVITABLE_ROLES);
@@ -128,20 +111,6 @@ function readPeople(payload: unknown): Person[] {
   });
 }
 
-function roleValue(role: UserRoleValue): string {
-  const invite = INVITE.has(role) ? 'Se invita' : 'No se invita';
-  if (!isKnownRole(role)) return `Sin secciones · ${invite}`;
-  if (capabilitiesFor(role).length === 0) return `Sin acceso · ${invite}`;
-  return `Con menú · ${invite}`;
-}
-
-function roleEffect(role: UserRoleValue): string {
-  if (!isKnownRole(role)) return 'Está en Prisma. El menú no lo reconoce.';
-  const caps = capabilitiesFor(role);
-  if (caps.length === 0) return 'Está en el menú. No pinta secciones.';
-  return caps.map((cap) => CAPABILITY_LABELS[cap]).join(', ');
-}
-
 export function EquipoPage() {
   return (
     <Suspense fallback={null}>
@@ -168,9 +137,7 @@ function EquipoBody() {
   const orgId = session.orgId;
   const actorId = token ? (decodeToken(token)?.sub ?? null) : null;
   const roleOptions = grantableOptions(session.role);
-  const menu = USER_ROLE_VALUES.filter((role) => isKnownRole(role));
-  const hidden = USER_ROLE_VALUES.filter((role) => !isKnownRole(role));
-  const invitable = USER_ROLE_VALUES.filter((role) => INVITE.has(role));
+  const menu = USER_ROLE_VALUES.filter((role) => isKnownRole(role) && role !== 'CUSTOMER');
 
   useEffect(() => {
     if (!canAssign || !token || !orgId) {
@@ -241,99 +208,148 @@ function EquipoBody() {
   return (
     <section>
       <header className={frame.sectionHead}>
-        <h1 className={frame.sectionTitle}>Equipo</h1>
+        <h1 className={frame.sectionTitle}>Equipo y permisos</h1>
         <p className={frame.quiet}>
-          Prisma define {USER_ROLE_VALUES.length} roles. El menú reconoce {menu.length}.{' '}
-          {hidden.length} quedan en Sin secciones. Se invitan {invitable.length}. Las llaves se
-          leen.{' '}
+          {people
+            ? `${people.length} ${people.length === 1 ? 'persona' : 'personas'} en tu organización. `
+            : 'Quién entra al panel y qué puede hacer cada rol. '}
           {session.status === 'loading'
             ? null
             : canAssign
-              ? 'Guardar asigna uno de esos roles a una persona del personal.'
-              : 'Asignar pide super administrador o quien ya administra el personal.'}
+              ? 'Cambia el rol de alguien y guarda.'
+              : 'Cambiar roles lo hace quien administra tu organización.'}
         </p>
       </header>
       <div className={frame.stack}>
         {canAssign ? (
           <>
-            <p className={frame.rowTitle}>Personal</p>
             {session.status === 'no-org' ? (
-              <p className={frame.quiet}>Sin organización no hay personal que asignar.</p>
+              <p className={frame.quiet}>Tu cuenta no tiene organización asignada todavía.</p>
             ) : null}
-            {loadingPeople ? <p className={frame.quiet}>Cargando personal.</p> : null}
             {peopleError ? (
               <p className={frame.danger} role="alert">
                 {peopleError}
               </p>
             ) : null}
-            {people && people.length === 0 ? (
-              <p className={frame.quiet}>No hay personal en la organización.</p>
+            {loadingPeople && !people ? (
+              <div
+                className={frame.skeleton}
+                style={{ height: 240 }}
+                aria-label="Cargando equipo"
+              />
             ) : null}
-            {people?.map((person) => {
-              const draft = drafts[person.id] ?? person.role;
-              return (
-                <Param key={person.id} name={`${person.firstName} ${person.lastName}`}>
-                  <ParameterCard
-                    name={`${person.firstName} ${person.lastName}`}
-                    value={roleName(draft)}
-                    effect={`${person.email}. Se guarda en su rol.`}
-                  >
-                    {canModify(session.role, actorId, person) ? (
-                      <SheetSelect
-                        label={`Rol de ${person.firstName} ${person.lastName}`}
-                        value={isCatalogRole(draft) ? draft : ''}
-                        placeholder={roleName(person.role)}
-                        options={roleOptions}
-                        onChange={(next) => {
-                          if (!isCatalogRole(next)) return;
-                          setDrafts((current) => ({ ...current, [person.id]: next }));
-                          setNotice(null);
-                        }}
-                      />
-                    ) : (
-                      <p className={frame.quiet}>
-                        {actorId === person.id
-                          ? 'Tu propio rol lo cambia otra persona.'
-                          : 'Su rango es igual o mayor que el tuyo.'}
-                      </p>
-                    )}
-                  </ParameterCard>
-                </Param>
-              );
-            })}
+            {people && people.length === 0 ? (
+              <div className={frame.empty}>
+                <p className={frame.emptyTitle}>Aún no hay nadie más en tu equipo</p>
+                <p className={frame.quiet}>Invita a tu equipo desde Organización.</p>
+                <Link href="/settings/organization" className={frame.goldLink}>
+                  Ir a Organización
+                </Link>
+              </div>
+            ) : null}
+            {people && people.length > 0 ? (
+              <div className={frame.tableWrap}>
+                <table className={frame.table}>
+                  <thead>
+                    <tr>
+                      <th scope="col">Persona</th>
+                      <th scope="col">Rol</th>
+                      <th scope="col">Acceso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {people.map((person) => {
+                      const draft = drafts[person.id] ?? person.role;
+                      const caps = isKnownRole(draft) ? capabilitiesFor(draft) : [];
+                      const dirty = draft !== person.role;
+                      return (
+                        <tr key={person.id} data-param={`${person.firstName} ${person.lastName}`}>
+                          <td>
+                            <p className={frame.rowTitle}>
+                              {person.firstName} {person.lastName}
+                            </p>
+                            <p className={frame.rowMeta}>{person.email}</p>
+                          </td>
+                          <td style={{ minWidth: 220 }}>
+                            {canModify(session.role, actorId, person) ? (
+                              <SheetSelect
+                                label={`Rol de ${person.firstName} ${person.lastName}`}
+                                value={isCatalogRole(draft) ? draft : ''}
+                                placeholder={roleName(person.role)}
+                                options={roleOptions}
+                                onChange={(next) => {
+                                  if (!isCatalogRole(next)) return;
+                                  setDrafts((current) => ({ ...current, [person.id]: next }));
+                                  setNotice(null);
+                                }}
+                              />
+                            ) : (
+                              <>
+                                <p className={frame.rowTitle}>{roleName(person.role)}</p>
+                                <p className={frame.rowMeta}>
+                                  {actorId === person.id
+                                    ? 'Tu propio rol lo cambia otra persona.'
+                                    : 'Su rango es igual o mayor que el tuyo.'}
+                                </p>
+                              </>
+                            )}
+                          </td>
+                          <td>
+                            {dirty ? (
+                              <span className={frame.chipGold}>Sin guardar</span>
+                            ) : caps.length === 0 ? (
+                              <span className={frame.chip}>Sin acceso al panel</span>
+                            ) : (
+                              <span className={frame.chipOk}>
+                                {caps.length} {caps.length === 1 ? 'permiso' : 'permisos'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
           </>
         ) : null}
-        <p className={frame.rowTitle}>Con menú</p>
-        {menu.map((role) => (
-          <Param key={role} name={ROLE_NAME[role]}>
-            <ParameterCard
-              name={ROLE_NAME[role]}
-              value={roleValue(role)}
-              effect={roleEffect(role)}
-            />
-          </Param>
-        ))}
-        <p className={frame.rowTitle}>En Prisma, sin menú</p>
-        {hidden.map((role) => (
-          <Param key={role} name={ROLE_NAME[role]}>
-            <ParameterCard
-              name={ROLE_NAME[role]}
-              value={roleValue(role)}
-              effect={roleEffect(role)}
-            />
-          </Param>
-        ))}
-        <p className={frame.rowTitle}>Llaves persistidas</p>
-        {CORE_PERMISSION_KEYS.map((key) => (
-          <Param key={key} name={KEY_NAME[key]}>
-            <ParameterCard
-              name={KEY_NAME[key]}
-              value={key}
-              valueStyle="mono"
-              effect="Se lee. El API no escribe esta llave."
-            />
-          </Param>
-        ))}
+
+        <h2 className={frame.panelTitle} style={{ marginTop: 12 }}>
+          Qué puede hacer cada rol
+        </h2>
+        <div className={frame.tableWrap}>
+          <table className={frame.table}>
+            <thead>
+              <tr>
+                <th scope="col">Rol</th>
+                <th scope="col">Puede</th>
+              </tr>
+            </thead>
+            <tbody>
+              {menu.map((role) => {
+                const caps = capabilitiesFor(role);
+                return (
+                  <tr key={role} data-param={ROLE_NAME[role]}>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <p className={frame.rowTitle}>{ROLE_NAME[role]}</p>
+                      <p className={frame.rowMeta}>
+                        {INVITE.has(role) ? 'Se puede invitar' : 'Lo asigna administración'}
+                      </p>
+                    </td>
+                    <td className={frame.quiet}>
+                      {role === 'SUPER_ADMIN'
+                        ? 'Todo el panel, en todas las organizaciones.'
+                        : caps.length === 0
+                          ? 'No entra al panel.'
+                          : caps.map((cap) => CAPABILITY_LABELS[cap]).join(' · ')}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
       {saveError ? (
         <p className={frame.danger} role="alert">
@@ -343,10 +359,12 @@ function EquipoBody() {
       {canAssign ? (
         <div className={frame.saveBar}>
           <p className={frame.quiet} aria-live="polite">
-            {changed.length > 0 ? 'Sin guardar' : (notice ?? '')}
+            {changed.length > 0
+              ? `${changed.length} ${changed.length === 1 ? 'cambio' : 'cambios'} sin guardar`
+              : (notice ?? '')}
           </p>
           <TicketButton disabled={changed.length === 0 || saving} onClick={() => void save()}>
-            Guardar sección
+            {saving ? 'Guardando' : 'Guardar cambios'}
           </TicketButton>
         </div>
       ) : null}

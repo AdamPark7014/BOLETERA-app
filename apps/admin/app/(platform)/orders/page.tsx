@@ -216,43 +216,39 @@ function OrdersList({
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Órdenes</h1>
         <p className={styles.quiet}>
-          Las {formatCount(orders.length)} más recientes de tu organización. El API no busca ni
-          pagina el listado: los filtros aplican solo sobre ellas y una orden anterior se busca por
-          folio exacto.
+          Las {formatCount(orders.length)} más recientes de tu organización. Los filtros aplican
+          sobre ellas; para una orden anterior, búscala por su folio exacto.
         </p>
         {hasMore || (total != null && total > orders.length) ? (
-          <p className={styles.tertiary}>Hay más órdenes en el servidor que no se listan aquí.</p>
+          <p className={styles.tertiary}>Hay órdenes más antiguas que no aparecen en esta lista.</p>
         ) : null}
       </header>
 
-      <div className={styles.rows}>
-        <div className={styles.row}>
-          <p className={styles.rowTitle}>Órdenes cargadas</p>
-          <span />
-          <p className={styles.figure}>{formatCount(orders.length)}</p>
-        </div>
-        <div className={styles.row}>
-          <p className={styles.rowTitle}>Requieren acción</p>
-          <span />
-          <p className={attention.length > 0 ? `${styles.figure} ${styles.danger}` : styles.figure}>
-            {formatCount(attention.length)}
-          </p>
-        </div>
-        <div className={styles.row}>
-          <p className={styles.rowTitle}>Completadas</p>
-          <span />
-          <p className={styles.figure}>{formatCount(completedCount)}</p>
-        </div>
-        <div className={styles.row}>
-          <div className={styles.rowMain}>
-            <p className={styles.rowTitle}>Cobrado en lo mostrado</p>
-            <p className={styles.rowMeta}>Solo completadas y con reembolso parcial de esta lista</p>
-          </div>
-          <span />
-          <p className={styles.figure}>
+      <div className={styles.kpis} aria-label="Resumen de órdenes">
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Cobrado en esta lista</p>
+          <p className={styles.kpiValue}>
             {totals.length > 0
               ? totals.map(([cur, amount]) => formatMoney(amount, cur)).join(' · ')
               : '—'}
+          </p>
+          <p className={styles.kpiNote}>completadas y con reembolso parcial</p>
+        </div>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Completadas</p>
+          <p className={styles.kpiValue}>{formatCount(completedCount)}</p>
+          <p className={styles.kpiNote}>de {formatCount(orders.length)} órdenes recientes</p>
+        </div>
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Requieren acción</p>
+          <p
+            className={styles.kpiValue}
+            style={attention.length > 0 ? { color: 'var(--danger)' } : undefined}
+          >
+            {formatCount(attention.length)}
+          </p>
+          <p className={styles.kpiNote}>
+            {attention.length > 0 ? 'reembolsos obligados o pagos por revisar' : 'todo en orden'}
           </p>
         </div>
       </div>
@@ -361,41 +357,68 @@ function OrdersList({
           ) : null}
         </div>
       ) : (
-        <ul className={`${styles.rows} ${bt.block}`} aria-label="Órdenes recientes">
-          {filtered.map((o) => {
-            const meta = orderStatusMeta(o.status);
-            const urgent = NEEDS_ACTION.has(o.status);
-            const payment = o.paymentGateway
-              ? `${o.paymentGateway}${o.paymentStatus ? ` · ${o.paymentStatus}` : ''}`
-              : 'Sin pago registrado';
-            return (
-              <li key={o.id}>
-                <Link href={`/orders/${o.id}`} className={`${styles.row} ${bt.rowLink}`}>
-                  <div className={styles.rowMain}>
-                    <p className={styles.rowTitle}>
-                      <span className={styles.mono}>{o.publicId}</span> · {o.eventTitle}
-                    </p>
-                    <p className={styles.rowMeta}>
-                      {[
-                        o.buyerName || 'Sin nombre',
-                        o.buyerEmail,
-                        channelWord(o.channel),
-                        payment,
-                        formatWhen(o.createdAt),
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </p>
-                  </div>
-                  <p className={urgent ? styles.danger : styles.quiet} title={meta.hint}>
-                    {meta.label}
-                  </p>
-                  <p className={styles.figure}>{formatMoney(o.amount, o.currency)}</p>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <div className={`${styles.tableWrap} ${bt.block}`}>
+          <table className={styles.table} aria-label="Órdenes recientes">
+            <thead>
+              <tr>
+                <th scope="col">Folio</th>
+                <th scope="col">Evento</th>
+                <th scope="col">Comprador</th>
+                <th scope="col">Canal</th>
+                <th scope="col">Estado</th>
+                <th scope="col" className={styles.num}>
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((o) => {
+                const meta = orderStatusMeta(o.status);
+                const urgent = NEEDS_ACTION.has(o.status);
+                const chip = urgent
+                  ? styles.chipDanger
+                  : o.status === 'COMPLETED'
+                    ? styles.chipOk
+                    : o.status === 'PENDING' || o.status === 'PARTIALLY_REFUNDED'
+                      ? styles.chipWarn
+                      : styles.chip;
+                return (
+                  <tr key={o.id}>
+                    <td>
+                      <Link
+                        href={`/orders/${o.id}`}
+                        className={`${styles.cellLink} ${styles.mono}`}
+                      >
+                        {o.publicId}
+                      </Link>
+                      <p className={styles.rowMeta}>{formatWhen(o.createdAt)}</p>
+                    </td>
+                    <td>{o.eventTitle}</td>
+                    <td>
+                      <p className={styles.rowTitle}>{o.buyerName || 'Sin nombre'}</p>
+                      <p className={styles.rowMeta}>{o.buyerEmail}</p>
+                    </td>
+                    <td>{channelWord(o.channel)}</td>
+                    <td title={meta.hint}>
+                      <span className={chip}>{meta.label}</span>
+                    </td>
+                    <td className={styles.num}>
+                      <strong
+                        style={
+                          o.status === 'REFUNDED' || o.status === 'CANCELLED'
+                            ? { color: 'var(--text-secondary)', textDecoration: 'line-through' }
+                            : undefined
+                        }
+                      >
+                        {formatMoney(o.amount, o.currency)}
+                      </strong>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

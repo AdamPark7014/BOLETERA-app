@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import { Field, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
@@ -95,7 +96,7 @@ function loyaltyCard(campaigns: Campaign[], now = new Date()): { value: string; 
   if (rules.length === 0) {
     return {
       value: 'Sin efecto',
-      effect: 'El endpoint no escribe. La cuenta no tiene ese dato.',
+      effect: 'Sin programa de lealtad activo en tus campañas.',
     };
   }
   const charging = rules.find((entry) => loyaltyIsCharging(entry.item, now));
@@ -326,7 +327,7 @@ function DescuentosBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Descuentos</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -412,14 +413,14 @@ function DescuentosBody() {
                     <ParameterCard
                       name="Nombre del descuento"
                       value={item.name}
-                      effect="Nombre interno. Esta ruta no lo renombra."
+                      effect="Nombre interno. No se edita desde aquí."
                     />
                   </Param>
                   <Param name="Tipo">
                     <ParameterCard
                       name="Tipo"
                       value={item.discountType === 'fixed' ? 'Monto fijo' : 'Porcentaje'}
-                      effect={`Campaña ${word(CAMPAIGN_TYPE, item.type)}. El alta no escribe 2×1, envío ni cashback.`}
+                      effect={`Campaña ${word(CAMPAIGN_TYPE, item.type)}.`}
                     />
                   </Param>
                   <Param name="Valor del descuento">
@@ -427,7 +428,7 @@ function DescuentosBody() {
                       name="Valor del descuento"
                       value={discountLabel(item.discountType, item.discountValue)}
                       valueStyle="tabular"
-                      effect="Descuento ya guardado. Esta ruta no lo cambia."
+                      effect="Descuento ya guardado. No se edita desde aquí."
                     />
                   </Param>
                   <Param name="Cupo de preventa">
@@ -590,7 +591,7 @@ function DescuentosBody() {
               name="Cupo de preventa"
               value={formatCount(draft.allocation)}
               valueStyle="tabular"
-              effect="El API lo acepta de 0 a 100."
+              effect="Entre 0 y 100 boletos."
             >
               <Stepper
                 label="Cupo de preventa"

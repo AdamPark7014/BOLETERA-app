@@ -99,10 +99,7 @@ export function MarketingPanel({
 
       <div className={styles.grid2}>
         <Card variant="outline" padding="md">
-          <CardHeader
-            title="Embudo de campañas"
-            description="Métricas agregadas del periodo (filtradas por evento cuando el backend lo soporta)"
-          />
+          <CardHeader title="Embudo de campañas" description="Métricas del periodo" />
           {funnelError ? (
             <EmptyState
               title="No se pudo cargar el embudo"

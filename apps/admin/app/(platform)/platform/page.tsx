@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import { ParameterCard } from '@boletera/ui';
 import { adminApi } from '@/lib/api';
@@ -96,7 +97,7 @@ function PlataformaBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Plataforma</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -118,7 +119,7 @@ function PlataformaBody() {
             name="Límite"
             value="120 / min"
             valueStyle="tabular"
-            effect="THROTTLE_LIMIT. Lo fija el entorno. Aquí se lee."
+            effect="Peticiones por minuto que acepta tu cuenta. Lo configura Black Ticket."
           />
         </Param>
         <Param name="Ráfaga">
@@ -126,7 +127,7 @@ function PlataformaBody() {
             name="Ráfaga"
             value="10 / s"
             valueStyle="tabular"
-            effect="THROTTLE_BURST_LIMIT. Lo fija el entorno. Aquí se lee."
+            effect="Ráfaga máxima de peticiones. Lo configura Black Ticket."
           />
         </Param>
         <Param name="SSO de admin">

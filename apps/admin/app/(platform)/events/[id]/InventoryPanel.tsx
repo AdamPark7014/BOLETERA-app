@@ -231,7 +231,7 @@ export function InventoryPanel({
       <Card variant="outline" padding="md">
         <CardHeader
           title="Mapa 3D en vivo"
-          description="Estados de asiento desde el endpoint interactivo"
+          description="Estado de cada asiento en tiempo real"
           actions={
             venueId && canManageVenue ? (
               <div className={styles.actionGroup}>

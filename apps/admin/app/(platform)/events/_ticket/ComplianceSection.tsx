@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { useEffect, useState } from 'react';
 import { ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
@@ -154,7 +155,7 @@ export function ComplianceSection({
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Cumplimiento</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -221,7 +222,7 @@ export function ComplianceSection({
             name="Hash"
             value={published.hash ?? 'Sin publicar'}
             valueStyle="mono"
-            effect="SHA-256 del payload. No se edita."
+            effect="Huella digital del documento. No se edita."
           />
         </Param>
         <Param name="Quién publicó">

@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import { adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
@@ -112,7 +113,7 @@ function MoneyBody({ section }: { section: MoneySection }) {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>{TITLE[section]}</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );

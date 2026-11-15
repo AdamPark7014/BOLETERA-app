@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import { ParameterCard, TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
@@ -120,7 +121,7 @@ function PagosBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Pagos</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );

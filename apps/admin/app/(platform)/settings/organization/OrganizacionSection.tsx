@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { useEffect, useState } from 'react';
 import { Field, ParameterCard, TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
@@ -227,7 +228,7 @@ export function OrganizacionBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Organización</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -326,42 +327,42 @@ export function OrganizacionBody() {
           </ParameterCard>
         </Param>
         <Read
-          name="Slug de la organización"
+          name="Dirección web de la organización"
           value={text(org.slug)}
           mono
-          effect="Único. Esta ruta no lo cambia."
+          effect="Único. No se edita desde aquí."
         />
-        <Read name="Tipo" value={word(ORG_TYPE, org.type)} effect="Esta ruta no lo cambia." />
+        <Read name="Tipo" value={word(ORG_TYPE, org.type)} effect="No se edita desde aquí." />
         <Read name="País" value={text(org.country)} effect="País de la organización." />
         <Read
           name="Zona horaria de la org"
           value={text(org.timezone)}
-          effect="Default de altas. Aquí se lee."
+          effect="Valor para eventos nuevos."
         />
         <Read
           name="Moneda de la org"
           value={text(org.currency)}
-          effect="Default de altas. Aquí se lee."
+          effect="Valor para eventos nuevos."
         />
         <Read
           name="Dirección de la org"
           value={text(org.address)}
-          effect="Calle. Esta ruta no la guarda."
+          effect="Calle. No se edita desde aquí."
         />
         <Read
           name="Ciudad de la org"
           value={text(org.city)}
-          effect="Ciudad. Esta ruta no la guarda."
+          effect="Ciudad. No se edita desde aquí."
         />
         <Read
           name="Estado de la org"
           value={text(org.state)}
-          effect="Entidad. Esta ruta no la guarda."
+          effect="Entidad. No se edita desde aquí."
         />
         <Read
           name="CP de la org"
           value={text(org.postalCode)}
-          effect="Código postal. Esta ruta no lo guarda."
+          effect="Código postal. No se edita desde aquí."
         />
         <Read
           name="Logo de la org"
@@ -376,17 +377,17 @@ export function OrganizacionBody() {
         <Read
           name="Titular de la cuenta"
           value={text(org.bankAccountName)}
-          effect="Dato bancario. Esta ruta no lo guarda."
+          effect="Dato bancario. No se edita desde aquí."
         />
         <Read
           name="Código de banco"
           value={text(org.bankCode)}
-          effect="Dato bancario. Esta ruta no lo guarda."
+          effect="Dato bancario. No se edita desde aquí."
         />
         <Read
           name="Routing"
           value={text(org.bankRoutingNumber)}
-          effect="Dato bancario. Esta ruta no lo guarda."
+          effect="Dato bancario. No se edita desde aquí."
         />
         <Read
           name="Número de cuenta"
@@ -411,9 +412,9 @@ export function OrganizacionBody() {
           value={text(org.taxId)}
           effect="El fiscal que factura es el perfil de Facturación."
         />
-        <Read name="Verificada" value={yesNo(org.verified)} effect="Esta ruta no la cambia." />
-        <Read name="KYC" value={word(CHECK, org.kycStatus)} effect="Esta ruta no lo cambia." />
-        <Read name="AML" value={word(CHECK, org.amlStatus)} effect="Esta ruta no lo cambia." />
+        <Read name="Verificada" value={yesNo(org.verified)} effect="No se edita desde aquí." />
+        <Read name="KYC" value={word(CHECK, org.kycStatus)} effect="No se edita desde aquí." />
+        <Read name="AML" value={word(CHECK, org.amlStatus)} effect="No se edita desde aquí." />
       </div>
       {actionError ? (
         <p className={styles.danger} role="alert">

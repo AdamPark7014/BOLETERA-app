@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { NamedStatus, ParameterCard, TicketButton } from '@boletera/ui';
@@ -248,7 +249,7 @@ function MapaBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Mapa</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -321,7 +322,7 @@ function MapaBody() {
             <ParameterCard
               name="Nombre del plano"
               value={layout.name}
-              effect="Esta ruta no lo renombra."
+              effect="No se edita desde aquí."
             />
           </Param>
           <Param name="Versión">
@@ -409,9 +410,9 @@ function MapaBody() {
                         effect="La zona del plano se nombra."
                       />
                     </Param>
-                    <Param name="Slug de la sección">
+                    <Param name="Clave de la sección">
                       <ParameterCard
-                        name="Slug de la sección"
+                        name="Clave de la sección"
                         value={section.slug}
                         valueStyle="mono"
                         effect="Único en el plano."

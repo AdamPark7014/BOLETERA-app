@@ -14,6 +14,9 @@ export type Role =
   | 'CUSTOMER'
   | 'SCANNER'
   | 'TAQUILLA'
+  | 'TAQUILLA_SUPERVISOR'
+  | 'FINANCE'
+  | 'AFFILIATE'
   | 'ARTIST'
   | 'VENUE_MANAGER'
   | 'PROMOTER'
@@ -81,6 +84,27 @@ const MATRIX: Record<Role, Capability[]> = {
 
   /** Taquilla: vende y opera inventario en sala; nada de finanzas ni mapas. */
   TAQUILLA: ['boxoffice.operate', 'access.scan', 'events.view', 'orders.view', 'inventory.monitor'],
+
+  /**
+   * Supervisor de taquilla: lo de taquilla más reembolsar y cancelar órdenes
+   * (`POST /admin/orders/:id/refund|cancel` lo admiten). No lista órdenes en el API.
+   */
+  TAQUILLA_SUPERVISOR: [
+    'boxoffice.operate',
+    'access.scan',
+    'events.view',
+    'inventory.monitor',
+    'orders.refund',
+  ],
+
+  /**
+   * Finanzas: el API le abre las métricas (`/metrics`) y reembolsar órdenes;
+   * no le abre el listado de órdenes ni las liquidaciones.
+   */
+  FINANCE: ['dashboard.view', 'orders.refund'],
+
+  /** Afiliado: ningún endpoint del backoffice lo admite todavía. */
+  AFFILIATE: [],
 
   /** Artista / representación: solo lectura de su evento y aforo. */
   ARTIST: ['events.view', 'analytics.view', 'inventory.monitor'],
@@ -213,6 +237,9 @@ export const ROLE_LABELS: Record<Role, string> = {
   PROMOTER: 'Promotor',
   VENUE_MANAGER: 'Gestor de recinto',
   TAQUILLA: 'Taquilla',
+  TAQUILLA_SUPERVISOR: 'Supervisor de taquilla',
+  FINANCE: 'Finanzas',
+  AFFILIATE: 'Afiliado',
   SCANNER: 'Control de acceso',
   ARTIST: 'Artista',
   CUSTOMER: 'Cliente',
@@ -240,7 +267,10 @@ const ROLE_RANK: Record<Role, number> = {
   CUSTOMER: 0,
   SCANNER: 1,
   TAQUILLA: 2,
+  AFFILIATE: 2,
   ARTIST: 2,
+  TAQUILLA_SUPERVISOR: 3,
+  FINANCE: 3,
   VENUE_MANAGER: 3,
   PROMOTER: 4,
   ADMIN: 5,

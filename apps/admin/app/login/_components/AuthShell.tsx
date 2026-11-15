@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { BlackTicketRoot } from '@boletera/ui';
+import { BlackTicketRoot, BrandLogo, StageArt } from '@boletera/ui';
 import styles from '../login.module.scss';
 
 /**
@@ -20,16 +20,30 @@ export function AuthShell({
   return (
     <BlackTicketRoot density="admin">
       <main className={styles.page}>
-        <header className={styles.bar}>
-          <p className={styles.wordmark}>Black Ticket</p>
-          <p className={styles.barNote}>Panel de organizador</p>
-        </header>
-        <div className={styles.column}>
-          <header className={styles.head}>
-            <h1>{title}</h1>
-            {lead ? <p className={styles.quiet}>{lead}</p> : null}
+        <aside className={styles.stage} aria-hidden="true">
+          <StageArt seed="black-ticket-panel" className={styles.stageArt} />
+          <div className={styles.stageText}>
+            <BrandLogo tone="gold" size={64} />
+            <p className={styles.stageTitle}>Tu evento, en vivo</p>
+            <p className={styles.stageLead}>
+              Venta, inventario, precios y acceso de cada función en un solo panel.
+            </p>
+          </div>
+        </aside>
+        <div className={styles.side}>
+          <header className={styles.bar}>
+            <span className={styles.barLogo}>
+              <BrandLogo tone="gold" size={30} />
+            </span>
+            <p className={styles.barNote}>Panel de organizador</p>
           </header>
-          {children}
+          <div className={styles.column}>
+            <header className={styles.head}>
+              <h1>{title}</h1>
+              {lead ? <p className={styles.quiet}>{lead}</p> : null}
+            </header>
+            {children}
+          </div>
         </div>
       </main>
     </BlackTicketRoot>

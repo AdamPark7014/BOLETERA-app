@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import { Field, Money, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
@@ -158,7 +159,7 @@ function LiquidacionesBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Liquidaciones</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -192,7 +193,7 @@ function LiquidacionesBody() {
           <ParameterCard
             name="Aviso de liquidación"
             value="Apagado"
-            effect="Lo fija el entorno. Encendido, el worker solo avisa: no hay riel bancario. Aquí se lee."
+            effect="Lo configura Black Ticket. Encendido, solo avisa: la transferencia al banco se hace aparte."
           />
         </Param>
       </div>
@@ -259,14 +260,14 @@ function LiquidacionesBody() {
                     <ParameterCard
                       name="Moneda de la liquidación"
                       value={currency}
-                      effect="La devuelve el API. Evita sumar monedas distintas."
+                      effect="Moneda de la liquidación."
                     />
                   </Param>
                   <Param name="Estado de la liquidación">
                     <ParameterCard
                       name="Estado de la liquidación"
                       value={status}
-                      effect="Pendiente, en proceso, completo, fallido o cancelado. El API escribe en proceso y completo."
+                      effect="Pendiente, en proceso, completa, fallida o cancelada."
                     />
                   </Param>
                   <Param name="Referencia">
@@ -301,7 +302,7 @@ function LiquidacionesBody() {
                     <ParameterCard
                       name="Periodo hasta"
                       value={formatWhen(payout.periodEnd)}
-                      effect="Cierre del periodo. Se lee."
+                      effect="Cierre del periodo."
                     />
                   </Param>
                   {actionable ? (

@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState } from 'react';
 import { ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi, adminDownload } from '@/lib/api';
@@ -101,7 +102,7 @@ function ReportesBody() {
           salesMessage = failMessage(cause);
         }
       } else {
-        salesMessage = 'El corte de venta lo devuelve el API a promotor y administrador.';
+        salesMessage = 'El corte de venta lo ven promotores y administradores.';
       }
       let egressRows: EgressOverviewVenue[] | null = null;
       let egressMessage: string | null = null;
@@ -152,7 +153,7 @@ function ReportesBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Reportes</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -179,7 +180,7 @@ function ReportesBody() {
           <ParameterCard
             name="Analítica"
             value="Encendida"
-            effect="Lo fija el entorno. El API no la lee ni la escribe. Aquí se lee."
+            effect="Los reportes de venta se generan solos para tu organización."
           />
         </Param>
       </div>

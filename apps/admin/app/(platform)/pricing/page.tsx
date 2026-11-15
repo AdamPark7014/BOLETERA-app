@@ -657,7 +657,7 @@ function PreciosBody() {
                     <ParameterCard
                       name="Cola de aprobación"
                       value="No disponible"
-                      effect="La cola se lee de /pricing/events/:id/recommendations/pending."
+                      effect="Cambios de precio que esperan aprobación."
                     />
                   </Param>
                   <p className={styles.danger} role="alert">
@@ -732,7 +732,7 @@ function BundleUnavailable({ error, onRetry }: { error: unknown; onRetry: () => 
         <ParameterCard
           name="Recomendaciones"
           value="No disponible"
-          effect="El paquete se lee de /pricing/events/:id/recommendations. Sin respuesta no se muestran precios sugeridos."
+          effect="Precios sugeridos para cada zona del evento."
         />
       </Param>
       <p className={styles.danger} role="alert">
@@ -1044,7 +1044,7 @@ function SignalsBlock({
       </div>
       <div className={local.block}>
         <p className={local.subTitle}>Estimación de ingreso</p>
-        <p className={styles.tertiary}>Ingreso bruto a precio base, según el API.</p>
+        <p className={styles.tertiary}>Ingreso bruto a precio base.</p>
         {revenueError ? (
           <div className={styles.stack}>
             <p className={styles.danger} role="alert">
@@ -1059,7 +1059,7 @@ function SignalsBlock({
         ) : revenuePending ? (
           <p className={styles.quiet}>Cargando estimación.</p>
         ) : !revenue ? (
-          <p className={styles.quiet}>El API no devolvió estimación para este evento.</p>
+          <p className={styles.quiet}>Todavía no hay estimación de ingresos para este evento.</p>
         ) : (
           <ul className={styles.rows}>
             <DetailRow name="Ingreso bruto" value={formatCurrency(revenue.grossRevenue, 0)} />

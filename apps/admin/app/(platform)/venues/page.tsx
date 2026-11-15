@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { formatLocalDateTime, parseLocalDateTime, zonedTimeToUtc } from '@boletera/shared';
 import { Field, ParameterCard, TicketButton } from '@boletera/ui';
@@ -531,7 +532,7 @@ function RecintoBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Recinto</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -553,7 +554,7 @@ function RecintoBody() {
         <h1 className={styles.sectionTitle}>Recinto</h1>
         <p className={styles.quiet}>
           {canEdit
-            ? 'Se guarda la sala y el blackout. El slug quedó al crear.'
+            ? 'Guarda los datos de la sala y las fechas bloqueadas.'
             : 'Se lee. La guarda quien edita el mapa.'}
         </p>
       </header>
@@ -653,10 +654,10 @@ function VenueCards({
         />
       </Card>
       <Card
-        name="Slug del recinto"
+        name="Dirección web del recinto"
         value={text(venue.slug)}
         style="mono"
-        effect="Quedó al crear. Aquí se lee."
+        effect="Se definió al crear el recinto."
       />
       <Card
         name="Descripción del recinto"

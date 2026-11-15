@@ -1,7 +1,22 @@
+import type { IconName } from '@/components/shell/icons';
+import { hasAnyCapability, type Capability } from '@/lib/permissions';
+
+/**
+ * Menú del backoffice, agrupado como la maqueta: siete secciones de la
+ * organización y, con un evento abierto, las secciones de ese evento.
+ * Ninguna ruta se quita: cada pantalla vive dentro de una sección y se abre
+ * desde su submenú. Cada entrada declara la capacidad que la abre; una sección
+ * sin entradas visibles para el rol no se pinta.
+ */
+
 export type IndexItem = {
   id: string;
   label: string;
   href: string;
+  /** Basta con una de estas capacidades. Vacío = cualquier rol con acceso. */
+  caps?: Capability[];
+  /** Solo SUPER_ADMIN (herramientas de toda la plataforma). */
+  superAdminOnly?: boolean;
 };
 
 export type IndexGroup = {
@@ -10,85 +25,184 @@ export type IndexGroup = {
   items: IndexItem[];
 };
 
-const SALA: IndexItem[] = [
-  { id: 'recinto', label: 'Recinto', href: '/venues' },
-  { id: 'mapa', label: 'Mapa', href: '/maps' },
-  { id: 'puerta', label: 'Puerta', href: '/access-control' },
-];
-
-const DINERO: IndexItem[] = [
-  { id: 'comisiones', label: 'Comisiones', href: '/dinero/comisiones' },
-  { id: 'cargos', label: 'Cargos', href: '/dinero/cargos' },
-  { id: 'iva', label: 'IVA', href: '/dinero/iva' },
-  { id: 'descuentos', label: 'Descuentos', href: '/campaigns' },
-  { id: 'reembolsos', label: 'Reembolsos', href: '/dinero/reembolsos' },
-  { id: 'liquidaciones', label: 'Liquidaciones', href: '/payouts' },
-  { id: 'facturacion', label: 'Facturación', href: '/billing/cfdi' },
-  { id: 'pagos', label: 'Pagos', href: '/settings/payments' },
-];
-
-const VENTA: IndexItem[] = [
-  { id: 'ordenes', label: 'Órdenes', href: '/orders' },
-  { id: 'por-reembolsar', label: 'Por reembolsar', href: '/orders/refunds' },
-  { id: 'inventario', label: 'Inventario', href: '/inventory' },
-  { id: 'reservaciones', label: 'Reservaciones', href: '/reservations' },
-  { id: 'precios', label: 'Precios', href: '/pricing' },
-  { id: 'canales', label: 'Canales', href: '/channels' },
-  { id: 'calendario', label: 'Calendario', href: '/calendar' },
-  { id: 'reventa', label: 'Reventa', href: '/resale' },
-  { id: 'membresias', label: 'Membresías', href: '/memberships' },
-  { id: 'patrocinios', label: 'Patrocinios', href: '/sponsorships' },
-];
-
-const LECTURA: IndexItem[] = [
-  { id: 'tablero', label: 'Tablero', href: '/dashboard' },
-  { id: 'analitica', label: 'Analítica', href: '/analytics' },
-  { id: 'auditoria', label: 'Auditoría', href: '/audit' },
-  { id: 'crm', label: 'CRM', href: '/crm' },
-];
-
-const SISTEMA: IndexItem[] = [
-  { id: 'integraciones', label: 'Integraciones', href: '/integrations' },
-  { id: 'api', label: 'API', href: '/api-management' },
-  { id: 'automatizaciones', label: 'Automatizaciones', href: '/automations' },
-  { id: 'ia', label: 'IA', href: '/ai' },
-  { id: 'control', label: 'Control', href: '/platform/control' },
-  { id: 'salud', label: 'Salud', href: '/platform/health' },
-];
-
-/** Ruta exacta → oficio del índice, para las secciones sin subrutas propias. */
-const SIMPLE_ACTIVE: Record<string, string> = {
-  '/inventory': 'inventario',
-  '/reservations': 'reservaciones',
-  '/pricing': 'precios',
-  '/channels': 'canales',
-  '/calendar': 'calendario',
-  '/resale': 'reventa',
-  '/memberships': 'membresias',
-  '/sponsorships': 'patrocinios',
-  '/dashboard': 'tablero',
-  '/analytics': 'analitica',
-  '/audit': 'auditoria',
-  '/crm': 'crm',
-  '/integrations': 'integraciones',
-  '/api-management': 'api',
-  '/automations': 'automatizaciones',
-  '/ai': 'ia',
-  '/platform/control': 'control',
-  '/platform/health': 'salud',
+export type IndexSection = {
+  id: string;
+  label: string;
+  icon: IconName;
+  items: IndexItem[];
 };
 
-const CASA: IndexItem[] = [
-  { id: 'reportes', label: 'Reportes', href: '/reports' },
-  { id: 'fraude', label: 'Fraude', href: '/fraud' },
-  { id: 'equipo', label: 'Equipo', href: '/staff' },
-  { id: 'organizacion', label: 'Organización', href: '/settings/organization' },
-  { id: 'marca', label: 'Marca', href: '/settings/branding' },
-  { id: 'partners', label: 'Partners', href: '/partners' },
-  { id: 'abonos', label: 'Abonos', href: '/season' },
-  { id: 'espera', label: 'Espera', href: '/waitlist' },
-  { id: 'plataforma', label: 'Plataforma', href: '/platform' },
+export const SECTIONS: IndexSection[] = [
+  {
+    id: 'inicio',
+    label: 'Inicio',
+    icon: 'home',
+    items: [
+      { id: 'tablero', label: 'Tablero', href: '/dashboard', caps: ['dashboard.view'] },
+      { id: 'analitica', label: 'Analítica', href: '/analytics', caps: ['analytics.view'] },
+      { id: 'ia', label: 'Asistente e IA', href: '/ai', caps: ['analytics.view'] },
+      { id: 'calendario', label: 'Calendario', href: '/calendar', caps: ['events.view'] },
+    ],
+  },
+  {
+    id: 'eventos',
+    label: 'Eventos',
+    icon: 'events',
+    items: [
+      { id: 'lista', label: 'Todos los eventos', href: '/events', caps: ['events.view'] },
+      { id: 'nuevo', label: 'Crear evento', href: '/events/new', caps: ['events.manage'] },
+      {
+        id: 'series',
+        label: 'Series y residencias',
+        href: '/events/series',
+        caps: ['events.view'],
+      },
+      { id: 'inventario', label: 'Inventario', href: '/inventory', caps: ['inventory.monitor'] },
+      {
+        id: 'reservaciones',
+        label: 'Apartados y bloqueos',
+        href: '/reservations',
+        caps: ['inventory.operate'],
+      },
+      { id: 'precios', label: 'Precios', href: '/pricing', caps: ['events.view'] },
+    ],
+  },
+  {
+    id: 'recintos',
+    label: 'Recintos y planos',
+    icon: 'mapPin',
+    items: [
+      { id: 'recinto', label: 'Recintos', href: '/venues', caps: ['venues.view'] },
+      { id: 'mapa', label: 'Planos de butacas', href: '/maps', caps: ['venues.editMap'] },
+      {
+        id: 'puerta',
+        label: 'Acceso y puertas',
+        href: '/access-control',
+        caps: ['safety.view'],
+      },
+      { id: 'escaner', label: 'Escáner', href: '/scanner', caps: ['access.scan'] },
+      { id: 'egress', label: 'Salida y aforo', href: '/reports/egress', caps: ['safety.view'] },
+    ],
+  },
+  {
+    id: 'ordenes',
+    label: 'Órdenes y clientes',
+    icon: 'orders',
+    items: [
+      { id: 'ordenes', label: 'Órdenes', href: '/orders', caps: ['orders.view'] },
+      {
+        id: 'por-reembolsar',
+        label: 'Por reembolsar',
+        href: '/orders/refunds',
+        caps: ['orders.refund'],
+      },
+      { id: 'crm', label: 'Clientes', href: '/crm', caps: ['marketing.manage'] },
+      { id: 'reventa', label: 'Reventa', href: '/resale', caps: ['orders.view'] },
+      { id: 'membresias', label: 'Membresías', href: '/memberships', caps: ['marketing.manage'] },
+      { id: 'abonos', label: 'Abonos', href: '/season', caps: ['marketing.manage'] },
+      { id: 'espera', label: 'Lista de espera', href: '/waitlist', caps: ['marketing.manage'] },
+    ],
+  },
+  {
+    id: 'finanzas',
+    label: 'Finanzas',
+    icon: 'payouts',
+    items: [
+      { id: 'liquidaciones', label: 'Liquidaciones', href: '/payouts', caps: ['finance.view'] },
+      { id: 'reportes', label: 'Reportes', href: '/reports', caps: ['reports.view'] },
+      {
+        id: 'reembolsos',
+        label: 'Reembolsos',
+        href: '/dinero/reembolsos',
+        caps: ['orders.refund'],
+      },
+      { id: 'comisiones', label: 'Comisiones', href: '/dinero/comisiones', caps: ['finance.view'] },
+      {
+        id: 'cargos',
+        label: 'Cargos por servicio',
+        href: '/dinero/cargos',
+        caps: ['finance.view'],
+      },
+      { id: 'iva', label: 'IVA', href: '/dinero/iva', caps: ['finance.view'] },
+      { id: 'facturacion', label: 'Facturación', href: '/billing/cfdi', caps: ['finance.view'] },
+      { id: 'fraude', label: 'Fraude y riesgo', href: '/fraud', caps: ['risk.view'] },
+      {
+        id: 'pagos',
+        label: 'Pasarela de pago',
+        href: '/settings/payments',
+        caps: ['settings.payments'],
+      },
+    ],
+  },
+  {
+    id: 'mercadotecnia',
+    label: 'Mercadotecnia',
+    icon: 'campaigns',
+    items: [
+      {
+        id: 'descuentos',
+        label: 'Campañas y descuentos',
+        href: '/campaigns',
+        caps: ['marketing.manage'],
+      },
+      { id: 'canales', label: 'Canales de venta', href: '/channels', caps: ['marketing.manage'] },
+      {
+        id: 'patrocinios',
+        label: 'Patrocinios',
+        href: '/sponsorships',
+        caps: ['marketing.manage'],
+      },
+      { id: 'partners', label: 'Socios comerciales', href: '/partners', caps: ['org.manage'] },
+      {
+        id: 'automatizaciones',
+        label: 'Automatizaciones',
+        href: '/automations',
+        caps: ['marketing.manage'],
+      },
+      {
+        id: 'contenido',
+        label: 'Contenido del sitio',
+        href: '/settings/content',
+        caps: ['settings.branding'],
+      },
+    ],
+  },
+  {
+    id: 'equipo',
+    label: 'Equipo y permisos',
+    icon: 'team',
+    items: [
+      { id: 'equipo', label: 'Equipo', href: '/staff', caps: ['org.manage'] },
+      {
+        id: 'organizacion',
+        label: 'Organización',
+        href: '/settings/organization',
+        caps: ['org.manage'],
+      },
+      { id: 'marca', label: 'Marca', href: '/settings/branding', caps: ['settings.branding'] },
+      { id: 'auditoria', label: 'Bitácora', href: '/audit', caps: ['audit.view'] },
+      { id: 'integraciones', label: 'Integraciones', href: '/integrations', caps: ['org.manage'] },
+      { id: 'api', label: 'Llaves de API', href: '/api-management', caps: ['org.manage'] },
+      { id: 'plataforma', label: 'Plan y módulos', href: '/platform', caps: ['org.manage'] },
+      { id: 'control', label: 'Control global', href: '/platform/control', superAdminOnly: true },
+      { id: 'salud', label: 'Salud operativa', href: '/platform/health', superAdminOnly: true },
+    ],
+  },
 ];
+
+export function canSeeItem(role: string | null | undefined, item: IndexItem): boolean {
+  if (item.superAdminOnly) return role === 'SUPER_ADMIN';
+  if (!item.caps || item.caps.length === 0) return true;
+  return hasAnyCapability(role, item.caps);
+}
+
+/** Secciones de la organización con solo las entradas que el rol puede abrir. */
+export function sectionsForRole(role: string | null | undefined): IndexSection[] {
+  return SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => canSeeItem(role, item)),
+  })).filter((section) => section.items.length > 0);
+}
 
 export function eventIdFromPath(pathname: string): string | null {
   const parts = pathname.split('/').filter(Boolean);
@@ -98,61 +212,75 @@ export function eventIdFromPath(pathname: string): string | null {
   return parts[1] ?? null;
 }
 
-export function indexGroups(eventId: string | null): IndexGroup[] {
-  const eventItems: IndexItem[] = eventId
-    ? [
-        { id: 'evento', label: 'Evento', href: `/events/${eventId}?seccion=evento` },
-        { id: 'agenda', label: 'Agenda', href: `/events/${eventId}?seccion=agenda` },
-        { id: 'zonas', label: 'Zonas y precios', href: `/events/${eventId}?seccion=zonas` },
-        { id: 'fases', label: 'Fases', href: `/events/${eventId}?seccion=fases` },
-        { id: 'canales', label: 'Canales', href: `/events/${eventId}?seccion=canales` },
-        { id: 'apartados', label: 'Apartados', href: `/events/${eventId}?seccion=apartados` },
-        {
-          id: 'cumplimiento',
-          label: 'Cumplimiento',
-          href: `/events/${eventId}?seccion=cumplimiento`,
-        },
-        { id: 'cancelar', label: 'Cancelación', href: `/events/${eventId}/cancel` },
-      ]
-    : [
-        { id: 'lista', label: 'Lista', href: '/events' },
-        { id: 'series', label: 'Series', href: '/events/series' },
-      ];
-
-  return [
-    { id: 'evento', label: eventId ? 'Evento' : 'Eventos', items: eventItems },
-    { id: 'venta', label: 'Venta', items: VENTA },
-    { id: 'sala', label: 'Sala', items: SALA },
-    { id: 'dinero', label: 'Dinero', items: DINERO },
-    { id: 'lectura', label: 'Lectura', items: LECTURA },
-    { id: 'casa', label: 'Casa', items: CASA },
-    { id: 'sistema', label: 'Sistema', items: SISTEMA },
-  ];
+/** Secciones del evento abierto. Las seis de la maqueta primero; el resto después. */
+export function eventItems(eventId: string): { main: IndexItem[]; more: IndexItem[] } {
+  const base = `/events/${eventId}`;
+  return {
+    main: [
+      { id: 'evento', label: 'Resumen', href: `${base}?seccion=evento` },
+      {
+        id: 'apartados',
+        label: 'Inventario',
+        href: `${base}?seccion=apartados`,
+        caps: ['inventory.monitor', 'inventory.operate'],
+      },
+      { id: 'zonas', label: 'Precios', href: `${base}?seccion=zonas` },
+      { id: 'fases', label: 'Preventas y códigos', href: `${base}?seccion=fases` },
+      {
+        id: 'puerta-evento',
+        label: 'Acceso y puertas',
+        href: '/access-control',
+        caps: ['safety.view'],
+      },
+      {
+        id: 'liquidacion-evento',
+        label: 'Liquidación',
+        href: '/payouts',
+        caps: ['finance.view'],
+      },
+    ],
+    more: [
+      { id: 'agenda', label: 'Agenda', href: `${base}?seccion=agenda` },
+      { id: 'canales', label: 'Canales', href: `${base}?seccion=canales` },
+      { id: 'cumplimiento', label: 'Publicación', href: `${base}?seccion=cumplimiento` },
+      {
+        id: 'cancelar',
+        label: 'Cancelación',
+        href: `${base}/cancel`,
+        caps: ['events.manage'],
+      },
+    ],
+  };
 }
 
+/** Compatibilidad: grupos planos (evento + secciones) para quien los pida. */
+export function indexGroups(eventId: string | null, role?: string | null): IndexGroup[] {
+  const groups: IndexGroup[] = sectionsForRole(role).map((section) => ({
+    id: section.id,
+    label: section.label,
+    items: section.items,
+  }));
+  if (!eventId) return groups;
+  const ev = eventItems(eventId);
+  return [{ id: 'evento', label: 'Este evento', items: [...ev.main, ...ev.more] }, ...groups];
+}
+
+/** Ruta → entrada activa del menú. */
 export function activeIndexId(pathname: string, section: string | null): string | null {
   const eventId = eventIdFromPath(pathname);
   if (eventId && pathname.endsWith('/cancel')) return 'cancelar';
   if (eventId) return section ?? 'evento';
-  const simple = SIMPLE_ACTIVE[pathname];
-  if (simple) return simple;
-  if (pathname === '/orders/refunds') return 'por-reembolsar';
-  if (pathname === '/orders' || pathname.startsWith('/orders/')) return 'ordenes';
-  if (pathname.startsWith('/events/series')) return 'series';
-  if (pathname === '/events') return 'lista';
-  if (pathname === '/dinero/comisiones') return 'comisiones';
-  if (pathname === '/dinero/cargos') return 'cargos';
-  if (pathname === '/dinero/iva') return 'iva';
-  if (pathname === '/dinero/reembolsos') return 'reembolsos';
-  if (pathname === '/access-control' || pathname === '/scanner') return 'puerta';
-  if (pathname === '/staff') return 'equipo';
-  if (pathname === '/payouts') return 'liquidaciones';
-  if (pathname === '/billing/cfdi' || pathname.startsWith('/billing/')) return 'facturacion';
-  if (pathname === '/reports' || pathname.startsWith('/reports/')) return 'reportes';
-  if (pathname === '/fraud') return 'fraude';
-  if (pathname === '/campaigns') return 'descuentos';
-  if (pathname === '/venues') return 'recinto';
-  if (pathname === '/maps') return 'mapa';
+  if (pathname === '/settings/content') return 'contenido';
+  let best: { id: string; len: number } | null = null;
+  for (const group of SECTIONS) {
+    for (const item of group.items) {
+      const href = item.href;
+      if (pathname === href || pathname.startsWith(`${href}/`)) {
+        if (!best || href.length > best.len) best = { id: item.id, len: href.length };
+      }
+    }
+  }
+  if (best) return best.id;
   const venueMap = pathname.split('/').filter(Boolean);
   if (
     venueMap.length === 3 &&
@@ -161,12 +289,13 @@ export function activeIndexId(pathname: string, section: string | null): string 
   ) {
     return 'mapa';
   }
-  if (pathname === '/settings/organization') return 'organizacion';
-  if (pathname === '/settings/branding' || pathname === '/settings/content') return 'marca';
-  if (pathname === '/partners') return 'partners';
-  if (pathname === '/season') return 'abonos';
-  if (pathname === '/waitlist') return 'espera';
-  if (pathname === '/settings/payments') return 'pagos';
-  if (pathname === '/platform') return 'plataforma';
   return null;
+}
+
+/** Sección de la organización que contiene la ruta actual. */
+export function activeSectionId(pathname: string): string | null {
+  if (eventIdFromPath(pathname)) return 'eventos';
+  const id = activeIndexId(pathname, null);
+  if (!id) return null;
+  return SECTIONS.find((section) => section.items.some((item) => item.id === id))?.id ?? null;
 }

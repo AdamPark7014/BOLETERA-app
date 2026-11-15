@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TicketButton, formatNumber } from '@boletera/ui';
 import { hasCapability } from '@/lib/permissions';
@@ -73,41 +74,93 @@ function EventsBody() {
 
   return (
     <section>
-      <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Eventos</h1>
-      </header>
-      {loading ? <p className={styles.quiet}>Cargando eventos.</p> : null}
-      {!loading && events.length === 0 ? <p className={styles.quiet}>No hay eventos.</p> : null}
-      {!loading && events.length > 0 && filtered.length === 0 ? (
-        <p className={styles.quiet}>Nada con ese criterio.</p>
-      ) : null}
-      <ul className={styles.rows}>
-        {filtered.map((event) => (
-          <li key={event.id} className={styles.row}>
-            <div className={styles.rowMain}>
-              <p className={styles.rowTitle}>{event.title}</p>
-              <p className={styles.rowMeta}>
-                {statusLabel(event.status)} · {formatWhen(event.startsAt)} ·{' '}
-                {event.venue?.name ?? 'Sin recinto'}
-              </p>
-            </div>
-            <p className={styles.figure}>
-              {event.totalCapacity > 0 ? formatNumber(event.totalCapacity) : '—'}
-            </p>
-            <TicketButton variant="ghost" onClick={() => router.push(`/events/${event.id}`)}>
-              Abrir
-            </TicketButton>
-          </li>
-        ))}
-      </ul>
-      {canCreate ? (
-        <div className={styles.saveBar}>
+      <header className={styles.panelHead} style={{ marginBottom: 22 }}>
+        <div className={styles.sectionHead} style={{ marginBottom: 0 }}>
+          <h1 className={styles.sectionTitle}>Eventos</h1>
           <p className={styles.quiet}>
-            {events.length === 0 ? '' : `${formatNumber(events.length)} en la lista`}
+            {loading
+              ? 'Cargando tu cartelera.'
+              : `${formatNumber(events.length)} ${events.length === 1 ? 'evento' : 'eventos'} en tu organización${needle ? ` · ${formatNumber(filtered.length)} con «${frame.query.trim()}»` : ''}.`}
           </p>
+        </div>
+        {canCreate ? (
           <TicketButton onClick={() => router.push('/events/new')}>Crear evento</TicketButton>
+        ) : null}
+      </header>
+      {loading ? (
+        <div className={styles.skeleton} style={{ height: 420 }} aria-label="Cargando eventos" />
+      ) : null}
+      {!loading && events.length === 0 ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Todavía no hay eventos</p>
+          <p className={styles.quiet}>
+            {canCreate
+              ? 'Crea el primero: nombre, fecha, recinto y zonas con precio.'
+              : 'Cuando tu organización cree eventos aparecerán aquí.'}
+          </p>
+          {canCreate ? (
+            <Link href="/events/new" className={styles.goldLink}>
+              Crear evento
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
+      {!loading && events.length > 0 && filtered.length === 0 ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Ningún evento coincide con la búsqueda</p>
+          <p className={styles.quiet}>Prueba con otro nombre, recinto o estado.</p>
+        </div>
+      ) : null}
+      {!loading && filtered.length > 0 ? (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th scope="col">Evento</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Estado</th>
+                <th scope="col" className={styles.num}>
+                  Aforo
+                </th>
+                <th scope="col">
+                  <span className={styles.srOnly}>Acciones</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((event) => (
+                <tr key={event.id}>
+                  <td>
+                    <Link href={`/events/${event.id}`} className={styles.cellLink}>
+                      {event.title}
+                    </Link>
+                    <p className={styles.rowMeta}>{event.venue?.name ?? 'Sin recinto'}</p>
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{formatWhen(event.startsAt)}</td>
+                  <td>
+                    <span className={statusChip(event.status)}>{statusLabel(event.status)}</span>
+                  </td>
+                  <td className={styles.num}>
+                    {event.totalCapacity > 0 ? formatNumber(event.totalCapacity) : '—'}
+                  </td>
+                  <td className={styles.num}>
+                    <Link href={`/events/${event.id}`} className={styles.panelLink}>
+                      Abrir resumen
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : null}
     </section>
   );
+}
+
+function statusChip(status: string): string {
+  if (status === 'LIVE' || status === 'SCHEDULED') return styles.chipOk;
+  if (status === 'CANCELLED') return styles.chipDanger;
+  if (status === 'DRAFT' || status === 'RESCHEDULED') return styles.chipWarn;
+  return styles.chip;
 }

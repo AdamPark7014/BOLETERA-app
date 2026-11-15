@@ -64,13 +64,13 @@ const DEFAULT_FALLBACK: Partial<Record<ChannelKey, number>> = {
 };
 
 function failMessage(cause: unknown): string {
-  if (cause instanceof ApiError) return `${cause.userMessage} (${cause.status})`;
+  if (cause instanceof ApiError) return cause.userMessage;
   if (cause instanceof Error) return cause.message;
   return 'No se guardó. Revisa la conexión.';
 }
 
 function readMessage(cause: unknown): string {
-  if (cause instanceof ApiError) return `${cause.userMessage} (${cause.status})`;
+  if (cause instanceof ApiError) return cause.userMessage;
   if (cause instanceof Error) return cause.message;
   return 'Sin respuesta.';
 }

@@ -1,0 +1,407 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+}
+
+.thumb {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #0b0907;
+}
+
+.thumbImg,
+.thumbArt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroText {
+  display: flex;
+  flex: 1 1 300px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.crumb {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.crumbLink {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.crumbLink:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display), Archivo, sans-serif;
+  font-size: clamp(28px, 3.6vw, 38px);
+  font-stretch: var(--headline-stretch, 72%);
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.heroSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.date,
+.dateOn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.date {
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+}
+
+.dateOn {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 12px;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.legendReal {
+  width: 14px;
+  height: 3px;
+  background: var(--gold);
+}
+
+.legendGoal {
+  width: 14px;
+  border-top: 2px dashed #6a6a70;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.channelList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.channel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.channelHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.channelNum {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2a2218 0%, #1a1a1a 70%);
+}
+
+.tipKicker {
+  margin: 0;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.tipText {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.tipActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tipDismiss {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sectionTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeadRow,
+.sectionRow {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 2fr 110px;
+  gap: 14px;
+  align-items: center;
+}
+
+.sectionHeadRow {
+  padding-bottom: 8px;
+  color: #8a8a90;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.sectionRow {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.sectionName {
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progressNum {
+  width: 96px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.right {
+  text-align: right;
+}
+
+.liveCol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.live {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.liveRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.liveRow:hover .liveWho {
+  color: var(--gold-soft);
+}
+
+.liveTime {
+  width: 44px;
+  flex: none;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.liveWho {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.liveAmount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alert,
+.alertCritical {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--warn);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+
+  strong {
+    color: var(--warn);
+  }
+}
+
+.alertCritical {
+  border-color: var(--danger);
+
+  strong {
+    color: var(--danger);
+  }
+}
+
+.desc {
+  max-width: 72ch;
+  margin-bottom: 14px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+
+  dt {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 700px) {
+  .heroSide {
+    align-items: flex-start;
+  }
+
+  .sectionHeadRow {
+    display: none;
+  }
+
+  .sectionRow {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'name state'
+      'bar bar'
+      'price price';
+    gap: 6px 12px;
+  }
+
+  .sectionName {
+    grid-area: name;
+  }
+
+  .sectionRow > .right {
+    grid-area: state;
+  }
+
+  .progress {
+    grid-area: bar;
+  }
+
+  .sectionRow > .muted {
+    grid-area: price;
+    font-size: 12px;
+  }
+}
+
+.chartEmpty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-height: 140px;
+}
+
+.chartEmptyFigure {
+  margin: 0;
+  font-family: var(--font-display), Archivo, sans-serif;
+  font-size: 48px;
+  font-stretch: var(--headline-stretch, 72%);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--gold);
+}

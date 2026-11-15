@@ -1,5 +1,6 @@
 'use client';
 
+import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { useEffect, useState } from 'react';
 import { Field, ParameterCard, TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
@@ -204,7 +205,7 @@ export function MarcaBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Marca y contenido</h1>
-          <p className={styles.quiet}>Sin secciones.</p>
+          <NoAccess />
         </header>
       </section>
     );
@@ -253,7 +254,7 @@ export function MarcaBody() {
             name="Color secundario"
             value={text(theme.secondaryColor)}
             valueStyle="mono"
-            effect="Esta ruta no lo guarda."
+            effect="No se edita desde aquí."
           />
         </Param>
         <Param name="Logo">
@@ -276,14 +277,14 @@ export function MarcaBody() {
           <ParameterCard
             name="Favicon"
             value={text(theme.faviconUrl)}
-            effect="Esta ruta no lo guarda."
+            effect="No se edita desde aquí."
           />
         </Param>
         <Param name="Dominio propio">
           <ParameterCard
             name="Dominio propio"
             value={text(theme.customDomain)}
-            effect="Esta ruta no lo guarda."
+            effect="No se edita desde aquí."
           />
         </Param>
         <Param name="Subdominio">

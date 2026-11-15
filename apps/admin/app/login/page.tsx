@@ -136,9 +136,7 @@ export default function LoginPage() {
               </TicketButton>
             ))}
           </div>
-          <p className={styles.tertiary}>
-            Rellena el formulario; sigue haciendo falta pulsar «Entrar».
-          </p>
+          <p className={styles.tertiary}>Elige una cuenta y pulsa «Entrar».</p>
         </div>
       ) : null}
 

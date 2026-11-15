@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { hasCapability } from '@/lib/permissions';
 import { getChannelHealth, getEventHub, type EventHub } from '@/lib/platform-api';
@@ -89,7 +90,13 @@ function EventBody() {
     );
   }
   if (loading || !hub || !token || !id) {
-    return <p className={styles.quiet}>Cargando evento.</p>;
+    return (
+      <div className={styles.stack} aria-busy="true" aria-label="Cargando evento">
+        <div className={styles.skeleton} style={{ height: 72 }} />
+        <div className={styles.skeleton} style={{ height: 120 }} />
+        <div className={styles.skeleton} style={{ height: 360 }} />
+      </div>
+    );
   }
 
   if (frame.section === 'agenda') return <AgendaSection event={hub.event} />;
@@ -143,7 +150,17 @@ function EventBody() {
     return <ComplianceSection eventId={id} token={token} canPublish={canManage} />;
   }
   if (frame.section !== 'evento') {
-    return <p className={styles.quiet}>Esta sección no está en este turno.</p>;
+    return (
+      <div className={styles.empty}>
+        <p className={styles.emptyTitle}>Esta sección no existe</p>
+        <p className={styles.quiet}>Vuelve al resumen del evento.</p>
+        <Link href={`/events/${id}`} className={styles.ghostLink}>
+          Ir al resumen
+        </Link>
+      </div>
+    );
   }
-  return <EventSection event={hub.event} />;
+  return (
+    <EventSection event={hub.event} hub={hub} eventId={id} token={token} role={session.role} />
+  );
 }

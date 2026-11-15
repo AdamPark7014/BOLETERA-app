@@ -2144,7 +2144,7 @@ export function SeatMapEditor({
       const ok = window.confirm(
         `Vas a guardar el mapa completo: ${seatCount.toLocaleString('es-MX')} butacas, ` +
           `~${formatBytes(bytes)}.\n\n` +
-          'El API reemplaza el documento entero (no hay guardado parcial), así que ' +
+          'Se reemplaza el mapa completo (no hay guardado parcial), así que ' +
           'cualquier zona que falte se borra.\n\n¿Continuar?'
       );
       if (!ok) return false;

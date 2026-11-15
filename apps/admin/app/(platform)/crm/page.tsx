@@ -46,11 +46,11 @@ const RANGE_OPTIONS: { value: CrmRangeKey; label: string }[] = [
 const PAGE = 50;
 
 function failText(error: unknown): string {
-  if (error instanceof ApiError) return `${error.userMessage} (${error.status})`;
+  if (error instanceof ApiError) return error.userMessage;
   if (error instanceof Error && error.message) {
     // Express responde «Cannot GET /ruta» cuando el API no tiene la ruta.
     if (/^Cannot (GET|POST|PUT|PATCH|DELETE) /.test(error.message))
-      return 'el API no tiene esta ruta (404).';
+      return 'esta función no está disponible todavía.';
     return error.message;
   }
   return 'No respondió.';
