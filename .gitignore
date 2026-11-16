@@ -16,3 +16,6 @@ coverage
 # busqueda encuentra 8 copias fosiles de cada migracion.
 .claude/worktrees/
 .ai/index/
+
+# Borradores locales de Ollama/Cursor (no se versionan)
+.ai/drafts/
