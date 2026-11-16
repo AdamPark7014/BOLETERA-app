@@ -43,13 +43,20 @@ export function ParameterCard({
   const valueClass =
     valueStyle === 'tabular' ? styles.tabular : valueStyle === 'mono' ? styles.mono : undefined;
 
+  // Con control editable, el nombre se dice una sola vez: sin el valor repetido,
+  // sin la línea de efecto y sin la etiqueta propia del campo (queda para lector
+  // de pantalla). Antes cada campo decía «Título — Título».
+  const editing = Boolean(children);
+
   return (
-    <section className={cx(styles.card, open && styles.isOpen, className)}>
+    <section
+      className={cx(styles.card, editing && styles.editing, open && styles.isOpen, className)}
+    >
       <div className={styles.head}>
         <p className={styles.name}>{name}</p>
-        <p className={cx(styles.value, valueClass)}>{value}</p>
+        {editing ? null : <p className={cx(styles.value, valueClass)}>{value}</p>}
       </div>
-      <p className={styles.effect}>{effect}</p>
+      {editing ? null : <p className={styles.effect}>{effect}</p>}
       {children ? <div className={styles.control}>{children}</div> : null}
       {closedNote && !open ? <p className={styles.closedNote}>{closedNote}</p> : null}
       {advanced ? (

@@ -73,9 +73,9 @@ function PuertaBody() {
         </div>
       ) : (
         <div className={frame.stack}>
-          <Param name="Check-ins">
+          <Param name="Entradas">
             <ParameterCard
-              name="Check-ins"
+              name="Entradas"
               value={access ? formatCount(access.ticketsCheckedIn) : '—'}
               valueStyle="tabular"
               effect="Escaneos con éxito en el periodo."

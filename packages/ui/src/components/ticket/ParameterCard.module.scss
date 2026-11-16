@@ -119,3 +119,13 @@
   flex-direction: column;
   gap: $space-2;
 }
+
+/* Con control: la etiqueta del único campo se oculta a la vista (el nombre de la ficha ya la dice). */
+.editing .control > :only-child > label:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
