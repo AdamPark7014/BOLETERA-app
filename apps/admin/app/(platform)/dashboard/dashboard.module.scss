@@ -85,7 +85,7 @@
 }
 
 .swatchNow {
-  background: var(--gold);
+  background: var(--text);
 }
 
 .swatchPrev {
@@ -132,7 +132,7 @@
 }
 
 .barNow {
-  background: var(--gold);
+  background: var(--text);
 }
 
 .barPrev {
@@ -228,7 +228,8 @@
   text-decoration: none;
 
   &:hover .paceMain > :first-child {
-    color: var(--gold-soft);
+    color: var(--text);
+    text-decoration: underline;
   }
 
   &:focus-visible {

@@ -198,3 +198,46 @@
   outline: 1.5px solid var(--focus);
   outline-offset: 2px;
 }
+
+/* Pasada 3: controles de 44 px, sin dorado en el interruptor y el rango solo para lector de pantalla. */
+.switch,
+.switchOn {
+  overflow: visible;
+}
+
+.switch::after,
+.switchOn::after {
+  content: '';
+  position: absolute;
+  inset: -10px -2px;
+}
+
+.switchOn {
+  box-shadow: none;
+  border-color: var(--text);
+  background: var(--elevated);
+}
+
+.stepper button {
+  width: 44px;
+  height: 44px;
+}
+
+.stepField {
+  height: 44px;
+}
+
+.segment button,
+.trigger,
+.option {
+  min-height: 44px;
+}
+
+.bounds {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

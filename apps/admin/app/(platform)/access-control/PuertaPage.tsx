@@ -47,7 +47,7 @@ function PuertaBody() {
     return (
       <section>
         <header className={frame.sectionHead}>
-          <h1 className={frame.sectionTitle}>Puerta</h1>
+          <h1 className={frame.sectionTitle}>Acceso y puertas</h1>
           <p className={frame.quiet}>Inicia sesión con una cuenta de una organización.</p>
         </header>
       </section>
@@ -57,7 +57,7 @@ function PuertaBody() {
   return (
     <section>
       <header className={frame.sectionHead}>
-        <h1 className={frame.sectionTitle}>Puerta</h1>
+        <h1 className={frame.sectionTitle}>Acceso y puertas</h1>
         <p className={frame.quiet}>Nombres que devolvió el acceso en este periodo.</p>
         <Segment label="Periodo" value={rangeKey} options={RANGE_OPTIONS} onChange={setRangeKey} />
       </header>

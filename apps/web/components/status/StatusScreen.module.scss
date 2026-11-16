@@ -56,8 +56,10 @@
   @include bt.headline(96px);
   line-height: 0.86;
 
+  overflow-wrap: anywhere;
+
   @include bt.phone {
-    font-size: 56px;
+    font-size: 44px;
   }
 }
 

@@ -137,7 +137,7 @@ function EgressBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Egress</h1>
+          <h1 className={styles.sectionTitle}>Salida y aforo</h1>
           <NoAccess />
         </header>
       </section>
@@ -161,7 +161,7 @@ function EgressBody() {
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Egress</h1>
+        <h1 className={styles.sectionTitle}>Salida y aforo</h1>
         <p className={styles.quiet}>
           Circulación y vaciado de cada recinto de la organización. {formatCount(total)} recintos
           analizados.

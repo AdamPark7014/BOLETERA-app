@@ -66,6 +66,8 @@ type MeResponse = {
   organizationId: string | null;
   role: string;
   permissions?: readonly string[];
+  firstName?: string | null;
+  lastName?: string | null;
 };
 
 function sessionFromUser(user: MeResponse): SessionSnapshot {
@@ -81,6 +83,7 @@ function sessionFromUser(user: MeResponse): SessionSnapshot {
       organizationId: user.organizationId,
       role: user.role,
       permissions: user.permissions ?? [],
+      name: [user.firstName, user.lastName].filter(Boolean).join(' ') || null,
     },
   };
 }
@@ -92,6 +95,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     const requestId = ++refreshRequestId.current;
+    // Sin token no hay sesión que pedir: evita un 401 en cada carga del login.
+    if (!getTokenStorage().getToken()) {
+      setSession(null);
+      setHydrated(true);
+      return;
+    }
     try {
       const user = await http<MeResponse>('/auth/me');
       if (requestId !== refreshRequestId.current) return;

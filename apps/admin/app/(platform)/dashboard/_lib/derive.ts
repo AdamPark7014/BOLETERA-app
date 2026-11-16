@@ -231,5 +231,6 @@ export const KPI_ORDER: readonly KpiKey[] = [
   'ordersCompleted',
   'ticketsSold',
   'averageTicketPrice',
-  'conversionRate',
+  // 'conversionRate' no se muestra: el API lo calcula como completadas / (completadas +
+  // fallidas), no contra visitas, y el periodo anterior usa una fórmula de relleno.
 ];

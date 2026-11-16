@@ -554,7 +554,7 @@ export function buildChannelAlerts(
       list.push({
         id: 'api-rate',
         severity: 'warning',
-        title: 'Partners cerca del rate limit',
+        title: 'Socios cerca del límite de consultas',
         explanation: `Uso de rate limit al ${formatPercentPoints(card.rateLimitUsage)}.`,
         suggestion: 'Ajusta cupos por partner o escala el límite contractual.',
       });

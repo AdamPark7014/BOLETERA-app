@@ -12,6 +12,7 @@ import {
   formatDateLong as uiDateLong,
   formatDayLabel as uiDayLabel,
   formatDayMonth as uiDayMonth,
+  formatTime as uiTime,
 } from '@boletera/ui';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -23,7 +24,7 @@ import { AnonymousView, NoOrgView, useSession } from '../events/_shared/api-stat
 import { AdminFrame } from '../events/_ticket/AdminFrame';
 import { Segment, SheetSelect } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
-import { formatCount } from '../events/_ticket/read';
+import { formatCount, formatInZone } from '../events/_ticket/read';
 import local from './calendar.module.scss';
 
 type CalendarView = 'month' | 'week' | 'timeline';
@@ -112,6 +113,20 @@ function numberField(value: Record<string, unknown>, key: string) {
   return typeof value[key] === 'number' && Number.isFinite(value[key]) ? value[key] : 0;
 }
 
+/**
+ * Hora de inicio en 24 h y zona de México. Si el API manda `startsAt` (ISO), se
+ * formatea aquí; si solo manda el texto ya hecho, se usa tal cual.
+ */
+function startTimeOf(value: Record<string, unknown>): string {
+  const iso = stringField(value, 'startsAt');
+  if (iso) {
+    const zone = stringField(value, 'timezone');
+    const time = zone ? formatInZone(iso, zone, 'time') : uiTime(iso);
+    if (time) return time;
+  }
+  return stringField(value, 'startTime');
+}
+
 function normalizeCalendar(calendar: Record<string, unknown[]> | undefined): CalendarItem[] {
   if (!calendar) return [];
   return Object.entries(calendar).flatMap(([date, values]) =>
@@ -125,7 +140,7 @@ function normalizeCalendar(calendar: Record<string, unknown[]> | undefined): Cal
           id,
           title,
           date,
-          startTime: stringField(value, 'startTime'),
+          startTime: startTimeOf(value),
           venue: stringField(value, 'venue'),
           capacity: numberField(value, 'capacity'),
           status: stringField(value, 'status'),
@@ -373,9 +388,6 @@ function CalendarContent() {
             onChange={(value) => updateUrl({ view: value })}
           />
         </div>
-        <p className={styles.tertiary}>
-          ← → cambian el rango · T hoy · M mes · W semana · L agenda
-        </p>
 
         <div className={local.filters}>
           <div>

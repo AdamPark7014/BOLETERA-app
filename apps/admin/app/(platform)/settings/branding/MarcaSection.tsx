@@ -111,7 +111,7 @@ function failMessage(cause: unknown): string {
   return 'No se guardó. Revisa la conexión.';
 }
 
-export function MarcaBody() {
+export function MarcaBody({ title = 'Marca' }: { title?: string }) {
   const session = useSession();
   const [theme, setTheme] = useState<Theme | null>(null);
   const [color, setColor] = useState('#171717');
@@ -204,7 +204,7 @@ export function MarcaBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Marca y contenido</h1>
+          <h1 className={styles.sectionTitle}>{title}</h1>
           <NoAccess />
         </header>
       </section>
@@ -224,7 +224,7 @@ export function MarcaBody() {
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Marca y contenido</h1>
+        <h1 className={styles.sectionTitle}>{title}</h1>
       </header>
       <div className={styles.stack}>
         <Param name="Color primario">

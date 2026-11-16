@@ -208,7 +208,7 @@ function EquipoBody() {
   return (
     <section>
       <header className={frame.sectionHead}>
-        <h1 className={frame.sectionTitle}>Equipo y permisos</h1>
+        <h1 className={frame.sectionTitle}>Equipo</h1>
         {people ? (
           <p className={frame.quiet}>
             {people.length} {people.length === 1 ? 'persona' : 'personas'}

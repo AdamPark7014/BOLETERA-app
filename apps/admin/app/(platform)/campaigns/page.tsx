@@ -323,7 +323,7 @@ function DescuentosBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Campañas y códigos</h1>
+          <h1 className={styles.sectionTitle}>Campañas y descuentos</h1>
           <NoAccess />
         </header>
       </section>
@@ -357,7 +357,7 @@ function DescuentosBody() {
     <section className={styles.page}>
       <header className={styles.pageHead}>
         <div className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Campañas y códigos</h1>
+          <h1 className={styles.sectionTitle}>Campañas y descuentos</h1>
         </div>
         {events.length > 0 ? (
           <div className={styles.formItem} style={{ width: 'min(360px, 100%)' }}>

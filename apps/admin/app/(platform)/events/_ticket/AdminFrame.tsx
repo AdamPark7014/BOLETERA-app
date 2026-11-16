@@ -27,6 +27,7 @@ import {
   sectionsForRole,
   type IndexItem,
 } from './catalog';
+import { NoAccess } from './NoAccess';
 import styles from './frame.module.scss';
 
 type FrameValue = {
@@ -41,10 +42,10 @@ export function useAdminFrame(): FrameValue {
   return useContext(FrameContext);
 }
 
-function initialsOf(email: string | null | undefined): string {
-  if (!email) return 'BT';
-  const name = email.split('@')[0] ?? '';
-  const parts = name.split(/[._-]+/).filter(Boolean);
+function initialsOf(display: string | null | undefined): string {
+  if (!display) return 'BT';
+  const name = display.split('@')[0] ?? '';
+  const parts = name.split(/[\s._-]+/).filter(Boolean);
   const letters = (parts.length > 1 ? `${parts[0]![0]}${parts[1]![0]}` : name.slice(0, 2)) || 'BT';
   return letters.toUpperCase();
 }
@@ -172,6 +173,7 @@ export function AdminFrame({ children }: { children: ReactNode }) {
   }
 
   const email = session.user?.email ?? null;
+  const displayName = session.user?.name || email;
   const firstHref = sections[0]?.items[0]?.href ?? null;
   const activeItem = active
     ? SECTIONS.flatMap((group) => group.items).find((item) => item.id === active)
@@ -189,7 +191,7 @@ export function AdminFrame({ children }: { children: ReactNode }) {
           >
             <div className={styles.brandRow}>
               <Link href="/dashboard" className={styles.brand} aria-label="Black Ticket, inicio">
-                <BrandLogo tone="gold" size={32} />
+                <BrandLogo tone="white" size={32} />
               </Link>
               <button
                 type="button"
@@ -242,21 +244,20 @@ export function AdminFrame({ children }: { children: ReactNode }) {
             {ev ? (
               <>
                 <p className={styles.groupLabel}>ESTE EVENTO</p>
-                <ul className={styles.navList}>{ev.main.map((item) => itemLink(item))}</ul>
-                {ev.more.length > 0 ? (
-                  <ul className={styles.subList} aria-label="Más del evento">
-                    {ev.more.map((item) => itemLink(item, true))}
-                  </ul>
-                ) : null}
+                <ul className={styles.navList}>
+                  {[...ev.main, ...ev.more].map((item) => itemLink(item))}
+                </ul>
               </>
             ) : null}
 
             <div className={styles.userCard}>
               <span className={styles.avatar} aria-hidden="true">
-                {initialsOf(email)}
+                {initialsOf(displayName)}
               </span>
               <div className={styles.userText}>
-                <span className={styles.userName}>{email ?? 'Sesión activa'}</span>
+                <span className={styles.userName} title={email ?? undefined}>
+                  {displayName ?? 'Sesión activa'}
+                </span>
                 <span className={styles.userRole}>{roleName(role)}</span>
               </div>
               <button type="button" className={styles.logout} onClick={() => void salir()}>
@@ -289,7 +290,7 @@ export function AdminFrame({ children }: { children: ReactNode }) {
                 </svg>
               </button>
               <Link href="/dashboard" className={styles.topBrand} aria-label="Black Ticket, inicio">
-                <BrandLogo tone="gold" size={22} />
+                <BrandLogo tone="white" size={22} />
               </Link>
               <div className={styles.search} role="search">
                 <svg
@@ -359,19 +360,11 @@ export function AdminFrame({ children }: { children: ReactNode }) {
             </header>
             <div id="contenido-frame" className={styles.canvas}>
               {blocked ? (
-                <section className={styles.empty} aria-labelledby="sin-permiso">
-                  <h1 id="sin-permiso" className={styles.emptyTitle}>
-                    {activeItem?.label}: tu rol no tiene acceso
-                  </h1>
-                  <p className={styles.quiet}>
-                    Como {roleName(role).toLowerCase()} no puedes abrir esta pantalla. Si la
-                    necesitas, pídele acceso a quien administra tu organización.
-                  </p>
-                  {firstHref ? (
-                    <Link href={firstHref} className={styles.goldLink}>
-                      Ir a mi inicio
-                    </Link>
-                  ) : null}
+                <section>
+                  <header className={styles.sectionHead}>
+                    <h1 className={styles.sectionTitle}>{activeItem?.label}</h1>
+                    <NoAccess href={firstHref ?? '/dashboard'} />
+                  </header>
                 </section>
               ) : (
                 children

@@ -1,17 +1,20 @@
 import Link from 'next/link';
+import { TicketState } from '@boletera/ui';
 import styles from './frame.module.scss';
 
-/** Estado «sin permiso»: explica por qué no se ve y ofrece una salida. */
-export function NoAccess() {
+/** Estado «sin permiso», el mismo en todo el panel: una frase y una salida. */
+export function NoAccess({ href = '/dashboard' }: { href?: string }) {
   return (
-    <span className={styles.noAccess}>
-      <span className={styles.quiet}>
-        Tu rol no tiene acceso a esta pantalla. Si la necesitas, pídela a quien administra tu
-        organización.
-      </span>
-      <Link href="/dashboard" className={styles.ghostLink}>
-        Volver al inicio
-      </Link>
-    </span>
+    <TicketState
+      kind="empty"
+      align="start"
+      title="No tienes acceso a esta pantalla"
+      body="Pídelo a quien administra tu organización."
+      action={
+        <Link href={href} className={styles.ghostLink}>
+          Ir al inicio
+        </Link>
+      }
+    />
   );
 }

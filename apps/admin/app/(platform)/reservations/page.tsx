@@ -91,7 +91,7 @@ function ReservasBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Reservaciones</h1>
+          <h1 className={styles.sectionTitle}>Apartados y bloqueos</h1>
           <p className={styles.quiet}>Tu rol no ve órdenes ni eventos.</p>
         </header>
       </section>
@@ -220,7 +220,7 @@ function ReservasView({ orgId }: { orgId: string }) {
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Reservaciones</h1>
+        <h1 className={styles.sectionTitle}>Apartados y bloqueos</h1>
         <p className={styles.quiet}>
           Holds de checkout, holds de zona, expiraciones y liberaciones. Se derivan de las órdenes
           recientes y del inventario; no se inventan holds.

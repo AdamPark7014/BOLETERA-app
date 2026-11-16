@@ -165,7 +165,7 @@ function PartnersBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Partners</h1>
+          <h1 className={styles.sectionTitle}>Socios comerciales</h1>
           <NoAccess />
         </header>
       </section>
@@ -185,7 +185,7 @@ function PartnersBody() {
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Partners</h1>
+        <h1 className={styles.sectionTitle}>Socios comerciales</h1>
         <p className={styles.quiet}>
           Claves de API. El partner de un evento, con cupo y comisión, está en Canales.
         </p>

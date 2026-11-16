@@ -206,7 +206,7 @@ function GestionApi({ organizationId }: { organizationId: string }) {
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>API</h1>
+        <h1 className={styles.sectionTitle}>Llaves de API</h1>
         <p className={styles.quiet}>
           Llaves, permisos, límites y rotación. Se ve el prefijo; el secreto se muestra una sola vez
           al crear o rotar.

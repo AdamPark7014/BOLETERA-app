@@ -15,6 +15,8 @@ export type SessionUser = {
   organizationId: string | null;
   role: string;
   permissions: readonly string[];
+  /** Nombre para mostrar (de `/auth/me`); el token no lo trae. */
+  name?: string | null;
 };
 
 export type SessionSnapshot = {

@@ -88,7 +88,7 @@ function SaludBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Salud</h1>
+          <h1 className={styles.sectionTitle}>Salud operativa</h1>
           <p className={styles.quiet}>
             Los diagnósticos los abre administrador o superadministrador.
           </p>
@@ -107,7 +107,7 @@ function SaludBody() {
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Salud</h1>
+        <h1 className={styles.sectionTitle}>Salud operativa</h1>
         <p className={styles.quiet}>
           Consistencia entre órdenes, pagos, boletos, inventario y reembolsos. Solo lectura: no
           corrige datos.

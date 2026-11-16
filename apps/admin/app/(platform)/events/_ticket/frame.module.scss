@@ -1510,3 +1510,90 @@ button.tab {
 button.tabOn {
   border: 0;
 }
+
+/* =====================================================================
+ * Pasada 3: un dorado por vista (solo el CTA de la pantalla), áreas
+ * táctiles de 44 px y tablas que crecen con la página.
+ * ===================================================================== */
+
+.brand,
+.topBrand {
+  color: var(--text);
+}
+
+.avatar {
+  background: var(--elevated);
+  color: var(--text);
+}
+
+.navCurrent .navIcon {
+  color: var(--text);
+}
+
+.navCurrent .dot {
+  background: var(--text);
+}
+
+.logout:hover,
+.search:focus-within {
+  border-color: var(--text-secondary);
+}
+
+.goldButton,
+.goldButton:hover {
+  color: var(--text);
+}
+
+.goldButton:hover {
+  border-color: var(--text-secondary);
+}
+
+/* La tarjeta del usuario queda fija abajo aunque el menú tenga scroll. */
+.userCard {
+  position: sticky;
+  bottom: -22px;
+  margin-bottom: -22px;
+  padding: 16px 12px 22px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--panel);
+}
+
+.navLink,
+.navCurrent,
+.subLink,
+.subCurrent,
+.search,
+.ghostButton,
+.goldButton,
+.logout,
+.tab,
+.tabOn,
+.panelLinkButton {
+  min-height: 44px;
+}
+
+.search {
+  height: 44px;
+}
+
+.logout {
+  padding: 0 14px;
+}
+
+.panelLinkButton {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tableWrap {
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Barras de avance en blanco: el dorado queda para la acción principal. */
+.barFill {
+  background: var(--text);
+}

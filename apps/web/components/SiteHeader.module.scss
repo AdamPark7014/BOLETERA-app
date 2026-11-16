@@ -281,3 +281,11 @@
     -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
   }
 }
+
+/* «Mis boletos» y «Entrar» con el mismo peso; «Entrar» como secundario. */
+.enter {
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--text);
+}

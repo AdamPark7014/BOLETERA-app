@@ -55,7 +55,7 @@ const ALERT_FILTERS: { value: AlertFilter; label: string }[] = [
   { value: 'info', label: 'Avisos' },
 ];
 
-const CHANNEL_COLORS = ['var(--gold)', 'var(--gold-soft)', '#8A7359', '#5C4E3E', '#3F362C'];
+const CHANNEL_COLORS = ['#FFFFFF', '#A8A29A', '#77777D', '#4A4A50', '#34343A'];
 
 /** 403 = el rol no puede leer esa fuente: se oculta la pieza, no se muestra un error. */
 function isForbidden(error: unknown): boolean {
@@ -147,7 +147,7 @@ function TableroDatos({ canChannels, canCreate }: { canChannels: boolean; canCre
     <section className={own.page}>
       <header className={own.head}>
         <div className={styles.sectionHead} style={{ marginBottom: 0 }}>
-          <h1 className={styles.sectionTitle}>Inicio</h1>
+          <h1 className={styles.sectionTitle}>Tablero</h1>
           <p className={styles.quiet}>{range.label}</p>
         </div>
         <div className={own.toolbar}>
@@ -273,7 +273,7 @@ function Indicadores({
 /** Cierre estimado como cifras secundarias, sin tarjeta. */
 function ProyeccionInline({ data }: { data: DashboardData }) {
   const projection = data.executive.data?.projection;
-  if (!projection) return null;
+  if (!projection || !projectionOpen(projection)) return null;
   return (
     <>
       <div className={styles.kpiSmall}>
@@ -288,9 +288,18 @@ function ProyeccionInline({ data }: { data: DashboardData }) {
   );
 }
 
+/**
+ * El cierre estimado solo tiene sentido con el periodo aún abierto; con el
+ * periodo completo el API divide entre un avance > 100 % y la estimación
+ * queda por debajo de lo ya vendido.
+ */
+function projectionOpen(projection: { daysElapsed: number; daysInPeriod: number }): boolean {
+  return projection.daysInPeriod > 0 && projection.daysElapsed < projection.daysInPeriod;
+}
+
 function Proyeccion({ data }: { data: DashboardData }) {
   const projection = data.executive.data?.projection;
-  if (!projection) return null;
+  if (!projection || !projectionOpen(projection)) return null;
   const coherent = projection.daysInPeriod > 0 && projection.daysElapsed <= projection.daysInPeriod;
   const pace = coherent ? (projection.daysElapsed / projection.daysInPeriod) * 100 : null;
   return (
@@ -598,7 +607,10 @@ function Ritmo({ data }: { data: DashboardData }) {
                   </span>
                 </span>
                 <span role="cell" className={own.right}>
-                  <span className={riskChip(row.riskLevel)}>{riskLabel(row.riskLevel)}</span>
+                  {/* Solo se marca lo que va atrasado; «en ritmo» no aporta. */}
+                  {row.riskLevel !== 'on_track' ? (
+                    <span className={riskChip(row.riskLevel)}>{riskLabel(row.riskLevel)}</span>
+                  ) : null}
                 </span>
               </Link>
             );

@@ -8,7 +8,7 @@ export default function ContentPage() {
   return (
     <Suspense fallback={null}>
       <AdminFrame>
-        <MarcaBody />
+        <MarcaBody title="Contenido del sitio" />
       </AdminFrame>
     </Suspense>
   );

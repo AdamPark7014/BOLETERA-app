@@ -147,7 +147,8 @@ let authGeneration = 0;
  * Una vez que sabemos que no existe, un 401 significa simplemente «no hay
  * sesión», que es la respuesta correcta en esa pantalla.
  */
-let refreshSupported = true;
+// Este API no tiene `/auth/refresh`: se parte de que no existe para no pedir un 404 en cada 401.
+let refreshSupported = false;
 
 /** `true` si el backend ofrece renovación de sesión sin volver a pedir clave. */
 export function isRefreshSupported(): boolean {

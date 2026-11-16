@@ -18,9 +18,10 @@ export type RealtimeOptions<T> = {
   maxRetries?: number;
   /**
    * Prepara la URL justo antes de cada conexión (p. ej. pide un ticket de SSE
-   * de vida corta). Si devuelve null, no se conecta en ese intento.
+   * de vida corta). Si devuelve null, no se conecta en ese intento; si
+   * devuelve false, el servidor rechazó el acceso y no se reintenta.
    */
-  prepareUrl?: (url: string) => Promise<string | null>;
+  prepareUrl?: (url: string) => Promise<string | null | false>;
 };
 
 export function useRealtime<T>({
@@ -71,7 +72,7 @@ export function useRealtime<T>({
     const connect = async () => {
       if (disposed) return;
       setStatus(attempts === 0 ? 'connecting' : 'reconnecting');
-      let target: string | null = url;
+      let target: string | null | false = url;
       if (prepareRef.current) {
         try {
           target = await prepareRef.current(url);
@@ -80,6 +81,10 @@ export function useRealtime<T>({
         }
       }
       if (disposed) return;
+      if (target === false) {
+        setStatus('idle');
+        return;
+      }
       if (!target) {
         scheduleRetry();
         return;
@@ -130,12 +135,18 @@ export function useRealtime<T>({
  * ticket de vida corta (`POST /auth/stream-ticket`) y pasarlo como `?ticket=`.
  * Se pide uno nuevo en cada conexión porque caduca en minutos.
  */
-async function withStreamTicket(base: string, url: string, token: string | null) {
+async function withStreamTicket(
+  base: string,
+  url: string,
+  token: string | null
+): Promise<string | null | false> {
   if (!token) return null;
   const response = await fetch(`${base}/auth/stream-ticket`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
+  // 401/403: sin acceso; 429: demasiados intentos. Reintentar solo empeora.
+  if ([401, 403, 429].includes(response.status)) return false;
   if (!response.ok) return null;
   const body = (await response.json()) as { ticket?: string; data?: { ticket?: string } };
   const ticket = body.ticket ?? body.data?.ticket;
@@ -144,8 +155,12 @@ async function withStreamTicket(base: string, url: string, token: string | null)
   return `${url}${join}ticket=${encodeURIComponent(ticket)}`;
 }
 
+/** Roles que el API deja abrir el stream de reportes (`ReportingController`). */
+const STREAM_ROLES = new Set(['PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER']);
+
 export function useRealtimeDashboardUpdates(eventId?: string) {
-  const { organizationId, token } = useSession();
+  const { organizationId, token, role } = useSession();
+  const allowed = Boolean(organizationId && role && STREAM_ROLES.has(role));
   const base =
     process.env.NEXT_PUBLIC_ADMIN_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
@@ -159,7 +174,9 @@ export function useRealtimeDashboardUpdates(eventId?: string) {
   return useRealtime<RealtimeDashboard>({
     url,
     queryKey: queryKeys.analytics.realtime(organizationId ?? '', eventId),
-    enabled: Boolean(organizationId),
+    enabled: allowed,
+    // EventSource no expone el código de error: tras varios fallos seguidos se deja de intentar.
+    maxRetries: 6,
     prepareUrl: (target) => withStreamTicket(base, target, tokenRef.current),
   });
 }

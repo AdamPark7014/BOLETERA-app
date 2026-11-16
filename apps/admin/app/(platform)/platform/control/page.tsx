@@ -156,7 +156,7 @@ function ControlBody() {
     return (
       <section>
         <header className={styles.sectionHead}>
-          <h1 className={styles.sectionTitle}>Control</h1>
+          <h1 className={styles.sectionTitle}>Control global</h1>
           <p className={styles.quiet}>
             Esta consola la abre solo el superadministrador de plataforma.
           </p>
@@ -191,7 +191,7 @@ function ControlBody() {
   return (
     <section>
       <header className={styles.sectionHead}>
-        <h1 className={styles.sectionTitle}>Control</h1>
+        <h1 className={styles.sectionTitle}>Control global</h1>
         <p className={styles.quiet}>
           Toda la plataforma: búsqueda entre organizaciones, cifras y accesos. Solo lectura.
         </p>
