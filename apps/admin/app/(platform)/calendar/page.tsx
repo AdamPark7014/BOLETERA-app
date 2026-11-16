@@ -12,6 +12,7 @@ import {
   formatDateLong as uiDateLong,
   formatDayLabel as uiDayLabel,
   formatDayMonth as uiDayMonth,
+  formatEventDate as uiEventDate,
   formatTime as uiTime,
 } from '@boletera/ui';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
@@ -540,7 +541,7 @@ function CalendarContent() {
                 return (
                   <section key={date} className={local.weekDay} aria-labelledby={`dia-${date}`}>
                     <p id={`dia-${date}`} className={local.weekHead}>
-                      {day.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric' })}
+                      {uiEventDate(day)}
                       {date === today ? ' · hoy' : ''}
                     </p>
                     {events.length === 0 ? <p className={styles.tertiary}>Sin eventos</p> : null}

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ToastProvider } from '@/components/Toast/ToastProvider';
 import { Providers } from './providers';
 import '@boletera/ui/src/styles/theme.scss';
@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: 'Black Ticket · Admin',
   description: 'Backoffice de boletería',
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
   themeColor: '#000000',
 };
 
