@@ -4,7 +4,16 @@ import { useEffect, useMemo, useRef, useState, type ElementType, type KeyboardEv
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CURATED_MARKETING_CARDS, type CuratedMarketingCard } from '@boletera/shared';
-import { Badge, Button, Card, EmptyState, SearchInput } from '@boletera/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  SearchInput,
+  formatEventDate,
+  formatTime,
+  formatPrice,
+} from '@boletera/ui';
 import { useTenantBrand } from '@/components/TenantBrand';
 import { EventPosterArt } from './EventPosterArt';
 import styles from './EventDiscoveryPanel.module.scss';
@@ -69,33 +78,21 @@ type WhenKey = 'ALL' | 'WEEK' | 'WEEKEND' | 'MONTH';
 type InventoryState = 'available' | 'low' | 'sold-out';
 
 function fmtDate(iso: string) {
-  const d = new Date(iso);
+  const label = formatEventDate(iso); // «Sáb 12 dic»
+  const [weekday = '', day = '', month = ''] = label.split(' ');
   return {
-    day: d.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', day: '2-digit' }),
-    month: d
-      .toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', month: 'short' })
-      .replace('.', ''),
-    weekday: d
-      .toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', weekday: 'short' })
-      .replace('.', ''),
-    time: d.toLocaleTimeString('es-MX', {
-      timeZone: 'America/Mexico_City',
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
-    full: d.toLocaleDateString('es-MX', {
-      timeZone: 'America/Mexico_City',
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    }),
+    day,
+    month,
+    weekday,
+    time: formatTime(iso),
+    full: label,
   };
 }
 
 function fmtPrice(n: number | string) {
   const v = Number(n);
   if (!Number.isFinite(v) || v <= 0) return 'Consultar';
-  return `Desde $${v.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`;
+  return `Desde ${formatPrice(v)}`;
 }
 
 function inventoryState(offerCount?: number): InventoryState {

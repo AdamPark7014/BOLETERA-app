@@ -21,6 +21,7 @@ export function ManagerPinDialog({
   open,
   title,
   detail,
+  children,
   confirmLabel = 'Autorizar',
   danger = false,
   onCancel,
@@ -29,6 +30,7 @@ export function ManagerPinDialog({
   open: boolean;
   title: string;
   detail?: string;
+  children?: React.ReactNode;
   confirmLabel?: string;
   danger?: boolean;
   onCancel: () => void;
@@ -88,11 +90,11 @@ export function ManagerPinDialog({
       }}
     >
       <form className={styles.dialog} onSubmit={(e) => void submit(e)}>
-        <p className={styles.eyebrow}>Autorización de gerente</p>
         <h2 id="pin-title" className={styles.title}>
           {title}
         </h2>
         {detail && <p className={styles.lead}>{detail}</p>}
+        {children}
 
         <label className={styles.field}>
           <small>PIN de gerente</small>
@@ -123,9 +125,6 @@ export function ManagerPinDialog({
             {busy ? 'Verificando…' : confirmLabel}
           </button>
         </div>
-        <p className={styles.hint}>
-          <kbd>Enter</kbd> autorizar · <kbd>Esc</kbd> cancelar
-        </p>
       </form>
     </div>
   );

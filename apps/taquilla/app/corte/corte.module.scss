@@ -107,10 +107,10 @@
     min-width: 0;
     gap: var(--bl-space-2);
     align-items: center;
-    padding: var(--bl-space-1-5) var(--bl-space-2-5);
-    border-radius: var(--bl-radius-sm);
-    background: var(--bg-deep);
-    border: 1px solid var(--border);
+    padding: 8px 0;
+    border-radius: 0;
+    background: transparent;
+    border: 0;
   }
 
   span {
@@ -285,8 +285,19 @@
 .actions {
   display: grid;
   grid-template-columns: 1fr 1fr 1.4fr;
-  gap: var(--bl-space-2-5);
+  gap: 12px;
   margin-bottom: var(--bl-space-4);
+  align-items: stretch;
+
+  > :not(:last-child) {
+    min-height: 48px;
+    height: 48px;
+    border-radius: 999px;
+  }
+
+  > :last-child {
+    min-height: 48px;
+  }
 
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
@@ -438,10 +449,14 @@
 }
 
 /* Etiquetas en oración, sin mayúsculas espaciadas. */
-.hero > div > span:first-child {
+.heroCell > span:first-child,
+.heroOk > span:first-child,
+.heroWarn > span:first-child,
+.heroBad > span:first-child {
   text-transform: none;
   letter-spacing: 0;
   font-size: 13px;
+  font-weight: 500;
 }
 
 /* Barra del desglose en blanco tenue: el dorado queda para «Cerrar corte». */

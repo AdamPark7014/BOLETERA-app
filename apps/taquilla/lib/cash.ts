@@ -5,6 +5,8 @@
  * y con qué piezas, y ofrece los billetes con los que realmente paga la gente.
  */
 
+import { formatTicketAmount, formatNumber } from '@boletera/ui';
+
 /** Denominaciones MXN en circulación, de mayor a menor. */
 export const MXN_DENOMINATIONS = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1, 0.5] as const;
 
@@ -12,17 +14,14 @@ export const MXN_DENOMINATIONS = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1, 0.5]
 const COMMON_BILLS = [50, 100, 200, 500, 1000];
 
 export function money(n: number): string {
-  return `$${Number(n || 0).toLocaleString('es-MX', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return formatTicketAmount(Number(n || 0));
 }
 
 /** Etiqueta corta para los botones de billete: $500, $1,000. */
 export function billLabel(n: number): string {
   // La moneda de 50 centavos: sin esto se redondeaba a «$1».
   if (n > 0 && n < 1) return `${Math.round(n * 100)}¢`;
-  return `$${n.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`;
+  return `$${formatNumber(n, 0)}`;
 }
 
 /** Redondeo a centavos: 0.1 + 0.2 no puede acabar en un faltante de caja. */

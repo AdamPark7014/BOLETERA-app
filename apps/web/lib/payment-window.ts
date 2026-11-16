@@ -14,6 +14,8 @@
  * igual de mal que uno de 24 h delante de un hold que muere en 15.
  */
 
+import { formatDateTime } from '@boletera/ui';
+
 export type PaymentMethodId = 'CARD' | 'SPEI' | 'OXXO';
 
 /** Aproximación por defecto del API; solo para textos previos a la orden. */
@@ -85,18 +87,10 @@ export function describeRemaining(totalSeconds: number): string {
   return `${seconds} segundo${seconds === 1 ? '' : 's'}`;
 }
 
-/** Fecha límite absoluta y legible: «sáb 16 ago, 18:45 h». */
+/** Fecha límite absoluta y legible: «sáb 16 ago, 18:45». */
 export function formatDeadline(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const date = new Date(iso);
   if (!Number.isFinite(date.getTime())) return null;
-  const formatted = date.toLocaleString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  return `${formatted} h`;
+  return formatDateTime(date);
 }

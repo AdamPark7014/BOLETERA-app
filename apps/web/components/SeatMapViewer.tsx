@@ -1,4 +1,5 @@
-'use client';
+import { formatNumber, formatPrice } from '@boletera/ui';
+('use client');
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { offerTones } from '@/lib/zone-tones';
@@ -493,7 +494,7 @@ export function SeatMapViewer({
         title: shorten(shape.name, 32),
         subtitle:
           stat.free > 0
-            ? `${stat.free} libres${price ? ` · $${price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}` : ''}`
+            ? `${stat.free} libres${price ? ` · ${formatPrice(price)}` : ''}`
             : 'Agotada',
         // Trama diagonal además del color: el «agotado» no puede depender solo
         // del tono (WCAG 1.4.1).
@@ -706,7 +707,7 @@ export function SeatMapViewer({
       }
       onToggle(seat.id);
       setStatusMessage(
-        `${seat.row ? `Fila ${seat.row}, ` : ''}butaca ${seat.label}, ${seat.sectionName}, $${seat.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}. Agregada.`
+        `${seat.row ? `Fila ${seat.row}, ` : ''}butaca ${seat.label}, ${seat.sectionName}, ${formatPrice(seat.price)}${currency && currency !== 'MXN' ? ` ${currency}` : ''}. Agregada.`
       );
     },
     [seats, statusAt, selectedSet, selected.length, maxSelect, onToggle, currency]
@@ -941,7 +942,7 @@ export function SeatMapViewer({
           <p role="status" aria-live="polite">
             Cargando disponibilidad… {loadPercent}%
             {totalTickets
-              ? ` (${feed.loadedTickets.toLocaleString('es-MX')} de ${totalTickets.toLocaleString('es-MX')})`
+              ? ` (${formatNumber(feed.loadedTickets)} de ${formatNumber(totalTickets)})`
               : ''}
             . Ya puedes explorar y elegir en las zonas cargadas.
           </p>
@@ -1052,15 +1053,12 @@ export function SeatMapViewer({
         <div className={styles.heatBar}>
           <div className={styles.heatScale} aria-hidden />
           <div className={styles.heatLabels}>
-            <span>${priceRange.min.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+            <span>${formatNumber(priceRange.min, 0)}</span>
             <span>Mapa de precios</span>
-            <span>${priceRange.max.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+            <span>${formatNumber(priceRange.max, 0)}</span>
           </div>
           <label className={styles.priceFilter}>
-            Máx. $
-            {((priceCap ?? priceRange.max) || 0).toLocaleString('es-MX', {
-              maximumFractionDigits: 0,
-            })}
+            Máx. ${formatNumber((priceCap ?? priceRange.max) || 0, 0)}
             <input
               type="range"
               min={priceRange.min}
@@ -1167,9 +1165,7 @@ export function SeatMapViewer({
                 <i style={{ background: '#3A3A3E' }} />
                 {sec.name}
                 {stat && <em>{stat.free} libres</em>}
-                {price > 0 && (
-                  <em>${price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</em>
-                )}
+                {price > 0 && <em>{formatPrice(price)}</em>}
               </button>
             );
           })}
@@ -1545,7 +1541,7 @@ export function SeatMapViewer({
           región viva aquí haría que todo se dijera dos veces. */}
       <p className={compact && !focused ? styles.srOnly : styles.focus}>
         {focused
-          ? `${focused.row ? `Fila ${focused.row}, ` : ''}butaca ${focused.label}, ${focused.sectionName}, $${focused.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}${focused.accessible ? ', lugar accesible' : ''}${
+          ? `${focused.row ? `Fila ${focused.row}, ` : ''}butaca ${focused.label}, ${focused.sectionName}, ${formatPrice(focused.price)}${currency && currency !== 'MXN' ? ` ${currency}` : ''}${focused.accessible ? ', lugar accesible' : ''}${
               focusedStatus === 'available'
                 ? ', disponible'
                 : focusedStatus === 'held'
@@ -1577,7 +1573,7 @@ export function SeatMapViewer({
               </p>
               <p className={styles.traySub}>
                 {selectedInfo.length
-                  ? `Total $${selectionTotalValue.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`
+                  ? `Total ${formatPrice(selectionTotalValue)}${currency && currency !== 'MXN' ? ` ${currency}` : ''}`
                   : `Máx. ${maxSelect}`}
               </p>
             </div>
@@ -1594,8 +1590,7 @@ export function SeatMapViewer({
                   <div>
                     <strong>{item.label}</strong>
                     <span>
-                      {item.sectionName} · $
-                      {item.price.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                      {item.sectionName} · {formatPrice(item.price)}
                     </span>
                   </div>
                   <button

@@ -497,6 +497,15 @@ export default function CuentaPage() {
             </p>
           )}
           <div className={styles.heroActions}>
+            <button
+              type="button"
+              className={styles.toolsToggle}
+              onClick={() => setShowTools((v) => !v)}
+              aria-expanded={showTools}
+              aria-controls="cuenta-tools"
+            >
+              {showTools ? 'Ocultar herramientas' : 'Transferencias y factura'}
+            </button>
             <button type="button" className={styles.browse} onClick={logout}>
               Cerrar sesión
             </button>
@@ -642,20 +651,13 @@ export default function CuentaPage() {
                         </span>
                       )}
                     </div>
-                    <dl className={styles.membershipFacts}>
-                      <div>
-                        <dt>{m.status === 'ACTIVE' ? 'Vigente hasta' : 'Venció el'}</dt>
-                        <dd>{formatShortDate(m.expiresAt)}</dd>
-                      </div>
-                      <div>
-                        <dt>Miembro desde</dt>
-                        <dd>{formatShortDate(m.startedAt)}</dd>
-                      </div>
-                      <div>
-                        <dt>Precio del plan</dt>
-                        <dd>{formatMoney(m.plan.price, m.plan.currency)}</dd>
-                      </div>
-                    </dl>
+                    <p className={styles.membershipFacts}>
+                      <span>
+                        {m.status === 'ACTIVE' ? 'Vigente hasta' : 'Venció el'}{' '}
+                        {formatShortDate(m.expiresAt)}
+                      </span>
+                      <span>{formatMoney(m.plan.price, m.plan.currency)}</span>
+                    </p>
                     {m.benefits.length > 0 ? (
                       <ul className={styles.membershipBenefits} aria-label="Beneficios">
                         {m.benefits.map((b) => (
@@ -801,16 +803,6 @@ export default function CuentaPage() {
                 })}
               </ul>
             </section>
-
-            <button
-              type="button"
-              className={styles.toolsToggle}
-              onClick={() => setShowTools((v) => !v)}
-              aria-expanded={showTools}
-              aria-controls="cuenta-tools"
-            >
-              {showTools ? 'Ocultar herramientas' : 'Transferencias y factura'}
-            </button>
 
             <div id="cuenta-tools" className={styles.tools} hidden={!showTools}>
               {transferCode && (

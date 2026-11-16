@@ -12,6 +12,7 @@ import {
   buildEgressPathOverlays,
 } from '@boletera/venue-engine';
 import { loadSeatStatuses, subscribeInventory } from '@/lib/inventory';
+import { formatNumber } from '@boletera/ui';
 import styles from './PosSeatMap.module.scss';
 
 type HeatMode = 'off' | 'price' | 'view';
@@ -333,16 +334,13 @@ export function PosSeatMap({
       {heatMode === 'price' && priceRange.max > 0 && (
         <div className={styles.priceHeatPanel}>
           <div className={styles.viewHeatBar} aria-hidden>
-            <span>${priceRange.min.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+            <span>${formatNumber(priceRange.min, 0)}</span>
             <div className={styles.priceHeatScale} />
-            <span>${priceRange.max.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+            <span>${formatNumber(priceRange.max, 0)}</span>
           </div>
           {priceRange.max > priceRange.min && (
             <label className={styles.priceFilter}>
-              Máx. $
-              {((priceCap ?? priceRange.max) || 0).toLocaleString('es-MX', {
-                maximumFractionDigits: 0,
-              })}
+              Máx. ${formatNumber((priceCap ?? priceRange.max) || 0, 0)}
               <input
                 type="range"
                 min={priceRange.min}

@@ -97,7 +97,7 @@
   cursor: text;
 
   &:focus-within {
-    border-color: var(--gold, #a68a6b);
+    border-color: #fff;
   }
 
   span {
@@ -428,7 +428,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  height: 44px;
   padding: 0 14px;
   border-radius: var(--r-pill, 999px);
   border: 1px solid var(--line-strong, #34343a);

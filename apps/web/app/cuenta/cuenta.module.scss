@@ -506,27 +506,16 @@
 .membershipFacts {
   margin: 0;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px 24px;
+  color: var(--text-secondary);
+  font: var(--body-sm);
 
-  div {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 10px 0;
-    border-bottom: 0;
-  }
-
-  dt {
-    color: var(--text-secondary);
-    font: var(--body-sm);
-  }
-
-  dd {
-    margin: 0;
+  span:last-child {
     color: var(--text);
-    font: var(--body-sm);
     font-variant-numeric: tabular-nums;
-    text-align: right;
   }
 }
 

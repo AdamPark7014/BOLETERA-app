@@ -1,11 +1,10 @@
 'use client';
 
-import { formatDayMonth, formatPrice } from '@boletera/ui';
-import { formatTime as uiTime } from '@boletera/ui';
+import { formatDayMonth, formatTicketAmount, formatTime } from '@boletera/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { stockImageForCategory } from '@boletera/shared';
-import { Badge, Button, Card, EmptyState, SearchInput, SkeletonCard } from '@boletera/ui';
+import { Badge, Card, EmptyState, SearchInput, SkeletonCard } from '@boletera/ui';
 import { apiJson, getTaquillaToken } from '@/lib/auth';
 import { PosShell } from '@/components/PosShell';
 import { digitPressed, type Hotkey } from '@/lib/hotkeys';
@@ -30,16 +29,11 @@ type EventRow = {
   offers?: Offer[];
 };
 
-function money(n: number) {
-  return formatPrice(n);
-}
-
 export default function EventosTaquillaPage() {
   const router = useRouter();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!getTaquillaToken()) router.replace('/login');
@@ -60,9 +54,10 @@ export default function EventosTaquillaPage() {
     );
   }, [events, q]);
 
-  /** El precio ya NO viaja por la URL: lo fija el catálogo en la pantalla de venta. */
-  function ventaUrl(eventId: string, offer: Offer) {
-    return `/venta?${new URLSearchParams({ eventId, offerId: offer.id }).toString()}`;
+  function ventaUrl(eventId: string, offerId?: string) {
+    const params = new URLSearchParams({ eventId });
+    if (offerId) params.set('offerId', offerId);
+    return `/venta?${params.toString()}`;
   }
 
   const hotkeys: Hotkey[] = [
@@ -75,12 +70,8 @@ export default function EventosTaquillaPage() {
         const n = digitPressed(e);
         const row = n ? filtered[n - 1] : undefined;
         if (!row) return;
-        const offer = (row.offers ?? []).filter((o) => o.isAvailable !== false)[0];
-        router.push(
-          offer
-            ? ventaUrl(row.id, offer)
-            : `/venta?${new URLSearchParams({ eventId: row.id }).toString()}`
-        );
+        const offer = (row.offers ?? []).find((o) => o.isAvailable !== false);
+        router.push(ventaUrl(row.id, offer?.id));
       },
     },
     {
@@ -140,7 +131,10 @@ export default function EventosTaquillaPage() {
           {filtered.map((e, i) => {
             const date = new Date(e.startsAt);
             const offers = (e.offers || []).filter((o) => o.isAvailable !== false);
-            const open = expanded === e.id;
+            const prices = offers
+              .map((o) => Number(o.basePrice))
+              .filter((n) => Number.isFinite(n) && n > 0);
+            const from = prices.length ? Math.min(...prices) : 0;
             const thumb = stockImageForCategory(e.category, e.title);
 
             return (
@@ -149,8 +143,7 @@ export default function EventosTaquillaPage() {
                   <button
                     type="button"
                     className={styles.eventToggle}
-                    onClick={() => setExpanded(open ? null : e.id)}
-                    aria-expanded={open}
+                    onClick={() => router.push(ventaUrl(e.id))}
                   >
                     <span className={styles.idx}>{String(i + 1).padStart(2, '0')}</span>
                     <div
@@ -165,7 +158,8 @@ export default function EventosTaquillaPage() {
                     <div className={styles.cardInfo}>
                       <strong>{e.title}</strong>
                       <span>
-                        {e.venue?.name} · {uiTime(date)}
+                        {e.venue?.name} · {formatTime(date)}
+                        {from > 0 ? ` · desde ${formatTicketAmount(from)}` : ''}
                       </span>
                     </div>
                     <div className={styles.cardMeta}>
@@ -178,60 +172,11 @@ export default function EventosTaquillaPage() {
                           Sin ofertas
                         </Badge>
                       )}
-                      <span className={open ? styles.ctaSecondary : styles.cta}>
-                        {open ? 'Cerrar' : 'Ver zonas ›'}
+                      <span className={styles.chevron} aria-hidden="true">
+                        ›
                       </span>
                     </div>
                   </button>
-
-                  {open && (
-                    <div className={styles.offerPanel}>
-                      {offers.length === 0 ? (
-                        <p className={styles.offerEmpty}>Sin ofertas disponibles</p>
-                      ) : (
-                        <ul className={styles.offerList}>
-                          {offers.map((o) => {
-                            const stock = o.remainingQuantity;
-                            const lowStock = stock != null && stock <= 10;
-                            return (
-                              <li key={o.id}>
-                                <Card variant="outline" padding="sm" className={styles.offerRow}>
-                                  <div className={styles.offerMain}>
-                                    <strong>{o.name || o.zone || 'General'}</strong>
-                                    <span>
-                                      {o.zone && o.name ? o.zone : 'GA'}
-                                      {stock != null ? ` · ${stock} disp.` : ''}
-                                    </span>
-                                  </div>
-                                  <div className={styles.offerAside}>
-                                    {stock != null && (
-                                      <Badge
-                                        tone={lowStock ? 'warning' : 'success'}
-                                        variant="soft"
-                                        size="sm"
-                                      >
-                                        {lowStock ? 'Poco stock' : 'Disponible'}
-                                      </Badge>
-                                    )}
-                                    <strong className={styles.offerPrice}>
-                                      {money(Number(o.basePrice))}
-                                    </strong>
-                                    <Button
-                                      variant="primary"
-                                      size="sm"
-                                      onClick={() => router.push(ventaUrl(e.id, o))}
-                                    >
-                                      Vender
-                                    </Button>
-                                  </div>
-                                </Card>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
-                    </div>
-                  )}
                 </Card>
               </li>
             );

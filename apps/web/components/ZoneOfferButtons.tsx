@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
+import { formatPrice } from '@boletera/ui';
 import styles from './ZoneOfferButtons.module.scss';
 
 export function ZoneOfferButtons({
@@ -51,8 +52,8 @@ export function ZoneOfferButtons({
                 </span>
               </div>
               <em>
-                ${Number(o.basePrice).toLocaleString('es-MX', { maximumFractionDigits: 0 })}{' '}
-                {currency}
+                {formatPrice(Number(o.basePrice))}
+                {currency && currency !== 'MXN' ? ' ' + currency : ''}
               </em>
             </button>
           </li>

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { formatDayMonth } from '@boletera/ui';
 import styles from './EventPosterArt.module.scss';
 import { PosterImage } from './PosterImage';
 
@@ -104,14 +105,8 @@ export function EventPosterArt({
       />
       {showDate && d && (
         <div className={styles.date}>
-          <strong>
-            {d.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', day: '2-digit' })}
-          </strong>
-          <span>
-            {d
-              .toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', month: 'short' })
-              .replace('.', '')}
-          </span>
+          <strong>{formatDayMonth(d).split(' ')[0]}</strong>
+          <span>{formatDayMonth(d).split(' ').slice(1).join(' ')}</span>
         </div>
       )}
     </div>

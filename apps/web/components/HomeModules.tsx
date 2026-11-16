@@ -5,7 +5,7 @@ import {
   type CuratedMarketingCard,
   type SiteContent,
 } from '@boletera/shared';
-import { Badge, Card } from '@boletera/ui';
+import { Badge, Card, formatEventDateTime, formatPrice } from '@boletera/ui';
 import { EventPosterArt } from './EventPosterArt';
 import type { EventHit } from './EventDiscoveryPanel';
 import styles from './HomeModules.module.scss';
@@ -22,19 +22,13 @@ type VenueHit = {
 };
 
 function fmtDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('es-MX', {
-    timeZone: 'America/Mexico_City',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+  return formatEventDateTime(iso);
 }
 
 function fmtPrice(n: number | string) {
   const v = Number(n);
   if (!Number.isFinite(v) || v <= 0) return 'Consultar';
-  return `Desde $${v.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`;
+  return `Desde ${formatPrice(v)}`;
 }
 
 export function HomeModules({

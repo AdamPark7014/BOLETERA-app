@@ -507,39 +507,6 @@ export default function CortePage() {
         </>
       )}
 
-      {/* Los campos de retiro y traspaso viven FUERA del diálogo: el importe y el
-          cajero entrante se teclean antes de pedir el PIN, no después. */}
-      {!closed && report && (
-        <Card padding="md" className={styles.section}>
-          <CardHeader title="Retiro o entrega de turno" />
-          <div className={styles.inlineFields}>
-            <Input
-              id="drop-amount"
-              type="number"
-              label="Importe a retirar"
-              min={0}
-              step="0.01"
-              value={dropAmount}
-              onChange={(e) => setDropAmount(e.target.value)}
-              inputSize="lg"
-            />
-            <Input
-              id="drop-note"
-              label="Nota del retiro"
-              value={dropNote}
-              onChange={(e) => setDropNote(e.target.value)}
-            />
-            <Input
-              id="handoff-cashier"
-              label="Cajero entrante (correo)"
-              value={handoffCashier}
-              onChange={(e) => setHandoffCashier(e.target.value)}
-              placeholder="Correo del cajero que recibe"
-            />
-          </div>
-        </Card>
-      )}
-
       {!closed && report && (
         <div className={styles.actions}>
           <Button variant="secondary" size="lg" onClick={() => setPrompt('DROP')}>
@@ -626,11 +593,30 @@ export default function CortePage() {
       <ManagerPinDialog
         open={prompt === 'DROP'}
         title="Retiro parcial de efectivo"
-        detail="El importe sale del cajón y se descuenta del esperado en caja. Queda registrado con el responsable del turno."
+        detail="El importe sale del cajón y se descuenta del esperado en caja."
         confirmLabel="Registrar retiro"
         onCancel={() => setPrompt(null)}
         onConfirm={(pin) => doDrop(pin)}
-      />
+      >
+        <div className={styles.inlineFields}>
+          <Input
+            id="drop-amount"
+            type="number"
+            label="Importe a retirar"
+            min={0}
+            step="0.01"
+            value={dropAmount}
+            onChange={(e) => setDropAmount(e.target.value)}
+            inputSize="lg"
+          />
+          <Input
+            id="drop-note"
+            label="Nota del retiro"
+            value={dropNote}
+            onChange={(e) => setDropNote(e.target.value)}
+          />
+        </div>
+      </ManagerPinDialog>
 
       <ManagerPinDialog
         open={prompt === 'CLOSE'}
@@ -647,11 +633,21 @@ export default function CortePage() {
       <ManagerPinDialog
         open={prompt === 'HANDOFF'}
         title="Entregar turno"
-        detail="Se cierra el turno actual con el efectivo contado y se abre uno nuevo. El cajero entrante deberá identificarse con sus credenciales."
+        detail="Se cierra el turno actual con el efectivo contado y se abre uno nuevo."
         confirmLabel="Entregar"
         onCancel={() => setPrompt(null)}
         onConfirm={(pin) => doHandoff(pin)}
-      />
+      >
+        <div className={styles.inlineFields}>
+          <Input
+            id="handoff-cashier"
+            label="Cajero entrante (correo)"
+            value={handoffCashier}
+            onChange={(e) => setHandoffCashier(e.target.value)}
+            placeholder="Correo del cajero que recibe"
+          />
+        </div>
+      </ManagerPinDialog>
     </PosShell>
   );
 }

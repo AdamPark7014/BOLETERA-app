@@ -86,7 +86,6 @@ export default function AccesoPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [stamps, setStamps] = useState<Array<{ at: number; ok: boolean }>>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [supervisorOpen, setSupervisorOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [online, setOnline] = useState(true);
 
@@ -146,7 +145,6 @@ export default function AccesoPage() {
   const pushOutcome = useCallback((next: ScanOutcomeView) => {
     setOutcome(next);
     setDetailsOpen(false);
-    setSupervisorOpen(false);
     setHistory((prev) => [next, ...prev].slice(0, 8));
     // Contadores de esta sesión de puerta: el API no expone el total por puerta.
     setStamps((prev) => [...prev, { at: next.at, ok: toneOf(next) === 'ok' }].slice(-2000));
@@ -460,7 +458,6 @@ export default function AccesoPage() {
   const nextScan = () => {
     setOutcome(null);
     setDetailsOpen(false);
-    setSupervisorOpen(false);
     setCode('');
     inputRef.current?.focus();
   };
@@ -486,8 +483,9 @@ export default function AccesoPage() {
             className={styles.downloadChip}
             disabled={downloading != null}
             onClick={() => void doDownload()}
+            aria-label="Descargar lista"
           >
-            {downloading != null ? 'Descargando lista…' : 'Descargar lista para trabajar sin red'}
+            {downloading != null ? 'Descargando…' : 'Lista sin descargar'}
           </button>
         ) : null
       }
@@ -516,7 +514,7 @@ export default function AccesoPage() {
                 aria-label="Código"
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
-                placeholder="Escanea el QR o escribe el código"
+                placeholder="Código del boleto"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -595,25 +593,16 @@ export default function AccesoPage() {
                   <>
                     <p className={styles.reason}>{outcome.detail}</p>
                     {outcome.extra ? <p className={styles.reasonSub}>{outcome.extra}</p> : null}
-                    {tone === 'bad' ? (
+                    {tone === 'bad' && hasTicketData ? (
                       <div className={styles.resultActions}>
                         <button
                           type="button"
-                          className={styles.whiteBtn}
-                          onClick={() => setSupervisorOpen((v) => !v)}
+                          className={styles.ghostBtn}
+                          aria-expanded={detailsOpen}
+                          onClick={() => setDetailsOpen((v) => !v)}
                         >
-                          Llamar supervisor
+                          Ver boleto
                         </button>
-                        {hasTicketData ? (
-                          <button
-                            type="button"
-                            className={styles.ghostBtn}
-                            aria-expanded={detailsOpen}
-                            onClick={() => setDetailsOpen((v) => !v)}
-                          >
-                            Ver boleto
-                          </button>
-                        ) : null}
                       </div>
                     ) : null}
                     {detailsOpen && hasTicketData ? (
@@ -637,16 +626,6 @@ export default function AccesoPage() {
                           </>
                         ) : null}
                       </dl>
-                    ) : null}
-                    {supervisorOpen ? (
-                      <div className={styles.ticketData}>
-                        <p>
-                          Dicta al supervisor por radio: «{outcome.title.toLowerCase()}»
-                          {outcome.code ? `, código ${outcome.code}` : ''}, {clock(outcome.at)}
-                          {zoneId.trim() ? `, puerta ${zoneId.trim()}` : ''}. Detén a la persona a
-                          un lado de la fila mientras llega.
-                        </p>
-                      </div>
                     ) : null}
                   </>
                 )}
@@ -696,7 +675,7 @@ export default function AccesoPage() {
               {pending > 0 ? ` · ${pending.toLocaleString('es-MX')} por subir` : ' · todo subido'}
             </span>
             <button type="button" className={styles.linkBtn} onClick={() => void runSync()}>
-              Subir ahora <kbd>F8</kbd>
+              Subir ahora
             </button>
           </div>
 
@@ -764,7 +743,7 @@ export default function AccesoPage() {
                 <button
                   type="button"
                   className={styles.pill}
-                  aria-label="Descargar lista de boletos (F5)"
+                  aria-label="Descargar lista"
                   disabled={downloading != null || !eventId}
                   onClick={() => void doDownload()}
                 >

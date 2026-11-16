@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import type { RenderSeat, SeatStatus } from './types';
+import { formatPrice } from '@boletera/ui';
 import styles from './AccessibleSeatPicker.module.scss';
 
 /**
@@ -57,7 +58,8 @@ function naturalCompare(a: string, b: string): number {
 
 function formatMoney(value: number, currency: string): string {
   if (!value) return 'sin precio publicado';
-  return `${value.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`;
+  const base = formatPrice(value);
+  return currency && currency !== 'MXN' ? `${base} ${currency}` : base;
 }
 
 export function AccessibleSeatPicker({

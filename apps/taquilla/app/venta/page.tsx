@@ -1,7 +1,7 @@
 'use client';
 
 import { friendlyError } from '@/lib/errors';
-import { formatEventDate, formatEventDateTime } from '@boletera/ui';
+import { formatEventDate } from '@boletera/ui';
 import { formatTime as uiTime } from '@boletera/ui';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -841,7 +841,7 @@ function VentaFlow() {
         },
         {
           keys: 'Enter',
-          label: 'Cobrar e imprimir',
+          label: 'Cobrar',
           whileTyping: true,
           match: (e) => e.key === 'Enter',
           run: () => void sell(),
@@ -971,9 +971,6 @@ function VentaFlow() {
     !loading &&
     (method !== 'CASH' || cash.sufficient) &&
     (method !== 'COMP' || Boolean(managerPin));
-  const functionLine = event
-    ? `${formatEventDateTime(event.startsAt)} · ${event.title}${event.venue?.name ? ` · ${event.venue.name}` : ''}`
-    : null;
   const whenLabel = (iso: string) => {
     const d = new Date(iso);
     const today = new Date();
@@ -1011,7 +1008,6 @@ function VentaFlow() {
       title={
         stage === 'ZONE' ? 'Sección' : stage === 'EVENT' || stage === 'DONE' ? 'Función' : 'Venta'
       }
-      eyebrow={functionLine && stage !== 'EVENT' && stage !== 'DONE' ? functionLine : undefined}
       backHref="/venta"
       hotkeys={hotkeys}
       escapeGoesBack={false}
@@ -1142,7 +1138,7 @@ function VentaFlow() {
                         void releaseHolds();
                       }}
                     >
-                      {pickSeats ? 'Por cantidad' : 'Elegir en mapa'} <kbd>M</kbd>
+                      {pickSeats ? 'Por cantidad' : 'Elegir en mapa'}
                     </button>
                   ) : null}
                   {stage !== 'ZONE' ? (
@@ -1360,7 +1356,7 @@ function VentaFlow() {
             </p>
           )}
 
-          <div className={styles.total}>
+          <div className={due > 0 ? styles.total : `${styles.total} ${styles.totalMuted}`}>
             <span>Total a cobrar</span>
             <strong>{formatTicketAmount(due)}</strong>
           </div>
@@ -1518,9 +1514,39 @@ function VentaFlow() {
                   ? 'Esperando terminal…'
                   : 'Cobrando…'
                 : method === 'COMP'
-                  ? 'Emitir cortesía e imprimir'
-                  : 'Cobrar e imprimir'}
+                  ? 'Emitir cortesía'
+                  : 'Cobrar'}
           </button>
+
+          <div className={styles.mobileBar} aria-hidden={false}>
+            <div
+              className={
+                due > 0 ? styles.mobileTotal : `${styles.mobileTotal} ${styles.mobileTotalMuted}`
+              }
+            >
+              <span>Total</span>
+              <strong>{formatTicketAmount(due)}</strong>
+            </div>
+            <button
+              type="button"
+              className={styles.chargeBtn}
+              disabled={releaseAsk ? false : !canCharge}
+              onClick={() => {
+                if (releaseAsk) void releaseLast();
+                else void sell();
+              }}
+            >
+              {releaseAsk
+                ? 'Soltar apartado'
+                : loading
+                  ? cardWaiting
+                    ? 'Esperando…'
+                    : 'Cobrando…'
+                  : method === 'COMP'
+                    ? 'Emitir cortesía'
+                    : 'Cobrar'}
+            </button>
+          </div>
         </aside>
       </div>
 

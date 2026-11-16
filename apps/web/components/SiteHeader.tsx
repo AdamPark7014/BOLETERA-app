@@ -36,6 +36,7 @@ function SearchPill() {
   const [q, setQ] = useState(params.get('q') ?? '');
   const [city, setCity] = useState(params.get('city') ?? '');
   const [cities, setCities] = useState<string[]>([]);
+  const [shortPlaceholder, setShortPlaceholder] = useState(false);
 
   useEffect(() => {
     setQ(params.get('q') ?? '');
@@ -53,6 +54,14 @@ function SearchPill() {
     return () => {
       alive = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 479px)');
+    const sync = () => setShortPlaceholder(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
   }, []);
 
   return (
@@ -79,7 +88,7 @@ function SearchPill() {
         type="search"
         value={q}
         onChange={(event) => setQ(event.target.value)}
-        placeholder="Artista, equipo o recinto"
+        placeholder={shortPlaceholder ? 'Buscar' : 'Artista, equipo o recinto'}
         autoComplete="off"
       />
       <label className={styles.city}>
