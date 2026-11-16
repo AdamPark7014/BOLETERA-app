@@ -1,4 +1,4 @@
-import { TicketState, formatEventDateTime, formatPrice } from '@boletera/ui';
+import { PageTitle, TicketState, formatEventDateTime, formatPrice } from '@boletera/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
@@ -64,17 +64,19 @@ export default async function ResalePage() {
     <>
       <SiteHeader />
       <main id="contenido" tabIndex={-1} className={styles.page}>
-        <header className={styles.hero}>
-          <h1>Reventa oficial</h1>
-          <div className={styles.heroActions}>
-            <Link href="/resale/vender" className={styles.primary}>
-              Vender mi boleto
-            </Link>
-            <Link href="/cuenta" className={styles.ghost}>
-              Mis boletos
-            </Link>
-          </div>
-        </header>
+        <PageTitle
+          title="Reventa oficial"
+          actions={
+            <div className={styles.heroActions}>
+              <Link href="/resale/vender" className={styles.ghost}>
+                Vender mi boleto
+              </Link>
+              <Link href="/cuenta" className={styles.ghost}>
+                Mis boletos
+              </Link>
+            </div>
+          }
+        />
 
         <section aria-labelledby="resale-list-title">
           <div className={styles.sectionHead}>
@@ -140,7 +142,9 @@ export default async function ResalePage() {
                     <div className={styles.side}>
                       <strong>{formatPrice(price)}</strong>
                       {event?.slug ? (
-                        <Link href={`/events/${event.slug}`}>Ver evento</Link>
+                        <Link href={`/events/${event.slug}`} className={styles.buy}>
+                          Ver evento
+                        </Link>
                       ) : (
                         <span className={styles.id}>Listado #{l.id.slice(0, 8)}</span>
                       )}

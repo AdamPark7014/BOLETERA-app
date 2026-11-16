@@ -13,9 +13,20 @@ export default function ForgotPasswordPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [devUrl, setDevUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+  const emailError = !email.trim()
+    ? 'Escribe tu correo.'
+    : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+      ? 'Ese correo no parece válido.'
+      : undefined;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    setShowErrors(true);
+    if (emailError) {
+      document.getElementById('forgot-email')?.focus();
+      return;
+    }
     setLoading(true);
     setMsg(null);
     setDevUrl(null);
@@ -27,8 +38,9 @@ export default function ForgotPasswordPage() {
       });
       const data = await res.json().catch(() => ({}));
       setMsg(
-        data.message ||
-          'Si ese correo está registrado, te enviamos un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.'
+        typeof data.message === 'string' && /[áéíóúñ¿¡]/i.test(data.message)
+          ? data.message
+          : 'Si ese correo está registrado, te enviamos un enlace para crear una contraseña nueva. Revisa también la carpeta de spam.'
       );
       if (data.devResetUrl) setDevUrl(data.devResetUrl);
     } catch {
@@ -42,7 +54,7 @@ export default function ForgotPasswordPage() {
     <>
       <SiteHeader />
       <main id="contenido" tabIndex={-1} className={styles.page}>
-        <form className={styles.simpleCard} onSubmit={onSubmit}>
+        <form className={styles.simpleCard} onSubmit={onSubmit} noValidate>
           <h1>Recuperar contraseña</h1>
           <Field
             id="forgot-email"
@@ -53,6 +65,7 @@ export default function ForgotPasswordPage() {
             placeholder="nombre@dominio.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={showErrors ? emailError : undefined}
             required
           />
           <TicketButton type="submit" disabled={loading}>

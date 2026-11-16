@@ -68,13 +68,19 @@ export default function LoginPage() {
         throw new Error(
           res.status === 401
             ? 'Correo o contraseña incorrectos.'
-            : (data.message ?? 'No se guardó. Revisa la conexión.')
+            : typeof data.message === 'string' && /[áéíóúñ¿¡]/i.test(data.message)
+              ? data.message
+              : 'No se guardó. Revisa la conexión.'
         );
       }
       saveSession(data.accessToken, data.user);
       router.push(nextTarget());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se guardó. Revisa la conexión.');
+      setError(
+        err instanceof Error && /[áéíóúñ¿¡]/i.test(err.message)
+          ? err.message
+          : 'No se guardó. Revisa la conexión.'
+      );
     } finally {
       setLoading(false);
     }

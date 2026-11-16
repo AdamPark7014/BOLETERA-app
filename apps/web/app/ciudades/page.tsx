@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { buildHubMetadata } from '@/lib/seo';
 import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from '../hub.module.scss';
-import { TicketState } from '@boletera/ui';
+import { PageTitle, TicketState } from '@boletera/ui';
 
 type CityFacet = { name: string; count: number };
 
@@ -37,9 +37,7 @@ export default async function CiudadesPage() {
           <span aria-hidden="true">/</span>
           <span aria-current="page">Ciudades</span>
         </nav>
-        <header className={styles.hero}>
-          <h1>Ciudades</h1>
-        </header>
+        <PageTitle title="Ciudades" />
 
         {failed ? (
           <TicketState

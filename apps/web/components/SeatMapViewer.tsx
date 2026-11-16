@@ -304,7 +304,7 @@ export function SeatMapViewer({
   const [priceCap, setPriceCap] = useState<number | null>(null);
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
-  const [viewScale, setViewScale] = useState(1);
+  const [, setViewScale] = useState(1);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [panning, setPanning] = useState(false);
   const [ready, setReady] = useState(false);
@@ -416,19 +416,18 @@ export function SeatMapViewer({
   const fillAt = useCallback(
     (index: number, status: SeatStatus, dimmed: boolean): string => {
       const seat = seats[index];
-      // Paleta de la maqueta: libre en bronce/dorado según precio, ocupado en
-      // gris, tu selección en blanco con anillo dorado.
+      // Libre: tono neutro de zona o blanco 85 %. Dorado solo en «Tu selección».
       if (status === 'selected') return '#A68A6B';
       if (dimmed) return '#141416';
       if (status === 'unknown') return '#1C1C1F';
       if (status === 'blocked' || status === 'sold' || status === 'held') return '#2A2A2E';
-      // «Vista»: calidad de visión del asiento sobre la misma rampa dorada.
+      // «Vista»: calidad de visión del asiento sobre rampa neutra.
       const score = heatMode === 'view' ? sightlineBySeat?.get(seat.id) : undefined;
       if (typeof score === 'number') {
         const t = score > 1 ? score / 100 : score;
-        return mixColor('#3A2F25', '#F2E6D2', Math.max(0, Math.min(1, t)));
+        return mixColor('#2A323C', '#E3E8EC', Math.max(0, Math.min(1, t)));
       }
-      return tones.get(seat.offerId) || '#5C4E3E';
+      return tones.get(seat.offerId) || 'rgba(255,255,255,0.85)';
     },
     [seats, tones, heatMode, sightlineBySeat]
   );
@@ -483,7 +482,7 @@ export function SeatMapViewer({
       // Color de su zona (maqueta): por precio y, si todas cuestan igual, por zona.
       const meta = sectionMeta.get(shape.id);
       const zoneOffer = resolveOfferForSection(offers, meta?.slug ?? '', meta?.name);
-      const tier = (zoneOffer && tones.get(zoneOffer.id)) || '#5C4E3E';
+      const tier = (zoneOffer && tones.get(zoneOffer.id)) || 'rgba(255,255,255,0.85)';
       return {
         shape,
         fill: mixColor(tier, '#2A2A2E', occupancy >= 1 ? 1 : occupancy * 0.35),
@@ -900,7 +899,6 @@ export function SeatMapViewer({
   const totalTickets = feed.aggregates?.totalTickets ?? 0;
   const loadPercent =
     totalTickets > 0 ? Math.min(100, Math.round((feed.loadedTickets / totalTickets) * 100)) : 0;
-  const canSelectByTap = seatPitch * viewScale * 0.86 >= SELECT_SEAT_PX;
 
   if (!seats.length) {
     return <p className={styles.empty}>Mapa no disponible para este evento.</p>;
@@ -1276,7 +1274,6 @@ export function SeatMapViewer({
         // disponible sin este control, en el selector accesible de abajo.
         role="application"
         aria-label="Mapa gráfico del recinto. Flechas para desplazar, más y menos para acercar, 0 para ver todo. Para elegir butaca con teclado o lector de pantalla, usa «Elegir butaca por lista», más abajo."
-        aria-describedby="map-help"
         onKeyDown={onMapKeyDown}
       >
         {!compact ? (
@@ -1538,12 +1535,6 @@ export function SeatMapViewer({
             })}
           </g>
         </svg>
-
-        <p className={compact ? styles.srOnly : styles.hint} id="map-help">
-          {canSelectByTap
-            ? 'Toca una butaca para elegirla · pellizca para el zoom · doble toque para acercar'
-            : 'Toca una zona para acercarte · pellizca para el zoom · las butacas aparecen al ampliar'}
-        </p>
       </div>
 
       {/* Detalle de la butaca bajo el cursor: informativo, NO región viva.
@@ -1563,7 +1554,7 @@ export function SeatMapViewer({
                       ? ', cargando'
                       : ', no disponible'
             }`
-          : 'Explora el mapa o usa el selector accesible de abajo'}
+          : ''}
       </p>
 
       {/* Única región viva del mapa: el RESULTADO de la última acción
@@ -1585,7 +1576,7 @@ export function SeatMapViewer({
               <p className={styles.traySub}>
                 {selectedInfo.length
                   ? `Total $${selectionTotalValue.toLocaleString('es-MX', { maximumFractionDigits: 0 })} ${currency}`
-                  : `Máx. ${maxSelect} · elige en el mapa o en la lista`}
+                  : `Máx. ${maxSelect}`}
               </p>
             </div>
             {selectedInfo.length > 0 && onClear && (
@@ -1647,12 +1638,12 @@ function LegendMark({ kind }: { kind: 'available' | 'held' | 'sold' | 'selected'
   }
   const fill =
     kind === 'available'
-      ? '#17171A'
+      ? 'rgba(255,255,255,0.85)'
       : kind === 'held'
         ? '#17171A'
         : kind === 'sold'
           ? '#3A342C'
-          : '#282522';
+          : '#A68A6B';
   return (
     <svg {...common} className={styles.legendMark}>
       <rect x={1.5} y={2.5} width={11} height={9} rx={1.5} fill={fill} />

@@ -119,29 +119,15 @@ export function EventPurchaseClient({
   const lastQuote = useRef<{ key: string; total: number } | null>(null);
 
   const focusedOffer = useMemo(() => {
-    if (zonePick) {
-      const needle = zonePick.toLowerCase();
-      return (
-        offers.find(
-          (o) =>
-            o.zone.toLowerCase() === needle || (o.name && o.name.toLowerCase().includes(needle))
-        ) ?? null
-      );
-    }
-    // Prefer an offer that matches published sections (skip stale orphan zones).
-    for (const sec of normalized.sections) {
-      const match = resolveOfferForSection(offers, sec.slug, sec.name);
-      if (
-        match &&
-        (match.zone === sec.slug || match.name === sec.name || match.zone === sec.name)
-      ) {
-        return match;
-      }
-      const bySlug = offers.find((o) => o.zone.toLowerCase() === sec.slug.toLowerCase());
-      if (bySlug) return bySlug;
-    }
-    return offers[0] ?? null;
-  }, [zonePick, offers, normalized.sections]);
+    // Sin zona elegida no se resalta ninguna; con una sola zona no hay nada que elegir.
+    if (!zonePick) return offers.length === 1 ? (offers[0] ?? null) : null;
+    const needle = zonePick.toLowerCase();
+    return (
+      offers.find(
+        (o) => o.zone.toLowerCase() === needle || (o.name && o.name.toLowerCase().includes(needle))
+      ) ?? null
+    );
+  }, [zonePick, offers]);
 
   const seatsForFocusedOffer = useMemo(() => {
     if (!focusedOffer) return [];

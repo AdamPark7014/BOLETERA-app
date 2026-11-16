@@ -9,9 +9,16 @@ import { OrderQrCards } from '@/components/OrderQrCards';
 import { SimulateDemoPaymentButton } from '@/components/SimulateDemoPaymentButton';
 import { fetchOrderResource, orderPath, resolveOrderAccessToken } from '@/lib/order-access';
 import { isDeferredMethod } from '@/lib/payment-window';
+import { getStoredUser } from '@/lib/auth';
 import { formatMoney } from '@/lib/pricing';
 import { orderHasRefund } from '@/lib/refund-policy';
 import { DeferredPaymentPanel } from './DeferredPaymentPanel';
+
+/** El correo del comprador solo se muestra a su dueño (quien abre por enlace no ve correos ajenos). */
+function ownEmail(buyerEmail: string | null | undefined): boolean {
+  const mine = getStoredUser()?.email?.toLowerCase();
+  return Boolean(mine && buyerEmail && mine === buyerEmail.toLowerCase());
+}
 import { OrderAccessGate } from './OrderAccessGate';
 import {
   EventCancelledBanner,
@@ -273,7 +280,7 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
           <h1>{showDeferred ? 'Falta un paso' : completed ? 'Tus boletos' : 'Tu orden'}</h1>
           <p className={styles.sub}>
             Orden <code>{order.publicId}</code>
-            {order.buyerEmail ? ` · ${order.buyerEmail}` : ''}
+            {ownEmail(order.buyerEmail) ? ` · ${order.buyerEmail}` : ''}
           </p>
         </header>
 

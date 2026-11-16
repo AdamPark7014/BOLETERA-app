@@ -74,7 +74,8 @@
   cursor: pointer;
 }
 
-.segment button[aria-pressed='true'] {
+.segment button[aria-pressed='true'],
+.segment button[aria-checked='true'] {
   color: var(--text);
   border-color: var(--text);
   background: var(--elevated);

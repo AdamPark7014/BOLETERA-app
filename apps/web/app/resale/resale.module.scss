@@ -71,8 +71,7 @@
 
 .ghost,
 .error a,
-.empty a,
-.side a {
+.empty a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -240,4 +239,10 @@
   min-height: 48px;
   padding: 0 24px;
   border-radius: 999px;
+}
+
+.buy {
+  @include bt.pill-primary;
+  min-height: 44px;
+  text-decoration: none;
 }
