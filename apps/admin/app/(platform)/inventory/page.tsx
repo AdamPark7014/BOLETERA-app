@@ -454,14 +454,9 @@ function InventarioView({ orgId }: { orgId: string }) {
           </div>
 
           <div className={bt.block}>
-            <p className={styles.rowTitle}>Riesgo de agotamiento</p>
-            <p className={styles.tertiary}>
-              Zonas a 14 días o menos del agotamiento al ritmo actual.
-            </p>
+            <p className={styles.rowTitle}>Zonas por agotarse</p>
             {sellouts.length === 0 ? (
-              <p className={styles.quiet}>
-                Ninguna zona del filtro proyecta agotarse en dos semanas.
-              </p>
+              <p className={styles.quiet}>Ninguna zona se agota en las próximas dos semanas.</p>
             ) : (
               <div className={styles.rows}>
                 {sellouts.map((row) => (

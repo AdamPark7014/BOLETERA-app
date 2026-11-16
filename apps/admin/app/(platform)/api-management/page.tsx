@@ -443,9 +443,6 @@ function GestionApi({ organizationId }: { organizationId: string }) {
 
         {!keysQuery.error && url.tab === 'usage' ? (
           <div className={styles.stack}>
-            <p className={styles.tertiary}>
-              Sin series del gateway: se deriva del último uso de cada llave.
-            </p>
             {usageQuery.data?.note ? <p className={styles.quiet}>{usageQuery.data.note}</p> : null}
             <div className={styles.rows}>
               {[

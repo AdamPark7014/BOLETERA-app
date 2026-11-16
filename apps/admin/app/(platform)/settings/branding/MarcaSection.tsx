@@ -333,6 +333,7 @@ export function MarcaBody({ title = 'Marca' }: { title?: string }) {
           <HeroFields
             key={`hero-${index}`}
             slide={slide}
+            position={index + 1}
             onChange={(next) =>
               setContent((current) => {
                 if (!current) return current;
@@ -347,6 +348,7 @@ export function MarcaBody({ title = 'Marca' }: { title?: string }) {
           <CardFields
             key={`card-${index}`}
             card={card}
+            position={index + 1}
             onChange={(next) =>
               setContent((current) => {
                 if (!current) return current;
@@ -396,107 +398,65 @@ export function MarcaBody({ title = 'Marca' }: { title?: string }) {
   );
 }
 
-function HeroFields({ slide, onChange }: { slide: Slide; onChange: (next: Slide) => void }) {
+function HeroFields({
+  slide,
+  position,
+  onChange,
+}: {
+  slide: Slide;
+  position: number;
+  onChange: (next: Slide) => void;
+}) {
+  const fields: { key: keyof Slide; label: string }[] = [
+    { key: 'url', label: `Imagen ${position}: enlace` },
+    { key: 'label', label: `Imagen ${position}: etiqueta` },
+    { key: 'alt', label: `Imagen ${position}: descripción` },
+  ];
   return (
     <>
-      <Param name="Hero, URL">
-        <ParameterCard
-          name="Hero, URL"
-          value={slide.url || '—'}
-          effect="Dirección de la diapositiva."
-        >
-          <Field
-            label="Hero, URL"
-            value={slide.url}
-            onChange={(event) => onChange({ ...slide, url: event.target.value })}
-          />
-        </ParameterCard>
-      </Param>
-      <Param name="Hero, etiqueta">
-        <ParameterCard
-          name="Hero, etiqueta"
-          value={slide.label || '—'}
-          effect="Etiqueta de la diapositiva."
-        >
-          <Field
-            label="Hero, etiqueta"
-            value={slide.label}
-            onChange={(event) => onChange({ ...slide, label: event.target.value })}
-          />
-        </ParameterCard>
-      </Param>
-      <Param name="Hero, texto alterno">
-        <ParameterCard
-          name="Hero, texto alterno"
-          value={slide.alt || '—'}
-          effect="Texto alterno de la diapositiva."
-        >
-          <Field
-            label="Hero, texto alterno"
-            value={slide.alt}
-            onChange={(event) => onChange({ ...slide, alt: event.target.value })}
-          />
-        </ParameterCard>
-      </Param>
+      {fields.map(({ key, label }) => (
+        <Param key={key} name={label}>
+          <ParameterCard name={label} value={slide[key] || '—'}>
+            <Field
+              label={label}
+              value={slide[key]}
+              onChange={(event) => onChange({ ...slide, [key]: event.target.value })}
+            />
+          </ParameterCard>
+        </Param>
+      ))}
     </>
   );
 }
 
-function CardFields({ card, onChange }: { card: Card; onChange: (next: Card) => void }) {
+function CardFields({
+  card,
+  position,
+  onChange,
+}: {
+  card: Card;
+  position: number;
+  onChange: (next: Card) => void;
+}) {
+  const fields: { key: keyof Card; label: string; empty?: string }[] = [
+    { key: 'title', label: `Tarjeta ${position}: título` },
+    { key: 'subtitle', label: `Tarjeta ${position}: subtítulo` },
+    { key: 'href', label: `Tarjeta ${position}: enlace` },
+    { key: 'image', label: `Tarjeta ${position}: imagen`, empty: 'Sin imagen' },
+  ];
   return (
     <>
-      <Param name="Tarjeta, título">
-        <ParameterCard
-          name="Tarjeta, título"
-          value={card.title || '—'}
-          effect="Tarjeta destacada de la portada."
-        >
-          <Field
-            label="Tarjeta, título"
-            value={card.title}
-            onChange={(event) => onChange({ ...card, title: event.target.value })}
-          />
-        </ParameterCard>
-      </Param>
-      <Param name="Tarjeta, subtítulo">
-        <ParameterCard
-          name="Tarjeta, subtítulo"
-          value={card.subtitle || '—'}
-          effect="Tarjeta destacada de la portada."
-        >
-          <Field
-            label="Tarjeta, subtítulo"
-            value={card.subtitle}
-            onChange={(event) => onChange({ ...card, subtitle: event.target.value })}
-          />
-        </ParameterCard>
-      </Param>
-      <Param name="Tarjeta, enlace">
-        <ParameterCard
-          name="Tarjeta, enlace"
-          value={card.href || '—'}
-          effect="Enlace de la tarjeta."
-        >
-          <Field
-            label="Tarjeta, enlace"
-            value={card.href}
-            onChange={(event) => onChange({ ...card, href: event.target.value })}
-          />
-        </ParameterCard>
-      </Param>
-      <Param name="Tarjeta, imagen">
-        <ParameterCard
-          name="Tarjeta, imagen"
-          value={card.image || 'Sin imagen'}
-          effect="Dirección de la imagen."
-        >
-          <Field
-            label="Tarjeta, imagen"
-            value={card.image}
-            onChange={(event) => onChange({ ...card, image: event.target.value })}
-          />
-        </ParameterCard>
-      </Param>
+      {fields.map(({ key, label, empty }) => (
+        <Param key={key} name={label}>
+          <ParameterCard name={label} value={card[key] || empty || '—'}>
+            <Field
+              label={label}
+              value={card[key]}
+              onChange={(event) => onChange({ ...card, [key]: event.target.value })}
+            />
+          </ParameterCard>
+        </Param>
+      ))}
     </>
   );
 }

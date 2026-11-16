@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { USER_ROLE_VALUES, type UserRoleValue } from '@boletera/shared';
-import { TicketButton } from '@boletera/ui';
+import { TicketButton, TicketState } from '@boletera/ui';
 import { ApiError, adminApi, decodeToken } from '@/lib/api';
 import {
   CAPABILITY_LABELS,
@@ -234,13 +233,7 @@ function EquipoBody() {
               />
             ) : null}
             {people && people.length === 0 ? (
-              <div className={frame.empty}>
-                <p className={frame.emptyTitle}>Aún no hay nadie más en tu equipo</p>
-                <p className={frame.quiet}>Invita a tu equipo desde Organización.</p>
-                <Link href="/settings/organization" className={frame.goldLink}>
-                  Ir a Organización
-                </Link>
-              </div>
+              <TicketState kind="empty" align="start" title="Aún no hay nadie más en tu equipo" />
             ) : null}
             {people && people.length > 0 ? (
               <div className={frame.tableWrap}>

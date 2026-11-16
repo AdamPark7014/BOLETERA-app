@@ -214,9 +214,6 @@ export function CampaignComposer({
             <option value="percentage">Porcentaje</option>
             <option value="fixed">Monto fijo (MXN)</option>
           </select>
-          <span className={styles.fieldHint}>
-            Se aplica sobre el precio base al validar el código en checkout.
-          </span>
         </label>
 
         <label className={styles.field}>

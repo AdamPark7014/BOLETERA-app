@@ -402,15 +402,13 @@ function OrderView({
           {formatMoney(settlement.expected, settlement.currency)} y la pasarela liquidó{' '}
           {formatMoney(settlement.settled ?? 0, settlement.currency)} (
           {formatMoneyDelta(settlement.difference, settlement.currency)}). Concilia contra el estado
-          de cuenta antes de liquidar al promotor; la bitácora lo registra como
-          payment.settlement_mismatch.
+          de cuenta antes de liquidar al promotor.
         </p>
       ) : null}
       {openRefunds.length > 0 ? (
         <p className={styles.quiet}>
-          {formatCount(openRefunds.length)} reembolso(s) sin cerrar. El dinero no sale hasta
-          ejecutarlos en el portal Banorte y marcarlos aquí; mientras tanto el inventario no se
-          libera.
+          {formatCount(openRefunds.length)}{' '}
+          {openRefunds.length === 1 ? 'reembolso por cerrar' : 'reembolsos por cerrar'}.
         </p>
       ) : null}
 
@@ -440,11 +438,7 @@ function OrderView({
           />
         </Param>
         <Param name="Creada">
-          <ParameterCard
-            name="Creada"
-            value={formatWhen(order.createdAt)}
-            effect="Hora de la Ciudad de México."
-          />
+          <ParameterCard name="Creada" value={formatWhen(order.createdAt)} />
         </Param>
       </div>
 

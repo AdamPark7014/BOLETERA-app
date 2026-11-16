@@ -1153,7 +1153,7 @@ export function SeatMapEditor({
 
   function seedStageFocuses() {
     if (cadLocks.focusPoints) {
-      warnLocked('Los focos están bloqueados (CAD lock).');
+      warnLocked('Los focos están bloqueados.');
       return;
     }
     const elev = stage.elevation ?? 40;
@@ -1172,7 +1172,7 @@ export function SeatMapEditor({
 
   function clearFocuses() {
     if (cadLocks.focusPoints) {
-      warnLocked('Los focos están bloqueados (CAD lock).');
+      warnLocked('Los focos están bloqueados.');
       return;
     }
     updateVenueMeta({ focusPoints: undefined });
@@ -1180,7 +1180,7 @@ export function SeatMapEditor({
 
   function addFocusAt(world: Point) {
     if (cadLocks.focusPoints) {
-      warnLocked('Los focos están bloqueados (CAD lock).');
+      warnLocked('Los focos están bloqueados.');
       return;
     }
     const elev = stage.elevation ?? 40;
@@ -1204,7 +1204,7 @@ export function SeatMapEditor({
 
   function removeFocus(id: string) {
     if (cadLocks.focusPoints) {
-      warnLocked('Los focos están bloqueados (CAD lock).');
+      warnLocked('Los focos están bloqueados.');
       return;
     }
     const next = (map.venue?.focusPoints ?? []).filter((f) => f.id !== id);
@@ -1222,7 +1222,7 @@ export function SeatMapEditor({
 
   function addExitAt(world: Point) {
     if (cadLocks.exits) {
-      window.alert('Las salidas están bloqueadas (CAD lock).');
+      window.alert('Las salidas están bloqueadas.');
       return;
     }
     const idx = exits.length + 1;
@@ -1244,7 +1244,7 @@ export function SeatMapEditor({
 
   function removeExit(id: string) {
     if (cadLocks.exits) {
-      window.alert('Las salidas están bloqueadas (CAD lock).');
+      window.alert('Las salidas están bloqueadas.');
       return;
     }
     const next = exits.filter((e) => e.id !== id);
@@ -1274,7 +1274,7 @@ export function SeatMapEditor({
 
   function removeAisle(id: string) {
     if (cadLocks.aisles) {
-      warnLocked('Los pasillos están bloqueados (CAD lock).');
+      warnLocked('Los pasillos están bloqueados.');
       return;
     }
     const next = aisles.filter((a) => a.id !== id);
@@ -1283,7 +1283,7 @@ export function SeatMapEditor({
 
   function removeStair(id: string) {
     if (cadLocks.stairs) {
-      warnLocked('Las escaleras están bloqueadas (CAD lock).');
+      warnLocked('Las escaleras están bloqueadas.');
       return;
     }
     const next = stairs.filter((s) => s.id !== id);
@@ -1299,7 +1299,7 @@ export function SeatMapEditor({
 
   function removeObstacle(id: string) {
     if (cadLocks.obstacles) {
-      warnLocked('Los obstáculos están bloqueados (CAD lock).');
+      warnLocked('Los obstáculos están bloqueados.');
       return;
     }
     const next = obstacles.filter((o) => o.id !== id);
@@ -1918,7 +1918,7 @@ export function SeatMapEditor({
         if (enforced.lockedCount > 0) {
           const labels = activeCadLockLabels(locks).join(', ');
           window.alert(
-            `${enforced.lockedCount} entidad(es) omitidas por CAD lock (${labels || 'capas bloqueadas'}).`
+            `${enforced.lockedCount} entidad(es) omitidas por capa bloqueada (${labels || 'capas bloqueadas'}).`
           );
         }
       } catch (err) {
@@ -1946,7 +1946,7 @@ export function SeatMapEditor({
         if (enforced.lockedCount > 0) {
           const labels = activeCadLockLabels(locks).join(', ');
           window.alert(
-            `${enforced.lockedCount} entidad(es) omitidas por CAD lock (${labels || 'capas bloqueadas'}).`
+            `${enforced.lockedCount} entidad(es) omitidas por capa bloqueada (${labels || 'capas bloqueadas'}).`
           );
         }
       } catch (err) {
@@ -1958,7 +1958,7 @@ export function SeatMapEditor({
 
   function patchCadReviewRole(id: string, role: CadEntityRole) {
     if (role !== 'skip' && isCadRoleLocked(role, map.venue?.cadLocks)) {
-      warnLocked(`Rol «${CAD_ROLE_LABELS[role]}» bloqueado (CAD lock).`);
+      warnLocked(`Rol «${CAD_ROLE_LABELS[role]}» bloqueado.`);
       return;
     }
     setCadReview((prev) =>
@@ -2036,7 +2036,7 @@ export function SeatMapEditor({
 
   function addFurniture(type: SeatMapFurniture['type']) {
     if (cadLocks.furniture) {
-      warnLocked('El mobiliario está bloqueado (CAD lock).');
+      warnLocked('El mobiliario está bloqueado.');
       return;
     }
     const id = `furn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -2065,7 +2065,7 @@ export function SeatMapEditor({
 
   function removeFurniture(id: string) {
     if (cadLocks.furniture) {
-      warnLocked('El mobiliario está bloqueado (CAD lock).');
+      warnLocked('El mobiliario está bloqueado.');
       return;
     }
     updateVenueMeta({ furniture: furniture.filter((f) => f.id !== id) });
@@ -3707,11 +3707,8 @@ export function SeatMapEditor({
           )}
           {(map.venue?.focusPoints?.length ?? 0) > 0 && (
             <p className={styles.sideHint}>
-              {map.venue!.focusPoints!.length} focos · sightlines toma el mejor por asiento
-              {tool === 'focus' && !cadLocks.focusPoints
-                ? ' · click mapa = nuevo, click foco = borrar'
-                : ''}
-              {cadLocks.focusPoints ? ' · bloqueados (CAD lock)' : ''}
+              {map.venue!.focusPoints!.length} focos · se usa el mejor por asiento
+              {cadLocks.focusPoints ? ' · bloqueados' : ''}
             </p>
           )}
         </details>
@@ -4464,7 +4461,7 @@ export function SeatMapEditor({
                       if (tool !== 'focus' && tool !== 'select') return;
                       e.stopPropagation();
                       if (cadLocks.focusPoints) {
-                        if (tool === 'focus') warnLocked('Los focos están bloqueados (CAD lock).');
+                        if (tool === 'focus') warnLocked('Los focos están bloqueados.');
                         return;
                       }
                       if (tool === 'focus') {
@@ -4920,7 +4917,7 @@ export function SeatMapEditor({
           className={styles.cadModalBackdrop}
           role="dialog"
           aria-modal="true"
-          aria-label="Revisar import CAD"
+          aria-label="Revisar importación del plano"
         >
           <div className={styles.cadModal}>
             <header className={styles.cadModalHeader}>
@@ -4959,8 +4956,8 @@ export function SeatMapEditor({
             </div>
             {activeCadLockLabels(map.venue?.cadLocks).length > 0 && (
               <p className={styles.sideHint} style={{ margin: '0 1rem 0.5rem' }}>
-                CAD locks activos: {activeCadLockLabels(map.venue?.cadLocks).join(', ')}. Esas capas
-                no se importan ni se borran en modo reemplazar.
+                Capas bloqueadas: {activeCadLockLabels(map.venue?.cadLocks).join(', ')}. No se
+                importan ni se borran al reemplazar.
               </p>
             )}
 

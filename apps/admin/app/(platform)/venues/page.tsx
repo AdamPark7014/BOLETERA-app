@@ -656,9 +656,7 @@ function RecintoBody() {
             </div>
           </>
         ) : (
-          <p className={styles.tertiary}>
-            Solo lectura: los datos del recinto los edita administración.
-          </p>
+          <p className={styles.tertiary}>Solo lectura.</p>
         )}
       </section>
     );

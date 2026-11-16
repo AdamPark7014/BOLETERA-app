@@ -251,7 +251,7 @@ function ReservasView({ orgId }: { orgId: string }) {
               <div className={styles.rowMain}>
                 <p className={styles.rowTitle}>Reservas activas</p>
                 <p className={styles.rowMeta}>
-                  {formatCount(kpis.pending)} checkouts · {formatCount(kpis.expiringSoon)} por
+                  {formatCount(kpis.pending)} en compra · {formatCount(kpis.expiringSoon)} por
                   expirar · {rangeLabel(url.range)}
                 </p>
               </div>
@@ -522,7 +522,7 @@ function ReservasView({ orgId }: { orgId: string }) {
               <div className={styles.row}>
                 <div className={styles.rowMain}>
                   <p className={styles.rowTitle}>Por expirar en 5 min o menos</p>
-                  <p className={styles.rowMeta}>TTL estimado del checkout web (15 min)</p>
+                  <p className={styles.rowMeta}>Vencen a los 15 min en la web</p>
                 </div>
                 <span />
                 <p className={styles.figure}>{formatCount(kpis.expiringSoon)}</p>

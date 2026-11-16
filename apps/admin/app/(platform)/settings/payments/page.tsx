@@ -251,7 +251,7 @@ function PagosBody() {
           <thead>
             <tr>
               <th scope="col">Método</th>
-              <th scope="col">En el checkout</th>
+              <th scope="col">En la compra</th>
               <th scope="col">Estado</th>
             </tr>
           </thead>
