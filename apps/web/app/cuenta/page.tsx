@@ -764,9 +764,13 @@ export default function CuentaPage() {
                               {actionLabel}
                             </TicketButton>
                           ) : (
-                            <Link href={`/orders/${o.publicId}`} className="bt-action">
+                            <TicketButton
+                              type="button"
+                              variant="secondary"
+                              onClick={() => router.push(`/orders/${o.publicId}`)}
+                            >
                               {actionLabel}
-                            </Link>
+                            </TicketButton>
                           )
                         ) : (
                           <details className={styles.walletOrders}>

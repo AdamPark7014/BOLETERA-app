@@ -59,7 +59,9 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 /** Por debajo de esto una butaca es un píxel de ruido: se pinta la sección. */
 const MIN_SEAT_PX = 3.5;
 /** A partir de aquí caben los números de butaca. */
-const LABEL_SEAT_PX = 17;
+// Las etiquetas «E-4» solo caben sin encimarse con la butaca de la fila de al lado
+// a partir de ~28 px; antes se veían montadas sobre el plano al encuadrarlo.
+const LABEL_SEAT_PX = 28;
 /**
  * Selección por toque sólo cuando la butaca mide ≥24 px: es el mínimo de
  * objetivo táctil de WCAG 2.2 (2.5.8). Más alejado, tocar NAVEGA (acerca la
