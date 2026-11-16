@@ -3,6 +3,25 @@ import type { WaitlistRow } from '@/lib/platform-api';
 import type { ApiKey } from '@/lib/queries/partners';
 import type { CrmCustomerRow, CrmKpis, CrmRecommendation } from './types';
 
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/**
+ * Texto del motor de recomendaciones en lenguaje de negocio: sin z-score ni
+ * paréntesis estadísticos y con fechas «5 nov» en lugar de ISO.
+ */
+export function plainText(text: string): string {
+  return text
+    .replace(/\s*\([^)]*\bz\s*=[^)]*\)/gi, '')
+    .replace(/[;,]?\s*\bz\s*=\s*-?[\d.]+/gi, '')
+    .replace(
+      /\b(\d{4})-(\d{2})-(\d{2})(?:T[\d:.]+Z?)?\b/g,
+      (_match, _year, month: string, day: string) =>
+        `${Number(day)} ${MONTHS[Number(month) - 1] ?? month}`
+    )
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 const PRIORITY_RANK: Record<CrmRecommendation['priority'], number> = {
   urgent: 0,
   high: 1,
@@ -39,8 +58,8 @@ export function buildCrmRecommendations(input: {
       priority: atRisk >= 10 ? 'high' : 'medium',
       title: `Reactivar ${atRisk} clientes en riesgo`,
       rationale:
-        'Hay compradores con última compra entre 90 y 180 días. La señal proviene del historial de pedidos cargado.',
-      action: 'Lanza una campaña de reactivación segmentada a “En riesgo”.',
+        'Compraron por última vez hace 3 a 6 meses.',
+      action: 'Envíales una campaña de regreso.',
     });
   }
 
@@ -49,10 +68,10 @@ export function buildCrmRecommendations(input: {
       id: 'churn-high',
       source: 'derived',
       priority: 'high',
-      title: `${input.kpis.churnHigh} perfiles con churn alto (recencia)`,
+      title: `${input.kpis.churnHigh} clientes podrían no volver`,
       rationale:
-        'El riesgo local se estima solo por días desde la última compra completada; no es un modelo predictivo.',
-      action: 'Prioriza outreach a altos LTV dentro del listado de churn.',
+        'Llevan mucho tiempo sin comprar.',
+      action: 'Contacta primero a los que más han gastado.',
     });
   }
 
@@ -63,8 +82,8 @@ export function buildCrmRecommendations(input: {
       priority: waiting >= 20 ? 'high' : 'medium',
       title: `${waiting} interesados en lista de espera`,
       rationale:
-        'Conteo observado en GET /waitlist/organization. No implica conversión garantizada.',
-      action: 'Notifica liberaciones de inventario a la lista de espera activa.',
+        'Esperan que se liberen boletos.',
+      action: 'Avísales cuando abras más lugares.',
     });
   }
 
@@ -73,9 +92,9 @@ export function buildCrmRecommendations(input: {
       id: 'winback-repeat',
       source: 'derived',
       priority: 'medium',
-      title: `${inactiveVip} repetidores inactivos (>180 días)`,
-      rationale: 'Clientes con 2+ pedidos completados sin actividad reciente en la muestra.',
-      action: 'Prepara un win-back con beneficio acotado y medición de respuesta.',
+      title: `${inactiveVip} clientes frecuentes sin comprar en 6 meses`,
+      rationale: 'Compraron dos o más veces y dejaron de hacerlo.',
+      action: 'Ofréceles un beneficio para volver.',
     });
   }
 
@@ -84,9 +103,9 @@ export function buildCrmRecommendations(input: {
       id: 'frequent-vip-path',
       source: 'derived',
       priority: 'low',
-      title: `${input.kpis.frequent} compradores frecuentes (3+ pedidos)`,
-      rationale: 'Frecuencia observada en pedidos completados de la muestra actual.',
-      action: 'Considera beneficios de lealtad o early access para este grupo.',
+      title: `${input.kpis.frequent} clientes compran seguido`,
+      rationale: 'Tres compras o más.',
+      action: 'Dales preventa o un beneficio de lealtad.',
     });
   }
 
@@ -95,10 +114,10 @@ export function buildCrmRecommendations(input: {
       id: 'partner-keys-idle',
       source: 'derived',
       priority: 'low',
-      title: `${staleKeys} claves partner activas sin uso`,
+      title: `${staleKeys} llaves de socios sin usar`,
       rationale:
-        'Señal B2B de GET /partners/:org/keys (lastUsedAt nulo). No es un score de partner CRM.',
-      action: 'Revisa alcance y rotación de claves inactivas con el equipo de partners.',
+        'Están activas y nunca se han usado.',
+      action: 'Revisa si siguen haciendo falta.',
     });
   }
 
@@ -107,9 +126,9 @@ export function buildCrmRecommendations(input: {
       id: 'no-customers',
       source: 'derived',
       priority: 'medium',
-      title: 'Sin cartera para segmentar',
-      rationale: 'No hay compradores derivados de pedidos en la respuesta actual.',
-      action: 'Confirma ventas o importa pedidos para activar LTV, RFM y perfiles.',
+      title: 'Aún no hay clientes',
+      rationale: 'Aparecen con la primera venta.',
+      action: 'Publica un evento para empezar a vender.',
     });
   }
 
@@ -118,9 +137,9 @@ export function buildCrmRecommendations(input: {
       id: `ai-${rec.id}`,
       source: 'ai',
       priority: rec.priority,
-      title: rec.title,
-      rationale: rec.rationale,
-      action: rec.action,
+      title: plainText(rec.title),
+      rationale: plainText(rec.rationale),
+      action: plainText(rec.action),
     });
   }
 

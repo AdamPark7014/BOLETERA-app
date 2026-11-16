@@ -1,5 +1,6 @@
 import { clearSession, getTokenStorage } from './session';
 import { addCsrfHeader } from './auth-cookies';
+import { userFacingMessage } from './errors';
 
 const API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:4000/api/v1';
 
@@ -69,6 +70,10 @@ export type HttpOptions = Omit<RequestInit, 'body'> & {
 };
 
 function messageFromBody(body: unknown, status: number): string {
+  return userFacingMessage(rawMessageFromBody(body, status), status);
+}
+
+function rawMessageFromBody(body: unknown, status: number): string {
   if (typeof body === 'string' && body.trim()) return body.trim();
   if (body && typeof body === 'object') {
     const candidate = body as BackendErrorBody;

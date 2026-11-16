@@ -16,6 +16,7 @@ import { Field, Money, ParameterCard, TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../../events/_shared/api-state';
+import { NotFound } from '../../events/_ticket/NotFound';
 import { AdminFrame } from '../../events/_ticket/AdminFrame';
 import { Param, SheetSelect } from '../../events/_ticket/controls';
 import styles from '../../events/_ticket/frame.module.scss';
@@ -172,6 +173,11 @@ function OrdenBody() {
         </header>
       </section>
     );
+  }
+  const missing =
+    (error instanceof ApiError && error.isNotFound) || (!loading && token && !error && !order);
+  if (missing) {
+    return <NotFound title="No encontramos esta orden" href="/orders" linkLabel="Ver órdenes" />;
   }
   if (error) {
     return (

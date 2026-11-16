@@ -12,8 +12,10 @@
  * Ambos casos necesitan una pantalla que diga qué pasó y qué hacer.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { TicketState } from '@boletera/ui';
+import { NoAccess } from '../_ticket/NoAccess';
 import { ApiError, decodeToken, fetchMe, isTokenExpired, STORAGE_KEYS } from '@/lib/api';
 import styles from './api-state.module.scss';
 
@@ -172,79 +174,53 @@ export function ApiErrorView({ error, context, onRetry }: ErrorViewProps) {
   const apiError = error instanceof ApiError ? error : null;
   const status = apiError?.status ?? 0;
 
-  let title = 'No se pudo cargar la información';
-  let hint = 'Revisa tu conexión e inténtalo de nuevo.';
-  let tone: 'auth' | 'denied' | 'missing' | 'fault' = 'fault';
+  void context;
+
+  if (apiError?.isForbidden && !apiError.isOrgDenied) {
+    return (
+      <section role="alert">
+        <NoAccess />
+      </section>
+    );
+  }
+
+  let title = 'No pudimos cargar esto';
+  let body: string | undefined = 'Revisa tu conexión e intenta de nuevo.';
+  let action: ReactNode = onRetry ? (
+    <button type="button" className={styles.primaryAction} onClick={onRetry}>
+      Reintentar
+    </button>
+  ) : null;
 
   if (apiError?.isUnauthorized) {
     title = 'Tu sesión expiró';
-    hint =
-      'Los accesos duran 2 horas y pueden revocarse desde la organización. Inicia sesión otra vez para continuar; no perderás nada de lo publicado.';
-    tone = 'auth';
+    body = 'Inicia sesión otra vez para continuar.';
+    action = (
+      <Link href={loginHref()} className={styles.primaryAction}>
+        Iniciar sesión
+      </Link>
+    );
   } else if (apiError?.isOrgDenied) {
     title = 'No tienes acceso a esta organización';
-    hint =
-      'Tu usuario no pertenece a la organización dueña de este recurso. Pide a un administrador que te invite, o cambia de cuenta.';
-    tone = 'denied';
-  } else if (apiError?.isForbidden) {
-    title = 'Tu rol no permite ver esto';
-    hint =
-      'Necesitas un rol con permiso sobre este módulo (ADMIN, VENUE_MANAGER o SUPER_ADMIN según la pantalla). Pide la elevación a un administrador de tu organización.';
-    tone = 'denied';
+    body = 'Pide a un administrador que te invite.';
+    action = null;
   } else if (apiError?.isNotFound) {
-    title = 'No se encontró el recurso';
-    hint =
-      'Puede que se haya eliminado o que el enlace esté mal. Vuelve al listado y entra otra vez.';
-    tone = 'missing';
+    title = 'No encontramos lo que buscas';
+    body = 'Puede que se haya eliminado o que el enlace esté mal.';
+    action = (
+      <Link href="/dashboard" className={styles.secondaryAction}>
+        Ir al inicio
+      </Link>
+    );
   } else if (status >= 500) {
-    title = 'El servidor tuvo un problema';
-    hint =
-      'No es culpa de tus datos. Reintenta en unos segundos; si persiste, avisa a soporte con el detalle técnico.';
-    tone = 'fault';
+    body = 'Intenta de nuevo en unos segundos.';
   } else if (apiError) {
-    title = apiError.userMessage;
-    hint = 'Revisa los datos enviados e inténtalo de nuevo.';
+    body = apiError.userMessage;
   }
 
   return (
-    <section className={styles.stateView} role="alert" aria-live="assertive" data-tone={tone}>
-      <p className={styles.stateBadge}>
-        <span aria-hidden="true">
-          {tone === 'auth' ? '🔑' : tone === 'denied' ? '⛔' : tone === 'missing' ? '🔍' : '⚠'}
-        </span>
-        {status ? `Error ${status}` : 'Error'}
-      </p>
-      <h2 className={styles.stateTitle}>{title}</h2>
-      {context && <p className={styles.stateContext}>Al {context}.</p>}
-      <p className={styles.stateHint}>{hint}</p>
-
-      <div className={styles.stateActions}>
-        {tone === 'auth' ? (
-          <Link href={loginHref()} className={styles.primaryAction}>
-            Iniciar sesión
-          </Link>
-        ) : null}
-        {onRetry && tone !== 'auth' && (
-          <button type="button" className={styles.primaryAction} onClick={onRetry}>
-            Reintentar
-          </button>
-        )}
-        <Link href="/events" className={styles.secondaryAction}>
-          Ir a eventos
-        </Link>
-      </div>
-
-      {apiError && (
-        <details className={styles.stateDetails}>
-          <summary>Detalle técnico</summary>
-          <p>
-            <code>
-              {apiError.status} · {apiError.path}
-            </code>
-          </p>
-          <p>{apiError.message}</p>
-        </details>
-      )}
+    <section role="alert" aria-live="assertive" title={apiError ? `${status} · ${apiError.path}` : undefined}>
+      <TicketState kind="error" align="start" title={title} body={body} action={action} />
     </section>
   );
 }

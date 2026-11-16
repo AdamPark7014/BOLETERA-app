@@ -34,6 +34,8 @@ type FrameValue = {
   query: string;
   eventId: string | null;
   section: string;
+  /** La ficha avisa que el evento no existe: el menú deja de ofrecer «Este evento». */
+  markEventMissing?: (eventId: string) => void;
 };
 
 const FrameContext = createContext<FrameValue>({ query: '', eventId: null, section: 'lista' });
@@ -66,6 +68,7 @@ export function AdminFrame({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const eventId = eventIdFromPath(pathname);
+  const [missingEventId, setMissingEventId] = useState<string | null>(null);
   const sectionParam = search.get('seccion');
   const section = eventId
     ? (sectionParam ?? 'evento')
@@ -74,13 +77,13 @@ export function AdminFrame({ children }: { children: ReactNode }) {
   const activeSection = activeSectionId(pathname);
   const sections = useMemo(() => sectionsForRole(role), [role]);
   const ev = useMemo(() => {
-    if (!eventId) return null;
+    if (!eventId || eventId === missingEventId) return null;
     const items = eventItems(eventId);
     return {
       main: items.main.filter((item) => canSeeItem(role, item)),
       more: items.more.filter((item) => canSeeItem(role, item)),
     };
-  }, [eventId, role]);
+  }, [eventId, role, missingEventId]);
 
   const matches = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -182,7 +185,9 @@ export function AdminFrame({ children }: { children: ReactNode }) {
 
   return (
     <BlackTicketRoot density="admin" className={styles.root}>
-      <FrameContext.Provider value={{ query, eventId, section }}>
+      <FrameContext.Provider
+        value={{ query, eventId, section, markEventMissing: setMissingEventId }}
+      >
         <div className={styles.frame}>
           <nav
             id="menu-principal"

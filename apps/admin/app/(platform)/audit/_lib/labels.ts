@@ -44,8 +44,19 @@ const ENTITY_LABELS: Record<string, string> = {
   Venue: 'Recinto',
   SeasonPass: 'Pase',
   Waitlist: 'Lista de espera',
+  Refund: 'Reembolso',
+  ResaleListing: 'Reventa',
+  Offer: 'Precio',
+  ApiKey: 'Llave de API',
+  Membership: 'Membresía',
 };
 
+const ENTITY_LABELS_LOWER = new Map(
+  Object.entries(ENTITY_LABELS).map(([key, label]) => [key.toLowerCase(), label])
+);
+
+/** Tipo de registro en español; si no se conoce, «Registro» (nunca el nombre del modelo en inglés). */
 export function entityLabel(entityType: string): string {
-  return ENTITY_LABELS[entityType] ?? entityType;
+  const key = entityType.replace(/[_\s-]/g, '').toLowerCase();
+  return ENTITY_LABELS[entityType] ?? ENTITY_LABELS_LOWER.get(key) ?? 'Registro';
 }

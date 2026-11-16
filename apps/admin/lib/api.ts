@@ -1,3 +1,5 @@
+import { isNotFoundMessage, userFacingMessage } from './errors';
+
 const API = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://127.0.0.1:4000/api/v1';
 
 export type AuthUser = {
@@ -26,9 +28,12 @@ export class ApiError extends Error {
   readonly status: number;
   readonly body: unknown;
   readonly path: string;
+  /** Texto original del API (puede venir en inglés); solo para detalle técnico. */
+  readonly rawMessage: string;
 
   constructor(status: number, message: string, body: unknown, path: string) {
-    super(message);
+    super(userFacingMessage(message, status));
+    this.rawMessage = message;
     this.name = 'ApiError';
     this.status = status;
     this.body = body;
@@ -47,11 +52,11 @@ export class ApiError extends Error {
 
   /** 403 concreto del `OrgAccessGuard`. */
   get isOrgDenied(): boolean {
-    return this.status === 403 && /organization access denied/i.test(this.message);
+    return this.status === 403 && /organization access denied/i.test(this.rawMessage);
   }
 
   get isNotFound(): boolean {
-    return this.status === 404;
+    return isNotFoundMessage(this.status, this.rawMessage);
   }
 
   /** Mensaje presentable en español para la interfaz. */
@@ -59,9 +64,8 @@ export class ApiError extends Error {
     if (this.isUnauthorized) return 'Tu sesión expiró. Vuelve a iniciar sesión.';
     if (this.isOrgDenied) return 'No tienes acceso a esta organización.';
     if (this.isForbidden) return 'Tu rol no permite esta acción.';
-    if (this.isNotFound) return 'No se encontró el recurso solicitado.';
-    if (this.status >= 500) return 'El servidor tuvo un problema. Intenta de nuevo.';
-    return this.message || 'No se pudo completar la operación.';
+    if (this.isNotFound) return 'No encontramos lo que buscas.';
+    return this.message;
   }
 }
 

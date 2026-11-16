@@ -91,6 +91,11 @@ type Acc = {
   eventCounts: Map<string, number>;
 };
 
+/** Correo interno generado por la taquilla o por pruebas (dominio `.local`). */
+export function isTechnicalEmail(email: string | null | undefined): boolean {
+  return /@[^@]*\.local$/i.test(email?.trim() ?? '');
+}
+
 /**
  * Agrega compradores por correo a partir de OrderRow.
  * Límite: solo pedidos presentes en la respuesta de GET /admin/orders.
@@ -102,6 +107,8 @@ export function buildCustomerRows(
   const byEmail = new Map<string, Acc>();
 
   for (const order of orders) {
+    // Ventas de mostrador sin correo real (taquilla+…@pos.boletera.local): no son clientes.
+    if (isTechnicalEmail(order.buyerEmail)) continue;
     const emailKey = order.buyerEmail?.trim().toLowerCase() || 'sin-email';
     const existing = byEmail.get(emailKey);
     const completed = isCompleted(order.status);

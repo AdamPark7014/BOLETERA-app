@@ -3,11 +3,13 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { ApiError } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { getChannelHealth, getEventHub, type EventHub } from '@/lib/platform-api';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../_shared/api-state';
 import { AdminFrame, useAdminFrame } from '../_ticket/AdminFrame';
 import { AgendaSection } from '../_ticket/AgendaSection';
+import { NotFound } from '../_ticket/NotFound';
 import { ChannelsSection } from '../_ticket/ChannelsSection';
 import { EventSection } from '../_ticket/EventSection';
 import { ApartadosSection } from '../_ticket/ApartadosSection';
@@ -78,8 +80,17 @@ function EventBody() {
     };
   }, [id, token, session.status, nonce]);
 
+  const missing = error instanceof ApiError && error.isNotFound;
+  const markEventMissing = frame.markEventMissing;
+  useEffect(() => {
+    if (missing && id) markEventMissing?.(id);
+  }, [missing, id, markEventMissing]);
+
   if (session.status === 'anonymous') return <AnonymousView />;
   if (session.status === 'no-org') return <NoOrgView />;
+  if (missing) {
+    return <NotFound title="No encontramos este evento" href="/events" linkLabel="Ver eventos" />;
+  }
   if (error) {
     return (
       <ApiErrorView

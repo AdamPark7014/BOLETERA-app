@@ -9,7 +9,9 @@ import { useCrmWorkspace } from '@/lib/queries/crm';
 import { useSession as useLegacySession } from '@/lib/use-session';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Segment } from '../events/_ticket/controls';
+import { Segment, SheetSelect } from '../events/_ticket/controls';
+
+const ALL_CHANNELS = '__todos__';
 import styles from '../events/_ticket/frame.module.scss';
 import { formatCount } from '../events/_ticket/read';
 import { channelLabel } from '../dashboard/format';
@@ -87,7 +89,7 @@ function CrmBody() {
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Clientes</h1>
           <p className={styles.quiet}>
-            Tu rol no incluye la lectura de pedidos que alimenta el CRM.
+            Tu rol no puede ver clientes.
           </p>
         </header>
       </section>
@@ -197,23 +199,16 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
   const auxFailures: { source: string; error: unknown }[] = [
     { source: 'Segmentación con IA', error: workspace.aiSegmentation.error },
     { source: 'Recomendaciones con IA', error: workspace.aiRecommendations.error },
-    { source: 'Métricas de pedidos', error: workspace.ordersMetrics.error },
-    { source: 'Serie de pedidos', error: workspace.timeseries.error },
+    { source: 'Métricas de órdenes', error: workspace.ordersMetrics.error },
+    { source: 'Serie de órdenes', error: workspace.timeseries.error },
     {
       source: 'Lista de espera',
       error: workspace.waitlist.error ?? workspace.waitlistMetrics.error,
     },
-    { source: 'Claves partner', error: workspace.apiKeys.error },
+    { source: 'Llaves de socios', error: workspace.apiKeys.error },
     { source: 'Auditoría', error: workspace.audit.error },
     { source: 'Analítica', error: workspace.analytics.error },
   ].filter((item) => item.error != null);
-
-  function toggleChannel(channel: string) {
-    const next = new Set(url.channels);
-    if (next.has(channel)) next.delete(channel);
-    else next.add(channel);
-    url.setFilterSelection({ segment: [...url.segments], channel: [...next] });
-  }
 
   const activeKeys = (workspace.apiKeys.data ?? []).filter((key) => key.active).length;
   const waiting = (workspace.waitlist.data ?? []).filter((row) => {
@@ -264,7 +259,7 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
       {workspace.orders.error ? (
         <ApiErrorView
           error={workspace.orders.error}
-          context="cargar los pedidos del CRM"
+          context="cargar los clientes"
           onRetry={() => void workspace.orders.refetch()}
         />
       ) : loading && customers.length === 0 ? (
@@ -304,7 +299,7 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
               <p className={styles.kpiSmallValue}>{formatCount(kpis.frequent)}</p>
             </div>
             <div className={styles.kpiSmall}>
-              <p className={styles.kpiLabel}>Pedidos completados</p>
+              <p className={styles.kpiLabel}>Órdenes completadas</p>
               <p className={styles.kpiSmallValue}>
                 {workspace.ordersMetrics.isPending ? '—' : formatCount(completed?.value ?? 0)}
               </p>
@@ -406,7 +401,7 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
                   <h2 className={styles.panelTitle}>Compradores frecuentes</h2>
                 </div>
                 {frequent.length === 0 ? (
-                  <p className={styles.quiet}>Aún nadie con 2 o más pedidos.</p>
+                  <p className={styles.quiet}>Aún nadie con 2 o más órdenes.</p>
                 ) : (
                   <ul className={own.mini}>
                     {frequent.map((row) => (
@@ -419,7 +414,7 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
                           <span className={own.miniMain}>
                             <strong>{row.name}</strong>
                             <span className={styles.rowMeta}>
-                              {formatCount(row.completedOrders)} pedidos ·{' '}
+                              {formatCount(row.completedOrders)} órdenes ·{' '}
                               {SEGMENT_LABEL[row.segment]}
                             </span>
                           </span>
@@ -449,21 +444,25 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
                 onChange={(event) => url.setSearch(event.target.value)}
               />
               {channelOptions.length > 0 ? (
-                <div className={own.chips} role="group" aria-label="Canal">
-                  {channelOptions.map((option) => {
-                    const on = url.channels.includes(option.value);
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        aria-pressed={on}
-                        className={on ? own.chipOn : own.chip}
-                        onClick={() => toggleChannel(option.value)}
-                      >
-                        {channelLabel(option.value)} · {formatCount(option.count)}
-                      </button>
-                    );
-                  })}
+                <div style={{ width: 'min(280px, 100%)' }}>
+                  <SheetSelect
+                    label="Canal"
+                    value={url.channels[0] ?? ALL_CHANNELS}
+                    placeholder="Todos los canales"
+                    options={[
+                      { value: ALL_CHANNELS, label: 'Todos los canales' },
+                      ...channelOptions.map((option) => ({
+                        value: option.value,
+                        label: `${channelLabel(option.value)} · ${formatCount(option.count)}`,
+                      })),
+                    ]}
+                    onChange={(next) =>
+                      url.setFilterSelection({
+                        segment: [...url.segments],
+                        channel: next === ALL_CHANNELS ? [] : [next],
+                      })
+                    }
+                  />
                 </div>
               ) : null}
               {hasActiveFilters ? (
@@ -488,7 +487,7 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
                       <th scope="col">Cliente</th>
                       <th scope="col">Segmento</th>
                       <th scope="col" className={styles.num}>
-                        Pedidos
+                        Órdenes
                       </th>
                       <th scope="col">Última compra</th>
                       <th scope="col" className={styles.num}>
@@ -529,17 +528,17 @@ function CrmDatos({ organizationId }: { organizationId: string }) {
           <div className={styles.split}>
             <div className={`${styles.panel} ${styles.splitWide}`}>
               <div className={styles.panelHead}>
-                <h2 className={styles.panelTitle}>Pedidos por día</h2>
+                <h2 className={styles.panelTitle}>Órdenes por día</h2>
               </div>
               {workspace.timeseries.isPending ? (
                 <div className={styles.skeleton} style={{ height: 200 }} />
               ) : series.length === 0 ? (
-                <p className={styles.quiet}>Sin pedidos en el periodo.</p>
+                <p className={styles.quiet}>Sin órdenes en el periodo.</p>
               ) : (
                 <div
                   className={own.bars}
                   role="img"
-                  aria-label={`Pedidos por día en ${rangeLabel(url.range).toLowerCase()}`}
+                  aria-label={`Órdenes por día en ${rangeLabel(url.range).toLowerCase()}`}
                 >
                   {series.map((point, index) => (
                     <div
@@ -669,7 +668,7 @@ function Cliente({
           <p className={styles.rowMeta}>{row.email}</p>
         </td>
         <td>
-          <span className={styles.chipGold}>{SEGMENT_LABEL[row.segment]}</span>
+          <span className={styles.chip}>{SEGMENT_LABEL[row.segment]}</span>
         </td>
         <td className={styles.num}>{formatCount(row.completedOrders)}</td>
         <td className={styles.quiet}>{formatRelativeDay(row.lastOrderAt)}</td>
@@ -683,11 +682,11 @@ function Cliente({
             <dl className={own.facts}>
               <Dato name="Correo" value={row.email} />
               <Dato
-                name="Puntaje RFM"
-                value={`${formatRfm(row.rfm)} · ${row.rfmScore.toLocaleString('es-MX', { maximumFractionDigits: 1 })}`}
+                name="Valor del cliente"
+                value={`${row.rfmScore.toLocaleString('es-MX', { maximumFractionDigits: 1 })} de 5`}
               />
               <Dato
-                name="Pedidos completados"
+                name="Órdenes completadas"
                 value={`${formatCount(row.completedOrders)} de ${formatCount(row.ordersCount)}`}
               />
               <Dato

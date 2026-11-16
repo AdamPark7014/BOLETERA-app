@@ -34,13 +34,14 @@ export function formatRfm(scores: {
 }
 
 export function formatRelativeDay(iso: string | null): string {
-  if (!iso) return 'Sin pedidos';
+  if (!iso) return 'Sin compras';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
   const days = Math.floor((Date.now() - date.getTime()) / 86_400_000);
   if (days <= 0) return 'Hoy';
   if (days === 1) return 'Ayer';
   if (days < 30) return `Hace ${days} días`;
+  if (days < 60) return 'Hace un mes';
   if (days < 365) return `Hace ${Math.floor(days / 30)} meses`;
   return uiDateLong(date);
 }

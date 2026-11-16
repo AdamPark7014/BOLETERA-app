@@ -20,6 +20,7 @@ import {
 import { ApiStateBoundary, useSession } from '../../../events/_shared/api-state';
 import { AdminFrame } from '../../../events/_ticket/AdminFrame';
 import { SheetSelect } from '../../../events/_ticket/controls';
+import { NotFound } from '../../../events/_ticket/NotFound';
 import frame from '../../../events/_ticket/frame.module.scss';
 import styles from '../../venues.module.scss';
 
@@ -105,6 +106,10 @@ function EditorBody() {
   const reloadLayout = useCallback(async () => {
     if (!token || !venueId) return;
     const data = await getVenueLayout(token, venueId);
+    // Recinto inexistente: el API puede responder sin `layout`; antes quedaba en blanco.
+    if (!data?.layout?.mapData) {
+      throw new ApiError(404, 'Venue not found', null, `/venues/${venueId}/layout`);
+    }
     setMap(data.layout.mapData);
     setVenueName(data.venue?.name ?? 'Recinto');
     if (data.layout.publishStatus) setPublishStatus(data.layout.publishStatus);
@@ -161,6 +166,9 @@ function EditorBody() {
     }
   }
 
+  if (error instanceof ApiError && error.isNotFound) {
+    return <NotFound title="No encontramos este recinto" href="/venues" linkLabel="Ver recintos" />;
+  }
   if (session.status !== 'ready' || error || !map || !token) {
     return (
       <ApiStateBoundary

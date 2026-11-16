@@ -196,13 +196,67 @@ export class OrganizationService {
     return updated;
   }
 
+  /**
+   * Bitácora con nombres legibles: `actorName` (nombre o correo de quien actuó)
+   * y `entityName` (folio de la orden o título del evento). Sin esto la
+   * pantalla solo podía mostrar ids crudos (cuid).
+   */
   async getAuditLog(orgId: string, limit = 50, cursor?: string) {
-    return this.prisma.auditEvent.findMany({
+    const rows = await this.prisma.auditEvent.findMany({
       where: { organizationId: orgId },
       take: limit,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       orderBy: { createdAt: 'desc' },
     });
+
+    const idsOf = (type: string) => [
+      ...new Set(
+        rows
+          .filter((row) => row.entityType.toLowerCase() === type && row.entityId)
+          .map((row) => row.entityId as string)
+      ),
+    ];
+    const userIds = [...new Set(rows.map((row) => row.userId).filter((id): id is string => !!id))];
+    const orderIds = idsOf('order');
+    const eventIds = idsOf('event');
+
+    const [users, orders, events] = await Promise.all([
+      userIds.length
+        ? this.prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, firstName: true, lastName: true, email: true },
+          })
+        : Promise.resolve([] as { id: string; firstName: string | null; lastName: string | null; email: string }[]),
+      orderIds.length
+        ? this.prisma.order.findMany({
+            where: { id: { in: orderIds }, organizationId: orgId },
+            select: { id: true, publicId: true },
+          })
+        : Promise.resolve([] as { id: string; publicId: string }[]),
+      eventIds.length
+        ? this.prisma.event.findMany({
+            where: { id: { in: eventIds }, organizationId: orgId },
+            select: { id: true, title: true },
+          })
+        : Promise.resolve([] as { id: string; title: string }[]),
+    ]);
+
+    const userName = new Map(
+      users.map((user) => [
+        user.id,
+        [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || user.email,
+      ])
+    );
+    const entityName = new Map<string, string>([
+      ...orders.map((order) => [order.id, order.publicId] as [string, string]),
+      ...events.map((event) => [event.id, event.title] as [string, string]),
+    ]);
+
+    return rows.map((row) => ({
+      ...row,
+      actorName: row.userId ? (userName.get(row.userId) ?? null) : null,
+      entityName: row.entityId ? (entityName.get(row.entityId) ?? null) : null,
+    }));
   }
 
   async getSaasCapabilities(orgId: string) {

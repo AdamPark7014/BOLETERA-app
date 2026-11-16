@@ -155,10 +155,6 @@ function ReventaBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Reventa</h1>
-        <p className={styles.quiet}>
-          Listados del mercado secundario. Se señala lo que pide más de {MARKUP_ALERT}% sobre el
-          precio original.
-        </p>
       </header>
 
       <ul className={styles.rows}>
@@ -215,7 +211,7 @@ function ReventaBody() {
         {visible.length > 0 ? (
           <ul className={styles.rows}>
             {visible.map((row) => {
-              const currency = row.listing.currency || 'MXN';
+              const currency = row.listing.currency && row.listing.currency !== 'MXN' ? ` ${row.listing.currency}` : '';
               const high = row.markup !== null && row.markup > MARKUP_ALERT;
               const meta = [
                 row.listing.ticket?.code ?? row.listing.id.slice(0, 8),
@@ -234,7 +230,7 @@ function ReventaBody() {
                     <p className={styles.rowMeta}>{meta.join(' · ')}</p>
                     <p className={styles.rowMeta}>
                       Original{' '}
-                      {row.original > 0 ? `${formatTicketAmount(row.original)} ${currency}` : '—'}
+                      {row.original > 0 ? `${formatTicketAmount(row.original)}${currency}` : '—'}
                     </p>
                   </div>
                   <p className={high ? styles.out : styles.tertiary}>
@@ -242,7 +238,7 @@ function ReventaBody() {
                     {high ? ' · Revisar' : ''}
                   </p>
                   <p className={styles.figure}>
-                    {formatTicketAmount(row.asking)} {currency}
+                    {formatTicketAmount(row.asking)}{currency}
                   </p>
                 </li>
               );

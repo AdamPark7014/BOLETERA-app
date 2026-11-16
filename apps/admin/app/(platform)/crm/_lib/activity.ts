@@ -1,4 +1,5 @@
 import type { AuditEntry } from '@/lib/queries/audit';
+import { entityLabel } from '../../audit/_lib/labels';
 import { orderStatusLabel } from '../../dashboard/format';
 import { formatMoney, orderAmount, orderCurrency } from './format';
 
@@ -13,12 +14,12 @@ export type CrmActivityItem = {
 
 function auditVerb(action: string): string {
   const normalized = action.toUpperCase();
-  if (normalized.includes('ORDER')) return 'actualizó pedido';
-  if (normalized.includes('REFUND')) return 'procesó reembolso';
-  if (normalized.includes('WAITLIST')) return 'tocó lista de espera';
-  if (normalized.includes('API_KEY')) return 'gestionó clave partner';
-  if (normalized.includes('CAMPAIGN')) return 'ajustó campaña';
-  return action.toLowerCase().replaceAll('_', ' ');
+  if (normalized.includes('REFUND')) return 'procesó un reembolso';
+  if (normalized.includes('ORDER')) return 'actualizó una orden';
+  if (normalized.includes('WAITLIST')) return 'actualizó la lista de espera';
+  if (normalized.includes('API_KEY')) return 'cambió una llave de socio';
+  if (normalized.includes('CAMPAIGN')) return 'ajustó una campaña';
+  return 'hizo un cambio';
 }
 
 /** Pedidos recientes + auditoría relevante, del más nuevo al más viejo. */
@@ -43,7 +44,7 @@ export function buildCrmActivity(input: {
     .map((order) => ({
       id: `order-${order.id}`,
       actor: order.buyerName || order.buyerEmail || 'Cliente',
-      action: `registró pedido · ${orderStatusLabel(order.status).toLowerCase()}`,
+      action: `compró · ${orderStatusLabel(order.status).toLowerCase()}`,
       target: order.event?.title || order.publicId,
       timestamp: order.createdAt,
       detail: formatMoney(orderAmount(order), orderCurrency(order)),
@@ -55,9 +56,10 @@ export function buildCrmActivity(input: {
     .slice(0, 6)
     .map((entry) => ({
       id: `audit-${entry.id}`,
-      actor: 'Sistema',
+      actor: (entry as { actorName?: string | null }).actorName || 'Sistema',
       action: auditVerb(entry.action),
-      target: `${entry.entityType} · ${entry.entityId.slice(0, 8)}`,
+      target:
+        (entry as { entityName?: string | null }).entityName || entityLabel(entry.entityType),
       timestamp: entry.createdAt,
       detail: null,
     }));

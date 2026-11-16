@@ -19,10 +19,10 @@ export const SEGMENT_TONE: Record<CustomerSegment, BadgeTone> = {
 
 export const SEGMENT_DESCRIPTION: Record<CustomerSegment, string> = {
   vip: 'Decil superior de gasto con compras repetidas',
-  recurrent: 'Dos o más pedidos completados',
+  recurrent: 'Compró dos veces o más',
   new: 'Primera compra en el portafolio',
   at_risk: 'Sin actividad reciente (90–180 días)',
-  inactive: 'Sin compras recientes o sin pedidos pagados',
+  inactive: 'Sin compras recientes',
 };
 
 export const CHURN_LABEL: Record<ChurnBand, string> = {

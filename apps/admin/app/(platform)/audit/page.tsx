@@ -28,6 +28,10 @@ type AuditRow = {
   entityId: string;
   createdAt: string;
   userId?: string | null;
+  /** Nombre o correo de quien actuó (el API lo une con User). */
+  actorName?: string | null;
+  /** Folio de la orden o título del evento. */
+  entityName?: string | null;
   metadata?: Record<string, unknown> | null;
 };
 
@@ -77,7 +81,7 @@ function startOfQuickRange(range: QuickRange): Date | null {
   }
 }
 
-/** El API no une con `User`: el correo solo aparece si la acción lo guardó. */
+/** Nombre que da el API; si no, el correo guardado en la acción. Nunca el id crudo. */
 function actorOf(row: AuditRow): string {
   const meta = row.metadata ?? {};
   const email =
@@ -86,8 +90,9 @@ function actorOf(row: AuditRow): string {
       : typeof meta.email === 'string'
         ? meta.email
         : null;
+  if (row.actorName) return row.actorName;
   if (email) return email;
-  if (row.userId) return row.userId;
+  if (row.userId) return 'Usuario';
   return 'Sistema';
 }
 
@@ -240,7 +245,7 @@ function AuditoriaBody() {
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Movimientos</p>
           <p className={styles.kpiValue}>{formatCount(filtered.length)}</p>
-          <p className={styles.kpiNote}>de {formatCount(rows.length)} registrados en la ventana</p>
+          <p className={styles.kpiNote}>de {formatCount(rows.length)}</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Por revisar</p>
@@ -272,7 +277,7 @@ function AuditoriaBody() {
             <Field
               label="Actor"
               kind="search"
-              placeholder="Correo o ID de usuario"
+              placeholder="Nombre o correo"
               value={actor}
               onChange={(event) => setActor(event.target.value)}
             />
@@ -412,9 +417,7 @@ function AuditoriaBody() {
                     <td className={own.actor}>{actorOf(row)}</td>
                     <td>
                       {entityLabel(row.entityType)}
-                      {row.entityId ? (
-                        <span className={own.code}> {row.entityId.slice(0, 12)}</span>
-                      ) : null}
+                      {row.entityName ? <span className={own.code}> {row.entityName}</span> : null}
                     </td>
                   </tr>
                 );
