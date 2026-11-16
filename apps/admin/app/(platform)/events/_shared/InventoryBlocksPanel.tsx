@@ -116,11 +116,8 @@ export function InventoryBlocksPanel({
   return (
     <div className={styles.blockForm}>
       <p className={styles.warnNote}>
-        <strong>Cómo funciona hoy:</strong> un bloqueo administrativo se guarda como un hold de
-        taquilla con <strong>300 segundos de vigencia</strong>. Sirve para retirar butacas de la
-        venta durante una operación puntual, no para reservar una zona toda la temporada: al vencer
-        vuelven solas al inventario. Cada operación queda registrada en la{' '}
-        <Link href="/audit">bitácora de auditoría</Link> con el motivo, la categoría y las butacas.
+        El bloqueo dura <strong>5 minutos</strong> y luego las butacas vuelven a la venta. Queda en
+        la <Link href="/audit">bitácora</Link>.
       </p>
 
       <label className={styles.field} htmlFor="block-seats">

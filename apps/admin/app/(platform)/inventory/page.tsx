@@ -275,7 +275,7 @@ function InventarioView({ orgId }: { orgId: string }) {
             ))}
             <div className={styles.row}>
               <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>Holds activos</p>
+                <p className={styles.rowTitle}>Apartados activos</p>
                 <p className={styles.rowMeta}>Apartados vigentes en este momento</p>
               </div>
               <span />

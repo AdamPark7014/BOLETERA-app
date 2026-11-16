@@ -64,7 +64,7 @@ export function OverviewPanel({
         <KpiCard
           label="Disponibles"
           value={formatCount(inventory.available)}
-          hint={`${formatCount(inventory.held)} en hold`}
+          hint={`${formatCount(inventory.held)} apartados`}
           tone="neutral"
         />
         <KpiCard

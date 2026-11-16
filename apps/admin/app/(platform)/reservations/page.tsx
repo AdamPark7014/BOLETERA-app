@@ -260,7 +260,7 @@ function ReservasView({ orgId }: { orgId: string }) {
             </div>
             <div className={styles.row}>
               <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>Holds de zona</p>
+                <p className={styles.rowTitle}>Bloqueos de zona</p>
                 <p className={styles.rowMeta}>
                   {formatCount(kpis.activeHolds)} holds activos reportados
                 </p>
@@ -280,7 +280,7 @@ function ReservasView({ orgId }: { orgId: string }) {
             </div>
             <div className={styles.row}>
               <div className={styles.rowMain}>
-                <p className={styles.rowTitle}>Conversión hold → compra</p>
+                <p className={styles.rowTitle}>Apartados que terminan en compra</p>
                 <p className={styles.rowMeta}>
                   {formatCount(kpis.completed)} convertidos de{' '}
                   {formatCount(kpis.pending + kpis.completed)}
@@ -292,7 +292,6 @@ function ReservasView({ orgId }: { orgId: string }) {
             <div className={styles.row}>
               <div className={styles.rowMain}>
                 <p className={styles.rowTitle}>Tasa de aprobación de pagos</p>
-                <p className={styles.rowMeta}>Sirve para leer el abandono de holds</p>
               </div>
               <span />
               <p className={styles.figure}>
@@ -492,7 +491,7 @@ function ReservasView({ orgId }: { orgId: string }) {
           ) : null}
 
           <div className={bt.block}>
-            <p className={styles.rowTitle}>Embudo hold → compra</p>
+            <p className={styles.rowTitle}>De apartado a compra</p>
             {funnel.every((stage) => stage.value === 0) ? (
               <p className={styles.quiet}>
                 Sin embudo todavía. Aparece con órdenes pendientes o completadas.
@@ -515,8 +514,7 @@ function ReservasView({ orgId }: { orgId: string }) {
             <div className={styles.rows}>
               <div className={styles.row}>
                 <div className={styles.rowMain}>
-                  <p className={styles.rowTitle}>Holds activos</p>
-                  <p className={styles.rowMeta}>Checkout más holds de inventario</p>
+                  <p className={styles.rowTitle}>Apartados activos</p>
                 </div>
                 <span />
                 <p className={styles.figure}>{formatCount(kpis.activeHolds)}</p>
