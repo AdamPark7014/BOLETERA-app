@@ -320,7 +320,7 @@ function ReservasView({ orgId }: { orgId: string }) {
                 label="Buscar"
                 kind="search"
                 value={url.q}
-                placeholder="Hold, evento, comprador o canal"
+                placeholder="Apartado, evento, comprador o canal"
                 onChange={(event) => url.setSearch(event.target.value)}
               />
               <div>
@@ -453,9 +453,8 @@ function ReservasView({ orgId }: { orgId: string }) {
                         <>
                           {!row.holdId ? (
                             <Field
-                              label="ID de SeatHold"
-                              hint="Si lo conoces. Liberar usa DELETE /inventory/holds/:id."
-                              placeholder="hold_…"
+                              label="ID del apartado"
+                              placeholder="Pega el ID"
                               autoComplete="off"
                               value={holdInput}
                               onChange={(event) => setHoldInput(event.target.value)}

@@ -441,7 +441,7 @@ function MembresiasBody({ orgId }: { orgId: string }) {
                     label="Buscar"
                     kind="search"
                     value={url.q}
-                    placeholder="Nombre, slug o tier"
+                    placeholder="Nombre, clave o nivel"
                     onChange={(event) => url.setSearch(event.target.value)}
                   />
                   <div>
@@ -596,14 +596,14 @@ function MembresiasBody({ orgId }: { orgId: string }) {
             }}
           />
           <Field
-            label="Slug"
+            label="Clave"
             value={form.slug}
             onChange={(event) =>
               setForm((prev) => ({ ...prev, slug: event.target.value, slugTouched: true }))
             }
           />
           <Field
-            label="Tier"
+            label="Nivel"
             value={form.tier}
             onChange={(event) => setForm((prev) => ({ ...prev, tier: event.target.value }))}
           />

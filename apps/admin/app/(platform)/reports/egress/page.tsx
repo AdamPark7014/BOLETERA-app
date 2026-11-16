@@ -61,7 +61,6 @@ function venueMeta(venue: EgressOverviewVenue): string {
 
 function failMessage(cause: unknown, fallback: string): string {
   if (cause instanceof ApiError) return cause.userMessage;
-  if (cause instanceof Error && cause.message.trim()) return `${fallback} ${cause.message}`;
   return fallback;
 }
 
@@ -147,12 +146,12 @@ function EgressBody() {
     return (
       <ApiErrorView
         error={error}
-        context="abrir egress"
+        context="abrir salida y aforo"
         onRetry={() => setNonce((current) => current + 1)}
       />
     );
   }
-  if ((loading && !data) || !token) return <p className={styles.quiet}>Cargando egress.</p>;
+  if ((loading && !data) || !token) return <p className={styles.quiet}>Cargando salida y aforo.</p>;
 
   const counts = data?.counts;
   const total = data?.venues.length ?? 0;

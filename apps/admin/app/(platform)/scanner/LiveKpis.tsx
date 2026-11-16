@@ -63,7 +63,7 @@ export function LiveKpis({
         loading={loading && ticketsCheckedIn === null}
       />
       <KpiCard
-        label="No-show"
+        label="No llegaron"
         value={noShowRate === null ? '—' : formatPercentPoints(noShowRate)}
         tone={
           noShowRate === null
@@ -83,7 +83,7 @@ export function LiveKpis({
         loading={loading && noShowRate === null}
       />
       <KpiCard
-        label="Cola offline"
+        label="Cola sin conexión"
         value={formatCount(stats.queued)}
         tone={stats.queued > 0 ? 'warning' : 'neutral'}
         hint={stats.queued > 0 ? 'Pendientes de sincronizar' : 'Sin pendientes'}

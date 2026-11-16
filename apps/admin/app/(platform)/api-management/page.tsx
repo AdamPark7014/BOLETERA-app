@@ -427,8 +427,8 @@ function GestionApi({ organizationId }: { organizationId: string }) {
                   <div className={styles.rowMain}>
                     <p className={styles.rowTitle}>{template.name}</p>
                     <p className={styles.rowMeta}>
-                      {template.environment === 'sandbox' ? 'Sandbox' : 'Producción'} · ráfaga
-                      sugerida {formatCount(template.burst)} por minuto · {template.description}
+                      {template.environment === 'sandbox' ? 'Pruebas' : 'Producción'} · hasta{' '}
+                      {formatCount(template.burst)} por minuto en picos · {template.description}
                     </p>
                   </div>
                   <p className={styles.figure}>{formatCount(template.rpm)}/min</p>

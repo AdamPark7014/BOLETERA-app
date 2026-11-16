@@ -143,7 +143,7 @@ export function CreatePassModal({ open, busy, onClose, onSubmit }: CreatePassMod
           autoFocus
         />
         <Input
-          label="Slug"
+          label="Clave"
           value={form.slug}
           onChange={(e) =>
             setForm((current) => ({

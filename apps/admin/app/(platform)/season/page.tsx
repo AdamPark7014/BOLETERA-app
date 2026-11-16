@@ -221,7 +221,7 @@ function describe(
     if (from !== to) lines.push(`${label}: ${from || '—'} → ${to || '—'}`);
   };
   pair('Nombre del abono', before.name, after.name);
-  pair('Slug del abono', before.slug, after.slug);
+  pair('Clave del abono', before.slug, after.slug);
   pair('Descripción del abono', before.description, after.description);
   pair('Temporada', before.seasonLabel, after.seasonLabel);
   pair('Abono desde', shownWhen(before.startsAt), shownWhen(after.startsAt));
@@ -552,14 +552,14 @@ function PassCards({
         />
       </Card>
       <Card
-        name="Slug del abono"
+        name="Clave del abono"
         value={text(draft.slug)}
         style="mono"
         effect="Único en la organización."
         editing={canEdit}
       >
         <Field
-          label="Slug del abono"
+          label="Clave del abono"
           value={draft.slug}
           onChange={(event) => set('slug', event.target.value)}
         />

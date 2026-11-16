@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { Field, ParameterCard, TicketButton } from '@boletera/ui';
 import { Param, Switch } from '../../events/_ticket/controls';
 import styles from '../../events/_ticket/frame.module.scss';
-import { GRANTABLE_SCOPES, SCOPE_CATALOG, type GrantableScope } from '../_lib/scopes';
+import { SCOPE_CATALOG, type GrantableScope } from '../_lib/scopes';
 
 export type CreateKeyPayload = {
   name: string;
@@ -112,9 +112,6 @@ export function CreateKeyForm({ busy, onCancel, onSubmit, describeError }: Creat
         placeholder="POS Arena Norte"
         autoFocus
       />
-      <p className={styles.tertiary}>
-        Solo se ofrecen los permisos que el API acepta hoy ({GRANTABLE_SCOPES.length} disponibles).
-      </p>
       {SCOPE_CATALOG.map((scope) => {
         const on = form.scopes.includes(scope.id);
         return (

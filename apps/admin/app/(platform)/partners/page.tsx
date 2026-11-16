@@ -124,7 +124,7 @@ function PartnersBody() {
   async function save() {
     if (!token || !session.orgId || !dirty || saving) return;
     if (creating && scopes.length === 0) {
-      setActionError('La clave necesita al menos un scope.');
+      setActionError('La clave necesita al menos un permiso.');
       return;
     }
     setSaving(true);
@@ -272,11 +272,7 @@ function PartnersBody() {
           const on = scopes.includes(scope.id);
           return (
             <Param key={scope.id} name={scope.label}>
-              <ParameterCard
-                name={scope.label}
-                value={on ? 'Sí' : 'No'}
-                effect="Scope de la clave nueva."
-              >
+              <ParameterCard name={scope.label} value={on ? 'Sí' : 'No'}>
                 <Switch
                   label={scope.label}
                   on={on}

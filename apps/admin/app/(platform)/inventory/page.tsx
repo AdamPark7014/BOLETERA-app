@@ -296,7 +296,7 @@ function InventarioView({ orgId }: { orgId: string }) {
                 label="Buscar"
                 kind="search"
                 value={url.q}
-                placeholder="Zona, tier o evento"
+                placeholder="Zona, nivel o evento"
                 onChange={(event) => url.setSearch(event.target.value)}
               />
               <div>
@@ -411,7 +411,7 @@ function InventarioView({ orgId }: { orgId: string }) {
                       ) : availability.data ? (
                         <div className={styles.rows}>
                           <Pair
-                            label="Holds activos"
+                            label="Apartados activos"
                             value={formatCount(availability.data.activeHolds)}
                           />
                           <Pair
