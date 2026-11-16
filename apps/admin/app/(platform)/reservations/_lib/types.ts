@@ -32,8 +32,8 @@ export type ReservationRow = {
 };
 
 export const KIND_LABEL: Record<ReservationKind, string> = {
-  checkout: 'Hold checkout',
-  zone_hold: 'Hold de zona',
+  checkout: 'Apartado en compra',
+  zone_hold: 'Bloqueo de zona',
   blocked: 'Bloqueo operativo',
   released: 'Liberación',
   expired: 'Expiración',
@@ -92,7 +92,7 @@ export const POLICY_TEMPLATES = [
   {
     id: 'web-15',
     title: 'TTL checkout web · 15 min',
-    detail: 'Libera asientos al expirar el hold de compra en línea.',
+    detail: 'Libera asientos cuando vence el apartado de una compra en línea.',
   },
   {
     id: 'pos-5',

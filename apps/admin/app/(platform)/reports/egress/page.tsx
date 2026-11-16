@@ -163,8 +163,7 @@ function EgressBody() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Salida y aforo</h1>
         <p className={styles.quiet}>
-          Circulación y vaciado de cada recinto de la organización. {formatCount(total)} recintos
-          analizados.
+          {formatCount(total)} {total === 1 ? 'recinto' : 'recintos'}
         </p>
       </header>
 

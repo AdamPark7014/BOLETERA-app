@@ -21,7 +21,7 @@ export const REPORT_CATALOG: readonly ReportCatalogItem[] = [
   {
     id: 'attendance',
     title: 'Asistencia y acceso',
-    description: 'Check-ins, no-shows y tráfico por punto de acceso.',
+    description: 'Entradas, ausencias y flujo por puerta.',
     href: '#attendance',
     tone: 'success',
     live: true,
@@ -52,7 +52,7 @@ export const REPORT_CATALOG: readonly ReportCatalogItem[] = [
   },
   {
     id: 'egress',
-    title: 'Egress y cumplimiento',
+    title: 'Salida y aforo',
     description: 'Salud de circulación y vaciado por venue.',
     href: '/reports/egress',
     tone: 'danger',

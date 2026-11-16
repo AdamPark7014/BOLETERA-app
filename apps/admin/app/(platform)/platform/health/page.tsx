@@ -108,10 +108,6 @@ function SaludBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Salud operativa</h1>
-        <p className={styles.quiet}>
-          Consistencia entre órdenes, pagos, boletos, inventario y reembolsos. Solo lectura: no
-          corrige datos.
-        </p>
         {data ? (
           <p className={styles.tertiary}>
             Generado {formatWhen(data.generatedAt)} ·{' '}

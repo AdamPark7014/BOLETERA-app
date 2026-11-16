@@ -317,9 +317,9 @@ export function LiveInventoryPanel({
           <small>{occupancy}% de ocupación</small>
         </article>
         <article className={styles.kpi}>
-          <span>En hold</span>
+          <span>Apartados</span>
           <strong>{held.toLocaleString('es-MX')}</strong>
-          <small>{live.activeHolds.toLocaleString('es-MX')} holds activos</small>
+          <small>{live.activeHolds.toLocaleString('es-MX')} activos</small>
         </article>
         <article className={styles.kpi}>
           <span>Ritmo</span>
@@ -372,7 +372,7 @@ export function LiveInventoryPanel({
               <tr>
                 <th scope="col">Zona</th>
                 <th scope="col">Disponibles</th>
-                <th scope="col">Hold</th>
+                <th scope="col">Apartado</th>
                 <th scope="col">Vendidas</th>
                 <th scope="col">Total</th>
                 <th scope="col">Ocupación</th>

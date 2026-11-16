@@ -57,8 +57,7 @@ export function buildCrmRecommendations(input: {
       source: 'derived',
       priority: atRisk >= 10 ? 'high' : 'medium',
       title: `Reactivar ${atRisk} clientes en riesgo`,
-      rationale:
-        'Compraron por última vez hace 3 a 6 meses.',
+      rationale: 'Compraron por última vez hace 3 a 6 meses.',
       action: 'Envíales una campaña de regreso.',
     });
   }
@@ -69,8 +68,7 @@ export function buildCrmRecommendations(input: {
       source: 'derived',
       priority: 'high',
       title: `${input.kpis.churnHigh} clientes podrían no volver`,
-      rationale:
-        'Llevan mucho tiempo sin comprar.',
+      rationale: 'Llevan mucho tiempo sin comprar.',
       action: 'Contacta primero a los que más han gastado.',
     });
   }
@@ -81,8 +79,7 @@ export function buildCrmRecommendations(input: {
       source: 'derived',
       priority: waiting >= 20 ? 'high' : 'medium',
       title: `${waiting} interesados en lista de espera`,
-      rationale:
-        'Esperan que se liberen boletos.',
+      rationale: 'Esperan que se liberen boletos.',
       action: 'Avísales cuando abras más lugares.',
     });
   }
@@ -115,8 +112,7 @@ export function buildCrmRecommendations(input: {
       source: 'derived',
       priority: 'low',
       title: `${staleKeys} llaves de socios sin usar`,
-      rationale:
-        'Están activas y nunca se han usado.',
+      rationale: 'Están activas y nunca se han usado.',
       action: 'Revisa si siguen haciendo falta.',
     });
   }

@@ -36,7 +36,7 @@ export const SORT_OPTIONS: ReadonlyArray<{ value: SortKey; label: string }> = [
   { value: 'members', label: 'Más miembros' },
   { value: 'revenue', label: 'Mayor ingreso' },
   { value: 'renewal', label: 'Mayor renovación' },
-  { value: 'tier', label: 'Tier' },
+  { value: 'tier', label: 'Nivel' },
   { value: 'name', label: 'Nombre A–Z' },
 ];
 
@@ -188,7 +188,7 @@ export type TierBucket = {
 export function adoptionByTier(plans: readonly MembershipPlan[]): TierBucket[] {
   const map = new Map<string, TierBucket>();
   for (const plan of plans) {
-    const tier = plan.tier.trim() || 'Sin tier';
+    const tier = plan.tier.trim() || 'Sin nivel';
     const current = map.get(tier) ?? {
       tier,
       plans: 0,

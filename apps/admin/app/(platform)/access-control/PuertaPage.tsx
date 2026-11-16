@@ -58,7 +58,6 @@ function PuertaBody() {
     <section>
       <header className={frame.sectionHead}>
         <h1 className={frame.sectionTitle}>Acceso y puertas</h1>
-        <p className={frame.quiet}>Nombres que devolvió el acceso en este periodo.</p>
         <Segment label="Periodo" value={rangeKey} options={RANGE_OPTIONS} onChange={setRangeKey} />
       </header>
 
@@ -90,9 +89,9 @@ function PuertaBody() {
               effect="Boletos vendidos de la organización."
             />
           </Param>
-          <Param name="No-show">
+          <Param name="No llegaron">
             <ParameterCard
-              name="No-show"
+              name="No llegaron"
               value={access ? formatPercentPoints(access.noShowRate) : '—'}
               valueStyle="tabular"
               effect="Vendidos que no entraron."

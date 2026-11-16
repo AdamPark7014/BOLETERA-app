@@ -25,14 +25,21 @@ export const TEAM_ROLES: readonly RoleOption[] = [
     label: 'Admin',
     summary: 'Configuración, equipo y finanzas',
     tone: 'accent',
-    permissions: ['Eventos', 'Inventario', 'Equipo', 'Facturación', 'Auditoría', 'Partners'],
+    permissions: [
+      'Eventos',
+      'Inventario',
+      'Equipo',
+      'Facturación',
+      'Auditoría',
+      'Socios comerciales',
+    ],
   },
   {
     value: 'PROMOTER',
     label: 'Promotor',
     summary: 'Eventos, campañas e inventario',
     tone: 'info',
-    permissions: ['Eventos', 'Precios', 'Campañas', 'Reportes', 'Partners'],
+    permissions: ['Eventos', 'Precios', 'Campañas', 'Reportes', 'Socios comerciales'],
   },
   {
     value: 'VENUE_MANAGER',
@@ -51,7 +58,7 @@ export const TEAM_ROLES: readonly RoleOption[] = [
   {
     value: 'SCANNER',
     label: 'Scanner',
-    summary: 'Check-in y validación',
+    summary: 'Entrada y validación',
     tone: 'neutral',
     permissions: ['Acceso', 'Validación offline'],
   },

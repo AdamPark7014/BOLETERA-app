@@ -226,7 +226,9 @@ export class OrganizationService {
             where: { id: { in: userIds } },
             select: { id: true, firstName: true, lastName: true, email: true },
           })
-        : Promise.resolve([] as { id: string; firstName: string | null; lastName: string | null; email: string }[]),
+        : Promise.resolve(
+            [] as { id: string; firstName: string | null; lastName: string | null; email: string }[]
+          ),
       orderIds.length
         ? this.prisma.order.findMany({
             where: { id: { in: orderIds }, organizationId: orgId },

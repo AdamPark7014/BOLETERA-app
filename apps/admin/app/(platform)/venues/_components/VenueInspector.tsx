@@ -87,7 +87,7 @@ export function VenueInspector({ row, onClose }: VenueInspectorProps) {
           <dd>{formatNumber(row.events)}</dd>
         </div>
         <div>
-          <dt>Versión de layout</dt>
+          <dt>Versión del plano</dt>
           <dd>{row.layoutVersion != null ? `v${row.layoutVersion}` : '—'}</dd>
         </div>
         <div>

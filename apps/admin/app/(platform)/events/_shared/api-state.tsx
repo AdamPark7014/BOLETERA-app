@@ -219,7 +219,11 @@ export function ApiErrorView({ error, context, onRetry }: ErrorViewProps) {
   }
 
   return (
-    <section role="alert" aria-live="assertive" title={apiError ? `${status} · ${apiError.path}` : undefined}>
+    <section
+      role="alert"
+      aria-live="assertive"
+      title={apiError ? `${status} · ${apiError.path}` : undefined}
+    >
       <TicketState kind="error" align="start" title={title} body={body} action={action} />
     </section>
   );

@@ -63,10 +63,10 @@ function failMessage(cause: unknown, fallback: string): string {
 
 function activityLabel(row: ReservationRow): string {
   if (row.status === 'released') return 'Liberada o cancelada';
-  if (row.status === 'expired') return 'Hold expirado';
+  if (row.status === 'expired') return 'Apartado vencido';
   if (row.status === 'completed') return 'Convertida a compra';
   if (row.kind === 'zone_hold') return 'Inventario de zona retenido';
-  return 'Hold de checkout';
+  return 'Apartado en compra';
 }
 
 export default function ReservationsPage() {
@@ -198,20 +198,20 @@ function ReservasView({ orgId }: { orgId: string }) {
     setActionError(null);
     setNotice(null);
     if (!holdId) {
-      setActionError('Indica el ID del hold a liberar (SeatHold).');
+      setActionError('Elige el apartado que quieres liberar.');
       return;
     }
     try {
       const result = await release.mutateAsync({ holdId });
       if (result.released) {
-        setNotice('Hold liberado; el inventario vuelve a disponible.');
+        setNotice('Apartado liberado. Los lugares vuelven a estar disponibles.');
         setHoldInput('');
         url.setSelectedId(null);
       } else {
-        setNotice(`El hold no estaba activo (${result.status ?? 'estado desconocido'}).`);
+        setNotice(`El apartado ya no estaba activo (${result.status ?? 'estado desconocido'}).`);
       }
     } catch (cause) {
-      setActionError(failMessage(cause, 'No se pudo liberar el hold.'));
+      setActionError(failMessage(cause, 'No se pudo liberar el apartado.'));
     }
   }
 
@@ -221,10 +221,6 @@ function ReservasView({ orgId }: { orgId: string }) {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Apartados y bloqueos</h1>
-        <p className={styles.quiet}>
-          Holds de checkout, holds de zona, expiraciones y liberaciones. Se derivan de las órdenes
-          recientes y del inventario; no se inventan holds.
-        </p>
         <div className={bt.actions}>
           <div className={bt.segmentWrap}>
             <Segment<RangeKey>
@@ -376,8 +372,8 @@ function ReservasView({ orgId }: { orgId: string }) {
               <>
                 <p className={styles.quiet}>
                   {(events.data?.length ?? 0) > 0
-                    ? 'Sin reservas activas. No hay holds de checkout ni retención de zona.'
-                    : 'Sin reservas. Publica eventos y abre venta para empezar a ver holds y bloqueos.'}
+                    ? 'No hay apartados activos.'
+                    : 'Aún no hay apartados. Aparecen cuando abres la venta.'}
                 </p>
                 <div className={bt.actions}>
                   <Link href="/orders" className={bt.link}>
@@ -472,7 +468,7 @@ function ReservasView({ orgId }: { orgId: string }) {
                               disabled={release.isPending}
                               onClick={() => void releaseHold(row)}
                             >
-                              {release.isPending ? 'Liberando' : 'Liberar hold'}
+                              {release.isPending ? 'Liberando' : 'Liberar apartado'}
                             </TicketButton>
                           </div>
                         </>

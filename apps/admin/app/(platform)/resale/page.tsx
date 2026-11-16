@@ -211,7 +211,10 @@ function ReventaBody() {
         {visible.length > 0 ? (
           <ul className={styles.rows}>
             {visible.map((row) => {
-              const currency = row.listing.currency && row.listing.currency !== 'MXN' ? ` ${row.listing.currency}` : '';
+              const currency =
+                row.listing.currency && row.listing.currency !== 'MXN'
+                  ? ` ${row.listing.currency}`
+                  : '';
               const high = row.markup !== null && row.markup > MARKUP_ALERT;
               const meta = [
                 row.listing.ticket?.code ?? row.listing.id.slice(0, 8),
@@ -238,7 +241,8 @@ function ReventaBody() {
                     {high ? ' · Revisar' : ''}
                   </p>
                   <p className={styles.figure}>
-                    {formatTicketAmount(row.asking)}{currency}
+                    {formatTicketAmount(row.asking)}
+                    {currency}
                   </p>
                 </li>
               );

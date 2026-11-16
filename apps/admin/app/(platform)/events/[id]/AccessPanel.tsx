@@ -20,7 +20,7 @@ export function AccessPanel({ access, loading, error }: Props) {
       ? [
           {
             id: 'checkins',
-            name: 'Check-ins',
+            name: 'Entradas',
             data: points.map((point) => ({
               label: formatDayShort(point.bucket),
               value: point.value,
@@ -122,7 +122,7 @@ export function AccessPanel({ access, loading, error }: Props) {
                     <thead>
                       <tr>
                         <th scope="col">Punto</th>
-                        <th scope="col">Check-ins</th>
+                        <th scope="col">Entradas</th>
                         <th scope="col">Participación</th>
                       </tr>
                     </thead>

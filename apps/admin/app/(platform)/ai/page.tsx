@@ -272,11 +272,6 @@ function Copiloto() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Asistente e IA</h1>
-        <p className={styles.quiet}>
-          Cálculos deterministas sobre órdenes, reembolsos y señales de fraude reales: agregados,
-          reglas estadísticas y plantillas, sin modelo de lenguaje. Lo que no tiene fuente queda
-          vacío con su motivo.
-        </p>
         <p className={styles.tertiary}>
           {range.label} · America/Mexico_City · MXN · última generación:{' '}
           {formatGeneratedAt(generatedAt)}

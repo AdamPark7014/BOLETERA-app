@@ -192,9 +192,6 @@ function ControlBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Control global</h1>
-        <p className={styles.quiet}>
-          Toda la plataforma: búsqueda entre organizaciones, cifras y accesos. Solo lectura.
-        </p>
       </header>
 
       <div className={styles.stack}>

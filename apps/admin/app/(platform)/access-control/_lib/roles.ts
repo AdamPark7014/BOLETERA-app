@@ -57,7 +57,7 @@ export const ACCESS_ROLES: readonly AccessRoleOption[] = [
   {
     value: 'SCANNER',
     label: 'Scanner',
-    summary: 'Check-in y validación',
+    summary: 'Entrada y validación',
     tone: 'neutral',
     permissions: ['Acceso', 'Validación offline'],
   },

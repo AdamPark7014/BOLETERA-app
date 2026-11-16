@@ -23,13 +23,20 @@ export const TEAM_ROLES: readonly RoleOption[] = [
     value: 'ADMIN',
     label: 'Admin',
     tone: 'accent',
-    permissions: ['Eventos', 'Inventario', 'Equipo', 'Facturación', 'Auditoría', 'Partners'],
+    permissions: [
+      'Eventos',
+      'Inventario',
+      'Equipo',
+      'Facturación',
+      'Auditoría',
+      'Socios comerciales',
+    ],
   },
   {
     value: 'PROMOTER',
     label: 'Promotor',
     tone: 'info',
-    permissions: ['Eventos', 'Precios', 'Campañas', 'Reportes', 'Partners'],
+    permissions: ['Eventos', 'Precios', 'Campañas', 'Reportes', 'Socios comerciales'],
   },
   {
     value: 'VENUE_MANAGER',

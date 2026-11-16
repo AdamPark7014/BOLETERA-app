@@ -131,9 +131,6 @@ function Integraciones() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Integraciones</h1>
-        <p className={styles.quiet}>
-          Banorte, correo SMTP y webhooks IPN. Salud y pasos de configuración sin mostrar secretos.
-        </p>
       </header>
 
       <div className={styles.stack}>

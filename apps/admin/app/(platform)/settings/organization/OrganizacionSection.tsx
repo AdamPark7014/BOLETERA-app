@@ -2,11 +2,10 @@
 
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { useEffect, useState } from 'react';
-import { Field, ParameterCard, TicketButton } from '@boletera/ui';
+import { Field, TicketButton } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../../events/_shared/api-state';
-import { Param } from '../../events/_ticket/controls';
 import styles from '../../events/_ticket/frame.module.scss';
 import { asRecord, readString, yesNo } from '../../events/_ticket/read';
 
@@ -123,6 +122,65 @@ function profileOf(org: Org): Profile {
     email: org.email,
     phone: org.phone,
   };
+}
+
+const ZONES: Record<string, string> = {
+  'America/Mexico_City': 'Ciudad de México',
+  'America/Monterrey': 'Monterrey',
+  'America/Tijuana': 'Tijuana',
+  'America/Cancun': 'Cancún',
+  'America/Hermosillo': 'Hermosillo',
+  'America/Mazatlan': 'Mazatlán',
+  'America/Merida': 'Mérida',
+  'America/Chihuahua': 'Chihuahua',
+};
+
+function zoneName(value: string | null): string {
+  if (!value) return '—';
+  return ZONES[value] ?? value.split('/').pop()?.replace(/_/g, ' ') ?? value;
+}
+
+function countryName(value: string | null): string {
+  if (!value) return '—';
+  if (value.toUpperCase() === 'MX') return 'México';
+  if (value.toUpperCase() === 'US') return 'Estados Unidos';
+  return value;
+}
+
+function currencyName(value: string | null): string {
+  if (!value) return '—';
+  if (value.toUpperCase() === 'MXN') return 'Pesos mexicanos';
+  if (value.toUpperCase() === 'USD') return 'Dólares';
+  return value;
+}
+
+/** Lista de datos de solo lectura: etiqueta a la izquierda, valor a la derecha. */
+function InfoList({
+  title,
+  items,
+}: {
+  title?: string;
+  items: { label: string; value: string; mono?: boolean }[];
+}) {
+  return (
+    <div>
+      {title ? <h2 className={styles.panelTitle}>{title}</h2> : null}
+      <ul className={styles.rows}>
+        {items.map((item) => (
+          <li key={item.label} className={styles.row}>
+            <p className={styles.rowTitle}>{item.label}</p>
+            <span />
+            <p
+              className={styles.tertiary}
+              style={item.mono ? { fontVariantNumeric: 'tabular-nums' } : undefined}
+            >
+              {item.value}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function failMessage(cause: unknown): string {
@@ -249,164 +307,75 @@ export function OrganizacionBody() {
     setNotice(null);
   }
 
+  const ubicacion = [org.address, org.city, org.state, org.postalCode].filter(Boolean).join(', ');
+  const datos: { label: string; value: string; mono?: boolean }[] = [
+    { label: 'Dirección del sitio', value: text(org.slug), mono: true },
+    { label: 'Tipo', value: word(ORG_TYPE, org.type) },
+    { label: 'País', value: countryName(org.country) },
+    { label: 'Zona horaria', value: zoneName(org.timezone) },
+    { label: 'Moneda', value: currencyName(org.currency) },
+    { label: 'Domicilio', value: ubicacion || '—' },
+    { label: 'RFC', value: text(org.taxId) },
+  ];
+  const deposito: { label: string; value: string; mono?: boolean }[] = [
+    { label: 'Titular', value: text(org.bankAccountName) },
+    { label: 'Banco', value: text(org.bankCode) },
+    { label: 'Cuenta', value: maskAccount(org.bankAccountNumber), mono: true },
+  ];
+  const verificacion: { label: string; value: string }[] = [
+    { label: 'Organización verificada', value: yesNo(org.verified) },
+    { label: 'Identidad', value: word(CHECK, org.kycStatus) },
+    { label: 'Prevención de lavado', value: word(CHECK, org.amlStatus) },
+  ];
+
   return (
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Organización</h1>
       </header>
       <div className={styles.stack}>
-        <Param name="Nombre de la organización">
-          <ParameterCard
-            name="Nombre de la organización"
-            value={draft.name}
-            effect="Nombre que ven tus compradores."
-          >
-            {canSave ? (
-              <Field
-                label="Nombre de la organización"
-                value={draft.name}
-                onChange={(event) => setField('name', event.target.value)}
-              />
-            ) : null}
-          </ParameterCard>
-        </Param>
-        <Param name="Descripción de la organización">
-          <ParameterCard
-            name="Descripción de la organización"
-            value={draft.description || '—'}
-            effect="Texto corto."
-          >
-            {canSave ? (
-              <Field
-                label="Descripción de la organización"
-                value={draft.description}
-                onChange={(event) => setField('description', event.target.value)}
-              />
-            ) : null}
-          </ParameterCard>
-        </Param>
-        <Param name="Sitio">
-          <ParameterCard name="Sitio" value={draft.website || '—'} effect="Web de la organización.">
-            {canSave ? (
-              <Field
-                label="Sitio"
-                value={draft.website}
-                onChange={(event) => setField('website', event.target.value)}
-              />
-            ) : null}
-          </ParameterCard>
-        </Param>
-        <Param name="Correo de la organización">
-          <ParameterCard name="Correo de la organización" value={draft.email} effect="Contacto.">
-            {canSave ? (
-              <Field
-                label="Correo de la organización"
-                value={draft.email}
-                onChange={(event) => setField('email', event.target.value)}
-              />
-            ) : null}
-          </ParameterCard>
-        </Param>
-        <Param name="Teléfono de la organización">
-          <ParameterCard
-            name="Teléfono de la organización"
-            value={draft.phone || '—'}
-            effect="Contacto."
-          >
-            {canSave ? (
-              <Field
-                label="Teléfono de la organización"
-                value={draft.phone}
-                onChange={(event) => setField('phone', event.target.value)}
-              />
-            ) : null}
-          </ParameterCard>
-        </Param>
-        <Read
-          name="Dirección web de la organización"
-          value={text(org.slug)}
-          mono
-          effect="Único. No se edita desde aquí."
-        />
-        <Read name="Tipo" value={word(ORG_TYPE, org.type)} effect="No se edita desde aquí." />
-        <Read name="País" value={text(org.country)} effect="País de la organización." />
-        <Read
-          name="Zona horaria de la org"
-          value={text(org.timezone)}
-          effect="Valor para eventos nuevos."
-        />
-        <Read
-          name="Moneda de la org"
-          value={text(org.currency)}
-          effect="Valor para eventos nuevos."
-        />
-        <Read
-          name="Dirección de la org"
-          value={text(org.address)}
-          effect="Calle. No se edita desde aquí."
-        />
-        <Read
-          name="Ciudad de la org"
-          value={text(org.city)}
-          effect="Ciudad. No se edita desde aquí."
-        />
-        <Read
-          name="Estado de la org"
-          value={text(org.state)}
-          effect="Entidad. No se edita desde aquí."
-        />
-        <Read
-          name="CP de la org"
-          value={text(org.postalCode)}
-          effect="Código postal. No se edita desde aquí."
-        />
-        <Read
-          name="Logo de la org"
-          value={org.logoUrl ?? 'Sin imagen'}
-          effect="El logo se cambia en Marca."
-        />
-        <Read
-          name="Banner de la org"
-          value={org.bannerUrl ?? 'Sin imagen'}
-          effect="Se cambia en Marca."
-        />
-        <Read
-          name="Titular de la cuenta"
-          value={text(org.bankAccountName)}
-          effect="Dato bancario. No se edita desde aquí."
-        />
-        <Read
-          name="Código de banco"
-          value={text(org.bankCode)}
-          effect="Dato bancario. No se edita desde aquí."
-        />
-        <Read
-          name="Routing"
-          value={text(org.bankRoutingNumber)}
-          effect="Dato bancario. No se edita desde aquí."
-        />
-        <Read
-          name="Número de cuenta"
-          value={maskAccount(org.bankAccountNumber)}
-          mono
-          effect="Enmascarado por seguridad."
-        />
-        <Read name="PayPal" value={text(org.paypalEmail)} effect="Solo informativo." />
-        <Read
-          name="Stripe"
-          value="No usar"
-          effect={
-            org.stripeAccountId ? 'Hay un identificador legado. No se usa.' : 'Legado. Sin control.'
-          }
-        />
-        <Read
-          name="RFC en la org"
-          value={text(org.taxId)}
-          effect="Los datos con que se factura están en Facturación."
-        />
-        <Read name="Verificada" value={yesNo(org.verified)} effect="No se edita desde aquí." />
-        <Read name="KYC" value={word(CHECK, org.kycStatus)} effect="No se edita desde aquí." />
-        <Read name="AML" value={word(CHECK, org.amlStatus)} effect="No se edita desde aquí." />
+        {canSave ? (
+          <div className={styles.stack}>
+            <Field
+              label="Nombre"
+              value={draft.name}
+              onChange={(event) => setField('name', event.target.value)}
+            />
+            <Field
+              label="Descripción"
+              value={draft.description}
+              onChange={(event) => setField('description', event.target.value)}
+            />
+            <Field
+              label="Sitio web"
+              value={draft.website}
+              onChange={(event) => setField('website', event.target.value)}
+            />
+            <Field
+              label="Correo de contacto"
+              value={draft.email}
+              onChange={(event) => setField('email', event.target.value)}
+            />
+            <Field
+              label="Teléfono"
+              value={draft.phone}
+              onChange={(event) => setField('phone', event.target.value)}
+            />
+          </div>
+        ) : (
+          <InfoList
+            items={[
+              { label: 'Nombre', value: draft.name },
+              { label: 'Descripción', value: draft.description || '—' },
+              { label: 'Sitio web', value: draft.website || '—' },
+              { label: 'Correo de contacto', value: draft.email },
+              { label: 'Teléfono', value: draft.phone || '—' },
+            ]}
+          />
+        )}
+        <InfoList title="Datos de la cuenta" items={datos} />
+        <InfoList title="Cuenta de depósito" items={deposito} />
+        <InfoList title="Verificación" items={verificacion} />
       </div>
       {actionError ? (
         <p className={styles.danger} role="alert">
@@ -424,28 +393,5 @@ export function OrganizacionBody() {
         </div>
       ) : null}
     </section>
-  );
-}
-
-function Read({
-  name,
-  value,
-  effect,
-  mono,
-}: {
-  name: string;
-  value: string;
-  effect: string;
-  mono?: boolean;
-}) {
-  return (
-    <Param name={name}>
-      <ParameterCard
-        name={name}
-        value={value}
-        valueStyle={mono ? 'mono' : 'text'}
-        effect={effect}
-      />
-    </Param>
   );
 }

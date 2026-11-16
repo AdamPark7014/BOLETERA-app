@@ -255,9 +255,6 @@ function MembresiasBody({ orgId }: { orgId: string }) {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Membresías</h1>
-        <p className={styles.quiet}>
-          Planes, beneficios, adopción, renovación e ingreso recurrente.
-        </p>
       </header>
 
       {plansUnavailable ? (
@@ -299,20 +296,14 @@ function MembresiasBody({ orgId }: { orgId: string }) {
           </p>
         </li>
         <li className={styles.row}>
-          <div className={styles.rowMain}>
-            <p className={styles.rowTitle}>Beneficios canjeados</p>
-            <p className={styles.rowMeta}>Según métricas</p>
-          </div>
+          <p className={styles.rowTitle}>Beneficios canjeados</p>
           <span />
           <p className={styles.figure}>
             {blank ?? (metricsQuery.isPending ? '…' : formatCount(kpis.benefitsRedeemed))}
           </p>
         </li>
         <li className={styles.row}>
-          <div className={styles.rowMain}>
-            <p className={styles.rowTitle}>Tasa de renovación</p>
-            <p className={styles.rowMeta}>Promedio de planes o métricas</p>
-          </div>
+          <p className={styles.rowTitle}>Tasa de renovación</p>
           <span />
           <p className={styles.figure}>
             {blank ?? (figuresPending ? '…' : formatRatio(kpis.renewalRate))}
@@ -507,20 +498,22 @@ function MembresiasBody({ orgId }: { orgId: string }) {
                             <p className={styles.rowMeta}>
                               {[
                                 plan.tier,
-                                billingLabel(plan.billingPeriod),
-                                plan.slug,
+                                `${formatMoneyPrecise(planPriceCents(plan))} ${billingLabel(plan.billingPeriod).toLowerCase()}`,
                                 planStatusMeta(statusOf(plan)).label,
-                                `${formatMoneyPrecise(planPriceCents(plan))} c/u`,
-                                `${formatCount(plan.benefitCount ?? 0)} beneficios`,
+                                `${formatCount(plan.benefitCount ?? 0)} ${(plan.benefitCount ?? 0) === 1 ? 'beneficio' : 'beneficios'}`,
                                 `renovación ${formatRatio(plan.renewalRate)}`,
-                              ].join(' · ')}
+                              ]
+                                .filter(Boolean)
+                                .join(' · ')}
                             </p>
                           </div>
                           <p className={styles.tertiary}>
                             {formatCount(plan.memberCount)}
                             {plan.maxMembers != null
                               ? `/${formatCount(plan.maxMembers)} · ${formatRatio(adoptionRate(plan))}`
-                              : ' miembros'}
+                              : plan.memberCount === 1
+                                ? ' miembro'
+                                : ' miembros'}
                           </p>
                           <p className={styles.figure}>{formatMoney(planRevenueCents(plan))}</p>
                         </li>

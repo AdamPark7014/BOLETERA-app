@@ -176,7 +176,7 @@ function InventarioView({ orgId }: { orgId: string }) {
     if (!summary) return [];
     return [
       { id: 'available', label: 'Disponibles', value: summary.available },
-      { id: 'held', label: 'En hold', value: summary.held },
+      { id: 'held', label: 'Apartados', value: summary.held },
       { id: 'sold', label: 'Vendidos', value: summary.sold },
       { id: 'blocked', label: 'Bloqueados', value: summary.blocked },
     ];
@@ -232,10 +232,6 @@ function InventarioView({ orgId }: { orgId: string }) {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Inventario</h1>
-        <p className={styles.quiet}>
-          Disponibilidad por zona y tier, holds, bloqueos y proyección de agotamiento. Aquí se lee;
-          los cupos se editan en cada evento.
-        </p>
         <div className={bt.actions}>
           <div className={bt.segmentWrap}>
             <Segment<RangeKey>
@@ -354,7 +350,7 @@ function InventarioView({ orgId }: { orgId: string }) {
                 <p className={styles.quiet}>
                   {events.data?.length
                     ? 'Hay eventos, pero el inventario aún no reporta zonas. Publica ofertas o espera la agregación.'
-                    : 'Sin inventario. Crea y publica un evento con ofertas para ver cupos y holds.'}
+                    : 'Sin inventario. Publica un evento para ver sus cupos.'}
                 </p>
                 <div className={bt.actions}>
                   <Link href="/events" className={bt.link}>

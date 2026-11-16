@@ -88,9 +88,7 @@ function CrmBody() {
       <section>
         <header className={styles.sectionHead}>
           <h1 className={styles.sectionTitle}>Clientes</h1>
-          <p className={styles.quiet}>
-            Tu rol no puede ver clientes.
-          </p>
+          <p className={styles.quiet}>Tu rol no puede ver clientes.</p>
         </header>
       </section>
     );

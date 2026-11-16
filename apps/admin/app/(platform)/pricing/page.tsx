@@ -231,9 +231,9 @@ function PreciosBody() {
       await previewMutation.mutateAsync();
       setPreviewMode(true);
       url.setView('recomendaciones');
-      setNotice('Vista previa generada. No se escribió ningún precio.');
+      setNotice('Revisa los precios y confírmalos para aplicarlos.');
     } catch (error) {
-      setActionError(failText(error, 'No se pudo previsualizar.'));
+      setActionError(failText(error, 'No se pudieron calcular los precios sugeridos.'));
     }
   }
 
@@ -250,7 +250,7 @@ function PreciosBody() {
       );
       if (result.pendingApproval > 0) url.setView('aprobaciones');
     } catch (error) {
-      setActionError(failText(error, 'No se pudo generar.'));
+      setActionError(failText(error, 'No se pudieron aplicar los precios.'));
     }
   }
 
@@ -355,16 +355,14 @@ function PreciosBody() {
           </Link>
         ) : null}
         <div className={local.toolbar}>
-          <TicketButton
-            variant="secondary"
-            disabled={!activeEventId || busy}
-            onClick={() => void onPreview()}
-          >
-            {previewMutation.isPending ? 'Previsualizando' : 'Previsualizar'}
-          </TicketButton>
-          {canWrite ? (
-            <TicketButton disabled={!activeEventId || busy} onClick={() => void onGenerate()}>
-              {updateMutation.isPending ? 'Generando' : 'Generar y aplicar seguros'}
+          {/* Aplicar siempre pasa por la vista previa: primero se ven los precios, luego se confirman. */}
+          {!previewMode ? (
+            <TicketButton
+              variant={canWrite ? 'primary' : 'secondary'}
+              disabled={!activeEventId || busy}
+              onClick={() => void onPreview()}
+            >
+              {previewMutation.isPending ? 'Calculando' : 'Ver precios sugeridos'}
             </TicketButton>
           ) : null}
           <TicketButton
@@ -386,10 +384,20 @@ function PreciosBody() {
               Vista previa sin guardar · {generatedAgeLabel(bundleQ.data, now)}
             </p>
             {canWrite ? (
-              <TicketButton variant="secondary" disabled={busy} onClick={() => void onGenerate()}>
-                Confirmar generación
+              <TicketButton disabled={busy} onClick={() => void onGenerate()}>
+                {updateMutation.isPending ? 'Aplicando' : 'Aplicar precios sugeridos'}
               </TicketButton>
             ) : null}
+            <TicketButton
+              variant="ghost"
+              disabled={busy}
+              onClick={() => {
+                setNotice(null);
+                void refreshAll();
+              }}
+            >
+              Cancelar
+            </TicketButton>
           </div>
         ) : null}
         {actionError ? (
@@ -438,7 +446,7 @@ function PreciosBody() {
               ) : null}
             </div>
             <div className={styles.kpi}>
-              <p className={styles.kpiLabel}>Se aplican sin firma</p>
+              <p className={styles.kpiLabel}>Se aplican sin aprobación</p>
               <p className={styles.kpiValue}>
                 {bundleQ.data ? formatNumber(summary.autoApplicable) : '—'}
               </p>
@@ -469,9 +477,7 @@ function PreciosBody() {
                 label="Buscar"
                 kind="search"
                 value={url.query}
-                placeholder={
-                  url.view === 'aprobaciones' ? 'Oferta o id de recomendación' : 'Oferta, zona o id'
-                }
+                placeholder={url.view === 'aprobaciones' ? 'Buscar oferta' : 'Buscar oferta o zona'}
                 onChange={(event) => url.setQuery(event.target.value)}
               />
             ) : null}

@@ -95,7 +95,7 @@ export function checkInSeries(
   return [
     {
       id: 'checkins',
-      name: 'Check-ins',
+      name: 'Entradas',
       data: points.map((point) => ({
         label: point.label ?? formatBucketLabel(point.bucket, granularity),
         value: point.value,

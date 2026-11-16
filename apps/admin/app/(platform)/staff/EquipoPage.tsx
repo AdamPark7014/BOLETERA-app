@@ -281,11 +281,6 @@ function EquipoBody() {
                             ) : (
                               <>
                                 <p className={frame.rowTitle}>{roleName(person.role)}</p>
-                                <p className={frame.rowMeta}>
-                                  {actorId === person.id
-                                    ? 'Tu propio rol lo cambia otra persona.'
-                                    : 'Su rango es igual o mayor que el tuyo.'}
-                                </p>
                               </>
                             )}
                           </td>

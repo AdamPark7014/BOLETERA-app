@@ -3,7 +3,7 @@
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { formatLocalDateTime, parseLocalDateTime, zonedTimeToUtc } from '@boletera/shared';
-import { Field, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { Field, ParameterCard, TicketButton, TicketState, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
@@ -456,13 +456,15 @@ function AbonosBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Abonos</h1>
-        <p className={styles.quiet}>
-          {canEdit
-            ? 'Se guarda el abono. Los vendidos los cuenta el servicio. La sección del asiento se pide al comprar.'
-            : 'Se lee. La guarda quien edita eventos.'}
-        </p>
       </header>
-      {passes.length === 0 ? <p className={styles.quiet}>No hay abonos.</p> : null}
+      {passes.length === 0 ? (
+        <TicketState
+          kind="empty"
+          align="start"
+          title="Aún no hay abonos"
+          body="Un abono agrupa varias funciones en una sola compra."
+        />
+      ) : null}
       <div className={styles.stack}>
         {passes.map((pass) => {
           const open = openId === pass.id;

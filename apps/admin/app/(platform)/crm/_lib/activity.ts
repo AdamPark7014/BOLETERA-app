@@ -58,8 +58,7 @@ export function buildCrmActivity(input: {
       id: `audit-${entry.id}`,
       actor: (entry as { actorName?: string | null }).actorName || 'Sistema',
       action: auditVerb(entry.action),
-      target:
-        (entry as { entityName?: string | null }).entityName || entityLabel(entry.entityType),
+      target: (entry as { entityName?: string | null }).entityName || entityLabel(entry.entityType),
       timestamp: entry.createdAt,
       detail: null,
     }));

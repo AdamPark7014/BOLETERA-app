@@ -412,7 +412,7 @@ export function responsiblePartyLabel(key: ChannelKey): string {
     case 'taquilla':
       return 'Ubicaciones / operador';
     case 'api':
-      return 'Partner API';
+      return 'Socio por API';
     case 'promoter':
       return 'Promotor responsable';
     case 'affiliate':

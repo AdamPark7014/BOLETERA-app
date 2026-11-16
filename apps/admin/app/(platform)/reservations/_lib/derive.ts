@@ -193,7 +193,7 @@ export function conversionFunnel(orders: readonly OrderRow[]) {
   }).length;
 
   return [
-    { id: 'holds', label: 'Holds / pendientes', value: Math.max(pending, 0) },
+    { id: 'holds', label: 'Apartados pendientes', value: Math.max(pending, 0) },
     { id: 'completed', label: 'Convertidos a compra', value: Math.max(completed, 0) },
     { id: 'lost', label: 'Liberados / expirados', value: Math.max(lost, 0) },
   ] as const;

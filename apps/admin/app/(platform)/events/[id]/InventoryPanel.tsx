@@ -125,14 +125,14 @@ export function InventoryPanel({
           <strong>{formatCount(hubInv.available)}</strong>
         </article>
         <article className={styles.statCard}>
-          <span>En hold</span>
+          <span>Apartados</span>
           <strong>{formatCount(hubInv.held)}</strong>
         </article>
         {summary ? (
           <article className={styles.statCard}>
             <span>Bloqueados (métricas)</span>
             <strong>{formatCount(summary.blocked)}</strong>
-            <small>{formatCount(summary.activeHolds)} holds activos</small>
+            <small>{formatCount(summary.activeHolds)} activos</small>
           </article>
         ) : null}
       </div>
@@ -179,7 +179,7 @@ export function InventoryPanel({
               <thead>
                 <tr>
                   <th scope="col">Zona</th>
-                  <th scope="col">Tier</th>
+                  <th scope="col">Nivel</th>
                   <th scope="col">Vendidos</th>
                   <th scope="col">Restantes</th>
                   <th scope="col">Disponibilidad</th>
@@ -235,7 +235,7 @@ export function InventoryPanel({
           actions={
             venueId && canManageVenue ? (
               <div className={styles.actionGroup}>
-                <Link href={`/venues/${venueId}/map`}>Layout</Link>
+                <Link href={`/venues/${venueId}/map`}>Plano</Link>
                 <Link href={`/venues/${venueId}/3d`}>Vista 3D</Link>
               </div>
             ) : undefined

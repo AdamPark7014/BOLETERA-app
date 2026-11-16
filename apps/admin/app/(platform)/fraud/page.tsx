@@ -181,9 +181,6 @@ function FraudeBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Fraude y riesgo</h1>
-        <p className={styles.quiet}>
-          Casos que ya marcó el servicio. Resolver deja el caso en Resuelto.
-        </p>
       </header>
       <div className={styles.stack}>
         <Param name="Detección">

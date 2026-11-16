@@ -186,9 +186,6 @@ function PartnersBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Socios comerciales</h1>
-        <p className={styles.quiet}>
-          Claves de API. El partner de un evento, con cupo y comisión, está en Canales.
-        </p>
       </header>
       {keys.length === 0 ? <p className={styles.quiet}>No hay claves.</p> : null}
       <div className={styles.stack}>

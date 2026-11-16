@@ -32,7 +32,7 @@ export type SeatStatus = (typeof SEAT_STATUSES)[number];
 
 export const SEAT_STATUS_LABEL: Record<string, string> = {
   AVAILABLE: 'Disponible',
-  HELD: 'En hold',
+  HELD: 'Apartado',
   SOLD: 'Vendido',
   USED: 'Usado',
   REFUNDED: 'Reembolsado',
