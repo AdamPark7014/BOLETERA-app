@@ -245,6 +245,7 @@ function dayKey(date: Date): string {
 }
 
 const monthLabelFormatter = new Intl.DateTimeFormat('es-MX', {
+  timeZone: 'America/Mexico_City',
   month: 'long',
   year: 'numeric',
 });

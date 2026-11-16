@@ -1606,3 +1606,44 @@ button.tabOn {
 .barFill {
   background: var(--text);
 }
+
+/* Pasada 5: lo que aún quedaba en dorado fuera de la acción principal. */
+.avatar {
+  border: 1px solid var(--line-strong);
+}
+
+.subCurrent {
+  background: var(--elevated);
+  color: var(--text);
+}
+
+.panelLink,
+.panelLinkButton,
+.panelLink:hover,
+.panelLinkButton:hover {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+.panelLink:hover,
+.panelLinkButton:hover {
+  text-decoration-color: var(--text);
+}
+
+.cellLink:hover {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Estados en proceso y fila desplegada: neutros. */
+.chipGold {
+  color: var(--text);
+}
+
+.zoneOpen {
+  border-color: var(--text-secondary);
+  background: var(--elevated);
+}

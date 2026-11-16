@@ -3,6 +3,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const integerFormatter = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 });
 
 const dayFormatter = new Intl.DateTimeFormat('es-MX', {
+  timeZone: 'America/Mexico_City',
   day: '2-digit',
   month: 'short',
   year: 'numeric',

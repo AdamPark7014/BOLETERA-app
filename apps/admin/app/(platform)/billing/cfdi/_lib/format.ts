@@ -10,6 +10,8 @@ const money = new Intl.NumberFormat('es-MX', {
 });
 
 const dateTime = new Intl.DateTimeFormat('es-MX', {
+  timeZone: 'America/Mexico_City',
+  hourCycle: 'h23',
   day: '2-digit',
   month: 'short',
   year: 'numeric',

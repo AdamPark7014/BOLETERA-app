@@ -23,6 +23,7 @@ export function isSettlementPeriod(value: string): value is SettlementPeriod {
 }
 
 const rangeLabelFormatter = new Intl.DateTimeFormat('es-MX', {
+  timeZone: 'America/Mexico_City',
   day: 'numeric',
   month: 'long',
 });
@@ -68,11 +69,14 @@ export function periodRange(period: SettlementPeriod, now = new Date()): PeriodR
 }
 
 const dayFormatter = new Intl.DateTimeFormat('es-MX', {
+  timeZone: 'America/Mexico_City',
   day: '2-digit',
   month: 'short',
 });
 
 const dateTimeFormatter = new Intl.DateTimeFormat('es-MX', {
+  timeZone: 'America/Mexico_City',
+  hourCycle: 'h23',
   day: '2-digit',
   month: 'short',
   year: 'numeric',
@@ -81,6 +85,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat('es-MX', {
 });
 
 const hourFormatter = new Intl.DateTimeFormat('es-MX', {
+  timeZone: 'America/Mexico_City',
+  hourCycle: 'h23',
   hour: '2-digit',
   minute: '2-digit',
 });

@@ -109,11 +109,14 @@ function formatBucketLabel(iso: string, granularity: MetricsGranularity): string
   if (Number.isNaN(date.getTime())) return iso;
   if (granularity === 'hour') {
     return new Intl.DateTimeFormat('es-MX', {
+      timeZone: 'America/Mexico_City',
+      hourCycle: 'h23',
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
   }
   return new Intl.DateTimeFormat('es-MX', {
+    timeZone: 'America/Mexico_City',
     month: 'short',
     day: '2-digit',
   }).format(date);
