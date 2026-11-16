@@ -351,12 +351,12 @@ export default function BuscarPage() {
 
           <div className={styles.actions}>
             {result.orderId && (
-              <TicketButton onClick={() => void reprint()}>Reimprimir · F7</TicketButton>
+              <TicketButton onClick={() => void reprint()}>Reimprimir</TicketButton>
             )}
             {canOperate && (
               <>
                 <TicketButton variant="danger" onClick={() => setPrompt('VOID')}>
-                  Anular · F9
+                  Anular
                 </TicketButton>
                 <TicketButton variant="secondary" onClick={() => setPrompt('EXCHANGE')}>
                   Cambio de boletos

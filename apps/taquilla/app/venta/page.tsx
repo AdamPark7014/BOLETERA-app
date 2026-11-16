@@ -1260,8 +1260,8 @@ function VentaFlow() {
                       {holdExpiresAt && ttlLeft > 0
                         ? `${holdIds.length} lugares juntos apartados · ${Math.floor(ttlLeft / 60)}:${String(ttlLeft % 60).padStart(2, '0')}`
                         : offer?.remainingQuantity != null
-                          ? `${offer.remainingQuantity.toLocaleString('es-MX')} libres en la sección · Enter pasa al cobro`
-                          : 'Enter pasa al cobro'}
+                          ? `${offer.remainingQuantity.toLocaleString('es-MX')} libres en la sección`
+                          : null}
                     </small>
                   </div>
                 </div>

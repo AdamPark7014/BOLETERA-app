@@ -448,3 +448,10 @@
 .bar span {
   background: rgba(255, 255, 255, 0.7);
 }
+
+/* La fecha del corte en una sola línea en escritorio. */
+@media (min-width: 481px) {
+  .zList li > strong {
+    white-space: nowrap;
+  }
+}

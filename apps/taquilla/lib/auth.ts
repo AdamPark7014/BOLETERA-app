@@ -198,7 +198,7 @@ export async function reauthenticateSameCashier(email: string, password: string)
   if (current && current.id !== user.id) {
     // Cambiar de persona a mitad de un turno rompería la trazabilidad del corte:
     // el relevo se hace por traspaso de turno, no por el diálogo de sesión.
-    throw new Error('Ese usuario no es el cajero del turno. Usa traspaso de turno en Corte (F12).');
+    throw new Error('Ese usuario no es el cajero del turno. Usa traspaso de turno en Corte.');
   }
   saveTaquillaSession(accessToken, {
     terminalLabel: getTerminalLabel(),

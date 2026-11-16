@@ -7,6 +7,7 @@ import {
   getOrgName,
   getTaquillaUser,
 } from './auth';
+import { formatDateTime } from '@boletera/ui';
 import { availableByOffer, fetchAvailability } from './inventory';
 import { buildEscPosReceipt, printEscPos, printViaSerial } from './thermal';
 
@@ -385,7 +386,7 @@ const PAYMENT_LABEL: Record<string, string> = {
 export async function printReceipt(receipt: PosReceipt) {
   const lines = [
     receipt.receiptNumber,
-    new Date(receipt.timestamp).toLocaleString('es-MX'),
+    formatDateTime(receipt.timestamp),
     '',
     receipt.eventName,
     `Boletos: ${receipt.quantity}`,
