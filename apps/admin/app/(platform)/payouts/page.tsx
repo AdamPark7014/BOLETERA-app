@@ -3,7 +3,7 @@
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import Link from 'next/link';
 import { Fragment, Suspense, useEffect, useState } from 'react';
-import { Field, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { Field, TicketButton, TicketState, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
@@ -237,16 +237,15 @@ function LiquidacionesBody() {
       </div>
 
       {payouts.length === 0 ? (
-        <div className={styles.empty}>
-          <p className={styles.emptyTitle}>Todavía no hay liquidaciones</p>
-          <p className={styles.quiet}>
-            Se generan al cerrar cada periodo con ventas cobradas. Mientras, revisa el corte de
-            venta.
-          </p>
-          <Link href="/reports" className={styles.ghostLink}>
-            Ver reportes
-          </Link>
-        </div>
+        <TicketState
+          kind="empty"
+          title="Todavía no hay liquidaciones"
+          action={
+            <Link href="/reports" className={styles.ghostLink}>
+              Ver reportes
+            </Link>
+          }
+        />
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>

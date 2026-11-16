@@ -45,6 +45,7 @@ export function Stepper({
   unit,
   label,
   editable = false,
+  showBounds = true,
   onChange,
 }: {
   value: number | null;
@@ -57,6 +58,8 @@ export function Stepper({
    * las pantallas que ya usan el Stepper de solo botones.
    */
   editable?: boolean;
+  /** Si es false, oculta la pista de rango (p. ej. «0–100 %»). */
+  showBounds?: boolean;
   onChange: (next: number) => void;
 }) {
   const atMin = value == null || value <= min;
@@ -97,9 +100,11 @@ export function Stepper({
       >
         +
       </button>
-      <span className={styles.bounds}>
-        {max != null ? `${min}–${max}${unit ?? ''}` : `Mínimo ${min}`}
-      </span>
+      {showBounds ? (
+        <span className={styles.bounds}>
+          {max != null ? `${min}–${max}${unit ?? ''}` : `Mínimo ${min}`}
+        </span>
+      ) : null}
     </div>
   );
 }

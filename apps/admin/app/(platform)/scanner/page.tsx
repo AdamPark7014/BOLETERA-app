@@ -22,7 +22,7 @@
  */
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Field, TicketButton } from '@boletera/ui';
+import { Field, TicketButton, formatDateTime, formatDayMonth, formatTime } from '@boletera/ui';
 import { ApiError, adminApi, getStoredToken } from '@/lib/api';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
 import { SheetSelect } from '../events/_ticket/controls';
@@ -102,9 +102,8 @@ function scanBody(raw: string) {
 
 function formatMoment(iso?: string) {
   if (!iso) return null;
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat('es-MX', { dateStyle: 'short', timeStyle: 'medium' }).format(date);
+  const formatted = formatDateTime(iso);
+  return formatted || null;
 }
 
 /**
@@ -680,13 +679,7 @@ function ScannerBody() {
                     />
                     <span className={styles.recentMain}>{row.label}</span>
                     <span className={styles.recentMeta}>{row.seat || '—'}</span>
-                    <span className={styles.recentMeta}>
-                      {new Date(row.at).toLocaleTimeString('es-MX', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })}
-                    </span>
+                    <span className={styles.recentMeta}>{formatTime(row.at)}</span>
                   </li>
                 ))}
               </ul>
@@ -701,10 +694,7 @@ function ScannerBody() {
               placeholder="Elige la función"
               options={events.map((e) => ({
                 value: e.id,
-                label: `${e.title} · ${new Date(e.startsAt).toLocaleDateString('es-MX', {
-                  day: 'numeric',
-                  month: 'short',
-                })}`,
+                label: `${e.title} · ${formatDayMonth(e.startsAt)}`,
               }))}
               onChange={persistEvent}
             />
@@ -750,7 +740,7 @@ function agoLabel(iso?: string) {
   const at = new Date(iso);
   if (Number.isNaN(at.getTime())) return null;
   const mins = Math.max(0, Math.round((Date.now() - at.getTime()) / 60000));
-  const hour = at.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const hour = formatTime(iso);
   if (mins < 1) return `hace menos de un minuto (${hour})`;
   if (mins < 120) return `hace ${mins} min (${hour})`;
   return `el ${formatMoment(iso)}`;

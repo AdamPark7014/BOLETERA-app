@@ -80,6 +80,7 @@ export function IvaSection({
                 min={0}
                 max={100}
                 unit="%"
+                showBounds={false}
                 onChange={(next) => {
                   setTax(next);
                   setNotice(null);

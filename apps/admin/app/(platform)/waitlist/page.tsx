@@ -3,7 +3,7 @@
 import { NoAccess } from '@/app/(platform)/events/_ticket/NoAccess';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
-import { TicketButton } from '@boletera/ui';
+import { TicketButton, TicketState } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
@@ -213,15 +213,15 @@ function EsperaBody() {
       </div>
 
       {entries.length === 0 ? (
-        <div className={styles.empty}>
-          <p className={styles.emptyTitle}>Nadie está en lista de espera</p>
-          <p className={styles.quiet}>
-            Cuando un evento se agote, los compradores podrán anotarse para recibir aviso.
-          </p>
-          <Link href="/events" className={styles.ghostLink}>
-            Ver eventos
-          </Link>
-        </div>
+        <TicketState
+          kind="empty"
+          title="Nadie está en lista de espera"
+          action={
+            <Link href="/events" className={styles.ghostLink}>
+              Ver eventos
+            </Link>
+          }
+        />
       ) : null}
 
       {[...groups.entries()].map(([eventId, group]) => {

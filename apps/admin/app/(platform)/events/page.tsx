@@ -123,17 +123,28 @@ function EventsBody() {
                   Aforo
                 </th>
                 <th scope="col">
-                  <span className={styles.srOnly}>Acciones</span>
+                  <span className={styles.srOnly}>Abrir</span>
                 </th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((event) => (
-                <tr key={event.id}>
+                <tr
+                  key={event.id}
+                  className={styles.rowLink}
+                  role="link"
+                  tabIndex={0}
+                  aria-label={`Abrir ${event.title}`}
+                  onClick={() => router.push(`/events/${event.id}`)}
+                  onKeyDown={(eventKey) => {
+                    if (eventKey.key === 'Enter' || eventKey.key === ' ') {
+                      eventKey.preventDefault();
+                      router.push(`/events/${event.id}`);
+                    }
+                  }}
+                >
                   <td>
-                    <Link href={`/events/${event.id}`} className={styles.cellLink}>
-                      {event.title}
-                    </Link>
+                    <span className={styles.cellLink}>{event.title}</span>
                     <p className={styles.rowMeta}>{event.venue?.name ?? 'Sin recinto'}</p>
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{formatWhen(event.startsAt)}</td>
@@ -143,10 +154,8 @@ function EventsBody() {
                   <td className={styles.num}>
                     {event.totalCapacity > 0 ? formatNumber(event.totalCapacity) : '—'}
                   </td>
-                  <td className={styles.num}>
-                    <Link href={`/events/${event.id}`} className={styles.panelLink}>
-                      Abrir resumen
-                    </Link>
+                  <td className={styles.num} aria-hidden="true">
+                    ›
                   </td>
                 </tr>
               ))}

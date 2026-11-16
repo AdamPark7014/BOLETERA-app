@@ -6,7 +6,7 @@ import { StageArt, formatTicketAmount } from '@boletera/ui';
 import type { MetricsAlert, MetricsTimePoint } from '@boletera/shared';
 import { hasCapability } from '@/lib/permissions';
 import { listEvents, type EventHub, type EventRow } from '@/lib/platform-api';
-import { useMetricsAlerts, useMetricsTimeseries, useEventSalesPace } from '@/lib/queries/metrics';
+import { useMetricsAlerts, useMetricsTimeseries } from '@/lib/queries/metrics';
 import { useOrders } from '@/lib/queries/orders';
 import { useRecommendationBundle } from '@/lib/queries/pricing';
 import {
@@ -166,7 +166,6 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
               token={token}
               eventId={eventId}
               seriesId={readString(row.seriesId)}
-              fallback={shortDate(readString(row.startsAt) ?? '', zone)}
               zone={zone}
             />
           ) : null}
@@ -192,14 +191,10 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
             </span>
           </p>
         </div>
-        {canMetrics && eventId ? (
-          <PaceKpi eventId={eventId} />
-        ) : (
-          <div className={styles.kpi}>
-            <p className={styles.kpiLabel}>Apartados en curso</p>
-            <p className={styles.kpiValue}>{formatCount(hub?.inventory.held ?? 0)}</p>
-          </div>
-        )}
+        <div className={styles.kpi}>
+          <p className={styles.kpiLabel}>Apartados en curso</p>
+          <p className={styles.kpiValue}>{formatCount(hub?.inventory.held ?? 0)}</p>
+        </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Ticket promedio</p>
           <p className={styles.kpiValue}>{average == null ? 'Sin dato' : money(average)}</p>
@@ -212,7 +207,6 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
             <CumulativeChart
               eventId={eventId}
               capacity={capacity}
-              sold={sold}
               zone={zone}
               since={readString(row.createdAt)}
             />
@@ -305,13 +299,11 @@ function DatePills({
   token,
   eventId,
   seriesId,
-  fallback,
   zone,
 }: {
   token: string;
   eventId: string;
   seriesId: string | null;
-  fallback: string;
   zone: string;
 }) {
   const [siblings, setSiblings] = useState<EventRow[]>([]);
@@ -332,13 +324,12 @@ function DatePills({
     };
   }, [token, seriesId]);
 
-  const items =
-    siblings.length > 1
-      ? siblings.map((item) => ({
-          id: item.id,
-          label: shortDate(String(item.startsAt), zone),
-        }))
-      : [{ id: eventId, label: fallback || 'Fecha' }];
+  if (siblings.length <= 1) return null;
+
+  const items = siblings.map((item) => ({
+    id: item.id,
+    label: shortDate(String(item.startsAt), zone),
+  }));
 
   return (
     <nav className={own.dates} aria-label="Fechas del evento">
@@ -356,43 +347,14 @@ function DatePills({
   );
 }
 
-function PaceKpi({ eventId }: { eventId: string }) {
-  const pace = useEventSalesPace({ eventId });
-  const rowData = pace.data?.events.find((item) => item.eventId === eventId);
-  if (!rowData) {
-    return (
-      <div className={styles.kpi}>
-        <p className={styles.kpiLabel}>Ritmo contra meta</p>
-        <p className={styles.kpiValue}>{pace.isPending ? '…' : 'Sin dato'}</p>
-      </div>
-    );
-  }
-  const points = Math.round(rowData.paceDelta * 100);
-  const ahead = points >= 0;
-  return (
-    <div className={styles.kpi}>
-      <p className={styles.kpiLabel}>Ritmo contra meta</p>
-      <p className={styles.kpiValue}>
-        {ahead ? '+' : '−'}
-        {Math.abs(points)}%
-      </p>
-      <p className={styles.kpiNote}>
-        <span className={ahead ? styles.up : styles.down}>{ahead ? 'adelante' : 'atrás'}</span>
-      </p>
-    </div>
-  );
-}
-
 function CumulativeChart({
   eventId,
   capacity,
-  sold,
   zone,
   since,
 }: {
   eventId: string;
   capacity: number;
-  sold: number;
   zone: string;
   since: string | null;
 }) {
@@ -437,8 +399,7 @@ function CumulativeChart({
         </p>
       ) : points.length < 2 ? (
         <div className={own.chartEmpty}>
-          <p className={own.chartEmptyFigure}>{formatCount(sold)}</p>
-          <p className={styles.quiet}>{sold === 1 ? 'boleto vendido' : 'boletos vendidos'}</p>
+          <p className={styles.quiet}>Aún no hay venta acumulada por día.</p>
         </div>
       ) : (
         <AreaSvg points={points} capacity={capacity} zone={zone} />

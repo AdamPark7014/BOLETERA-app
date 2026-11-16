@@ -839,6 +839,15 @@ button.row:hover {
   color: var(--gold-soft);
 }
 
+.rowLink {
+  cursor: pointer;
+}
+
+.rowLink:focus-visible td {
+  outline: 2px solid var(--focus, var(--gold));
+  outline-offset: -2px;
+}
+
 .empty {
   display: flex;
   flex-direction: column;

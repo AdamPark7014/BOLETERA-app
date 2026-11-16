@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Money, ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
+import { ParameterCard, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { Param, Stepper } from '../../events/_ticket/controls';
 import styles from '../../events/_ticket/frame.module.scss';
@@ -90,6 +90,7 @@ export function CargosSection({
                 min={0}
                 max={100}
                 unit="%"
+                showBounds={false}
                 onChange={(next) => {
                   setFee(next);
                   setNotice(null);
@@ -118,20 +119,8 @@ export function CargosSection({
             name="Precio anunciado"
             value={formatTicketAmount(example.total)}
             valueStyle="tabular"
-            effect={`Base + cargo + IVA sobre ${formatTicketAmount(example.base)}. Nadie lo teclea.`}
-          >
-            <Money
-              label="Precio anunciado"
-              amount={example.total}
-              currency
-              defaultOpen
-              lines={[
-                { label: 'Base', amount: example.base },
-                { label: 'Cargo', amount: example.fees },
-                { label: 'IVA', amount: example.taxes },
-              ]}
-            />
-          </ParameterCard>
+            effect={`Base ${formatTicketAmount(example.base)} · cargo ${formatTicketAmount(example.fees)} · IVA ${formatTicketAmount(example.taxes)}`}
+          />
         </Param>
         {error ? (
           <p className={styles.danger} role="alert">

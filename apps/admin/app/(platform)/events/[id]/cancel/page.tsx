@@ -258,10 +258,15 @@ function CancelBody() {
       <div className={styles.section}>
         <h2 className={styles.subTitle}>¿La causa es imputable al promotor?</h2>
         <p className={frame.quiet}>
-          De esta respuesta depende una obligación legal: si la cancelación es imputable, además del
-          reembolso completo procede una bonificación mínima del 20% de lo pagado (LFPC art. 92
-          Bis).
+          De esta respuesta depende el reembolso y una posible bonificación.
         </p>
+        <details>
+          <summary className={frame.panelLink}>Ver qué implica</summary>
+          <p className={frame.quiet} style={{ marginTop: 8 }}>
+            Si la cancelación es imputable, además del reembolso completo procede una bonificación
+            mínima del 20% de lo pagado (LFPC art. 92 Bis).
+          </p>
+        </details>
         <div className={styles.choices} role="radiogroup" aria-label="Imputabilidad">
           <button
             type="button"

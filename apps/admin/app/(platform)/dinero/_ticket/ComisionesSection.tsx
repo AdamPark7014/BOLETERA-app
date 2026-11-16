@@ -110,6 +110,7 @@ export function ComisionesSection({
                 min={0}
                 max={100}
                 unit="%"
+                showBounds={false}
                 onChange={(next) => {
                   setCommission(next);
                   setNotice(null);
@@ -150,6 +151,7 @@ export function ComisionesSection({
                 min={0}
                 max={100}
                 unit="%"
+                showBounds={false}
                 onChange={(next) => {
                   setResale(next);
                   setNotice(null);

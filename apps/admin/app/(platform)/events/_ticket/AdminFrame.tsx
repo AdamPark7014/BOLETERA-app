@@ -333,7 +333,6 @@ export function AdminFrame({ children }: { children: ReactNode }) {
                     }
                   }}
                 />
-                <kbd className={styles.kbd}>Ctrl K</kbd>
                 {searchOpen && matches.length > 0 ? (
                   <ul className={styles.searchResults} aria-label="Pantallas que coinciden">
                     {matches.map((item) => (

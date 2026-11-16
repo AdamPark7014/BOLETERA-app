@@ -462,12 +462,23 @@ function PreciosBody() {
           </div>
 
           <div className={`${styles.stack} ${local.block}`}>
-            <Segment
-              label="Vista de precios"
-              value={url.view}
-              options={VIEW_OPTIONS}
-              onChange={url.setView}
-            />
+            <div role="radiogroup" aria-label="Vista de precios" className={local.viewTabs}>
+              {VIEW_OPTIONS.map((option) => {
+                const selected = url.view === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={selected ? local.viewTabOn : local.viewTab}
+                    onClick={() => url.setView(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
             {url.view !== 'senales' ? (
               <Field
                 label="Buscar"
@@ -487,28 +498,32 @@ function PreciosBody() {
                 <p className={styles.quiet}>Cargando recomendaciones.</p>
               ) : (
                 <div className={styles.stack}>
-                  <Segment
-                    label="Dirección"
-                    value={url.directions.length === 1 ? url.directions[0] : 'todas'}
-                    options={DIRECTION_OPTIONS}
-                    onChange={setDirection}
-                  />
-                  <div className={local.toolbar}>
-                    <Switch
-                      label="Solo las que piden aprobación"
-                      on={url.approvalOnly}
-                      onChange={(on) => setMarks({ approval: on })}
-                    />
-                    <p className={styles.quiet}>
-                      Piden aprobación · {formatNumber(summary.requiresApproval)}
-                    </p>
-                    <Switch
-                      label="Solo acotadas por banda"
-                      on={url.clampedOnly}
-                      onChange={(on) => setMarks({ clamped: on })}
-                    />
-                    <p className={styles.quiet}>Acotadas · {formatNumber(summary.clamped)}</p>
-                  </div>
+                  {recommendations.length >= 10 ? (
+                    <>
+                      <Segment
+                        label="Dirección"
+                        value={url.directions.length === 1 ? url.directions[0] : 'todas'}
+                        options={DIRECTION_OPTIONS}
+                        onChange={setDirection}
+                      />
+                      <div className={local.toolbar}>
+                        <Switch
+                          label="Solo las que piden aprobación"
+                          on={url.approvalOnly}
+                          onChange={(on) => setMarks({ approval: on })}
+                        />
+                        <p className={styles.quiet}>
+                          Piden aprobación · {formatNumber(summary.requiresApproval)}
+                        </p>
+                        <Switch
+                          label="Solo acotadas por banda"
+                          on={url.clampedOnly}
+                          onChange={(on) => setMarks({ clamped: on })}
+                        />
+                        <p className={styles.quiet}>Acotadas · {formatNumber(summary.clamped)}</p>
+                      </div>
+                    </>
+                  ) : null}
                   {bundleQ.data?.enableDynamic === false ? (
                     <p className={styles.tertiary}>Precio dinámico apagado.</p>
                   ) : null}
@@ -603,35 +618,37 @@ function PreciosBody() {
                           </tbody>
                         </table>
                       </div>
-                      <div className={local.toolbar}>
-                        <p className={styles.tertiary}>
-                          {formatNumber(page.from)}–{formatNumber(page.to)} de{' '}
-                          {formatNumber(page.total)}
-                        </p>
-                        <TicketButton
-                          variant="ghost"
-                          disabled={page.page <= 1}
-                          onClick={() => url.setPage(page.page - 1)}
-                        >
-                          Anterior
-                        </TicketButton>
-                        <TicketButton
-                          variant="ghost"
-                          disabled={page.page >= page.pageCount}
-                          onClick={() => url.setPage(page.page + 1)}
-                        >
-                          Siguiente
-                        </TicketButton>
-                        <Segment
-                          label="Por página"
-                          value={String(url.pageSize)}
-                          options={PAGE_SIZES.map((size) => ({
-                            value: String(size),
-                            label: String(size),
-                          }))}
-                          onChange={(value) => url.setPageSize(Number(value) as PageSize)}
-                        />
-                      </div>
+                      {filtered.length >= 10 ? (
+                        <div className={local.toolbar}>
+                          <p className={styles.tertiary}>
+                            {formatNumber(page.from)}–{formatNumber(page.to)} de{' '}
+                            {formatNumber(page.total)}
+                          </p>
+                          <TicketButton
+                            variant="ghost"
+                            disabled={page.page <= 1}
+                            onClick={() => url.setPage(page.page - 1)}
+                          >
+                            Anterior
+                          </TicketButton>
+                          <TicketButton
+                            variant="ghost"
+                            disabled={page.page >= page.pageCount}
+                            onClick={() => url.setPage(page.page + 1)}
+                          >
+                            Siguiente
+                          </TicketButton>
+                          <Segment
+                            label="Por página"
+                            value={String(url.pageSize)}
+                            options={PAGE_SIZES.map((size) => ({
+                              value: String(size),
+                              label: String(size),
+                            }))}
+                            onChange={(value) => url.setPageSize(Number(value) as PageSize)}
+                          />
+                        </div>
+                      ) : null}
                     </>
                   )}
                 </div>

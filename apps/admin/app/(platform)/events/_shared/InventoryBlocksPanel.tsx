@@ -23,6 +23,7 @@ import {
   type AdminReleaseResult,
   type BlockCategory,
 } from './inventory-api';
+import { formatWhen } from '../_ticket/read';
 import styles from './live-inventory.module.scss';
 
 /** Acepta comas, espacios y saltos de línea: se pega desde hoja de cálculo o del mapa. */
@@ -78,7 +79,7 @@ export function InventoryBlocksPanel({
         setResult(
           `Bloqueadas ${res.holds?.length ?? seatIds.length} butacas · motivo «${res.reason}» (${
             BLOCK_CATEGORY_LABEL[res.category as BlockCategory] ?? res.category
-          }) · vence ${new Date(res.expiresAt).toLocaleString('es-MX')}.`
+          }) · vence ${formatWhen(res.expiresAt)}.`
         );
       } else {
         const res: AdminReleaseResult = await releaseSeats(token, layoutId, {
