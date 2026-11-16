@@ -665,6 +665,8 @@ function RecintoBody() {
   }
 
   const totalCapacity = venues.reduce((sum, venue) => sum + (venue.totalCapacity ?? 0), 0);
+  const showAccessible = venues.some((venue) => (venue.accessibilitySeats ?? 0) > 0);
+  const showBlackouts = venues.some((venue) => venue.blackouts.length > 0);
 
   return (
     <section className={styles.page}>
@@ -709,10 +711,12 @@ function RecintoBody() {
                   <th scope="col" className={styles.num}>
                     Aforo
                   </th>
-                  <th scope="col" className={styles.num}>
-                    Accesibles
-                  </th>
-                  <th scope="col">Bloqueos</th>
+                  {showAccessible ? (
+                    <th scope="col" className={styles.num}>
+                      Accesibles
+                    </th>
+                  ) : null}
+                  {showBlackouts ? <th scope="col">Bloqueos</th> : null}
                   <th scope="col">
                     <span className={styles.srOnly}>Acciones</span>
                   </th>
@@ -734,23 +738,21 @@ function RecintoBody() {
                       </p>
                     </td>
                     <td className={styles.num}>{formatCount(venue.totalCapacity)}</td>
-                    <td className={styles.num}>
-                      {venue.accessibilitySeats ? (
-                        formatCount(venue.accessibilitySeats)
-                      ) : (
-                        <span className={styles.chipWarn}>Sin plazas</span>
-                      )}
-                    </td>
-                    <td>
-                      {venue.blackouts.length > 0 ? (
-                        <span className={styles.chipGold}>
-                          {venue.blackouts.length}{' '}
-                          {venue.blackouts.length === 1 ? 'fecha' : 'fechas'}
-                        </span>
-                      ) : (
-                        <span className={styles.quiet}>—</span>
-                      )}
-                    </td>
+                    {showAccessible ? (
+                      <td className={styles.num}>{formatCount(venue.accessibilitySeats)}</td>
+                    ) : null}
+                    {showBlackouts ? (
+                      <td>
+                        {venue.blackouts.length > 0 ? (
+                          <span className={styles.chipGold}>
+                            {venue.blackouts.length}{' '}
+                            {venue.blackouts.length === 1 ? 'fecha' : 'fechas'}
+                          </span>
+                        ) : (
+                          <span className={styles.quiet}>—</span>
+                        )}
+                      </td>
+                    ) : null}
                     <td className={styles.num}>
                       <div className={styles.cellActions}>
                         <Link href={`/venues/${venue.id}/map`} className={styles.panelLink}>

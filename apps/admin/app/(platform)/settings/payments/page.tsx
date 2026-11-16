@@ -217,7 +217,7 @@ function PagosBody() {
           <p className={styles.kpiValue}>Banorte</p>
           <p className={styles.kpiNote}>
             <span className={live ? styles.chipOk : styles.chipWarn}>
-              {live ? 'En vivo: cobros reales' : 'Modo demostración'}
+              {live ? 'En vivo' : 'Modo de prueba'}
             </span>
           </p>
         </div>
@@ -230,10 +230,19 @@ function PagosBody() {
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Cuenta de depósito</p>
-          <p className={styles.kpiValue} style={{ fontFamily: 'var(--font-mono)', fontSize: 22 }}>
-            {config.clabe ?? 'Sin CLABE'}
-          </p>
-          <p className={styles.kpiNote}>{config.settlement ?? 'CLABE enmascarada por seguridad'}</p>
+          {config.clabe ? (
+            <>
+              <p
+                className={styles.kpiValue}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 22 }}
+              >
+                {config.clabe}
+              </p>
+              <p className={styles.kpiNote}>{config.settlement ?? 'Cuenta enmascarada'}</p>
+            </>
+          ) : (
+            <p className={`${styles.kpiNote} ${styles.chipWarn}`}>Falta la cuenta de depósito</p>
+          )}
         </div>
       </div>
 

@@ -14,7 +14,7 @@ export interface ParameterCardProps {
   /** Tabular si es cifra, mono si es código. */
   valueStyle?: ParameterValueStyle;
   /** Una línea: qué cambia si se toca. */
-  effect: string;
+  effect?: string;
   /** Control diseñado. Si el rol no edita, no se pasa. */
   children?: ReactNode;
   /** Parámetros de borde. Se abren aquí, no en otra pantalla. */
@@ -56,7 +56,7 @@ export function ParameterCard({
         <p className={styles.name}>{name}</p>
         {editing ? null : <p className={cx(styles.value, valueClass)}>{value}</p>}
       </div>
-      {editing ? null : <p className={styles.effect}>{effect}</p>}
+      {editing || !effect ? null : <p className={styles.effect}>{effect}</p>}
       {children ? <div className={styles.control}>{children}</div> : null}
       {closedNote && !open ? <p className={styles.closedNote}>{closedNote}</p> : null}
       {advanced ? (

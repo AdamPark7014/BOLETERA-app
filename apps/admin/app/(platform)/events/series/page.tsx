@@ -4,7 +4,7 @@ import { formatDateLong as uiDateLong } from '@boletera/ui';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Field, ParameterCard, TicketButton } from '@boletera/ui';
+import { Field, ParameterCard, TicketButton, TicketState } from '@boletera/ui';
 import {
   listSeries,
   type EventSeriesKind,
@@ -107,9 +107,6 @@ function SeriesBody() {
     <section>
       <header className={frame.sectionHead}>
         <h1 className={frame.sectionTitle}>Series y residencias</h1>
-        <p className={frame.quiet}>
-          Programas recurrentes y residencias con fechas, aforo y próxima función.
-        </p>
         <p className={styles.links}>
           <Link href="/calendar" className={styles.inlineLink}>
             Calendario
@@ -183,139 +180,148 @@ function SeriesBody() {
           ) : null}
 
           {!loading && rows ? (
-            <>
-              <div className={styles.figures}>
-                <Param name="Programas">
-                  <ParameterCard
-                    name="Programas"
-                    value={formatCount(kpis.total)}
-                    valueStyle="tabular"
-                    effect="Series y temporadas."
-                  />
-                </Param>
-                <Param name="Activas">
-                  <ParameterCard
-                    name="Activas"
-                    value={formatCount(kpis.active)}
-                    valueStyle="tabular"
-                    effect="En estado Activa."
-                  />
-                </Param>
-                <Param name="Fechas próximas">
-                  <ParameterCard
-                    name="Fechas próximas"
-                    value={formatCount(kpis.upcomingDates)}
-                    valueStyle="tabular"
-                    effect="Funciones por venir."
-                  />
-                </Param>
-                <Param name="Aforo agregado">
-                  <ParameterCard
-                    name="Aforo agregado"
-                    value={formatCount(kpis.capacity)}
-                    valueStyle="tabular"
-                    effect="Capacidad de todas las fechas."
-                  />
-                </Param>
-              </div>
-
-              {rows.length === 0 ? (
-                <p className={frame.quiet}>
-                  Todavía no hay series. Crea una serie o residencia, o usa el asistente completo.
-                </p>
-              ) : (
-                <>
-                  <div className={styles.filters}>
-                    <Field
-                      label="Buscar"
-                      kind="search"
-                      value={filters.q}
-                      placeholder="Nombre, recinto o resumen"
-                      onChange={(e) => setFilters({ q: e.target.value })}
+            rows.length === 0 ? (
+              <TicketState
+                kind="empty"
+                title="Aún no hay series"
+                action={
+                  canWrite ? (
+                    <TicketButton
+                      variant="primary"
+                      onClick={() => setFilters({ tab: 'crear-serie' })}
+                    >
+                      Crear serie
+                    </TicketButton>
+                  ) : undefined
+                }
+              />
+            ) : (
+              <>
+                <div className={styles.figures}>
+                  <Param name="Programas">
+                    <ParameterCard
+                      name="Programas"
+                      value={formatCount(kpis.total)}
+                      valueStyle="tabular"
+                      effect="Series y temporadas."
                     />
-                    <div className={styles.pick}>
-                      <p className={styles.caption}>Tipo</p>
-                      <SheetSelect
-                        label="Tipo"
-                        value={filters.kind}
-                        placeholder="Todos"
-                        options={[
-                          { value: 'ALL', label: 'Todos' },
-                          ...(Object.keys(KIND_LABELS) as EventSeriesKind[]).map((kind) => ({
-                            value: kind,
-                            label: KIND_LABELS[kind],
-                          })),
-                        ]}
-                        onChange={(next) => setFilters({ kind: next as SeriesFilters['kind'] })}
-                      />
-                    </div>
-                    <div className={styles.pick}>
-                      <p className={styles.caption}>Estado</p>
-                      <SheetSelect
-                        label="Estado"
-                        value={filters.status}
-                        placeholder="Todos"
-                        options={[
-                          { value: 'ALL', label: 'Todos' },
-                          ...(Object.keys(STATUS_LABELS) as EventSeriesStatus[]).map((status) => ({
-                            value: status,
-                            label: STATUS_LABELS[status],
-                          })),
-                        ]}
-                        onChange={(next) => setFilters({ status: next as SeriesFilters['status'] })}
-                      />
-                    </div>
+                  </Param>
+                  <Param name="Activas">
+                    <ParameterCard
+                      name="Activas"
+                      value={formatCount(kpis.active)}
+                      valueStyle="tabular"
+                      effect="En estado Activa."
+                    />
+                  </Param>
+                  <Param name="Fechas próximas">
+                    <ParameterCard
+                      name="Fechas próximas"
+                      value={formatCount(kpis.upcomingDates)}
+                      valueStyle="tabular"
+                      effect="Funciones por venir."
+                    />
+                  </Param>
+                  <Param name="Aforo agregado">
+                    <ParameterCard
+                      name="Aforo agregado"
+                      value={formatCount(kpis.capacity)}
+                      valueStyle="tabular"
+                      effect="Capacidad de todas las fechas."
+                    />
+                  </Param>
+                </div>
+
+                <div className={styles.filters}>
+                  <Field
+                    label="Buscar"
+                    kind="search"
+                    value={filters.q}
+                    placeholder="Nombre, recinto o resumen"
+                    onChange={(e) => setFilters({ q: e.target.value })}
+                  />
+                  <div className={styles.pick}>
+                    <p className={styles.caption}>Tipo</p>
+                    <SheetSelect
+                      label="Tipo"
+                      value={filters.kind}
+                      placeholder="Todos"
+                      options={[
+                        { value: 'ALL', label: 'Todos' },
+                        ...(Object.keys(KIND_LABELS) as EventSeriesKind[]).map((kind) => ({
+                          value: kind,
+                          label: KIND_LABELS[kind],
+                        })),
+                      ]}
+                      onChange={(next) => setFilters({ kind: next as SeriesFilters['kind'] })}
+                    />
                   </div>
+                  <div className={styles.pick}>
+                    <p className={styles.caption}>Estado</p>
+                    <SheetSelect
+                      label="Estado"
+                      value={filters.status}
+                      placeholder="Todos"
+                      options={[
+                        { value: 'ALL', label: 'Todos' },
+                        ...(Object.keys(STATUS_LABELS) as EventSeriesStatus[]).map((status) => ({
+                          value: status,
+                          label: STATUS_LABELS[status],
+                        })),
+                      ]}
+                      onChange={(next) => setFilters({ status: next as SeriesFilters['status'] })}
+                    />
+                  </div>
+                </div>
 
-                  <p className={frame.tertiary}>
-                    {filtered.length === rows.length
-                      ? `${formatCount(filtered.length)} programas`
-                      : `${formatCount(filtered.length)} de ${formatCount(rows.length)} programas`}
-                  </p>
+                <p className={frame.tertiary}>
+                  {filtered.length === rows.length
+                    ? `${formatCount(filtered.length)} programas`
+                    : `${formatCount(filtered.length)} de ${formatCount(rows.length)} programas`}
+                </p>
 
-                  {filtered.length === 0 ? (
-                    <div className={styles.actions}>
-                      <p className={frame.quiet}>Sin coincidencias.</p>
-                      <TicketButton
-                        variant="ghost"
-                        onClick={() => setFilters({ q: '', kind: 'ALL', status: 'ALL' })}
-                      >
-                        Limpiar filtros
-                      </TicketButton>
-                    </div>
-                  ) : (
-                    <ul className={frame.rows}>
-                      {filtered.map((row) => (
-                        <li key={row.id} className={frame.row}>
-                          <div className={frame.rowMain}>
-                            <p className={frame.rowTitle}>
-                              <Link href={`/events/series/${row.id}`} className={styles.inlineLink}>
-                                {row.name}
-                              </Link>
-                            </p>
-                            <p className={frame.rowMeta}>
-                              {KIND_LABELS[row.kind]} · {row.venue?.name ?? 'Sin recinto'} ·{' '}
-                              {formatDate(row.firstDate)} → {formatDate(row.lastDate)}
-                              {row.summary ? ` · ${row.summary}` : ''}
-                            </p>
-                            <p className={frame.rowMeta}>
-                              Próxima {formatDate(row.nextDate)} ·{' '}
-                              {formatCount(row.totals.capacity)} lugares
-                              {row.totals.cancelled > 0
-                                ? ` · ${formatCount(row.totals.cancelled)} canceladas`
-                                : ''}{' '}
-                              · alta {formatWhen(row.createdAt)}
-                            </p>
-                          </div>
-                          <p className={frame.rowMeta}>{STATUS_LABELS[row.status]}</p>
-                          <p className={frame.figure}>{formatCount(row.totals.events)}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </>
-              )}
-            </>
+                {filtered.length === 0 ? (
+                  <div className={styles.actions}>
+                    <p className={frame.quiet}>Sin coincidencias.</p>
+                    <TicketButton
+                      variant="ghost"
+                      onClick={() => setFilters({ q: '', kind: 'ALL', status: 'ALL' })}
+                    >
+                      Limpiar filtros
+                    </TicketButton>
+                  </div>
+                ) : (
+                  <ul className={frame.rows}>
+                    {filtered.map((row) => (
+                      <li key={row.id} className={frame.row}>
+                        <div className={frame.rowMain}>
+                          <p className={frame.rowTitle}>
+                            <Link href={`/events/series/${row.id}`} className={styles.inlineLink}>
+                              {row.name}
+                            </Link>
+                          </p>
+                          <p className={frame.rowMeta}>
+                            {KIND_LABELS[row.kind]} · {row.venue?.name ?? 'Sin recinto'} ·{' '}
+                            {formatDate(row.firstDate)} → {formatDate(row.lastDate)}
+                            {row.summary ? ` · ${row.summary}` : ''}
+                          </p>
+                          <p className={frame.rowMeta}>
+                            Próxima {formatDate(row.nextDate)} · {formatCount(row.totals.capacity)}{' '}
+                            lugares
+                            {row.totals.cancelled > 0
+                              ? ` · ${formatCount(row.totals.cancelled)} canceladas`
+                              : ''}{' '}
+                            · alta {formatWhen(row.createdAt)}
+                          </p>
+                        </div>
+                        <p className={frame.rowMeta}>{STATUS_LABELS[row.status]}</p>
+                        <p className={frame.figure}>{formatCount(row.totals.events)}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )
           ) : null}
         </div>
       ) : null}

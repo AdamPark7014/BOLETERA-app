@@ -120,8 +120,8 @@ function Integraciones() {
       wait: pendingHealth,
     },
     {
-      label: 'Demo o sin telemetría',
-      meta: 'El correo SMTP no tiene lectura de salud',
+      label: 'Sin lectura',
+      meta: 'Conectores sin estado',
       value: kpis.demoOrUnknown,
       wait: pendingHealth,
     },
@@ -146,10 +146,6 @@ function Integraciones() {
             </div>
           ))}
         </div>
-        <p className={styles.tertiary}>
-          Banorte y los webhooks IPN leen el API real; el correo SMTP sale como sin telemetría
-          porque no hay lectura de salud. Valida Banorte antes de activar cobros en producción.
-        </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
           <TicketButton
             variant="secondary"

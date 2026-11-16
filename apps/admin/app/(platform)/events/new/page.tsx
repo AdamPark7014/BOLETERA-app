@@ -122,6 +122,7 @@ function CreateBody() {
   const [draftFound, setDraftFound] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState(false);
 
   useEffect(() => {
     try {
@@ -192,12 +193,18 @@ function CreateBody() {
   const seriesCount = Number(form.seriesCount);
   const residencyCount = Number(form.residencyCount);
 
-  const titleError =
-    form.title.trim().length > 0 && form.title.trim().length < 3
+  const titleError = !form.title.trim()
+    ? attempted
+      ? 'Escribe el título.'
+      : undefined
+    : form.title.trim().length < 3
       ? 'El título necesita al menos 3 caracteres.'
       : undefined;
-  const startError =
-    form.startDate && start && start.getTime() < Date.now()
+  const startError = !form.startDate
+    ? attempted
+      ? 'Indica la fecha de inicio.'
+      : undefined
+    : start && start.getTime() < Date.now()
       ? 'La fecha de inicio ya pasó.'
       : undefined;
   const endError =
@@ -212,24 +219,38 @@ function CreateBody() {
         : start && salesStart && salesStart.getTime() > start.getTime()
           ? 'La venta abre después de que empieza la función.'
           : undefined;
-  const venueError =
-    map.status === 'missing'
+  const venueError = !form.venueId
+    ? attempted
+      ? 'Elige un recinto.'
+      : undefined
+    : map.status === 'missing'
       ? 'El recinto no tiene mapa.'
       : map.status === 'empty'
         ? 'El mapa del recinto no tiene butacas.'
         : undefined;
   const capacityError =
-    form.capacity !== '' && (!Number.isFinite(capacity) || capacity <= 0)
-      ? 'El cupo tiene que ser mayor que cero.'
-      : map.status === 'ok' && Number.isFinite(capacity) && capacity > map.seats
+    form.capacity === '' || !Number.isFinite(capacity) || capacity <= 0
+      ? attempted
+        ? 'Indica el cupo.'
+        : form.capacity !== ''
+          ? 'El cupo tiene que ser mayor que cero.'
+          : undefined
+      : map.status === 'ok' && capacity > map.seats
         ? `El cupo supera las butacas del mapa (${map.seats.toLocaleString('es-MX')}).`
         : undefined;
   const priceError =
-    form.basePrice !== '' && (!Number.isFinite(price) || price <= 0)
-      ? 'El precio tiene que ser mayor que $0.00.'
+    form.basePrice === '' || !Number.isFinite(price) || price <= 0
+      ? attempted
+        ? 'Indica el precio.'
+        : form.basePrice !== ''
+          ? 'El precio tiene que ser mayor que $0.00.'
+          : undefined
       : undefined;
-  const zoneError =
-    form.zoneName !== '' && !form.zoneName.trim() ? 'La zona necesita un nombre.' : undefined;
+  const zoneError = !form.zoneName.trim()
+    ? attempted
+      ? 'Escribe el nombre de la zona.'
+      : undefined
+    : undefined;
   const seriesError =
     form.type === 'series' && (seriesCount < 2 || seriesCount > 52)
       ? 'Una serie necesita entre 2 y 52 fechas.'
@@ -260,9 +281,28 @@ function CreateBody() {
   }
 
   async function submit() {
-    if (!token || !ready || saving || !start) return;
-    setSaving(true);
+    if (!token || !canCreate || saving) return;
+    setAttempted(true);
     setError(null);
+    if (!ready || !start) {
+      window.setTimeout(() => {
+        const id =
+          !form.title.trim() || form.title.trim().length < 3
+            ? 'new-event-title'
+            : !form.venueId
+              ? 'new-event-venue'
+              : !form.startDate || (start && start.getTime() < Date.now())
+                ? 'new-event-start'
+                : !form.zoneName.trim()
+                  ? 'new-event-zone'
+                  : !form.basePrice || !(Number(form.basePrice) > 0)
+                    ? 'new-event-price'
+                    : 'new-event-capacity';
+        document.getElementById(id)?.focus();
+      }, 0);
+      return;
+    }
+    setSaving(true);
     try {
       if (form.type === 'series') {
         const dates = Array.from({ length: seriesCount }, (_, index) => {
@@ -334,7 +374,6 @@ function CreateBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Crear evento</h1>
-        <p className={styles.quiet}>El evento queda en borrador.</p>
       </header>
       {draftFound ? (
         <div className={styles.stack}>
@@ -362,13 +401,10 @@ function CreateBody() {
       {!canCreate ? <p className={styles.quiet}>Tu rol no crea eventos.</p> : null}
       <div className={styles.stack}>
         <Param name="Título">
-          <ParameterCard
-            name="Título"
-            value={form.title.trim() || '—'}
-            effect="Nombre en la ficha y en la venta."
-          >
+          <ParameterCard name="Título" value={form.title.trim() || '—'} effect="">
             {canCreate ? (
               <Field
+                id="new-event-title"
                 label="Título"
                 value={form.title}
                 error={titleError}
@@ -378,16 +414,18 @@ function CreateBody() {
           </ParameterCard>
         </Param>
         <Param name="Recinto">
-          <ParameterCard name="Recinto" value={venueName} effect="Sala de la función.">
+          <ParameterCard name="Recinto" value={venueName} effect="">
             {canCreate ? (
               <>
-                <SheetSelect
-                  label="Recinto"
-                  value={form.venueId}
-                  placeholder="Elegir recinto"
-                  options={venues.map((venue) => ({ value: venue.id, label: venue.name }))}
-                  onChange={(venueId) => set('venueId', venueId)}
-                />
+                <div id="new-event-venue" tabIndex={-1}>
+                  <SheetSelect
+                    label="Recinto"
+                    value={form.venueId}
+                    placeholder="Elegir recinto"
+                    options={venues.map((venue) => ({ value: venue.id, label: venue.name }))}
+                    onChange={(venueId) => set('venueId', venueId)}
+                  />
+                </div>
                 {venueError ? <p className={styles.danger}>{venueError}</p> : null}
                 {map.status === 'loading' ? (
                   <p className={styles.tertiary}>Leyendo el mapa.</p>
@@ -400,10 +438,11 @@ function CreateBody() {
           <ParameterCard
             name="Inicio"
             value={form.startDate ? form.startDate.replace('T', ' ') : '—'}
-            effect="Hora de la función."
+            effect=""
           >
             {canCreate ? (
               <Field
+                id="new-event-start"
                 label="Inicio"
                 type="datetime-local"
                 value={form.startDate}
@@ -414,13 +453,10 @@ function CreateBody() {
           </ParameterCard>
         </Param>
         <Param name="Zona">
-          <ParameterCard
-            name="Zona"
-            value={form.zoneName.trim() || '—'}
-            effect="Nombre de la primera zona."
-          >
+          <ParameterCard name="Zona" value={form.zoneName.trim() || '—'} effect="">
             {canCreate ? (
               <Field
+                id="new-event-zone"
                 label="Zona"
                 value={form.zoneName}
                 error={zoneError}
@@ -434,10 +470,11 @@ function CreateBody() {
             name="Precio base"
             value={price > 0 ? formatTicketAmount(price) : '—'}
             valueStyle="tabular"
-            effect="Lo que recibe el promotor por boleto."
+            effect=""
           >
             {canCreate ? (
               <Field
+                id="new-event-price"
                 label="Precio base"
                 kind="money"
                 value={form.basePrice}
@@ -452,8 +489,7 @@ function CreateBody() {
             name="Cupo de la oferta"
             value={capacity > 0 ? capacity.toLocaleString('es-MX') : '—'}
             valueStyle="tabular"
-            effect="Cupo de la primera zona."
-            closedNote="Apartado 15 min · Reembolsable · Transferible · Cargo 10% · IVA 16%."
+            effect=""
             advanced={
               canCreate ? (
                 <div className={styles.stack}>
@@ -533,14 +569,16 @@ function CreateBody() {
           >
             {canCreate ? (
               <>
-                <Stepper
-                  label="Cupo"
-                  editable
-                  value={form.capacity === '' ? null : capacity}
-                  min={1}
-                  max={map.status === 'ok' ? map.seats : null}
-                  onChange={(next) => set('capacity', String(next))}
-                />
+                <div id="new-event-capacity" tabIndex={-1}>
+                  <Stepper
+                    label="Cupo"
+                    editable
+                    value={form.capacity === '' ? null : capacity}
+                    min={1}
+                    max={map.status === 'ok' ? map.seats : null}
+                    onChange={(next) => set('capacity', String(next))}
+                  />
+                </div>
                 {capacityError ? <p className={styles.danger}>{capacityError}</p> : null}
               </>
             ) : null}
@@ -554,10 +592,7 @@ function CreateBody() {
       ) : null}
       {canCreate ? (
         <div className={styles.saveBar}>
-          <p className={styles.tertiary}>
-            Apartado 15 min · Reembolsable · Transferible · Cargo 10% · IVA 16%.
-          </p>
-          <TicketButton disabled={!ready || saving} onClick={() => void submit()}>
+          <TicketButton disabled={saving} onClick={() => void submit()}>
             Crear evento
           </TicketButton>
         </div>

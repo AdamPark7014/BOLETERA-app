@@ -185,20 +185,17 @@ function GestionApi({ organizationId }: { organizationId: string }) {
     { label: 'Llaves activas', meta: `${formatCount(kpis.total)} en total`, value: kpis.active },
     {
       label: 'Uso reciente',
-      meta: 'Llaves con tráfico en 24 h (derivado)',
+      meta: 'En las últimas 24 h',
       value: usageQuery.data?.usedIn24h ?? kpis.usedRecently,
     },
     {
-      label: 'Límite medio por minuto',
-      meta:
-        kpis.nearHighLimit > 0
-          ? `${formatCount(kpis.nearHighLimit)} con 5 000 o más`
-          : 'Límite de las llaves activas',
+      label: 'Límite medio',
+      meta: 'Por minuto',
       value: kpis.avgLimit,
     },
     {
       label: 'Por rotar',
-      meta: 'Más de 90 días, por expirar o expiradas',
+      meta: 'Próximas a vencer',
       value: kpis.rotationDue,
     },
   ];

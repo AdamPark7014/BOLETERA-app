@@ -121,6 +121,7 @@ function CanalesBody() {
   const [error, setError] = useState<unknown>(null);
   const [nonce, setNonce] = useState(0);
   const [readNonce, setReadNonce] = useState(0);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -336,29 +337,12 @@ function CanalesBody() {
 
       <div className={styles.kpis}>
         <div className={styles.kpi}>
-          <p className={styles.kpiLabel}>Canales saludables</p>
-          <p className={styles.kpiValue}>
-            {formatCount(healthSummary.healthy)}
-            <span className={local.of}> / {formatCount(healthCards.length)}</span>
-          </p>
-          <p className={styles.kpiNote}>
-            {healthSummary.worstLatencyMs != null
-              ? `peor latencia ${formatMs(healthSummary.worstLatencyMs)}`
-              : 'sin telemetría de latencia'}
-          </p>
-        </div>
-        <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Órdenes</p>
           <p className={styles.kpiValue}>{formatCount(healthSummary.totalOrders)}</p>
         </div>
         <div className={styles.kpi}>
           <p className={styles.kpiLabel}>Ingresos</p>
           <p className={styles.kpiValue}>{money(healthSummary.totalRevenue)}</p>
-          <p className={styles.kpiNote}>
-            {healthSummary.worstErrorRate != null
-              ? `peor tasa de error ${formatPercentPoints(healthSummary.worstErrorRate * 100)}`
-              : 'sin errores registrados'}
-          </p>
         </div>
       </div>
       {healthError ? (
@@ -403,7 +387,13 @@ function CanalesBody() {
               </tr>
             </thead>
             <tbody>
-              {CHANNEL_ORDER.map((key) => {
+              {(showAll
+                ? [
+                    ...CHANNEL_ORDER.filter((key) => allocation[key].enabled),
+                    ...CHANNEL_ORDER.filter((key) => !allocation[key].enabled),
+                  ]
+                : CHANNEL_ORDER.filter((key) => allocation[key].enabled)
+              ).map((key) => {
                 const entry = allocation[key];
                 const label = channelLabel(key);
                 const responsible = RESPONSIBLE_PARTY_CHANNELS.includes(key);
@@ -485,6 +475,13 @@ function CanalesBody() {
             </tbody>
           </table>
         </div>
+        {!showAll && CHANNEL_ORDER.some((key) => !allocation[key].enabled) ? (
+          <div style={{ marginTop: 12 }}>
+            <TicketButton variant="secondary" onClick={() => setShowAll(true)}>
+              Mostrar todos
+            </TicketButton>
+          </div>
+        ) : null}
         {saveError ? (
           <p className={styles.danger} role="alert">
             {saveError}

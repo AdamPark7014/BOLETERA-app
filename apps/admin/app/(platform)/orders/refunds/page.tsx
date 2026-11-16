@@ -9,7 +9,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Field, TicketButton } from '@boletera/ui';
+import { Field, TicketButton, formatTicketAmount } from '@boletera/ui';
 import { ApiError, adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../../events/_shared/api-state';
@@ -200,10 +200,6 @@ function QueueView({
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Por reembolsar</h1>
-        <p className={styles.quiet}>
-          Solicitudes registradas que todavía no devuelven el dinero. El dinero no sale hasta
-          ejecutarlas en el portal Banorte y marcarlas aquí como pagadas.
-        </p>
         {hasMore ? (
           <p className={styles.tertiary}>
             Se muestran las 100 más antiguas; hay más en el servidor.
@@ -260,7 +256,7 @@ function QueueView({
                   <span className={styles.mono}>{refund.publicId}</span>
                   {refund.eventTitle ? ` · ${refund.eventTitle}` : ''}
                 </span>
-                <span className={styles.figure}>{formatMoney(refund.amount, refund.currency)}</span>
+                <span className={styles.figure}>{formatTicketAmount(-refund.amount)}</span>
               </button>
               {open ? (
                 <div className={bt.detail}>
@@ -308,11 +304,12 @@ function QueueView({
                         <p className={bt.pairValue}>{orderStatusMeta(refund.orderStatus).label}</p>
                       </div>
                     ) : null}
-                    {refund.notes ? (
-                      <div className={bt.pair}>
-                        <p className={bt.pairLabel}>Nota</p>
-                        <p className={bt.pairValue}>{refund.notes}</p>
-                      </div>
+                    {refund.notes || rmeta.hint ? (
+                      <details className={bt.pair}>
+                        <summary className={bt.pairLabel}>Detalle</summary>
+                        {refund.notes ? <p className={bt.pairValue}>{refund.notes}</p> : null}
+                        {rmeta.hint ? <p className={bt.pairValue}>{rmeta.hint}</p> : null}
+                      </details>
                     ) : null}
                   </div>
                   {refund.orderId ? (

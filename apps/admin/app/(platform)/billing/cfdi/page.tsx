@@ -95,7 +95,7 @@ function tipoLabel(tipo: string): string {
 }
 
 function modeLabel(mode: Profile['pacMode']): string {
-  return mode === 'production' ? 'Producción' : 'Sandbox';
+  return mode === 'production' ? 'Real' : 'Pruebas';
 }
 
 function sameProfile(left: Profile, right: Profile): boolean {
@@ -236,10 +236,10 @@ function FacturacionBody() {
         ? `Serie: ${baseline.serie || 'A'} → ${draft.serie.trim() || 'A'}`
         : null,
       draft.pacMode !== baseline.pacMode
-        ? `Modo PAC: ${modeLabel(baseline.pacMode)} → ${modeLabel(draft.pacMode)}`
+        ? `Modo: ${modeLabel(baseline.pacMode)} → ${modeLabel(draft.pacMode)}`
         : null,
-      draft.provider.trim() !== baseline.provider ? 'Proveedor PAC' : null,
-      key.trim() ? 'Clave PAC' : null,
+      draft.provider.trim() !== baseline.provider ? 'Proveedor de facturación' : null,
+      key.trim() ? 'Clave del proveedor' : null,
       saved == null ? 'Perfil fiscal creado' : null,
     ].filter((line): line is string => line != null);
     try {
@@ -285,9 +285,7 @@ function FacturacionBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Facturación</h1>
-        <p className={styles.quiet}>
-          {saved ? 'Perfil fiscal y comprobantes.' : 'Sin perfil guardado.'} Producción no timbra.
-        </p>
+        {!saved ? <p className={styles.quiet}>Aún no configuras la facturación</p> : null}
       </header>
       <div className={styles.stack}>
         <Param name="RFC">
@@ -367,40 +365,36 @@ function FacturacionBody() {
             effect="Lo avanza el timbrado. Esta ficha no lo escribe."
           />
         </Param>
-        <Param name="Modo PAC">
-          <ParameterCard
-            name="Modo PAC"
-            value={modeLabel(draft.pacMode)}
-            effect="En producción todavía no se timbran facturas; el ajuste queda guardado."
-          >
+        <Param name="Modo">
+          <ParameterCard name="Modo" value={modeLabel(draft.pacMode)} effect="">
             <Segment
-              label="Modo PAC"
+              label="Modo"
               value={draft.pacMode}
               options={[
-                { value: 'sandbox', label: 'Sandbox' },
-                { value: 'production', label: 'Producción' },
+                { value: 'sandbox', label: 'Pruebas' },
+                { value: 'production', label: 'Real' },
               ]}
               onChange={(next) => patch({ pacMode: next })}
             />
           </ParameterCard>
         </Param>
-        <Param name="Proveedor PAC">
+        <Param name="Proveedor de facturación">
           <ParameterCard
-            name="Proveedor PAC"
+            name="Proveedor de facturación"
             value={draft.provider.trim() || '—'}
-            effect="Nombre del PAC."
+            effect=""
           >
             <Field
-              label="Proveedor PAC"
+              label="Proveedor de facturación"
               value={draft.provider}
               onChange={(event) => patch({ provider: event.target.value })}
             />
           </ParameterCard>
         </Param>
-        <Param name="Clave PAC">
-          <ParameterCard name="Clave PAC" value={keyValue} effect="No se muestra completa.">
+        <Param name="Clave del proveedor">
+          <ParameterCard name="Clave del proveedor" value={keyValue} effect="">
             <Field
-              label="Clave PAC"
+              label="Clave del proveedor"
               type="password"
               autoComplete="new-password"
               value={key}

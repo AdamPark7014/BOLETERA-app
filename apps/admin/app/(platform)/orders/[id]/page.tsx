@@ -215,6 +215,7 @@ function OrderView({
   const [refundNotes, setRefundNotes] = useState('');
   const [references, setReferences] = useState<Record<string, string>>({});
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [confirmRefund, setConfirmRefund] = useState(false);
   /** Instrucción del backend cuando el reembolso queda a medias. */
   const [nextStep, setNextStep] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -450,7 +451,7 @@ function OrderView({
       <div className={bt.block}>
         <p className={styles.rowTitle}>Acciones</p>
         <div className={bt.actions}>
-          <TicketButton variant="secondary" disabled={busy !== null} onClick={() => void resend()}>
+          <TicketButton variant="primary" disabled={busy !== null} onClick={() => void resend()}>
             {busy === 'resend' ? 'Reenviando' : 'Reenviar correo'}
           </TicketButton>
           {order.status === 'PENDING' ? (
@@ -641,9 +642,35 @@ function OrderView({
               onChange={(e) => setRefundNotes(e.target.value)}
             />
             <div className={bt.actions}>
-              <TicketButton disabled={busy !== null} onClick={() => void requestRefund()}>
-                {busy === 'refund' ? 'Registrando' : 'Paso 1 · Registrar reembolso'}
-              </TicketButton>
+              {confirmRefund ? (
+                <>
+                  <TicketButton
+                    variant="secondary"
+                    disabled={busy !== null}
+                    onClick={() => {
+                      setConfirmRefund(false);
+                      void requestRefund();
+                    }}
+                  >
+                    {busy === 'refund' ? 'Registrando' : 'Confirmar reembolso'}
+                  </TicketButton>
+                  <TicketButton
+                    variant="ghost"
+                    disabled={busy !== null}
+                    onClick={() => setConfirmRefund(false)}
+                  >
+                    Cancelar
+                  </TicketButton>
+                </>
+              ) : (
+                <TicketButton
+                  variant="secondary"
+                  disabled={busy !== null}
+                  onClick={() => setConfirmRefund(true)}
+                >
+                  Registrar reembolso
+                </TicketButton>
+              )}
             </div>
           </div>
         ) : null}

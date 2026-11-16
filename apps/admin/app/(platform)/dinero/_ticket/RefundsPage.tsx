@@ -404,7 +404,12 @@ function RefundCards({
       </td>
       <td>
         {reasonLabel(refund.reason)}
-        {refund.notes ? <p className={styles.rowMeta}>{refund.notes}</p> : null}
+        {refund.notes ? (
+          <details>
+            <summary className={styles.rowMeta}>Detalle</summary>
+            <p className={styles.rowMeta}>{refund.notes}</p>
+          </details>
+        ) : null}
       </td>
       <td className={styles.quiet}>
         {refund.requestedBy ?? '—'} · {refund.processedBy ?? '—'}
@@ -419,7 +424,7 @@ function RefundCards({
         </span>
       </td>
       <td className={styles.num}>
-        <strong style={{ color: 'var(--money-out)' }}>− {amount}</strong>
+        <strong style={{ color: 'var(--money-out)' }}>{formatTicketAmount(-refund.amount)}</strong>
       </td>
       <td className={styles.num}>
         {pending && canRefund ? (

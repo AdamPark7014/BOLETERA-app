@@ -2,14 +2,13 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { ParameterCard } from '@boletera/ui';
+import { TicketState } from '@boletera/ui';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
-import { Param } from '../events/_ticket/controls';
 import styles from '../events/_ticket/frame.module.scss';
 
 /**
  * Patrocinios: el API no está cableado. La pantalla no inventa contratos,
- * pipeline ni ROI; solo dice que la función no está disponible.
+ * pipeline ni ROI; solo avisa que llega después.
  */
 export default function SponsorshipsUnavailablePage() {
   return (
@@ -18,20 +17,17 @@ export default function SponsorshipsUnavailablePage() {
         <section>
           <header className={styles.sectionHead}>
             <h1 className={styles.sectionTitle}>Patrocinios</h1>
-            <p className={styles.quiet}>Paquetes, activaciones y retorno de patrocinadores.</p>
           </header>
-          <div className={styles.stack}>
-            <Param name="Función no disponible">
-              <ParameterCard
-                name="Estado"
-                value="Función no disponible"
-                effect="La API de patrocinios aún no está conectada. No se muestran contratos, pipeline ni ROI inventados."
-              />
-            </Param>
-            <p className={styles.tertiary}>
-              <Link href="/events">Volver a eventos</Link>
-            </p>
-          </div>
+          <TicketState
+            kind="empty"
+            title="Próximamente"
+            body="Aquí verás paquetes y activaciones de patrocinadores."
+            action={
+              <Link href="/events" className={styles.panelLink}>
+                Volver a eventos
+              </Link>
+            }
+          />
         </section>
       </AdminFrame>
     </Suspense>
