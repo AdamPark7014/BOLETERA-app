@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { Field, TicketButton } from '@boletera/ui';
+import { looksSpanish, userFacingMessage } from '@/lib/errors';
 import { AuthShell, StatusBanner } from '../_components/AuthShell';
 import styles from '../login.module.scss';
 
@@ -27,12 +28,19 @@ export default function AdminForgotPasswordPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
+      const data = (await res.json().catch(() => ({}))) as {
+        message?: string;
+        devResetUrl?: string;
+      };
       if (!res.ok) {
-        setError(data.message || 'No se pudo enviar la solicitud');
+        setError(userFacingMessage(data.message, res.status));
         return;
       }
-      setMsg(data.message || 'Revisa tu correo si la cuenta existe.');
+      setMsg(
+        data.message && looksSpanish(data.message)
+          ? data.message
+          : 'Si el correo está registrado, te enviamos un enlace.'
+      );
       if (data.devResetUrl) {
         const u = new URL(data.devResetUrl);
         setDevUrl(`/login/reset${u.search}`);
@@ -45,10 +53,7 @@ export default function AdminForgotPasswordPage() {
   }
 
   return (
-    <AuthShell
-      title="Recuperar contraseña"
-      lead="Te enviamos un enlace si el correo está registrado en tu organización."
-    >
+    <AuthShell title="Recuperar contraseña">
       <form className={styles.form} onSubmit={(e) => void onSubmit(e)}>
         <Field
           id="forgot-email"
@@ -71,7 +76,7 @@ export default function AdminForgotPasswordPage() {
           </StatusBanner>
         ) : null}
 
-        <TicketButton type="submit" fullWidth disabled={loading || email.trim().length === 0}>
+        <TicketButton type="submit" fullWidth disabled={loading}>
           {loading ? 'Enviando' : 'Enviar enlace'}
         </TicketButton>
       </form>

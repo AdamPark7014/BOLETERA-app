@@ -172,7 +172,7 @@ export function CreateResidencyForm({ disabled, onCreated }: Props) {
         />
         <p className={`${frame.quiet} ${styles.full}`}>
           Frecuencia efectiva: {FREQUENCY_LABELS[frequency]} · {formatCount(occurrenceCount)} fechas
-          · {formatTicketAmount(basePrice)} MXN
+          · {formatTicketAmount(basePrice)}
         </p>
       </div>
 

@@ -89,7 +89,7 @@ function sameEntry(a: ChannelFormEntry, b: ChannelFormEntry): boolean {
 }
 
 function money(value: number): string {
-  return `${formatTicketAmount(value)} MXN`;
+  return formatTicketAmount(value);
 }
 
 export default function ChannelsPage() {

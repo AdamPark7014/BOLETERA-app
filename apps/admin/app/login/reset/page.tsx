@@ -4,6 +4,7 @@ import { FormEvent, Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Field, TicketButton } from '@boletera/ui';
+import { userFacingMessage } from '@/lib/errors';
 import { AuthShell, StatusBanner } from '../_components/AuthShell';
 import styles from '../login.module.scss';
 
@@ -30,12 +31,16 @@ function ResetForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, token, password }),
       });
-      const data = await res.json();
+      const data = (await res.json().catch(() => ({}))) as { message?: string };
       if (!res.ok) {
-        setError(data.message || 'Token inválido o expirado');
+        setError(
+          res.status === 400 || res.status === 401 || res.status === 404
+            ? 'El enlace no es válido o ya venció. Pide uno nuevo.'
+            : userFacingMessage(data.message, res.status)
+        );
         return;
       }
-      setMsg(data.message || 'Contraseña actualizada. Redirigiendo…');
+      setMsg('Contraseña actualizada.');
       setTimeout(() => router.push('/login'), 1500);
     } catch {
       setError('No se pudo conectar con el servidor. Intenta de nuevo.');
@@ -68,7 +73,7 @@ function ResetForm() {
         {error ? <StatusBanner tone="error">{error}</StatusBanner> : null}
         {msg ? <StatusBanner tone="success">{msg}</StatusBanner> : null}
 
-        <TicketButton type="submit" fullWidth disabled={loading || password.length === 0}>
+        <TicketButton type="submit" fullWidth disabled={loading}>
           {loading ? 'Guardando' : 'Guardar contraseña'}
         </TicketButton>
       </form>
@@ -84,10 +89,7 @@ function ResetForm() {
 
 export default function AdminResetPasswordPage() {
   return (
-    <AuthShell
-      title="Nueva contraseña"
-      lead="Elige una contraseña segura de al menos 8 caracteres."
-    >
+    <AuthShell title="Nueva contraseña">
       <Suspense fallback={<p className={styles.quiet}>Cargando.</p>}>
         <ResetForm />
       </Suspense>

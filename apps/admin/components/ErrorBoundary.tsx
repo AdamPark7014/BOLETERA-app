@@ -1,6 +1,7 @@
 'use client';
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { BlackTicketRoot, TicketButton, TicketState } from '@boletera/ui';
 
 type Props = { children: ReactNode };
 type State = { error: Error | null };
@@ -18,23 +19,35 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render(): ReactNode {
     if (!this.state.error) return this.props.children;
+    // El texto técnico del error queda en la consola; la pantalla no lo muestra.
     return (
-      <main
-        role="alert"
-        style={{ maxWidth: 560, margin: '10vh auto', padding: 32, textAlign: 'center' }}
-      >
-        <h1>No pudimos mostrar esta pantalla</h1>
-        <p>{this.state.error.message || 'Ocurrió un error inesperado.'}</p>
-        <button
-          type="button"
-          onClick={() => {
-            this.setState({ error: null });
-            window.location.reload();
+      <BlackTicketRoot density="admin">
+        <main
+          style={{
+            minHeight: '100vh',
+            display: 'grid',
+            placeItems: 'center',
+            padding: 24,
+            background: 'var(--ink)',
+            color: 'var(--text)',
           }}
         >
-          Reintentar
-        </button>
-      </main>
+          <TicketState
+            kind="error"
+            title="No pudimos mostrar esta pantalla"
+            action={
+              <TicketButton
+                onClick={() => {
+                  this.setState({ error: null });
+                  window.location.reload();
+                }}
+              >
+                Reintentar
+              </TicketButton>
+            }
+          />
+        </main>
+      </BlackTicketRoot>
     );
   }
 }

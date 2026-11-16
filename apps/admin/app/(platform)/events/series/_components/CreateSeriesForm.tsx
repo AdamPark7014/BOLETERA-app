@@ -179,7 +179,7 @@ export function CreateSeriesForm({ disabled, onCreated }: Props) {
           step={50}
           value={basePrice}
           onChange={(e) => setBasePrice(Number(e.target.value) || 0)}
-          hint={`${formatTicketAmount(basePrice)} MXN · zona horaria ${timezone}`}
+          hint={formatTicketAmount(basePrice)}
           disabled={disabled}
         />
       </div>

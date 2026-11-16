@@ -69,20 +69,22 @@
 
 .chip,
 .chipOn {
-  min-height: 36px;
+  min-height: 44px;
   margin: 0;
-  padding: 0 12px;
+  padding: 0 16px;
   border: 1px solid var(--line-strong);
-  border-radius: var(--r-m);
-  background: var(--ink-sunken);
+  border-radius: var(--r-pill);
+  background: transparent;
   color: var(--text);
   font: var(--body-sm);
   cursor: pointer;
 }
 
 .chipOn {
-  box-shadow: inset 0 0 0 1px var(--gold);
-  background: var(--gold-wash);
+  border-color: #fff;
+  background: #fff;
+  color: #000;
+  font-weight: 600;
 }
 
 .chip:focus-visible,
@@ -254,8 +256,8 @@
 
 .segmentOn {
   border-radius: 10px;
-  background: var(--gold-wash);
-  box-shadow: inset 2px 0 0 var(--gold);
+  background: var(--elevated);
+  box-shadow: inset 2px 0 0 var(--text);
 }
 
 .segment:focus-visible,
@@ -325,7 +327,7 @@
   max-width: 22px;
   min-height: 2px;
   border-radius: 4px 4px 0 0;
-  background: var(--gold);
+  background: var(--text);
 }
 
 .barLabel {

@@ -76,12 +76,13 @@
 }
 
 .today .dayNumber {
-  color: var(--gold);
+  color: var(--text);
+  font-weight: 700;
 }
 
 .selected {
-  background: var(--gold-wash);
-  box-shadow: inset 2px 0 0 var(--gold);
+  background: var(--elevated);
+  box-shadow: inset 2px 0 0 var(--text);
 }
 
 .dayNumber {

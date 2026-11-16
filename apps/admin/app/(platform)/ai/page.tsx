@@ -273,8 +273,9 @@ function Copiloto() {
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Asistente e IA</h1>
         <p className={styles.tertiary}>
-          {range.label} · America/Mexico_City · MXN · última generación:{' '}
-          {formatGeneratedAt(generatedAt)}
+          {generatedAt
+            ? `${range.label} · actualizado ${formatGeneratedAt(generatedAt)}`
+            : range.label}
         </p>
       </header>
 

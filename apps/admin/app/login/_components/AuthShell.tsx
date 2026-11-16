@@ -23,14 +23,13 @@ export function AuthShell({
         <aside className={styles.stage} aria-hidden="true">
           <StageArt seed="black-ticket-panel" className={styles.stageArt} />
           <div className={styles.stageText}>
-            <BrandLogo tone="gold" size={64} />
-            <p className={styles.stageTitle}>Tu evento, en vivo</p>
+            <BrandLogo tone="white" size={64} />
           </div>
         </aside>
         <div className={styles.side}>
           <header className={styles.bar}>
             <span className={styles.barLogo}>
-              <BrandLogo tone="gold" size={30} />
+              <BrandLogo tone="white" size={30} />
             </span>
           </header>
           <div className={styles.column}>

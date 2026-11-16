@@ -17,6 +17,44 @@
   gap: 8px;
 }
 
+/* Pestañas de vista: subrayado, distintas de los chips/Segment en píldora. */
+.viewTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.viewTab,
+.viewTabOn {
+  margin: 0;
+  padding: 10px 4px 12px;
+  min-height: 44px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: var(--body-sm);
+  cursor: pointer;
+}
+
+.viewTab:hover {
+  color: var(--text);
+}
+
+.viewTabOn {
+  border-bottom-color: #fff;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.viewTab:focus-visible,
+.viewTabOn:focus-visible {
+  outline: 2px solid var(--focus, var(--gold));
+  outline-offset: 2px;
+}
+
 .eventPick {
   max-width: 420px;
 }
@@ -36,9 +74,9 @@
 
 .queue {
   padding: 20px;
-  border: 1px solid var(--gold);
+  border: 1px solid var(--line-strong);
   border-radius: 16px;
-  background: linear-gradient(135deg, #2a2218 0%, var(--card) 60%);
+  background: var(--card);
 }
 
 .rowOpen td {

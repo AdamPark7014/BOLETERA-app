@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { storeSession } from '@/lib/api';
+import { userFacingMessage } from '@/lib/errors';
 import { AuthShell, StatusBanner } from '../../_components/AuthShell';
 import { oauthCallbackRedirectUri, resolveOauthProvider } from '../../_lib/oauth';
 import styles from '../../login.module.scss';
@@ -32,7 +33,7 @@ function OauthCallbackHandler() {
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body.message || 'El inicio de sesión con el proveedor falló.');
+          throw new Error(userFacingMessage(body.message, res.status));
         }
         const data = (await res.json()) as {
           accessToken: string;

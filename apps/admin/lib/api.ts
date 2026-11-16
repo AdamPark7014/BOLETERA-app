@@ -149,14 +149,21 @@ export async function adminApi<T>(path: string, token: string, init?: AdminApiOp
   const { silent, noRetry, ...rest } = init ?? {};
 
   async function send(bearer: string): Promise<Response> {
-    return fetch(`${API}${path}`, {
-      ...rest,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${bearer}`,
-        ...init?.headers,
-      },
-    });
+    try {
+      return await fetch(`${API}${path}`, {
+        ...rest,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${bearer}`,
+          ...init?.headers,
+        },
+      });
+    } catch (cause) {
+      // Sin red, el navegador lanza «Failed to fetch»: la pantalla recibe una
+      // frase en español. Las cancelaciones (AbortError) pasan intactas.
+      if (cause instanceof DOMException && cause.name === 'AbortError') throw cause;
+      throw new ApiError(0, '', null, path);
+    }
   }
 
   let res = await send(token);

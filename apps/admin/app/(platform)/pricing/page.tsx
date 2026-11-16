@@ -79,9 +79,7 @@ const DIRECTION_OPTIONS: { value: DirectionChoice; label: string }[] = [
 ];
 
 function errorText(error: unknown): string {
-  if (error instanceof HttpError) {
-    return error.status ? `Error ${error.status} · ${error.message}` : error.message;
-  }
+  if (error instanceof HttpError) return error.message;
   if (error instanceof Error) return error.message;
   return 'Sin respuesta.';
 }
@@ -111,8 +109,7 @@ function canWritePrices(role: string | null): boolean {
   return PRICE_WRITE_ROLES.has((role ?? '').toUpperCase());
 }
 
-const READ_ONLY_NOTE =
-  'Esta pantalla es de solo lectura para tu rol: consultas recomendaciones, cola y señales. Aplicar o aprobar precios lo hace administración.';
+const READ_ONLY_NOTE = 'Tu rol solo consulta los precios.';
 
 function PreciosGate() {
   const session = useSession();
@@ -416,8 +413,7 @@ function PreciosBody() {
         <p className={`${styles.quiet} ${local.block}`}>Elige un evento.</p>
       ) : forbidden ? (
         <p className={`${styles.danger} ${local.block}`} role="alert">
-          Tu rol no tiene acceso a los precios de este evento. Pide a un administrador el permiso de
-          lectura de precios.
+          No tienes acceso a los precios de este evento.
         </p>
       ) : (
         <>
@@ -528,14 +524,14 @@ function PreciosBody() {
                         disabled={!canWrite || applyMutation.isPending}
                         onClick={() => void applyOffers(selectedKeys, false)}
                       >
-                        Aplicar seguras
+                        Aplicar sin aprobación
                       </TicketButton>
                       <TicketButton
                         variant="secondary"
                         disabled={!canWrite || applyMutation.isPending}
                         onClick={() => void applyOffers(selectedKeys, true)}
                       >
-                        Aplicar con aprobación
+                        Pedir aprobación
                       </TicketButton>
                       <TicketButton
                         variant="ghost"
@@ -670,7 +666,7 @@ function PreciosBody() {
                   <p className={styles.quiet}>
                     {url.query.trim() && pendingRows.length > 0
                       ? 'Ninguna recomendación pendiente coincide con la búsqueda.'
-                      : 'Cola vacía. Las que pasan del tope automático aparecen aquí al aplicarlas.'}
+                      : 'No hay cambios por aprobar.'}
                   </p>
                   {url.query.trim() && pendingRows.length > 0 ? (
                     <div>
@@ -685,10 +681,6 @@ function PreciosBody() {
                   <div className={styles.panelHead}>
                     <div>
                       <h2 className={styles.panelTitle}>Esperan aprobación</h2>
-                      <p className={styles.rowMeta}>
-                        Cambios que pasaron del tope automático. Se aprueban o se rechazan uno por
-                        uno.
-                      </p>
                     </div>
                     <span className={styles.chipGold}>
                       {formatNumber(filteredPending.length)} en cola
@@ -958,7 +950,7 @@ function RecommendationItem({
                   <Switch label={`Seleccionar ${label}`} on={selected} onChange={onSelect} />
                   <p className={styles.quiet}>Incluir en la selección</p>
                   <TicketButton variant="secondary" disabled={applying} onClick={onApply}>
-                    {item.requiresApproval ? 'Encolar aprobación' : 'Aplicar cambio seguro'}
+                    {item.requiresApproval ? 'Pedir aprobación' : 'Aplicar precio'}
                   </TicketButton>
                 </div>
               ) : null}

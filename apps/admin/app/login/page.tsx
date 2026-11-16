@@ -24,7 +24,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -52,8 +51,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
-
-  const ready = email.trim().length > 0 && password.length > 0;
 
   return (
     <AuthShell title="Entrar al panel">
@@ -92,18 +89,9 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <label className={styles.remember}>
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
-          />
-          <span>Mantener sesión iniciada en este dispositivo</span>
-        </label>
-
         {error ? <StatusBanner tone="error">{error}</StatusBanner> : null}
 
-        <TicketButton type="submit" fullWidth disabled={!ready || loading}>
+        <TicketButton type="submit" fullWidth disabled={loading}>
           {loading ? 'Verificando' : 'Entrar'}
         </TicketButton>
       </form>

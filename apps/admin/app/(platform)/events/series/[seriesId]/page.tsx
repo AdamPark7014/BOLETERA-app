@@ -205,7 +205,7 @@ function SeriesDetailBody() {
         </p>
         <p className={frame.tertiary}>
           {series.description?.trim() ||
-            `${series.venue?.name ?? 'Sin recinto'} · ${formatCount(series.events.length)} fechas · ${timezone}`}
+            `${series.venue?.name ?? 'Sin recinto'} · ${formatCount(series.events.length)} fechas`}
         </p>
         <p className={styles.links}>
           <Link href="/events/series" className={styles.inlineLink}>
@@ -250,7 +250,7 @@ function SeriesDetailBody() {
               valueStyle="tabular"
               effect={
                 series.template?.basePrice != null
-                  ? `Base ${formatTicketAmount(series.template.basePrice)} MXN.`
+                  ? `Base ${formatTicketAmount(series.template.basePrice)}.`
                   : 'Sin precio en plantilla.'
               }
             />
@@ -267,7 +267,9 @@ function SeriesDetailBody() {
             <li className={frame.row}>
               <p className={frame.rowTitle}>Zona horaria</p>
               <span />
-              <p className={frame.mono}>{timezone}</p>
+              <p className={frame.rowMeta}>
+                {timezone === 'America/Mexico_City' ? 'Ciudad de México' : timezone}
+              </p>
             </li>
             <li className={frame.row}>
               <p className={frame.rowTitle}>Recinto</p>
