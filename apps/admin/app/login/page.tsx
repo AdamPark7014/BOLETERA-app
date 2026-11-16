@@ -26,9 +26,27 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+
+  const fieldErrors = {
+    email: !email.trim()
+      ? 'Escribe tu correo.'
+      : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+        ? 'Ese correo no parece válido.'
+        : undefined,
+    password: !password ? 'Escribe tu contraseña.' : undefined,
+  };
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    setShowErrors(true);
+    const firstInvalid = (Object.keys(fieldErrors) as (keyof typeof fieldErrors)[]).find(
+      (key) => fieldErrors[key]
+    );
+    if (firstInvalid) {
+      document.getElementById(`admin-${firstInvalid}`)?.focus();
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -54,7 +72,7 @@ export default function LoginPage() {
 
   return (
     <AuthShell title="Entrar al panel">
-      <form onSubmit={(e) => void submit(e)} className={styles.form}>
+      <form onSubmit={(e) => void submit(e)} className={styles.form} noValidate>
         <Field
           id="admin-email"
           label="Correo"
@@ -62,7 +80,7 @@ export default function LoginPage() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
+          error={showErrors ? fieldErrors.email : undefined}
         />
         <Field
           id="admin-password"
@@ -71,7 +89,7 @@ export default function LoginPage() {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
+          error={showErrors ? fieldErrors.password : undefined}
           trailing={
             <button
               type="button"
@@ -118,6 +136,7 @@ export default function LoginPage() {
                   setEmail(account.email);
                   setPassword(account.password);
                   setError('');
+                  setShowErrors(false);
                 }}
               >
                 {account.label}

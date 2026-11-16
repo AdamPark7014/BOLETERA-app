@@ -381,29 +381,12 @@ export function AdminFrame({ children }: { children: ReactNode }) {
   );
 }
 
-function agoLabel(seconds: number): string {
-  if (seconds < 60) return `hace ${Math.max(1, Math.round(seconds))} s`;
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `hace ${minutes} min`;
-  return `hace ${Math.round(minutes / 60)} h`;
-}
-
 function LiveStatus() {
   const status = useConnectionStatus();
-  const [loadedAt] = useState(() => Date.now());
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 10_000);
-    return () => window.clearInterval(timer);
-  }, []);
+  if (status.tone !== 'online' && status.tone !== 'offline') return null;
   const live = status.tone === 'online';
-  const offline = status.tone === 'offline';
-  const text = live
-    ? 'En vivo'
-    : offline
-      ? 'Sin conexión'
-      : `Actualizado ${agoLabel((now - loadedAt) / 1000)}`;
-  const tone = live ? styles.liveOk : offline ? styles.liveWait : styles.liveOff;
+  const text = live ? 'En vivo' : 'Sin conexión';
+  const tone = live ? styles.liveOk : styles.liveWait;
   return (
     <span className={`${styles.live} ${tone}`} title={status.detail} role="status">
       <span className={styles.liveDot} aria-hidden="true" />

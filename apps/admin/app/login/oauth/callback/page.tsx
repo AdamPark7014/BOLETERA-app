@@ -19,7 +19,7 @@ function OauthCallbackHandler() {
     const code = params.get('code');
     const provider = resolveOauthProvider(params.get('provider'));
     if (!code) {
-      setError('Falta el código del proveedor. Vuelve a intentarlo desde la pantalla de acceso.');
+      setError('No recibimos la confirmación. Vuelve a intentarlo desde la pantalla de acceso.');
       return;
     }
 
@@ -49,12 +49,12 @@ function OauthCallbackHandler() {
         // Navegación completa: los proveedores de sesión leen el token al montar.
         window.location.replace('/dashboard');
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Error de inicio de sesión con el proveedor.');
+        setError(e instanceof Error ? e.message : 'No se pudo completar el acceso.');
       }
     })();
   }, [params]);
 
-  if (!error) return <p className={styles.quiet}>Completando el acceso con tu proveedor.</p>;
+  if (!error) return <p className={styles.quiet}>Completando el acceso.</p>;
   return (
     <>
       <StatusBanner tone="error">{error}</StatusBanner>
@@ -73,8 +73,8 @@ function OauthCallbackHandler() {
  */
 export default function OauthCallbackPage() {
   return (
-    <AuthShell title="Inicio de sesión único">
-      <Suspense fallback={<p className={styles.quiet}>Completando el acceso con tu proveedor.</p>}>
+    <AuthShell title="Completando acceso">
+      <Suspense fallback={<p className={styles.quiet}>Completando el acceso.</p>}>
         <OauthCallbackHandler />
       </Suspense>
     </AuthShell>

@@ -3,7 +3,7 @@
 import { FormEvent, Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Field, TicketButton } from '@boletera/ui';
+import { Field, TicketButton, TicketState } from '@boletera/ui';
 import { userFacingMessage } from '@/lib/errors';
 import { AuthShell, StatusBanner } from '../_components/AuthShell';
 import styles from '../login.module.scss';
@@ -49,6 +49,20 @@ function ResetForm() {
     }
   }
 
+  if (!token) {
+    return (
+      <TicketState
+        kind="empty"
+        title="Este enlace ya no es válido"
+        action={
+          <Link href="/login/forgot" className={styles.inlineLink}>
+            Pedir otro
+          </Link>
+        }
+      />
+    );
+  }
+
   return (
     <>
       <form className={styles.form} onSubmit={(e) => void onSubmit(e)}>
@@ -65,11 +79,6 @@ function ResetForm() {
           required
         />
 
-        {!token ? (
-          <p className={styles.tertiary}>
-            Este enlace no trae token. Ábrelo desde el correo de recuperación.
-          </p>
-        ) : null}
         {error ? <StatusBanner tone="error">{error}</StatusBanner> : null}
         {msg ? <StatusBanner tone="success">{msg}</StatusBanner> : null}
 

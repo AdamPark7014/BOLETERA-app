@@ -88,15 +88,15 @@ const RECOMMENDATION_KIND_LABELS = {
   boost_sales_pace: 'Acelerar ritmo de venta',
   clear_inventory_zone: 'Liberar inventario por zona',
   improve_campaign: 'Mejorar campaña',
-  review_pricing: 'Revisar pricing',
+  review_pricing: 'Revisar precios',
   investigate_anomaly: 'Investigar anomalía',
   mitigate_fraud: 'Mitigar fraude',
 } as const satisfies Record<AiRecommendationKind, string>;
 
 const IMPACT_METRIC_LABELS = {
   tickets: 'boletos',
-  revenue_mxn: 'MXN',
-  occupancy_pp: 'pp ocupación',
+  revenue_mxn: 'ingreso',
+  occupancy_pp: 'puntos de ocupación',
   risk_reduction: 'reducción de riesgo',
 } as const satisfies Record<AiImpactMetric, string>;
 

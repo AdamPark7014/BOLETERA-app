@@ -147,7 +147,10 @@ function AnaliticaBody() {
           onRetry={() => setNonce((current) => current + 1)}
         />
       ) : loading && !data ? (
-        <p className={styles.quiet}>Cargando analítica.</p>
+        <div className={styles.stack} aria-busy="true" aria-label="Cargando analítica">
+          <div className={styles.skeleton} style={{ height: 120 }} />
+          <div className={styles.skeleton} style={{ height: 200 }} />
+        </div>
       ) : data ? (
         <Resumen data={data} />
       ) : null}

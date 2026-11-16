@@ -1647,3 +1647,39 @@ button.tabOn {
   border-color: var(--text-secondary);
   background: var(--elevated);
 }
+
+/* Bloque 1: foco blanco y botón de barra superior sin dorado. */
+.goldButton,
+.goldButton:hover {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.goldButton:hover {
+  border-color: var(--text-secondary);
+}
+
+.navLink:focus-visible,
+.navCurrent:focus-visible,
+.subLink:focus-visible,
+.subCurrent:focus-visible,
+.brand:focus-visible,
+.topBrand:focus-visible,
+.ghostButton:focus-visible,
+.goldButton:focus-visible,
+.goldLink:focus-visible,
+.ghostLink:focus-visible,
+.panelLink:focus-visible,
+.panelLinkButton:focus-visible,
+.cellLink:focus-visible,
+.menuButton:focus-visible,
+.closeMenu:focus-visible,
+.logout:focus-visible,
+.row:focus-visible,
+.tab:focus-visible,
+.tabOn:focus-visible,
+.searchInput:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}

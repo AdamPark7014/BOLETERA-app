@@ -15,9 +15,21 @@ export default function AdminForgotPasswordPage() {
   const [devUrl, setDevUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showErrors, setShowErrors] = useState(false);
+
+  const emailError = !email.trim()
+    ? 'Escribe tu correo.'
+    : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+      ? 'Ese correo no parece válido.'
+      : undefined;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    setShowErrors(true);
+    if (emailError) {
+      document.getElementById('forgot-email')?.focus();
+      return;
+    }
     setLoading(true);
     setMsg(null);
     setDevUrl(null);
@@ -54,7 +66,7 @@ export default function AdminForgotPasswordPage() {
 
   return (
     <AuthShell title="Recuperar contraseña">
-      <form className={styles.form} onSubmit={(e) => void onSubmit(e)}>
+      <form className={styles.form} onSubmit={(e) => void onSubmit(e)} noValidate>
         <Field
           id="forgot-email"
           label="Correo"
@@ -62,7 +74,7 @@ export default function AdminForgotPasswordPage() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
+          error={showErrors ? emailError : undefined}
         />
 
         {error ? <StatusBanner tone="error">{error}</StatusBanner> : null}

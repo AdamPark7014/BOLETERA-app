@@ -39,30 +39,6 @@ import { isAiServiceUnavailable } from './_lib/status';
 
 type AiView = 'chat' | 'insights' | 'panels' | 'actions';
 
-const GOVERNANCE_NOTES = [
-  {
-    title: 'Trazabilidad por respuesta',
-    body: 'Cada salida conserva método, rango, muestra y hora de generación. Sin traza no hay acción.',
-  },
-  {
-    title: 'Insuficiencia explícita',
-    body: 'Si la muestra es limitada o insuficiente, el copiloto lo declara. Nunca rellena huecos con cifras inventadas.',
-  },
-  {
-    title: 'Recomendar no es cambiar',
-    body: 'Las recomendaciones orientan; cambios de precio, campañas o fraude siguen flujos con confirmación humana.',
-  },
-] as const;
-
-const AI_ENDPOINTS = [
-  '/ai/summaries/executive',
-  '/ai/anomalies',
-  '/ai/recommendations',
-  '/ai/fraud/risk',
-  '/ai/segmentation/customers',
-  '/ai/forecast/events/:eventId',
-];
-
 export default function AiPage() {
   return (
     <Suspense fallback={null}>
@@ -120,7 +96,7 @@ function Copiloto() {
       .sort((a, b) => a.title.localeCompare(b.title, 'es-MX'))
       .map((event) => ({
         id: event.id,
-        label: `${event.title}${event.status ? ` · ${event.status}` : ''}`,
+        label: event.title,
       }));
   }, [eventsQ.data]);
 
@@ -304,20 +280,8 @@ function Copiloto() {
 
         {aiUnavailable ? (
           <div className={styles.stack} role="status">
-            <p className={styles.rowTitle}>Motor de IA no disponible</p>
-            <p className={styles.quiet}>
-              La pantalla consulta {AI_ENDPOINTS.length} rutas del ai-engine. Mientras no respondan,
-              cada panel muestra un vacío honesto basado en{' '}
-              <span className={styles.mono}>ai-contracts</span>.
-            </p>
-            <p className={styles.tertiary}>
-              {AI_ENDPOINTS.map((path, index) => (
-                <span key={path}>
-                  {index > 0 ? ' · ' : ''}
-                  <span className={styles.mono}>{path}</span>
-                </span>
-              ))}
-            </p>
+            <p className={styles.rowTitle}>Asistente no disponible</p>
+            <p className={styles.quiet}>Intenta más tarde o vuelve a actualizar.</p>
           </div>
         ) : null}
 
@@ -327,7 +291,7 @@ function Copiloto() {
             meta={
               anomaliesQ.data
                 ? `Umbral z ${formatCount(anomaliesQ.data.zThreshold, 1)}`
-                : 'Requiere /ai/anomalies'
+                : 'Sin datos'
             }
             value={wait(loadingKpis, anomalyCount === undefined ? '—' : formatCount(anomalyCount))}
           />
@@ -335,7 +299,7 @@ function Copiloto() {
             label="Recomendaciones accionables"
             meta={
               urgentCount === undefined
-                ? 'Requiere /ai/recommendations'
+                ? 'Sin recomendaciones'
                 : `${formatCount(urgentCount)} urgentes o altas`
             }
             value={wait(
@@ -348,7 +312,7 @@ function Copiloto() {
             meta={
               fraudQ.data
                 ? `${formatCount(fraudQ.data.summary.scored)} evaluados`
-                : 'Requiere /ai/fraud/risk'
+                : 'Sin evaluación'
             }
             value={wait(loadingKpis, highFraud === undefined ? '—' : formatCount(highFraud))}
           />
@@ -457,29 +421,14 @@ function Copiloto() {
           >
             <ForecastPanel eventId={eventId || null} query={forecastQ} />
           </Block>
-          <Block
-            title="Riesgo de fraude"
-            note="Puntajes explicables por orden o usuario, con el peso de cada factor."
-          >
+          <Block title="Riesgo de fraude" note="Órdenes y usuarios con mayor riesgo.">
             <FraudRiskPanel query={fraudQ} />
           </Block>
           <Block
             title="Segmentación de clientes"
-            note="RFM y probabilidad de abandono. Declara insuficiencia cuando no hay historial."
+            note="Grupos de clientes según compras recientes."
           >
             <SegmentationPanel query={segmentationQ} />
-          </Block>
-          <Block title="Gobernanza del copiloto" note="El copiloto recomienda; no ejecuta cambios.">
-            <ul className={styles.rows}>
-              {GOVERNANCE_NOTES.map((note) => (
-                <li key={note.title} className={styles.row}>
-                  <div className={styles.rowMain}>
-                    <p className={styles.rowTitle}>{note.title}</p>
-                    <p className={styles.rowMeta}>{note.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </Block>
         </>
       ) : null}
