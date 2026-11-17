@@ -239,6 +239,7 @@ services:
       dockerfile: Dockerfile.web
       args:
         APP_NAME: admin
+        NEXT_PUBLIC_WEB_URL: ${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
     container_name: boletera-admin
     restart: unless-stopped
     ports:

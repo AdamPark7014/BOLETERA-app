@@ -58,6 +58,9 @@ const CHANNEL_LABEL: Record<string, string> = {
   KIOSK: 'Quiosco',
 };
 
+/** Sitio público de compra; en local es la web de la demo. */
+const WEB_URL = (process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000').replace(/\/$/, '');
+
 const CHANNEL_COLORS = ['#FFFFFF', '#D4D4D8', '#A1A1AA', '#71717A', '#52525B'];
 
 function channelName(raw: string): string {
@@ -130,6 +133,10 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
     eventId && draftLike && canManage
       ? { href: `/events/${eventId}?seccion=cumplimiento`, label: 'Publicar' }
       : null;
+  const slug = readString(row.slug);
+  const published =
+    Boolean(readString(row.publishedAt)) && status !== 'DRAFT' && status !== 'CANCELLED';
+  const publicHref = published && slug ? `${WEB_URL}/events/${encodeURIComponent(slug)}` : null;
 
   return (
     <section className={own.page} aria-labelledby="evento-titulo">
@@ -168,6 +175,11 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
             <Link href={primaryAction.href} className={styles.goldLink}>
               {primaryAction.label}
             </Link>
+          ) : null}
+          {publicHref ? (
+            <a href={publicHref} target="_blank" rel="noreferrer" className={styles.panelLink}>
+              Ver en la web
+            </a>
           ) : null}
           {token && eventId ? (
             <DatePills

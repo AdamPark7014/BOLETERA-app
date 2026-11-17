@@ -15,6 +15,7 @@ WORKDIR /app
 ARG APP_NAME=web
 # Lo que verá el navegador. Next lo incrusta en el bundle al construir.
 ARG NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+ARG NEXT_PUBLIC_WEB_URL=http://localhost:3000
 
 COPY . .
 
@@ -23,6 +24,7 @@ RUN --mount=type=cache,id=boletera-pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
+    NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL} \
     NEXT_TELEMETRY_DISABLED=1
 
 # Primero los paquetes del workspace cuyo main apunta a dist/ (no se versiona).
