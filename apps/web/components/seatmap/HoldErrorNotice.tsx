@@ -17,11 +17,16 @@ export function HoldErrorNotice({
   error,
   onRetry,
   onDismiss,
+  onChooseAgain,
 }: {
   error: InventoryError;
   onRetry?: () => void;
   onDismiss?: () => void;
+  onChooseAgain?: () => void;
 }) {
+  const shouldShowChooseAgain =
+    ['forbidden', 'seat-taken', 'not-found'].includes(error.kind) && onChooseAgain;
+
   return (
     <div className={styles.notice} role="alert">
       <p className={styles.text}>{error.message}</p>
@@ -29,6 +34,11 @@ export function HoldErrorNotice({
         {onRetry && error.kind !== 'hold-limit' && (
           <button type="button" className={styles.retry} onClick={onRetry}>
             Reintentar
+          </button>
+        )}
+        {shouldShowChooseAgain && (
+          <button type="button" className={styles.chooseAgain} onClick={onChooseAgain}>
+            Elegir de nuevo
           </button>
         )}
         {onDismiss && (

@@ -62,6 +62,15 @@ export function CarteleraBoard({
   const [active, setActive] = useState(0);
   const [sheet, setSheet] = useState<'category' | 'city' | null>(null);
   const [cityQuery, setCityQuery] = useState('');
+  const [shortPlaceholder, setShortPlaceholder] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 479px)');
+    const sync = () => setShortPlaceholder(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
   const sheetRef = useRef<HTMLDivElement>(null);
 
   /*
@@ -155,7 +164,7 @@ export function CarteleraBoard({
         label="Buscar"
         kind="search"
         value={query}
-        placeholder="Artista, ciudad o recinto"
+        placeholder={shortPlaceholder ? 'Buscar' : 'Artista, ciudad o recinto'}
         onChange={(event) => setQuery(event.target.value)}
       />
 

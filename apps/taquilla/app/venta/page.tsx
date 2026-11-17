@@ -40,16 +40,11 @@ import {
 } from '@/lib/pos';
 import { stockImageForCategory } from '@boletera/shared';
 import { Field, StageArt, formatTicketAmount } from '@boletera/ui';
+import { EventPicker } from '@/components/EventPicker';
+import { sellableOffersSorted, type OrderableOffer } from '@/lib/offer-order';
 import styles from './venta.module.scss';
 
-type Offer = {
-  id: string;
-  name?: string;
-  zone?: string;
-  basePrice: string | number;
-  remainingQuantity?: number;
-  isAvailable?: boolean;
-};
+type Offer = OrderableOffer;
 
 type EventRow = {
   id: string;
@@ -70,22 +65,6 @@ type PendingAuth = null | 'COMP' | 'DISCOUNT';
 
 const QTY_TYPING_WINDOW_MS = 900;
 const EVENTS_CACHE_KEY = 'boletera_pos_events';
-
-/**
- * Zonas en orden ESTABLE (precio descendente, luego nombre). El catálogo llega
- * sin `orderBy` y Postgres reordena las ofertas cada vez que una venta toca
- * `remainingQuantity`: la tecla «3» elegía Balcón en una venta y Luneta en la
- * siguiente.
- */
-function sellableOffers(list: Offer[] | undefined): Offer[] {
-  return (list ?? [])
-    .filter((o) => o.isAvailable !== false)
-    .sort(
-      (a, b) =>
-        Number(b.basePrice) - Number(a.basePrice) ||
-        (a.name || a.zone || '').localeCompare(b.name || b.zone || '', 'es')
-    );
-}
 
 function VentaFlow() {
   const router = useRouter();
@@ -203,7 +182,7 @@ function VentaFlow() {
 
   const event = useMemo(() => events.find((e) => e.id === eventId) ?? null, [events, eventId]);
 
-  const offers = useMemo(() => sellableOffers(event?.offers), [event]);
+  const offers = useMemo(() => sellableOffersSorted(event?.offers), [event]);
 
   const offer = useMemo(
     () => offers.find((o) => o.id === offerId) ?? offers[0] ?? null,
@@ -370,7 +349,7 @@ function VentaFlow() {
       setLastChange(null);
       setChargedLine(null);
       setEventId(row.id);
-      const list = sellableOffers(row.offers);
+      const list = sellableOffersSorted(row.offers);
       setOfferId(list[0]?.id ?? '');
       setSelectedSeats([]);
       void releaseHolds();
@@ -1028,69 +1007,16 @@ function VentaFlow() {
           ) : null}
 
           {(stage === 'EVENT' || stage === 'DONE') && (
-            <section className={styles.block} aria-label="Elige función">
-              <div className={styles.headRow}>
-                <h2 className={styles.label}>Elige función</h2>
-                <div className={styles.filter}>
-                  <Field
-                    ref={filterRef}
-                    kind="search"
-                    label="Buscar función"
-                    placeholder="Nombre o recinto"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                  />
-                </div>
-              </div>
-              {eventsLoading ? (
-                <ul className={styles.events} aria-hidden="true">
-                  {[0, 1, 2, 3, 4, 5].map((i) => (
-                    <li key={i} className={styles.eventSkeleton} />
-                  ))}
-                </ul>
-              ) : filteredEvents.length === 0 ? (
-                <p className={styles.empty}>
-                  {filter.trim()
-                    ? 'Ninguna función coincide con esa búsqueda.'
-                    : 'No hay funciones en venta en esta taquilla.'}
-                </p>
-              ) : (
-                <ul className={styles.events}>
-                  {filteredEvents.map((row, i) => {
-                    // «Desde» es el precio MÁS BAJO, no el de la primera oferta
-                    // que devuelva el catálogo (Ballet decía «Desde $532» con
-                    // Balcón a $285).
-                    const prices = sellableOffers(row.offers)
-                      .map((o) => Number(o.basePrice))
-                      .filter((n) => Number.isFinite(n) && n > 0);
-                    const price = prices.length ? Math.min(...prices) : 0;
-                    return (
-                      <li key={row.id}>
-                        <button
-                          type="button"
-                          className={row.id === eventId ? styles.eventOn : styles.event}
-                          onClick={() => selectEvent(row)}
-                        >
-                          <span className={styles.thumb}>
-                            <StageArt seed={row.id} fade={false} />
-                            <img src={stockImageForCategory(row.category, row.title)} alt="" />
-                          </span>
-                          <span className={styles.eventText}>
-                            <strong>{row.title}</strong>
-                            <small>{whenLabel(row.startsAt)}</small>
-                            <small>
-                              {row.venue?.name ?? 'Recinto por confirmar'}
-                              {price > 0 ? ` · desde ${formatTicketAmount(price)}` : ''}
-                            </small>
-                          </span>
-                          {i < 9 ? <kbd>{i + 1}</kbd> : null}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </section>
+            <EventPicker
+              events={events}
+              loading={eventsLoading}
+              filter={filter}
+              onFilterChange={setFilter}
+              selectedId={eventId}
+              onSelect={selectEvent}
+              filterInputRef={filterRef}
+              showHotkeys
+            />
           )}
 
           {stage !== 'EVENT' && stage !== 'DONE' && (
@@ -1172,10 +1098,8 @@ function VentaFlow() {
                           aria-pressed={on}
                           onClick={() => selectOffer(o.id)}
                         >
-                          <span className={styles.sectionName}>
-                            {offerName(o)}
-                            {i < 9 ? <kbd>{i + 1}</kbd> : null}
-                          </span>
+                          <span className={styles.sectionName}>{offerName(o)}</span>
+                          {i < 9 ? <kbd>{i + 1}</kbd> : null}
                           {soldOut ? (
                             <span className={styles.sectionMeta}>Agotada</span>
                           ) : (
@@ -1185,7 +1109,7 @@ function VentaFlow() {
                               </span>
                               <span className={styles.sectionMeta}>
                                 {o.remainingQuantity != null
-                                  ? `${o.remainingQuantity.toLocaleString('es-MX')} libres`
+                                  ? `${o.remainingQuantity} libres`
                                   : 'En venta'}
                               </span>
                             </span>
@@ -1256,7 +1180,7 @@ function VentaFlow() {
                       {holdExpiresAt && ttlLeft > 0
                         ? `${holdIds.length} lugares juntos apartados · ${Math.floor(ttlLeft / 60)}:${String(ttlLeft % 60).padStart(2, '0')}`
                         : offer?.remainingQuantity != null
-                          ? `${offer.remainingQuantity.toLocaleString('es-MX')} libres en la sección`
+                          ? `${offer.remainingQuantity} libres en la sección`
                           : null}
                     </small>
                   </div>

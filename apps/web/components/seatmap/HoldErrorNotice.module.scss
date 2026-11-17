@@ -26,7 +26,8 @@
 }
 
 .retry,
-.dismiss {
+.dismiss,
+.chooseAgain {
   // 40 px de alto: muy por encima del mínimo de 24×24 (WCAG 2.2 §2.5.8), que
   // es lo mínimo exigible en un control que aparece durante un error de pago.
   min-height: 2.5rem;

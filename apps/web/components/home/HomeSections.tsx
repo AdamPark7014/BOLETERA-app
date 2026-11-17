@@ -86,7 +86,6 @@ export function MembershipBand() {
         <h2 className={styles.memberTitle} id="membresia-title">
           Membresía Black
         </h2>
-        <p className={styles.memberText}>Preventas y beneficios en tus eventos favoritos.</p>
         <Link href="/membresias" className={styles.secondary}>
           Ver planes
         </Link>

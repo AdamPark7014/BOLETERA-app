@@ -99,7 +99,7 @@ export default function AjustesPage() {
               <li key={m.eventId}>
                 <strong>{m.eventTitle ?? m.eventId}</strong>
                 <span>
-                  {m.count.toLocaleString('es-MX')} boletos · emitido {formatDateTime(m.issuedAt)}
+                  {String(m.count)} boletos · emitido {formatDateTime(m.issuedAt)}
                   {m.complete ? '' : ' · incompleta'}
                 </span>
               </li>

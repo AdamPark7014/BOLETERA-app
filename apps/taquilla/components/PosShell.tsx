@@ -347,7 +347,7 @@ export function PosShell({
               <span>Ventas del turno</span>
               <strong>
                 {formatTicketAmount(Number(shift.totalRevenue) || 0)} ·{' '}
-                {shift.totalTransactions.toLocaleString('es-MX')}{' '}
+                {String(shift.totalTransactions)}{' '}
                 {shift.totalTransactions === 1 ? 'venta' : 'ventas'}
               </strong>
             </div>

@@ -19,10 +19,9 @@ async function loadPlans(slug: string): Promise<PlansState> {
       cache: 'no-store',
     });
     if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as { message?: string } | null;
       return {
         kind: 'error',
-        message: body?.message || `No pudimos cargar los planes (HTTP ${res.status}).`,
+        message: 'No pudimos cargar los planes.',
       };
     }
     const data = (await res.json()) as { organization?: { name?: string }; plans?: PublicPlan[] };
@@ -45,7 +44,6 @@ export default async function MembresiasPage() {
           <span className={styles.heroShade} />
           <div className={styles.heroCopy}>
             <h1 className={styles.heroTitle}>Membresía Black</h1>
-            <p className={styles.heroLead}>Preventas y beneficios en tus eventos favoritos.</p>
           </div>
         </section>
 

@@ -415,7 +415,7 @@ export default function AccesoPage() {
           pushOutcome({
             verdict: 'INVALID',
             title: 'NO VÁLIDO',
-            detail: payload.message || err.message,
+            detail: friendlyError(err, 'No se pudo validar el boleto.'),
             extra: 'Cancelado, reembolsado, transferido o QR alterado.',
             at: Date.now(),
           });
@@ -473,7 +473,7 @@ export default function AccesoPage() {
       whoMain={`${zoneId.trim() ? `Puerta ${zoneId.trim()}` : 'Puerta'} · ${currentEvent?.title ?? 'Sin función'}`}
       whoSub={
         manifest
-          ? `Lista descargada · ${manifest.count.toLocaleString('es-MX')} boletos${manifest.complete ? '' : ' (incompleta)'}`
+          ? `Lista descargada · ${String(manifest.count)} boletos${manifest.complete ? '' : ' (incompleta)'}`
           : ''
       }
       headerExtra={
@@ -656,15 +656,15 @@ export default function AccesoPage() {
           <div className={styles.counters}>
             <div className={styles.counter}>
               <span>Entradas</span>
-              <strong>{okCount.toLocaleString('es-MX')}</strong>
+              <strong>{String(okCount)}</strong>
             </div>
             <div className={styles.counter}>
               <span>Por minuto</span>
-              <strong>{perMinute.toLocaleString('es-MX')}</strong>
+              <strong>{String(perMinute)}</strong>
             </div>
             <div className={styles.counter}>
               <span>Rechazos</span>
-              <strong>{rejectCount.toLocaleString('es-MX')}</strong>
+              <strong>{String(rejectCount)}</strong>
             </div>
           </div>
 
@@ -672,7 +672,7 @@ export default function AccesoPage() {
             <span className={styles.dot} aria-hidden="true" />
             <span>
               {online ? 'En línea' : 'Sin red'}
-              {pending > 0 ? ` · ${pending.toLocaleString('es-MX')} por subir` : ' · todo subido'}
+              {pending > 0 ? ` · ${String(pending)} por subir` : ' · todo subido'}
             </span>
             <button type="button" className={styles.linkBtn} onClick={() => void runSync()}>
               Subir ahora
@@ -736,7 +736,7 @@ export default function AccesoPage() {
                   </strong>
                   <span>
                     {manifest
-                      ? `${manifest.count.toLocaleString('es-MX')} boletos · ${uiDateTime(new Date(manifest.issuedAt))}`
+                      ? `${String(manifest.count)} boletos · ${uiDateTime(new Date(manifest.issuedAt))}`
                       : 'Descárgala antes de abrir puertas para validar sin red.'}
                   </span>
                 </div>

@@ -8,6 +8,7 @@ import { WaitlistSignup } from '@/components/WaitlistSignup';
 import { Countdown } from '@/components/home/Countdown';
 import { availability, longWhen, priceLabel } from '@/lib/event-display';
 import { EventPurchaseClient } from './EventPurchaseClient';
+import { sortOffersForDisplay } from '@/lib/offer-order';
 import styles from './event.module.scss';
 
 type Offer = {
@@ -18,6 +19,7 @@ type Offer = {
   allInPrice?: number;
   remainingQuantity?: number;
   isAvailable?: boolean;
+  sortOrder?: number | null;
 };
 
 export function EventStage({
@@ -75,11 +77,12 @@ export function EventStage({
   focusZone: string | null;
   mapData: unknown;
 }) {
+  const orderedOffers = sortOffersForDisplay(offers);
   const [stage, setStage] = useState<'ficha' | 'zona'>('ficha');
   const place = [venueName, venueCity].filter(Boolean).join(', ');
   const announced = minPriceAllIn && minPriceAllIn > 0 ? minPriceAllIn : minPrice;
   const hasOffer = offers.length > 0;
-  const stock = availability(offers);
+  const stock = availability(orderedOffers);
   const doors = doorsAt ? formatTime(doorsAt) : null;
   const salesSoon =
     salesStartAt && new Date(salesStartAt).getTime() > Date.now() ? salesStartAt : null;
@@ -134,7 +137,7 @@ export function EventStage({
           venueName={venueName}
           venueCity={venueCity}
           mapData={mapData}
-          offers={offers}
+          offers={orderedOffers}
           minPrice={minPrice}
           minPriceAllIn={minPriceAllIn}
           currency={currency}
@@ -203,7 +206,7 @@ export function EventStage({
                 Zonas
               </h2>
               <ul className={styles.zoneList}>
-                {offers.map((offer) => {
+                {orderedOffers.map((offer) => {
                   const price = Number(offer.allInPrice ?? offer.basePrice);
                   const out = offer.isAvailable === false || offer.remainingQuantity === 0;
                   return (

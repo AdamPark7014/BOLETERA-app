@@ -36,7 +36,6 @@ export function PlanesClient({ plans }: { plans: PublicPlan[] }) {
   const [selected, setSelected] = useState<string | null>(firstOpen?.id ?? null);
   const [method, setMethod] = useState<MethodId>('CARD');
   const [offered, setOffered] = useState<MethodId[]>(['CARD', 'SPEI', 'OXXO']);
-  const [demo, setDemo] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ApiErrorInfo | null>(null);
@@ -46,8 +45,7 @@ export function PlanesClient({ plans }: { plans: PublicPlan[] }) {
     const controller = new AbortController();
     fetch(`${API}/payments/config`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : null))
-      .then((cfg: { demo?: boolean; methods?: string[] } | null) => {
-        if (cfg?.demo) setDemo(true);
+      .then((cfg: { methods?: string[] } | null) => {
         const methods = cfg?.methods;
         if (Array.isArray(methods)) {
           const list = METHODS.map((m) => m.id).filter((id) => methods.includes(id));
@@ -168,9 +166,6 @@ export function PlanesClient({ plans }: { plans: PublicPlan[] }) {
               </button>
             ))}
           </div>
-          {demo ? (
-            <p className={purchase.caption}>Modo demostración: no se hace ningún cargo.</p>
-          ) : null}
           {failure ? (
             <div className={purchase.error} role="alert">
               <span>{failure.message}</span>
