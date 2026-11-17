@@ -1,9 +1,8 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { TicketButton, formatNumber } from '@boletera/ui';
+import { StageArt, TicketButton, TicketState, formatNumber } from '@boletera/ui';
 import { hasCapability } from '@/lib/permissions';
 import { listEvents, type EventRow } from '@/lib/platform-api';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from './_shared/api-state';
@@ -93,17 +92,15 @@ function EventsBody() {
         <div className={styles.skeleton} style={{ height: 420 }} aria-label="Cargando eventos" />
       ) : null}
       {!loading && events.length === 0 ? (
-        <div className={styles.empty}>
-          <p className={styles.emptyTitle}>Todavía no hay eventos</p>
-          <p className={styles.quiet}>
-            {canCreate ? 'Crea el primero en un par de minutos.' : 'Aún no hay funciones.'}
-          </p>
-          {canCreate ? (
-            <Link href="/events/new" className={styles.goldLink}>
-              Crear evento
-            </Link>
-          ) : null}
-        </div>
+        <TicketState
+          kind="empty"
+          title="Todavía no hay eventos"
+          action={
+            canCreate ? (
+              <TicketButton onClick={() => router.push('/events/new')}>Crear evento</TicketButton>
+            ) : undefined
+          }
+        />
       ) : null}
       {!loading && events.length > 0 && filtered.length === 0 ? (
         <div className={styles.empty}>
@@ -144,8 +141,20 @@ function EventsBody() {
                   }}
                 >
                   <td>
-                    <span className={styles.cellLink}>{event.title}</span>
-                    <p className={styles.rowMeta}>{event.venue?.name ?? 'Sin recinto'}</p>
+                    <div className={styles.rowWithThumb}>
+                      <span className={styles.rowThumb} aria-hidden="true">
+                        {event.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={event.image} alt="" />
+                        ) : (
+                          <StageArt seed={event.id} fade={false} />
+                        )}
+                      </span>
+                      <span>
+                        <span className={styles.cellLink}>{event.title}</span>
+                        <p className={styles.rowMeta}>{event.venue?.name ?? 'Sin recinto'}</p>
+                      </span>
+                    </div>
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{formatWhen(event.startsAt)}</td>
                   <td>

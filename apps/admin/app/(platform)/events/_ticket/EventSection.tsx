@@ -58,18 +58,14 @@ const CHANNEL_LABEL: Record<string, string> = {
   KIOSK: 'Quiosco',
 };
 
-const CHANNEL_COLORS = ['var(--gold)', 'var(--gold-soft)', '#8A7359', '#5C4E3E', '#3F362C'];
+const CHANNEL_COLORS = ['#FFFFFF', '#D4D4D8', '#A1A1AA', '#71717A', '#52525B'];
 
 function channelName(raw: string): string {
   return CHANNEL_LABEL[raw.toUpperCase()] ?? raw.charAt(0) + raw.slice(1).toLowerCase();
 }
 
 function money(value: number): string {
-  return value.toLocaleString('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    maximumFractionDigits: 0,
-  });
+  return formatTicketAmount(value);
 }
 
 function moneyCompact(value: number): string {
@@ -124,9 +120,16 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
   const canPricing = hasCapability(role, 'events.view') && hasCapability(role, 'dashboard.view');
   const canApply = role === 'ADMIN' || role === 'SUPER_ADMIN';
   const canInventory = hasCapability(role, 'inventory.monitor');
+  const canManage = hasCapability(role, 'events.manage');
   const when = formatWhen(row.startsAt, zone);
   const venueName = readString(venue.name);
   const city = readString(venue.city);
+  const status = readString(row.status);
+  const draftLike = status === 'DRAFT' || status === 'ANNOUNCED';
+  const primaryAction =
+    eventId && draftLike && canManage
+      ? { href: `/events/${eventId}?seccion=cumplimiento`, label: 'Publicar' }
+      : null;
 
   return (
     <section className={own.page} aria-labelledby="evento-titulo">
@@ -161,6 +164,11 @@ export function EventSection({ event, hub, eventId, token, role }: Props) {
         </div>
         <div className={own.heroSide}>
           <span className={statusChip(row.status)}>{statusLabel(row.status)}</span>
+          {primaryAction ? (
+            <Link href={primaryAction.href} className={styles.goldLink}>
+              {primaryAction.label}
+            </Link>
+          ) : null}
           {token && eventId ? (
             <DatePills
               token={token}
@@ -450,8 +458,8 @@ function AreaSvg({
     >
       <defs>
         <linearGradient id="bt-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#A68A6B" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#A68A6B" stopOpacity="0" />
+          <stop offset="0" stopColor="#FFFFFF" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
         </linearGradient>
       </defs>
       {ticks.map((tick) => (
@@ -494,11 +502,11 @@ function AreaSvg({
       <polyline
         points={line}
         fill="none"
-        stroke="#A68A6B"
+        stroke="#FFFFFF"
         strokeWidth="2.5"
         strokeLinejoin="round"
       />
-      <circle cx={lastX} cy={lastY} r="5" fill="#000" stroke="#A68A6B" strokeWidth="2.5" />
+      <circle cx={lastX} cy={lastY} r="5" fill="#000" stroke="#FFFFFF" strokeWidth="2.5" />
       <text
         x={lastX > W - 120 ? lastX - 10 : lastX + 10}
         y={lastY - 10}
@@ -530,7 +538,7 @@ function PriceTip({ eventId, canApply }: { eventId: string; canApply: boolean })
       </p>
       <p className={styles.quiet}>{top.explanation}</p>
       <div className={own.tipActions}>
-        <Link href={`/pricing?evento=${encodeURIComponent(eventId)}`} className={styles.goldLink}>
+        <Link href={`/pricing?evento=${encodeURIComponent(eventId)}`} className={styles.panelLink}>
           {canApply ? 'Revisar y aplicar' : 'Revisar'}
         </Link>
         <button type="button" className={own.tipDismiss} onClick={() => setDismissed(true)}>
@@ -728,7 +736,12 @@ function EventFacts({ row, zone }: { row: Record<string, unknown>; zone: string 
     ['Termina', formatWhen(row.endsAt, zone)],
     ['Publicado', formatWhen(row.publishedAt, zone)],
     ['Dirección web', readString(row.slug) ? `/${readString(row.slug)}` : '—'],
-    ['Moneda', readString(row.currency) ?? 'MXN'],
+    [
+      'Moneda',
+      (readString(row.currency) ?? 'MXN') === 'MXN'
+        ? 'Pesos mexicanos'
+        : (readString(row.currency) ?? '—'),
+    ],
     ['Reembolsos', yesNo(row.refundable)],
     ['Reventa', yesNo(row.allowResale)],
     ['Transferencia', yesNo(row.transferAllowed)],

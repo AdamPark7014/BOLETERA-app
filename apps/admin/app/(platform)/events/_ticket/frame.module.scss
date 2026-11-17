@@ -1683,3 +1683,27 @@ button.tabOn {
   outline: 2px solid #ffffff;
   outline-offset: 2px;
 }
+
+/* Lista de eventos: miniatura del póster junto al nombre. */
+.rowWithThumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rowThumb {
+  position: relative;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--elevated);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}

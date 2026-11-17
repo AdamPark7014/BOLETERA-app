@@ -179,7 +179,7 @@ function CancelBody() {
               direction="out"
             />
             <Money
-              label="Bonificación · art. 92 Bis LFPC"
+              label="Bonificación"
               amount={amount(outcome.compensationTotal)}
               currency
               direction="out"
@@ -349,7 +349,7 @@ function CancelBody() {
               <Money
                 label={
                   projection.compensationRate > 0
-                    ? `Bonificación · ${Math.round(projection.compensationRate * 100)}% art. 92 Bis`
+                    ? `Bonificación · ${Math.round(projection.compensationRate * 100)}%`
                     : 'Bonificación · no aplica'
                 }
                 amount={amount(projection.compensationTotal)}
@@ -369,7 +369,7 @@ function CancelBody() {
                 <p className={frame.quiet}>
                   Esta acción no se puede deshacer. Se devolverán{' '}
                   <span className={frame.out}>
-                    {formatTicketAmount(amount(projection.grandTotal))} MXN
+                    {formatTicketAmount(amount(projection.grandTotal))}
                   </span>{' '}
                   a {projection.ordersAffected} órdenes, se cerrará la venta y se avisará a cada
                   comprador.
@@ -405,7 +405,7 @@ function CancelBody() {
             ) : (
               <div className={styles.actions}>
                 <TicketButton variant="danger" onClick={() => setConfirmOpen(true)}>
-                  Cancelar evento y devolver {formatTicketAmount(amount(projection.grandTotal))} MXN
+                  Cancelar evento y devolver {formatTicketAmount(amount(projection.grandTotal))}
                 </TicketButton>
               </div>
             )}
