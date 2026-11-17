@@ -1119,7 +1119,8 @@ model ResaleListing {
   delistedReason String?
 
   // Relations
-  offers ResaleOffer[]
+  offers    ResaleOffer[]
+  checkouts ResaleCheckout[]
 
   // Audit
   listedAt  DateTime  @default(now())
@@ -2109,6 +2110,44 @@ model MembershipCheckout {
   @@index([organizationId, status, createdAt])
   @@index([userId, status])
   @@index([planId, status])
+}
+
+// ============================================================================
+// COMPRA DE REVENTA (20261117120000_resale_checkout)
+// ============================================================================
+
+/// Compra «ya» de un anuncio de reventa. Cobra por el mismo camino que las
+/// órdenes (cobro externo del PaymentService); al confirmarse, el boleto pasa al
+/// comprador con un código nuevo y queda registrado lo que se le debe al vendedor.
+model ResaleCheckout {
+  id             String        @id @default(cuid())
+  publicId       String        @unique
+  organizationId String
+  listingId      String
+  listing        ResaleListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId        String
+  buyerEmail     String        @db.VarChar(255)
+  buyerName      String
+  status         OrderStatus   @default(PENDING)
+  /// Lo que paga el comprador: precio del anuncio + cargo por servicio.
+  amount         Decimal       @db.Decimal(12, 2)
+  fee            Decimal       @db.Decimal(12, 2)
+  currency       Currency      @default(MXN)
+  paymentMethod  PaymentMethod @default(CARD)
+  /// Lo que recibe el vendedor (el precio que pidió).
+  sellerPayout   Decimal       @db.Decimal(12, 2)
+  /// PENDING hasta que finanzas lo deposita; PAID después.
+  payoutStatus   String        @default("PENDING")
+  paymentId      String?
+  orderId        String?
+  expiresAt      DateTime
+  completedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([listingId, status])
+  @@index([buyerId, status])
+  @@index([organizationId, status, createdAt])
 }
 
 // ============================================================================

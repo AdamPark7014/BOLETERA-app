@@ -1,12 +1,45 @@
 import { Controller, Post, Get, Body, Param, UseGuards, Query, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ResaleService } from './resale.service';
+import { ResaleCheckoutService } from './resale-checkout.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Resale')
 @Controller('resale')
 export class ResaleController {
-  constructor(private resaleService: ResaleService) {}
+  constructor(
+    private resaleService: ResaleService,
+    private checkouts: ResaleCheckoutService
+  ) {}
+
+  // ==================== COMPRAR YA (cobro real) ====================
+
+  @Post('listings/:listingId/buy')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Comprar un anuncio de reventa: crea el cobro y aparta el boleto' })
+  async buy(@Param('listingId') listingId: string, @Request() req: { user: { sub: string } }) {
+    return this.checkouts.start(req.user.sub, listingId);
+  }
+
+  @Get('checkouts/:publicId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Estado de una compra de reventa propia' })
+  async checkoutStatus(
+    @Param('publicId') publicId: string,
+    @Request() req: { user: { sub: string } }
+  ) {
+    return this.checkouts.status(req.user.sub, publicId);
+  }
+
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mis anuncios de reventa con lo que recibiré' })
+  async mine(@Request() req: { user: { sub: string } }) {
+    return this.checkouts.sellerSummary(req.user.sub);
+  }
 
   // ==================== CREATE LISTING ====================
 

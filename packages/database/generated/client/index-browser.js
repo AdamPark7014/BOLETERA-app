@@ -1044,6 +1044,29 @@ exports.Prisma.MembershipCheckoutScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ResaleCheckoutScalarFieldEnum = {
+  id: 'id',
+  publicId: 'publicId',
+  organizationId: 'organizationId',
+  listingId: 'listingId',
+  buyerId: 'buyerId',
+  buyerEmail: 'buyerEmail',
+  buyerName: 'buyerName',
+  status: 'status',
+  amount: 'amount',
+  fee: 'fee',
+  currency: 'currency',
+  paymentMethod: 'paymentMethod',
+  sellerPayout: 'sellerPayout',
+  payoutStatus: 'payoutStatus',
+  paymentId: 'paymentId',
+  orderId: 'orderId',
+  expiresAt: 'expiresAt',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.PricingRecommendationScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
@@ -1494,6 +1517,7 @@ exports.Prisma.ModelName = {
   MembershipBenefit: 'MembershipBenefit',
   MembershipBenefitRedemption: 'MembershipBenefitRedemption',
   MembershipCheckout: 'MembershipCheckout',
+  ResaleCheckout: 'ResaleCheckout',
   PricingRecommendation: 'PricingRecommendation'
 };
 

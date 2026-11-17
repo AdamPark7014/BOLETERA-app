@@ -20,7 +20,7 @@ describe('SaleWindowService · código de preventa', () => {
   };
   const event = {
     id: 'ev1',
-    status: EventStatus.PUBLISHED,
+    status: EventStatus.LIVE,
     startsAt: new Date('2026-12-20T02:00:00Z'),
     totalCapacity: 1000,
     salesStartAt: null,

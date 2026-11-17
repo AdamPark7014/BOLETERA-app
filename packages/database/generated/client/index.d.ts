@@ -335,6 +335,13 @@ export type MembershipBenefitRedemption = $Result.DefaultSelection<Prisma.$Membe
  */
 export type MembershipCheckout = $Result.DefaultSelection<Prisma.$MembershipCheckoutPayload>
 /**
+ * Model ResaleCheckout
+ * Compra «ya» de un anuncio de reventa. Cobra por el mismo camino que las
+ * órdenes (cobro externo del PaymentService); al confirmarse, el boleto pasa al
+ * comprador con un código nuevo y queda registrado lo que se le debe al vendedor.
+ */
+export type ResaleCheckout = $Result.DefaultSelection<Prisma.$ResaleCheckoutPayload>
+/**
  * Model PricingRecommendation
  * Recomendación de precio encolada o aplicada. La vista previa no escribe aquí.
  * Al aplicar se escribe `Offer.basePrice` y una fila de `DynamicPrice` como historial.
@@ -1660,6 +1667,16 @@ export class PrismaClient<
   get membershipCheckout(): Prisma.MembershipCheckoutDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.resaleCheckout`: Exposes CRUD operations for the **ResaleCheckout** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ResaleCheckouts
+    * const resaleCheckouts = await prisma.resaleCheckout.findMany()
+    * ```
+    */
+  get resaleCheckout(): Prisma.ResaleCheckoutDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.pricingRecommendation`: Exposes CRUD operations for the **PricingRecommendation** model.
     * Example usage:
     * ```ts
@@ -2168,6 +2185,7 @@ export namespace Prisma {
     MembershipBenefit: 'MembershipBenefit',
     MembershipBenefitRedemption: 'MembershipBenefitRedemption',
     MembershipCheckout: 'MembershipCheckout',
+    ResaleCheckout: 'ResaleCheckout',
     PricingRecommendation: 'PricingRecommendation'
   };
 
@@ -2187,7 +2205,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "organization" | "venue" | "venueLayout" | "venueLayoutSnapshot" | "section" | "seatRow" | "seat" | "eventSeatMap" | "seatHold" | "inventoryBlock" | "tenantTheme" | "accessZone" | "ticketScan" | "paymentIntent" | "auditEvent" | "cashierShift" | "event" | "eventSeries" | "salePhase" | "venueBlackout" | "offer" | "ticket" | "order" | "orderItem" | "payment" | "refund" | "user" | "permission" | "rolePermission" | "userPermission" | "session" | "posTerminal" | "posCashierSession" | "resaleListing" | "resaleOffer" | "dynamicPrice" | "promotion" | "fraudFlag" | "eventAnalytics" | "promoterPayout" | "cart" | "wishlist" | "review" | "waitlistEntry" | "ticketTransfer" | "apiKey" | "fiscalProfile" | "cfdiInvoice" | "seasonPass" | "seasonPassEvent" | "seasonPassPurchase" | "orgInvitation" | "eventDisclosure" | "membershipPlan" | "membership" | "membershipPeriod" | "membershipBenefit" | "membershipBenefitRedemption" | "membershipCheckout" | "pricingRecommendation"
+      modelProps: "organization" | "venue" | "venueLayout" | "venueLayoutSnapshot" | "section" | "seatRow" | "seat" | "eventSeatMap" | "seatHold" | "inventoryBlock" | "tenantTheme" | "accessZone" | "ticketScan" | "paymentIntent" | "auditEvent" | "cashierShift" | "event" | "eventSeries" | "salePhase" | "venueBlackout" | "offer" | "ticket" | "order" | "orderItem" | "payment" | "refund" | "user" | "permission" | "rolePermission" | "userPermission" | "session" | "posTerminal" | "posCashierSession" | "resaleListing" | "resaleOffer" | "dynamicPrice" | "promotion" | "fraudFlag" | "eventAnalytics" | "promoterPayout" | "cart" | "wishlist" | "review" | "waitlistEntry" | "ticketTransfer" | "apiKey" | "fiscalProfile" | "cfdiInvoice" | "seasonPass" | "seasonPassEvent" | "seasonPassPurchase" | "orgInvitation" | "eventDisclosure" | "membershipPlan" | "membership" | "membershipPeriod" | "membershipBenefit" | "membershipBenefitRedemption" | "membershipCheckout" | "resaleCheckout" | "pricingRecommendation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -6557,6 +6575,80 @@ export namespace Prisma {
           }
         }
       }
+      ResaleCheckout: {
+        payload: Prisma.$ResaleCheckoutPayload<ExtArgs>
+        fields: Prisma.ResaleCheckoutFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ResaleCheckoutFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ResaleCheckoutFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>
+          }
+          findFirst: {
+            args: Prisma.ResaleCheckoutFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ResaleCheckoutFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>
+          }
+          findMany: {
+            args: Prisma.ResaleCheckoutFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>[]
+          }
+          create: {
+            args: Prisma.ResaleCheckoutCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>
+          }
+          createMany: {
+            args: Prisma.ResaleCheckoutCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ResaleCheckoutCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>[]
+          }
+          delete: {
+            args: Prisma.ResaleCheckoutDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>
+          }
+          update: {
+            args: Prisma.ResaleCheckoutUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>
+          }
+          deleteMany: {
+            args: Prisma.ResaleCheckoutDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ResaleCheckoutUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ResaleCheckoutUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>[]
+          }
+          upsert: {
+            args: Prisma.ResaleCheckoutUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ResaleCheckoutPayload>
+          }
+          aggregate: {
+            args: Prisma.ResaleCheckoutAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateResaleCheckout>
+          }
+          groupBy: {
+            args: Prisma.ResaleCheckoutGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ResaleCheckoutGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ResaleCheckoutCountArgs<ExtArgs>
+            result: $Utils.Optional<ResaleCheckoutCountAggregateOutputType> | number
+          }
+        }
+      }
       PricingRecommendation: {
         payload: Prisma.$PricingRecommendationPayload<ExtArgs>
         fields: Prisma.PricingRecommendationFieldRefs
@@ -6786,6 +6878,7 @@ export namespace Prisma {
     membershipBenefit?: MembershipBenefitOmit
     membershipBenefitRedemption?: MembershipBenefitRedemptionOmit
     membershipCheckout?: MembershipCheckoutOmit
+    resaleCheckout?: ResaleCheckoutOmit
     pricingRecommendation?: PricingRecommendationOmit
   }
 
@@ -7845,10 +7938,12 @@ export namespace Prisma {
 
   export type ResaleListingCountOutputType = {
     offers: number
+    checkouts: number
   }
 
   export type ResaleListingCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     offers?: boolean | ResaleListingCountOutputTypeCountOffersArgs
+    checkouts?: boolean | ResaleListingCountOutputTypeCountCheckoutsArgs
   }
 
   // Custom InputTypes
@@ -7867,6 +7962,13 @@ export namespace Prisma {
    */
   export type ResaleListingCountOutputTypeCountOffersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ResaleOfferWhereInput
+  }
+
+  /**
+   * ResaleListingCountOutputType without action
+   */
+  export type ResaleListingCountOutputTypeCountCheckoutsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ResaleCheckoutWhereInput
   }
 
 
@@ -49982,6 +50084,7 @@ export namespace Prisma {
     updatedAt?: boolean
     ticket?: boolean | TicketDefaultArgs<ExtArgs>
     offers?: boolean | ResaleListing$offersArgs<ExtArgs>
+    checkouts?: boolean | ResaleListing$checkoutsArgs<ExtArgs>
     _count?: boolean | ResaleListingCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["resaleListing"]>
 
@@ -50039,6 +50142,7 @@ export namespace Prisma {
   export type ResaleListingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     ticket?: boolean | TicketDefaultArgs<ExtArgs>
     offers?: boolean | ResaleListing$offersArgs<ExtArgs>
+    checkouts?: boolean | ResaleListing$checkoutsArgs<ExtArgs>
     _count?: boolean | ResaleListingCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ResaleListingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -50053,6 +50157,7 @@ export namespace Prisma {
     objects: {
       ticket: Prisma.$TicketPayload<ExtArgs>
       offers: Prisma.$ResaleOfferPayload<ExtArgs>[]
+      checkouts: Prisma.$ResaleCheckoutPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -50464,6 +50569,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     ticket<T extends TicketDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TicketDefaultArgs<ExtArgs>>): Prisma__TicketClient<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     offers<T extends ResaleListing$offersArgs<ExtArgs> = {}>(args?: Subset<T, ResaleListing$offersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ResaleOfferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    checkouts<T extends ResaleListing$checkoutsArgs<ExtArgs> = {}>(args?: Subset<T, ResaleListing$checkoutsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -50923,6 +51029,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ResaleOfferScalarFieldEnum | ResaleOfferScalarFieldEnum[]
+  }
+
+  /**
+   * ResaleListing.checkouts
+   */
+  export type ResaleListing$checkoutsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    where?: ResaleCheckoutWhereInput
+    orderBy?: ResaleCheckoutOrderByWithRelationInput | ResaleCheckoutOrderByWithRelationInput[]
+    cursor?: ResaleCheckoutWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ResaleCheckoutScalarFieldEnum | ResaleCheckoutScalarFieldEnum[]
   }
 
   /**
@@ -80488,6 +80618,1310 @@ export namespace Prisma {
 
 
   /**
+   * Model ResaleCheckout
+   */
+
+  export type AggregateResaleCheckout = {
+    _count: ResaleCheckoutCountAggregateOutputType | null
+    _avg: ResaleCheckoutAvgAggregateOutputType | null
+    _sum: ResaleCheckoutSumAggregateOutputType | null
+    _min: ResaleCheckoutMinAggregateOutputType | null
+    _max: ResaleCheckoutMaxAggregateOutputType | null
+  }
+
+  export type ResaleCheckoutAvgAggregateOutputType = {
+    amount: Decimal | null
+    fee: Decimal | null
+    sellerPayout: Decimal | null
+  }
+
+  export type ResaleCheckoutSumAggregateOutputType = {
+    amount: Decimal | null
+    fee: Decimal | null
+    sellerPayout: Decimal | null
+  }
+
+  export type ResaleCheckoutMinAggregateOutputType = {
+    id: string | null
+    publicId: string | null
+    organizationId: string | null
+    listingId: string | null
+    buyerId: string | null
+    buyerEmail: string | null
+    buyerName: string | null
+    status: $Enums.OrderStatus | null
+    amount: Decimal | null
+    fee: Decimal | null
+    currency: $Enums.Currency | null
+    paymentMethod: $Enums.PaymentMethod | null
+    sellerPayout: Decimal | null
+    payoutStatus: string | null
+    paymentId: string | null
+    orderId: string | null
+    expiresAt: Date | null
+    completedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ResaleCheckoutMaxAggregateOutputType = {
+    id: string | null
+    publicId: string | null
+    organizationId: string | null
+    listingId: string | null
+    buyerId: string | null
+    buyerEmail: string | null
+    buyerName: string | null
+    status: $Enums.OrderStatus | null
+    amount: Decimal | null
+    fee: Decimal | null
+    currency: $Enums.Currency | null
+    paymentMethod: $Enums.PaymentMethod | null
+    sellerPayout: Decimal | null
+    payoutStatus: string | null
+    paymentId: string | null
+    orderId: string | null
+    expiresAt: Date | null
+    completedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ResaleCheckoutCountAggregateOutputType = {
+    id: number
+    publicId: number
+    organizationId: number
+    listingId: number
+    buyerId: number
+    buyerEmail: number
+    buyerName: number
+    status: number
+    amount: number
+    fee: number
+    currency: number
+    paymentMethod: number
+    sellerPayout: number
+    payoutStatus: number
+    paymentId: number
+    orderId: number
+    expiresAt: number
+    completedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ResaleCheckoutAvgAggregateInputType = {
+    amount?: true
+    fee?: true
+    sellerPayout?: true
+  }
+
+  export type ResaleCheckoutSumAggregateInputType = {
+    amount?: true
+    fee?: true
+    sellerPayout?: true
+  }
+
+  export type ResaleCheckoutMinAggregateInputType = {
+    id?: true
+    publicId?: true
+    organizationId?: true
+    listingId?: true
+    buyerId?: true
+    buyerEmail?: true
+    buyerName?: true
+    status?: true
+    amount?: true
+    fee?: true
+    currency?: true
+    paymentMethod?: true
+    sellerPayout?: true
+    payoutStatus?: true
+    paymentId?: true
+    orderId?: true
+    expiresAt?: true
+    completedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ResaleCheckoutMaxAggregateInputType = {
+    id?: true
+    publicId?: true
+    organizationId?: true
+    listingId?: true
+    buyerId?: true
+    buyerEmail?: true
+    buyerName?: true
+    status?: true
+    amount?: true
+    fee?: true
+    currency?: true
+    paymentMethod?: true
+    sellerPayout?: true
+    payoutStatus?: true
+    paymentId?: true
+    orderId?: true
+    expiresAt?: true
+    completedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ResaleCheckoutCountAggregateInputType = {
+    id?: true
+    publicId?: true
+    organizationId?: true
+    listingId?: true
+    buyerId?: true
+    buyerEmail?: true
+    buyerName?: true
+    status?: true
+    amount?: true
+    fee?: true
+    currency?: true
+    paymentMethod?: true
+    sellerPayout?: true
+    payoutStatus?: true
+    paymentId?: true
+    orderId?: true
+    expiresAt?: true
+    completedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ResaleCheckoutAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ResaleCheckout to aggregate.
+     */
+    where?: ResaleCheckoutWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ResaleCheckouts to fetch.
+     */
+    orderBy?: ResaleCheckoutOrderByWithRelationInput | ResaleCheckoutOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ResaleCheckoutWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ResaleCheckouts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ResaleCheckouts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ResaleCheckouts
+    **/
+    _count?: true | ResaleCheckoutCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ResaleCheckoutAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ResaleCheckoutSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ResaleCheckoutMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ResaleCheckoutMaxAggregateInputType
+  }
+
+  export type GetResaleCheckoutAggregateType<T extends ResaleCheckoutAggregateArgs> = {
+        [P in keyof T & keyof AggregateResaleCheckout]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateResaleCheckout[P]>
+      : GetScalarType<T[P], AggregateResaleCheckout[P]>
+  }
+
+
+
+
+  export type ResaleCheckoutGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ResaleCheckoutWhereInput
+    orderBy?: ResaleCheckoutOrderByWithAggregationInput | ResaleCheckoutOrderByWithAggregationInput[]
+    by: ResaleCheckoutScalarFieldEnum[] | ResaleCheckoutScalarFieldEnum
+    having?: ResaleCheckoutScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ResaleCheckoutCountAggregateInputType | true
+    _avg?: ResaleCheckoutAvgAggregateInputType
+    _sum?: ResaleCheckoutSumAggregateInputType
+    _min?: ResaleCheckoutMinAggregateInputType
+    _max?: ResaleCheckoutMaxAggregateInputType
+  }
+
+  export type ResaleCheckoutGroupByOutputType = {
+    id: string
+    publicId: string
+    organizationId: string
+    listingId: string
+    buyerId: string
+    buyerEmail: string
+    buyerName: string
+    status: $Enums.OrderStatus
+    amount: Decimal
+    fee: Decimal
+    currency: $Enums.Currency
+    paymentMethod: $Enums.PaymentMethod
+    sellerPayout: Decimal
+    payoutStatus: string
+    paymentId: string | null
+    orderId: string | null
+    expiresAt: Date
+    completedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ResaleCheckoutCountAggregateOutputType | null
+    _avg: ResaleCheckoutAvgAggregateOutputType | null
+    _sum: ResaleCheckoutSumAggregateOutputType | null
+    _min: ResaleCheckoutMinAggregateOutputType | null
+    _max: ResaleCheckoutMaxAggregateOutputType | null
+  }
+
+  type GetResaleCheckoutGroupByPayload<T extends ResaleCheckoutGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ResaleCheckoutGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ResaleCheckoutGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ResaleCheckoutGroupByOutputType[P]>
+            : GetScalarType<T[P], ResaleCheckoutGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ResaleCheckoutSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    publicId?: boolean
+    organizationId?: boolean
+    listingId?: boolean
+    buyerId?: boolean
+    buyerEmail?: boolean
+    buyerName?: boolean
+    status?: boolean
+    amount?: boolean
+    fee?: boolean
+    currency?: boolean
+    paymentMethod?: boolean
+    sellerPayout?: boolean
+    payoutStatus?: boolean
+    paymentId?: boolean
+    orderId?: boolean
+    expiresAt?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    listing?: boolean | ResaleListingDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["resaleCheckout"]>
+
+  export type ResaleCheckoutSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    publicId?: boolean
+    organizationId?: boolean
+    listingId?: boolean
+    buyerId?: boolean
+    buyerEmail?: boolean
+    buyerName?: boolean
+    status?: boolean
+    amount?: boolean
+    fee?: boolean
+    currency?: boolean
+    paymentMethod?: boolean
+    sellerPayout?: boolean
+    payoutStatus?: boolean
+    paymentId?: boolean
+    orderId?: boolean
+    expiresAt?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    listing?: boolean | ResaleListingDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["resaleCheckout"]>
+
+  export type ResaleCheckoutSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    publicId?: boolean
+    organizationId?: boolean
+    listingId?: boolean
+    buyerId?: boolean
+    buyerEmail?: boolean
+    buyerName?: boolean
+    status?: boolean
+    amount?: boolean
+    fee?: boolean
+    currency?: boolean
+    paymentMethod?: boolean
+    sellerPayout?: boolean
+    payoutStatus?: boolean
+    paymentId?: boolean
+    orderId?: boolean
+    expiresAt?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    listing?: boolean | ResaleListingDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["resaleCheckout"]>
+
+  export type ResaleCheckoutSelectScalar = {
+    id?: boolean
+    publicId?: boolean
+    organizationId?: boolean
+    listingId?: boolean
+    buyerId?: boolean
+    buyerEmail?: boolean
+    buyerName?: boolean
+    status?: boolean
+    amount?: boolean
+    fee?: boolean
+    currency?: boolean
+    paymentMethod?: boolean
+    sellerPayout?: boolean
+    payoutStatus?: boolean
+    paymentId?: boolean
+    orderId?: boolean
+    expiresAt?: boolean
+    completedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ResaleCheckoutOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "publicId" | "organizationId" | "listingId" | "buyerId" | "buyerEmail" | "buyerName" | "status" | "amount" | "fee" | "currency" | "paymentMethod" | "sellerPayout" | "payoutStatus" | "paymentId" | "orderId" | "expiresAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["resaleCheckout"]>
+  export type ResaleCheckoutInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    listing?: boolean | ResaleListingDefaultArgs<ExtArgs>
+  }
+  export type ResaleCheckoutIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    listing?: boolean | ResaleListingDefaultArgs<ExtArgs>
+  }
+  export type ResaleCheckoutIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    listing?: boolean | ResaleListingDefaultArgs<ExtArgs>
+  }
+
+  export type $ResaleCheckoutPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ResaleCheckout"
+    objects: {
+      listing: Prisma.$ResaleListingPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      publicId: string
+      organizationId: string
+      listingId: string
+      buyerId: string
+      buyerEmail: string
+      buyerName: string
+      status: $Enums.OrderStatus
+      /**
+       * Lo que paga el comprador: precio del anuncio + cargo por servicio.
+       */
+      amount: Prisma.Decimal
+      fee: Prisma.Decimal
+      currency: $Enums.Currency
+      paymentMethod: $Enums.PaymentMethod
+      /**
+       * Lo que recibe el vendedor (el precio que pidió).
+       */
+      sellerPayout: Prisma.Decimal
+      /**
+       * PENDING hasta que finanzas lo deposita; PAID después.
+       */
+      payoutStatus: string
+      paymentId: string | null
+      orderId: string | null
+      expiresAt: Date
+      completedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["resaleCheckout"]>
+    composites: {}
+  }
+
+  type ResaleCheckoutGetPayload<S extends boolean | null | undefined | ResaleCheckoutDefaultArgs> = $Result.GetResult<Prisma.$ResaleCheckoutPayload, S>
+
+  type ResaleCheckoutCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ResaleCheckoutFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ResaleCheckoutCountAggregateInputType | true
+    }
+
+  export interface ResaleCheckoutDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ResaleCheckout'], meta: { name: 'ResaleCheckout' } }
+    /**
+     * Find zero or one ResaleCheckout that matches the filter.
+     * @param {ResaleCheckoutFindUniqueArgs} args - Arguments to find a ResaleCheckout
+     * @example
+     * // Get one ResaleCheckout
+     * const resaleCheckout = await prisma.resaleCheckout.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ResaleCheckoutFindUniqueArgs>(args: SelectSubset<T, ResaleCheckoutFindUniqueArgs<ExtArgs>>): Prisma__ResaleCheckoutClient<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ResaleCheckout that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ResaleCheckoutFindUniqueOrThrowArgs} args - Arguments to find a ResaleCheckout
+     * @example
+     * // Get one ResaleCheckout
+     * const resaleCheckout = await prisma.resaleCheckout.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ResaleCheckoutFindUniqueOrThrowArgs>(args: SelectSubset<T, ResaleCheckoutFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ResaleCheckoutClient<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ResaleCheckout that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ResaleCheckoutFindFirstArgs} args - Arguments to find a ResaleCheckout
+     * @example
+     * // Get one ResaleCheckout
+     * const resaleCheckout = await prisma.resaleCheckout.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ResaleCheckoutFindFirstArgs>(args?: SelectSubset<T, ResaleCheckoutFindFirstArgs<ExtArgs>>): Prisma__ResaleCheckoutClient<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ResaleCheckout that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ResaleCheckoutFindFirstOrThrowArgs} args - Arguments to find a ResaleCheckout
+     * @example
+     * // Get one ResaleCheckout
+     * const resaleCheckout = await prisma.resaleCheckout.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ResaleCheckoutFindFirstOrThrowArgs>(args?: SelectSubset<T, ResaleCheckoutFindFirstOrThrowArgs<ExtArgs>>): Prisma__ResaleCheckoutClient<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ResaleCheckouts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ResaleCheckoutFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ResaleCheckouts
+     * const resaleCheckouts = await prisma.resaleCheckout.findMany()
+     * 
+     * // Get first 10 ResaleCheckouts
+     * const resaleCheckouts = await prisma.resaleCheckout.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const resaleCheckoutWithIdOnly = await prisma.resaleCheckout.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ResaleCheckoutFindManyArgs>(args?: SelectSubset<T, ResaleCheckoutFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ResaleCheckout.
+     * @param {ResaleCheckoutCreateArgs} args - Arguments to create a ResaleCheckout.
+     * @example
+     * // Create one ResaleCheckout
+     * const ResaleCheckout = await prisma.resaleCheckout.create({
+     *   data: {
+     *     // ... data to create a ResaleCheckout
+     *   }
+     * })
+     * 
+     */
+    create<T extends ResaleCheckoutCreateArgs>(args: SelectSubset<T, ResaleCheckoutCreateArgs<ExtArgs>>): Prisma__ResaleCheckoutClient<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ResaleCheckouts.
+     * @param {ResaleCheckoutCreateManyArgs} args - Arguments to create many ResaleCheckouts.
+     * @example
+     * // Create many ResaleCheckouts
+     * const resaleCheckout = await prisma.resaleCheckout.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ResaleCheckoutCreateManyArgs>(args?: SelectSubset<T, ResaleCheckoutCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ResaleCheckouts and returns the data saved in the database.
+     * @param {ResaleCheckoutCreateManyAndReturnArgs} args - Arguments to create many ResaleCheckouts.
+     * @example
+     * // Create many ResaleCheckouts
+     * const resaleCheckout = await prisma.resaleCheckout.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ResaleCheckouts and only return the `id`
+     * const resaleCheckoutWithIdOnly = await prisma.resaleCheckout.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ResaleCheckoutCreateManyAndReturnArgs>(args?: SelectSubset<T, ResaleCheckoutCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ResaleCheckout.
+     * @param {ResaleCheckoutDeleteArgs} args - Arguments to delete one ResaleCheckout.
+     * @example
+     * // Delete one ResaleCheckout
+     * const ResaleCheckout = await prisma.resaleCheckout.delete({
+     *   where: {
+     *     // ... filter to delete one ResaleCheckout
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ResaleCheckoutDeleteArgs>(args: SelectSubset<T, ResaleCheckoutDeleteArgs<ExtArgs>>): Prisma__ResaleCheckoutClient<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ResaleCheckout.
+     * @param {ResaleCheckoutUpdateArgs} args - Arguments to update one ResaleCheckout.
+     * @example
+     * // Update one ResaleCheckout
+     * const resaleCheckout = await prisma.resaleCheckout.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ResaleCheckoutUpdateArgs>(args: SelectSubset<T, ResaleCheckoutUpdateArgs<ExtArgs>>): Prisma__ResaleCheckoutClient<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ResaleCheckouts.
+     * @param {ResaleCheckoutDeleteManyArgs} args - Arguments to filter ResaleCheckouts to delete.
+     * @example
+     * // Delete a few ResaleCheckouts
+     * const { count } = await prisma.resaleCheckout.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ResaleCheckoutDeleteManyArgs>(args?: SelectSubset<T, ResaleCheckoutDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ResaleCheckouts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ResaleCheckoutUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ResaleCheckouts
+     * const resaleCheckout = await prisma.resaleCheckout.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ResaleCheckoutUpdateManyArgs>(args: SelectSubset<T, ResaleCheckoutUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ResaleCheckouts and returns the data updated in the database.
+     * @param {ResaleCheckoutUpdateManyAndReturnArgs} args - Arguments to update many ResaleCheckouts.
+     * @example
+     * // Update many ResaleCheckouts
+     * const resaleCheckout = await prisma.resaleCheckout.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ResaleCheckouts and only return the `id`
+     * const resaleCheckoutWithIdOnly = await prisma.resaleCheckout.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ResaleCheckoutUpdateManyAndReturnArgs>(args: SelectSubset<T, ResaleCheckoutUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ResaleCheckout.
+     * @param {ResaleCheckoutUpsertArgs} args - Arguments to update or create a ResaleCheckout.
+     * @example
+     * // Update or create a ResaleCheckout
+     * const resaleCheckout = await prisma.resaleCheckout.upsert({
+     *   create: {
+     *     // ... data to create a ResaleCheckout
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ResaleCheckout we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ResaleCheckoutUpsertArgs>(args: SelectSubset<T, ResaleCheckoutUpsertArgs<ExtArgs>>): Prisma__ResaleCheckoutClient<$Result.GetResult<Prisma.$ResaleCheckoutPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ResaleCheckouts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ResaleCheckoutCountArgs} args - Arguments to filter ResaleCheckouts to count.
+     * @example
+     * // Count the number of ResaleCheckouts
+     * const count = await prisma.resaleCheckout.count({
+     *   where: {
+     *     // ... the filter for the ResaleCheckouts we want to count
+     *   }
+     * })
+    **/
+    count<T extends ResaleCheckoutCountArgs>(
+      args?: Subset<T, ResaleCheckoutCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ResaleCheckoutCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ResaleCheckout.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ResaleCheckoutAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ResaleCheckoutAggregateArgs>(args: Subset<T, ResaleCheckoutAggregateArgs>): Prisma.PrismaPromise<GetResaleCheckoutAggregateType<T>>
+
+    /**
+     * Group by ResaleCheckout.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ResaleCheckoutGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ResaleCheckoutGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ResaleCheckoutGroupByArgs['orderBy'] }
+        : { orderBy?: ResaleCheckoutGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ResaleCheckoutGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetResaleCheckoutGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ResaleCheckout model
+   */
+  readonly fields: ResaleCheckoutFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ResaleCheckout.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ResaleCheckoutClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    listing<T extends ResaleListingDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ResaleListingDefaultArgs<ExtArgs>>): Prisma__ResaleListingClient<$Result.GetResult<Prisma.$ResaleListingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ResaleCheckout model
+   */
+  interface ResaleCheckoutFieldRefs {
+    readonly id: FieldRef<"ResaleCheckout", 'String'>
+    readonly publicId: FieldRef<"ResaleCheckout", 'String'>
+    readonly organizationId: FieldRef<"ResaleCheckout", 'String'>
+    readonly listingId: FieldRef<"ResaleCheckout", 'String'>
+    readonly buyerId: FieldRef<"ResaleCheckout", 'String'>
+    readonly buyerEmail: FieldRef<"ResaleCheckout", 'String'>
+    readonly buyerName: FieldRef<"ResaleCheckout", 'String'>
+    readonly status: FieldRef<"ResaleCheckout", 'OrderStatus'>
+    readonly amount: FieldRef<"ResaleCheckout", 'Decimal'>
+    readonly fee: FieldRef<"ResaleCheckout", 'Decimal'>
+    readonly currency: FieldRef<"ResaleCheckout", 'Currency'>
+    readonly paymentMethod: FieldRef<"ResaleCheckout", 'PaymentMethod'>
+    readonly sellerPayout: FieldRef<"ResaleCheckout", 'Decimal'>
+    readonly payoutStatus: FieldRef<"ResaleCheckout", 'String'>
+    readonly paymentId: FieldRef<"ResaleCheckout", 'String'>
+    readonly orderId: FieldRef<"ResaleCheckout", 'String'>
+    readonly expiresAt: FieldRef<"ResaleCheckout", 'DateTime'>
+    readonly completedAt: FieldRef<"ResaleCheckout", 'DateTime'>
+    readonly createdAt: FieldRef<"ResaleCheckout", 'DateTime'>
+    readonly updatedAt: FieldRef<"ResaleCheckout", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ResaleCheckout findUnique
+   */
+  export type ResaleCheckoutFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ResaleCheckout to fetch.
+     */
+    where: ResaleCheckoutWhereUniqueInput
+  }
+
+  /**
+   * ResaleCheckout findUniqueOrThrow
+   */
+  export type ResaleCheckoutFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ResaleCheckout to fetch.
+     */
+    where: ResaleCheckoutWhereUniqueInput
+  }
+
+  /**
+   * ResaleCheckout findFirst
+   */
+  export type ResaleCheckoutFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ResaleCheckout to fetch.
+     */
+    where?: ResaleCheckoutWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ResaleCheckouts to fetch.
+     */
+    orderBy?: ResaleCheckoutOrderByWithRelationInput | ResaleCheckoutOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ResaleCheckouts.
+     */
+    cursor?: ResaleCheckoutWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ResaleCheckouts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ResaleCheckouts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ResaleCheckouts.
+     */
+    distinct?: ResaleCheckoutScalarFieldEnum | ResaleCheckoutScalarFieldEnum[]
+  }
+
+  /**
+   * ResaleCheckout findFirstOrThrow
+   */
+  export type ResaleCheckoutFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ResaleCheckout to fetch.
+     */
+    where?: ResaleCheckoutWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ResaleCheckouts to fetch.
+     */
+    orderBy?: ResaleCheckoutOrderByWithRelationInput | ResaleCheckoutOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ResaleCheckouts.
+     */
+    cursor?: ResaleCheckoutWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ResaleCheckouts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ResaleCheckouts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ResaleCheckouts.
+     */
+    distinct?: ResaleCheckoutScalarFieldEnum | ResaleCheckoutScalarFieldEnum[]
+  }
+
+  /**
+   * ResaleCheckout findMany
+   */
+  export type ResaleCheckoutFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ResaleCheckouts to fetch.
+     */
+    where?: ResaleCheckoutWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ResaleCheckouts to fetch.
+     */
+    orderBy?: ResaleCheckoutOrderByWithRelationInput | ResaleCheckoutOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ResaleCheckouts.
+     */
+    cursor?: ResaleCheckoutWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ResaleCheckouts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ResaleCheckouts.
+     */
+    skip?: number
+    distinct?: ResaleCheckoutScalarFieldEnum | ResaleCheckoutScalarFieldEnum[]
+  }
+
+  /**
+   * ResaleCheckout create
+   */
+  export type ResaleCheckoutCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ResaleCheckout.
+     */
+    data: XOR<ResaleCheckoutCreateInput, ResaleCheckoutUncheckedCreateInput>
+  }
+
+  /**
+   * ResaleCheckout createMany
+   */
+  export type ResaleCheckoutCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ResaleCheckouts.
+     */
+    data: ResaleCheckoutCreateManyInput | ResaleCheckoutCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ResaleCheckout createManyAndReturn
+   */
+  export type ResaleCheckoutCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * The data used to create many ResaleCheckouts.
+     */
+    data: ResaleCheckoutCreateManyInput | ResaleCheckoutCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ResaleCheckout update
+   */
+  export type ResaleCheckoutUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ResaleCheckout.
+     */
+    data: XOR<ResaleCheckoutUpdateInput, ResaleCheckoutUncheckedUpdateInput>
+    /**
+     * Choose, which ResaleCheckout to update.
+     */
+    where: ResaleCheckoutWhereUniqueInput
+  }
+
+  /**
+   * ResaleCheckout updateMany
+   */
+  export type ResaleCheckoutUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ResaleCheckouts.
+     */
+    data: XOR<ResaleCheckoutUpdateManyMutationInput, ResaleCheckoutUncheckedUpdateManyInput>
+    /**
+     * Filter which ResaleCheckouts to update
+     */
+    where?: ResaleCheckoutWhereInput
+    /**
+     * Limit how many ResaleCheckouts to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ResaleCheckout updateManyAndReturn
+   */
+  export type ResaleCheckoutUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * The data used to update ResaleCheckouts.
+     */
+    data: XOR<ResaleCheckoutUpdateManyMutationInput, ResaleCheckoutUncheckedUpdateManyInput>
+    /**
+     * Filter which ResaleCheckouts to update
+     */
+    where?: ResaleCheckoutWhereInput
+    /**
+     * Limit how many ResaleCheckouts to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ResaleCheckout upsert
+   */
+  export type ResaleCheckoutUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ResaleCheckout to update in case it exists.
+     */
+    where: ResaleCheckoutWhereUniqueInput
+    /**
+     * In case the ResaleCheckout found by the `where` argument doesn't exist, create a new ResaleCheckout with this data.
+     */
+    create: XOR<ResaleCheckoutCreateInput, ResaleCheckoutUncheckedCreateInput>
+    /**
+     * In case the ResaleCheckout was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ResaleCheckoutUpdateInput, ResaleCheckoutUncheckedUpdateInput>
+  }
+
+  /**
+   * ResaleCheckout delete
+   */
+  export type ResaleCheckoutDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+    /**
+     * Filter which ResaleCheckout to delete.
+     */
+    where: ResaleCheckoutWhereUniqueInput
+  }
+
+  /**
+   * ResaleCheckout deleteMany
+   */
+  export type ResaleCheckoutDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ResaleCheckouts to delete
+     */
+    where?: ResaleCheckoutWhereInput
+    /**
+     * Limit how many ResaleCheckouts to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ResaleCheckout without action
+   */
+  export type ResaleCheckoutDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ResaleCheckout
+     */
+    select?: ResaleCheckoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ResaleCheckout
+     */
+    omit?: ResaleCheckoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ResaleCheckoutInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model PricingRecommendation
    */
 
@@ -82898,6 +84332,32 @@ export namespace Prisma {
   };
 
   export type MembershipCheckoutScalarFieldEnum = (typeof MembershipCheckoutScalarFieldEnum)[keyof typeof MembershipCheckoutScalarFieldEnum]
+
+
+  export const ResaleCheckoutScalarFieldEnum: {
+    id: 'id',
+    publicId: 'publicId',
+    organizationId: 'organizationId',
+    listingId: 'listingId',
+    buyerId: 'buyerId',
+    buyerEmail: 'buyerEmail',
+    buyerName: 'buyerName',
+    status: 'status',
+    amount: 'amount',
+    fee: 'fee',
+    currency: 'currency',
+    paymentMethod: 'paymentMethod',
+    sellerPayout: 'sellerPayout',
+    payoutStatus: 'payoutStatus',
+    paymentId: 'paymentId',
+    orderId: 'orderId',
+    expiresAt: 'expiresAt',
+    completedAt: 'completedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ResaleCheckoutScalarFieldEnum = (typeof ResaleCheckoutScalarFieldEnum)[keyof typeof ResaleCheckoutScalarFieldEnum]
 
 
   export const PricingRecommendationScalarFieldEnum: {
@@ -87180,6 +88640,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ResaleListing"> | Date | string
     ticket?: XOR<TicketScalarRelationFilter, TicketWhereInput>
     offers?: ResaleOfferListRelationFilter
+    checkouts?: ResaleCheckoutListRelationFilter
   }
 
   export type ResaleListingOrderByWithRelationInput = {
@@ -87198,6 +88659,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     ticket?: TicketOrderByWithRelationInput
     offers?: ResaleOfferOrderByRelationAggregateInput
+    checkouts?: ResaleCheckoutOrderByRelationAggregateInput
   }
 
   export type ResaleListingWhereUniqueInput = Prisma.AtLeast<{
@@ -87219,6 +88681,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ResaleListing"> | Date | string
     ticket?: XOR<TicketScalarRelationFilter, TicketWhereInput>
     offers?: ResaleOfferListRelationFilter
+    checkouts?: ResaleCheckoutListRelationFilter
   }, "id" | "ticketId">
 
   export type ResaleListingOrderByWithAggregationInput = {
@@ -89508,6 +90971,138 @@ export namespace Prisma {
     completedAt?: DateTimeNullableWithAggregatesFilter<"MembershipCheckout"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"MembershipCheckout"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"MembershipCheckout"> | Date | string
+  }
+
+  export type ResaleCheckoutWhereInput = {
+    AND?: ResaleCheckoutWhereInput | ResaleCheckoutWhereInput[]
+    OR?: ResaleCheckoutWhereInput[]
+    NOT?: ResaleCheckoutWhereInput | ResaleCheckoutWhereInput[]
+    id?: StringFilter<"ResaleCheckout"> | string
+    publicId?: StringFilter<"ResaleCheckout"> | string
+    organizationId?: StringFilter<"ResaleCheckout"> | string
+    listingId?: StringFilter<"ResaleCheckout"> | string
+    buyerId?: StringFilter<"ResaleCheckout"> | string
+    buyerEmail?: StringFilter<"ResaleCheckout"> | string
+    buyerName?: StringFilter<"ResaleCheckout"> | string
+    status?: EnumOrderStatusFilter<"ResaleCheckout"> | $Enums.OrderStatus
+    amount?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"ResaleCheckout"> | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFilter<"ResaleCheckout"> | $Enums.PaymentMethod
+    sellerPayout?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFilter<"ResaleCheckout"> | string
+    paymentId?: StringNullableFilter<"ResaleCheckout"> | string | null
+    orderId?: StringNullableFilter<"ResaleCheckout"> | string | null
+    expiresAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+    completedAt?: DateTimeNullableFilter<"ResaleCheckout"> | Date | string | null
+    createdAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+    updatedAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+    listing?: XOR<ResaleListingScalarRelationFilter, ResaleListingWhereInput>
+  }
+
+  export type ResaleCheckoutOrderByWithRelationInput = {
+    id?: SortOrder
+    publicId?: SortOrder
+    organizationId?: SortOrder
+    listingId?: SortOrder
+    buyerId?: SortOrder
+    buyerEmail?: SortOrder
+    buyerName?: SortOrder
+    status?: SortOrder
+    amount?: SortOrder
+    fee?: SortOrder
+    currency?: SortOrder
+    paymentMethod?: SortOrder
+    sellerPayout?: SortOrder
+    payoutStatus?: SortOrder
+    paymentId?: SortOrderInput | SortOrder
+    orderId?: SortOrderInput | SortOrder
+    expiresAt?: SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    listing?: ResaleListingOrderByWithRelationInput
+  }
+
+  export type ResaleCheckoutWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    publicId?: string
+    AND?: ResaleCheckoutWhereInput | ResaleCheckoutWhereInput[]
+    OR?: ResaleCheckoutWhereInput[]
+    NOT?: ResaleCheckoutWhereInput | ResaleCheckoutWhereInput[]
+    organizationId?: StringFilter<"ResaleCheckout"> | string
+    listingId?: StringFilter<"ResaleCheckout"> | string
+    buyerId?: StringFilter<"ResaleCheckout"> | string
+    buyerEmail?: StringFilter<"ResaleCheckout"> | string
+    buyerName?: StringFilter<"ResaleCheckout"> | string
+    status?: EnumOrderStatusFilter<"ResaleCheckout"> | $Enums.OrderStatus
+    amount?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"ResaleCheckout"> | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFilter<"ResaleCheckout"> | $Enums.PaymentMethod
+    sellerPayout?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFilter<"ResaleCheckout"> | string
+    paymentId?: StringNullableFilter<"ResaleCheckout"> | string | null
+    orderId?: StringNullableFilter<"ResaleCheckout"> | string | null
+    expiresAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+    completedAt?: DateTimeNullableFilter<"ResaleCheckout"> | Date | string | null
+    createdAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+    updatedAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+    listing?: XOR<ResaleListingScalarRelationFilter, ResaleListingWhereInput>
+  }, "id" | "publicId">
+
+  export type ResaleCheckoutOrderByWithAggregationInput = {
+    id?: SortOrder
+    publicId?: SortOrder
+    organizationId?: SortOrder
+    listingId?: SortOrder
+    buyerId?: SortOrder
+    buyerEmail?: SortOrder
+    buyerName?: SortOrder
+    status?: SortOrder
+    amount?: SortOrder
+    fee?: SortOrder
+    currency?: SortOrder
+    paymentMethod?: SortOrder
+    sellerPayout?: SortOrder
+    payoutStatus?: SortOrder
+    paymentId?: SortOrderInput | SortOrder
+    orderId?: SortOrderInput | SortOrder
+    expiresAt?: SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ResaleCheckoutCountOrderByAggregateInput
+    _avg?: ResaleCheckoutAvgOrderByAggregateInput
+    _max?: ResaleCheckoutMaxOrderByAggregateInput
+    _min?: ResaleCheckoutMinOrderByAggregateInput
+    _sum?: ResaleCheckoutSumOrderByAggregateInput
+  }
+
+  export type ResaleCheckoutScalarWhereWithAggregatesInput = {
+    AND?: ResaleCheckoutScalarWhereWithAggregatesInput | ResaleCheckoutScalarWhereWithAggregatesInput[]
+    OR?: ResaleCheckoutScalarWhereWithAggregatesInput[]
+    NOT?: ResaleCheckoutScalarWhereWithAggregatesInput | ResaleCheckoutScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    publicId?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    organizationId?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    listingId?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    buyerId?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    buyerEmail?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    buyerName?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    status?: EnumOrderStatusWithAggregatesFilter<"ResaleCheckout"> | $Enums.OrderStatus
+    amount?: DecimalWithAggregatesFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    fee?: DecimalWithAggregatesFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyWithAggregatesFilter<"ResaleCheckout"> | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodWithAggregatesFilter<"ResaleCheckout"> | $Enums.PaymentMethod
+    sellerPayout?: DecimalWithAggregatesFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    paymentId?: StringNullableWithAggregatesFilter<"ResaleCheckout"> | string | null
+    orderId?: StringNullableWithAggregatesFilter<"ResaleCheckout"> | string | null
+    expiresAt?: DateTimeWithAggregatesFilter<"ResaleCheckout"> | Date | string
+    completedAt?: DateTimeNullableWithAggregatesFilter<"ResaleCheckout"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ResaleCheckout"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ResaleCheckout"> | Date | string
   }
 
   export type PricingRecommendationWhereInput = {
@@ -93762,6 +95357,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     ticket: TicketCreateNestedOneWithoutResaleListingInput
     offers?: ResaleOfferCreateNestedManyWithoutListingInput
+    checkouts?: ResaleCheckoutCreateNestedManyWithoutListingInput
   }
 
   export type ResaleListingUncheckedCreateInput = {
@@ -93779,6 +95375,7 @@ export namespace Prisma {
     soldAt?: Date | string | null
     updatedAt?: Date | string
     offers?: ResaleOfferUncheckedCreateNestedManyWithoutListingInput
+    checkouts?: ResaleCheckoutUncheckedCreateNestedManyWithoutListingInput
   }
 
   export type ResaleListingUpdateInput = {
@@ -93796,6 +95393,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ticket?: TicketUpdateOneRequiredWithoutResaleListingNestedInput
     offers?: ResaleOfferUpdateManyWithoutListingNestedInput
+    checkouts?: ResaleCheckoutUpdateManyWithoutListingNestedInput
   }
 
   export type ResaleListingUncheckedUpdateInput = {
@@ -93813,6 +95411,7 @@ export namespace Prisma {
     soldAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     offers?: ResaleOfferUncheckedUpdateManyWithoutListingNestedInput
+    checkouts?: ResaleCheckoutUncheckedUpdateManyWithoutListingNestedInput
   }
 
   export type ResaleListingCreateManyInput = {
@@ -96343,6 +97942,166 @@ export namespace Prisma {
     paymentId?: NullableStringFieldUpdateOperationsInput | string | null
     membershipId?: NullableStringFieldUpdateOperationsInput | string | null
     periodId?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ResaleCheckoutCreateInput = {
+    id?: string
+    publicId: string
+    organizationId: string
+    buyerId: string
+    buyerEmail: string
+    buyerName: string
+    status?: $Enums.OrderStatus
+    amount: Decimal | DecimalJsLike | number | string
+    fee: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    paymentMethod?: $Enums.PaymentMethod
+    sellerPayout: Decimal | DecimalJsLike | number | string
+    payoutStatus?: string
+    paymentId?: string | null
+    orderId?: string | null
+    expiresAt: Date | string
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    listing: ResaleListingCreateNestedOneWithoutCheckoutsInput
+  }
+
+  export type ResaleCheckoutUncheckedCreateInput = {
+    id?: string
+    publicId: string
+    organizationId: string
+    listingId: string
+    buyerId: string
+    buyerEmail: string
+    buyerName: string
+    status?: $Enums.OrderStatus
+    amount: Decimal | DecimalJsLike | number | string
+    fee: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    paymentMethod?: $Enums.PaymentMethod
+    sellerPayout: Decimal | DecimalJsLike | number | string
+    payoutStatus?: string
+    paymentId?: string | null
+    orderId?: string | null
+    expiresAt: Date | string
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ResaleCheckoutUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publicId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    buyerId?: StringFieldUpdateOperationsInput | string
+    buyerEmail?: StringFieldUpdateOperationsInput | string
+    buyerName?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    listing?: ResaleListingUpdateOneRequiredWithoutCheckoutsNestedInput
+  }
+
+  export type ResaleCheckoutUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publicId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    listingId?: StringFieldUpdateOperationsInput | string
+    buyerId?: StringFieldUpdateOperationsInput | string
+    buyerEmail?: StringFieldUpdateOperationsInput | string
+    buyerName?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ResaleCheckoutCreateManyInput = {
+    id?: string
+    publicId: string
+    organizationId: string
+    listingId: string
+    buyerId: string
+    buyerEmail: string
+    buyerName: string
+    status?: $Enums.OrderStatus
+    amount: Decimal | DecimalJsLike | number | string
+    fee: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    paymentMethod?: $Enums.PaymentMethod
+    sellerPayout: Decimal | DecimalJsLike | number | string
+    payoutStatus?: string
+    paymentId?: string | null
+    orderId?: string | null
+    expiresAt: Date | string
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ResaleCheckoutUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publicId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    buyerId?: StringFieldUpdateOperationsInput | string
+    buyerEmail?: StringFieldUpdateOperationsInput | string
+    buyerName?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ResaleCheckoutUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publicId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    listingId?: StringFieldUpdateOperationsInput | string
+    buyerId?: StringFieldUpdateOperationsInput | string
+    buyerEmail?: StringFieldUpdateOperationsInput | string
+    buyerName?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -99772,7 +101531,17 @@ export namespace Prisma {
     none?: ResaleOfferWhereInput
   }
 
+  export type ResaleCheckoutListRelationFilter = {
+    every?: ResaleCheckoutWhereInput
+    some?: ResaleCheckoutWhereInput
+    none?: ResaleCheckoutWhereInput
+  }
+
   export type ResaleOfferOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ResaleCheckoutOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -101431,6 +103200,87 @@ export namespace Prisma {
 
   export type MembershipCheckoutSumOrderByAggregateInput = {
     amount?: SortOrder
+  }
+
+  export type ResaleCheckoutCountOrderByAggregateInput = {
+    id?: SortOrder
+    publicId?: SortOrder
+    organizationId?: SortOrder
+    listingId?: SortOrder
+    buyerId?: SortOrder
+    buyerEmail?: SortOrder
+    buyerName?: SortOrder
+    status?: SortOrder
+    amount?: SortOrder
+    fee?: SortOrder
+    currency?: SortOrder
+    paymentMethod?: SortOrder
+    sellerPayout?: SortOrder
+    payoutStatus?: SortOrder
+    paymentId?: SortOrder
+    orderId?: SortOrder
+    expiresAt?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ResaleCheckoutAvgOrderByAggregateInput = {
+    amount?: SortOrder
+    fee?: SortOrder
+    sellerPayout?: SortOrder
+  }
+
+  export type ResaleCheckoutMaxOrderByAggregateInput = {
+    id?: SortOrder
+    publicId?: SortOrder
+    organizationId?: SortOrder
+    listingId?: SortOrder
+    buyerId?: SortOrder
+    buyerEmail?: SortOrder
+    buyerName?: SortOrder
+    status?: SortOrder
+    amount?: SortOrder
+    fee?: SortOrder
+    currency?: SortOrder
+    paymentMethod?: SortOrder
+    sellerPayout?: SortOrder
+    payoutStatus?: SortOrder
+    paymentId?: SortOrder
+    orderId?: SortOrder
+    expiresAt?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ResaleCheckoutMinOrderByAggregateInput = {
+    id?: SortOrder
+    publicId?: SortOrder
+    organizationId?: SortOrder
+    listingId?: SortOrder
+    buyerId?: SortOrder
+    buyerEmail?: SortOrder
+    buyerName?: SortOrder
+    status?: SortOrder
+    amount?: SortOrder
+    fee?: SortOrder
+    currency?: SortOrder
+    paymentMethod?: SortOrder
+    sellerPayout?: SortOrder
+    payoutStatus?: SortOrder
+    paymentId?: SortOrder
+    orderId?: SortOrder
+    expiresAt?: SortOrder
+    completedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ResaleCheckoutSumOrderByAggregateInput = {
+    amount?: SortOrder
+    fee?: SortOrder
+    sellerPayout?: SortOrder
   }
 
   export type EnumPricingRecommendationStatusFilter<$PrismaModel = never> = {
@@ -105345,11 +107195,25 @@ export namespace Prisma {
     connect?: ResaleOfferWhereUniqueInput | ResaleOfferWhereUniqueInput[]
   }
 
+  export type ResaleCheckoutCreateNestedManyWithoutListingInput = {
+    create?: XOR<ResaleCheckoutCreateWithoutListingInput, ResaleCheckoutUncheckedCreateWithoutListingInput> | ResaleCheckoutCreateWithoutListingInput[] | ResaleCheckoutUncheckedCreateWithoutListingInput[]
+    connectOrCreate?: ResaleCheckoutCreateOrConnectWithoutListingInput | ResaleCheckoutCreateOrConnectWithoutListingInput[]
+    createMany?: ResaleCheckoutCreateManyListingInputEnvelope
+    connect?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+  }
+
   export type ResaleOfferUncheckedCreateNestedManyWithoutListingInput = {
     create?: XOR<ResaleOfferCreateWithoutListingInput, ResaleOfferUncheckedCreateWithoutListingInput> | ResaleOfferCreateWithoutListingInput[] | ResaleOfferUncheckedCreateWithoutListingInput[]
     connectOrCreate?: ResaleOfferCreateOrConnectWithoutListingInput | ResaleOfferCreateOrConnectWithoutListingInput[]
     createMany?: ResaleOfferCreateManyListingInputEnvelope
     connect?: ResaleOfferWhereUniqueInput | ResaleOfferWhereUniqueInput[]
+  }
+
+  export type ResaleCheckoutUncheckedCreateNestedManyWithoutListingInput = {
+    create?: XOR<ResaleCheckoutCreateWithoutListingInput, ResaleCheckoutUncheckedCreateWithoutListingInput> | ResaleCheckoutCreateWithoutListingInput[] | ResaleCheckoutUncheckedCreateWithoutListingInput[]
+    connectOrCreate?: ResaleCheckoutCreateOrConnectWithoutListingInput | ResaleCheckoutCreateOrConnectWithoutListingInput[]
+    createMany?: ResaleCheckoutCreateManyListingInputEnvelope
+    connect?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
   }
 
   export type EnumResaleStatusFieldUpdateOperationsInput = {
@@ -105378,6 +107242,20 @@ export namespace Prisma {
     deleteMany?: ResaleOfferScalarWhereInput | ResaleOfferScalarWhereInput[]
   }
 
+  export type ResaleCheckoutUpdateManyWithoutListingNestedInput = {
+    create?: XOR<ResaleCheckoutCreateWithoutListingInput, ResaleCheckoutUncheckedCreateWithoutListingInput> | ResaleCheckoutCreateWithoutListingInput[] | ResaleCheckoutUncheckedCreateWithoutListingInput[]
+    connectOrCreate?: ResaleCheckoutCreateOrConnectWithoutListingInput | ResaleCheckoutCreateOrConnectWithoutListingInput[]
+    upsert?: ResaleCheckoutUpsertWithWhereUniqueWithoutListingInput | ResaleCheckoutUpsertWithWhereUniqueWithoutListingInput[]
+    createMany?: ResaleCheckoutCreateManyListingInputEnvelope
+    set?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+    disconnect?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+    delete?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+    connect?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+    update?: ResaleCheckoutUpdateWithWhereUniqueWithoutListingInput | ResaleCheckoutUpdateWithWhereUniqueWithoutListingInput[]
+    updateMany?: ResaleCheckoutUpdateManyWithWhereWithoutListingInput | ResaleCheckoutUpdateManyWithWhereWithoutListingInput[]
+    deleteMany?: ResaleCheckoutScalarWhereInput | ResaleCheckoutScalarWhereInput[]
+  }
+
   export type ResaleOfferUncheckedUpdateManyWithoutListingNestedInput = {
     create?: XOR<ResaleOfferCreateWithoutListingInput, ResaleOfferUncheckedCreateWithoutListingInput> | ResaleOfferCreateWithoutListingInput[] | ResaleOfferUncheckedCreateWithoutListingInput[]
     connectOrCreate?: ResaleOfferCreateOrConnectWithoutListingInput | ResaleOfferCreateOrConnectWithoutListingInput[]
@@ -105390,6 +107268,20 @@ export namespace Prisma {
     update?: ResaleOfferUpdateWithWhereUniqueWithoutListingInput | ResaleOfferUpdateWithWhereUniqueWithoutListingInput[]
     updateMany?: ResaleOfferUpdateManyWithWhereWithoutListingInput | ResaleOfferUpdateManyWithWhereWithoutListingInput[]
     deleteMany?: ResaleOfferScalarWhereInput | ResaleOfferScalarWhereInput[]
+  }
+
+  export type ResaleCheckoutUncheckedUpdateManyWithoutListingNestedInput = {
+    create?: XOR<ResaleCheckoutCreateWithoutListingInput, ResaleCheckoutUncheckedCreateWithoutListingInput> | ResaleCheckoutCreateWithoutListingInput[] | ResaleCheckoutUncheckedCreateWithoutListingInput[]
+    connectOrCreate?: ResaleCheckoutCreateOrConnectWithoutListingInput | ResaleCheckoutCreateOrConnectWithoutListingInput[]
+    upsert?: ResaleCheckoutUpsertWithWhereUniqueWithoutListingInput | ResaleCheckoutUpsertWithWhereUniqueWithoutListingInput[]
+    createMany?: ResaleCheckoutCreateManyListingInputEnvelope
+    set?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+    disconnect?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+    delete?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+    connect?: ResaleCheckoutWhereUniqueInput | ResaleCheckoutWhereUniqueInput[]
+    update?: ResaleCheckoutUpdateWithWhereUniqueWithoutListingInput | ResaleCheckoutUpdateWithWhereUniqueWithoutListingInput[]
+    updateMany?: ResaleCheckoutUpdateManyWithWhereWithoutListingInput | ResaleCheckoutUpdateManyWithWhereWithoutListingInput[]
+    deleteMany?: ResaleCheckoutScalarWhereInput | ResaleCheckoutScalarWhereInput[]
   }
 
   export type ResaleListingCreateNestedOneWithoutOffersInput = {
@@ -106317,6 +108209,20 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutMembershipCheckoutsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMembershipCheckoutsInput, UserUpdateWithoutMembershipCheckoutsInput>, UserUncheckedUpdateWithoutMembershipCheckoutsInput>
+  }
+
+  export type ResaleListingCreateNestedOneWithoutCheckoutsInput = {
+    create?: XOR<ResaleListingCreateWithoutCheckoutsInput, ResaleListingUncheckedCreateWithoutCheckoutsInput>
+    connectOrCreate?: ResaleListingCreateOrConnectWithoutCheckoutsInput
+    connect?: ResaleListingWhereUniqueInput
+  }
+
+  export type ResaleListingUpdateOneRequiredWithoutCheckoutsNestedInput = {
+    create?: XOR<ResaleListingCreateWithoutCheckoutsInput, ResaleListingUncheckedCreateWithoutCheckoutsInput>
+    connectOrCreate?: ResaleListingCreateOrConnectWithoutCheckoutsInput
+    upsert?: ResaleListingUpsertWithoutCheckoutsInput
+    connect?: ResaleListingWhereUniqueInput
+    update?: XOR<XOR<ResaleListingUpdateToOneWithWhereWithoutCheckoutsInput, ResaleListingUpdateWithoutCheckoutsInput>, ResaleListingUncheckedUpdateWithoutCheckoutsInput>
   }
 
   export type EventCreateNestedOneWithoutPricingRecommendationsInput = {
@@ -115526,6 +117432,7 @@ export namespace Prisma {
     soldAt?: Date | string | null
     updatedAt?: Date | string
     offers?: ResaleOfferCreateNestedManyWithoutListingInput
+    checkouts?: ResaleCheckoutCreateNestedManyWithoutListingInput
   }
 
   export type ResaleListingUncheckedCreateWithoutTicketInput = {
@@ -115542,6 +117449,7 @@ export namespace Prisma {
     soldAt?: Date | string | null
     updatedAt?: Date | string
     offers?: ResaleOfferUncheckedCreateNestedManyWithoutListingInput
+    checkouts?: ResaleCheckoutUncheckedCreateNestedManyWithoutListingInput
   }
 
   export type ResaleListingCreateOrConnectWithoutTicketInput = {
@@ -116010,6 +117918,7 @@ export namespace Prisma {
     soldAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     offers?: ResaleOfferUpdateManyWithoutListingNestedInput
+    checkouts?: ResaleCheckoutUpdateManyWithoutListingNestedInput
   }
 
   export type ResaleListingUncheckedUpdateWithoutTicketInput = {
@@ -116026,6 +117935,7 @@ export namespace Prisma {
     soldAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     offers?: ResaleOfferUncheckedUpdateManyWithoutListingNestedInput
+    checkouts?: ResaleCheckoutUncheckedUpdateManyWithoutListingNestedInput
   }
 
   export type FraudFlagUpsertWithWhereUniqueWithoutTicketInput = {
@@ -119536,6 +121446,60 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ResaleCheckoutCreateWithoutListingInput = {
+    id?: string
+    publicId: string
+    organizationId: string
+    buyerId: string
+    buyerEmail: string
+    buyerName: string
+    status?: $Enums.OrderStatus
+    amount: Decimal | DecimalJsLike | number | string
+    fee: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    paymentMethod?: $Enums.PaymentMethod
+    sellerPayout: Decimal | DecimalJsLike | number | string
+    payoutStatus?: string
+    paymentId?: string | null
+    orderId?: string | null
+    expiresAt: Date | string
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ResaleCheckoutUncheckedCreateWithoutListingInput = {
+    id?: string
+    publicId: string
+    organizationId: string
+    buyerId: string
+    buyerEmail: string
+    buyerName: string
+    status?: $Enums.OrderStatus
+    amount: Decimal | DecimalJsLike | number | string
+    fee: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    paymentMethod?: $Enums.PaymentMethod
+    sellerPayout: Decimal | DecimalJsLike | number | string
+    payoutStatus?: string
+    paymentId?: string | null
+    orderId?: string | null
+    expiresAt: Date | string
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ResaleCheckoutCreateOrConnectWithoutListingInput = {
+    where: ResaleCheckoutWhereUniqueInput
+    create: XOR<ResaleCheckoutCreateWithoutListingInput, ResaleCheckoutUncheckedCreateWithoutListingInput>
+  }
+
+  export type ResaleCheckoutCreateManyListingInputEnvelope = {
+    data: ResaleCheckoutCreateManyListingInput | ResaleCheckoutCreateManyListingInput[]
+    skipDuplicates?: boolean
+  }
+
   export type TicketUpsertWithoutResaleListingInput = {
     update: XOR<TicketUpdateWithoutResaleListingInput, TicketUncheckedUpdateWithoutResaleListingInput>
     create: XOR<TicketCreateWithoutResaleListingInput, TicketUncheckedCreateWithoutResaleListingInput>
@@ -119632,6 +121596,48 @@ export namespace Prisma {
     respondedAt?: DateTimeNullableFilter<"ResaleOffer"> | Date | string | null
   }
 
+  export type ResaleCheckoutUpsertWithWhereUniqueWithoutListingInput = {
+    where: ResaleCheckoutWhereUniqueInput
+    update: XOR<ResaleCheckoutUpdateWithoutListingInput, ResaleCheckoutUncheckedUpdateWithoutListingInput>
+    create: XOR<ResaleCheckoutCreateWithoutListingInput, ResaleCheckoutUncheckedCreateWithoutListingInput>
+  }
+
+  export type ResaleCheckoutUpdateWithWhereUniqueWithoutListingInput = {
+    where: ResaleCheckoutWhereUniqueInput
+    data: XOR<ResaleCheckoutUpdateWithoutListingInput, ResaleCheckoutUncheckedUpdateWithoutListingInput>
+  }
+
+  export type ResaleCheckoutUpdateManyWithWhereWithoutListingInput = {
+    where: ResaleCheckoutScalarWhereInput
+    data: XOR<ResaleCheckoutUpdateManyMutationInput, ResaleCheckoutUncheckedUpdateManyWithoutListingInput>
+  }
+
+  export type ResaleCheckoutScalarWhereInput = {
+    AND?: ResaleCheckoutScalarWhereInput | ResaleCheckoutScalarWhereInput[]
+    OR?: ResaleCheckoutScalarWhereInput[]
+    NOT?: ResaleCheckoutScalarWhereInput | ResaleCheckoutScalarWhereInput[]
+    id?: StringFilter<"ResaleCheckout"> | string
+    publicId?: StringFilter<"ResaleCheckout"> | string
+    organizationId?: StringFilter<"ResaleCheckout"> | string
+    listingId?: StringFilter<"ResaleCheckout"> | string
+    buyerId?: StringFilter<"ResaleCheckout"> | string
+    buyerEmail?: StringFilter<"ResaleCheckout"> | string
+    buyerName?: StringFilter<"ResaleCheckout"> | string
+    status?: EnumOrderStatusFilter<"ResaleCheckout"> | $Enums.OrderStatus
+    amount?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFilter<"ResaleCheckout"> | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFilter<"ResaleCheckout"> | $Enums.PaymentMethod
+    sellerPayout?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFilter<"ResaleCheckout"> | string
+    paymentId?: StringNullableFilter<"ResaleCheckout"> | string | null
+    orderId?: StringNullableFilter<"ResaleCheckout"> | string | null
+    expiresAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+    completedAt?: DateTimeNullableFilter<"ResaleCheckout"> | Date | string | null
+    createdAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+    updatedAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
+  }
+
   export type ResaleListingCreateWithoutOffersInput = {
     id?: string
     sellerId: string
@@ -119646,6 +121652,7 @@ export namespace Prisma {
     soldAt?: Date | string | null
     updatedAt?: Date | string
     ticket: TicketCreateNestedOneWithoutResaleListingInput
+    checkouts?: ResaleCheckoutCreateNestedManyWithoutListingInput
   }
 
   export type ResaleListingUncheckedCreateWithoutOffersInput = {
@@ -119662,6 +121669,7 @@ export namespace Prisma {
     listedAt?: Date | string
     soldAt?: Date | string | null
     updatedAt?: Date | string
+    checkouts?: ResaleCheckoutUncheckedCreateNestedManyWithoutListingInput
   }
 
   export type ResaleListingCreateOrConnectWithoutOffersInput = {
@@ -119694,6 +121702,7 @@ export namespace Prisma {
     soldAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ticket?: TicketUpdateOneRequiredWithoutResaleListingNestedInput
+    checkouts?: ResaleCheckoutUpdateManyWithoutListingNestedInput
   }
 
   export type ResaleListingUncheckedUpdateWithoutOffersInput = {
@@ -119710,6 +121719,7 @@ export namespace Prisma {
     listedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     soldAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    checkouts?: ResaleCheckoutUncheckedUpdateManyWithoutListingNestedInput
   }
 
   export type EventCreateWithoutDynamicPricesInput = {
@@ -125786,6 +127796,90 @@ export namespace Prisma {
     memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
   }
 
+  export type ResaleListingCreateWithoutCheckoutsInput = {
+    id?: string
+    sellerId: string
+    sellerName: string
+    askingPrice: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    fee: Decimal | DecimalJsLike | number | string
+    status?: $Enums.ResaleStatus
+    delisted?: boolean
+    delistedReason?: string | null
+    listedAt?: Date | string
+    soldAt?: Date | string | null
+    updatedAt?: Date | string
+    ticket: TicketCreateNestedOneWithoutResaleListingInput
+    offers?: ResaleOfferCreateNestedManyWithoutListingInput
+  }
+
+  export type ResaleListingUncheckedCreateWithoutCheckoutsInput = {
+    id?: string
+    ticketId: string
+    sellerId: string
+    sellerName: string
+    askingPrice: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    fee: Decimal | DecimalJsLike | number | string
+    status?: $Enums.ResaleStatus
+    delisted?: boolean
+    delistedReason?: string | null
+    listedAt?: Date | string
+    soldAt?: Date | string | null
+    updatedAt?: Date | string
+    offers?: ResaleOfferUncheckedCreateNestedManyWithoutListingInput
+  }
+
+  export type ResaleListingCreateOrConnectWithoutCheckoutsInput = {
+    where: ResaleListingWhereUniqueInput
+    create: XOR<ResaleListingCreateWithoutCheckoutsInput, ResaleListingUncheckedCreateWithoutCheckoutsInput>
+  }
+
+  export type ResaleListingUpsertWithoutCheckoutsInput = {
+    update: XOR<ResaleListingUpdateWithoutCheckoutsInput, ResaleListingUncheckedUpdateWithoutCheckoutsInput>
+    create: XOR<ResaleListingCreateWithoutCheckoutsInput, ResaleListingUncheckedCreateWithoutCheckoutsInput>
+    where?: ResaleListingWhereInput
+  }
+
+  export type ResaleListingUpdateToOneWithWhereWithoutCheckoutsInput = {
+    where?: ResaleListingWhereInput
+    data: XOR<ResaleListingUpdateWithoutCheckoutsInput, ResaleListingUncheckedUpdateWithoutCheckoutsInput>
+  }
+
+  export type ResaleListingUpdateWithoutCheckoutsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sellerId?: StringFieldUpdateOperationsInput | string
+    sellerName?: StringFieldUpdateOperationsInput | string
+    askingPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    status?: EnumResaleStatusFieldUpdateOperationsInput | $Enums.ResaleStatus
+    delisted?: BoolFieldUpdateOperationsInput | boolean
+    delistedReason?: NullableStringFieldUpdateOperationsInput | string | null
+    listedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    soldAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    ticket?: TicketUpdateOneRequiredWithoutResaleListingNestedInput
+    offers?: ResaleOfferUpdateManyWithoutListingNestedInput
+  }
+
+  export type ResaleListingUncheckedUpdateWithoutCheckoutsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    sellerId?: StringFieldUpdateOperationsInput | string
+    sellerName?: StringFieldUpdateOperationsInput | string
+    askingPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    status?: EnumResaleStatusFieldUpdateOperationsInput | $Enums.ResaleStatus
+    delisted?: BoolFieldUpdateOperationsInput | boolean
+    delistedReason?: NullableStringFieldUpdateOperationsInput | string | null
+    listedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    soldAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    offers?: ResaleOfferUncheckedUpdateManyWithoutListingNestedInput
+  }
+
   export type EventCreateWithoutPricingRecommendationsInput = {
     id?: string
     externalId?: string | null
@@ -131097,6 +133191,28 @@ export namespace Prisma {
     respondedAt?: Date | string | null
   }
 
+  export type ResaleCheckoutCreateManyListingInput = {
+    id?: string
+    publicId: string
+    organizationId: string
+    buyerId: string
+    buyerEmail: string
+    buyerName: string
+    status?: $Enums.OrderStatus
+    amount: Decimal | DecimalJsLike | number | string
+    fee: Decimal | DecimalJsLike | number | string
+    currency?: $Enums.Currency
+    paymentMethod?: $Enums.PaymentMethod
+    sellerPayout: Decimal | DecimalJsLike | number | string
+    payoutStatus?: string
+    paymentId?: string | null
+    orderId?: string | null
+    expiresAt: Date | string
+    completedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type ResaleOfferUpdateWithoutListingInput = {
     id?: StringFieldUpdateOperationsInput | string
     buyerId?: StringFieldUpdateOperationsInput | string
@@ -131128,6 +133244,72 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     respondedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ResaleCheckoutUpdateWithoutListingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publicId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    buyerId?: StringFieldUpdateOperationsInput | string
+    buyerEmail?: StringFieldUpdateOperationsInput | string
+    buyerName?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ResaleCheckoutUncheckedUpdateWithoutListingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publicId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    buyerId?: StringFieldUpdateOperationsInput | string
+    buyerEmail?: StringFieldUpdateOperationsInput | string
+    buyerName?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ResaleCheckoutUncheckedUpdateManyWithoutListingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    publicId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    buyerId?: StringFieldUpdateOperationsInput | string
+    buyerEmail?: StringFieldUpdateOperationsInput | string
+    buyerName?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fee?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+    sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    payoutStatus?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type OrderCreateManyPromotionInput = {
