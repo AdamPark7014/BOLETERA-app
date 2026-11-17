@@ -36,6 +36,7 @@ import { AuditService } from '../../common/audit.service';
 import { isWebLikeChannel } from '../../common/sales-channel';
 import { isKnownAffiliateRef, normalizeAffiliateRef } from '../../common/affiliate-ref';
 import { isDeferredMethod, paymentDeadline } from '../../common/payment-window';
+import { resolveInstallments } from '../../common/msi';
 import { checkoutMethodOffered } from '../payment/payment-methods';
 import { PrismaService } from '../prisma/prisma.service';
 import { requireTicketQrSecret } from '../auth/jwt-secret';
@@ -127,6 +128,8 @@ export class OrdersService {
     buyerPhone?: string;
     userId?: string;
     paymentMethod?: string;
+    /** Meses sin intereses (tarjeta). Se guarda en PaymentIntent; Banorte aún no lo cobra. */
+    installments?: number;
     promotionCode?: string;
     affiliateRef?: string;
     channel?: SalesChannel;
@@ -484,6 +487,12 @@ export class OrdersService {
           // El intent se persiste también en la rama síncrona: antes solo
           // existía en la asíncrona, así que un reintento con la misma clave
           // no encontraba nada y cobraba dos veces (F1-07).
+          // MSI: se guarda el plan; Banorte Payworks aún no lo cobra en el adaptador.
+          const installments = resolveInstallments(
+            totalAmount,
+            dto.installments,
+            event.organization?.settings
+          );
           const intent = await tx.paymentIntent.create({
             data: {
               orderId: created.id,
@@ -494,8 +503,18 @@ export class OrdersService {
               channel,
               idempotencyKey,
               expiresAt: payBy,
+              ...(installments != null ? { installments } : {}),
               // Con esto el webhook/reconciliador puede rehacer la venta.
-              metadata: intentMetadata,
+              metadata: {
+                ...intentMetadata,
+                ...(installments != null
+                  ? {
+                      installments,
+                      // Nota: el proveedor Banorte de este repo no envía MSI aún.
+                      msiNote: 'plan-guardado-sin-llamada-banorte',
+                    }
+                  : {}),
+              },
             },
           });
 

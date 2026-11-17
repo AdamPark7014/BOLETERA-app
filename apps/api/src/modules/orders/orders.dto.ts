@@ -5,10 +5,13 @@ import {
   IsArray,
   IsEmail,
   IsIn,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -75,6 +78,12 @@ export class CreateOrderDto {
   @IsOptional()
   @IsIn(REQUESTABLE_PAYMENT_METHODS as unknown as string[])
   paymentMethod?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  installments?: number;
 
   @IsOptional()
   @IsString()

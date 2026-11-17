@@ -11,6 +11,11 @@ export type StartSessionDto = {
   openingCash?: number;
 };
 
+export type PosPaymentPart = {
+  method: 'CASH' | 'CARD' | 'COMP';
+  amount: number;
+};
+
 export type CheckoutDataDto = {
   eventId: string;
   offerId: string;
@@ -28,6 +33,9 @@ export type CheckoutDataDto = {
   managerPin?: string;
   clientSaleId?: string;
   holdIds?: string[];
+  paymentParts?: PosPaymentPart[];
+  cashReceived?: number;
+  changeGiven?: number;
 };
 
 export type QuickCheckoutDto = {

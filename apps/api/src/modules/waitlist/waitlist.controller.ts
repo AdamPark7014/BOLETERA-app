@@ -53,4 +53,14 @@ export class WaitlistController {
   notify(@Param('eventId') eventId: string, @Query('limit') limit?: string) {
     return this.waitlist.notifyBatch(eventId, limit ? parseInt(limit, 10) : 50);
   }
+
+  @Get('claim/:token')
+  getByClaimToken(@Param('token') token: string) {
+    return this.waitlist.getByClaimToken(token);
+  }
+
+  @Post('claim/:token/convert')
+  convertClaim(@Param('token') token: string) {
+    return this.waitlist.convertClaim(token);
+  }
 }

@@ -9,7 +9,10 @@
  */
 
 const DB_NAME = 'boletera-taquilla';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
+
+export const STORE_CATALOG = 'catalog';
+export const STORE_QUOTA = 'quota';
 
 export const STORE_SALES = 'sales';
 export const STORE_SCAN_QUEUE = 'scanQueue';
@@ -26,6 +29,8 @@ const STORES: Array<[string, string]> = [
   [STORE_MANIFEST_META, 'eventId'],
   [STORE_LOCAL_SCANS, 'ticketId'],
   [STORE_CONFLICTS, 'id'],
+  [STORE_CATALOG, 'id'], // catálogo de eventos (usaremos id='events')
+  [STORE_QUOTA, 'eventId'], // cupo offline de venta por evento
 ];
 
 let dbPromise: Promise<IDBDatabase> | null = null;

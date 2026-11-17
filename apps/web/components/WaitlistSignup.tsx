@@ -61,7 +61,7 @@ export function WaitlistSignup({
         onChange={(e) => setEmail(e.target.value)}
       />
       <TicketButton type="submit" disabled={loading || !email.trim()}>
-        {loading ? 'Avisarme' : 'Avisarme'}
+        {loading ? 'Uniendo…' : 'Unirme a la lista de espera'}
       </TicketButton>
       <p className={styles.lead}>{eventTitle}</p>
     </form>

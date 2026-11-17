@@ -1,8 +1,19 @@
-import { Controller, Get, Headers, NotFoundException, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Header,
+  Headers,
+  NotFoundException,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DiscoveryService } from './discovery.service';
 import { TenantService } from '../tenant/tenant.service';
 import { pickTenantHost } from '../tenant/tenant-host';
+
+/** Cartelera y ficha: CDN/edge 30 s frescos, 120 s stale. */
+const PUBLIC_READ_CACHE = 'public, s-maxage=30, stale-while-revalidate=120';
 
 @ApiTags('Discovery')
 @Controller('discovery')
@@ -28,6 +39,7 @@ export class DiscoveryController {
   }
 
   @Get('facets')
+  @Header('Cache-Control', PUBLIC_READ_CACHE)
   async facets(@Headers() headers: Record<string, string>) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return { cities: [], categories: [] };
@@ -35,6 +47,7 @@ export class DiscoveryController {
   }
 
   @Get('venues')
+  @Header('Cache-Control', PUBLIC_READ_CACHE)
   async venues(
     @Headers() headers: Record<string, string>,
     @Query('limit') limit?: string,
@@ -50,6 +63,7 @@ export class DiscoveryController {
   }
 
   @Get('venues/:slug')
+  @Header('Cache-Control', PUBLIC_READ_CACHE)
   async venueBySlug(@Headers() headers: Record<string, string>, @Param('slug') slug: string) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return null;
@@ -57,6 +71,7 @@ export class DiscoveryController {
   }
 
   @Get('events')
+  @Header('Cache-Control', PUBLIC_READ_CACHE)
   async events(
     @Headers() headers: Record<string, string>,
     @Query('q') q?: string,
@@ -86,6 +101,7 @@ export class DiscoveryController {
   }
 
   @Get('events/:slug')
+  @Header('Cache-Control', PUBLIC_READ_CACHE)
   async getEvent(@Headers() headers: Record<string, string>, @Param('slug') slug: string) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     // Fail-closed: sin tenant resuelto no se sirve detalle cross-org.
@@ -94,6 +110,7 @@ export class DiscoveryController {
   }
 
   @Get('site-content')
+  @Header('Cache-Control', PUBLIC_READ_CACHE)
   async siteContent(@Headers() headers: Record<string, string>) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) {

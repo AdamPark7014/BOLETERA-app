@@ -6,7 +6,11 @@ import homeStyles from '@/components/home/home.module.scss';
 import { api } from '@/lib/api';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
 import { buildHubMetadata } from '@/lib/seo';
+import { buildItemListJsonLd } from '@/lib/seo/item-list-jsonld';
+import { getSiteOrigin } from '@/lib/site-url';
 import { fetchTenantCurrent } from '@/lib/tenant';
+
+export const revalidate = 30;
 
 export async function generateMetadata({
   params,
@@ -44,8 +48,26 @@ export default async function CiudadPage({ params }: { params: Promise<{ city: s
     if (facets && !known) notFound();
   }
 
+  const [tenant, origin] = await Promise.all([fetchTenantCurrent(), getSiteOrigin()]);
+  const jsonLd = buildItemListJsonLd({
+    origin,
+    name: `Eventos en ${city}`,
+    description: `Cartelera en ${city} en ${tenant.name}.`,
+    path: `/ciudades/${encodeURIComponent(city)}`,
+    events: events.map((e) => ({
+      slug: e.slug,
+      title: e.title,
+      startsAt: e.startsAt,
+      image: e.image,
+    })),
+  });
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <SiteHeader />
       <main id="contenido" tabIndex={-1} className={homeStyles.wrap}>
         <EventGrid

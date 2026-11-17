@@ -21,6 +21,8 @@ import { offerTones } from '@/lib/zone-tones';
 import { sortOffersForDisplay } from '@/lib/offer-order';
 import { WaitingRoomGate } from '@/components/waiting-room/WaitingRoomGate';
 import { isQueueRejection } from '@/components/waiting-room/queue-client';
+import { HoldStickyBar } from '@/components/HoldStickyBar';
+import { secondsUntil } from '@/lib/payment-window';
 import styles from './event.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -86,6 +88,18 @@ export function EventPurchaseClient({
 }) {
   const router = useRouter();
   const addToCart = useCartStore((s) => s.addItem);
+  const cartItems = useCartStore((s) => s.items);
+  const cartExpiresAt = useMemo(() => {
+    const mine = cartItems.filter((i) => i.eventId === eventId && secondsUntil(i.expiresAt) > 0);
+    if (!mine.length) return null;
+    return mine.reduce(
+      (soonest, item) =>
+        !soonest || new Date(item.expiresAt).getTime() < new Date(soonest).getTime()
+          ? item.expiresAt
+          : soonest,
+      null as string | null
+    );
+  }, [cartItems, eventId]);
   const orderedOffers = useMemo(() => sortOffersForDisplay(offers), [offers]);
   /**
    * Sala de espera. Va por delante de todo lo demás: si el evento la tiene
@@ -594,6 +608,7 @@ export function EventPurchaseClient({
 
   return (
     <div id="compra" className={styles.buyBody}>
+      <HoldStickyBar expiresAt={cartExpiresAt} warnSeconds={120} />
       <div className={styles.filters}>
         <div className={styles.filtersInner}>
           {hasSeatMap && !isGaOffer ? (

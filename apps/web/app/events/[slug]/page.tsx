@@ -10,6 +10,9 @@ import { buildEventJsonLd, localPosterFallback } from '@/lib/seo/event-jsonld';
 import { absUrlWithOrigin, getSiteOrigin } from '@/lib/site-url';
 import { fetchTenantCurrent } from '@/lib/tenant';
 
+/** Alineado con Cache-Control de discovery (s-maxage=30). */
+export const revalidate = 30;
+
 type EventDetail = {
   /** Precio final al comprador, cargos e IVA incluidos. */
   minPriceAllIn?: number;
@@ -95,7 +98,8 @@ export async function generateMetadata({
         title,
         description,
         url,
-        type: 'website',
+        // Next Metadata no tiene og:type=event; article es el más cercano al ficha.
+        type: 'article',
         locale: 'es_MX',
         siteName: tenant.name,
         images: image ? [{ url: image }] : undefined,

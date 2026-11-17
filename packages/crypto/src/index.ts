@@ -39,7 +39,7 @@ const V2_PREFIX = 'v2.';
  * cliente móvil puede tardar en actualizarse. Poner en `false` —y desplegar—
  * cierra definitivamente el formato antiguo.
  */
-const ACCEPT_LEGACY_V1_SIGNATURES = true;
+const ACCEPT_LEGACY_V1_SIGNATURES = false;
 
 export function generateTicketCode(): string {
   return `BLT-${randomBytes(8).toString('hex').toUpperCase()}`;

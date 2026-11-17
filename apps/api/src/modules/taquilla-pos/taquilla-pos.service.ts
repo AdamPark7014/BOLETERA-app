@@ -177,6 +177,10 @@ export class TaquillaPosService {
       managerPin?: string;
       clientSaleId?: string;
       holdIds?: string[];
+      /** Partes del cobro (efectivo + tarjeta). Se guardan en Order.posOps. */
+      paymentParts?: Array<{ method: 'CASH' | 'CARD' | 'COMP'; amount: number }>;
+      cashReceived?: number;
+      changeGiven?: number;
     },
     organizationId?: string
   ) {
@@ -190,6 +194,29 @@ export class TaquillaPosService {
       if (!terminal) throw new BadRequestException('Terminal not found');
       await this.assertManagerPin(terminal.organizationId, data.managerPin);
     }
+
+    const paymentParts = (data.paymentParts ?? [])
+      .map((p) => ({
+        method: p.method,
+        amount: Math.round((Number(p.amount) + Number.EPSILON) * 100) / 100,
+      }))
+      .filter((p) => Number.isFinite(p.amount) && p.amount > 0);
+    const mixed = !isComp && paymentParts.filter((p) => p.method !== 'COMP').length >= 2;
+    // El enum de Order no tiene MIXED: si hay efectivo en el mixto usamos CASH
+    // (caja); si solo tarjeta, CARD. Las partes reales viven en posOps.
+    const cashPart = paymentParts.find((p) => p.method === 'CASH')?.amount ?? 0;
+    const cardPart = paymentParts.find((p) => p.method === 'CARD')?.amount ?? 0;
+    const primaryMethod: 'CASH' | 'CARD' | 'COMP' = isComp
+      ? 'COMP'
+      : mixed
+        ? cashPart > 0
+          ? 'CASH'
+          : 'CARD'
+        : data.paymentMethod === 'CHECK'
+          ? 'CASH'
+          : data.paymentMethod === 'COMP'
+            ? 'COMP'
+            : data.paymentMethod;
 
     let holds: { holds: { id: string }[]; expiresAt: Date };
     if (data.holdIds?.length) {
@@ -234,7 +261,7 @@ export class TaquillaPosService {
       buyerName,
       buyerEmail,
       buyerPhone: data.buyerPhone,
-      paymentMethod: isComp ? 'COMP' : data.paymentMethod === 'CHECK' ? 'CASH' : data.paymentMethod,
+      paymentMethod: isComp ? 'COMP' : primaryMethod === 'COMP' ? 'CASH' : primaryMethod,
       promotionCode: data.discountCode,
       channel: SalesChannel.TAQUILLA,
       cashierId: data.cashierId,
@@ -247,6 +274,17 @@ export class TaquillaPosService {
         sessionId,
         seatIds: data.seatIds,
         discountPercent: data.discountPercent,
+        ...(paymentParts.length ? { paymentParts } : {}),
+        ...(mixed ? { mixed: true } : {}),
+        ...(data.cashReceived != null && Number.isFinite(Number(data.cashReceived))
+          ? { cashReceived: Number(data.cashReceived) }
+          : {}),
+        ...(data.changeGiven != null && Number.isFinite(Number(data.changeGiven))
+          ? { changeGiven: Number(data.changeGiven) }
+          : {}),
+        ...(cashPart > 0 || cardPart > 0
+          ? { cashPart, cardPart }
+          : {}),
       },
     });
     if (!order) throw new BadRequestException('No se pudo crear la orden');
@@ -263,7 +301,10 @@ export class TaquillaPosService {
       taxes: Number(order.taxAmount),
       quantity: data.seatIds?.length ?? data.quantity ?? holds.holds.length,
       processingTime: `${processingTime.toFixed(2)}s`,
-      paymentMethod: isComp ? 'COMP' : data.paymentMethod,
+      paymentMethod: isComp ? 'COMP' : mixed ? 'MIXED' : primaryMethod,
+      paymentParts: paymentParts.length ? paymentParts : undefined,
+      cashReceived: data.cashReceived,
+      changeGiven: data.changeGiven,
       status: order.status,
       holdExpiresAt: holds.expiresAt,
       isComp,
@@ -337,7 +378,15 @@ export class TaquillaPosService {
     if (!order || (organizationId && order.organizationId !== organizationId)) {
       throw new BadRequestException('Order not found');
     }
-    const isComp = Boolean((order as { posOps?: { isComp?: boolean } }).posOps?.isComp);
+    const ops = ((order as { posOps?: Record<string, unknown> }).posOps ?? {}) as {
+      isComp?: boolean;
+      mixed?: boolean;
+      paymentParts?: Array<{ method: string; amount: number }>;
+      cashReceived?: number;
+      changeGiven?: number;
+    };
+    const isComp = Boolean(ops.isComp);
+    const mixed = Boolean(ops.mixed) || (ops.paymentParts?.length ?? 0) >= 2;
 
     return {
       receiptNumber: `RCP-${order.publicId}`,
@@ -354,8 +403,11 @@ export class TaquillaPosService {
       taxes: Number(order.taxAmount),
       total: Number(order.totalAmount),
       // La cortesía se guarda como CASH a $0 (el enum no tiene COMP); el
-      // ticket debe decir cortesía, no efectivo.
-      paymentMethod: isComp ? 'COMP' : order.paymentMethod,
+      // ticket debe decir cortesía, no efectivo. Mixto = partes en posOps.
+      paymentMethod: isComp ? 'COMP' : mixed ? 'MIXED' : order.paymentMethod,
+      paymentParts: Array.isArray(ops.paymentParts) ? ops.paymentParts : undefined,
+      cashReceived: ops.cashReceived,
+      changeGiven: ops.changeGiven,
       ticketCodes: order.items.flatMap((item) =>
         item.tickets.map((t) => ({
           barcode: t.code,
@@ -564,6 +616,9 @@ export class TaquillaPosService {
           buyerEmail?: string;
           buyerPhone?: string;
           clientSaleId?: string;
+          paymentParts?: Array<{ method: 'CASH' | 'CARD' | 'COMP'; amount: number }>;
+          cashReceived?: number;
+          changeGiven?: number;
         };
         const clientSaleId = (txn.clientSaleId || data.clientSaleId)?.trim() || undefined;
         if (!clientSaleId) {
@@ -663,9 +718,29 @@ export class TaquillaPosService {
     const byMethod: Record<string, number> = {};
 
     for (const o of orders) {
-      const ops = (o as { posOps?: { isComp?: boolean } }).posOps;
+      const ops = (o as {
+        posOps?: {
+          isComp?: boolean;
+          paymentParts?: Array<{ method?: string; amount?: number }>;
+        };
+      }).posOps;
       if (ops?.isComp || Number(o.totalAmount) === 0) {
         compCount += 1;
+        continue;
+      }
+      const parts = Array.isArray(ops?.paymentParts)
+        ? ops!.paymentParts!.filter(
+            (p) => p && Number.isFinite(Number(p.amount)) && Number(p.amount) > 0
+          )
+        : [];
+      if (parts.length >= 1) {
+        for (const p of parts) {
+          const m = String(p.method || '').toUpperCase() || 'CASH';
+          const amt = Number(p.amount);
+          byMethod[m] = (byMethod[m] ?? 0) + amt;
+          if (m === 'CASH') cashSales += amt;
+          if (m === 'CARD') cardSales += amt;
+        }
         continue;
       }
       const m = o.paymentMethod;

@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import Image from 'next/image';
 import { Field, StageArt, TicketState, formatTicketAmount } from '@boletera/ui';
 import { SiteHeader } from '@/components/SiteHeader';
+import { HoldStickyBar } from '@/components/HoldStickyBar';
 import { networkError, readApiError, type ApiErrorInfo } from '@/lib/api-errors';
 import { authHeaders, getStoredUser } from '@/lib/auth';
 import {
@@ -174,6 +175,9 @@ function CheckoutForm() {
   const [promoChecking, setPromoChecking] = useState(false);
   const [promoOpen, setPromoOpen] = useState(false);
   const [method, setMethod] = useState<PaymentMethodId>('CARD');
+  /** Meses sin intereses (solo tarjeta y total ≥ umbral). Viaja al PaymentIntent. */
+  const [installments, setInstallments] = useState<number>(1);
+  const [holdWarn, setHoldWarn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pricing, setPricing] = useState<CartPricing | null>(null);
   const [pricingLoading, setPricingLoading] = useState(false);
@@ -380,6 +384,9 @@ function CheckoutForm() {
         buyerEmail: email.trim(),
         paymentMethod: method,
       };
+      if (method === 'CARD' && installments > 1) {
+        body.installments = installments;
+      }
       if (multiLine) {
         body.items = orderLines.map((l) => ({ offerId: l.offerId, holdIds: l.holdIds }));
       } else {
@@ -502,9 +509,19 @@ function CheckoutForm() {
     );
   }
 
+  const msiThreshold = 1500;
+  const showMsi = method === 'CARD' && payAmount >= msiThreshold;
+  const msiPlans = [1, 3, 6, 9, 12] as const;
+
   return (
     <>
       <SiteHeader compact />
+      <HoldStickyBar
+        expiresAt={expiresAt}
+        onExpire={() => setHoldExpired(true)}
+        onWarn={() => setHoldWarn(true)}
+        warnSeconds={120}
+      />
       <div className={styles.steps}>
         <div className={styles.stepsInner}>
           <Link href={backHref} className={styles.back} aria-label="Volver al mapa">
@@ -533,6 +550,11 @@ function CheckoutForm() {
 
       <main id="contenido" tabIndex={-1} className={styles.page}>
         <h1 className="sr-only">Pago</h1>
+        {holdWarn && !expired ? (
+          <p className={styles.warn} role="status">
+            Quedan menos de 2 minutos de apartado. Termina el pago o tus lugares se liberan.
+          </p>
+        ) : null}
         <div className={styles.grid}>
           <div className={styles.mainCol}>
             <section className={styles.eventCard} aria-label="Tu compra">
@@ -704,6 +726,37 @@ function CheckoutForm() {
               ) : null}
               {gatewayInfo?.demo ? (
                 <p className={styles.demo}>Modo demostración: no se hace ningún cargo.</p>
+              ) : null}
+              {showMsi ? (
+                <div className={styles.msi} role="group" aria-label="Meses sin intereses">
+                  <p className={styles.label}>Meses sin intereses</p>
+                  <div className={styles.msiPlans}>
+                    {msiPlans.map((plan) => {
+                      const perMonth = payAmount / plan;
+                      const active = installments === plan;
+                      return (
+                        <button
+                          key={plan}
+                          type="button"
+                          className={styles.msiPlan}
+                          aria-pressed={active}
+                          onClick={() => setInstallments(plan)}
+                        >
+                          <strong>{plan === 1 ? 'De contado' : `${plan} meses`}</strong>
+                          <span>
+                            {plan === 1
+                              ? formatTicketAmount(payAmount)
+                              : `${formatTicketAmount(perMonth)} / mes`}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className={styles.muted}>
+                    El plan se guarda con tu pago. Si el banco no ofrece MSI en este comercio, se
+                    cobra de contado.
+                  </p>
+                </div>
               ) : null}
             </section>
           </div>

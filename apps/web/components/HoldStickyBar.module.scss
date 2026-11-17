@@ -1,0 +1,13 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 12px 16px;
+  background: var(--bg, #000);
+  border-bottom: 1px solid var(--line, #2a2a2a);
+
+  :global(.wrap),
+  > * {
+    min-height: 44px;
+  }
+}

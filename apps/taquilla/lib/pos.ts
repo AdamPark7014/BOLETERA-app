@@ -8,7 +8,10 @@ import {
   getTaquillaUser,
 } from './auth';
 import { formatDateTime } from '@boletera/ui';
+import type { PaymentPart } from './cash';
+import { labelPaymentParts } from './cash';
 import { availableByOffer, fetchAvailability } from './inventory';
+import { saveOfflineQuota } from './offline-catalog';
 import { buildEscPosReceipt, printEscPos, printViaSerial } from './thermal';
 
 const TERMINAL_KEY = 'boletera_terminal_id';
@@ -34,9 +37,10 @@ export type PosReceipt = {
   total: number;
   paymentMethod: string;
   ticketCodes: { barcode: string; seatInfo: string }[];
-  /** Añadidos en cliente para el ticket de efectivo. */
+  /** Añadidos en cliente para el ticket de efectivo / mixto. */
   cashReceived?: number;
   changeGiven?: number;
+  paymentParts?: PaymentPart[];
 };
 
 export type OfflinePosPayload = {
@@ -57,6 +61,9 @@ export type OfflinePosPayload = {
     clientSaleId?: string;
     isComp?: boolean;
     compReason?: string;
+    paymentParts?: PaymentPart[];
+    cashReceived?: number;
+    changeGiven?: number;
   };
 };
 
@@ -150,8 +157,10 @@ export type SaleDraft = {
   offerId: string;
   qty: number;
   seatIds: string[];
-  method: 'CASH' | 'CARD' | 'COMP';
+  method: 'CASH' | 'CARD' | 'COMP' | 'MIXED';
   cashReceived: string;
+  /** Parte del total cobrada en efectivo cuando method === MIXED. */
+  cashPart?: string;
   stage: string;
   savedAt: string;
 };
@@ -342,6 +351,9 @@ export async function posCheckout(params: {
   managerPin?: string;
   discountCode?: string;
   clientSaleId?: string;
+  paymentParts?: PaymentPart[];
+  cashReceived?: number;
+  changeGiven?: number;
 }) {
   const clientSaleId = params.clientSaleId || crypto.randomUUID();
   return apiJson<CheckoutResult>('/taquilla/checkout', {
@@ -365,6 +377,9 @@ export async function posCheckout(params: {
         managerPin: params.managerPin,
         discountCode: params.discountCode,
         clientSaleId,
+        paymentParts: params.paymentParts,
+        cashReceived: params.cashReceived,
+        changeGiven: params.changeGiven,
       },
     }),
   });
@@ -381,7 +396,32 @@ const PAYMENT_LABEL: Record<string, string> = {
   CASH: 'Efectivo',
   CARD: 'Tarjeta',
   COMP: 'Cortesía',
+  MIXED: 'Mixto',
 };
+
+function receiptPaymentLines(receipt: PosReceipt): string[] {
+  if (receipt.paymentParts?.length) {
+    return [
+      `Pago: Mixto`,
+      `  ${labelPaymentParts(receipt.paymentParts)}`,
+      ...(receipt.cashReceived != null
+        ? [
+            `Recibido: $${receipt.cashReceived.toFixed(2)}`,
+            `Cambio: $${(receipt.changeGiven ?? 0).toFixed(2)}`,
+          ]
+        : []),
+    ];
+  }
+  return [
+    `Pago: ${PAYMENT_LABEL[receipt.paymentMethod] ?? receipt.paymentMethod}`,
+    ...(receipt.cashReceived != null
+      ? [
+          `Recibido: $${receipt.cashReceived.toFixed(2)}`,
+          `Cambio: $${(receipt.changeGiven ?? 0).toFixed(2)}`,
+        ]
+      : []),
+  ];
+}
 
 export async function printReceipt(receipt: PosReceipt) {
   const lines = [
@@ -395,13 +435,7 @@ export async function printReceipt(receipt: PosReceipt) {
     `Cargos: $${receipt.fees.toFixed(2)}`,
     `IVA: $${receipt.taxes.toFixed(2)}`,
     `TOTAL: $${receipt.total.toFixed(2)}`,
-    `Pago: ${PAYMENT_LABEL[receipt.paymentMethod] ?? receipt.paymentMethod}`,
-    ...(receipt.cashReceived != null
-      ? [
-          `Recibido: $${receipt.cashReceived.toFixed(2)}`,
-          `Cambio: $${(receipt.changeGiven ?? 0).toFixed(2)}`,
-        ]
-      : []),
+    ...receiptPaymentLines(receipt),
     '',
     ...receipt.ticketCodes.map((t) => `${t.seatInfo} · ${t.barcode}`),
     '',
@@ -410,6 +444,52 @@ export async function printReceipt(receipt: PosReceipt) {
   const payload = buildEscPosReceipt(lines, getOrgName());
   const serialOk = await printViaSerial(payload);
   if (!serialOk) printEscPos(payload);
+}
+
+/** Recibo en navegador a 80 mm (CSS @media print en venta). */
+export function printBrowserReceipt(receipt: PosReceipt) {
+  if (typeof document === 'undefined') return;
+  const root = document.getElementById('bt-receipt-print');
+  if (!root) {
+    void printReceipt(receipt);
+    return;
+  }
+  const pay = receipt.paymentParts?.length
+    ? `Mixto · ${labelPaymentParts(receipt.paymentParts)}`
+    : (PAYMENT_LABEL[receipt.paymentMethod] ?? receipt.paymentMethod);
+  const tickets = receipt.ticketCodes
+    .map((t) => `<div class="r-line">${escapeHtml(t.seatInfo)} · ${escapeHtml(t.barcode)}</div>`)
+    .join('');
+  root.innerHTML = `
+    <div class="r-org">${escapeHtml(getOrgName() || 'Black Ticket')}</div>
+    <div class="r-folio">${escapeHtml(receipt.receiptNumber)}</div>
+    <div class="r-meta">${escapeHtml(formatDateTime(receipt.timestamp))}</div>
+    <div class="r-event">${escapeHtml(receipt.eventName)}</div>
+    <div class="r-line">Boletos: ${receipt.quantity}</div>
+    <div class="r-line">Subtotal: $${receipt.subtotal.toFixed(2)}</div>
+    <div class="r-line">Cargos: $${receipt.fees.toFixed(2)}</div>
+    <div class="r-line">IVA: $${receipt.taxes.toFixed(2)}</div>
+    <div class="r-total">TOTAL: $${receipt.total.toFixed(2)}</div>
+    <div class="r-line">Pago: ${escapeHtml(pay)}</div>
+    ${
+      receipt.cashReceived != null
+        ? `<div class="r-line">Recibido: $${receipt.cashReceived.toFixed(2)}</div>
+           <div class="r-line">Cambio: $${(receipt.changeGiven ?? 0).toFixed(2)}</div>`
+        : ''
+    }
+    ${tickets}
+    <div class="r-thanks">Gracias por su compra</div>
+  `;
+  root.setAttribute('data-ready', '1');
+  window.print();
+}
+
+function escapeHtml(value: string): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 // ---------------------------------------------------------------------------
@@ -654,6 +734,7 @@ export async function syncInventoryCache(eventId: string) {
     localStorage.setItem(LOCAL_QUOTA_KEY, JSON.stringify(quotas));
     const byOffer = availableByOffer(snapshot);
     localStorage.setItem(`${LOCAL_QUOTA_KEY}:${eventId}`, JSON.stringify(byOffer));
+    await saveOfflineQuota(eventId, quotas[eventId], byOffer).catch(() => undefined);
     return snapshot;
   } catch {
     return null;

@@ -107,3 +107,69 @@ export function countedTotal(counts: DenominationCount): number {
     MXN_DENOMINATIONS.reduce((sum, value) => sum + value * (Number(counts[String(value)]) || 0), 0)
   );
 }
+
+// ---------------------------------------------------------------------------
+// Pago mixto (efectivo + tarjeta). La cortesía sigue siendo un método aparte.
+// ---------------------------------------------------------------------------
+
+export type PosPayMethod = 'CASH' | 'CARD' | 'COMP';
+export type PaymentPart = { method: PosPayMethod; amount: number };
+
+/**
+ * Parte en efectivo + resto con tarjeta. `cashPartRaw` es cuánto se cobra en
+ * efectivo (no lo recibido del cliente): el cambio se calcula aparte.
+ */
+export function splitMixedPayment(
+  total: number,
+  cashPartRaw: string | number
+): {
+  cashPart: number;
+  cardPart: number;
+  parts: PaymentPart[];
+  valid: boolean;
+  error?: string;
+} {
+  const totalR = round2(total);
+  const parsed = round2(typeof cashPartRaw === 'number' ? cashPartRaw : Number(cashPartRaw));
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return {
+      cashPart: 0,
+      cardPart: totalR,
+      parts: totalR > 0 ? [{ method: 'CARD', amount: totalR }] : [],
+      valid: false,
+      error: 'El importe en efectivo no es válido.',
+    };
+  }
+  if (parsed > totalR) {
+    return {
+      cashPart: totalR,
+      cardPart: 0,
+      parts: totalR > 0 ? [{ method: 'CASH', amount: totalR }] : [],
+      valid: false,
+      error: 'El efectivo no puede ser mayor que el total.',
+    };
+  }
+  const cashPart = parsed;
+  const cardPart = round2(totalR - cashPart);
+  const parts: PaymentPart[] = [];
+  if (cashPart > 0) parts.push({ method: 'CASH', amount: cashPart });
+  if (cardPart > 0) parts.push({ method: 'CARD', amount: cardPart });
+  return { cashPart, cardPart, parts, valid: true };
+}
+
+/** Cambio solo sobre la parte en efectivo del mixto. */
+export function mixedCashState(cashPart: number, receivedRaw: string | number): CashState {
+  return computeCash(cashPart, receivedRaw);
+}
+
+export function labelPaymentParts(parts: PaymentPart[]): string {
+  const labels: Record<PosPayMethod, string> = {
+    CASH: 'Efectivo',
+    CARD: 'Tarjeta',
+    COMP: 'Cortesía',
+  };
+  return parts
+    .filter((p) => p.amount > 0)
+    .map((p) => `${labels[p.method]} ${money(p.amount)}`)
+    .join(' · ');
+}

@@ -197,7 +197,11 @@ export function EventStage({
           {!hasOffer || stock.soldOut ? (
             <section className={styles.panel}>
               <h2 className={styles.h2}>{stock.soldOut ? 'Agotado' : 'Pronto a la venta'}</h2>
-              <p className={styles.muted}>Te avisamos si se liberan lugares.</p>
+              <p className={styles.muted}>
+                {stock.soldOut
+                  ? 'Si se libera un boleto al precio original, te avisamos con un enlace de 60 minutos.'
+                  : 'Te avisamos si se liberan lugares.'}
+              </p>
               <WaitlistSignup eventId={eventId} eventTitle={title} />
             </section>
           ) : (

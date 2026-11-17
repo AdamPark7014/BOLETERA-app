@@ -5,30 +5,44 @@ import {
   ConflictException,
   ForbiddenException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { generateTicketCode } from '@boletera/crypto';
 import { ResaleStatus, ResaleOfferStatus, SalesChannel } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
+import {
+  ABSOLUTE_RESALE_MAX_PERCENT,
+  DEFAULT_RESALE_FEE_PERCENT,
+  MIN_RESALE_PRICE_PERCENT,
+  maxPercentFromSettings,
+} from '../../common/resale-limits';
+import { WaitlistService } from '../waitlist/waitlist.service';
 
 @Injectable()
 export class ResaleService {
   private logger = new Logger(ResaleService.name);
 
-  private readonly RESALE_FEE_PERCENT = 0.08; // 8%
-  private readonly MIN_RESALE_PRICE_PERCENT = 0.5; // Can't sell below 50% of original
-  private readonly MAX_RESALE_PRICE_PERCENT = 2.0; // Can't sell above 200% of original
+  private readonly RESALE_FEE_PERCENT = DEFAULT_RESALE_FEE_PERCENT;
+  private readonly MIN_RESALE_PRICE_PERCENT = MIN_RESALE_PRICE_PERCENT;
+  /** Techo absoluto; el tope efectivo por org sale de settings.resaleMaxPercent (1.2). */
+  private readonly MAX_RESALE_PRICE_PERCENT = ABSOLUTE_RESALE_MAX_PERCENT;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Optional() private waitlist?: WaitlistService
+  ) {}
 
   /**
    * Topes del servicio. `feePercent` es el 8% de respaldo:
    * el anuncio usa `Organization.resaleCommission` cuando tiene valor.
+   * `maxPercent` aquí es el techo absoluto (2.0); cada org puede bajarlo.
    */
   limits() {
     return {
       minPercent: this.MIN_RESALE_PRICE_PERCENT,
       maxPercent: this.MAX_RESALE_PRICE_PERCENT,
+      defaultMaxPercent: 1.2,
       feePercent: this.RESALE_FEE_PERCENT,
     };
   }
@@ -60,7 +74,11 @@ export class ResaleService {
     const ticketInclude = {
       offer: true,
       orderItem: { select: { order: { select: { userId: true } } } },
-      event: { include: { organization: { select: { resaleCommission: true } } } },
+      event: {
+        include: {
+          organization: { select: { resaleCommission: true, settings: true } },
+        },
+      },
     } as const;
     const ticket = data.ticketId
       ? await this.prisma.ticket.findUnique({
@@ -98,8 +116,12 @@ export class ResaleService {
       id: string;
       status: string;
       orderItemId: string | null;
-      offer: { basePrice: unknown; currency?: string };
-      event: { allowResale: boolean; organization: { resaleCommission: number | null } };
+      offer: { id?: string; basePrice: unknown; currency?: string };
+      event: {
+        id: string;
+        allowResale: boolean;
+        organization: { resaleCommission: number | null; settings: unknown };
+      };
     },
     data: { askingPrice: number; currency: string; sellerId: string; sellerName: string }
   ) {
@@ -122,10 +144,11 @@ export class ResaleService {
       );
     }
 
-    // Validate price bounds
+    // Validate price bounds (tope por organización: settings.resaleMaxPercent, omisión 1.2)
     const originalPrice = Number(ticket.offer.basePrice);
+    const maxPercent = maxPercentFromSettings(ticket.event.organization.settings);
     const minPrice = originalPrice * this.MIN_RESALE_PRICE_PERCENT;
-    const maxPrice = originalPrice * this.MAX_RESALE_PRICE_PERCENT;
+    const maxPrice = originalPrice * maxPercent;
 
     if (data.askingPrice < minPrice || data.askingPrice > maxPrice) {
       throw new BadRequestException(
@@ -153,6 +176,18 @@ export class ResaleService {
     });
 
     this.logger.log(`Resale listing created: ${listing.id} for ticket ${ticket.id}`);
+
+    // Reventa al precio original: el primero de la lista de espera recibe el enlace.
+    if (Math.abs(data.askingPrice - originalPrice) < 0.005 && this.waitlist) {
+      void this.waitlist
+        .offerNext(ticket.event.id, {
+          ticketId: ticket.id,
+          offerId: ticket.offer.id,
+          facePrice: originalPrice,
+          source: 'resale-face',
+        })
+        .catch((err) => this.logger.warn(`Waitlist offer after face resale: ${err}`));
+    }
 
     return listing;
   }

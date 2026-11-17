@@ -288,3 +288,19 @@ describe('generateTicketCode', () => {
     assert.equal(codigos.size, 500);
   });
 });
+
+describe('firmas v1 apagadas', () => {
+  it('una firma sin prefijo v2. ya no verifica', () => {
+    // Firma v1 (HMAC con secreto global, sin prefijo). Tras apagar el legado
+    // debe rechazarse aunque el material sea el correcto.
+    const { createHmac } = require('node:crypto') as typeof import('node:crypto');
+    const window = Math.floor(T0 / (QR_ROTATION_SECONDS * 1000));
+    const v1 = createHmac('sha256', SECRET)
+      .update(`${TICKET}:${EVENTO}:${window}`)
+      .digest('hex')
+      .slice(0, 32);
+
+    const ok = conRelojEn(T0, () => verifyTicketSignature(TICKET, EVENTO, v1, SECRET));
+    assert.equal(ok, false);
+  });
+});

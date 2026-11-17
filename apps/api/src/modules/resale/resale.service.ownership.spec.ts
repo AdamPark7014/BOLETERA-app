@@ -16,7 +16,11 @@ describe('ResaleService · dueño del boleto y del anuncio', () => {
     buyerEmail: 'Duena@Ejemplo.mx',
     orderItem: { order: { userId: 'u-duena' } },
     offer: { basePrice: new Decimal(500) },
-    event: { allowResale: true, organization: { resaleCommission: null } },
+    event: {
+      id: 'e1',
+      allowResale: true,
+      organization: { resaleCommission: null, settings: null },
+    },
   };
 
   function build() {

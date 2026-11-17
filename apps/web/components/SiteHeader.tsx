@@ -16,6 +16,7 @@ export const NAV_CATEGORIES = [
   { href: '/categoria/SPORTS', label: 'Deportes' },
   { href: '/categoria/THEATER', label: 'Teatro' },
   { href: '/categoria/FESTIVAL', label: 'Festivales' },
+  { href: '/membresias', label: 'Membresías' },
 ];
 
 type SiteHeaderProps = {
