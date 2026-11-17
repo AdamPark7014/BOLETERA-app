@@ -245,4 +245,27 @@
   @include bt.pill-primary;
   min-height: 44px;
   text-decoration: none;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.buyError {
+  max-width: 260px;
+  margin: 0;
+  font-size: 13px;
+  text-align: right;
+  color: var(--warn, #e0a458);
+}
+
+.eventLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.64));
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

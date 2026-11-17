@@ -27,6 +27,7 @@ import {
   summarizeRefunds,
 } from '@/lib/refund-policy';
 import styles from './cuenta.module.scss';
+import { MySalesSection } from './MySalesSection';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 const LOGIN_BACK = '/login?next=%2Fcuenta';
@@ -587,6 +588,8 @@ export default function CuentaPage() {
                 </ul>
               </section>
             )}
+
+            <MySalesSection />
 
             <section className={styles.section} aria-labelledby="membership-title">
               <h2 id="membership-title">Mi membresía</h2>

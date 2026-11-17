@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { SiteHeader } from '@/components/SiteHeader';
 import { fetchTenantCurrent } from '@/lib/tenant';
 import styles from './resale.module.scss';
+import { BuyResaleButton } from './BuyResaleButton';
 
 import { API_BASE as API } from '@/lib/api';
 
@@ -19,6 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 type Listing = {
   id: string;
   askingPrice: string | number;
+  fee?: string | number;
   status: string;
   listedAt?: string;
   ticket?: {
@@ -113,7 +115,8 @@ export default async function ResalePage() {
                 const seat = [l.ticket?.section, l.ticket?.row, l.ticket?.seatNumber]
                   .filter(Boolean)
                   .join(' · ');
-                const price = Number(l.askingPrice);
+                // Precio final desde la lista: lo que se pide más el cargo por servicio.
+                const price = Number(l.askingPrice) + (Number(l.fee) || 0);
                 const original = l.priceComparison?.originalPrice;
                 const markup = Number(l.priceComparison?.markup ?? 0);
 
@@ -141,13 +144,14 @@ export default async function ResalePage() {
                     </div>
                     <div className={styles.side}>
                       <strong>{formatPrice(price)}</strong>
+                      {l.status === 'ACTIVE' ? (
+                        <BuyResaleButton listingId={l.id} label="Comprar" />
+                      ) : null}
                       {event?.slug ? (
-                        <Link href={`/events/${event.slug}`} className={styles.buy}>
+                        <Link href={`/events/${event.slug}`} className={styles.eventLink}>
                           Ver evento
                         </Link>
-                      ) : (
-                        <span className={styles.id}>Listado #{l.id.slice(0, 8)}</span>
-                      )}
+                      ) : null}
                     </div>
                   </li>
                 );

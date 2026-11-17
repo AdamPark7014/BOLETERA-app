@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Query, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  UseGuards,
+  Query,
+  Request,
+  HttpCode,
+  NotFoundException,
+} from '@nestjs/common';
+import { PaymentService } from '../payment/payment.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ResaleService } from './resale.service';
 import { ResaleCheckoutService } from './resale-checkout.service';
@@ -9,7 +21,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class ResaleController {
   constructor(
     private resaleService: ResaleService,
-    private checkouts: ResaleCheckoutService
+    private checkouts: ResaleCheckoutService,
+    private payments: PaymentService
   ) {}
 
   // ==================== COMPRAR YA (cobro real) ====================
@@ -31,6 +44,21 @@ export class ResaleController {
     @Request() req: { user: { sub: string } }
   ) {
     return this.checkouts.status(req.user.sub, publicId);
+  }
+
+  /** Solo demo: el comprador simula la confirmación del banco (404 en producción). */
+  @Post('checkouts/:publicId/demo-confirm')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Demo: confirmar el pago de una compra de reventa propia' })
+  async demoConfirm(
+    @Param('publicId') publicId: string,
+    @Request() req: { user: { sub: string } }
+  ) {
+    if (!this.payments.isBuyerDemoConfirmAvailable()) throw new NotFoundException();
+    const own = await this.checkouts.status(req.user.sub, publicId);
+    return this.payments.confirmBuyerDemoPurchase(own.id, own.publicId);
   }
 
   @Get('mine')

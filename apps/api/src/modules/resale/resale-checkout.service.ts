@@ -187,9 +187,13 @@ export class ResaleCheckoutService implements ExternalChargeHandler, OnModuleIni
         })
       : null;
     return {
+      id: row.id,
       publicId: row.publicId,
       status: row.status,
       eventTitle: row.listing.ticket.event.title,
+      seat: [row.listing.ticket.section, row.listing.ticket.row, row.listing.ticket.seatNumber]
+        .filter(Boolean)
+        .join(' · '),
       amount: row.amount.toString(),
       fee: row.fee.toString(),
       currency: row.currency,
