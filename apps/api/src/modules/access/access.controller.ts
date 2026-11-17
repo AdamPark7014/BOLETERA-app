@@ -58,6 +58,18 @@ export class AccessController {
     return this.access.getQrForTicket(id, req.user, { reason, ipAddress: req.ip });
   }
 
+  /** Totales en vivo de la función: entraron, faltan, por puerta y por minuto. */
+  @Get('events/:eventId/live')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...GATE_ROLES)
+  @ApiBearerAuth()
+  live(@Request() req: { user: JwtUser }, @Param('eventId') eventId: string) {
+    return this.access.getLiveStats(eventId, {
+      organizationId: req.user.organizationId ?? null,
+      role: req.user.role,
+    });
+  }
+
   /** Manifiesto del evento para verificación en puerta sin red (F2-15). */
   @Get('events/:eventId/manifest')
   @UseGuards(JwtAuthGuard, RolesGuard)

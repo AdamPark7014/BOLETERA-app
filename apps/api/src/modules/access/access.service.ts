@@ -147,7 +147,10 @@ export class AccessService {
     // de ventanilla y no lleva firma.
     const ticket = await this.prisma.ticket.findFirst({
       where: ticketId ? { id: ticketId } : { code: params.ticketCode },
-      include: { event: { select: { title: true } } },
+      include: {
+        event: { select: { title: true } },
+        offer: { select: { name: true, zone: true } },
+      },
     });
 
     if (!ticket) {
@@ -208,6 +211,9 @@ export class AccessService {
         row: ticket.row,
         seatNumber: ticket.seatNumber,
         eventTitle: ticket.event.title,
+        // Como en Presence/Eventbrite: la puerta ve a quién deja pasar y con qué boleto.
+        holderName: ticket.buyerName?.trim() || null,
+        ticketType: ticket.offer?.name || ticket.offer?.zone || null,
       },
     };
   }
@@ -509,6 +515,63 @@ export class AccessService {
    * La puerta sólo puede controlar funciones de SU organización: si no, un
    * escáner de otro inquilino podría quemar boletos ajenos pidiendo su evento.
    */
+  /**
+   * Totales en vivo de la puerta (como Ticketmaster Presence): cuántos entraron,
+   * cuántos faltan, por puerta y por minuto en los últimos 10 minutos.
+   */
+  async getLiveStats(
+    eventId: string,
+    scope: { organizationId?: string | null; role?: string },
+    now = new Date()
+  ) {
+    await this.assertGateEvent(eventId, scope.organizationId, scope.role);
+    const since = new Date(now.getTime() - 10 * 60_000);
+    const [admitted, expected, byZone, recent] = await Promise.all([
+      this.prisma.ticket.count({ where: { eventId, status: 'USED' } }),
+      this.prisma.ticket.count({
+        where: { eventId, status: { in: ['SOLD', 'USED', 'RESOLD'] } },
+      }),
+      this.prisma.ticketScan.groupBy({
+        by: ['zoneId'],
+        where: { success: true, ticket: { eventId } },
+        _count: { _all: true },
+      }),
+      this.prisma.ticketScan.findMany({
+        where: { success: true, ticket: { eventId }, scannedAt: { gte: since } },
+        select: { scannedAt: true },
+      }),
+    ]);
+    const zoneIds = byZone.map((z) => z.zoneId).filter((id): id is string => Boolean(id));
+    const zones = zoneIds.length
+      ? await this.prisma.accessZone.findMany({
+          where: { id: { in: zoneIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+    const zoneName = new Map(zones.map((z) => [z.id, z.name]));
+    const perMinute = Array.from({ length: 10 }, () => 0);
+    for (const r of recent) {
+      const ago = Math.floor((now.getTime() - r.scannedAt.getTime()) / 60_000);
+      if (ago >= 0 && ago < 10) perMinute[9 - ago] += 1;
+    }
+    return {
+      eventId,
+      admitted,
+      expected,
+      remaining: Math.max(0, expected - admitted),
+      lastTenMinutes: recent.length,
+      perMinute,
+      byGate: byZone
+        .map((z) => ({
+          zoneId: z.zoneId,
+          name: z.zoneId ? (zoneName.get(z.zoneId) ?? 'Puerta') : 'Sin puerta asignada',
+          admitted: z._count._all,
+        }))
+        .sort((a, b) => b.admitted - a.admitted),
+      at: now.toISOString(),
+    };
+  }
+
   private async assertGateEvent(
     eventId: string,
     organizationId: string | null | undefined,

@@ -44,6 +44,16 @@ type ScanOutcomeView = {
   section?: string | null;
   row?: string | null;
   seat?: string | null;
+  holderName?: string | null;
+  ticketType?: string | null;
+};
+
+type LiveStats = {
+  admitted: number;
+  expected: number;
+  remaining: number;
+  lastTenMinutes: number;
+  byGate: { zoneId: string | null; name: string; admitted: number }[];
 };
 
 const ZONE_KEY = 'taquilla_access_zone';
@@ -73,6 +83,8 @@ export default function AccesoPage() {
   const router = useRouter();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [eventId, setEventId] = useState('');
+  /** Totales de toda la función (todas las puertas), no solo de este equipo. */
+  const [live, setLive] = useState<LiveStats | null>(null);
   const [zoneId, setZoneId] = useState('');
   const [manifests, setManifests] = useState<ManifestMeta[]>([]);
   const [code, setCode] = useState('');
@@ -326,6 +338,8 @@ export default function AccesoPage() {
               row?: string | null;
               seatNumber?: string | null;
               eventTitle?: string;
+              holderName?: string | null;
+              ticketType?: string | null;
             };
           }>('/access/scan', {
             method: 'POST',
@@ -342,6 +356,8 @@ export default function AccesoPage() {
             section: t?.section,
             row: t?.row,
             seat: t?.seatNumber,
+            holderName: t?.holderName,
+            ticketType: t?.ticketType,
             at: Date.now(),
           });
         } catch (err) {
@@ -454,6 +470,26 @@ export default function AccesoPage() {
   const rejectCount = stamps.length - okCount;
   const perMinute = stamps.filter((s) => s.ok && now - s.at <= 60_000).length;
   const tone = outcome ? toneOf(outcome) : null;
+  useEffect(() => {
+    setLive(null);
+    if (!eventId) return;
+    let cancelled = false;
+    const pull = () => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+      apiJson<LiveStats>(`/access/events/${encodeURIComponent(eventId)}/live`)
+        .then((data) => {
+          if (!cancelled) setLive(data);
+        })
+        .catch(() => {});
+    };
+    pull();
+    const timer = setInterval(pull, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [eventId]);
+
   const hasTicketData = Boolean(outcome && (outcome.code || outcome.section || outcome.eventTitle));
   const nextScan = () => {
     setOutcome(null);
@@ -556,8 +592,13 @@ export default function AccesoPage() {
                 <p className={styles.verdict}>{outcome.title}</p>
                 {tone === 'ok' ? (
                   <>
+                    {outcome.holderName ? (
+                      <p className={styles.holderName}>{outcome.holderName}</p>
+                    ) : null}
                     <p className={styles.holder}>
-                      {outcome.eventTitle || outcome.detail}
+                      {[outcome.ticketType, outcome.eventTitle || outcome.detail]
+                        .filter(Boolean)
+                        .join(' · ')}
                       {outcome.verdict === 'OFFLINE_OK' ? ' · validado sin red' : ''}
                     </p>
                     {outcome.section || outcome.row || outcome.seat ? (
@@ -653,6 +694,45 @@ export default function AccesoPage() {
         </div>
 
         <aside className={styles.side}>
+          {live ? (
+            <section className={styles.live} aria-label="Toda la función">
+              <div className={styles.liveHead}>
+                <h2 className={styles.label}>Toda la función</h2>
+                <span className={styles.liveCount}>
+                  {live.admitted.toLocaleString('es-MX')} de {live.expected.toLocaleString('es-MX')}
+                </span>
+              </div>
+              <div
+                className={styles.liveBar}
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={live.expected || 1}
+                aria-valuenow={live.admitted}
+                aria-label="Personas que ya entraron"
+              >
+                <span
+                  style={{
+                    width: `${live.expected ? Math.min(100, (live.admitted / live.expected) * 100) : 0}%`,
+                  }}
+                />
+              </div>
+              <p className={styles.quiet}>
+                Faltan {live.remaining.toLocaleString('es-MX')} · {live.lastTenMinutes} en los
+                últimos 10 min
+              </p>
+              {live.byGate.length > 1 ? (
+                <ul className={styles.gates}>
+                  {live.byGate.map((g) => (
+                    <li key={g.zoneId ?? 'none'}>
+                      <span>{g.name}</span>
+                      <strong>{g.admitted.toLocaleString('es-MX')}</strong>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          ) : null}
+
           <div className={styles.counters}>
             <div className={styles.counter}>
               <span>Entradas</span>

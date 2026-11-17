@@ -205,6 +205,15 @@
   font-size: clamp(52px, 8vw, 96px);
 }
 
+.holderName {
+  margin: 0;
+  font-size: clamp(26px, 6vw, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
 .holder {
   margin: 0;
   font-size: 20px;
@@ -717,5 +726,59 @@
   .pill kbd,
   .linkBtn kbd {
     display: none;
+  }
+}
+
+.live {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line, #26262a);
+}
+
+.liveHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.liveCount {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.liveBar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #2fbf71;
+    transition: width 0.4s ease;
+  }
+}
+
+.gates {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  strong {
+    font-variant-numeric: tabular-nums;
   }
 }
