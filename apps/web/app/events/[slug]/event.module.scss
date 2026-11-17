@@ -962,6 +962,49 @@
   color: var(--warn);
 }
 
+.codeToggle {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted, rgba(255, 255, 255, 0.64));
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text, #fff);
+  }
+}
+
+.codeField {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted, rgba(255, 255, 255, 0.64));
+
+  input {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 10px;
+    background: #1a1a1a;
+    color: #fff;
+    font: inherit;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+
+    &:focus-visible {
+      outline: 2px solid #a68a6b;
+      outline-offset: 1px;
+    }
+  }
+}
+
 .payButton {
   @include bt.pill-primary;
   width: 100%;

@@ -177,6 +177,8 @@ export class InventoryController {
       contiguous?: boolean;
       /** Pase emitido por la sala de espera, si el evento la tiene activa. */
       queuePass?: string;
+      /** Código de preventa o de socios que escribió el comprador. */
+      accessCode?: string;
     },
     @CurrentUser() user: PublicUser,
     @Headers('x-channel') channelHeader?: string,
@@ -195,6 +197,7 @@ export class InventoryController {
       userId: user?.sub,
       channel: SalesChannel.WEB,
       idempotencyKey,
+      accessCode: body.accessCode,
     });
   }
 
@@ -211,6 +214,8 @@ export class InventoryController {
       sessionId?: string;
       /** Pase emitido por la sala de espera, si el evento la tiene activa. */
       queuePass?: string;
+      /** Código de preventa o de socios que escribió el comprador. */
+      accessCode?: string;
     },
     @CurrentUser() user: PublicUser,
     @Headers('x-channel') channelHeader?: string,
@@ -230,6 +235,7 @@ export class InventoryController {
       userId: user?.sub,
       channel: SalesChannel.WEB,
       idempotencyKey,
+      accessCode: body.accessCode,
     });
   }
 

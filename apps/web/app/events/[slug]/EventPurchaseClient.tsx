@@ -18,6 +18,7 @@ import { useCartStore, type CartOfferLine } from '@/lib/cart-store';
 import { fetchCartPricing, pricingTotal } from '@/lib/pricing';
 import { useWaitingRoom } from '@/components/waiting-room/useWaitingRoom';
 import { offerTones } from '@/lib/zone-tones';
+import { sortOffersForDisplay } from '@/lib/offer-order';
 import { WaitingRoomGate } from '@/components/waiting-room/WaitingRoomGate';
 import { isQueueRejection } from '@/components/waiting-room/queue-client';
 import styles from './event.module.scss';
@@ -32,6 +33,7 @@ type Offer = {
   allInPrice?: number;
   remainingQuantity?: number;
   isAvailable?: boolean;
+  sortOrder?: number | null;
 };
 
 type HoldResponse = {
@@ -84,6 +86,7 @@ export function EventPurchaseClient({
 }) {
   const router = useRouter();
   const addToCart = useCartStore((s) => s.addItem);
+  const orderedOffers = useMemo(() => sortOffersForDisplay(offers), [offers]);
   /**
    * Sala de espera. Va por delante de todo lo demás: si el evento la tiene
    * activa, el API responde 403 a cualquier hold sin pase, así que dejar elegir
@@ -107,6 +110,10 @@ export function EventPurchaseClient({
   const [qty, setQty] = useState(2);
   /** Último error de reserva ya traducido a algo accionable. */
   const [holdError, setHoldError] = useState<InventoryError | null>(null);
+  /** Código de preventa: el campo se abre a pedido o cuando la fase lo exige. */
+  const [accessCode, setAccessCode] = useState('');
+  const [codeOpen, setCodeOpen] = useState(false);
+  const codeInputRef = useRef<HTMLInputElement>(null);
   /** Butacas que perdimos en un 409: el mapa las señala. */
   const [conflictSeatIds, setConflictSeatIds] = useState<string[]>([]);
   /** Cambiarlo obliga al visor a resincronizar el inventario. */
@@ -360,7 +367,12 @@ export function EventPurchaseClient({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             // `JSON.stringify` descarta `undefined`: sin pase no se manda el campo.
-            body: JSON.stringify({ ...body, sessionId, queuePass: getQueuePass() }),
+            body: JSON.stringify({
+              ...body,
+              sessionId,
+              queuePass: getQueuePass(),
+              accessCode: accessCode.trim() || undefined,
+            }),
           });
         } catch {
           throw describeNetworkError();
@@ -393,13 +405,18 @@ export function EventPurchaseClient({
       }
       throw describeInventoryError(500);
     },
-    [getQueuePass, onQueueRejected]
+    [getQueuePass, onQueueRejected, accessCode]
   );
 
   /** Un 409 no puede dejar al comprador mirando un spinner: se marca y se sigue. */
   function handleHoldFailure(raw: unknown) {
     const error = isInventoryError(raw) ? raw : describeNetworkError();
     setHoldError(error);
+    if (error.kind === 'access-code') {
+      setCodeOpen(true);
+      // Tras pintar el campo, el foco va ahí para escribir sin buscarlo.
+      requestAnimationFrame(() => codeInputRef.current?.focus());
+    }
     if (error.seatId) {
       setConflictSeatIds([error.seatId]);
       setSelected((prev) => prev.filter((id) => id !== error.seatId));
@@ -520,7 +537,7 @@ export function EventPurchaseClient({
   const canPayQty = (buyMode === 'best' || buyMode === 'ga') && qty > 0 && Boolean(focusedOffer);
   const canApart = buyMode === 'map' ? canPayMap : canPayQty;
   const offerPrice = (offer: Offer) => Number(offer.allInPrice ?? offer.basePrice);
-  const cheapest = offers
+  const cheapest = orderedOffers
     .filter((o) => o.isAvailable !== false && o.remainingQuantity !== 0)
     .reduce<Offer | null>((min, o) => (!min || offerPrice(o) < offerPrice(min) ? o : min), null);
   const summary =
@@ -534,7 +551,7 @@ export function EventPurchaseClient({
         ? `${qty} ${qty === 1 ? 'boleto' : 'boletos'} · ${focusedOffer.name || focusedOffer.zone}`
         : null;
   const focusedRemaining = offers.find((o) => o.id === focusedOffer?.id)?.remainingQuantity;
-  const tones = offerTones(offers);
+  const tones = offerTones(orderedOffers);
   const payLabel = loading
     ? 'Apartando…'
     : buyMode === 'map' && selected.length === 0
@@ -767,7 +784,7 @@ export function EventPurchaseClient({
 
           {buyMode === 'map' && hasSeatMap && offers.length > 1 ? (
             <ul className={styles.zoneLegend} aria-label="Zonas">
-              {offers.map((offer) => (
+              {orderedOffers.map((offer) => (
                 <li key={offer.id}>
                   <i style={{ background: tones.get(offer.id) }} aria-hidden="true" />
                   {offer.name || offer.zone}
@@ -828,6 +845,12 @@ export function EventPurchaseClient({
             <HoldErrorNotice
               error={holdError}
               onRetry={holdError.kind === 'hold-limit' ? undefined : apart}
+              onChooseAgain={() => {
+                setHoldError(null);
+                setConflictSeatIds([]);
+                setSelected([]);
+                setZonePick(null);
+              }}
               onDismiss={() => {
                 setHoldError(null);
                 setConflictSeatIds([]);
@@ -839,7 +862,7 @@ export function EventPurchaseClient({
         <aside className={styles.side} aria-label="Zonas y total">
           <h2 className={styles.sideTitle}>Zonas</h2>
           <ul className={styles.options}>
-            {offers.map((offer) => {
+            {orderedOffers.map((offer) => {
               const active = Boolean(zonePick) && focusedOffer?.id === offer.id;
               const out = offer.isAvailable === false || offer.remainingQuantity === 0;
               const few = !out && offer.remainingQuantity != null && offer.remainingQuantity <= 20;
@@ -888,6 +911,32 @@ export function EventPurchaseClient({
                 No pudimos calcular el total. Intenta de nuevo.
               </p>
             ) : null}
+            {codeOpen ? (
+              <label className={styles.codeField}>
+                <span>Código de preventa</span>
+                <input
+                  ref={codeInputRef}
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  maxLength={40}
+                  placeholder="Ej. FANS2026"
+                />
+              </label>
+            ) : (
+              <button
+                type="button"
+                className={styles.codeToggle}
+                onClick={() => {
+                  setCodeOpen(true);
+                  requestAnimationFrame(() => codeInputRef.current?.focus());
+                }}
+              >
+                ¿Tienes código de preventa?
+              </button>
+            )}
             <button
               type="button"
               className={styles.payButton}

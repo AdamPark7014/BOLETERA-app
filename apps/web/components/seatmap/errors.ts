@@ -24,6 +24,10 @@ export type InventoryErrorKind =
   | 'not-found'
   | 'invalid'
   | 'offline'
+  /** 403 de la ventana de venta: la preventa pide código, o el escrito no vale. */
+  | 'access-code'
+  /** 403 de la ventana de venta: aún no abre o ya cerró. */
+  | 'sale-closed'
   | 'unknown';
 
 export type InventoryError = {
@@ -99,6 +103,31 @@ export function describeInventoryError(status: number, body?: unknown): Inventor
       kind: 'throttled',
       message:
         'Hiciste demasiados intentos seguidos. Espera unos 30 segundos y vuelve a intentarlo.',
+      selfHealing: false,
+      staleMap: false,
+    };
+  }
+
+  const reason =
+    body && typeof body === 'object' ? (body as { reason?: unknown }).reason : undefined;
+  if (status === 403 && (reason === 'CODE_REQUIRED' || reason === 'CODE_INVALID')) {
+    return {
+      kind: 'access-code',
+      message:
+        reason === 'CODE_INVALID'
+          ? 'Ese código no es válido para esta preventa. Revísalo y vuelve a intentarlo.'
+          : 'Esta preventa necesita un código. Escríbelo abajo para apartar tus boletos.',
+      selfHealing: false,
+      staleMap: false,
+    };
+  }
+  if (status === 403 && (reason === 'NOT_STARTED' || reason === 'CLOSED')) {
+    return {
+      kind: 'sale-closed',
+      message:
+        reason === 'NOT_STARTED'
+          ? 'La venta de este evento todavía no abre.'
+          : 'La venta de este evento ya cerró.',
       selfHealing: false,
       staleMap: false,
     };

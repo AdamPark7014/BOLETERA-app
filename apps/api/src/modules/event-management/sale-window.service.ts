@@ -21,6 +21,7 @@ export type SaleWindowReason =
   | 'NOT_STARTED'
   | 'CLOSED'
   | 'CODE_REQUIRED'
+  | 'CODE_INVALID'
   | 'CHANNEL_NOT_ALLOWED'
   | 'EVENT_NOT_ON_SALE'
   | 'EVENT_NOT_FOUND'
@@ -344,9 +345,15 @@ export class SaleWindowService {
     }
 
     if (codeMissing) {
-      return this.deny('CODE_REQUIRED', 'Esta fase de venta requiere código de acceso.', {
-        nextOpensAt,
-      });
+      // Con código escrito pero que no coincide, el comprador necesita saber que
+      // lo revise; sin código, que lo pida a quien le dio acceso a la preventa.
+      return code
+        ? this.deny('CODE_INVALID', 'Ese código no es válido para esta preventa.', {
+            nextOpensAt,
+          })
+        : this.deny('CODE_REQUIRED', 'Esta preventa necesita un código de acceso.', {
+            nextOpensAt,
+          });
     }
     if (channelBlocked) {
       return this.deny('CHANNEL_NOT_ALLOWED', 'La fase de venta vigente no permite este canal.', {

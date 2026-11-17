@@ -442,6 +442,8 @@ export class InventoryService {
     idempotencyKey?: string;
     /** Llamadas internas ya autorizadas (POS, layout) pueden saltar el tope por sesión. */
     skipSessionLimit?: boolean;
+    /** Código de preventa o de socios; lo valida la ventana de venta. */
+    accessCode?: string;
   }): Promise<HoldCreateResult> {
     const idempotencyKey = dto.idempotencyKey?.trim() || undefined;
     const idempInflightKey = idempotencyKey ? `${dto.eventId}:${idempotencyKey}` : undefined;
@@ -474,6 +476,7 @@ export class InventoryService {
       channel?: SalesChannel;
       cashierId?: string;
       skipSessionLimit?: boolean;
+      accessCode?: string;
     },
     idempotencyKey: string | undefined
   ): Promise<HoldCreateResult> {
@@ -505,6 +508,7 @@ export class InventoryService {
     const window = await this.saleWindow.assertSaleWindowOpenAndReserve(dto.eventId, {
       channel,
       quantity,
+      code: dto.accessCode,
     });
 
     const ttl = await this.holdTtlForEvent(dto.eventId, channel);
@@ -758,6 +762,7 @@ export class InventoryService {
     contiguous?: boolean;
     skipSessionLimit?: boolean;
     idempotencyKey?: string;
+    accessCode?: string;
   }) {
     const quantity = Math.min(Math.max(dto.quantity || 1, 1), 12);
     const offer = await this.prisma.offer.findFirst({
@@ -795,6 +800,7 @@ export class InventoryService {
         cashierId: dto.cashierId,
         skipSessionLimit: dto.skipSessionLimit,
         idempotencyKey: dto.idempotencyKey,
+        accessCode: dto.accessCode,
       });
       return {
         ...result,
@@ -819,6 +825,7 @@ export class InventoryService {
       cashierId: dto.cashierId,
       skipSessionLimit: dto.skipSessionLimit,
       idempotencyKey: dto.idempotencyKey,
+      accessCode: dto.accessCode,
     });
     return {
       ...result,
