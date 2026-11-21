@@ -269,3 +269,11 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.verified {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}

@@ -9,42 +9,75 @@
 
 .inner {
   @include bt.container;
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+  gap: 32px 40px;
+  padding-top: 48px;
+  padding-bottom: 28px;
+
+  @include bt.phone {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-top: 36px;
+  }
+}
+
+.brand {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px 28px;
-  padding-top: 40px;
-  padding-bottom: 20px;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 28ch;
 }
 
 .logo {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.tagline {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary);
 }
 
 .nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 22px;
+  flex-direction: column;
+  gap: 2px;
 
   a {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 40px;
     color: var(--text-secondary);
+    transition: color 0.15s ease;
 
     &:hover {
       color: var(--text);
     }
+
+    &:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
+    }
   }
 }
 
-.pay {
-  color: var(--text-secondary);
+.navTitle {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
 }
 
 .copy {
@@ -53,13 +86,4 @@
   padding-bottom: 40px;
   font-size: 12px;
   color: var(--text-secondary);
-}
-
-.logo {
-  opacity: 0.6;
-  transition: opacity 0.15s ease;
-
-  &:hover {
-    opacity: 1;
-  }
 }

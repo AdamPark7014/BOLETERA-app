@@ -494,7 +494,9 @@ export function SeatMapViewer({
         title: shorten(shape.name, 32),
         subtitle:
           stat.free > 0
-            ? `${stat.free} libres${price ? ` · ${formatPrice(price)}` : ''}`
+            ? price
+              ? `desde ${formatPrice(price)}`
+              : `${stat.free} libres`
             : 'Agotada',
         // Trama diagonal además del color: el «agotado» no puede depender solo
         // del tono (WCAG 1.4.1).

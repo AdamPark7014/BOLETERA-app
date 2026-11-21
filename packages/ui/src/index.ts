@@ -128,6 +128,9 @@ export type { ParameterCardProps, ParameterValueStyle } from './components/ticke
 export { BlackTicketRoot, useTicketDensity } from './components/ticket/BlackTicketRoot';
 export { BrandLogo } from './components/ticket/BrandLogo';
 export type { BrandLogoProps } from './components/ticket/BrandLogo';
+
+export { PurchaseChip } from './components/ticket/PurchaseChip';
+export type { PurchaseChipProps, PurchaseChipTone } from './components/ticket/PurchaseChip';
 export { StageArt } from './components/ticket/StageArt';
 export { TicketSkeleton, TicketState } from './components/ticket/TicketState';
 export { PageTitle } from './components/ticket/PageTitle';

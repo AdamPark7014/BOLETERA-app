@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { StageArt } from '@boletera/ui';
 import { shortWhen } from '@/lib/event-display';
 import { fetchOrderResource, readStoredOrderAccessToken } from '@/lib/order-access';
+import { readLastTicketQr, saveLastTicketQr } from '@/lib/offline-ticket';
 import styles from './OrderQrCards.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -81,9 +82,28 @@ export function OrderQrCards({
           setData(res.data);
           setDenied(false);
           setLoadedAt(Date.now());
+          saveLastTicketQr({
+            publicId,
+            tickets: res.data.tickets,
+            eventTitle: res.data.eventTitle,
+            savedAt: Date.now(),
+          });
         } else if (res.forbidden) {
-          setDenied(true);
-          if (timer) clearInterval(timer);
+          const cached = readLastTicketQr(publicId);
+          if (cached) {
+            setData({ tickets: cached.tickets, eventTitle: cached.eventTitle });
+            setDenied(false);
+            setLoadedAt(cached.savedAt);
+          } else {
+            setDenied(true);
+            if (timer) clearInterval(timer);
+          }
+        } else {
+          const cached = readLastTicketQr(publicId);
+          if (cached && !isRefresh) {
+            setData({ tickets: cached.tickets, eventTitle: cached.eventTitle });
+            setLoadedAt(cached.savedAt);
+          }
         }
       } finally {
         if (!cancelled && isRefresh) setRefreshing(false);

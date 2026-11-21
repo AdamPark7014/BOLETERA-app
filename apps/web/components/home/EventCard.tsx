@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { StageArt } from '@boletera/ui';
 import {
   advertisedPrice,
-  availability,
+  dateBlock,
+  eventStatusLabel,
   priceLabel,
-  shortWhen,
   type OfferLite,
 } from '@/lib/event-display';
 import styles from './home.module.scss';
@@ -24,16 +24,13 @@ export type CardEvent = {
   offers?: OfferLite[];
 };
 
-/** Tarjeta de evento: imagen, nombre, fecha y precio. Toda la tarjeta es el enlace. */
+/** Tarjeta única de cartelera: póster 3:4, fecha en bloque, título a 2 líneas. */
 export function EventCard({ event }: { event: CardEvent }) {
   const price = advertisedPrice(event);
-  const stock = availability(event.offers);
+  const status = eventStatusLabel(event.offers);
   const img = event.image || event.bannerImage;
-  const scarce = stock.soldOut
-    ? 'Agotado'
-    : stock.label.startsWith('Últimos')
-      ? 'Últimos lugares'
-      : null;
+  const when = dateBlock(event.startsAt);
+  const place = [event.venue?.name, event.venue?.city].filter(Boolean).join(' · ');
 
   return (
     <Link href={`/events/${event.slug}`} className={styles.card}>
@@ -43,26 +40,31 @@ export function EventCard({ event }: { event: CardEvent }) {
             src={img}
             alt=""
             fill
-            sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 420px"
+            sizes="(max-width: 720px) 70vw, 280px"
             className={styles.cardImg}
           />
         ) : (
           <StageArt seed={event.slug} className={styles.cardImg} fade={false} />
         )}
-        {scarce ? (
-          <span className={styles.cardBadge} data-out={stock.soldOut || undefined}>
-            {scarce}
+        <time className={styles.cardDate} dateTime={event.startsAt}>
+          <span className={styles.cardDay}>{when.day}</span>
+          <span className={styles.cardMonth}>{when.month}</span>
+        </time>
+        {status.label ? (
+          <span
+            className={styles.cardBadge}
+            data-kind={status.kind || undefined}
+            data-out={status.kind === 'soldout' || undefined}
+          >
+            {status.label}
           </span>
         ) : null}
       </span>
       <span className={styles.cardBody}>
         <span className={styles.cardTitle}>{event.title}</span>
-        <span className={styles.cardMeta}>
-          {shortWhen(event.startsAt)}
-          {event.venue?.name ? ` · ${event.venue.name}` : ''}
-        </span>
-        {!stock.soldOut && price > 0 ? (
-          <span className={styles.cardPrice}>Desde {priceLabel(price)}</span>
+        {place ? <span className={styles.cardMeta}>{place}</span> : null}
+        {status.kind !== 'soldout' && price > 0 ? (
+          <span className={styles.cardPrice}>desde {priceLabel(price)}</span>
         ) : null}
       </span>
     </Link>

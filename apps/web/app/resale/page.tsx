@@ -123,11 +123,13 @@ export default async function ResalePage() {
                 return (
                   <li key={l.id} className={styles.card}>
                     <div>
-                      {l.status !== 'ACTIVE' ? (
+                      {l.status === 'ACTIVE' ? (
+                        <p className={styles.verified}>Verificado · QR nuevo</p>
+                      ) : (
                         <p className={styles.status}>
                           {LISTING_STATUS_LABEL[l.status] ?? l.status}
                         </p>
-                      ) : null}
+                      )}
                       <h3>{event?.title || 'Evento'}</h3>
                       <p className={styles.meta}>
                         {when ? formatEventDateTime(when) : 'Fecha por confirmar'}
@@ -136,9 +138,16 @@ export default async function ResalePage() {
                       {typeof original === 'number' && original > 0 && (
                         <p className={styles.compare}>
                           Precio original {formatPrice(original)}
-                          {Number.isFinite(markup) && (
-                            <> · {markup > 0 ? `+${markup}%` : `${markup}%`} respecto al original</>
-                          )}
+                          {Number.isFinite(markup) ? (
+                            <>
+                              {' · '}
+                              {markup > 0
+                                ? `+${markup}% sobre el original`
+                                : markup < 0
+                                  ? `${markup}% bajo el original`
+                                  : 'Al precio original'}
+                            </>
+                          ) : null}
                         </p>
                       )}
                     </div>

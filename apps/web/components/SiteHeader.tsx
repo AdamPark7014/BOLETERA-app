@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useId, useState } from 'react';
 import { BrandLogo } from '@boletera/ui';
 import { getStoredUser, type AuthUser } from '@/lib/auth';
 import styles from './SiteHeader.module.scss';
@@ -126,16 +126,36 @@ function SearchPill() {
   );
 }
 
-/** Encabezado: logo, buscador con ciudad, Mis boletos y cuenta; categorías en fila secundaria. */
+/** Encabezado: logo, buscador con ciudad, Mis boletos y cuenta; menú móvil a pantalla completa. */
 export function SiteHeader({ compact = false }: SiteHeaderProps) {
   const pathname = usePathname();
+  const menuId = useId();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     setUser(getStoredUser());
     setReady(true);
   }, [pathname]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
 
   return (
     <>
@@ -175,6 +195,18 @@ export function SiteHeader({ compact = false }: SiteHeaderProps) {
                 Entrar
               </Link>
             )}
+            {!compact ? (
+              <button
+                type="button"
+                className={styles.menuToggle}
+                aria-expanded={menuOpen}
+                aria-controls={menuId}
+                aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                <span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
+              </button>
+            ) : null}
           </div>
         </div>
         {!compact ? (
@@ -193,6 +225,56 @@ export function SiteHeader({ compact = false }: SiteHeaderProps) {
           </nav>
         ) : null}
       </header>
+
+      {menuOpen && !compact ? (
+        <div
+          id={menuId}
+          className={styles.menuOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menú"
+        >
+          <div className={styles.menuTop}>
+            <BrandLogo size={28} />
+            <button type="button" className={styles.menuClose} onClick={() => setMenuOpen(false)}>
+              Cerrar
+            </button>
+          </div>
+          <nav className={styles.menuNav} aria-label="Menú principal">
+            {NAV_CATEGORIES.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                aria-current={pathname === item.href ? 'page' : undefined}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link href="/cuenta" onClick={() => setMenuOpen(false)}>
+              Mis boletos
+            </Link>
+            <Link href="/resale" onClick={() => setMenuOpen(false)}>
+              Reventa oficial
+            </Link>
+            <Link href="/ciudades" onClick={() => setMenuOpen(false)}>
+              Ciudades
+            </Link>
+            <Link href="/ayuda" onClick={() => setMenuOpen(false)}>
+              Ayuda
+            </Link>
+            {user ? (
+              <Link href="/cuenta" onClick={() => setMenuOpen(false)}>
+                Mi cuenta
+              </Link>
+            ) : (
+              <Link href="/login" className={styles.menuPrimary} onClick={() => setMenuOpen(false)}>
+                Entrar
+              </Link>
+            )}
+          </nav>
+        </div>
+      ) : null}
     </>
   );
 }

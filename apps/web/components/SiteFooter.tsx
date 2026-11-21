@@ -2,21 +2,32 @@ import Link from 'next/link';
 import { BrandLogo } from '@boletera/ui';
 import styles from './SiteFooter.module.scss';
 
-/** Pie de la maqueta: logo dorado, enlaces y métodos de pago reales. */
+/** Pie ordenado: marca, ayuda, legales y descubrimiento. */
 export function SiteFooter() {
   return (
     <footer className={styles.footer}>
       <h2 className="sr-only">Pie de página</h2>
       <div className={styles.inner}>
-        <Link href="/" className={styles.logo} aria-label="Black Ticket, inicio">
-          <BrandLogo tone="white" size={32} />
-        </Link>
-        <nav className={styles.nav} aria-label="Enlaces del sitio">
-          <Link href="/ayuda">Ayuda</Link>
-          <Link href="/venues">Recintos</Link>
+        <div className={styles.brand}>
+          <Link href="/" className={styles.logo} aria-label="Black Ticket, inicio">
+            <BrandLogo tone="white" size={32} />
+          </Link>
+          <p className={styles.tagline}>Boletos oficiales. Precio final con cargos e IVA.</p>
+        </div>
+        <nav className={styles.nav} aria-label="Ayuda">
+          <p className={styles.navTitle}>Ayuda</p>
+          <Link href="/ayuda">Centro de ayuda</Link>
+          <Link href="/cuenta">Mis boletos</Link>
+          <Link href="/resale">Reventa oficial</Link>
+        </nav>
+        <nav className={styles.nav} aria-label="Explorar">
+          <p className={styles.navTitle}>Explorar</p>
           <Link href="/ciudades">Ciudades</Link>
-          <Link href="/resale">Reventa</Link>
+          <Link href="/venues">Recintos</Link>
           <Link href="/membresias">Membresías</Link>
+        </nav>
+        <nav className={styles.nav} aria-label="Legal">
+          <p className={styles.navTitle}>Legal</p>
           <Link href="/terminos">Términos</Link>
           <Link href="/privacidad">Privacidad</Link>
         </nav>

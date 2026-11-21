@@ -180,10 +180,46 @@ export function EventStage({
             {doors ? ` · Puertas ${doors}` : ''}
           </p>
           {hasOffer && !stock.soldOut ? (
-            <button type="button" className={styles.primary} onClick={() => setStage('zona')}>
-              {announced > 0 ? `Boletos desde ${priceLabel(announced)}` : 'Elegir boletos'}
-            </button>
+            <div className={styles.heroActions}>
+              <button type="button" className={styles.primary} onClick={() => setStage('zona')}>
+                Comprar boletos
+              </button>
+              {announced > 0 ? (
+                <span className={styles.heroFrom}>desde {priceLabel(announced)}</span>
+              ) : null}
+            </div>
           ) : null}
+          <div className={styles.heroLinks}>
+            <a
+              className={styles.textLink}
+              href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${new Date(
+                startsAt
+              )
+                .toISOString()
+                .replace(/[-:]/g, '')
+                .replace(/\.\d{3}/, '')}/${new Date(new Date(startsAt).getTime() + 3 * 3600_000)
+                .toISOString()
+                .replace(/[-:]/g, '')
+                .replace(
+                  /\.\d{3}/,
+                  ''
+                )}&details=${encodeURIComponent(description || title)}&location=${encodeURIComponent([venueName, venueAddress, venueCity].filter(Boolean).join(', '))}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Agregar al calendario
+            </a>
+            {venueAddress || venueCity ? (
+              <a
+                className={styles.textLink}
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([venueAddress, venueName, venueCity].filter(Boolean).join(', '))}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Cómo llegar
+              </a>
+            ) : null}
+          </div>
         </div>
         {salesSoon ? (
           <div className={styles.heroCount}>
@@ -289,17 +325,29 @@ export function EventStage({
                 Ver recinto
               </Link>
             ) : null}
-            <span className={styles.conds}>
-              {[
-                refundable === false ? 'No reembolsable' : 'Reembolsable',
-                nonTransferable || transferAllowed === false ? 'No transferible' : 'Transferible',
-                allowResale === false ? 'Sin reventa' : 'Reventa oficial',
-              ].join(' · ')}
-              {' · '}
-              <Link href="/terminos#reembolsos" className={styles.policyLink}>
-                Política de reembolso
-              </Link>
-            </span>
+            <details className={styles.policyAccord}>
+              <summary>Políticas del evento</summary>
+              <ul>
+                <li>
+                  {refundable === false
+                    ? 'No reembolsable salvo cancelación del organizador.'
+                    : 'Reembolsable según la política publicada.'}{' '}
+                  <Link href="/terminos#reembolsos" className={styles.policyLink}>
+                    Ver detalle
+                  </Link>
+                </li>
+                <li>
+                  {nonTransferable || transferAllowed === false
+                    ? 'Este boleto no se puede transferir.'
+                    : 'Puedes transferir el boleto a otra persona desde tu cuenta.'}
+                </li>
+                <li>
+                  {allowResale === false
+                    ? 'Sin reventa oficial para este evento.'
+                    : 'Reventa oficial disponible con QR nuevo para el comprador.'}
+                </li>
+              </ul>
+            </details>
           </section>
         </aside>
       </div>

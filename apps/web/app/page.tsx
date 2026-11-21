@@ -4,6 +4,7 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { EventGrid } from '@/components/home/EventGrid';
 import type { CardEvent } from '@/components/home/EventCard';
 import { HomeHero, HomeHeroSkeleton, MembershipBand } from '@/components/home/HomeSections';
+import { HomeRails } from '@/components/home/HomeRails';
 import styles from '@/components/home/home.module.scss';
 import { api } from '@/lib/api';
 import { availability } from '@/lib/event-display';
@@ -53,24 +54,33 @@ async function HomeContent({ q, city }: HomeSearch) {
   const failed = found ? !found.ok : !all.ok;
   const featured = pickFeatured(all.value);
 
-  const title = q
-    ? `Resultados para «${q}»${city ? ` en ${city}` : ''}`
-    : city
-      ? `En cartelera en ${city}`
-      : 'Próximas funciones';
+  if (filtered) {
+    const title = q
+      ? `Resultados para «${q}»${city ? ` en ${city}` : ''}`
+      : `En cartelera en ${city}`;
+    return (
+      <>
+        <HomeHero event={featured} />
+        <div className={styles.wrap}>
+          <EventGrid
+            events={list}
+            failed={failed}
+            title={title}
+            emptyText="Sin resultados. Prueba con otro artista o ciudad."
+          />
+          <MembershipBand />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <HomeHero event={featured} />
-      <EventGrid
-        events={list}
-        failed={failed}
-        title={title}
-        emptyText={
-          filtered ? 'Sin resultados. Prueba con otro artista o ciudad.' : 'Pronto habrá funciones.'
-        }
-      />
-      <MembershipBand />
+      <div className={styles.wrap}>
+        <HomeRails events={list} failed={failed} />
+        <MembershipBand />
+      </div>
     </>
   );
 }
@@ -83,7 +93,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Hom
   return (
     <>
       <SiteHeader />
-      <main id="contenido" tabIndex={-1} className={styles.wrap}>
+      <main id="contenido" tabIndex={-1} className={styles.home}>
         <Suspense fallback={<HomeHeroSkeleton />}>
           <HomeContent q={query} city={place} />
         </Suspense>

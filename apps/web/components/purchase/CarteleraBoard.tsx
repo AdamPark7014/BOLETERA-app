@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Field, TicketButton, formatTicketAmount, formatEventDateTime } from '@boletera/ui';
+import { Field, TicketButton, dayKey, formatTicketAmount, formatEventDateTime } from '@boletera/ui';
 import type { EventHit } from '@/components/EventDiscoveryPanel';
 import styles from './purchase.module.scss';
 
@@ -25,6 +26,15 @@ const CATEGORIES = [
 
 const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label]));
 
+type DateFilter = 'all' | 'today' | 'weekend' | 'month';
+
+const DATE_FILTERS: { key: DateFilter; label: string }[] = [
+  { key: 'all', label: 'Todas las fechas' },
+  { key: 'today', label: 'Hoy' },
+  { key: 'weekend', label: 'Fin de semana' },
+  { key: 'month', label: 'Este mes' },
+];
+
 function advertised(event: EventHit): number {
   const raw = event.minPriceAllIn ?? event.minPrice;
   const value = Number(raw);
@@ -33,6 +43,36 @@ function advertised(event: EventHit): number {
 
 function whenLabel(iso: string) {
   return formatEventDateTime(iso);
+}
+
+function weekendKeys(now: Date): Set<string> {
+  const weekdayName = now.toLocaleDateString('en-US', {
+    timeZone: 'America/Mexico_City',
+    weekday: 'short',
+  });
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekdayName);
+  const back = weekday === 6 ? 1 : weekday === 0 ? 2 : -((5 - weekday + 7) % 7);
+  const friday = new Date(now.getTime() - back * 86_400_000);
+  return new Set([0, 1, 2].map((d) => dayKey(new Date(friday.getTime() + d * 86_400_000))));
+}
+
+function matchesDate(event: EventHit, filter: DateFilter, now: Date): boolean {
+  if (filter === 'all') return true;
+  const start = new Date(event.startsAt);
+  const eventKey = dayKey(start);
+  if (filter === 'today') return eventKey === dayKey(now);
+  if (filter === 'weekend') return weekendKeys(now).has(eventKey);
+  const eventMonth = start.toLocaleDateString('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+  });
+  const nowMonth = now.toLocaleDateString('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+  });
+  return eventMonth === nowMonth;
 }
 
 export function CarteleraBoard({
@@ -55,6 +95,7 @@ export function CarteleraBoard({
   const [category, setCategory] = useState(presetCategory);
   const [city, setCity] = useState(presetCity);
   const [sort, setSort] = useState<'date' | 'price'>('date');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [events, setEvents] = useState(initial);
   const [failed, setFailed] = useState(initialFailed);
   const [loading, setLoading] = useState(false);
@@ -63,6 +104,12 @@ export function CarteleraBoard({
   const [sheet, setSheet] = useState<'category' | 'city' | null>(null);
   const [cityQuery, setCityQuery] = useState('');
   const [shortPlaceholder, setShortPlaceholder] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 479px)');
@@ -71,13 +118,7 @@ export function CarteleraBoard({
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
   }, []);
-  const sheetRef = useRef<HTMLDivElement>(null);
 
-  /*
-   * La hoja de categoría/ciudad es un diálogo: Escape la cierra, el foco entra
-   * al abrirla y vuelve al botón que la abrió al cerrarla. Antes Escape no hacía
-   * nada y con teclado había que recorrer toda la lista para salir.
-   */
   useEffect(() => {
     if (!sheet) return;
     const opener = document.activeElement as HTMLElement | null;
@@ -132,18 +173,21 @@ export function CarteleraBoard({
   }, [query, category, city, initial, initialFailed, presetCategory, presetCity, reloadKey]);
 
   const list = useMemo(() => {
-    return [...events].sort((a, b) => {
+    const sorted = [...events].sort((a, b) => {
       if (sort === 'price') return advertised(a) - advertised(b);
       return new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime();
     });
-  }, [events, sort]);
+    if (!now || dateFilter === 'all') return sorted;
+    return sorted.filter((event) => matchesDate(event, dateFilter, now));
+  }, [events, sort, dateFilter, now]);
 
   useEffect(() => {
     setActive(0);
-  }, [list.length, sort, category, city, query]);
+  }, [list.length, sort, category, city, query, dateFilter]);
 
   const current = list[active];
-  const filtering = Boolean(query.trim()) || category !== 'ALL' || city !== 'ALL';
+  const filtering =
+    Boolean(query.trim()) || category !== 'ALL' || city !== 'ALL' || dateFilter !== 'all';
   const visibleCities = cities.filter((name) =>
     name.toLocaleLowerCase('es-MX').includes(cityQuery.trim().toLocaleLowerCase('es-MX'))
   );
@@ -151,6 +195,14 @@ export function CarteleraBoard({
   function open(event: EventHit | undefined) {
     if (!event) return;
     router.push(`/events/${event.slug}`);
+  }
+
+  function clearFilters() {
+    setQuery('');
+    setCategory(presetCategory);
+    setCity(presetCity);
+    setDateFilter('all');
+    setSort('date');
   }
 
   return (
@@ -167,6 +219,19 @@ export function CarteleraBoard({
         placeholder={shortPlaceholder ? 'Buscar' : 'Artista, ciudad o recinto'}
         onChange={(event) => setQuery(event.target.value)}
       />
+
+      <div className={styles.segment} role="group" aria-label="Fecha">
+        {DATE_FILTERS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            aria-pressed={dateFilter === item.key}
+            onClick={() => setDateFilter(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
 
       <div className={styles.tools}>
         <div className={styles.segment} role="group" aria-label="Orden">
@@ -185,6 +250,14 @@ export function CarteleraBoard({
         </button>
       </div>
 
+      {!failed ? (
+        <p className={styles.caption} aria-live="polite">
+          {loading
+            ? 'Buscando…'
+            : `${list.length} ${list.length === 1 ? 'resultado' : 'resultados'}`}
+        </p>
+      ) : null}
+
       {failed ? (
         <div className={styles.error} role="alert">
           <span>No se cargó la cartelera.</span>
@@ -200,9 +273,27 @@ export function CarteleraBoard({
       ) : null}
 
       {!failed && !loading && list.length === 0 ? (
-        <p className={styles.lead}>
-          {filtering ? 'Nada con ese criterio.' : 'No hay funciones publicadas.'}
-        </p>
+        <div className={styles.emptyHints}>
+          <p className={styles.lead}>
+            {filtering ? 'Nada con ese criterio.' : 'No hay funciones publicadas.'}
+          </p>
+          <div className={styles.segment}>
+            <Link href="/categoria/MUSIC" className={styles.textButton}>
+              Conciertos
+            </Link>
+            <Link href="/ciudades" className={styles.textButton}>
+              Ciudades
+            </Link>
+            <Link href="/" className={styles.textButton}>
+              Inicio
+            </Link>
+            {filtering ? (
+              <button type="button" className={styles.textButton} onClick={clearFilters}>
+                Limpiar filtros
+              </button>
+            ) : null}
+          </div>
+        </div>
       ) : null}
 
       <ul
@@ -250,7 +341,7 @@ export function CarteleraBoard({
                   </span>
                 </span>
                 {price > 0 ? (
-                  <span className={styles.price}>Desde {formatTicketAmount(price)}</span>
+                  <span className={styles.price}>desde {formatTicketAmount(price)}</span>
                 ) : null}
               </button>
             </li>

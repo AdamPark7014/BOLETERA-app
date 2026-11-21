@@ -1,12 +1,16 @@
-// Inicio, cartelera y tarjetas: aire generoso (escala de 8 px), separación por
-// espacio y tono, un solo elemento dorado por vista (la acción principal).
+// Inicio, cartelera y tarjetas: aire generoso, un solo dorado por vista.
 @use '../../styles/bt' as bt;
+
+.home {
+  display: flex;
+  flex-direction: column;
+}
 
 .wrap {
   @include bt.container;
   display: flex;
   flex-direction: column;
-  padding-bottom: 32px;
+  padding-bottom: 48px;
 }
 
 .kicker {
@@ -44,18 +48,17 @@
 
 .hero {
   position: relative;
-  margin-top: 24px;
-  min-height: 560px;
-  border-radius: 24px;
-  overflow: hidden;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  min-height: min(88vh, 760px);
   display: flex;
   align-items: flex-end;
   background: #0b0907;
+  overflow: hidden;
 
   @include bt.phone {
-    min-height: 480px;
-    margin-top: 16px;
-    border-radius: 16px;
+    min-height: 72vh;
   }
 }
 
@@ -76,25 +79,38 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 80%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.6) 100%);
+    linear-gradient(90deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.45) 48%, rgba(0, 0, 0, 0.1) 78%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.75) 100%);
 
   @include bt.phone {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 0.92) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.92) 100%);
   }
 }
 
 .heroCopy {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 720px;
-  padding: 56px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 56px 24px;
 
   @include bt.phone {
-    padding: 24px;
+    padding: 32px 16px;
+    gap: 12px;
   }
+}
+
+.heroBrand {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .badge {
@@ -108,29 +124,46 @@
 }
 
 .heroTitle {
-  @include bt.headline(112px);
+  @include bt.headline(104px);
   font-stretch: 66%;
-  line-height: 0.86;
+  line-height: 0.88;
+  max-width: 16ch;
   overflow-wrap: anywhere;
 
   @media (max-width: 1100px) {
-    font-size: 88px;
+    font-size: 72px;
   }
 
   @include bt.phone {
-    font-size: 56px;
+    font-size: 48px;
   }
 }
 
 .heroLine {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 18px;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.82);
+  max-width: 42ch;
 
   @include bt.phone {
     font-size: 15px;
   }
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.heroFrom {
+  font-size: 18px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* ----------------------------------------------------------- secciones */
@@ -149,11 +182,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 32px;
-
-  @include bt.phone {
-    margin-bottom: 24px;
-  }
+  margin-bottom: 24px;
 }
 
 .sectionTitles {
@@ -166,6 +195,7 @@
 .chips {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 
   button {
     min-height: 44px;
@@ -178,8 +208,8 @@
     font-size: 14px;
     cursor: pointer;
     transition:
-      background 0.15s ease,
-      color 0.15s ease;
+      background 0.18s ease,
+      color 0.18s ease;
 
     &:hover {
       color: var(--text);
@@ -188,6 +218,11 @@
     &[aria-pressed='true'] {
       background: var(--card);
       color: var(--text);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
     }
   }
 }
@@ -204,17 +239,105 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 48px 24px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 32px 20px;
 
   @include bt.phone {
-    grid-template-columns: 1fr;
-    gap: 32px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 12px;
   }
 
   > li {
     display: flex;
   }
+}
+
+/* ------------------------------------------------------------ rails */
+
+.rail {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 8px;
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.railItem {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+  display: flex;
+
+  @include bt.phone {
+    flex-basis: 168px;
+  }
+}
+
+.railMore {
+  font-size: 14px;
+  color: var(--text-secondary);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
+.catGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.catCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  min-height: 96px;
+  padding: 20px;
+  border-radius: 16px;
+  background: #1a1a1a;
+  color: var(--text);
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+
+  &:hover {
+    background: #222;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.catName {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.catCount {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 /* ------------------------------------------------------------ tarjeta */
@@ -223,12 +346,13 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   color: var(--text);
-  border-radius: 16px;
+  border-radius: 12px;
+  min-width: 0;
 
   &:hover .cardImg {
-    transform: scale(1.03);
+    transform: scale(1.04);
   }
 
   &:hover .cardTitle {
@@ -239,13 +363,19 @@
     outline: 2px solid var(--text);
     outline-offset: 4px;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:hover .cardImg {
+      transform: none;
+    }
+  }
 }
 
 .cardMedia {
   position: relative;
   display: block;
-  aspect-ratio: 4 / 3;
-  border-radius: 16px;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
   background: #0b0907;
   overflow: hidden;
 }
@@ -256,22 +386,66 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.2s ease;
+  transition: transform 0.22s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.cardDate {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  line-height: 1;
+}
+
+.cardDay {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.cardMonth {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .cardBadge {
   position: absolute;
-  left: 12px;
-  top: 12px;
+  left: 10px;
+  top: 10px;
+  max-width: calc(100% - 20px);
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(8px);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   &[data-out] {
     color: var(--text-secondary);
+  }
+
+  &[data-kind='last'] {
+    background: rgba(166, 138, 107, 0.92);
+    color: #0b0907;
   }
 }
 
@@ -279,10 +453,15 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .cardTitle {
-  font-size: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.3;
   color: rgba(255, 255, 255, 0.94);
@@ -290,13 +469,16 @@
 }
 
 .cardMeta {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardPrice {
-  margin-top: 4px;
-  font-size: 15px;
+  margin-top: 2px;
+  font-size: 14px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
@@ -305,6 +487,11 @@
   background: linear-gradient(90deg, #111113 0%, #1a1a1d 50%, #111113 100%);
   background-size: 200% 100%;
   animation: skel 1.4s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background: #151515;
+  }
 }
 
 @keyframes skel {
@@ -321,7 +508,7 @@
 .member {
   position: relative;
   margin-top: bt.$section-gap;
-  min-height: 320px;
+  min-height: 280px;
   display: flex;
   align-items: flex-end;
   border-radius: 24px;
@@ -348,8 +535,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 48px;
+  gap: 12px;
+  padding: 40px;
 
   @include bt.phone {
     padding: 24px;
@@ -357,21 +544,22 @@
 }
 
 .memberTitle {
-  @include bt.headline(56px);
-  line-height: 0.9;
+  @include bt.headline(48px);
+  line-height: 0.92;
 
   @include bt.phone {
-    font-size: 40px;
+    font-size: 36px;
   }
 }
 
 .memberText {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.78);
+  max-width: 36ch;
 }
 
-/* -------------------------------- cuenta regresiva (solo si aporta: venta) */
+/* -------------------------------- cuenta regresiva */
 
 .countdown {
   display: flex;
@@ -407,7 +595,6 @@
   }
 }
 
-/* Titular de página (categoría, ciudad): el mismo de todas las páginas. */
 .pageTitle {
   @include bt.headline(56px);
   line-height: 0.92;

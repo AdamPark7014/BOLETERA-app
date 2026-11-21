@@ -54,6 +54,19 @@
   align-items: flex-end;
 }
 
+.emptyHints {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0 24px;
+
+  .textButton {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+}
+
 .segment {
   display: inline-flex;
   gap: 8px;

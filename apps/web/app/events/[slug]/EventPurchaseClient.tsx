@@ -120,7 +120,7 @@ export function EventPurchaseClient({
   );
   const [viewer3dError, setViewer3dError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [buyMode, setBuyMode] = useState<'map' | 'best' | 'ga'>(hasSeatMap ? 'map' : 'ga');
+  const [buyMode, setBuyMode] = useState<'map' | 'best' | 'ga'>(hasSeatMap ? 'best' : 'ga');
   const [qty, setQty] = useState(2);
   /** Último error de reserva ya traducido a algo accionable. */
   const [holdError, setHoldError] = useState<InventoryError | null>(null);
@@ -618,14 +618,14 @@ export function EventPurchaseClient({
                 aria-pressed={buyMode === 'map'}
                 onClick={() => setBuyMode('map')}
               >
-                En el mapa
+                Elegir en el mapa
               </button>
               <button
                 type="button"
                 aria-pressed={buyMode === 'best'}
                 onClick={() => setBuyMode('best')}
               >
-                Mejores lugares
+                Mejor lugar disponible
               </button>
             </div>
           ) : null}

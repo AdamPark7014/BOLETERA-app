@@ -20,6 +20,13 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(origin),
     title: `Black Ticket | Boletos oficiales`,
     description: `Compra boletos oficiales en ${tenant.name}: inventario real, mapa de asientos y pagos Banorte.`,
+    manifest: '/manifest.webmanifest',
+    themeColor: '#000000',
+    appleWebApp: {
+      capable: true,
+      title: 'Black Ticket',
+      statusBarStyle: 'black-translucent',
+    },
     icons: {
       icon: favicon || '/favicon.svg',
       apple: favicon || logo || '/favicon.svg',
@@ -59,6 +66,7 @@ export default async function RootLayout({
       style={tenantThemeStyle(tenant.theme)}
     >
       <head>
+        <meta name="theme-color" content="#000000" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}

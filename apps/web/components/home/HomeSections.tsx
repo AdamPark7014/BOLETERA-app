@@ -16,7 +16,8 @@ export function HomeHero({ event }: { event: CardEvent | null }) {
         </span>
         <span className={styles.heroShade} />
         <div className={styles.heroCopy}>
-          <h1 className={styles.heroTitle}>Black Ticket</h1>
+          <p className={styles.heroBrand}>Black Ticket</p>
+          <h1 className={styles.heroTitle}>Boletos oficiales</h1>
         </div>
       </section>
     );
@@ -29,7 +30,7 @@ export function HomeHero({ event }: { event: CardEvent | null }) {
   const scarce = stock.soldOut
     ? 'Agotado'
     : stock.label.startsWith('Últimos')
-      ? 'Últimos lugares'
+      ? 'Últimos boletos'
       : null;
 
   return (
@@ -42,7 +43,7 @@ export function HomeHero({ event }: { event: CardEvent | null }) {
             fill
             priority
             fetchPriority="high"
-            sizes="(max-width: 720px) 100vw, 1330px"
+            sizes="100vw"
             className={styles.heroImg}
           />
         ) : (
@@ -51,6 +52,7 @@ export function HomeHero({ event }: { event: CardEvent | null }) {
       </span>
       <span className={styles.heroShade} />
       <div className={styles.heroCopy}>
+        <p className={styles.heroBrand}>Black Ticket</p>
         {scarce ? <span className={styles.badge}>{scarce}</span> : null}
         <h1 className={styles.heroTitle} id="hero-title">
           {event.title}
@@ -59,13 +61,14 @@ export function HomeHero({ event }: { event: CardEvent | null }) {
           {longWhen(event.startsAt)}
           {place ? <span> · {place}</span> : null}
         </p>
-        <Link href={`/events/${event.slug}`} className={styles.primary}>
-          {stock.soldOut
-            ? 'Ver evento'
-            : price > 0
-              ? `Boletos desde ${priceLabel(price)}`
-              : 'Ver boletos'}
-        </Link>
+        <div className={styles.heroActions}>
+          <Link href={`/events/${event.slug}`} className={styles.primary}>
+            {stock.soldOut ? 'Ver evento' : 'Comprar boletos'}
+          </Link>
+          {!stock.soldOut && price > 0 ? (
+            <span className={styles.heroFrom}>desde {priceLabel(price)}</span>
+          ) : null}
+        </div>
       </div>
     </section>
   );
@@ -86,6 +89,9 @@ export function MembershipBand() {
         <h2 className={styles.memberTitle} id="membresia-title">
           Membresía Black
         </h2>
+        <p className={styles.memberText}>
+          Acceso anticipado y beneficios en eventos seleccionados.
+        </p>
         <Link href="/membresias" className={styles.secondary}>
           Ver planes
         </Link>

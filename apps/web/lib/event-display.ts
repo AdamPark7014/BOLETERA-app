@@ -94,3 +94,37 @@ export function sizedImage(url: string | null | undefined, width: number): strin
     return url;
   }
 }
+
+/** Bloque de fecha para tarjetas: día numérico y mes corto («14» / «mar»). */
+export function dateBlock(iso: string): { day: string; month: string } {
+  const formatter = new Intl.DateTimeFormat('es-MX', {
+    timeZone: TIME_ZONE,
+    day: 'numeric',
+    month: 'short',
+  });
+  const parts = formatter.formatToParts(new Date(iso));
+  const day = parts.find((p) => p.type === 'day')?.value ?? '';
+  const month = (parts.find((p) => p.type === 'month')?.value ?? '')
+    .replace(/\./g, '')
+    .toLocaleLowerCase('es-MX')
+    .trim();
+  return { day, month };
+}
+
+export type EventStatusKind = 'last' | 'presale' | 'soldout' | 'waitlist' | null;
+
+/** Etiqueta de estado de la tarjeta: últimos boletos, preventa o agotado. */
+export function eventStatusLabel(
+  offers?: OfferLite[] | null,
+  opts?: { presale?: boolean }
+): { kind: EventStatusKind; label: string } {
+  if (opts?.presale) return { kind: 'presale', label: 'Preventa' };
+  const stock = availability(offers);
+  if (stock.soldOut) return { kind: 'soldout', label: 'Agotado: lista de espera' };
+  if (stock.remaining != null && stock.remaining <= 100) {
+    return stock.remaining <= 20
+      ? { kind: 'last', label: 'Últimos boletos' }
+      : { kind: 'last', label: `Últimos ${stock.remaining}` };
+  }
+  return { kind: null, label: '' };
+}
