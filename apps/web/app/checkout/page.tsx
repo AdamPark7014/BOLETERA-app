@@ -25,6 +25,7 @@ import {
 import { releaseHolds } from '@/lib/release-holds';
 import { shortWhen } from '@/lib/event-display';
 import styles from './checkout.module.scss';
+import methodStyles from './checkout-methods.module.scss';
 import { fetchCartPricing, pricingTotal, sameTotal, type CartPricing } from '@/lib/pricing';
 import { clearAffiliateRef, getAffiliateRefForEvent } from '@/lib/affiliate-ref';
 
@@ -697,7 +698,7 @@ function CheckoutForm() {
                 </p>
               ) : null}
               {visibleMethods.length > 0 ? (
-                <div className={styles.methods} role="radiogroup" aria-label="Método de pago">
+                <div className={methodStyles.methods} role="radiogroup" aria-label="Método de pago">
                   {visibleMethods.map((item, index) => {
                     const active = method === item.id;
                     return (
@@ -712,13 +713,14 @@ function CheckoutForm() {
                         }}
                         onKeyDown={(event) => onMethodKeyDown(event, index)}
                         onClick={() => setMethod(item.id)}
-                        className={styles.method}
+                        className={methodStyles.method}
                       >
                         <span className={styles.radio} aria-hidden="true" />
-                        <span className={styles.methodCopy}>
-                          <span>{item.label}</span>
+                        <span className={methodStyles.methodCopy}>
+                          <strong>{item.label}</strong>
+                          <small>{item.detail}</small>
                         </span>
-                        <span className={styles.methodWhen}>{item.when}</span>
+                        <span className={methodStyles.methodWhen}>{item.when}</span>
                       </button>
                     );
                   })}

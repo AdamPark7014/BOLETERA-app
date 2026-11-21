@@ -1,0 +1,50 @@
+/* SCSS for larger payment method cards */
+@use '../../styles/bt' as bt;
+
+.methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.method {
+  min-height: 88px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--line-strong);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+
+  &[aria-checked='true'] {
+    border-color: var(--gold);
+    box-shadow: inset 0 0 0 1px var(--gold);
+  }
+}
+
+.methodCopy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong {
+    font-size: 16px;
+  }
+
+  small {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}
+
+.methodWhen {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}

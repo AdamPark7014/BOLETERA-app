@@ -173,7 +173,9 @@ export function CarteleraBoard({
   }, [query, category, city, initial, initialFailed, presetCategory, presetCity, reloadKey]);
 
   const list = useMemo(() => {
-    const sorted = [...events].sort((a, b) => {
+    const cutoff = now?.getTime() ?? Date.now();
+    const upcoming = events.filter((event) => new Date(event.startsAt).getTime() >= cutoff);
+    const sorted = [...upcoming].sort((a, b) => {
       if (sort === 'price') return advertised(a) - advertised(b);
       return new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime();
     });

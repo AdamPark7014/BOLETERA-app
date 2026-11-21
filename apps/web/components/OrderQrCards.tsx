@@ -8,10 +8,13 @@ import { shortWhen } from '@/lib/event-display';
 import { fetchOrderResource, readStoredOrderAccessToken } from '@/lib/order-access';
 import { readLastTicketQr, saveLastTicketQr } from '@/lib/offline-ticket';
 import styles from './OrderQrCards.module.scss';
+import ring from './OrderQrCards-ring.module.scss';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-/** Rotating QR window is ~15s; poll under that so puerta always sees a fresh token. */
-const POLL_MS = 11_000;
+/** Ventana del QR firmado (~15 s); el anillo y el sondeo usan el mismo periodo. */
+const POLL_MS = 15_000;
+const RING_R = 46;
+const RING_C = 2 * Math.PI * RING_R;
 
 type QrData = {
   tickets: { id: string; code: string; qrPayload: string; qrDataUrl?: string }[];
@@ -52,6 +55,7 @@ export function OrderQrCards({
   expectedCount = 1,
   allowTransfer = true,
   allowResale = true,
+  holderName,
 }: {
   publicId: string;
   accessToken?: string | null;
@@ -61,6 +65,7 @@ export function OrderQrCards({
   expectedCount?: number;
   allowTransfer?: boolean;
   allowResale?: boolean;
+  holderName?: string | null;
 }) {
   const [data, setData] = useState<QrData | null>(null);
   const [denied, setDenied] = useState(false);
@@ -121,7 +126,7 @@ export function OrderQrCards({
     };
   }, [publicId, accessToken]);
 
-  // Reloj de la barra «cambia en N s»: solo visual, el sondeo manda.
+  // Reloj del anillo «cambia en N s»: solo visual, el sondeo manda.
   useEffect(() => {
     setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -170,18 +175,39 @@ export function OrderQrCards({
                 progress={progress}
                 allowTransfer={allowTransfer}
                 allowResale={allowResale}
+                holderName={holderName}
               />
             </li>
           );
         })}
         {Array.from({ length: placeholders }).map((_, index) => (
           <li key={`skel-${index}`}>
-            <Stub event={event} index={index} total={total} left={null} progress={1} loading />
+            <Stub
+              event={event}
+              index={index}
+              total={total}
+              left={null}
+              progress={1}
+              loading
+              holderName={holderName}
+            />
           </li>
         ))}
       </ul>
     </section>
   );
+}
+
+function calendarHref(event?: TicketEvent | null): string | null {
+  if (!event?.startsAt || !event.title) return null;
+  const start = new Date(event.startsAt);
+  const end = new Date(start.getTime() + 3 * 3600_000);
+  const stamp = (d: Date) =>
+    d
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}/, '');
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${stamp(start)}/${stamp(end)}&location=${encodeURIComponent(event.venueName || '')}`;
 }
 
 function Stub({
@@ -196,6 +222,7 @@ function Stub({
   loading = false,
   allowTransfer = true,
   allowResale = true,
+  holderName,
 }: {
   event?: TicketEvent | null;
   seat?: TicketSeat;
@@ -208,15 +235,21 @@ function Stub({
   loading?: boolean;
   allowTransfer?: boolean;
   allowResale?: boolean;
+  holderName?: string | null;
 }) {
   const general = !seat?.section && !seat?.row && !seat?.seatNumber;
-  const facts = general
-    ? [{ k: 'Acceso', v: 'General' }]
-    : [
-        { k: 'Sección', v: seat?.section || '—' },
-        { k: 'Fila', v: seat?.row || '—' },
-        { k: 'Asiento', v: seat?.seatNumber || '—' },
-      ];
+  const facts = [
+    ...(holderName ? [{ k: 'Titular', v: holderName }] : []),
+    ...(general
+      ? [{ k: 'Acceso', v: 'General' }]
+      : [
+          { k: 'Sección', v: seat?.section || '—' },
+          { k: 'Fila', v: seat?.row || '—' },
+          { k: 'Asiento', v: seat?.seatNumber || '—' },
+        ]),
+  ];
+  const cal = calendarHref(event);
+  const dashOffset = RING_C * (1 - Math.max(0, Math.min(1, progress)));
 
   return (
     <article className={styles.ticket} aria-label={`Boleto ${index + 1} de ${total}`}>
@@ -258,24 +291,34 @@ function Stub({
       <div className={styles.perforation} aria-hidden="true" />
 
       <div className={styles.qrArea}>
-        <div className={styles.qrFrame}>
-          {qr ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={qr} alt={`Código QR del boleto ${code ?? ''}`} width={220} height={220} />
-          ) : (
-            <span className={styles.qrSkeleton} role={loading ? 'status' : undefined}>
-              {loading ? <span className="sr-only">Cargando código QR…</span> : null}
-            </span>
-          )}
+        <div className={ring.qrRingWrap}>
+          <svg className={ring.qrRing} viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r={RING_R} className={ring.qrRingTrack} />
+            <circle
+              cx="50"
+              cy="50"
+              r={RING_R}
+              className={ring.qrRingProgress}
+              style={{
+                strokeDasharray: RING_C,
+                strokeDashoffset: dashOffset,
+              }}
+            />
+          </svg>
+          <div className={styles.qrFrame}>
+            {qr ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={qr} alt={`Código QR del boleto ${code ?? ''}`} width={220} height={220} />
+            ) : (
+              <span className={styles.qrSkeleton} role={loading ? 'status' : undefined}>
+                {loading ? <span className="sr-only">Cargando código QR…</span> : null}
+              </span>
+            )}
+          </div>
         </div>
-        <div className={styles.rotate}>
-          <span className={styles.rotateBar}>
-            <span style={{ transform: `scaleX(${progress})` }} />
-          </span>
-          <span className={styles.rotateText}>
-            {left != null ? `Cambia en ${left} s` : 'Preparando código…'}
-          </span>
-        </div>
+        <span className={styles.rotateText}>
+          {left != null ? `Cambia en ${left} s` : 'Preparando código…'}
+        </span>
         {code ? (
           <code className={styles.code}>{code}</code>
         ) : (
@@ -283,8 +326,13 @@ function Stub({
         )}
       </div>
 
-      {!loading && (allowTransfer || allowResale) ? (
+      {!loading ? (
         <div className={styles.stubActions}>
+          {cal ? (
+            <a className={styles.stubButton} href={cal} target="_blank" rel="noreferrer">
+              Calendario
+            </a>
+          ) : null}
           {allowTransfer ? (
             <Link href="/cuenta" className={styles.stubButton}>
               Transferir
@@ -292,7 +340,7 @@ function Stub({
           ) : null}
           {allowResale ? (
             <Link href="/resale/vender" className={styles.stubButton}>
-              Revender
+              Vender en reventa
             </Link>
           ) : null}
         </div>

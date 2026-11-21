@@ -306,6 +306,7 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
                 accessToken={token}
                 expectedCount={tickets.length || 1}
                 seats={tickets}
+                holderName={order.buyerName ?? null}
                 event={
                   order.event
                     ? {

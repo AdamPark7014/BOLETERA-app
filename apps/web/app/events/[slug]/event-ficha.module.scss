@@ -1,0 +1,166 @@
+// Extras de la ficha (zonas, mapa, acerca, dock móvil). Tokens del tema BT.
+@use '../../../styles/bt' as bt;
+
+.zoneCards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.zoneCard {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--line-strong);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+}
+
+.zoneSwatch {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 999px;
+}
+
+.zoneCardCopy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.zoneName {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.zoneLeft {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.zonePrice {
+  font-weight: 700;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.mapPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.mapPreviewLabel {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mapPreviewFrame {
+  position: relative;
+  height: min(52vw, 320px);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #0b0907;
+}
+
+.aboutBody {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #e8e3dc;
+  white-space: pre-line;
+}
+
+.aboutMeta {
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+
+  div {
+    display: grid;
+    gap: 2px;
+  }
+
+  dt {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 15px;
+    color: var(--text);
+  }
+}
+
+.fichaWithDock {
+  @include bt.phone {
+    padding-bottom: 96px;
+  }
+}
+
+.fichaDock {
+  display: none;
+
+  @include bt.phone {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 36%);
+  }
+}
+
+.fichaDockInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.fichaDockFrom {
+  flex: 1;
+  font-weight: 600;
+  font-size: 15px;
+  min-width: 0;
+}

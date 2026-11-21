@@ -919,7 +919,8 @@ async function seedArenaNorte(passwordHash: string) {
     organizationId: org.id,
     slug: 'rock-sold-out-mty',
     title: 'Rock Sold Out — Arena Norte',
-    description: 'Concierto agotado al 100%. Escenario para probar estado sold-out y reventa.',
+    description:
+      'Función agotada en Arena Norte. Si se liberan lugares, entras a la lista de espera al precio original.',
     category: 'MUSIC',
     venueId: venue.id,
     startsAt: inDays(14),
@@ -936,7 +937,7 @@ async function seedArenaNorte(passwordHash: string) {
     organizationId: org.id,
     slug: 'liga-norte-j12',
     title: 'Liga Norte — Jornada 12',
-    description: 'Partido con ~55% de aforo vendido. Mix de canales taquilla y web.',
+    description: 'Jornada de liga en casa. Tribuna y preferente con acceso por QR en torniquete.',
     category: 'SPORTS',
     venueId: venue.id,
     startsAt: inDays(7),
@@ -952,8 +953,7 @@ async function seedArenaNorte(passwordHash: string) {
     organizationId: org.id,
     slug: 'concierto-waitlist-mty',
     title: 'Pop Estelar — Lista de Espera',
-    description:
-      'Show agotado con lista de espera activa. Ideal para probar notificaciones waitlist.',
+    description: 'Pop Estelar agotado. Déjanos tu correo y te avisamos si se libera un boleto.',
     category: 'MUSIC',
     venueId: venue.id,
     startsAt: inDays(10),
@@ -999,7 +999,8 @@ async function seedArenaNorte(passwordHash: string) {
     organizationId: org.id,
     slug: 'festival-urbano-ga-mty',
     title: 'Festival Urbano GA',
-    description: 'Admisión general sin mapa de asientos. Acceso por pulsera en puerta.',
+    description:
+      'Admisión general con pulsera en puerta. Sin asiento asignado; llega con tiempo para la fila.',
     category: 'FESTIVAL',
     venueId: venue.id,
     startsAt: inDays(16),
@@ -1316,7 +1317,8 @@ async function seedTeatroCapital(passwordHash: string) {
     organizationId: org.id,
     slug: 'microteatro-ga-capital',
     title: 'Microteatro — Noche Abierta',
-    description: 'Admisión general sin numeración. Cupo limitado en sala íntima.',
+    description:
+      'Sala íntima con cupo limitado. Entrada general sin numeración; ambiente cercano al escenario.',
     category: 'COMEDY',
     venueId: venue.id,
     startsAt: inDays(5),
@@ -1707,7 +1709,7 @@ async function main() {
     slug: 'concierto-demo-2026',
     title: 'Concierto Demo 2026',
     description:
-      'Show demo con mapa de asientos en vivo. Ideal para probar hold, checkout Banorte y boleto QR.',
+      'Una noche de escenario grande en Arena CDMX: luces, banda en vivo y asientos numerados. Abre puertas una hora antes.',
     category: 'MUSIC',
     venueId: venue.id,
     startsAt: inDays(28),

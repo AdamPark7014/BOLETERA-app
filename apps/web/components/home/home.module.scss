@@ -65,13 +65,20 @@
 .heroMedia {
   position: absolute;
   inset: 0;
+  z-index: 0;
+
+  /* Next/Image (fill) envuelve en span; sin esto el img queda a 0×0 en móvil. */
+  :global(span) {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
 }
 
 .heroImg {
-  position: absolute !important;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
   object-fit: cover;
 }
 

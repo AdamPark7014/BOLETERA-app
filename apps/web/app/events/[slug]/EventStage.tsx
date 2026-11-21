@@ -5,11 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { StageArt, formatTime } from '@boletera/ui';
 import { WaitlistSignup } from '@/components/WaitlistSignup';
+import { SeatMapViewer } from '@/components/SeatMapViewer';
 import { Countdown } from '@/components/home/Countdown';
 import { availability, longWhen, priceLabel } from '@/lib/event-display';
 import { EventPurchaseClient } from './EventPurchaseClient';
 import { sortOffersForDisplay } from '@/lib/offer-order';
+import { offerTones } from '@/lib/zone-tones';
 import styles from './event.module.scss';
+import ficha from './event-ficha.module.scss';
 
 type Offer = {
   id: string;
@@ -21,6 +24,11 @@ type Offer = {
   isAvailable?: boolean;
   sortOrder?: number | null;
 };
+
+function zonePrice(offer: Offer): number {
+  const value = Number(offer.allInPrice ?? offer.basePrice);
+  return Number.isFinite(value) ? value : 0;
+}
 
 export function EventStage({
   eventId,
@@ -78,6 +86,7 @@ export function EventStage({
   mapData: unknown;
 }) {
   const orderedOffers = sortOffersForDisplay(offers);
+  const tones = offerTones(orderedOffers);
   const [stage, setStage] = useState<'ficha' | 'zona'>('ficha');
   const place = [venueName, venueCity].filter(Boolean).join(', ');
   const announced = minPriceAllIn && minPriceAllIn > 0 ? minPriceAllIn : minPrice;
@@ -88,6 +97,8 @@ export function EventStage({
     salesStartAt && new Date(salesStartAt).getTime() > Date.now() ? salesStartAt : null;
   const hero = bannerImage || image;
   const poster = image || bannerImage;
+  const about = description?.trim() || '';
+  const canBuy = hasOffer && !stock.soldOut;
 
   if (stage === 'zona') {
     return (
@@ -179,7 +190,7 @@ export function EventStage({
             {[longWhen(startsAt), place].filter(Boolean).join(' · ')}
             {doors ? ` · Puertas ${doors}` : ''}
           </p>
-          {hasOffer && !stock.soldOut ? (
+          {canBuy ? (
             <div className={styles.heroActions}>
               <button type="button" className={styles.primary} onClick={() => setStage('zona')}>
                 Comprar boletos
@@ -203,7 +214,7 @@ export function EventStage({
                 .replace(
                   /\.\d{3}/,
                   ''
-                )}&details=${encodeURIComponent(description || title)}&location=${encodeURIComponent([venueName, venueAddress, venueCity].filter(Boolean).join(', '))}`}
+                )}&details=${encodeURIComponent(about || title)}&location=${encodeURIComponent([venueName, venueAddress, venueCity].filter(Boolean).join(', '))}`}
               target="_blank"
               rel="noreferrer"
             >
@@ -228,7 +239,7 @@ export function EventStage({
         ) : null}
       </section>
 
-      <div className={styles.fichaGrid}>
+      <div className={`${styles.fichaGrid}${canBuy ? ` ${ficha.fichaWithDock}` : ''}`}>
         <div className={styles.fichaMain}>
           {!hasOffer || stock.soldOut ? (
             <section className={styles.panel}>
@@ -245,39 +256,47 @@ export function EventStage({
               <h2 className={styles.h2} id="zonas-title">
                 Zonas
               </h2>
-              <ul className={styles.zoneList}>
+              {mapData ? (
+                <div className={ficha.mapPreview} aria-label="Mapa del recinto">
+                  <p className={ficha.mapPreviewLabel}>Mapa del recinto</p>
+                  <div className={ficha.mapPreviewFrame}>
+                    <SeatMapViewer
+                      eventId={eventId}
+                      mapData={mapData}
+                      selected={[]}
+                      onToggle={() => setStage('zona')}
+                      offers={orderedOffers}
+                      currency={currency}
+                      compact
+                    />
+                  </div>
+                </div>
+              ) : null}
+              <ul className={ficha.zoneCards}>
                 {orderedOffers.map((offer) => {
-                  const price = Number(offer.allInPrice ?? offer.basePrice);
+                  const price = zonePrice(offer);
                   const out = offer.isAvailable === false || offer.remainingQuantity === 0;
+                  const few =
+                    !out && offer.remainingQuantity != null && offer.remainingQuantity <= 20;
+                  const status = out ? 'Agotada: lista de espera' : few ? 'Últimos lugares' : null;
                   return (
                     <li key={offer.id}>
                       <button
                         type="button"
-                        className={styles.zoneRow}
+                        className={ficha.zoneCard}
                         disabled={out}
                         onClick={() => setStage('zona')}
                       >
-                        <span className={styles.zoneName}>{offer.name || offer.zone}</span>
-                        <span className={styles.zoneLeft}>
-                          {out
-                            ? 'Agotada'
-                            : offer.remainingQuantity != null && offer.remainingQuantity <= 20
-                              ? 'Últimos lugares'
-                              : ''}
-                        </span>
-                        <span className={styles.zonePrice}>{priceLabel(price)}</span>
-                        <svg
+                        <i
+                          className={ficha.zoneSwatch}
+                          style={{ background: tones.get(offer.id) }}
                           aria-hidden="true"
-                          className={styles.chevron}
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                        >
-                          <path d="M9 6l6 6-6 6" />
-                        </svg>
+                        />
+                        <span className={ficha.zoneCardCopy}>
+                          <strong className={ficha.zoneName}>{offer.name || offer.zone}</strong>
+                          {status ? <span className={ficha.zoneLeft}>{status}</span> : null}
+                        </span>
+                        <span className={ficha.zonePrice}>{priceLabel(price)}</span>
                       </button>
                     </li>
                   );
@@ -286,17 +305,40 @@ export function EventStage({
             </section>
           )}
 
-          {description ? (
-            <section className={styles.panel}>
-              <h2 className={styles.h2}>Acerca del evento</h2>
-              <p className={styles.body}>{description}</p>
-              {genre || rating ? (
-                <p className={styles.muted}>
-                  {[genre ? `Género: ${genre}` : null, rating ? `Clasificación: ${rating}` : null]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              ) : null}
+          {about ? (
+            <section className={styles.panel} aria-labelledby="acerca-title">
+              <h2 className={styles.h2} id="acerca-title">
+                Acerca del evento
+              </h2>
+              <p className={ficha.aboutBody}>{about}</p>
+              <dl className={ficha.aboutMeta}>
+                <div>
+                  <dt>Inicio</dt>
+                  <dd>{longWhen(startsAt)}</dd>
+                </div>
+                {doors ? (
+                  <div>
+                    <dt>Puertas</dt>
+                    <dd>{doors}</dd>
+                  </div>
+                ) : null}
+                {rating ? (
+                  <div>
+                    <dt>Clasificación</dt>
+                    <dd>{rating}</dd>
+                  </div>
+                ) : null}
+                {genre ? (
+                  <div>
+                    <dt>Género</dt>
+                    <dd>{genre}</dd>
+                  </div>
+                ) : null}
+                <div>
+                  <dt>Accesibilidad</dt>
+                  <dd>Consulta lugares accesibles al elegir asiento en el mapa.</dd>
+                </div>
+              </dl>
             </section>
           ) : null}
         </div>
@@ -351,6 +393,21 @@ export function EventStage({
           </section>
         </aside>
       </div>
+
+      {canBuy ? (
+        <div className={ficha.fichaDock}>
+          <div className={ficha.fichaDockInner}>
+            {announced > 0 ? (
+              <span className={ficha.fichaDockFrom}>desde {priceLabel(announced)}</span>
+            ) : (
+              <span className={ficha.fichaDockFrom}>Elige tu zona</span>
+            )}
+            <button type="button" className={styles.primary} onClick={() => setStage('zona')}>
+              Continuar
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

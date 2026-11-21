@@ -27,6 +27,7 @@ import {
   summarizeRefunds,
 } from '@/lib/refund-policy';
 import styles from './cuenta.module.scss';
+import tabStyles from './cuenta-tabs.module.scss';
 import { ResendTicketButton } from '@/app/orders/[publicId]/ResendTicketButton';
 import { MySalesSection } from './MySalesSection';
 
@@ -146,6 +147,16 @@ function billingLabel(period: string) {
 
 type LoadState = 'loading' | 'ready' | 'expired' | 'error';
 
+type CuentaTab = 'proximos' | 'pasados' | 'ventas' | 'membresia' | 'datos';
+
+const CUENTA_TABS: { id: CuentaTab; label: string }[] = [
+  { id: 'proximos', label: 'Próximos' },
+  { id: 'pasados', label: 'Pasados' },
+  { id: 'ventas', label: 'Ventas' },
+  { id: 'membresia', label: 'Membresía' },
+  { id: 'datos', label: 'Datos' },
+];
+
 /**
  * PDF de boletos con la sesión. Un `<a href>` no manda la cabecera
  * `Authorization` y el API respondía 403 al propio comprador; se pide por
@@ -185,6 +196,7 @@ export default function CuentaPage() {
   const [cfdiForm, setCfdiForm] = useState({ rfc: '', nombre: '' });
   const [cfdiBusy, setCfdiBusy] = useState(false);
   const [showTools, setShowTools] = useState(false);
+  const [tab, setTab] = useState<CuentaTab>('proximos');
   const [membership, setMembership] = useState<MembershipState>({ kind: 'loading' });
 
   function showToast(type: 'ok' | 'err', text: string) {
@@ -514,6 +526,47 @@ export default function CuentaPage() {
           </div>
         </header>
 
+        {(state === 'ready' || state === 'loading') && (
+          <nav className={tabStyles.cuentaTabs} aria-label="Secciones de tu cuenta" role="tablist">
+            {CUENTA_TABS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                className={tabStyles.cuentaTab}
+                aria-selected={tab === item.id}
+                onClick={() => {
+                  setTab(item.id);
+                  if (item.id === 'datos') setShowTools(true);
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        )}
+
+        {state === 'ready' && tab === 'proximos' && upcomingGroups[0] ? (
+          <section className={tabStyles.featuredNext} aria-labelledby="next-title">
+            <p className={styles.eyebrow}>Próximo evento</p>
+            <h2 id="next-title" className={styles.walletTitle}>
+              {upcomingGroups[0].orders[0].event.title}
+            </h2>
+            <p className={styles.hint}>
+              {formatEventDateTime(upcomingGroups[0].orders[0].event.startsAt)}
+              {upcomingGroups[0].orders[0].event.venue?.name
+                ? ` · ${upcomingGroups[0].orders[0].event.venue.name}`
+                : ''}
+            </p>
+            <TicketButton
+              type="button"
+              onClick={() => router.push(`/orders/${upcomingGroups[0].orders[0].publicId}`)}
+            >
+              Ver QR
+            </TicketButton>
+          </section>
+        ) : null}
+
         {state === 'expired' ? (
           <section className={styles.sessionExpired} role="alert" aria-labelledby="expired-title">
             <h2 id="expired-title">Tu sesión terminó</h2>
@@ -590,230 +643,235 @@ export default function CuentaPage() {
               </section>
             )}
 
-            <MySalesSection />
+            {tab === 'ventas' ? <MySalesSection /> : null}
 
-            <section className={styles.section} aria-labelledby="membership-title">
-              <h2 id="membership-title">Mi membresía</h2>
-              {membership.kind === 'loading' && (
-                <p className={styles.loading} role="status">
-                  Cargando tu membresía…
-                </p>
-              )}
-              {membership.kind === 'error' && (
-                <p className={styles.hint} role="alert">
-                  No pudimos cargar tu membresía. Tus boletos no se ven afectados; recarga para
-                  intentarlo de nuevo.
-                </p>
-              )}
-              {membership.kind === 'ready' &&
-                membership.memberships.length === 0 &&
-                membership.pending.length === 0 && (
-                  <div className={styles.membershipEmpty}>
-                    <p className={styles.hint}>
-                      No tienes membresía. Con un plan tienes preventa y beneficios en cada evento.
-                    </p>
-                    <Link href="/membresias" className={styles.browse}>
-                      Ver planes
-                    </Link>
-                  </div>
+            {tab === 'membresia' ? (
+              <section className={styles.section} aria-labelledby="membership-title">
+                <h2 id="membership-title">Mi membresía</h2>
+                {membership.kind === 'loading' && (
+                  <p className={styles.loading} role="status">
+                    Cargando tu membresía…
+                  </p>
                 )}
-              {membership.kind === 'ready' && membership.pending.length > 0 && (
-                <ul className={styles.list}>
-                  {membership.pending.map((p) => (
-                    <li key={p.publicId}>
-                      <div>
-                        <strong>{p.planName}</strong>
-                        <span className={styles.status}>Pendiente de pago</span>
-                      </div>
-                      <p>
-                        {formatMoney(p.amount, p.currency)} · paga antes del{' '}
-                        {formatShortDate(p.expiresAt)}
+                {membership.kind === 'error' && (
+                  <p className={styles.hint} role="alert">
+                    No pudimos cargar tu membresía. Tus boletos no se ven afectados; recarga para
+                    intentarlo de nuevo.
+                  </p>
+                )}
+                {membership.kind === 'ready' &&
+                  membership.memberships.length === 0 &&
+                  membership.pending.length === 0 && (
+                    <div className={styles.membershipEmpty}>
+                      <p className={styles.hint}>
+                        No tienes membresía. Con un plan tienes preventa y beneficios en cada
+                        evento.
                       </p>
-                      <div className={styles.orderLinks}>
-                        <Link href={`/membresias/pago/${p.publicId}`}>Continuar pago</Link>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {membership.kind === 'ready' &&
-                membership.memberships.map((m) => (
-                  <article key={m.id} className={styles.membershipCard}>
-                    <div className={styles.membershipHead}>
-                      <div>
-                        <p className={styles.eyebrow}>
-                          {m.organizationName} · {m.plan.tier} ·{' '}
-                          {billingLabel(m.plan.billingPeriod)}
-                        </p>
-                        <strong className={styles.walletTitle}>{m.plan.name}</strong>
-                      </div>
-                      {m.status === 'ACTIVE' ? (
-                        <NamedStatus status="pagado" />
-                      ) : (
-                        <span className={styles.status}>
-                          {MEMBERSHIP_STATUS_LABEL[m.status] ?? m.status}
-                        </span>
-                      )}
-                    </div>
-                    <p className={styles.membershipFacts}>
-                      <span>
-                        {m.status === 'ACTIVE' ? 'Vigente hasta' : 'Venció el'}{' '}
-                        {formatShortDate(m.expiresAt)}
-                      </span>
-                      <span>{formatMoney(m.plan.price, m.plan.currency)}</span>
-                    </p>
-                    {m.benefits.length > 0 ? (
-                      <ul className={styles.membershipBenefits} aria-label="Beneficios">
-                        {m.benefits.map((b) => (
-                          <li key={b.id}>
-                            <span>{b.name}</span>
-                            {b.redemptionLimit != null && (
-                              <small>
-                                {b.redemptionLimit} {b.redemptionLimit === 1 ? 'uso' : 'usos'}
-                              </small>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className={styles.hint}>Este plan aún no tiene beneficios publicados.</p>
-                    )}
-                    {m.canRenew && (
                       <Link href="/membresias" className={styles.browse}>
-                        {m.status === 'ACTIVE' ? 'Renovar membresía' : 'Volver a contratar'}
+                        Ver planes
                       </Link>
-                    )}
-                  </article>
-                ))}
-            </section>
-
-            <section className={styles.wallet} aria-labelledby="wallet-title">
-              <div className={styles.walletHead}>
-                <h2 id="wallet-title">Próximos</h2>
-              </div>
-
-              {state === 'loading' && (
-                <p className={styles.loading} role="status">
-                  Cargando tus boletos…
-                </p>
-              )}
-
-              {state === 'ready' && upcomingGroups.length === 0 && (
-                <TicketState
-                  title="Aún no tienes boletos próximos"
-                  action={
-                    <Link href="/" className="bt-action">
-                      Ver cartelera
-                    </Link>
-                  }
-                />
-              )}
-
-              <ul className={styles.walletList}>
-                {upcomingGroups.map((group, index) => {
-                  const o = group.orders[0];
-                  const when = new Date(o.event.startsAt);
-                  const tickets = group.orders.flatMap(
-                    (order) => order.items?.flatMap((i) => i.tickets ?? []) ?? []
-                  );
-                  const count =
-                    tickets.length ||
-                    group.orders.reduce(
-                      (sum, order) =>
-                        sum + (order.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ?? 0),
-                      0
-                    );
-                  const cancelled = o.event.status === 'CANCELLED';
-                  const actionLabel = cancelled ? 'Ver reembolso' : 'Ver boletos';
-                  return (
-                    <li key={group.key} className={styles.walletCard}>
-                      <div className={styles.walletDateBlock} aria-hidden="true">
-                        <strong>{formatDayMonth(when).split(' ')[0]}</strong>
-                        <span>{formatDayMonth(when).split(' ')[1]}</span>
-                      </div>
-                      <div className={styles.walletBody}>
-                        <p className={styles.walletDate}>{formatEventDateTime(when)}</p>
-                        <strong className={styles.walletTitle}>{o.event.title}</strong>
-                        <p className={styles.walletMeta}>
-                          {o.event.venue?.name}
-                          {count ? ` · ${count} boleto${count === 1 ? '' : 's'}` : ''}
+                    </div>
+                  )}
+                {membership.kind === 'ready' && membership.pending.length > 0 && (
+                  <ul className={styles.list}>
+                    {membership.pending.map((p) => (
+                      <li key={p.publicId}>
+                        <div>
+                          <strong>{p.planName}</strong>
+                          <span className={styles.status}>Pendiente de pago</span>
+                        </div>
+                        <p>
+                          {formatMoney(p.amount, p.currency)} · paga antes del{' '}
+                          {formatShortDate(p.expiresAt)}
                         </p>
-                        {/*
+                        <div className={styles.orderLinks}>
+                          <Link href={`/membresias/pago/${p.publicId}`}>Continuar pago</Link>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {membership.kind === 'ready' &&
+                  membership.memberships.map((m) => (
+                    <article key={m.id} className={styles.membershipCard}>
+                      <div className={styles.membershipHead}>
+                        <div>
+                          <p className={styles.eyebrow}>
+                            {m.organizationName} · {m.plan.tier} ·{' '}
+                            {billingLabel(m.plan.billingPeriod)}
+                          </p>
+                          <strong className={styles.walletTitle}>{m.plan.name}</strong>
+                        </div>
+                        {m.status === 'ACTIVE' ? (
+                          <NamedStatus status="pagado" />
+                        ) : (
+                          <span className={styles.status}>
+                            {MEMBERSHIP_STATUS_LABEL[m.status] ?? m.status}
+                          </span>
+                        )}
+                      </div>
+                      <p className={styles.membershipFacts}>
+                        <span>
+                          {m.status === 'ACTIVE' ? 'Vigente hasta' : 'Venció el'}{' '}
+                          {formatShortDate(m.expiresAt)}
+                        </span>
+                        <span>{formatMoney(m.plan.price, m.plan.currency)}</span>
+                      </p>
+                      {m.benefits.length > 0 ? (
+                        <ul className={styles.membershipBenefits} aria-label="Beneficios">
+                          {m.benefits.map((b) => (
+                            <li key={b.id}>
+                              <span>{b.name}</span>
+                              {b.redemptionLimit != null && (
+                                <small>
+                                  {b.redemptionLimit} {b.redemptionLimit === 1 ? 'uso' : 'usos'}
+                                </small>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className={styles.hint}>Este plan aún no tiene beneficios publicados.</p>
+                      )}
+                      {m.canRenew && (
+                        <Link href="/membresias" className={styles.browse}>
+                          {m.status === 'ACTIVE' ? 'Renovar membresía' : 'Volver a contratar'}
+                        </Link>
+                      )}
+                    </article>
+                  ))}
+              </section>
+            ) : null}
+
+            {tab === 'proximos' ? (
+              <section className={styles.wallet} aria-labelledby="wallet-title">
+                <div className={styles.walletHead}>
+                  <h2 id="wallet-title">Próximos</h2>
+                </div>
+
+                {state === 'loading' && (
+                  <p className={styles.loading} role="status">
+                    Cargando tus boletos…
+                  </p>
+                )}
+
+                {state === 'ready' && upcomingGroups.length === 0 && (
+                  <TicketState
+                    title="Aún no tienes boletos próximos"
+                    action={
+                      <Link href="/" className="bt-action">
+                        Ver cartelera
+                      </Link>
+                    }
+                  />
+                )}
+
+                <ul className={styles.walletList}>
+                  {upcomingGroups.map((group, index) => {
+                    const o = group.orders[0];
+                    const when = new Date(o.event.startsAt);
+                    const tickets = group.orders.flatMap(
+                      (order) => order.items?.flatMap((i) => i.tickets ?? []) ?? []
+                    );
+                    const count =
+                      tickets.length ||
+                      group.orders.reduce(
+                        (sum, order) =>
+                          sum + (order.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ?? 0),
+                        0
+                      );
+                    const cancelled = o.event.status === 'CANCELLED';
+                    const actionLabel = cancelled ? 'Ver reembolso' : 'Ver boletos';
+                    return (
+                      <li key={group.key} className={styles.walletCard}>
+                        <div className={styles.walletDateBlock} aria-hidden="true">
+                          <strong>{formatDayMonth(when).split(' ')[0]}</strong>
+                          <span>{formatDayMonth(when).split(' ')[1]}</span>
+                        </div>
+                        <div className={styles.walletBody}>
+                          <p className={styles.walletDate}>{formatEventDateTime(when)}</p>
+                          <strong className={styles.walletTitle}>{o.event.title}</strong>
+                          <p className={styles.walletMeta}>
+                            {o.event.venue?.name}
+                            {count ? ` · ${count} boleto${count === 1 ? '' : 's'}` : ''}
+                          </p>
+                          {/*
                           Si el evento se cayó, esa es la noticia. Sin este
                           aviso la tarjeta seguía anunciándolo como próximo y el
                           comprador solo se enteraba entrando orden por orden
                           —o el día del evento, en la puerta.
                         */}
-                        {cancelled && (
-                          <p className={styles.walletCancelled}>
-                            Evento cancelado
-                            {o.event.cancelledAt
-                              ? ` el ${formatShortDate(o.event.cancelledAt)}`
-                              : ''}
-                            . Te devolvemos tu dinero sin que hagas ningún trámite.
-                          </p>
-                        )}
-                      </div>
-                      {/*
+                          {cancelled && (
+                            <p className={styles.walletCancelled}>
+                              Evento cancelado
+                              {o.event.cancelledAt
+                                ? ` el ${formatShortDate(o.event.cancelledAt)}`
+                                : ''}
+                              . Te devolvemos tu dinero sin que hagas ningún trámite.
+                            </p>
+                          )}
+                        </div>
+                        {/*
                         De un evento cancelado no se ofrece «Ver QR» ni el PDF:
                         invitar a preparar la entrada de algo que no se va a
                         celebrar contradice el aviso de arriba y manda al
                         comprador a la puerta con un código muerto.
                       */}
-                      <div className={styles.walletActions}>
-                        {group.orders.length === 1 ? (
-                          <>
-                            {index === 0 ? (
-                              <TicketButton
-                                type="button"
-                                onClick={() => router.push(`/orders/${o.publicId}`)}
-                              >
-                                {actionLabel}
-                              </TicketButton>
-                            ) : (
-                              <TicketButton
-                                type="button"
-                                variant="secondary"
-                                onClick={() => router.push(`/orders/${o.publicId}`)}
-                              >
-                                {actionLabel}
-                              </TicketButton>
-                            )}
-                            {o.status === 'COMPLETED' ? (
-                              <ResendTicketButton apiBase={API} publicId={o.publicId} />
-                            ) : null}
-                          </>
-                        ) : (
-                          <details className={styles.walletOrders}>
-                            <summary>
-                              {actionLabel} · {group.orders.length} compras
-                            </summary>
-                            <ul>
-                              {group.orders.map((order) => {
-                                const n =
-                                  order.items?.flatMap((i) => i.tickets ?? []).length ||
-                                  order.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ||
-                                  0;
-                                return (
-                                  <li key={order.publicId}>
-                                    <Link href={`/orders/${order.publicId}`}>
-                                      {n} boleto{n === 1 ? '' : 's'}
-                                      <span>{order.publicId}</span>
-                                    </Link>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </details>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
+                        <div className={styles.walletActions}>
+                          {group.orders.length === 1 ? (
+                            <>
+                              {index === 0 ? (
+                                <TicketButton
+                                  type="button"
+                                  onClick={() => router.push(`/orders/${o.publicId}`)}
+                                >
+                                  {actionLabel}
+                                </TicketButton>
+                              ) : (
+                                <TicketButton
+                                  type="button"
+                                  variant="secondary"
+                                  onClick={() => router.push(`/orders/${o.publicId}`)}
+                                >
+                                  {actionLabel}
+                                </TicketButton>
+                              )}
+                              {o.status === 'COMPLETED' ? (
+                                <ResendTicketButton apiBase={API} publicId={o.publicId} />
+                              ) : null}
+                            </>
+                          ) : (
+                            <details className={styles.walletOrders}>
+                              <summary>
+                                {actionLabel} · {group.orders.length} compras
+                              </summary>
+                              <ul>
+                                {group.orders.map((order) => {
+                                  const n =
+                                    order.items?.flatMap((i) => i.tickets ?? []).length ||
+                                    order.items?.reduce((s, i) => s + (i.quantity ?? 0), 0) ||
+                                    0;
+                                  return (
+                                    <li key={order.publicId}>
+                                      <Link href={`/orders/${order.publicId}`}>
+                                        {n} boleto{n === 1 ? '' : 's'}
+                                        <span>{order.publicId}</span>
+                                      </Link>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </details>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
 
-            <div id="cuenta-tools" className={styles.tools} hidden={!showTools}>
+            <div id="cuenta-tools" className={styles.tools} hidden={tab !== 'datos' && !showTools}>
               {transferCode && (
                 <section className={styles.section}>
                   <h2>Aceptar boleto</h2>
@@ -942,7 +1000,7 @@ export default function CuentaPage() {
               )}
             </div>
 
-            {state === 'ready' && past.length > 0 && (
+            {state === 'ready' && tab === 'pasados' && past.length > 0 && (
               <section className={styles.section}>
                 <h2>Historial</h2>
                 <ul className={styles.list}>

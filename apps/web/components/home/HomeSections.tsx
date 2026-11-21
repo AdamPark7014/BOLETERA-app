@@ -1,7 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { StageArt } from '@boletera/ui';
-import { advertisedPrice, availability, longWhen, priceLabel } from '@/lib/event-display';
+import {
+  advertisedPrice,
+  availability,
+  longWhen,
+  priceLabel,
+  sizedImage,
+} from '@/lib/event-display';
 import type { CardEvent } from './EventCard';
 import styles from './home.module.scss';
 
@@ -38,7 +44,7 @@ export function HomeHero({ event }: { event: CardEvent | null }) {
       <span className={styles.heroMedia}>
         {img ? (
           <Image
-            src={img}
+            src={sizedImage(img, 1200) || img}
             alt=""
             fill
             priority
