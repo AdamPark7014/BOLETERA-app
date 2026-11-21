@@ -23,31 +23,16 @@ import mx.boletera.mobile.crypto.RotatingTicketCode
 import mx.boletera.mobile.data.WalletEvent
 import mx.boletera.mobile.data.WalletTicket
 
-/**
- * El boleto, con su QR vivo.
- *
- * Tres decisiones que solo se entienden habiendo estado en una fila de acceso:
- *
- *  1. **El brillo sube al máximo mientras esta pantalla está delante.** Un lector
- *     de puerta con una pantalla al 20 % y sol de lado no lee. Se restaura al
- *     salir para no vaciar la batería del asistente.
- *  2. **La cuenta atrás es visible.** El código cambia cada 15 s; sin indicador,
- *     quien lo ve cambiar en la mano cree que algo va mal justo cuando le toca
- *     pasar. Verlo rotar es lo que convierte una rareza en una garantía.
- *  3. **Se dice explícitamente que funciona sin conexión.** Es la duda número
- *     uno del comprador con un boleto digital, y la respuesta tiene que estar en
- *     la pantalla, no en un FAQ.
- */
 @Composable
 fun TicketScreen(
     evento: WalletEvent,
     boleto: WalletTicket,
     sincronizada: Boolean,
+    titularFallback: String?,
     onVolver: () -> Unit,
 ) {
     val activity = LocalActivity.current
 
-    // Brillo al máximo solo mientras el boleto está en pantalla.
     DisposableEffect(Unit) {
         val ventana = activity?.window
         val anterior = ventana?.attributes?.screenBrightness
@@ -73,12 +58,12 @@ fun TicketScreen(
         RotatingTicketCode.payload(boleto.signingKey, boleto.id, evento.id, ahora)
     }
     val bitmap = remember(payload) { QrRenderer.generar(payload, 512) }
-
     val restanteMs = RotatingTicketCode.millisUntilNextWindow(ahora)
     val progreso by animateFloatAsState(
         targetValue = restanteMs / (RotatingTicketCode.ROTATION_SECONDS * 1000f),
         label = "cuenta-atras",
     )
+    val titular = boleto.holderName?.takeIf { it.isNotBlank() } ?: titularFallback
 
     Column(
         modifier = Modifier
@@ -87,57 +72,33 @@ fun TicketScreen(
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = onVolver) { Text("‹ Mis boletos", color = Marca.TintaSuave) }
         }
-
         Spacer(Modifier.height(8.dp))
-
-        Text(
-            evento.title,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = Marca.Tinta,
-            textAlign = TextAlign.Center,
-        )
+        Text(evento.title, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Marca.Tinta, textAlign = TextAlign.Center)
         evento.venue?.let {
             Text(it, fontSize = 14.sp, color = Marca.TintaSuave, textAlign = TextAlign.Center)
         }
-
         Spacer(Modifier.height(20.dp))
 
         if (!boleto.esUtilizable) {
             EstadoNoUtilizable(boleto.status)
         } else {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Marca.Papel,
-                shadowElevation = 2.dp,
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
+            Surface(shape = RoundedCornerShape(20.dp), color = Marca.Carbon) {
+                Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
                         bitmap = bitmap.asImageBitmap(),
                         contentDescription =
                             "Código de acceso del boleto ${boleto.code}. Cambia cada " +
                                 "${RotatingTicketCode.ROTATION_SECONDS} segundos.",
-                        modifier = Modifier
-                            .size(260.dp)
-                            .clip(RoundedCornerShape(8.dp)),
+                        modifier = Modifier.size(260.dp).clip(RoundedCornerShape(8.dp)),
                     )
                     Spacer(Modifier.height(14.dp))
                     LinearProgressIndicator(
                         progress = { progreso },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = Marca.Acento,
+                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                        color = Marca.Dorado,
                         trackColor = Marca.Borde,
                     )
                     Spacer(Modifier.height(8.dp))
@@ -151,21 +112,28 @@ fun TicketScreen(
         }
 
         Spacer(Modifier.height(18.dp))
-
+        titular?.let {
+            Text("Titular", fontSize = 12.sp, color = Marca.TintaSuave)
+            Text(it, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Marca.Tinta)
+            Spacer(Modifier.height(8.dp))
+        }
         Text(boleto.ubicacion, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Marca.Tinta)
-        Text(
-            boleto.code,
+        boleto.gate?.let {
+            Text("Puerta $it", fontSize = 14.sp, color = Marca.DoradoSuave)
+        } ?: Text(
+            "Puerta según el recinto",
             fontSize = 13.sp,
-            fontFamily = FontFamily.Monospace,
             color = Marca.TintaSuave,
         )
+        boleto.ticketType?.let {
+            Text(it, fontSize = 13.sp, color = Marca.TintaSuave)
+        }
+        Text(boleto.code, fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = Marca.TintaSuave)
 
         Spacer(Modifier.weight(1f))
-
-        // La duda número uno del comprador, contestada en la propia pantalla.
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = if (sincronizada) Marca.Papel else Color_AvisoFondo,
+            color = Marca.Carbon,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(Modifier.padding(14.dp)) {
@@ -177,9 +145,8 @@ fun TicketScreen(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "El código se genera en este teléfono, así que entra igual aunque no " +
-                        "haya señal en la puerta. Una captura de pantalla no sirve: caduca " +
-                        "en ${RotatingTicketCode.ROTATION_SECONDS} segundos.",
+                    "El código se genera en este teléfono. Una captura no sirve: caduca en " +
+                        "${RotatingTicketCode.ROTATION_SECONDS} segundos.",
                     fontSize = 12.sp,
                     color = Marca.TintaSuave,
                 )
@@ -188,22 +155,16 @@ fun TicketScreen(
     }
 }
 
-private val Color_AvisoFondo = androidx.compose.ui.graphics.Color(0xFFFEFCE8)
-
 @Composable
 private fun EstadoNoUtilizable(status: String) {
     val (titulo, detalle) = when (status.uppercase()) {
-        "USED" -> "Ya se usó" to "Este boleto se escaneó en la puerta. No se puede volver a usar."
-        "REFUNDED" -> "Reembolsado" to "Se devolvió el importe, así que este boleto ya no da acceso."
+        "USED" -> "Ya se usó" to "Este boleto se escaneó en la puerta."
+        "REFUNDED" -> "Reembolsado" to "Se devolvió el importe; ya no da acceso."
         "CANCELLED" -> "Cancelado" to "Este boleto quedó cancelado."
-        "TRANSFERRED" -> "Transferido" to "Lo enviaste a otra persona; el código lo tiene ahora esa cuenta."
+        "TRANSFERRED" -> "Transferido" to "El código lo tiene ahora otra cuenta."
         else -> "No disponible" to "Este boleto no está activo ($status)."
     }
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = Marca.Papel,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Surface(shape = RoundedCornerShape(16.dp), color = Marca.Carbon, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(titulo, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Marca.Tinta)
             Spacer(Modifier.height(6.dp))

@@ -86,5 +86,8 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
+    // Tarjeta: abre la URL del banco en Custom Tab (Chrome Custom Tabs).
+    implementation("androidx.browser:browser:1.8.0")
+
     testImplementation("junit:junit:4.13.2")
 }

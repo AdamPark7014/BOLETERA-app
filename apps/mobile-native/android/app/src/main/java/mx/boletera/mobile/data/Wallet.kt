@@ -4,11 +4,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Modelo de la cartera. Refleja `GET /orders/:publicId/wallet`.
- *
- * Se parsea a mano con `org.json` en vez de traer una librería de serialización:
- * son cuatro campos, el formato lo controlamos nosotros, y cada dependencia en
- * una app que debe funcionar sin red es una cosa más que puede fallar.
+ * Modelo de la cartera. Refleja `GET /orders/:publicId/wallet` y
+ * `GET /orders/mine/wallet` (agrupado por evento).
  */
 
 data class WalletTicket(
@@ -20,11 +17,15 @@ data class WalletTicket(
     val status: String,
     /**
      * Clave por boleto con la que se firma el QR rotativo.
-     *
-     * ES LA CREDENCIAL DE ENTRADA. No debe salir del almacenamiento cifrado, ni
-     * escribirse en logs, ni mostrarse en pantalla.
+     * ES LA CREDENCIAL DE ENTRADA. Solo en almacenamiento cifrado.
      */
     val signingKey: String,
+    /** Titular si el API lo manda; si no, la UI usa el nombre de sesión. */
+    val holderName: String? = null,
+    /** Puerta o acceso asignado cuando el API lo incluye. */
+    val gate: String? = null,
+    val ticketType: String? = null,
+    val orderPublicId: String? = null,
 ) {
     /** "Platea · Fila B · Asiento 12", saltando lo que no aplique. */
     val ubicacion: String
@@ -34,7 +35,6 @@ data class WalletTicket(
             seatNumber?.takeIf { it.isNotBlank() }?.let { "Asiento $it" },
         ).joinToString(" · ").ifBlank { "Admisión general" }
 
-    /** Solo un boleto vendido y sin usar abre la puerta. */
     val esUtilizable: Boolean
         get() = status.equals("SOLD", ignoreCase = true)
 }
@@ -71,6 +71,10 @@ data class Wallet(
                     put("seatNumber", t.seatNumber ?: JSONObject.NULL)
                     put("status", t.status)
                     put("signingKey", t.signingKey)
+                    put("holderName", t.holderName ?: JSONObject.NULL)
+                    put("gate", t.gate ?: JSONObject.NULL)
+                    put("ticketType", t.ticketType ?: JSONObject.NULL)
+                    put("orderPublicId", t.orderPublicId ?: JSONObject.NULL)
                 })
             }
         })
@@ -90,20 +94,25 @@ data class Wallet(
                     startsAt = e.optStringOrNull("startsAt"),
                     venue = e.optStringOrNull("venue"),
                 ),
-                tickets = (0 until arr.length()).map { i ->
-                    val t = arr.getJSONObject(i)
-                    WalletTicket(
-                        id = t.getString("id"),
-                        code = t.getString("code"),
-                        section = t.optStringOrNull("section"),
-                        row = t.optStringOrNull("row"),
-                        seatNumber = t.optStringOrNull("seatNumber"),
-                        status = t.optString("status", "SOLD"),
-                        signingKey = t.getString("signingKey"),
-                    )
-                },
+                tickets = (0 until arr.length()).map { i -> parseTicket(arr.getJSONObject(i)) },
             )
         }
+
+        fun parseTicket(t: JSONObject, orderPublicId: String? = null): WalletTicket =
+            WalletTicket(
+                id = t.getString("id"),
+                code = t.getString("code"),
+                section = t.optStringOrNull("section"),
+                row = t.optStringOrNull("row"),
+                seatNumber = t.optStringOrNull("seatNumber"),
+                status = t.optString("status", "SOLD"),
+                signingKey = t.getString("signingKey"),
+                holderName = t.optStringOrNull("holderName") ?: t.optStringOrNull("buyerName"),
+                gate = t.optStringOrNull("gate") ?: t.optStringOrNull("entryGate")
+                    ?: t.optStringOrNull("door"),
+                ticketType = t.optStringOrNull("ticketType") ?: t.optStringOrNull("offerName"),
+                orderPublicId = orderPublicId ?: t.optStringOrNull("orderPublicId"),
+            )
     }
 }
 

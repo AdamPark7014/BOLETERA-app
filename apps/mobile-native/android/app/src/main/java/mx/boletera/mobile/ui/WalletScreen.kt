@@ -21,13 +21,6 @@ import androidx.compose.ui.unit.sp
 import mx.boletera.mobile.data.Wallet
 import mx.boletera.mobile.data.WalletTicket
 
-/**
- * Lista de boletos de una orden.
- *
- * La app NO exige crear cuenta: se entra con el código de orden que ya viene en
- * el correo de compra. Obligar a registrarse para enseñar un boleto que ya está
- * pagado es fricción que solo produce llamadas a soporte el día del evento.
- */
 @Composable
 fun WalletScreen(
     estado: EstadoCartera,
@@ -35,6 +28,8 @@ fun WalletScreen(
     onAbrirBoleto: (Wallet, WalletTicket) -> Unit,
     onRefrescar: () -> Unit,
     onOlvidar: (String) -> Unit,
+    onTransferir: (WalletTicket) -> Unit,
+    onReenviar: (Wallet) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -42,24 +37,23 @@ fun WalletScreen(
             .background(Marca.Fondo)
             .padding(horizontal = 20.dp),
     ) {
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(20.dp))
         Text("Mis boletos", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Marca.Tinta)
+        Text(
+            "Próximos primero · el QR funciona sin señal",
+            fontSize = 13.sp,
+            color = Marca.TintaSuave,
+        )
         Spacer(Modifier.height(16.dp))
 
         AgregarOrden(cargando = estado.cargando, onAgregar = onAgregarOrden)
 
         estado.error?.let {
             Spacer(Modifier.height(12.dp))
-            Surface(shape = RoundedCornerShape(10.dp), color = Color_DangerWash) {
-                Text(
-                    it,
-                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                    color = Marca.AcentoOscuro,
-                    fontSize = 13.sp,
-                )
+            Surface(shape = RoundedCornerShape(10.dp), color = Marca.Carbon) {
+                Text(it, modifier = Modifier.padding(12.dp).fillMaxWidth(), color = Marca.Peligro, fontSize = 13.sp)
             }
         }
-
         estado.aviso?.let {
             Spacer(Modifier.height(12.dp))
             Text(it, fontSize = 12.sp, color = Marca.Aviso)
@@ -69,14 +63,14 @@ fun WalletScreen(
 
         if (estado.carteras.isEmpty() && !estado.cargando) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text("Todavía no hay boletos aquí", fontWeight = FontWeight.SemiBold, color = Marca.Tinta)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Añade el código de orden que te llegó por correo. " +
-                        "Una vez añadido, el boleto funciona sin internet.",
+                    "Entra con tu cuenta o añade el código de orden del correo. " +
+                        "Una vez en el teléfono, el boleto abre la puerta sin internet.",
                     fontSize = 13.sp,
                     color = Marca.TintaSuave,
                     textAlign = TextAlign.Center,
@@ -88,16 +82,18 @@ fun WalletScreen(
             items(estado.carteras, key = { it.publicId }) { cartera ->
                 TarjetaEvento(
                     cartera = cartera,
-                    onAbrirBoleto = { boleto -> onAbrirBoleto(cartera, boleto) },
+                    onAbrirBoleto = { onAbrirBoleto(cartera, it) },
                     onOlvidar = { onOlvidar(cartera.publicId) },
+                    onTransferir = onTransferir,
+                    onReenviar = { onReenviar(cartera) },
                 )
             }
             item {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
                 TextButton(onClick = onRefrescar, modifier = Modifier.fillMaxWidth()) {
                     Text("Actualizar", color = Marca.TintaSuave)
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(88.dp))
             }
         }
     }
@@ -114,8 +110,7 @@ private fun AgregarOrden(cargando: Boolean, onAgregar: (String) -> Unit) {
             placeholder = { Text("BLT-XXXXXX") },
             singleLine = true,
             modifier = Modifier.weight(1f),
-            // El código va en mayúsculas y sin autocorrector: el teclado no debe
-            // "arreglar" un identificador.
+            colors = btFieldColors(),
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Characters,
                 autoCorrectEnabled = false,
@@ -124,16 +119,17 @@ private fun AgregarOrden(cargando: Boolean, onAgregar: (String) -> Unit) {
         )
         Spacer(Modifier.width(10.dp))
         Button(
-            onClick = { if (texto.isNotBlank()) { onAgregar(texto); texto = "" } },
+            onClick = {
+                if (texto.isNotBlank() && !cargando) {
+                    onAgregar(texto)
+                    texto = ""
+                }
+            },
             enabled = texto.isNotBlank() && !cargando,
-            colors = ButtonDefaults.buttonColors(containerColor = Marca.Acento),
+            colors = ButtonDefaults.buttonColors(containerColor = Marca.Dorado, contentColor = Marca.Negro),
         ) {
             if (cargando) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                    color = Marca.Papel,
-                )
+                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Marca.Negro)
             } else {
                 Text("Añadir")
             }
@@ -146,22 +142,17 @@ private fun TarjetaEvento(
     cartera: Wallet,
     onAbrirBoleto: (WalletTicket) -> Unit,
     onOlvidar: () -> Unit,
+    onTransferir: (WalletTicket) -> Unit,
+    onReenviar: () -> Unit,
 ) {
-    Surface(shape = RoundedCornerShape(16.dp), color = Marca.Papel, shadowElevation = 1.dp) {
+    Surface(shape = RoundedCornerShape(16.dp), color = Marca.Carbon) {
         Column(Modifier.padding(16.dp)) {
             Text(cartera.event.title, fontWeight = FontWeight.Bold, fontSize = 17.sp, color = Marca.Tinta)
-            cartera.event.venue?.let {
-                Text(it, fontSize = 13.sp, color = Marca.TintaSuave)
+            cartera.event.venue?.let { Text(it, fontSize = 13.sp, color = Marca.TintaSuave) }
+            if (!cartera.publicId.startsWith("mine:")) {
+                Text(cartera.publicId, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = Marca.TintaSuave)
             }
-            Text(
-                cartera.publicId,
-                fontSize = 11.sp,
-                fontFamily = FontFamily.Monospace,
-                color = Marca.TintaSuave,
-            )
-
             Spacer(Modifier.height(12.dp))
-
             cartera.tickets.forEach { boleto ->
                 Row(
                     modifier = Modifier
@@ -172,27 +163,31 @@ private fun TarjetaEvento(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(boleto.ubicacion, fontSize = 15.sp, color = Marca.Tinta)
-                        Text(
-                            boleto.code,
-                            fontSize = 11.sp,
-                            fontFamily = FontFamily.Monospace,
-                            color = Marca.TintaSuave,
-                        )
+                        boleto.gate?.let { Text("Puerta $it", fontSize = 12.sp, color = Marca.TintaSuave) }
+                        Text(boleto.code, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = Marca.TintaSuave)
                     }
-                    // El estado se dice con palabra, no solo con color: un
-                    // daltónico no debe tener que adivinar si su boleto sirve.
                     if (boleto.esUtilizable) {
-                        Text("Ver código", color = Marca.Acento, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Text("Ver código", color = Marca.Dorado, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                     } else {
                         Text(etiquetaEstado(boleto.status), color = Marca.TintaSuave, fontSize = 13.sp)
                     }
                 }
+                if (boleto.esUtilizable) {
+                    TextButton(onClick = { onTransferir(boleto) }) {
+                        Text("Transferir", fontSize = 12.sp, color = Marca.TintaSuave)
+                    }
+                }
                 HorizontalDivider(color = Marca.Borde)
             }
-
-            Spacer(Modifier.height(6.dp))
-            TextButton(onClick = onOlvidar) {
-                Text("Quitar de este teléfono", fontSize = 12.sp, color = Marca.TintaSuave)
+            Row {
+                TextButton(onClick = onReenviar) {
+                    Text("Reenviar boletos", fontSize = 12.sp, color = Marca.DoradoSuave)
+                }
+                if (!cartera.publicId.startsWith("mine:")) {
+                    TextButton(onClick = onOlvidar) {
+                        Text("Quitar de este teléfono", fontSize = 12.sp, color = Marca.TintaSuave)
+                    }
+                }
             }
         }
     }
@@ -206,7 +201,16 @@ private fun etiquetaEstado(status: String) = when (status.uppercase()) {
     else -> status.lowercase().replaceFirstChar { it.uppercase() }
 }
 
-private val Color_DangerWash = androidx.compose.ui.graphics.Color(0xFFFEF2F2)
+@Composable
+fun btFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Marca.Tinta,
+    unfocusedTextColor = Marca.Tinta,
+    focusedBorderColor = Marca.Dorado,
+    unfocusedBorderColor = Marca.Borde,
+    focusedLabelColor = Marca.DoradoSuave,
+    unfocusedLabelColor = Marca.TintaSuave,
+    cursorColor = Marca.Dorado,
+)
 
 data class EstadoCartera(
     val carteras: List<Wallet> = emptyList(),
