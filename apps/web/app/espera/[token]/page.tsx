@@ -130,8 +130,7 @@ export default function EsperaPage() {
             </p>
             {view.claim.facePrice != null ? (
               <p className={styles.price}>
-                Precio original{' '}
-                <strong>{formatTicketAmount(view.claim.facePrice)}</strong>
+                Precio original <strong>{formatTicketAmount(view.claim.facePrice)}</strong>
               </p>
             ) : (
               <p className={styles.price}>Al precio original del evento</p>

@@ -20,8 +20,5 @@ export function maxPercentFromSettings(settings: unknown): number {
   const raw = settingsRecord(settings).resaleMaxPercent;
   const value = typeof raw === 'number' ? raw : Number(raw);
   const base = Number.isFinite(value) ? value : DEFAULT_RESALE_MAX_PERCENT;
-  return Math.min(
-    ABSOLUTE_RESALE_MAX_PERCENT,
-    Math.max(MIN_RESALE_PRICE_PERCENT, base)
-  );
+  return Math.min(ABSOLUTE_RESALE_MAX_PERCENT, Math.max(MIN_RESALE_PRICE_PERCENT, base));
 }

@@ -22,7 +22,11 @@ export function HoldStickyBar({
   if (!expiresAt) return null;
 
   return (
-    <div className={`${styles.bar} ${className ?? ''}`.trim()} role="region" aria-label="Tiempo de apartado">
+    <div
+      className={`${styles.bar} ${className ?? ''}`.trim()}
+      role="region"
+      aria-label="Tiempo de apartado"
+    >
       <HoldCountdown
         expiresAt={expiresAt}
         warnSeconds={warnSeconds}

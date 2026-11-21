@@ -51,13 +51,15 @@ describe('WaitlistService (lista de espera DICE)', () => {
       slug: 'concierto',
       organizationId: 'org1',
     });
-    prisma.waitlistEntry.update.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
-      id: 'w1',
-      eventId: 'e1',
-      email: 'fan@ejemplo.com',
-      quantity: 1,
-      ...data,
-    }));
+    prisma.waitlistEntry.update.mockImplementation(
+      async ({ data }: { data: Record<string, unknown> }) => ({
+        id: 'w1',
+        eventId: 'e1',
+        email: 'fan@ejemplo.com',
+        quantity: 1,
+        ...data,
+      })
+    );
 
     const entry = await service.offerNext('e1', { facePrice: 500, source: 'test' });
 

@@ -196,4 +196,25 @@ export class OrdersController {
     if (!req.user?.sub && !accessToken?.trim()) {
       throw new UnauthorizedException('Inicia sesión o abre la orden desde el enlace del correo.');
     }
-    const order = await this.orders.author
+    const order = await this.orders.authorizeBuyerAction(
+      publicId,
+      this.requester(req, accessToken)
+    );
+    return this.payments.confirmBuyerDemoPurchase(order.id, order.publicId);
+  }
+
+  @Get(':publicId')
+  @UseGuards(OptionalJwtAuthGuard)
+  get(
+    @Param('publicId') publicId: string,
+    @Request() req: OptionalAuthRequest,
+    @Query('accessToken') accessToken?: string
+  ) {
+    return this.orders.getForRequester(publicId, this.requester(req, accessToken));
+  }
+
+  /** Identidad del solicitante: JWT verificado o token del enlace del correo. */
+  private requester(req: OptionalAuthRequest, accessToken?: string): OrderRequester {
+    return { userId: req.user?.sub, email: req.user?.email, accessToken };
+  }
+}

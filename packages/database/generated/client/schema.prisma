@@ -377,6 +377,9 @@ model PaymentIntent {
   metadata       Json?
   idempotencyKey String?        @unique
   expiresAt      DateTime?
+  /// Meses sin intereses elegidos en el checkout (1 = de contado). Banorte Payworks
+  /// aún no expone MSI en el adaptador: el valor se guarda para liquidación / UI.
+  installments   Int?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -1380,22 +1383,28 @@ model Review {
 // ============================================================================
 
 model WaitlistEntry {
-  id          String         @id @default(cuid())
-  eventId     String
-  event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  email       String
-  phone       String?
-  firstName   String?
-  lastName    String?
-  quantity    Int            @default(1)
-  offerId     String?
-  status      WaitlistStatus @default(PENDING)
-  priority    Int            @default(0)
-  notifiedAt  DateTime?
-  convertedAt DateTime?
-  metadata    Json?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id               String         @id @default(cuid())
+  eventId          String
+  event            Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  email            String
+  phone            String?
+  firstName        String?
+  lastName         String?
+  quantity         Int            @default(1)
+  offerId          String?
+  status           WaitlistStatus @default(PENDING)
+  priority         Int            @default(0)
+  notifiedAt       DateTime?
+  convertedAt      DateTime?
+  /// Enlace /espera/[token]: apartado a precio original por 60 min (estilo DICE).
+  claimToken       String?        @unique
+  claimExpiresAt   DateTime?
+  reservedTicketId String?
+  reservedHoldId   String?
+  facePrice        Decimal?       @db.Decimal(12, 2)
+  metadata         Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@unique([eventId, email])
   @@index([eventId])
@@ -1403,6 +1412,7 @@ model WaitlistEntry {
   @@index([createdAt])
   /// waitlist processing queue
   @@index([eventId, status, priority, createdAt])
+  @@index([claimExpiresAt])
 }
 
 model TicketTransfer {

@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import {
   Currency,
@@ -46,6 +47,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CampaignExecutionService } from '../campaign-execution/campaign-execution.service';
 import { NotificationService } from '../notification/notification.service';
+import { WaitlistService } from '../waitlist/waitlist.service';
 
 initDefaultProviders();
 
@@ -170,7 +172,8 @@ export class PaymentService {
     private prisma: PrismaService,
     private notifications: NotificationService,
     private campaigns: CampaignExecutionService,
-    private audit: AuditService
+    private audit: AuditService,
+    @Optional() private waitlist?: WaitlistService
   ) {}
 
   /**
@@ -1248,7 +1251,14 @@ export class PaymentService {
    * corresponde a la fracción devuelta. Solo cambia el estado de la orden.
    */
   private async applyRefundInventory(orderId: string, fullRefund: boolean) {
+    let eventId: string | null = null;
     await this.prisma.$transaction(async (tx) => {
+      const orderMeta = await tx.order.findUnique({
+        where: { id: orderId },
+        select: { eventId: true },
+      });
+      eventId = orderMeta?.eventId ?? null;
+
       await tx.order.update({
         where: { id: orderId },
         data: {
@@ -1291,6 +1301,11 @@ export class PaymentService {
         data: { status: PaymentStatus.REFUNDED },
       });
     });
+
+    // Reembolso total libera boletos al precio original: avisa a la lista de espera.
+    if (fullRefund && eventId) {
+      void this.waitlist?.offerNext(eventId, { source: 'refund' }).catch(() => undefined);
+    }
   }
 
   /**

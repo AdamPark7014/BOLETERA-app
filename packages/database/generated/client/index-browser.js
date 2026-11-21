@@ -340,6 +340,7 @@ exports.Prisma.PaymentIntentScalarFieldEnum = {
   metadata: 'metadata',
   idempotencyKey: 'idempotencyKey',
   expiresAt: 'expiresAt',
+  installments: 'installments',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -820,6 +821,11 @@ exports.Prisma.WaitlistEntryScalarFieldEnum = {
   priority: 'priority',
   notifiedAt: 'notifiedAt',
   convertedAt: 'convertedAt',
+  claimToken: 'claimToken',
+  claimExpiresAt: 'claimExpiresAt',
+  reservedTicketId: 'reservedTicketId',
+  reservedHoldId: 'reservedHoldId',
+  facePrice: 'facePrice',
   metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

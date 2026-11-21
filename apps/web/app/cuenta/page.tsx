@@ -27,6 +27,7 @@ import {
   summarizeRefunds,
 } from '@/lib/refund-policy';
 import styles from './cuenta.module.scss';
+import { ResendTicketButton } from '@/app/orders/[publicId]/ResendTicketButton';
 import { MySalesSection } from './MySalesSection';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -761,22 +762,27 @@ export default function CuentaPage() {
                       */}
                       <div className={styles.walletActions}>
                         {group.orders.length === 1 ? (
-                          index === 0 ? (
-                            <TicketButton
-                              type="button"
-                              onClick={() => router.push(`/orders/${o.publicId}`)}
-                            >
-                              {actionLabel}
-                            </TicketButton>
-                          ) : (
-                            <TicketButton
-                              type="button"
-                              variant="secondary"
-                              onClick={() => router.push(`/orders/${o.publicId}`)}
-                            >
-                              {actionLabel}
-                            </TicketButton>
-                          )
+                          <>
+                            {index === 0 ? (
+                              <TicketButton
+                                type="button"
+                                onClick={() => router.push(`/orders/${o.publicId}`)}
+                              >
+                                {actionLabel}
+                              </TicketButton>
+                            ) : (
+                              <TicketButton
+                                type="button"
+                                variant="secondary"
+                                onClick={() => router.push(`/orders/${o.publicId}`)}
+                              >
+                                {actionLabel}
+                              </TicketButton>
+                            )}
+                            {o.status === 'COMPLETED' ? (
+                              <ResendTicketButton apiBase={API} publicId={o.publicId} />
+                            ) : null}
+                          </>
                         ) : (
                           <details className={styles.walletOrders}>
                             <summary>
@@ -958,15 +964,18 @@ export default function CuentaPage() {
                           <Link href={`/orders/${o.publicId}`}>Ver detalle</Link>
                         )}
                         {o.status === 'COMPLETED' && (
-                          <a
-                            href={`${API}/orders/${o.publicId}/tickets.pdf`}
-                            onClick={(event) => {
-                              event.preventDefault();
-                              void downloadTicketsPdf(o.publicId);
-                            }}
-                          >
-                            PDF de boletos
-                          </a>
+                          <>
+                            <a
+                              href={`${API}/orders/${o.publicId}/tickets.pdf`}
+                              onClick={(event) => {
+                                event.preventDefault();
+                                void downloadTicketsPdf(o.publicId);
+                              }}
+                            >
+                              PDF de boletos
+                            </a>
+                            <ResendTicketButton apiBase={API} publicId={o.publicId} />
+                          </>
                         )}
                       </div>
                     </li>

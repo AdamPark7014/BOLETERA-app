@@ -24557,10 +24557,12 @@ export namespace Prisma {
 
   export type PaymentIntentAvgAggregateOutputType = {
     amount: Decimal | null
+    installments: number | null
   }
 
   export type PaymentIntentSumAggregateOutputType = {
     amount: Decimal | null
+    installments: number | null
   }
 
   export type PaymentIntentMinAggregateOutputType = {
@@ -24574,6 +24576,7 @@ export namespace Prisma {
     channel: $Enums.SalesChannel | null
     idempotencyKey: string | null
     expiresAt: Date | null
+    installments: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -24589,6 +24592,7 @@ export namespace Prisma {
     channel: $Enums.SalesChannel | null
     idempotencyKey: string | null
     expiresAt: Date | null
+    installments: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -24605,6 +24609,7 @@ export namespace Prisma {
     metadata: number
     idempotencyKey: number
     expiresAt: number
+    installments: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -24613,10 +24618,12 @@ export namespace Prisma {
 
   export type PaymentIntentAvgAggregateInputType = {
     amount?: true
+    installments?: true
   }
 
   export type PaymentIntentSumAggregateInputType = {
     amount?: true
+    installments?: true
   }
 
   export type PaymentIntentMinAggregateInputType = {
@@ -24630,6 +24637,7 @@ export namespace Prisma {
     channel?: true
     idempotencyKey?: true
     expiresAt?: true
+    installments?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -24645,6 +24653,7 @@ export namespace Prisma {
     channel?: true
     idempotencyKey?: true
     expiresAt?: true
+    installments?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -24661,6 +24670,7 @@ export namespace Prisma {
     metadata?: true
     idempotencyKey?: true
     expiresAt?: true
+    installments?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -24764,6 +24774,7 @@ export namespace Prisma {
     metadata: JsonValue | null
     idempotencyKey: string | null
     expiresAt: Date | null
+    installments: number | null
     createdAt: Date
     updatedAt: Date
     _count: PaymentIntentCountAggregateOutputType | null
@@ -24799,6 +24810,7 @@ export namespace Prisma {
     metadata?: boolean
     idempotencyKey?: boolean
     expiresAt?: boolean
+    installments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["paymentIntent"]>
@@ -24815,6 +24827,7 @@ export namespace Prisma {
     metadata?: boolean
     idempotencyKey?: boolean
     expiresAt?: boolean
+    installments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["paymentIntent"]>
@@ -24831,6 +24844,7 @@ export namespace Prisma {
     metadata?: boolean
     idempotencyKey?: boolean
     expiresAt?: boolean
+    installments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["paymentIntent"]>
@@ -24847,11 +24861,12 @@ export namespace Prisma {
     metadata?: boolean
     idempotencyKey?: boolean
     expiresAt?: boolean
+    installments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type PaymentIntentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "provider" | "externalId" | "amount" | "currency" | "status" | "channel" | "metadata" | "idempotencyKey" | "expiresAt" | "createdAt" | "updatedAt", ExtArgs["result"]["paymentIntent"]>
+  export type PaymentIntentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "provider" | "externalId" | "amount" | "currency" | "status" | "channel" | "metadata" | "idempotencyKey" | "expiresAt" | "installments" | "createdAt" | "updatedAt", ExtArgs["result"]["paymentIntent"]>
 
   export type $PaymentIntentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "PaymentIntent"
@@ -24868,6 +24883,11 @@ export namespace Prisma {
       metadata: Prisma.JsonValue | null
       idempotencyKey: string | null
       expiresAt: Date | null
+      /**
+       * Meses sin intereses elegidos en el checkout (1 = de contado). Banorte Payworks
+       * aún no expone MSI en el adaptador: el valor se guarda para liquidación / UI.
+       */
+      installments: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["paymentIntent"]>
@@ -25304,6 +25324,7 @@ export namespace Prisma {
     readonly metadata: FieldRef<"PaymentIntent", 'Json'>
     readonly idempotencyKey: FieldRef<"PaymentIntent", 'String'>
     readonly expiresAt: FieldRef<"PaymentIntent", 'DateTime'>
+    readonly installments: FieldRef<"PaymentIntent", 'Int'>
     readonly createdAt: FieldRef<"PaymentIntent", 'DateTime'>
     readonly updatedAt: FieldRef<"PaymentIntent", 'DateTime'>
   }
@@ -61561,11 +61582,13 @@ export namespace Prisma {
   export type WaitlistEntryAvgAggregateOutputType = {
     quantity: number | null
     priority: number | null
+    facePrice: Decimal | null
   }
 
   export type WaitlistEntrySumAggregateOutputType = {
     quantity: number | null
     priority: number | null
+    facePrice: Decimal | null
   }
 
   export type WaitlistEntryMinAggregateOutputType = {
@@ -61581,6 +61604,11 @@ export namespace Prisma {
     priority: number | null
     notifiedAt: Date | null
     convertedAt: Date | null
+    claimToken: string | null
+    claimExpiresAt: Date | null
+    reservedTicketId: string | null
+    reservedHoldId: string | null
+    facePrice: Decimal | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -61598,6 +61626,11 @@ export namespace Prisma {
     priority: number | null
     notifiedAt: Date | null
     convertedAt: Date | null
+    claimToken: string | null
+    claimExpiresAt: Date | null
+    reservedTicketId: string | null
+    reservedHoldId: string | null
+    facePrice: Decimal | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -61615,6 +61648,11 @@ export namespace Prisma {
     priority: number
     notifiedAt: number
     convertedAt: number
+    claimToken: number
+    claimExpiresAt: number
+    reservedTicketId: number
+    reservedHoldId: number
+    facePrice: number
     metadata: number
     createdAt: number
     updatedAt: number
@@ -61625,11 +61663,13 @@ export namespace Prisma {
   export type WaitlistEntryAvgAggregateInputType = {
     quantity?: true
     priority?: true
+    facePrice?: true
   }
 
   export type WaitlistEntrySumAggregateInputType = {
     quantity?: true
     priority?: true
+    facePrice?: true
   }
 
   export type WaitlistEntryMinAggregateInputType = {
@@ -61645,6 +61685,11 @@ export namespace Prisma {
     priority?: true
     notifiedAt?: true
     convertedAt?: true
+    claimToken?: true
+    claimExpiresAt?: true
+    reservedTicketId?: true
+    reservedHoldId?: true
+    facePrice?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -61662,6 +61707,11 @@ export namespace Prisma {
     priority?: true
     notifiedAt?: true
     convertedAt?: true
+    claimToken?: true
+    claimExpiresAt?: true
+    reservedTicketId?: true
+    reservedHoldId?: true
+    facePrice?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -61679,6 +61729,11 @@ export namespace Prisma {
     priority?: true
     notifiedAt?: true
     convertedAt?: true
+    claimToken?: true
+    claimExpiresAt?: true
+    reservedTicketId?: true
+    reservedHoldId?: true
+    facePrice?: true
     metadata?: true
     createdAt?: true
     updatedAt?: true
@@ -61784,6 +61839,11 @@ export namespace Prisma {
     priority: number
     notifiedAt: Date | null
     convertedAt: Date | null
+    claimToken: string | null
+    claimExpiresAt: Date | null
+    reservedTicketId: string | null
+    reservedHoldId: string | null
+    facePrice: Decimal | null
     metadata: JsonValue | null
     createdAt: Date
     updatedAt: Date
@@ -61821,6 +61881,11 @@ export namespace Prisma {
     priority?: boolean
     notifiedAt?: boolean
     convertedAt?: boolean
+    claimToken?: boolean
+    claimExpiresAt?: boolean
+    reservedTicketId?: boolean
+    reservedHoldId?: boolean
+    facePrice?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -61840,6 +61905,11 @@ export namespace Prisma {
     priority?: boolean
     notifiedAt?: boolean
     convertedAt?: boolean
+    claimToken?: boolean
+    claimExpiresAt?: boolean
+    reservedTicketId?: boolean
+    reservedHoldId?: boolean
+    facePrice?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -61859,6 +61929,11 @@ export namespace Prisma {
     priority?: boolean
     notifiedAt?: boolean
     convertedAt?: boolean
+    claimToken?: boolean
+    claimExpiresAt?: boolean
+    reservedTicketId?: boolean
+    reservedHoldId?: boolean
+    facePrice?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -61878,12 +61953,17 @@ export namespace Prisma {
     priority?: boolean
     notifiedAt?: boolean
     convertedAt?: boolean
+    claimToken?: boolean
+    claimExpiresAt?: boolean
+    reservedTicketId?: boolean
+    reservedHoldId?: boolean
+    facePrice?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type WaitlistEntryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "email" | "phone" | "firstName" | "lastName" | "quantity" | "offerId" | "status" | "priority" | "notifiedAt" | "convertedAt" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["waitlistEntry"]>
+  export type WaitlistEntryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "email" | "phone" | "firstName" | "lastName" | "quantity" | "offerId" | "status" | "priority" | "notifiedAt" | "convertedAt" | "claimToken" | "claimExpiresAt" | "reservedTicketId" | "reservedHoldId" | "facePrice" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["waitlistEntry"]>
   export type WaitlistEntryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     event?: boolean | EventDefaultArgs<ExtArgs>
   }
@@ -61912,6 +61992,14 @@ export namespace Prisma {
       priority: number
       notifiedAt: Date | null
       convertedAt: Date | null
+      /**
+       * Enlace /espera/[token]: apartado a precio original por 60 min (estilo DICE).
+       */
+      claimToken: string | null
+      claimExpiresAt: Date | null
+      reservedTicketId: string | null
+      reservedHoldId: string | null
+      facePrice: Prisma.Decimal | null
       metadata: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
@@ -62351,6 +62439,11 @@ export namespace Prisma {
     readonly priority: FieldRef<"WaitlistEntry", 'Int'>
     readonly notifiedAt: FieldRef<"WaitlistEntry", 'DateTime'>
     readonly convertedAt: FieldRef<"WaitlistEntry", 'DateTime'>
+    readonly claimToken: FieldRef<"WaitlistEntry", 'String'>
+    readonly claimExpiresAt: FieldRef<"WaitlistEntry", 'DateTime'>
+    readonly reservedTicketId: FieldRef<"WaitlistEntry", 'String'>
+    readonly reservedHoldId: FieldRef<"WaitlistEntry", 'String'>
+    readonly facePrice: FieldRef<"WaitlistEntry", 'Decimal'>
     readonly metadata: FieldRef<"WaitlistEntry", 'Json'>
     readonly createdAt: FieldRef<"WaitlistEntry", 'DateTime'>
     readonly updatedAt: FieldRef<"WaitlistEntry", 'DateTime'>
@@ -83492,6 +83585,7 @@ export namespace Prisma {
     metadata: 'metadata',
     idempotencyKey: 'idempotencyKey',
     expiresAt: 'expiresAt',
+    installments: 'installments',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -84062,6 +84156,11 @@ export namespace Prisma {
     priority: 'priority',
     notifiedAt: 'notifiedAt',
     convertedAt: 'convertedAt',
+    claimToken: 'claimToken',
+    claimExpiresAt: 'claimExpiresAt',
+    reservedTicketId: 'reservedTicketId',
+    reservedHoldId: 'reservedHoldId',
+    facePrice: 'facePrice',
     metadata: 'metadata',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -86436,6 +86535,7 @@ export namespace Prisma {
     metadata?: JsonNullableFilter<"PaymentIntent">
     idempotencyKey?: StringNullableFilter<"PaymentIntent"> | string | null
     expiresAt?: DateTimeNullableFilter<"PaymentIntent"> | Date | string | null
+    installments?: IntNullableFilter<"PaymentIntent"> | number | null
     createdAt?: DateTimeFilter<"PaymentIntent"> | Date | string
     updatedAt?: DateTimeFilter<"PaymentIntent"> | Date | string
   }
@@ -86452,6 +86552,7 @@ export namespace Prisma {
     metadata?: SortOrderInput | SortOrder
     idempotencyKey?: SortOrderInput | SortOrder
     expiresAt?: SortOrderInput | SortOrder
+    installments?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -86471,6 +86572,7 @@ export namespace Prisma {
     channel?: EnumSalesChannelFilter<"PaymentIntent"> | $Enums.SalesChannel
     metadata?: JsonNullableFilter<"PaymentIntent">
     expiresAt?: DateTimeNullableFilter<"PaymentIntent"> | Date | string | null
+    installments?: IntNullableFilter<"PaymentIntent"> | number | null
     createdAt?: DateTimeFilter<"PaymentIntent"> | Date | string
     updatedAt?: DateTimeFilter<"PaymentIntent"> | Date | string
   }, "id" | "idempotencyKey">
@@ -86487,6 +86589,7 @@ export namespace Prisma {
     metadata?: SortOrderInput | SortOrder
     idempotencyKey?: SortOrderInput | SortOrder
     expiresAt?: SortOrderInput | SortOrder
+    installments?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: PaymentIntentCountOrderByAggregateInput
@@ -86511,6 +86614,7 @@ export namespace Prisma {
     metadata?: JsonNullableWithAggregatesFilter<"PaymentIntent">
     idempotencyKey?: StringNullableWithAggregatesFilter<"PaymentIntent"> | string | null
     expiresAt?: DateTimeNullableWithAggregatesFilter<"PaymentIntent"> | Date | string | null
+    installments?: IntNullableWithAggregatesFilter<"PaymentIntent"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"PaymentIntent"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"PaymentIntent"> | Date | string
   }
@@ -89493,6 +89597,11 @@ export namespace Prisma {
     priority?: IntFilter<"WaitlistEntry"> | number
     notifiedAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
     convertedAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
+    claimToken?: StringNullableFilter<"WaitlistEntry"> | string | null
+    claimExpiresAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
+    reservedTicketId?: StringNullableFilter<"WaitlistEntry"> | string | null
+    reservedHoldId?: StringNullableFilter<"WaitlistEntry"> | string | null
+    facePrice?: DecimalNullableFilter<"WaitlistEntry"> | Decimal | DecimalJsLike | number | string | null
     metadata?: JsonNullableFilter<"WaitlistEntry">
     createdAt?: DateTimeFilter<"WaitlistEntry"> | Date | string
     updatedAt?: DateTimeFilter<"WaitlistEntry"> | Date | string
@@ -89512,6 +89621,11 @@ export namespace Prisma {
     priority?: SortOrder
     notifiedAt?: SortOrderInput | SortOrder
     convertedAt?: SortOrderInput | SortOrder
+    claimToken?: SortOrderInput | SortOrder
+    claimExpiresAt?: SortOrderInput | SortOrder
+    reservedTicketId?: SortOrderInput | SortOrder
+    reservedHoldId?: SortOrderInput | SortOrder
+    facePrice?: SortOrderInput | SortOrder
     metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -89520,6 +89634,7 @@ export namespace Prisma {
 
   export type WaitlistEntryWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    claimToken?: string
     eventId_email?: WaitlistEntryEventIdEmailCompoundUniqueInput
     AND?: WaitlistEntryWhereInput | WaitlistEntryWhereInput[]
     OR?: WaitlistEntryWhereInput[]
@@ -89535,11 +89650,15 @@ export namespace Prisma {
     priority?: IntFilter<"WaitlistEntry"> | number
     notifiedAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
     convertedAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
+    claimExpiresAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
+    reservedTicketId?: StringNullableFilter<"WaitlistEntry"> | string | null
+    reservedHoldId?: StringNullableFilter<"WaitlistEntry"> | string | null
+    facePrice?: DecimalNullableFilter<"WaitlistEntry"> | Decimal | DecimalJsLike | number | string | null
     metadata?: JsonNullableFilter<"WaitlistEntry">
     createdAt?: DateTimeFilter<"WaitlistEntry"> | Date | string
     updatedAt?: DateTimeFilter<"WaitlistEntry"> | Date | string
     event?: XOR<EventScalarRelationFilter, EventWhereInput>
-  }, "id" | "eventId_email">
+  }, "id" | "claimToken" | "eventId_email">
 
   export type WaitlistEntryOrderByWithAggregationInput = {
     id?: SortOrder
@@ -89554,6 +89673,11 @@ export namespace Prisma {
     priority?: SortOrder
     notifiedAt?: SortOrderInput | SortOrder
     convertedAt?: SortOrderInput | SortOrder
+    claimToken?: SortOrderInput | SortOrder
+    claimExpiresAt?: SortOrderInput | SortOrder
+    reservedTicketId?: SortOrderInput | SortOrder
+    reservedHoldId?: SortOrderInput | SortOrder
+    facePrice?: SortOrderInput | SortOrder
     metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -89580,6 +89704,11 @@ export namespace Prisma {
     priority?: IntWithAggregatesFilter<"WaitlistEntry"> | number
     notifiedAt?: DateTimeNullableWithAggregatesFilter<"WaitlistEntry"> | Date | string | null
     convertedAt?: DateTimeNullableWithAggregatesFilter<"WaitlistEntry"> | Date | string | null
+    claimToken?: StringNullableWithAggregatesFilter<"WaitlistEntry"> | string | null
+    claimExpiresAt?: DateTimeNullableWithAggregatesFilter<"WaitlistEntry"> | Date | string | null
+    reservedTicketId?: StringNullableWithAggregatesFilter<"WaitlistEntry"> | string | null
+    reservedHoldId?: StringNullableWithAggregatesFilter<"WaitlistEntry"> | string | null
+    facePrice?: DecimalNullableWithAggregatesFilter<"WaitlistEntry"> | Decimal | DecimalJsLike | number | string | null
     metadata?: JsonNullableWithAggregatesFilter<"WaitlistEntry">
     createdAt?: DateTimeWithAggregatesFilter<"WaitlistEntry"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"WaitlistEntry"> | Date | string
@@ -92798,6 +92927,7 @@ export namespace Prisma {
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
     expiresAt?: Date | string | null
+    installments?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -92814,6 +92944,7 @@ export namespace Prisma {
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
     expiresAt?: Date | string | null
+    installments?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -92830,6 +92961,7 @@ export namespace Prisma {
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    installments?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -92846,6 +92978,7 @@ export namespace Prisma {
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    installments?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -92862,6 +92995,7 @@ export namespace Prisma {
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: string | null
     expiresAt?: Date | string | null
+    installments?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -92878,6 +93012,7 @@ export namespace Prisma {
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    installments?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -92894,6 +93029,7 @@ export namespace Prisma {
     metadata?: NullableJsonNullValueInput | InputJsonValue
     idempotencyKey?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    installments?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -96291,6 +96427,11 @@ export namespace Prisma {
     priority?: number
     notifiedAt?: Date | string | null
     convertedAt?: Date | string | null
+    claimToken?: string | null
+    claimExpiresAt?: Date | string | null
+    reservedTicketId?: string | null
+    reservedHoldId?: string | null
+    facePrice?: Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -96310,6 +96451,11 @@ export namespace Prisma {
     priority?: number
     notifiedAt?: Date | string | null
     convertedAt?: Date | string | null
+    claimToken?: string | null
+    claimExpiresAt?: Date | string | null
+    reservedTicketId?: string | null
+    reservedHoldId?: string | null
+    facePrice?: Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -96327,6 +96473,11 @@ export namespace Prisma {
     priority?: IntFieldUpdateOperationsInput | number
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimToken?: NullableStringFieldUpdateOperationsInput | string | null
+    claimExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reservedTicketId?: NullableStringFieldUpdateOperationsInput | string | null
+    reservedHoldId?: NullableStringFieldUpdateOperationsInput | string | null
+    facePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96346,6 +96497,11 @@ export namespace Prisma {
     priority?: IntFieldUpdateOperationsInput | number
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimToken?: NullableStringFieldUpdateOperationsInput | string | null
+    claimExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reservedTicketId?: NullableStringFieldUpdateOperationsInput | string | null
+    reservedHoldId?: NullableStringFieldUpdateOperationsInput | string | null
+    facePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96364,6 +96520,11 @@ export namespace Prisma {
     priority?: number
     notifiedAt?: Date | string | null
     convertedAt?: Date | string | null
+    claimToken?: string | null
+    claimExpiresAt?: Date | string | null
+    reservedTicketId?: string | null
+    reservedHoldId?: string | null
+    facePrice?: Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -96381,6 +96542,11 @@ export namespace Prisma {
     priority?: IntFieldUpdateOperationsInput | number
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimToken?: NullableStringFieldUpdateOperationsInput | string | null
+    claimExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reservedTicketId?: NullableStringFieldUpdateOperationsInput | string | null
+    reservedHoldId?: NullableStringFieldUpdateOperationsInput | string | null
+    facePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -96399,6 +96565,11 @@ export namespace Prisma {
     priority?: IntFieldUpdateOperationsInput | number
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimToken?: NullableStringFieldUpdateOperationsInput | string | null
+    claimExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reservedTicketId?: NullableStringFieldUpdateOperationsInput | string | null
+    reservedHoldId?: NullableStringFieldUpdateOperationsInput | string | null
+    facePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -99764,12 +99935,14 @@ export namespace Prisma {
     metadata?: SortOrder
     idempotencyKey?: SortOrder
     expiresAt?: SortOrder
+    installments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type PaymentIntentAvgOrderByAggregateInput = {
     amount?: SortOrder
+    installments?: SortOrder
   }
 
   export type PaymentIntentMaxOrderByAggregateInput = {
@@ -99783,6 +99956,7 @@ export namespace Prisma {
     channel?: SortOrder
     idempotencyKey?: SortOrder
     expiresAt?: SortOrder
+    installments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -99798,12 +99972,14 @@ export namespace Prisma {
     channel?: SortOrder
     idempotencyKey?: SortOrder
     expiresAt?: SortOrder
+    installments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type PaymentIntentSumOrderByAggregateInput = {
     amount?: SortOrder
+    installments?: SortOrder
   }
 
   export type EnumPaymentGatewayWithAggregatesFilter<$PrismaModel = never> = {
@@ -102207,6 +102383,11 @@ export namespace Prisma {
     priority?: SortOrder
     notifiedAt?: SortOrder
     convertedAt?: SortOrder
+    claimToken?: SortOrder
+    claimExpiresAt?: SortOrder
+    reservedTicketId?: SortOrder
+    reservedHoldId?: SortOrder
+    facePrice?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -102215,6 +102396,7 @@ export namespace Prisma {
   export type WaitlistEntryAvgOrderByAggregateInput = {
     quantity?: SortOrder
     priority?: SortOrder
+    facePrice?: SortOrder
   }
 
   export type WaitlistEntryMaxOrderByAggregateInput = {
@@ -102230,6 +102412,11 @@ export namespace Prisma {
     priority?: SortOrder
     notifiedAt?: SortOrder
     convertedAt?: SortOrder
+    claimToken?: SortOrder
+    claimExpiresAt?: SortOrder
+    reservedTicketId?: SortOrder
+    reservedHoldId?: SortOrder
+    facePrice?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -102247,6 +102434,11 @@ export namespace Prisma {
     priority?: SortOrder
     notifiedAt?: SortOrder
     convertedAt?: SortOrder
+    claimToken?: SortOrder
+    claimExpiresAt?: SortOrder
+    reservedTicketId?: SortOrder
+    reservedHoldId?: SortOrder
+    facePrice?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -102254,6 +102446,7 @@ export namespace Prisma {
   export type WaitlistEntrySumOrderByAggregateInput = {
     quantity?: SortOrder
     priority?: SortOrder
+    facePrice?: SortOrder
   }
 
   export type EnumWaitlistStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -114947,6 +115140,11 @@ export namespace Prisma {
     priority?: number
     notifiedAt?: Date | string | null
     convertedAt?: Date | string | null
+    claimToken?: string | null
+    claimExpiresAt?: Date | string | null
+    reservedTicketId?: string | null
+    reservedHoldId?: string | null
+    facePrice?: Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -114964,6 +115162,11 @@ export namespace Prisma {
     priority?: number
     notifiedAt?: Date | string | null
     convertedAt?: Date | string | null
+    claimToken?: string | null
+    claimExpiresAt?: Date | string | null
+    reservedTicketId?: string | null
+    reservedHoldId?: string | null
+    facePrice?: Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -115639,6 +115842,11 @@ export namespace Prisma {
     priority?: IntFilter<"WaitlistEntry"> | number
     notifiedAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
     convertedAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
+    claimToken?: StringNullableFilter<"WaitlistEntry"> | string | null
+    claimExpiresAt?: DateTimeNullableFilter<"WaitlistEntry"> | Date | string | null
+    reservedTicketId?: StringNullableFilter<"WaitlistEntry"> | string | null
+    reservedHoldId?: StringNullableFilter<"WaitlistEntry"> | string | null
+    facePrice?: DecimalNullableFilter<"WaitlistEntry"> | Decimal | DecimalJsLike | number | string | null
     metadata?: JsonNullableFilter<"WaitlistEntry">
     createdAt?: DateTimeFilter<"WaitlistEntry"> | Date | string
     updatedAt?: DateTimeFilter<"WaitlistEntry"> | Date | string
@@ -130623,6 +130831,11 @@ export namespace Prisma {
     priority?: number
     notifiedAt?: Date | string | null
     convertedAt?: Date | string | null
+    claimToken?: string | null
+    claimExpiresAt?: Date | string | null
+    reservedTicketId?: string | null
+    reservedHoldId?: string | null
+    facePrice?: Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -131199,6 +131412,11 @@ export namespace Prisma {
     priority?: IntFieldUpdateOperationsInput | number
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimToken?: NullableStringFieldUpdateOperationsInput | string | null
+    claimExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reservedTicketId?: NullableStringFieldUpdateOperationsInput | string | null
+    reservedHoldId?: NullableStringFieldUpdateOperationsInput | string | null
+    facePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -131216,6 +131434,11 @@ export namespace Prisma {
     priority?: IntFieldUpdateOperationsInput | number
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimToken?: NullableStringFieldUpdateOperationsInput | string | null
+    claimExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reservedTicketId?: NullableStringFieldUpdateOperationsInput | string | null
+    reservedHoldId?: NullableStringFieldUpdateOperationsInput | string | null
+    facePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -131233,6 +131456,11 @@ export namespace Prisma {
     priority?: IntFieldUpdateOperationsInput | number
     notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     convertedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimToken?: NullableStringFieldUpdateOperationsInput | string | null
+    claimExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reservedTicketId?: NullableStringFieldUpdateOperationsInput | string | null
+    reservedHoldId?: NullableStringFieldUpdateOperationsInput | string | null
+    facePrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
