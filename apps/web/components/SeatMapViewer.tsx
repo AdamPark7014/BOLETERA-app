@@ -1,6 +1,6 @@
-import { formatNumber, formatPrice } from '@boletera/ui';
-('use client');
+'use client';
 
+import { formatNumber, formatPrice } from '@boletera/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { offerTones } from '@/lib/zone-tones';
 import {
