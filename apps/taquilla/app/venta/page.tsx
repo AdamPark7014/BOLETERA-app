@@ -15,9 +15,11 @@ import {
   billLabel,
   changeBreakdownLabel,
   computeCash,
+  mixedCashState,
   money,
   quickCashOptions,
   round2,
+  splitMixedPayment,
 } from '@/lib/cash';
 import {
   clearSaleDraft,
@@ -38,11 +40,16 @@ import {
   type OfflinePosPayload,
   type PosReceipt,
 } from '@/lib/pos';
+import { loadOfflineCatalog, saveOfflineCatalog } from '@/lib/offline-catalog';
 import { stockImageForCategory } from '@boletera/shared';
 import { Field, StageArt, formatTicketAmount } from '@boletera/ui';
 import { EventPicker } from '@/components/EventPicker';
+import { MixedTenderPanel, canChargeMixed } from '@/components/MixedTenderPanel';
+import { PrintableReceipt } from '@/components/PrintableReceipt';
 import { sellableOffersSorted, type OrderableOffer } from '@/lib/offer-order';
 import styles from './venta.module.scss';
+
+type PayMethod = 'CASH' | 'CARD' | 'COMP' | 'MIXED';
 
 type Offer = OrderableOffer;
 
@@ -80,8 +87,10 @@ function VentaFlow() {
   const [offerId, setOfferId] = useState(urlOfferId);
   const [stage, setStage] = useState<Stage>(urlEventId ? 'TICKETS' : 'EVENT');
   const [qty, setQty] = useState(1);
-  const [method, setMethod] = useState<'CASH' | 'CARD' | 'COMP'>(compMode ? 'COMP' : 'CASH');
+  const [method, setMethod] = useState<PayMethod>(compMode ? 'COMP' : 'CASH');
   const [cashReceived, setCashReceived] = useState('');
+  /** Parte del total cobrada en efectivo cuando method === MIXED. */
+  const [cashPart, setCashPart] = useState('');
   const [mapData, setMapData] = useState<PosMapData | null>(null);
   const [pickSeats, setPickSeats] = useState(false);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
@@ -165,11 +174,15 @@ function VentaFlow() {
         } catch {
           /* sin cuota: el catálogo en caché es una comodidad */
         }
+        void saveOfflineCatalog(data).catch(() => undefined);
       })
-      .catch(() => {
-        // Sin red tras recargar, la venta offline necesita el catálogo: antes
-        // la pantalla decía «No hay funciones publicadas» aunque hubiera cupo
-        // local para vender.
+      .catch(async () => {
+        // Sin red tras recargar: IndexedDB primero, luego localStorage.
+        const fromIdb = await loadOfflineCatalog().catch(() => []);
+        if (fromIdb.length) {
+          show(fromIdb as EventRow[]);
+          return;
+        }
         try {
           const cached = JSON.parse(localStorage.getItem(EVENTS_CACHE_KEY) || '[]') as EventRow[];
           show(Array.isArray(cached) ? cached : []);
@@ -179,6 +192,15 @@ function VentaFlow() {
       })
       .finally(() => setEventsLoading(false));
   }, []);
+
+  useEffect(() => {
+    const onConflict = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ message?: string }>).detail;
+      if (detail?.message) showToast(detail.message);
+    };
+    window.addEventListener('bt-sync-conflict', onConflict);
+    return () => window.removeEventListener('bt-sync-conflict', onConflict);
+  }, [showToast]);
 
   const event = useMemo(() => events.find((e) => e.id === eventId) ?? null, [events, eventId]);
 
@@ -253,6 +275,11 @@ function VentaFlow() {
   const inSale = stage === 'TICKETS' || stage === 'TENDER';
   const due = !inSale || method === 'COMP' ? 0 : round2(quote?.total ?? estimate);
   const cash = computeCash(due, cashReceived);
+  const mixed = useMemo(() => splitMixedPayment(due, cashPart), [due, cashPart]);
+  const mixedCash = useMemo(
+    () => mixedCashState(mixed.cashPart, cashReceived),
+    [mixed.cashPart, cashReceived]
+  );
   const quickCash = useMemo(() => quickCashOptions(due), [due]);
 
   useEffect(() => {
@@ -318,10 +345,11 @@ function VentaFlow() {
       seatIds: selectedSeats,
       method,
       cashReceived,
+      cashPart,
       stage,
       savedAt: new Date().toISOString(),
     });
-  }, [stage, eventId, offerId, qty, selectedSeats, method, cashReceived, event?.title]);
+  }, [stage, eventId, offerId, qty, selectedSeats, method, cashReceived, cashPart, event?.title]);
 
   // Recupera una venta a medias tras un recargue accidental de la PWA.
   useEffect(() => {
@@ -334,6 +362,7 @@ function VentaFlow() {
     setSelectedSeats(draft.seatIds ?? []);
     setMethod(draft.method);
     setCashReceived(draft.cashReceived ?? '');
+    setCashPart(draft.cashPart ?? '');
     setStage(draft.stage === 'DONE' ? 'TICKETS' : (draft.stage as Stage));
     showToast('Venta recuperada del borrador local');
   }, [urlEventId, showToast]);
@@ -421,6 +450,7 @@ function VentaFlow() {
       setQty(1);
       setSelectedSeats([]);
       setCashReceived('');
+      setCashPart('');
       setReceipt(null);
       setManagerPin('');
       setPromoCode('');
@@ -449,14 +479,25 @@ function VentaFlow() {
       showToast(`Faltan ${money(cash.missing)}`);
       return;
     }
+    if (method === 'MIXED') {
+      if (!mixed.valid || mixed.cashPart <= 0 || mixed.cardPart <= 0) {
+        showToast(mixed.error || 'El efectivo y la tarjeta deben sumar el total');
+        return;
+      }
+      if (!mixedCash.sufficient) {
+        showToast(`Faltan ${money(mixedCash.missing)} en efectivo`);
+        return;
+      }
+    }
     if (method === 'COMP' && !managerPin) {
       setPendingAuth('COMP');
       return;
     }
 
     setLoading(true);
-    if (method === 'CARD') setCardWaiting(true);
-    cardCancelRef.current = method === 'CARD' ? 'waiting' : 'idle';
+    const needsCard = method === 'CARD' || method === 'MIXED';
+    if (needsCard) setCardWaiting(true);
+    cardCancelRef.current = needsCard ? 'waiting' : 'idle';
     const clientSaleId = crypto.randomUUID();
 
     try {
@@ -475,7 +516,7 @@ function VentaFlow() {
         setHoldExpiresAt(new Date(hold.expiresAt).getTime());
       }
 
-      if (method === 'CARD') {
+      if (needsCard) {
         // Hueco del pinpad: el flujo real lo cierra el integrador de Banorte.
         await new Promise((r) => setTimeout(r, 800));
         // Esc lo cambia durante la espera; TS no ve esa mutación del ref.
@@ -487,6 +528,11 @@ function VentaFlow() {
         cardCancelRef.current = 'sent';
       }
 
+      const apiMethod = method === 'MIXED' ? 'CASH' : method;
+      const mixedParts = method === 'MIXED' ? mixed.parts : undefined;
+      const cashForChange =
+        method === 'MIXED' ? mixedCash : method === 'CASH' ? computeCash(due, cashReceived) : null;
+
       const result = await posCheckout({
         terminalId,
         sessionId,
@@ -495,7 +541,7 @@ function VentaFlow() {
         quantity: seatMode ? undefined : qty,
         seatIds: seatMode ? selectedSeats : undefined,
         holdIds: holds.length ? holds : undefined,
-        paymentMethod: method,
+        paymentMethod: apiMethod,
         cashierId: getCashierId(),
         buyerName: buyerName.trim() || undefined,
         buyerEmail: buyerEmail.trim() || undefined,
@@ -505,29 +551,45 @@ function VentaFlow() {
         managerPin: method === 'COMP' ? managerPin : undefined,
         discountCode: discountUnlocked && promoCode ? promoCode : undefined,
         clientSaleId,
+        paymentParts: mixedParts,
+        cashReceived: cashForChange?.received,
+        changeGiven: cashForChange?.change,
       });
 
       setHoldIds([]);
       setHoldExpiresAt(null);
       const realTotal = round2(Number(result.total));
-      const finalCash = computeCash(realTotal, cashReceived);
+      const finalCash =
+        method === 'MIXED'
+          ? mixedCashState(splitMixedPayment(realTotal, cashPart).cashPart, cashReceived)
+          : computeCash(realTotal, cashReceived);
       const rec = await fetchReceipt(result.orderId, terminalId).catch(() => null);
       if (rec) {
-        const enriched: PosReceipt =
-          method === 'CASH'
-            ? { ...rec, cashReceived: finalCash.received, changeGiven: finalCash.change }
-            : rec;
+        const enriched: PosReceipt = {
+          ...rec,
+          ...(method === 'CASH' || method === 'MIXED'
+            ? { cashReceived: finalCash.received, changeGiven: finalCash.change }
+            : {}),
+          ...(mixedParts ? { paymentParts: mixedParts, paymentMethod: 'MIXED' } : {}),
+        };
         setReceipt(enriched);
         saveLastReceipt(enriched);
         void printReceipt(enriched);
       }
       const folio = rec?.receiptNumber || result.publicId;
-      const change = method === 'CASH' ? finalCash.change : 0;
-      reset(folio ? `Cobrado · ${folio}` : 'Cobrado');
-      setLastChange(method === 'CASH' ? change : null);
+      const change = method === 'CASH' || method === 'MIXED' ? finalCash.change : 0;
+      clearSaleDraft();
+      setStage('DONE');
+      setChargedLine(folio ? `Cobrado · ${folio}` : 'Cobrado');
+      setLastChange(method === 'CASH' || method === 'MIXED' ? change : null);
+      setCashReceived('');
+      setCashPart('');
+      setQty(1);
+      setSelectedSeats([]);
+      setQuote(null);
       window.dispatchEvent(new Event('bt-shift-refresh'));
       if (change > 0) showToast(`Cambio ${money(change)}`);
-      else if (Math.abs(realTotal - due) > 0.009 && method === 'CASH') {
+      else if (Math.abs(realTotal - due) > 0.009 && (method === 'CASH' || method === 'MIXED')) {
         showToast(`El total final fue ${money(realTotal)}. Revisa el cambio.`);
       }
     } catch (err) {
@@ -539,6 +601,7 @@ function VentaFlow() {
         }
         try {
           const { terminalId, sessionId } = await ensurePosSession(resolveOrgId(), getCashierId());
+          const offlineMethod = method === 'COMP' || method === 'MIXED' ? 'CASH' : method;
           const payload: OfflinePosPayload = {
             type: 'pos',
             terminalId,
@@ -551,11 +614,18 @@ function VentaFlow() {
               seatIds: seatMode ? selectedSeats : undefined,
               // Una cortesía sin red no se puede autorizar: se registra como
               // efectivo a 0 y queda para revisión al sincronizar.
-              paymentMethod: method === 'COMP' ? 'CASH' : method,
+              paymentMethod: offlineMethod,
               cashierId: getCashierId(),
               buyerName: buyerName.trim() || undefined,
               buyerEmail: buyerEmail.trim() || undefined,
               clientSaleId,
+              ...(method === 'MIXED'
+                ? {
+                    paymentParts: mixed.parts,
+                    cashReceived: mixedCash.received,
+                    changeGiven: mixedCash.change,
+                  }
+                : {}),
             },
           };
           await enqueueSale(payload);
@@ -581,6 +651,9 @@ function VentaFlow() {
     method,
     cash.sufficient,
     cash.missing,
+    mixed,
+    mixedCash,
+    cashPart,
     managerPin,
     seatMode,
     selectedSeats,
@@ -787,12 +860,18 @@ function VentaFlow() {
           },
         },
         {
+          keys: 'X',
+          label: 'Mixto',
+          match: (e) => e.key.toLowerCase() === 'x',
+          run: () => setMethod('MIXED'),
+        },
+        {
           keys: 'F1-F6',
           label: 'Billete rápido',
           whileTyping: true,
           match: (e) => {
             const n = fKeyPressed(e);
-            return method === 'CASH' && n != null && n <= quickCash.length;
+            return (method === 'CASH' || method === 'MIXED') && n != null && n <= quickCash.length;
           },
           run: (e) => {
             const n = fKeyPressed(e);
@@ -805,7 +884,7 @@ function VentaFlow() {
         {
           keys: '0-9',
           label: 'Recibido',
-          match: (e) => method === 'CASH' && anyDigitPressed(e) != null,
+          match: (e) => (method === 'CASH' || method === 'MIXED') && anyDigitPressed(e) != null,
           run: (e) => {
             const d = anyDigitPressed(e);
             if (d != null) pushCashDigit(d);
@@ -815,7 +894,7 @@ function VentaFlow() {
           keys: '⌫',
           label: 'Borrar',
           hidden: true,
-          match: (e) => method === 'CASH' && e.key === 'Backspace',
+          match: (e) => (method === 'CASH' || method === 'MIXED') && e.key === 'Backspace',
           run: () => setCashReceived((v) => v.slice(0, -1)),
         },
         {
@@ -949,6 +1028,7 @@ function VentaFlow() {
     ticketCount >= 1 &&
     !loading &&
     (method !== 'CASH' || cash.sufficient) &&
+    (method !== 'MIXED' || canChargeMixed(due, cashPart, cashReceived)) &&
     (method !== 'COMP' || Boolean(managerPin));
   const whenLabel = (iso: string) => {
     const d = new Date(iso);
@@ -970,7 +1050,7 @@ function VentaFlow() {
       : [];
 
   const pressPad = (key: string) => {
-    if (!inSale || method !== 'CASH') return;
+    if (!inSale || (method !== 'CASH' && method !== 'MIXED')) return;
     if (stage === 'TICKETS') setStage('TENDER');
     if (key === '⌫') setCashReceived((v) => v.slice(0, -1));
     else if (key === '00') setCashReceived((v) => (v ? `${v}00`.slice(0, 9) : v));
@@ -1006,7 +1086,11 @@ function VentaFlow() {
             </p>
           ) : null}
 
-          {(stage === 'EVENT' || stage === 'DONE') && (
+          {stage === 'DONE' && receipt ? (
+            <PrintableReceipt receipt={receipt} onClose={() => reset()} />
+          ) : null}
+
+          {(stage === 'EVENT' || (stage === 'DONE' && !receipt)) && (
             <EventPicker
               events={events}
               loading={eventsLoading}
@@ -1289,6 +1373,7 @@ function VentaFlow() {
             {[
               { id: 'CASH' as const, label: 'Efectivo', hot: 'E' },
               { id: 'CARD' as const, label: 'Terminal', hot: 'T' },
+              { id: 'MIXED' as const, label: 'Mixto', hot: 'X' },
               { id: 'COMP' as const, label: 'Cortesía', hot: 'C' },
             ].map((m) => (
               <button
@@ -1299,6 +1384,7 @@ function VentaFlow() {
                 onClick={() => {
                   setMethod(m.id);
                   if (m.id === 'COMP' && !managerPin) setPendingAuth('COMP');
+                  if (m.id !== 'MIXED' && m.id !== 'CASH') setCashPart('');
                 }}
               >
                 {m.label}
@@ -1306,6 +1392,16 @@ function VentaFlow() {
               </button>
             ))}
           </div>
+
+          {method === 'MIXED' && inSale ? (
+            <MixedTenderPanel
+              due={due}
+              cashPart={cashPart}
+              onCashPartChange={setCashPart}
+              cashReceived={cashReceived}
+              onCashReceivedChange={setCashReceived}
+            />
+          ) : null}
 
           {method === 'CASH' && inSale ? (
             <>

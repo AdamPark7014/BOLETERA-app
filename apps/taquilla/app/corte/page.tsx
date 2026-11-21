@@ -489,7 +489,17 @@ export default function CortePage() {
                   return (
                     <li key={m}>
                       <div className={styles.methodInfo}>
-                        <strong>{m === 'CASH' ? 'Efectivo' : m === 'CARD' ? 'Tarjeta' : m}</strong>
+                        <strong>
+                          {m === 'CASH'
+                            ? 'Efectivo'
+                            : m === 'CARD'
+                              ? 'Tarjeta'
+                              : m === 'COMP'
+                                ? 'Cortesía'
+                                : m === 'MIXED'
+                                  ? 'Mixto'
+                                  : m}
+                        </strong>
                         <div className={styles.bar}>
                           <span style={{ width: `${pct}%` }} />
                         </div>

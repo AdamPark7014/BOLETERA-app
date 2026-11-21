@@ -331,6 +331,10 @@ export type CheckoutResult = {
   status: string;
   isComp?: boolean;
   holdExpiresAt?: string;
+  paymentMethod?: string;
+  paymentParts?: PaymentPart[];
+  cashReceived?: number;
+  changeGiven?: number;
 };
 
 export async function posCheckout(params: {

@@ -1,0 +1,153 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line-strong, #34343a);
+  background: var(--elevated, #242424);
+  color: var(--text, #fff);
+}
+
+.folio {
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+}
+
+.meta,
+.event,
+.line {
+  font-size: 14px;
+  color: var(--text-secondary, #a8a29a);
+}
+
+.event {
+  color: var(--text, #fff);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text, #fff);
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-strong, #34343a);
+  font-size: 16px;
+
+  strong {
+    font-size: 28px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tickets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text-secondary, #a8a29a);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.printBtn,
+.secondaryBtn {
+  min-height: 44px;
+  min-width: 120px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+}
+
+.printBtn {
+  background: var(--bone, #f2eadf);
+  color: #111;
+  border: 0;
+}
+
+.secondaryBtn {
+  background: transparent;
+  border: 1px solid var(--line-strong, #34343a);
+  color: inherit;
+}
+
+.printRoot {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 80mm;
+}
+
+@media print {
+  :global(body *) {
+    visibility: hidden !important;
+  }
+
+  .printRoot,
+  .printRoot :global(*) {
+    visibility: visible !important;
+  }
+
+  .printRoot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    padding: 2mm;
+    color: #000;
+    background: #fff;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .printRoot :global(.r-org) {
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .printRoot :global(.r-folio) {
+    font-weight: 800;
+    text-align: center;
+    margin-top: 2mm;
+  }
+
+  .printRoot :global(.r-total) {
+    font-weight: 800;
+    margin-top: 2mm;
+  }
+
+  .printRoot :global(.r-thanks) {
+    text-align: center;
+    margin-top: 4mm;
+  }
+
+  .panel {
+    display: none !important;
+  }
+}
