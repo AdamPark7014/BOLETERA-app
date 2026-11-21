@@ -98,6 +98,12 @@ export const SECTIONS: IndexSection[] = [
       },
       { id: 'crm', label: 'Clientes', href: '/crm', caps: ['marketing.manage'] },
       { id: 'reventa', label: 'Reventa', href: '/resale', caps: ['orders.view'] },
+      {
+        id: 'reventa-pagos',
+        label: 'Reventa · Pagos a vendedores',
+        href: '/resale/payouts',
+        caps: ['finance.view'],
+      },
       { id: 'membresias', label: 'Membresías', href: '/memberships', caps: ['marketing.manage'] },
       { id: 'abonos', label: 'Abonos', href: '/season', caps: ['marketing.manage'] },
       { id: 'espera', label: 'Lista de espera', href: '/waitlist', caps: ['marketing.manage'] },

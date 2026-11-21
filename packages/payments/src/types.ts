@@ -65,6 +65,8 @@ export interface PaymentContext {
    * Required for safe retries of createIntent.
    */
   idempotencyKey?: string;
+  /** Meses sin intereses (tarjeta). 1 o ausente = de contado. */
+  installments?: number;
 }
 
 export interface PaymentIntentResult {

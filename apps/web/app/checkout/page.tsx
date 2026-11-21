@@ -188,8 +188,34 @@ function CheckoutForm() {
   const [failure, setFailure] = useState<ApiErrorInfo | null>(null);
   const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
   const [offered, setOffered] = useState<PaymentMethodId[] | null>(null);
+  const [msiConfig, setMsiConfig] = useState<{ minTotal: number; plans: number[] }>({
+    minTotal: 1500,
+    plans: [1, 3, 6, 9, 12],
+  });
   const [eventImage, setEventImage] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+
+  // ENCARGO08_MSI_FETCH
+  useEffect(() => {
+    if (!eventId) return;
+    const controller = new AbortController();
+    const q = encodeURIComponent(eventId);
+    fetch(`${API}/payments/msi?eventId=${q}`, { signal: controller.signal, cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        const minTotal = Number(data.minTotal);
+        const plans = Array.isArray(data.plans)
+          ? data.plans.map(Number).filter((n: number) => [1, 3, 6, 9, 12].includes(n))
+          : [];
+        setMsiConfig({
+          minTotal: Number.isFinite(minTotal) && minTotal > 0 ? minTotal : 1500,
+          plans: plans.length ? plans : [1, 3, 6, 9, 12],
+        });
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [eventId]);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -510,9 +536,9 @@ function CheckoutForm() {
     );
   }
 
-  const msiThreshold = 1500;
+  const msiThreshold = msiConfig.minTotal;
   const showMsi = method === 'CARD' && payAmount >= msiThreshold;
-  const msiPlans = [1, 3, 6, 9, 12] as const;
+  const msiPlans = msiConfig.plans;
 
   return (
     <>

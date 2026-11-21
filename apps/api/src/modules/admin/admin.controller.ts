@@ -7,6 +7,7 @@ import {
   Post,
   Query,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -17,6 +18,7 @@ import { PermissionsGuard } from '../auth/permissions.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { ReconciliationService } from '../reconciliation/reconciliation.service';
+import { ResaleSellerPayoutService } from '../resale/resale-seller-payout.service';
 import { AdminService, type VenueWrite } from './admin.service';
 import { maskClabe } from '../orders/clabe';
 
@@ -30,7 +32,8 @@ const CLABE_FULL_ROLES = new Set(['ADMIN', 'SUPER_ADMIN', 'FINANCE']);
 export class AdminController {
   constructor(
     private admin: AdminService,
-    private reconciliation: ReconciliationService
+    private reconciliation: ReconciliationService,
+    private resaleSellerPayouts: ResaleSellerPayoutService
   ) {}
 
   @Get('dashboard')
@@ -204,5 +207,53 @@ export class AdminController {
     return this.reconciliation.runHealthChecks({
       organizationId: req.user.organizationId,
     });
+  }
+
+  @Get('resale/seller-payouts')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'FINANCE')
+  @ApiOperation({ summary: 'Pagos a vendedores de reventa' })
+  listResaleSellerPayouts(
+    @Request() req: { user: { organizationId?: string } },
+    @Query('status') status?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string
+  ) {
+    return this.resaleSellerPayouts.list(req.user.organizationId!, { status, from, to });
+  }
+
+  @Post('resale/seller-payouts/:id/paid')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'FINANCE')
+  @ApiOperation({ summary: 'Marcar pago a vendedor de reventa como depositado' })
+  markResaleSellerPaid(
+    @Request() req: { user: { organizationId?: string; sub?: string; id?: string; role?: string } },
+    @Param('id') id: string,
+    @Body() body: { reference: string; paidAt?: string }
+  ) {
+    return this.resaleSellerPayouts.markPaid(
+      req.user.organizationId!,
+      id,
+      { id: req.user.sub || req.user.id || 'unknown', role: req.user.role },
+      body ?? { reference: '' }
+    );
+  }
+
+  @Get('resale/seller-payouts.csv')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'FINANCE')
+  @ApiOperation({ summary: 'CSV de pagos a vendedores de reventa' })
+  async exportResaleSellerPayouts(
+    @Request() req: { user: { organizationId?: string } },
+    @Query('status') status?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Res({ passthrough: true }) res?: { setHeader: (k: string, v: string) => void }
+  ) {
+    const csv = await this.resaleSellerPayouts.exportCsv(req.user.organizationId!, {
+      status,
+      from,
+      to,
+    });
+    res?.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res?.setHeader('Content-Disposition', 'attachment; filename="reventa-pagos.csv"');
+    return csv;
   }
 }

@@ -120,6 +120,9 @@ export class BanorteProvider implements PaymentProvider {
       };
     }
 
+    const installmentsRaw = ctx.installments ?? Number(ctx.metadata?.installments);
+    const installments =
+      Number.isFinite(installmentsRaw) && installmentsRaw > 1 ? installmentsRaw : undefined;
     const redirectUrl = buildPayworksRedirectUrl(cfg, {
       orderId: ctx.orderId,
       publicId,
@@ -128,6 +131,7 @@ export class BanorteProvider implements PaymentProvider {
       currency: money.currency,
       buyerEmail: ctx.buyerEmail,
       buyerName: ctx.buyerName,
+      installments,
     });
 
     return {

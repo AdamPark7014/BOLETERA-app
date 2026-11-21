@@ -282,9 +282,7 @@ export class TaquillaPosService {
         ...(data.changeGiven != null && Number.isFinite(Number(data.changeGiven))
           ? { changeGiven: Number(data.changeGiven) }
           : {}),
-        ...(cashPart > 0 || cardPart > 0
-          ? { cashPart, cardPart }
-          : {}),
+        ...(cashPart > 0 || cardPart > 0 ? { cashPart, cardPart } : {}),
       },
     });
     if (!order) throw new BadRequestException('No se pudo crear la orden');
@@ -718,12 +716,14 @@ export class TaquillaPosService {
     const byMethod: Record<string, number> = {};
 
     for (const o of orders) {
-      const ops = (o as {
-        posOps?: {
-          isComp?: boolean;
-          paymentParts?: Array<{ method?: string; amount?: number }>;
-        };
-      }).posOps;
+      const ops = (
+        o as {
+          posOps?: {
+            isComp?: boolean;
+            paymentParts?: Array<{ method?: string; amount?: number }>;
+          };
+        }
+      ).posOps;
       if (ops?.isComp || Number(o.totalAmount) === 0) {
         compCount += 1;
         continue;

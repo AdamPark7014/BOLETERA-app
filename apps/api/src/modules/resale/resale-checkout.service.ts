@@ -366,9 +366,17 @@ export class ResaleCheckoutService implements ExternalChargeHandler, OnModuleIni
       },
     });
 
+    const seller = await tx.user.findUnique({
+      where: { id: listing.sellerId },
+      select: { resalePayoutClabe: true },
+    });
     await tx.resaleCheckout.update({
       where: { id: checkout.id },
-      data: { paymentId, orderId: order.id },
+      data: {
+        paymentId,
+        orderId: order.id,
+        ...(seller?.resalePayoutClabe ? { sellerClabe: seller.resalePayoutClabe } : {}),
+      },
     });
     await tx.auditEvent.create({
       data: {

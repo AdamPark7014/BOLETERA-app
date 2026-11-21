@@ -136,6 +136,12 @@ export class PaymentController {
     return this.paymentService.getPublicConfig(eventId);
   }
 
+  @Get('msi')
+  @ApiOperation({ summary: 'Planes MSI públicos de la organización del evento' })
+  getMsi(@Query('eventId') eventId?: string) {
+    return this.paymentService.getPublicMsiConfig(eventId);
+  }
+
   /** Interruptores de la organización. Vacío, tarjeta, SPEI y OXXO siguen activos. */
   @Get('methods')
   @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
@@ -163,6 +169,30 @@ export class PaymentController {
       body ?? {},
       user?.sub || user?.id
     );
+  }
+
+  @Get('msi/settings')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Configuración MSI de la organización' })
+  readMsi(@Request() req: ScopedRequest) {
+    return this.paymentService.readMsiSettings(requireScope(req));
+  }
+
+  @Patch('msi/settings')
+  @UseGuards(JwtAuthGuard, RolesGuard, OrgAccessGuard)
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Guardar plazos MSI y monto mínimo' })
+  saveMsi(
+    @Request() req: ScopedRequest,
+    @Body() body: { minTotal?: number; plans?: number[] },
+    @CurrentUser() user: { sub?: string; id?: string }
+  ) {
+    const organizationId = requireScope(req);
+    if (!organizationId) throw new BadRequestException('organizationId requerido');
+    return this.paymentService.saveMsiSettings(organizationId, body ?? {}, user?.sub || user?.id);
   }
 
   @Get('config/validate')

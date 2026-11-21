@@ -275,6 +275,10 @@ exports.Prisma.SeatHoldScalarFieldEnum = {
   expiresAt: 'expiresAt',
   releasedAt: 'releasedAt',
   status: 'status',
+  quotedSubtotal: 'quotedSubtotal',
+  quotedFees: 'quotedFees',
+  quotedTaxes: 'quotedTaxes',
+  quotedTotal: 'quotedTotal',
   createdAt: 'createdAt'
 };
 
@@ -614,6 +618,8 @@ exports.Prisma.UserScalarFieldEnum = {
   active: 'active',
   lastLogin: 'lastLogin',
   loyaltyPoints: 'loyaltyPoints',
+  resalePayoutClabe: 'resalePayoutClabe',
+  resalePayoutClabeAt: 'resalePayoutClabeAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -1065,6 +1071,10 @@ exports.Prisma.ResaleCheckoutScalarFieldEnum = {
   paymentMethod: 'paymentMethod',
   sellerPayout: 'sellerPayout',
   payoutStatus: 'payoutStatus',
+  sellerClabe: 'sellerClabe',
+  payoutReference: 'payoutReference',
+  payoutPaidAt: 'payoutPaidAt',
+  payoutPaidById: 'payoutPaidById',
   paymentId: 'paymentId',
   orderId: 'orderId',
   expiresAt: 'expiresAt',

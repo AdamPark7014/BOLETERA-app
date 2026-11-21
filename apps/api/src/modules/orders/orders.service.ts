@@ -37,6 +37,10 @@ import { isWebLikeChannel } from '../../common/sales-channel';
 import { isKnownAffiliateRef, normalizeAffiliateRef } from '../../common/affiliate-ref';
 import { isDeferredMethod, paymentDeadline } from '../../common/payment-window';
 import { resolveInstallments } from '../../common/msi';
+
+function roundMoney(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
 import { checkoutMethodOffered } from '../payment/payment-methods';
 import { PrismaService } from '../prisma/prisma.service';
 import { requireTicketQrSecret } from '../auth/jwt-secret';
@@ -287,11 +291,37 @@ export class OrdersService {
         promotionCode: appliedPromotionCode,
         skipLoyalty: compRequested,
       });
-      const lineSubtotal = Number(pricingResult.subtotal);
-      const lineFees = Number(pricingResult.fees);
-      const lineTaxes = Number(pricingResult.taxes);
-      const lineTotal = Number(pricingResult.total);
+      // ENCARGO08_QUOTED_CAP: PROFECO — el total no sube tras apartar.
+      // Si el hold trae cotización, es tope; si el dinámico bajó, se cobra lo menor.
+      const quotedParts = group.holds.reduce(
+        (acc, h) => {
+          const qt = h.quotedTotal != null ? Number(h.quotedTotal) : null;
+          const qs = h.quotedSubtotal != null ? Number(h.quotedSubtotal) : null;
+          const qf = h.quotedFees != null ? Number(h.quotedFees) : null;
+          const qx = h.quotedTaxes != null ? Number(h.quotedTaxes) : null;
+          if (qt == null || qs == null || qf == null || qx == null) return acc;
+          return {
+            ok: acc.ok,
+            subtotal: acc.subtotal + qs,
+            fees: acc.fees + qf,
+            taxes: acc.taxes + qx,
+            total: acc.total + qt,
+          };
+        },
+        { ok: true as boolean, subtotal: 0, fees: 0, taxes: 0, total: 0 }
+      );
+      const allQuoted = group.holds.every((h) => h.quotedTotal != null && h.quotedSubtotal != null);
+      let lineSubtotal = Number(pricingResult.subtotal);
+      let lineFees = Number(pricingResult.fees);
+      let lineTaxes = Number(pricingResult.taxes);
+      let lineTotal = Number(pricingResult.total);
       const lineDiscount = Number(pricingResult.discount);
+      if (allQuoted && quotedParts.ok) {
+        lineTotal = Math.min(lineTotal, roundMoney(quotedParts.total));
+        lineSubtotal = Math.min(lineSubtotal, roundMoney(quotedParts.subtotal));
+        lineFees = Math.min(lineFees, roundMoney(quotedParts.fees));
+        lineTaxes = Math.min(lineTaxes, roundMoney(quotedParts.taxes));
+      }
       const qty = group.holds.length;
       pricedLines.push({
         offerId: offer.id,
@@ -589,8 +619,14 @@ export class OrdersService {
         buyerEmail: dto.buyerEmail,
         buyerName,
         paymentMethod: method as 'CARD' | 'SPEI' | 'OXXO',
-        metadata: { publicId: order.publicId },
+        metadata: {
+          publicId: order.publicId,
+          ...(intentRow.installments != null
+            ? { installments: String(intentRow.installments) }
+            : {}),
+        },
         idempotencyKey,
+        installments: intentRow.installments ?? undefined, // ENCARGO08_MSI
       });
 
       await this.prisma.paymentIntent.update({
@@ -645,8 +681,12 @@ export class OrdersService {
       buyerEmail: dto.buyerEmail,
       buyerName,
       paymentMethod: method as 'CARD' | 'SPEI' | 'OXXO' | 'CASH',
-      metadata: { publicId: order.publicId },
+      metadata: {
+        publicId: order.publicId,
+        ...(intentRow.installments != null ? { installments: String(intentRow.installments) } : {}),
+      },
       idempotencyKey,
+      installments: intentRow.installments ?? undefined,
     });
 
     const capture = await provider.capture(intent.intentId, intent.externalId);

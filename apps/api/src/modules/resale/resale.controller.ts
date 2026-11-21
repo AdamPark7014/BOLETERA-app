@@ -14,6 +14,7 @@ import { PaymentService } from '../payment/payment.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ResaleService } from './resale.service';
 import { ResaleCheckoutService } from './resale-checkout.service';
+import { ResaleSellerPayoutService } from './resale-seller-payout.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Resale')
@@ -22,7 +23,8 @@ export class ResaleController {
   constructor(
     private resaleService: ResaleService,
     private checkouts: ResaleCheckoutService,
-    private payments: PaymentService
+    private payments: PaymentService,
+    private sellerPayouts: ResaleSellerPayoutService
   ) {}
 
   // ==================== COMPRAR YA (cobro real) ====================
@@ -67,6 +69,22 @@ export class ResaleController {
   @ApiOperation({ summary: 'Mis anuncios de reventa con lo que recibiré' })
   async mine(@Request() req: { user: { sub: string } }) {
     return this.checkouts.sellerSummary(req.user.sub);
+  }
+
+  @Get('mine/clabe')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'CLABE guardada para depósito de reventa' })
+  async getClabe(@Request() req: { user: { sub: string } }) {
+    return this.sellerPayouts.sellerClabeStatus(req.user.sub);
+  }
+
+  @Post('mine/clabe')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Guardar CLABE para depósito de reventa' })
+  async saveClabe(@Request() req: { user: { sub: string } }, @Body() body: { clabe: string }) {
+    return this.sellerPayouts.saveSellerClabe(req.user.sub, body?.clabe);
   }
 
   // ==================== CREATE LISTING ====================

@@ -22,6 +22,7 @@ export type PayworksChargeParams = {
   currency: string;
   buyerEmail: string;
   buyerName: string;
+  installments?: number;
 };
 
 export {
@@ -30,6 +31,28 @@ export {
   parseBanorteSettlement,
   timingSafeEqualString,
 } from './webhook';
+
+/**
+ * Build MSI fields for Payworks redirection.
+ *
+ * The manual names for these fields vary by affiliation (e.g., `NUMERO_MENSUALIDADES` vs others).
+ * This function returns a populated Record only if installments > 1,
+ * otherwise an empty Record to avoid adding unwanted parameters.
+ */
+export function buildPayworksMsiFields(installments?: number): Record<string, string> {
+  if (installments == null || installments <= 1) {
+    return {};
+  }
+
+  const plan = process.env.BANORTE_MSI_FIELD_PLAN ?? 'NUMERO_MENSUALIDADES';
+  const promo = process.env.BANORTE_MSI_FIELD_PROMO ?? 'PROMOCION';
+  const promoValue = process.env.BANORTE_MSI_PROMO_VALUE ?? 'MSI';
+
+  return {
+    [plan]: String(installments),
+    [promo]: promoValue,
+  };
+}
 
 function resolveMoney(params: PayworksChargeParams): MoneyAmount {
   const currency: CurrencyCode = toCurrencyCode(params.currency);
@@ -51,6 +74,8 @@ export function buildPayworksRedirectUrl(cfg: BanorteConfig, params: PayworksCha
   const importe = toGatewayAmountString(money);
   const reference = params.publicId.replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
 
+  const msiFields = buildPayworksMsiFields(params.installments);
+
   const query = new URLSearchParams({
     ID_AFILIACION: cfg.affiliation,
     ID_TERMINAL: cfg.terminal,
@@ -65,6 +90,10 @@ export function buildPayworksRedirectUrl(cfg: BanorteConfig, params: PayworksCha
     CMD_TRANS: 'VENTA',
     METODO_PAGO: 'TC',
   });
+
+  if (Object.keys(msiFields).length > 0) {
+    Object.entries(msiFields).forEach(([key, value]) => query.set(key, value));
+  }
 
   if (cfg.password) {
     const sig = signPayworksPayload(query.toString(), cfg.password);

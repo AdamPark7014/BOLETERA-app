@@ -17,6 +17,7 @@ import { RedisService } from '../../common/redis.service';
 import { ChannelQuotaService } from '../channel-management/channel-quota.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
+import { priceBreakdown, ratesFromSettings } from '../../common/pricing-rates';
 
 const HOLD_TTL_WEB_SECONDS = 900;
 const HOLD_TTL_TAQUILLA_SECONDS = 300;
@@ -537,6 +538,8 @@ export class InventoryService {
       if (idempotencyKey) {
         await this.persistIdempotentHold(dto, idempotencyKey, result, ttl);
       }
+      // ENCARGO08_ATTACH_QUOTES: congela el total anunciado al apartar (PROFECO).
+      await this.attachHoldQuotes(result.holds);
       return result;
     } catch (error) {
       // Cupo apartado que nunca llegó a ser hold: la reconciliación no lo vería
@@ -553,6 +556,44 @@ export class InventoryService {
    * atómica: antes, si fallaba el asiento k+1, los k anteriores quedaban HELD
    * con `SeatHold` huérfanos hasta expirar.
    */
+
+  /** Precio final por hold al apartar: tope PROFECO si el dinámico sube después. */
+  private async attachHoldQuotes(
+    holds: Array<{ id: string; eventId: string; offerId: string | null }>
+  ) {
+    if (!holds.length) return;
+    const eventId = holds[0].eventId;
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { organization: { select: { settings: true } } },
+    });
+    if (!event) return;
+    const rates = ratesFromSettings(event.organization?.settings);
+    const offerIds = [...new Set(holds.map((h) => h.offerId).filter(Boolean))] as string[];
+    const offers = await this.prisma.offer.findMany({
+      where: { id: { in: offerIds } },
+      select: { id: true, basePrice: true },
+    });
+    const byOffer = new Map(offers.map((o) => [o.id, Number(o.basePrice)]));
+    await Promise.all(
+      holds.map(async (hold) => {
+        if (!hold.offerId) return;
+        const base = byOffer.get(hold.offerId);
+        if (base == null) return;
+        const b = priceBreakdown(base, rates);
+        await this.prisma.seatHold.update({
+          where: { id: hold.id },
+          data: {
+            quotedSubtotal: b.base,
+            quotedFees: b.fees,
+            quotedTaxes: b.taxes,
+            quotedTotal: b.total,
+          },
+        });
+      })
+    );
+  }
+
   private async createReservedSeatHold(
     dto: {
       eventId: string;

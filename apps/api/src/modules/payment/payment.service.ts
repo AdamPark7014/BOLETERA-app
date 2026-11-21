@@ -44,6 +44,7 @@ import {
   offeredCheckoutMethods,
   type MethodPatch,
 } from './payment-methods';
+import { msiConfigFromSettings, type MsiPlan } from '../../common/msi';
 import { PrismaService } from '../prisma/prisma.service';
 import { CampaignExecutionService } from '../campaign-execution/campaign-execution.service';
 import { NotificationService } from '../notification/notification.service';
@@ -1933,6 +1934,79 @@ export class PaymentService {
    * Con evento, omite el que la organización guardó en falso. No toca
    * credenciales, CLABE ni el modo demo/vivo.
    */
+  async getPublicMsiConfig(eventId?: string) {
+    if (!eventId?.trim()) {
+      const cfg = msiConfigFromSettings(null);
+      return { minTotal: cfg.minTotal, plans: cfg.plans };
+    }
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId.trim() },
+      select: { organization: { select: { settings: true } } },
+    });
+    const cfg = msiConfigFromSettings(event?.organization?.settings ?? null);
+    return { minTotal: cfg.minTotal, plans: cfg.plans };
+  }
+
+  async readMsiSettings(organizationId: string | null) {
+    if (!organizationId) return msiConfigFromSettings(null);
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    return msiConfigFromSettings(org.settings);
+  }
+
+  async saveMsiSettings(
+    organizationId: string,
+    body: { minTotal?: number; plans?: number[] },
+    actorId?: string
+  ) {
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new NotFoundException('Organization not found');
+    const current =
+      typeof org.settings === 'object' && org.settings !== null && !Array.isArray(org.settings)
+        ? { ...(org.settings as Record<string, unknown>) }
+        : {};
+    const prevMsi =
+      typeof current.msi === 'object' && current.msi !== null && !Array.isArray(current.msi)
+        ? { ...(current.msi as Record<string, unknown>) }
+        : {};
+    if (body.minTotal !== undefined) {
+      const n = Number(body.minTotal);
+      if (!Number.isFinite(n) || n < 1) throw new BadRequestException('Monto mínimo MSI inválido');
+      prevMsi.minTotal = n;
+    }
+    if (body.plans !== undefined) {
+      if (!Array.isArray(body.plans) || body.plans.length === 0) {
+        throw new BadRequestException('Indica al menos un plazo MSI');
+      }
+      const plans = [...new Set(body.plans.map(Number))].filter((p) =>
+        [1, 3, 6, 9, 12].includes(p)
+      ) as MsiPlan[];
+      if (!plans.length) throw new BadRequestException('Plazos MSI inválidos');
+      if (!plans.includes(1)) plans.unshift(1);
+      prevMsi.plans = plans.sort((a, b) => a - b);
+    }
+    current.msi = prevMsi;
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: { settings: current as Prisma.InputJsonValue },
+    });
+    await this.audit.log({
+      action: 'PAYMENT_MSI_UPDATED',
+      entityType: 'Organization',
+      entityId: organizationId,
+      organizationId,
+      userId: actorId,
+      metadata: prevMsi,
+    });
+    return msiConfigFromSettings(current);
+  }
+
   async getPublicConfig(eventId?: string) {
     const config = this.getBanortePublicConfig();
     const id = eventId?.trim();

@@ -247,21 +247,26 @@ model EventSeatMap {
 }
 
 model SeatHold {
-  id         String       @id @default(cuid())
-  eventId    String
-  event      Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  seatId     String?
-  seat       Seat?        @relation(fields: [seatId], references: [id], onDelete: Cascade)
-  offerId    String?
-  userId     String?
-  sessionId  String?
-  channel    SalesChannel @default(WEB)
-  cashierId  String?
-  quantity   Int          @default(1)
-  expiresAt  DateTime
-  releasedAt DateTime?
-  status     HoldStatus   @default(ACTIVE)
-  createdAt  DateTime     @default(now())
+  id             String       @id @default(cuid())
+  eventId        String
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  seatId         String?
+  seat           Seat?        @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  offerId        String?
+  userId         String?
+  sessionId      String?
+  channel        SalesChannel @default(WEB)
+  cashierId      String?
+  quantity       Int          @default(1)
+  expiresAt      DateTime
+  releasedAt     DateTime?
+  status         HoldStatus   @default(ACTIVE)
+  /// Precio unitario cotizado al apartar (PROFECO: el total no sube en la compra).
+  quotedSubtotal Decimal?     @db.Decimal(12, 2)
+  quotedFees     Decimal?     @db.Decimal(12, 2)
+  quotedTaxes    Decimal?     @db.Decimal(12, 2)
+  quotedTotal    Decimal?     @db.Decimal(12, 2)
+  createdAt      DateTime     @default(now())
 
   @@index([eventId])
   @@index([seatId])
@@ -982,6 +987,10 @@ model User {
 
   /// Saldo de puntos. Lo escribe awardLoyaltyPoints al pagar. Vacío = 0.
   loyaltyPoints Int @default(0)
+
+  /// CLABE del vendedor para depósito de reventa (dígito verificador validado).
+  resalePayoutClabe   String?   @db.VarChar(18)
+  resalePayoutClabeAt DateTime?
 
   // Relations
   orders              Order[]
@@ -2130,34 +2139,40 @@ model MembershipCheckout {
 /// órdenes (cobro externo del PaymentService); al confirmarse, el boleto pasa al
 /// comprador con un código nuevo y queda registrado lo que se le debe al vendedor.
 model ResaleCheckout {
-  id             String        @id @default(cuid())
-  publicId       String        @unique
-  organizationId String
-  listingId      String
-  listing        ResaleListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  buyerId        String
-  buyerEmail     String        @db.VarChar(255)
-  buyerName      String
-  status         OrderStatus   @default(PENDING)
+  id              String        @id @default(cuid())
+  publicId        String        @unique
+  organizationId  String
+  listingId       String
+  listing         ResaleListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId         String
+  buyerEmail      String        @db.VarChar(255)
+  buyerName       String
+  status          OrderStatus   @default(PENDING)
   /// Lo que paga el comprador: precio del anuncio + cargo por servicio.
-  amount         Decimal       @db.Decimal(12, 2)
-  fee            Decimal       @db.Decimal(12, 2)
-  currency       Currency      @default(MXN)
-  paymentMethod  PaymentMethod @default(CARD)
+  amount          Decimal       @db.Decimal(12, 2)
+  fee             Decimal       @db.Decimal(12, 2)
+  currency        Currency      @default(MXN)
+  paymentMethod   PaymentMethod @default(CARD)
   /// Lo que recibe el vendedor (el precio que pidió).
-  sellerPayout   Decimal       @db.Decimal(12, 2)
+  sellerPayout    Decimal       @db.Decimal(12, 2)
   /// PENDING hasta que finanzas lo deposita; PAID después.
-  payoutStatus   String        @default("PENDING")
-  paymentId      String?
-  orderId        String?
-  expiresAt      DateTime
-  completedAt    DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  payoutStatus    String        @default("PENDING")
+  /// CLABE capturada del vendedor al vender o al actualizar «Mis ventas».
+  sellerClabe     String?       @db.VarChar(18)
+  payoutReference String?
+  payoutPaidAt    DateTime?
+  payoutPaidById  String?
+  paymentId       String?
+  orderId         String?
+  expiresAt       DateTime
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([listingId, status])
   @@index([buyerId, status])
   @@index([organizationId, status, createdAt])
+  @@index([organizationId, payoutStatus])
 }
 
 // ============================================================================

@@ -1,14 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { createHash, randomUUID } from 'crypto';
+import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../../common/audit.service';
+import { createInvoicingProvider, type InvoicingProvider } from './invoicing.provider';
 
 /**
- * CFDI 4.0 sandbox timbrado — produces deterministic fake UUID/XML for local/dev.
- * Swap pacProvider integration when a real PAC is configured.
+ * CFDI 4.0: sandbox (SIN VALIDEZ FISCAL) o Facturama sandbox con credenciales.
+ * Nunca presenta un UUID inventado como folio real.
  */
 @Injectable()
 export class BillingService {
+  private invoicing: InvoicingProvider = createInvoicingProvider();
+
   constructor(
     private prisma: PrismaService,
     private audit: AuditService
@@ -88,21 +91,23 @@ export class BillingService {
     const iva = Number(order.taxAmount);
     const total = Number(order.totalAmount);
 
-    const isSandbox = profile.pacMode !== 'production';
-    const uuid = isSandbox ? randomUUID() : randomUUID(); // production: replace with PAC response UUID
-
-    const xml = this.buildSandboxXml({
-      uuid,
+    const stamped = await this.invoicing.stamp({
+      serie: profile.serie,
+      folio,
       rfcEmisor: profile.rfc,
       nombreEmisor: profile.legalName,
       rfcReceptor: data.receptorRfc.toUpperCase(),
       nombreReceptor: data.receptorNombre,
-      serie: profile.serie,
-      folio,
+      usoCfdi: data.receptorUsoCfdi ?? 'G03',
       subtotal,
       iva,
       total,
+      currency: order.currency,
+      orderPublicId: order.publicId,
     });
+    const uuid = stamped.uuid;
+    const xml = stamped.xml;
+    const isSandbox = stamped.withoutFiscalValidity;
 
     const invoice = await this.prisma.$transaction(async (tx) => {
       await tx.fiscalProfile.update({
@@ -129,9 +134,12 @@ export class BillingService {
           stampedAt: new Date(),
           pacRaw: {
             mode: profile.pacMode,
-            provider: profile.pacProvider ?? 'boletera-sandbox',
+            provider: stamped.provider,
+            withoutFiscalValidity: stamped.withoutFiscalValidity,
+            notice: stamped.withoutFiscalValidity ? 'SIN VALIDEZ FISCAL' : undefined,
             xmlSha256: createHash('sha256').update(xml).digest('hex'),
             xmlPreview: xml.slice(0, 500),
+            facturama: (stamped.raw ?? null) as object | null,
           },
         },
       });
@@ -145,7 +153,13 @@ export class BillingService {
       metadata: { orderId: order.id, uuid, sandbox: isSandbox },
     });
 
-    return { ...invoice, sandbox: isSandbox, xml };
+    return {
+      ...invoice,
+      sandbox: isSandbox,
+      withoutFiscalValidity: stamped.withoutFiscalValidity,
+      notice: stamped.withoutFiscalValidity ? 'SIN VALIDEZ FISCAL' : undefined,
+      xml,
+    };
   }
 
   async listInvoices(orgId: string) {

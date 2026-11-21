@@ -68,6 +68,9 @@ function PagosBody() {
   const [tarjeta, setTarjeta] = useState(true);
   const [spei, setSpei] = useState(true);
   const [oxxo, setOxxo] = useState(true);
+  const [msiMin, setMsiMin] = useState(1500);
+  const [msiPlans, setMsiPlans] = useState('1,3,6,9,12');
+  const [msiSaved, setMsiSaved] = useState<{ minTotal: number; plans: number[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<unknown>(null);
@@ -87,8 +90,9 @@ function PagosBody() {
     Promise.all([
       adminApi<unknown>('/payments/config', token),
       adminApi<unknown>('/payments/methods', token),
+      adminApi<{ minTotal: number; plans: number[] }>('/payments/msi/settings', token),
     ])
-      .then(([configPayload, methodPayload]) => {
+      .then(([configPayload, methodPayload, msiPayload]) => {
         if (!alive) return;
         const next = readFlags(methodPayload);
         setConfig(readConfig(configPayload));
@@ -96,6 +100,9 @@ function PagosBody() {
         setTarjeta(next.tarjeta);
         setSpei(next.SPEI);
         setOxxo(next.OXXO);
+        setMsiSaved(msiPayload);
+        setMsiMin(msiPayload.minTotal);
+        setMsiPlans(msiPayload.plans.join(','));
       })
       .catch((cause: unknown) => {
         if (!alive) return;
@@ -205,11 +212,70 @@ function PagosBody() {
   const activeCount = methods.filter((method) => method.on).length;
   const live = config.mode === 'live';
 
+  async function saveMsi() {
+    if (!token || saving) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const plans = msiPlans
+        .split(/[,\s]+/)
+        .map(Number)
+        .filter((n) => [1, 3, 6, 9, 12].includes(n));
+      const updated = await adminApi<{ minTotal: number; plans: number[] }>(
+        '/payments/msi/settings',
+        token,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ minTotal: Number(msiMin), plans }),
+        }
+      );
+      setMsiSaved(updated);
+      setMsiMin(updated.minTotal);
+      setMsiPlans(updated.plans.join(','));
+      setNotice('Meses sin intereses actualizados');
+    } catch (cause) {
+      setSaveError(
+        cause instanceof ApiError ? cause.userMessage : 'No se guardó MSI. Revisa la conexión.'
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <section className={styles.page}>
       <header className={styles.sectionHead} style={{ marginBottom: 0 }}>
         <h1 className={styles.sectionTitle}>Pasarela de pago</h1>
       </header>
+
+      <div className={styles.card} style={{ marginBottom: 24 }}>
+        <h2 className={styles.sectionTitle}>Meses sin intereses</h2>
+        <p className={styles.kpiNote}>
+          Monto mínimo y plazos que ve el comprador. Banorte recibe el plan con BANORTE_MSI_FIELD_*
+          (por omisión NUMERO_MENSUALIDADES / PROMOCION=MSI).
+        </p>
+        <label>
+          Monto mínimo
+          <input
+            type="number"
+            min={1}
+            value={msiMin}
+            onChange={(e) => setMsiMin(Number(e.target.value))}
+          />
+        </label>
+        <label>
+          Plazos (ej. 1,3,6,9,12)
+          <input value={msiPlans} onChange={(e) => setMsiPlans(e.target.value)} />
+        </label>
+        <TicketButton type="button" onClick={() => void saveMsi()} disabled={saving}>
+          Guardar MSI
+        </TicketButton>
+        {msiSaved ? (
+          <p className={styles.kpiNote}>
+            Activo: desde {msiSaved.minTotal} · {msiSaved.plans.join(', ')} meses
+          </p>
+        ) : null}
+      </div>
 
       <div className={styles.kpis}>
         <div className={styles.kpi}>

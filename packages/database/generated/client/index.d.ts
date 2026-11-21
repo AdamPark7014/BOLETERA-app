@@ -18728,10 +18728,18 @@ export namespace Prisma {
 
   export type SeatHoldAvgAggregateOutputType = {
     quantity: number | null
+    quotedSubtotal: Decimal | null
+    quotedFees: Decimal | null
+    quotedTaxes: Decimal | null
+    quotedTotal: Decimal | null
   }
 
   export type SeatHoldSumAggregateOutputType = {
     quantity: number | null
+    quotedSubtotal: Decimal | null
+    quotedFees: Decimal | null
+    quotedTaxes: Decimal | null
+    quotedTotal: Decimal | null
   }
 
   export type SeatHoldMinAggregateOutputType = {
@@ -18747,6 +18755,10 @@ export namespace Prisma {
     expiresAt: Date | null
     releasedAt: Date | null
     status: $Enums.HoldStatus | null
+    quotedSubtotal: Decimal | null
+    quotedFees: Decimal | null
+    quotedTaxes: Decimal | null
+    quotedTotal: Decimal | null
     createdAt: Date | null
   }
 
@@ -18763,6 +18775,10 @@ export namespace Prisma {
     expiresAt: Date | null
     releasedAt: Date | null
     status: $Enums.HoldStatus | null
+    quotedSubtotal: Decimal | null
+    quotedFees: Decimal | null
+    quotedTaxes: Decimal | null
+    quotedTotal: Decimal | null
     createdAt: Date | null
   }
 
@@ -18779,6 +18795,10 @@ export namespace Prisma {
     expiresAt: number
     releasedAt: number
     status: number
+    quotedSubtotal: number
+    quotedFees: number
+    quotedTaxes: number
+    quotedTotal: number
     createdAt: number
     _all: number
   }
@@ -18786,10 +18806,18 @@ export namespace Prisma {
 
   export type SeatHoldAvgAggregateInputType = {
     quantity?: true
+    quotedSubtotal?: true
+    quotedFees?: true
+    quotedTaxes?: true
+    quotedTotal?: true
   }
 
   export type SeatHoldSumAggregateInputType = {
     quantity?: true
+    quotedSubtotal?: true
+    quotedFees?: true
+    quotedTaxes?: true
+    quotedTotal?: true
   }
 
   export type SeatHoldMinAggregateInputType = {
@@ -18805,6 +18833,10 @@ export namespace Prisma {
     expiresAt?: true
     releasedAt?: true
     status?: true
+    quotedSubtotal?: true
+    quotedFees?: true
+    quotedTaxes?: true
+    quotedTotal?: true
     createdAt?: true
   }
 
@@ -18821,6 +18853,10 @@ export namespace Prisma {
     expiresAt?: true
     releasedAt?: true
     status?: true
+    quotedSubtotal?: true
+    quotedFees?: true
+    quotedTaxes?: true
+    quotedTotal?: true
     createdAt?: true
   }
 
@@ -18837,6 +18873,10 @@ export namespace Prisma {
     expiresAt?: true
     releasedAt?: true
     status?: true
+    quotedSubtotal?: true
+    quotedFees?: true
+    quotedTaxes?: true
+    quotedTotal?: true
     createdAt?: true
     _all?: true
   }
@@ -18940,6 +18980,10 @@ export namespace Prisma {
     expiresAt: Date
     releasedAt: Date | null
     status: $Enums.HoldStatus
+    quotedSubtotal: Decimal | null
+    quotedFees: Decimal | null
+    quotedTaxes: Decimal | null
+    quotedTotal: Decimal | null
     createdAt: Date
     _count: SeatHoldCountAggregateOutputType | null
     _avg: SeatHoldAvgAggregateOutputType | null
@@ -18975,6 +19019,10 @@ export namespace Prisma {
     expiresAt?: boolean
     releasedAt?: boolean
     status?: boolean
+    quotedSubtotal?: boolean
+    quotedFees?: boolean
+    quotedTaxes?: boolean
+    quotedTotal?: boolean
     createdAt?: boolean
     event?: boolean | EventDefaultArgs<ExtArgs>
     seat?: boolean | SeatHold$seatArgs<ExtArgs>
@@ -18993,6 +19041,10 @@ export namespace Prisma {
     expiresAt?: boolean
     releasedAt?: boolean
     status?: boolean
+    quotedSubtotal?: boolean
+    quotedFees?: boolean
+    quotedTaxes?: boolean
+    quotedTotal?: boolean
     createdAt?: boolean
     event?: boolean | EventDefaultArgs<ExtArgs>
     seat?: boolean | SeatHold$seatArgs<ExtArgs>
@@ -19011,6 +19063,10 @@ export namespace Prisma {
     expiresAt?: boolean
     releasedAt?: boolean
     status?: boolean
+    quotedSubtotal?: boolean
+    quotedFees?: boolean
+    quotedTaxes?: boolean
+    quotedTotal?: boolean
     createdAt?: boolean
     event?: boolean | EventDefaultArgs<ExtArgs>
     seat?: boolean | SeatHold$seatArgs<ExtArgs>
@@ -19029,10 +19085,14 @@ export namespace Prisma {
     expiresAt?: boolean
     releasedAt?: boolean
     status?: boolean
+    quotedSubtotal?: boolean
+    quotedFees?: boolean
+    quotedTaxes?: boolean
+    quotedTotal?: boolean
     createdAt?: boolean
   }
 
-  export type SeatHoldOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "seatId" | "offerId" | "userId" | "sessionId" | "channel" | "cashierId" | "quantity" | "expiresAt" | "releasedAt" | "status" | "createdAt", ExtArgs["result"]["seatHold"]>
+  export type SeatHoldOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "seatId" | "offerId" | "userId" | "sessionId" | "channel" | "cashierId" | "quantity" | "expiresAt" | "releasedAt" | "status" | "quotedSubtotal" | "quotedFees" | "quotedTaxes" | "quotedTotal" | "createdAt", ExtArgs["result"]["seatHold"]>
   export type SeatHoldInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     event?: boolean | EventDefaultArgs<ExtArgs>
     seat?: boolean | SeatHold$seatArgs<ExtArgs>
@@ -19065,6 +19125,13 @@ export namespace Prisma {
       expiresAt: Date
       releasedAt: Date | null
       status: $Enums.HoldStatus
+      /**
+       * Precio unitario cotizado al apartar (PROFECO: el total no sube en la compra).
+       */
+      quotedSubtotal: Prisma.Decimal | null
+      quotedFees: Prisma.Decimal | null
+      quotedTaxes: Prisma.Decimal | null
+      quotedTotal: Prisma.Decimal | null
       createdAt: Date
     }, ExtArgs["result"]["seatHold"]>
     composites: {}
@@ -19503,6 +19570,10 @@ export namespace Prisma {
     readonly expiresAt: FieldRef<"SeatHold", 'DateTime'>
     readonly releasedAt: FieldRef<"SeatHold", 'DateTime'>
     readonly status: FieldRef<"SeatHold", 'HoldStatus'>
+    readonly quotedSubtotal: FieldRef<"SeatHold", 'Decimal'>
+    readonly quotedFees: FieldRef<"SeatHold", 'Decimal'>
+    readonly quotedTaxes: FieldRef<"SeatHold", 'Decimal'>
+    readonly quotedTotal: FieldRef<"SeatHold", 'Decimal'>
     readonly createdAt: FieldRef<"SeatHold", 'DateTime'>
   }
     
@@ -41773,6 +41844,8 @@ export namespace Prisma {
     active: boolean | null
     lastLogin: Date | null
     loyaltyPoints: number | null
+    resalePayoutClabe: string | null
+    resalePayoutClabeAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -41798,6 +41871,8 @@ export namespace Prisma {
     active: boolean | null
     lastLogin: Date | null
     loyaltyPoints: number | null
+    resalePayoutClabe: string | null
+    resalePayoutClabeAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -41823,6 +41898,8 @@ export namespace Prisma {
     active: number
     lastLogin: number
     loyaltyPoints: number
+    resalePayoutClabe: number
+    resalePayoutClabeAt: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -41858,6 +41935,8 @@ export namespace Prisma {
     active?: true
     lastLogin?: true
     loyaltyPoints?: true
+    resalePayoutClabe?: true
+    resalePayoutClabeAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -41883,6 +41962,8 @@ export namespace Prisma {
     active?: true
     lastLogin?: true
     loyaltyPoints?: true
+    resalePayoutClabe?: true
+    resalePayoutClabeAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -41908,6 +41989,8 @@ export namespace Prisma {
     active?: true
     lastLogin?: true
     loyaltyPoints?: true
+    resalePayoutClabe?: true
+    resalePayoutClabeAt?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -42020,6 +42103,8 @@ export namespace Prisma {
     active: boolean
     lastLogin: Date | null
     loyaltyPoints: number
+    resalePayoutClabe: string | null
+    resalePayoutClabeAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -42064,6 +42149,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: boolean
     loyaltyPoints?: boolean
+    resalePayoutClabe?: boolean
+    resalePayoutClabeAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | User$organizationArgs<ExtArgs>
@@ -42100,6 +42187,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: boolean
     loyaltyPoints?: boolean
+    resalePayoutClabe?: boolean
+    resalePayoutClabeAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | User$organizationArgs<ExtArgs>
@@ -42126,6 +42215,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: boolean
     loyaltyPoints?: boolean
+    resalePayoutClabe?: boolean
+    resalePayoutClabeAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     organization?: boolean | User$organizationArgs<ExtArgs>
@@ -42152,11 +42243,13 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: boolean
     loyaltyPoints?: boolean
+    resalePayoutClabe?: boolean
+    resalePayoutClabeAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "emailVerified" | "emailVerifiedAt" | "firstName" | "lastName" | "profileImage" | "phone" | "role" | "organizationId" | "password" | "passwordResetToken" | "passwordResetAt" | "provider" | "providerId" | "twoFactorEnabled" | "twoFactorSecret" | "active" | "lastLogin" | "loyaltyPoints" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "emailVerified" | "emailVerifiedAt" | "firstName" | "lastName" | "profileImage" | "phone" | "role" | "organizationId" | "password" | "passwordResetToken" | "passwordResetAt" | "provider" | "providerId" | "twoFactorEnabled" | "twoFactorSecret" | "active" | "lastLogin" | "loyaltyPoints" | "resalePayoutClabe" | "resalePayoutClabeAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | User$organizationArgs<ExtArgs>
     orders?: boolean | User$ordersArgs<ExtArgs>
@@ -42215,6 +42308,11 @@ export namespace Prisma {
        * Saldo de puntos. Lo escribe awardLoyaltyPoints al pagar. Vacío = 0.
        */
       loyaltyPoints: number
+      /**
+       * CLABE del vendedor para depósito de reventa (dígito verificador validado).
+       */
+      resalePayoutClabe: string | null
+      resalePayoutClabeAt: Date | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -42670,6 +42768,8 @@ export namespace Prisma {
     readonly active: FieldRef<"User", 'Boolean'>
     readonly lastLogin: FieldRef<"User", 'DateTime'>
     readonly loyaltyPoints: FieldRef<"User", 'Int'>
+    readonly resalePayoutClabe: FieldRef<"User", 'String'>
+    readonly resalePayoutClabeAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -80749,6 +80849,10 @@ export namespace Prisma {
     paymentMethod: $Enums.PaymentMethod | null
     sellerPayout: Decimal | null
     payoutStatus: string | null
+    sellerClabe: string | null
+    payoutReference: string | null
+    payoutPaidAt: Date | null
+    payoutPaidById: string | null
     paymentId: string | null
     orderId: string | null
     expiresAt: Date | null
@@ -80772,6 +80876,10 @@ export namespace Prisma {
     paymentMethod: $Enums.PaymentMethod | null
     sellerPayout: Decimal | null
     payoutStatus: string | null
+    sellerClabe: string | null
+    payoutReference: string | null
+    payoutPaidAt: Date | null
+    payoutPaidById: string | null
     paymentId: string | null
     orderId: string | null
     expiresAt: Date | null
@@ -80795,6 +80903,10 @@ export namespace Prisma {
     paymentMethod: number
     sellerPayout: number
     payoutStatus: number
+    sellerClabe: number
+    payoutReference: number
+    payoutPaidAt: number
+    payoutPaidById: number
     paymentId: number
     orderId: number
     expiresAt: number
@@ -80832,6 +80944,10 @@ export namespace Prisma {
     paymentMethod?: true
     sellerPayout?: true
     payoutStatus?: true
+    sellerClabe?: true
+    payoutReference?: true
+    payoutPaidAt?: true
+    payoutPaidById?: true
     paymentId?: true
     orderId?: true
     expiresAt?: true
@@ -80855,6 +80971,10 @@ export namespace Prisma {
     paymentMethod?: true
     sellerPayout?: true
     payoutStatus?: true
+    sellerClabe?: true
+    payoutReference?: true
+    payoutPaidAt?: true
+    payoutPaidById?: true
     paymentId?: true
     orderId?: true
     expiresAt?: true
@@ -80878,6 +80998,10 @@ export namespace Prisma {
     paymentMethod?: true
     sellerPayout?: true
     payoutStatus?: true
+    sellerClabe?: true
+    payoutReference?: true
+    payoutPaidAt?: true
+    payoutPaidById?: true
     paymentId?: true
     orderId?: true
     expiresAt?: true
@@ -80988,6 +81112,10 @@ export namespace Prisma {
     paymentMethod: $Enums.PaymentMethod
     sellerPayout: Decimal
     payoutStatus: string
+    sellerClabe: string | null
+    payoutReference: string | null
+    payoutPaidAt: Date | null
+    payoutPaidById: string | null
     paymentId: string | null
     orderId: string | null
     expiresAt: Date
@@ -81030,6 +81158,10 @@ export namespace Prisma {
     paymentMethod?: boolean
     sellerPayout?: boolean
     payoutStatus?: boolean
+    sellerClabe?: boolean
+    payoutReference?: boolean
+    payoutPaidAt?: boolean
+    payoutPaidById?: boolean
     paymentId?: boolean
     orderId?: boolean
     expiresAt?: boolean
@@ -81054,6 +81186,10 @@ export namespace Prisma {
     paymentMethod?: boolean
     sellerPayout?: boolean
     payoutStatus?: boolean
+    sellerClabe?: boolean
+    payoutReference?: boolean
+    payoutPaidAt?: boolean
+    payoutPaidById?: boolean
     paymentId?: boolean
     orderId?: boolean
     expiresAt?: boolean
@@ -81078,6 +81214,10 @@ export namespace Prisma {
     paymentMethod?: boolean
     sellerPayout?: boolean
     payoutStatus?: boolean
+    sellerClabe?: boolean
+    payoutReference?: boolean
+    payoutPaidAt?: boolean
+    payoutPaidById?: boolean
     paymentId?: boolean
     orderId?: boolean
     expiresAt?: boolean
@@ -81102,6 +81242,10 @@ export namespace Prisma {
     paymentMethod?: boolean
     sellerPayout?: boolean
     payoutStatus?: boolean
+    sellerClabe?: boolean
+    payoutReference?: boolean
+    payoutPaidAt?: boolean
+    payoutPaidById?: boolean
     paymentId?: boolean
     orderId?: boolean
     expiresAt?: boolean
@@ -81110,7 +81254,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ResaleCheckoutOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "publicId" | "organizationId" | "listingId" | "buyerId" | "buyerEmail" | "buyerName" | "status" | "amount" | "fee" | "currency" | "paymentMethod" | "sellerPayout" | "payoutStatus" | "paymentId" | "orderId" | "expiresAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["resaleCheckout"]>
+  export type ResaleCheckoutOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "publicId" | "organizationId" | "listingId" | "buyerId" | "buyerEmail" | "buyerName" | "status" | "amount" | "fee" | "currency" | "paymentMethod" | "sellerPayout" | "payoutStatus" | "sellerClabe" | "payoutReference" | "payoutPaidAt" | "payoutPaidById" | "paymentId" | "orderId" | "expiresAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["resaleCheckout"]>
   export type ResaleCheckoutInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     listing?: boolean | ResaleListingDefaultArgs<ExtArgs>
   }
@@ -81150,6 +81294,13 @@ export namespace Prisma {
        * PENDING hasta que finanzas lo deposita; PAID después.
        */
       payoutStatus: string
+      /**
+       * CLABE capturada del vendedor al vender o al actualizar «Mis ventas».
+       */
+      sellerClabe: string | null
+      payoutReference: string | null
+      payoutPaidAt: Date | null
+      payoutPaidById: string | null
       paymentId: string | null
       orderId: string | null
       expiresAt: Date
@@ -81594,6 +81745,10 @@ export namespace Prisma {
     readonly paymentMethod: FieldRef<"ResaleCheckout", 'PaymentMethod'>
     readonly sellerPayout: FieldRef<"ResaleCheckout", 'Decimal'>
     readonly payoutStatus: FieldRef<"ResaleCheckout", 'String'>
+    readonly sellerClabe: FieldRef<"ResaleCheckout", 'String'>
+    readonly payoutReference: FieldRef<"ResaleCheckout", 'String'>
+    readonly payoutPaidAt: FieldRef<"ResaleCheckout", 'DateTime'>
+    readonly payoutPaidById: FieldRef<"ResaleCheckout", 'String'>
     readonly paymentId: FieldRef<"ResaleCheckout", 'String'>
     readonly orderId: FieldRef<"ResaleCheckout", 'String'>
     readonly expiresAt: FieldRef<"ResaleCheckout", 'DateTime'>
@@ -83505,6 +83660,10 @@ export namespace Prisma {
     expiresAt: 'expiresAt',
     releasedAt: 'releasedAt',
     status: 'status',
+    quotedSubtotal: 'quotedSubtotal',
+    quotedFees: 'quotedFees',
+    quotedTaxes: 'quotedTaxes',
+    quotedTotal: 'quotedTotal',
     createdAt: 'createdAt'
   };
 
@@ -83898,6 +84057,8 @@ export namespace Prisma {
     active: 'active',
     lastLogin: 'lastLogin',
     loyaltyPoints: 'loyaltyPoints',
+    resalePayoutClabe: 'resalePayoutClabe',
+    resalePayoutClabeAt: 'resalePayoutClabeAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -84448,6 +84609,10 @@ export namespace Prisma {
     paymentMethod: 'paymentMethod',
     sellerPayout: 'sellerPayout',
     payoutStatus: 'payoutStatus',
+    sellerClabe: 'sellerClabe',
+    payoutReference: 'payoutReference',
+    payoutPaidAt: 'payoutPaidAt',
+    payoutPaidById: 'payoutPaidById',
     paymentId: 'paymentId',
     orderId: 'orderId',
     expiresAt: 'expiresAt',
@@ -84713,20 +84878,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'PaymentGateway'
-   */
-  export type EnumPaymentGatewayFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentGateway'>
-    
-
-
-  /**
-   * Reference to a field of type 'PaymentGateway[]'
-   */
-  export type ListEnumPaymentGatewayFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentGateway[]'>
-    
-
-
-  /**
    * Reference to a field of type 'Decimal'
    */
   export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
@@ -84737,6 +84888,20 @@ export namespace Prisma {
    * Reference to a field of type 'Decimal[]'
    */
   export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'PaymentGateway'
+   */
+  export type EnumPaymentGatewayFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentGateway'>
+    
+
+
+  /**
+   * Reference to a field of type 'PaymentGateway[]'
+   */
+  export type ListEnumPaymentGatewayFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentGateway[]'>
     
 
 
@@ -86111,6 +86276,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFilter<"SeatHold"> | Date | string
     releasedAt?: DateTimeNullableFilter<"SeatHold"> | Date | string | null
     status?: EnumHoldStatusFilter<"SeatHold"> | $Enums.HoldStatus
+    quotedSubtotal?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFilter<"SeatHold"> | Date | string
     event?: XOR<EventScalarRelationFilter, EventWhereInput>
     seat?: XOR<SeatNullableScalarRelationFilter, SeatWhereInput> | null
@@ -86129,6 +86298,10 @@ export namespace Prisma {
     expiresAt?: SortOrder
     releasedAt?: SortOrderInput | SortOrder
     status?: SortOrder
+    quotedSubtotal?: SortOrderInput | SortOrder
+    quotedFees?: SortOrderInput | SortOrder
+    quotedTaxes?: SortOrderInput | SortOrder
+    quotedTotal?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     event?: EventOrderByWithRelationInput
     seat?: SeatOrderByWithRelationInput
@@ -86150,6 +86323,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFilter<"SeatHold"> | Date | string
     releasedAt?: DateTimeNullableFilter<"SeatHold"> | Date | string | null
     status?: EnumHoldStatusFilter<"SeatHold"> | $Enums.HoldStatus
+    quotedSubtotal?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFilter<"SeatHold"> | Date | string
     event?: XOR<EventScalarRelationFilter, EventWhereInput>
     seat?: XOR<SeatNullableScalarRelationFilter, SeatWhereInput> | null
@@ -86168,6 +86345,10 @@ export namespace Prisma {
     expiresAt?: SortOrder
     releasedAt?: SortOrderInput | SortOrder
     status?: SortOrder
+    quotedSubtotal?: SortOrderInput | SortOrder
+    quotedFees?: SortOrderInput | SortOrder
+    quotedTaxes?: SortOrderInput | SortOrder
+    quotedTotal?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: SeatHoldCountOrderByAggregateInput
     _avg?: SeatHoldAvgOrderByAggregateInput
@@ -86192,6 +86373,10 @@ export namespace Prisma {
     expiresAt?: DateTimeWithAggregatesFilter<"SeatHold"> | Date | string
     releasedAt?: DateTimeNullableWithAggregatesFilter<"SeatHold"> | Date | string | null
     status?: EnumHoldStatusWithAggregatesFilter<"SeatHold"> | $Enums.HoldStatus
+    quotedSubtotal?: DecimalNullableWithAggregatesFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: DecimalNullableWithAggregatesFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: DecimalNullableWithAggregatesFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: DecimalNullableWithAggregatesFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeWithAggregatesFilter<"SeatHold"> | Date | string
   }
 
@@ -88199,6 +88384,8 @@ export namespace Prisma {
     active?: BoolFilter<"User"> | boolean
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
     loyaltyPoints?: IntFilter<"User"> | number
+    resalePayoutClabe?: StringNullableFilter<"User"> | string | null
+    resalePayoutClabeAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     organization?: XOR<OrganizationNullableScalarRelationFilter, OrganizationWhereInput> | null
@@ -88234,6 +88421,8 @@ export namespace Prisma {
     active?: SortOrder
     lastLogin?: SortOrderInput | SortOrder
     loyaltyPoints?: SortOrder
+    resalePayoutClabe?: SortOrderInput | SortOrder
+    resalePayoutClabeAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     organization?: OrganizationOrderByWithRelationInput
@@ -88272,6 +88461,8 @@ export namespace Prisma {
     active?: BoolFilter<"User"> | boolean
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
     loyaltyPoints?: IntFilter<"User"> | number
+    resalePayoutClabe?: StringNullableFilter<"User"> | string | null
+    resalePayoutClabeAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     organization?: XOR<OrganizationNullableScalarRelationFilter, OrganizationWhereInput> | null
@@ -88307,6 +88498,8 @@ export namespace Prisma {
     active?: SortOrder
     lastLogin?: SortOrderInput | SortOrder
     loyaltyPoints?: SortOrder
+    resalePayoutClabe?: SortOrderInput | SortOrder
+    resalePayoutClabeAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -88340,6 +88533,8 @@ export namespace Prisma {
     active?: BoolWithAggregatesFilter<"User"> | boolean
     lastLogin?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     loyaltyPoints?: IntWithAggregatesFilter<"User"> | number
+    resalePayoutClabe?: StringNullableWithAggregatesFilter<"User"> | string | null
+    resalePayoutClabeAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -91120,6 +91315,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFilter<"ResaleCheckout"> | $Enums.PaymentMethod
     sellerPayout?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFilter<"ResaleCheckout"> | string
+    sellerClabe?: StringNullableFilter<"ResaleCheckout"> | string | null
+    payoutReference?: StringNullableFilter<"ResaleCheckout"> | string | null
+    payoutPaidAt?: DateTimeNullableFilter<"ResaleCheckout"> | Date | string | null
+    payoutPaidById?: StringNullableFilter<"ResaleCheckout"> | string | null
     paymentId?: StringNullableFilter<"ResaleCheckout"> | string | null
     orderId?: StringNullableFilter<"ResaleCheckout"> | string | null
     expiresAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
@@ -91144,6 +91343,10 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     sellerPayout?: SortOrder
     payoutStatus?: SortOrder
+    sellerClabe?: SortOrderInput | SortOrder
+    payoutReference?: SortOrderInput | SortOrder
+    payoutPaidAt?: SortOrderInput | SortOrder
+    payoutPaidById?: SortOrderInput | SortOrder
     paymentId?: SortOrderInput | SortOrder
     orderId?: SortOrderInput | SortOrder
     expiresAt?: SortOrder
@@ -91171,6 +91374,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFilter<"ResaleCheckout"> | $Enums.PaymentMethod
     sellerPayout?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFilter<"ResaleCheckout"> | string
+    sellerClabe?: StringNullableFilter<"ResaleCheckout"> | string | null
+    payoutReference?: StringNullableFilter<"ResaleCheckout"> | string | null
+    payoutPaidAt?: DateTimeNullableFilter<"ResaleCheckout"> | Date | string | null
+    payoutPaidById?: StringNullableFilter<"ResaleCheckout"> | string | null
     paymentId?: StringNullableFilter<"ResaleCheckout"> | string | null
     orderId?: StringNullableFilter<"ResaleCheckout"> | string | null
     expiresAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
@@ -91195,6 +91402,10 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     sellerPayout?: SortOrder
     payoutStatus?: SortOrder
+    sellerClabe?: SortOrderInput | SortOrder
+    payoutReference?: SortOrderInput | SortOrder
+    payoutPaidAt?: SortOrderInput | SortOrder
+    payoutPaidById?: SortOrderInput | SortOrder
     paymentId?: SortOrderInput | SortOrder
     orderId?: SortOrderInput | SortOrder
     expiresAt?: SortOrder
@@ -91226,6 +91437,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodWithAggregatesFilter<"ResaleCheckout"> | $Enums.PaymentMethod
     sellerPayout?: DecimalWithAggregatesFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringWithAggregatesFilter<"ResaleCheckout"> | string
+    sellerClabe?: StringNullableWithAggregatesFilter<"ResaleCheckout"> | string | null
+    payoutReference?: StringNullableWithAggregatesFilter<"ResaleCheckout"> | string | null
+    payoutPaidAt?: DateTimeNullableWithAggregatesFilter<"ResaleCheckout"> | Date | string | null
+    payoutPaidById?: StringNullableWithAggregatesFilter<"ResaleCheckout"> | string | null
     paymentId?: StringNullableWithAggregatesFilter<"ResaleCheckout"> | string | null
     orderId?: StringNullableWithAggregatesFilter<"ResaleCheckout"> | string | null
     expiresAt?: DateTimeWithAggregatesFilter<"ResaleCheckout"> | Date | string
@@ -92469,6 +92684,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
     event: EventCreateNestedOneWithoutHoldsInput
     seat?: SeatCreateNestedOneWithoutHoldsInput
@@ -92487,6 +92706,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
   }
 
@@ -92501,6 +92724,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     event?: EventUpdateOneRequiredWithoutHoldsNestedInput
     seat?: SeatUpdateOneWithoutHoldsNestedInput
@@ -92519,6 +92746,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -92535,6 +92766,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
   }
 
@@ -92549,6 +92784,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -92565,6 +92804,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -94890,6 +95133,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -94925,6 +95170,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -94958,6 +95205,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -94993,6 +95242,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -95027,6 +95278,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -95051,6 +95304,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -95076,6 +95331,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -98133,6 +98390,10 @@ export namespace Prisma {
     paymentMethod?: $Enums.PaymentMethod
     sellerPayout: Decimal | DecimalJsLike | number | string
     payoutStatus?: string
+    sellerClabe?: string | null
+    payoutReference?: string | null
+    payoutPaidAt?: Date | string | null
+    payoutPaidById?: string | null
     paymentId?: string | null
     orderId?: string | null
     expiresAt: Date | string
@@ -98157,6 +98418,10 @@ export namespace Prisma {
     paymentMethod?: $Enums.PaymentMethod
     sellerPayout: Decimal | DecimalJsLike | number | string
     payoutStatus?: string
+    sellerClabe?: string | null
+    payoutReference?: string | null
+    payoutPaidAt?: Date | string | null
+    payoutPaidById?: string | null
     paymentId?: string | null
     orderId?: string | null
     expiresAt: Date | string
@@ -98179,6 +98444,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFieldUpdateOperationsInput | string
+    sellerClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutReference?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutPaidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    payoutPaidById?: NullableStringFieldUpdateOperationsInput | string | null
     paymentId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -98203,6 +98472,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFieldUpdateOperationsInput | string
+    sellerClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutReference?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutPaidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    payoutPaidById?: NullableStringFieldUpdateOperationsInput | string | null
     paymentId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -98226,6 +98499,10 @@ export namespace Prisma {
     paymentMethod?: $Enums.PaymentMethod
     sellerPayout: Decimal | DecimalJsLike | number | string
     payoutStatus?: string
+    sellerClabe?: string | null
+    payoutReference?: string | null
+    payoutPaidAt?: Date | string | null
+    payoutPaidById?: string | null
     paymentId?: string | null
     orderId?: string | null
     expiresAt: Date | string
@@ -98248,6 +98525,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFieldUpdateOperationsInput | string
+    sellerClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutReference?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutPaidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    payoutPaidById?: NullableStringFieldUpdateOperationsInput | string | null
     paymentId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -98271,6 +98552,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFieldUpdateOperationsInput | string
+    sellerClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutReference?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutPaidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    payoutPaidById?: NullableStringFieldUpdateOperationsInput | string | null
     paymentId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -99609,6 +99894,17 @@ export namespace Prisma {
     not?: NestedEnumHoldStatusFilter<$PrismaModel> | $Enums.HoldStatus
   }
 
+  export type DecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
   export type SeatNullableScalarRelationFilter = {
     is?: SeatWhereInput | null
     isNot?: SeatWhereInput | null
@@ -99627,11 +99923,19 @@ export namespace Prisma {
     expiresAt?: SortOrder
     releasedAt?: SortOrder
     status?: SortOrder
+    quotedSubtotal?: SortOrder
+    quotedFees?: SortOrder
+    quotedTaxes?: SortOrder
+    quotedTotal?: SortOrder
     createdAt?: SortOrder
   }
 
   export type SeatHoldAvgOrderByAggregateInput = {
     quantity?: SortOrder
+    quotedSubtotal?: SortOrder
+    quotedFees?: SortOrder
+    quotedTaxes?: SortOrder
+    quotedTotal?: SortOrder
   }
 
   export type SeatHoldMaxOrderByAggregateInput = {
@@ -99647,6 +99951,10 @@ export namespace Prisma {
     expiresAt?: SortOrder
     releasedAt?: SortOrder
     status?: SortOrder
+    quotedSubtotal?: SortOrder
+    quotedFees?: SortOrder
+    quotedTaxes?: SortOrder
+    quotedTotal?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -99663,11 +99971,19 @@ export namespace Prisma {
     expiresAt?: SortOrder
     releasedAt?: SortOrder
     status?: SortOrder
+    quotedSubtotal?: SortOrder
+    quotedFees?: SortOrder
+    quotedTaxes?: SortOrder
+    quotedTotal?: SortOrder
     createdAt?: SortOrder
   }
 
   export type SeatHoldSumOrderByAggregateInput = {
     quantity?: SortOrder
+    quotedSubtotal?: SortOrder
+    quotedFees?: SortOrder
+    quotedTaxes?: SortOrder
+    quotedTotal?: SortOrder
   }
 
   export type EnumSalesChannelWithAggregatesFilter<$PrismaModel = never> = {
@@ -99688,6 +100004,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumHoldStatusFilter<$PrismaModel>
     _max?: NestedEnumHoldStatusFilter<$PrismaModel>
+  }
+
+  export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type TicketScalarRelationFilter = {
@@ -100052,17 +100384,6 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
-  export type DecimalNullableFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-  }
-
   export type CashierShiftCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -100107,22 +100428,6 @@ export namespace Prisma {
     openingCash?: SortOrder
     closingCash?: SortOrder
     totalSales?: SortOrder
-  }
-
-  export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedDecimalNullableFilter<$PrismaModel>
-    _sum?: NestedDecimalNullableFilter<$PrismaModel>
-    _min?: NestedDecimalNullableFilter<$PrismaModel>
-    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type EnumEventCategoryFilter<$PrismaModel = never> = {
@@ -101386,6 +101691,8 @@ export namespace Prisma {
     active?: SortOrder
     lastLogin?: SortOrder
     loyaltyPoints?: SortOrder
+    resalePayoutClabe?: SortOrder
+    resalePayoutClabeAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -101415,6 +101722,8 @@ export namespace Prisma {
     active?: SortOrder
     lastLogin?: SortOrder
     loyaltyPoints?: SortOrder
+    resalePayoutClabe?: SortOrder
+    resalePayoutClabeAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -101440,6 +101749,8 @@ export namespace Prisma {
     active?: SortOrder
     lastLogin?: SortOrder
     loyaltyPoints?: SortOrder
+    resalePayoutClabe?: SortOrder
+    resalePayoutClabeAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -103410,6 +103721,10 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     sellerPayout?: SortOrder
     payoutStatus?: SortOrder
+    sellerClabe?: SortOrder
+    payoutReference?: SortOrder
+    payoutPaidAt?: SortOrder
+    payoutPaidById?: SortOrder
     paymentId?: SortOrder
     orderId?: SortOrder
     expiresAt?: SortOrder
@@ -103439,6 +103754,10 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     sellerPayout?: SortOrder
     payoutStatus?: SortOrder
+    sellerClabe?: SortOrder
+    payoutReference?: SortOrder
+    payoutPaidAt?: SortOrder
+    payoutPaidById?: SortOrder
     paymentId?: SortOrder
     orderId?: SortOrder
     expiresAt?: SortOrder
@@ -103462,6 +103781,10 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     sellerPayout?: SortOrder
     payoutStatus?: SortOrder
+    sellerClabe?: SortOrder
+    payoutReference?: SortOrder
+    payoutPaidAt?: SortOrder
+    payoutPaidById?: SortOrder
     paymentId?: SortOrder
     orderId?: SortOrder
     expiresAt?: SortOrder
@@ -104981,6 +105304,14 @@ export namespace Prisma {
     set?: $Enums.HoldStatus
   }
 
+  export type NullableDecimalFieldUpdateOperationsInput = {
+    set?: Decimal | DecimalJsLike | number | string | null
+    increment?: Decimal | DecimalJsLike | number | string
+    decrement?: Decimal | DecimalJsLike | number | string
+    multiply?: Decimal | DecimalJsLike | number | string
+    divide?: Decimal | DecimalJsLike | number | string
+  }
+
   export type EventUpdateOneRequiredWithoutHoldsNestedInput = {
     create?: XOR<EventCreateWithoutHoldsInput, EventUncheckedCreateWithoutHoldsInput>
     connectOrCreate?: EventCreateOrConnectWithoutHoldsInput
@@ -105165,14 +105496,6 @@ export namespace Prisma {
 
   export type EnumPaymentStatusFieldUpdateOperationsInput = {
     set?: $Enums.PaymentStatus
-  }
-
-  export type NullableDecimalFieldUpdateOperationsInput = {
-    set?: Decimal | DecimalJsLike | number | string | null
-    increment?: Decimal | DecimalJsLike | number | string
-    decrement?: Decimal | DecimalJsLike | number | string
-    multiply?: Decimal | DecimalJsLike | number | string
-    divide?: Decimal | DecimalJsLike | number | string
   }
 
   export type OrganizationCreateNestedOneWithoutEventsInput = {
@@ -108812,6 +109135,17 @@ export namespace Prisma {
     not?: NestedEnumHoldStatusFilter<$PrismaModel> | $Enums.HoldStatus
   }
 
+  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
   export type NestedEnumSalesChannelWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SalesChannel | EnumSalesChannelFieldRefInput<$PrismaModel>
     in?: $Enums.SalesChannel[] | ListEnumSalesChannelFieldRefInput<$PrismaModel>
@@ -108830,6 +109164,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumHoldStatusFilter<$PrismaModel>
     _max?: NestedEnumHoldStatusFilter<$PrismaModel>
+  }
+
+  export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -108907,33 +109257,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
     _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
-  }
-
-  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-  }
-
-  export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedDecimalNullableFilter<$PrismaModel>
-    _sum?: NestedDecimalNullableFilter<$PrismaModel>
-    _min?: NestedDecimalNullableFilter<$PrismaModel>
-    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumEventCategoryFilter<$PrismaModel = never> = {
@@ -109731,6 +110054,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderCreateNestedManyWithoutUserInput
@@ -109764,6 +110089,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -110437,6 +110764,8 @@ export namespace Prisma {
     active?: BoolFilter<"User"> | boolean
     lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
     loyaltyPoints?: IntFilter<"User"> | number
+    resalePayoutClabe?: StringNullableFilter<"User"> | string | null
+    resalePayoutClabeAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
   }
@@ -112421,6 +112750,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
     event: EventCreateNestedOneWithoutHoldsInput
   }
@@ -112437,6 +112770,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
   }
 
@@ -112628,6 +112965,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFilter<"SeatHold"> | Date | string
     releasedAt?: DateTimeNullableFilter<"SeatHold"> | Date | string | null
     status?: EnumHoldStatusFilter<"SeatHold"> | $Enums.HoldStatus
+    quotedSubtotal?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: DecimalNullableFilter<"SeatHold"> | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFilter<"SeatHold"> | Date | string
   }
 
@@ -115099,6 +115440,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
     seat?: SeatCreateNestedOneWithoutHoldsInput
   }
@@ -115115,6 +115460,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
   }
 
@@ -118481,6 +118830,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -118515,6 +118866,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
@@ -119075,6 +119428,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -119109,6 +119464,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
@@ -120890,6 +121247,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -120924,6 +121283,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -120993,6 +121354,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -121027,6 +121390,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -121086,6 +121451,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -121120,6 +121487,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -121168,6 +121537,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -121202,6 +121573,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -121668,6 +122041,10 @@ export namespace Prisma {
     paymentMethod?: $Enums.PaymentMethod
     sellerPayout: Decimal | DecimalJsLike | number | string
     payoutStatus?: string
+    sellerClabe?: string | null
+    payoutReference?: string | null
+    payoutPaidAt?: Date | string | null
+    payoutPaidById?: string | null
     paymentId?: string | null
     orderId?: string | null
     expiresAt: Date | string
@@ -121690,6 +122067,10 @@ export namespace Prisma {
     paymentMethod?: $Enums.PaymentMethod
     sellerPayout: Decimal | DecimalJsLike | number | string
     payoutStatus?: string
+    sellerClabe?: string | null
+    payoutReference?: string | null
+    payoutPaidAt?: Date | string | null
+    payoutPaidById?: string | null
     paymentId?: string | null
     orderId?: string | null
     expiresAt: Date | string
@@ -121838,6 +122219,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFilter<"ResaleCheckout"> | $Enums.PaymentMethod
     sellerPayout?: DecimalFilter<"ResaleCheckout"> | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFilter<"ResaleCheckout"> | string
+    sellerClabe?: StringNullableFilter<"ResaleCheckout"> | string | null
+    payoutReference?: StringNullableFilter<"ResaleCheckout"> | string | null
+    payoutPaidAt?: DateTimeNullableFilter<"ResaleCheckout"> | Date | string | null
+    payoutPaidById?: StringNullableFilter<"ResaleCheckout"> | string | null
     paymentId?: StringNullableFilter<"ResaleCheckout"> | string | null
     orderId?: StringNullableFilter<"ResaleCheckout"> | string | null
     expiresAt?: DateTimeFilter<"ResaleCheckout"> | Date | string
@@ -122703,6 +123088,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -122737,6 +123124,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -123070,6 +123459,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -123104,6 +123495,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -123356,6 +123749,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -123390,6 +123785,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -123438,6 +123835,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -123472,6 +123871,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -123504,6 +123905,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -123538,6 +123941,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -123586,6 +123991,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -123620,6 +124027,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -123779,6 +124188,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -123813,6 +124224,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -123994,6 +124407,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -124028,6 +124443,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -127129,6 +127546,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -127163,6 +127582,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -127318,6 +127739,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -127352,6 +127775,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -127829,6 +128254,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     organization?: OrganizationCreateNestedOneWithoutUsersInput
@@ -127863,6 +128290,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
@@ -127958,6 +128387,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneWithoutUsersNestedInput
@@ -127992,6 +128423,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -128592,6 +129025,8 @@ export namespace Prisma {
     active?: boolean
     lastLogin?: Date | string | null
     loyaltyPoints?: number
+    resalePayoutClabe?: string | null
+    resalePayoutClabeAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -129094,6 +129529,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUpdateManyWithoutUserNestedInput
@@ -129127,6 +129564,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -129160,6 +129599,8 @@ export namespace Prisma {
     active?: BoolFieldUpdateOperationsInput | boolean
     lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
+    resalePayoutClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    resalePayoutClabeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -130430,6 +130871,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
   }
 
@@ -130535,6 +130980,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     event?: EventUpdateOneRequiredWithoutHoldsNestedInput
   }
@@ -130551,6 +131000,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -130566,6 +131019,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -130816,6 +131273,10 @@ export namespace Prisma {
     expiresAt: Date | string
     releasedAt?: Date | string | null
     status?: $Enums.HoldStatus
+    quotedSubtotal?: Decimal | DecimalJsLike | number | string | null
+    quotedFees?: Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
   }
 
@@ -131366,6 +131827,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seat?: SeatUpdateOneWithoutHoldsNestedInput
   }
@@ -131382,6 +131847,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -131397,6 +131866,10 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     releasedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumHoldStatusFieldUpdateOperationsInput | $Enums.HoldStatus
+    quotedSubtotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedFees?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTaxes?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    quotedTotal?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -133433,6 +133906,10 @@ export namespace Prisma {
     paymentMethod?: $Enums.PaymentMethod
     sellerPayout: Decimal | DecimalJsLike | number | string
     payoutStatus?: string
+    sellerClabe?: string | null
+    payoutReference?: string | null
+    payoutPaidAt?: Date | string | null
+    payoutPaidById?: string | null
     paymentId?: string | null
     orderId?: string | null
     expiresAt: Date | string
@@ -133488,6 +133965,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFieldUpdateOperationsInput | string
+    sellerClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutReference?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutPaidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    payoutPaidById?: NullableStringFieldUpdateOperationsInput | string | null
     paymentId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -133510,6 +133991,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFieldUpdateOperationsInput | string
+    sellerClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutReference?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutPaidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    payoutPaidById?: NullableStringFieldUpdateOperationsInput | string | null
     paymentId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -133532,6 +134017,10 @@ export namespace Prisma {
     paymentMethod?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     sellerPayout?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     payoutStatus?: StringFieldUpdateOperationsInput | string
+    sellerClabe?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutReference?: NullableStringFieldUpdateOperationsInput | string | null
+    payoutPaidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    payoutPaidById?: NullableStringFieldUpdateOperationsInput | string | null
     paymentId?: NullableStringFieldUpdateOperationsInput | string | null
     orderId?: NullableStringFieldUpdateOperationsInput | string | null
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -289,6 +289,11 @@ export function WaitingRoomGate({
           {announcement}
         </p>
 
+        <p className={styles.profecoNote} role="note">
+          Entrar a la fila no garantiza boleto: el cupo se agota y llegar a tu turno no asegura que
+          queden lugares.
+        </p>
+
         <div className={styles.footer}>
           <button type="button" className={styles.secondaryAction} onClick={room.leave}>
             Salir de la fila

@@ -143,4 +143,3 @@ export type HandoffDto = {
   closingCashCounted?: number;
   managerPin?: string;
 };
-

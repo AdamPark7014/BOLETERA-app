@@ -770,16 +770,20 @@ export class MetricsService {
   }
 
   async settlements(params: RangeParams): Promise<SettlementsMetrics> {
+    // ENCARGO08_SETTLEMENTS: órdenes + comisión de reventa + membresías.
     const range = parseMetricsRange(params.from, params.to);
-    const [orders, refunds, payouts] = await Promise.all([
+    const [orders, refunds, payouts, resaleSales, memberships] = await Promise.all([
       this.completedOrders(params.organizationId, range.from, range.to, params.eventId),
       this.prisma.refund.findMany({
         where: {
           status: 'COMPLETED',
           processedAt: { gte: range.from, lte: range.to },
-          order: { organizationId: params.organizationId },
+          order: {
+            organizationId: params.organizationId,
+            ...(params.eventId ? { eventId: params.eventId } : {}),
+          },
         },
-        select: { amount: true },
+        select: { amount: true, order: { select: { eventId: true } } },
       }),
       this.prisma.promoterPayout.findMany({
         where: {
@@ -788,33 +792,104 @@ export class MetricsService {
           periodEnd: { lte: range.to },
         },
       }),
+      this.prisma.resaleCheckout.findMany({
+        where: {
+          organizationId: params.organizationId,
+          status: 'COMPLETED',
+          completedAt: { gte: range.from, lte: range.to },
+          ...(params.eventId ? { listing: { ticket: { eventId: params.eventId } } } : {}),
+        },
+        select: {
+          fee: true,
+          amount: true,
+          sellerPayout: true,
+          listing: { select: { ticket: { select: { eventId: true } } } },
+        },
+      }),
+      this.prisma.membershipCheckout.findMany({
+        where: {
+          organizationId: params.organizationId,
+          status: 'COMPLETED',
+          completedAt: { gte: range.from, lte: range.to },
+        },
+        select: { amount: true },
+      }),
     ]);
 
     const grossRevenue = sumOrderRevenue(orders).revenue;
-    const refundTotal = refunds.reduce((s, r) => s + Number(r.amount), 0);
+    const resaleFeeIncome = resaleSales.reduce((sum, r) => sum + Number(r.fee), 0);
+    const membershipRevenue = memberships.reduce((sum, m) => sum + Number(m.amount), 0);
+    const refundTotal = refunds.reduce((sum, r) => sum + Number(r.amount), 0);
     const commissionRate = await this.orgCommissionRate(params.organizationId);
     const commission = grossRevenue * commissionRate;
-    const netPayable = grossRevenue - refundTotal - commission;
+    // Neto al organizador: ventas + membresías − reembolsos − comisión plataforma + (la comisión de reventa es ingreso de plataforma, no del organizador).
+    const netPayable =
+      Math.round((grossRevenue + membershipRevenue - refundTotal - commission) * 100) / 100;
+    const platformResaleIncome = Math.round(resaleFeeIncome * 100) / 100;
 
-    const eventMap = new Map<string, number>();
+    type EventBucket = {
+      label: string;
+      sold: number;
+      fees: number;
+      commissions: number;
+      refunds: number;
+      resaleFees: number;
+    };
+    const eventMap = new Map<string, EventBucket>();
     const orderRows = await this.prisma.order.findMany({
       where: {
         ...this.orderWhere(params.organizationId, range, params.eventId),
         status: COMPLETED,
       },
-      select: { totalAmount: true, event: { select: { id: true, title: true } } },
+      select: {
+        totalAmount: true,
+        fees: true,
+        commissionAmount: true,
+        event: { select: { id: true, title: true } },
+      },
     });
     for (const order of orderRows) {
-      eventMap.set(order.event.id, (eventMap.get(order.event.id) ?? 0) + Number(order.totalAmount));
+      const cur = eventMap.get(order.event.id) ?? {
+        label: order.event.title,
+        sold: 0,
+        fees: 0,
+        commissions: 0,
+        refunds: 0,
+        resaleFees: 0,
+      };
+      cur.sold += Number(order.totalAmount);
+      cur.fees += Number(order.fees);
+      cur.commissions += Number(order.commissionAmount);
+      eventMap.set(order.event.id, cur);
+    }
+    for (const r of refunds) {
+      const eventId = r.order?.eventId;
+      if (!eventId) continue;
+      const cur = eventMap.get(eventId);
+      if (cur) cur.refunds += Number(r.amount);
+    }
+    for (const sale of resaleSales) {
+      const eventId = sale.listing.ticket.eventId;
+      const cur = eventMap.get(eventId) ?? {
+        label: eventId,
+        sold: 0,
+        fees: 0,
+        commissions: 0,
+        refunds: 0,
+        resaleFees: 0,
+      };
+      cur.resaleFees += Number(sale.fee);
+      eventMap.set(eventId, cur);
     }
 
     return {
       organizationId: params.organizationId,
       dateRange: range.dateRange,
       summary: {
-        grossRevenue,
+        // Membresías entran al bruto liquidable; la comisión de reventa es ingreso de plataforma.
+        grossRevenue: Math.round((grossRevenue + membershipRevenue) * 100) / 100,
         refunds: refundTotal,
-        commission,
+        commission: Math.round((commission + platformResaleIncome) * 100) / 100,
         netPayable,
         pendingPayouts: payouts.filter((p) => p.status === 'PENDING').length,
         completedPayouts: payouts.filter((p) => p.status === 'COMPLETED').length,
@@ -830,12 +905,21 @@ export class MetricsService {
         referenceId: p.referenceId,
         processedAt: p.processedAt?.toISOString() ?? null,
       })),
-      byEvent: Array.from(eventMap.entries()).map(([key, value]) => {
-        const title = orderRows.find((o) => o.event.id === key)?.event.title ?? key;
-        return { key, label: title, value };
-      }),
+      byEvent: Array.from(eventMap.entries()).map(([key, bucket]) => ({
+        key,
+        label: bucket.label,
+        value: Math.round((bucket.sold - bucket.refunds - bucket.commissions) * 100) / 100,
+        meta: {
+          sold: Math.round(bucket.sold * 100) / 100,
+          fees: Math.round(bucket.fees * 100) / 100,
+          commissions: Math.round(bucket.commissions * 100) / 100,
+          refunds: Math.round(bucket.refunds * 100) / 100,
+          resaleFees: Math.round(bucket.resaleFees * 100) / 100,
+          net: Math.round((bucket.sold - bucket.refunds - bucket.commissions) * 100) / 100,
+        },
+      })),
       generatedAt: new Date().toISOString(),
-    };
+    } as SettlementsMetrics;
   }
 
   async timeseries(

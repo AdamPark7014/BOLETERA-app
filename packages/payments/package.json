@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "check-types": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types src/banorte/webhook.test.ts src/banorte/status-classifier.test.ts src/security/redact.test.ts src/security/idempotency.test.ts src/security/retry.test.ts src/types.money.test.ts"
+    "test": "node --test --experimental-strip-types src/banorte/payworks.msi.test.ts src/banorte/webhook.test.ts src/banorte/status-classifier.test.ts src/security/redact.test.ts src/security/idempotency.test.ts src/security/retry.test.ts src/types.money.test.ts"
   },
   "dependencies": {
     "@boletera/shared": "workspace:*"
