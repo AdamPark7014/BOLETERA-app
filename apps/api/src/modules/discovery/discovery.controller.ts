@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Header,
-  Headers,
-  NotFoundException,
-  Param,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Header, Headers, NotFoundException, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DiscoveryService } from './discovery.service';
 import { TenantService } from '../tenant/tenant.service';
@@ -82,7 +74,8 @@ export class DiscoveryController {
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('limit') limit?: string,
-    @Query('cursor') cursor?: string
+    @Query('cursor') cursor?: string,
+    @Query('includePast') includePast?: string
   ) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return [];
@@ -97,6 +90,7 @@ export class DiscoveryController {
       to,
       limit: limit ? parseInt(limit, 10) : undefined,
       cursor,
+      includePast: includePast === 'true' || includePast === '1',
     });
   }
 

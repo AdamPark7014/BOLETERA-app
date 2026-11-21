@@ -239,25 +239,22 @@ export function EventStage({
         ) : null}
       </section>
 
-      <div className={`${styles.fichaGrid}${canBuy ? ` ${ficha.fichaWithDock}` : ''}`}>
-        <div className={styles.fichaMain}>
-          {!hasOffer || stock.soldOut ? (
-            <section className={styles.panel}>
-              <h2 className={styles.h2}>{stock.soldOut ? 'Agotado' : 'Pronto a la venta'}</h2>
-              <p className={styles.muted}>
-                {stock.soldOut
-                  ? 'Si se libera un boleto al precio original, te avisamos con un enlace de 60 minutos.'
-                  : 'Te avisamos si se liberan lugares.'}
-              </p>
-              <WaitlistSignup eventId={eventId} eventTitle={title} />
-            </section>
-          ) : (
-            <section className={styles.panel} aria-labelledby="zonas-title">
-              <h2 className={styles.h2} id="zonas-title">
-                Zonas
-              </h2>
+      <div className={`${styles.fichaMain}${canBuy ? ` ${ficha.fichaWithDock}` : ''}`}>
+        {!hasOffer || stock.soldOut ? (
+          <section className={styles.panel}>
+            <h2 className={styles.h2}>{stock.soldOut ? 'Agotado' : 'Pronto a la venta'}</h2>
+            <p className={styles.muted}>
+              {stock.soldOut
+                ? 'Si se libera un boleto al precio original, te avisamos con un enlace de 60 minutos.'
+                : 'Te avisamos si se liberan lugares.'}
+            </p>
+            <WaitlistSignup eventId={eventId} eventTitle={title} />
+          </section>
+        ) : (
+          <div className={ficha.fichaBuyGrid}>
+            <section className={styles.panel} aria-label="Mapa del recinto">
               {mapData ? (
-                <div className={ficha.mapPreview} aria-label="Mapa del recinto">
+                <div className={ficha.mapPreview}>
                   <p className={ficha.mapPreviewLabel}>Mapa del recinto</p>
                   <div className={ficha.mapPreviewFrame}>
                     <SeatMapViewer
@@ -271,7 +268,16 @@ export function EventStage({
                     />
                   </div>
                 </div>
-              ) : null}
+              ) : (
+                <h2 className={styles.h2} id="zonas-title">
+                  Zonas
+                </h2>
+              )}
+            </section>
+            <aside className={ficha.fichaSticky} aria-labelledby="zonas-title">
+              <h2 className={styles.h2} id="zonas-title">
+                Zonas
+              </h2>
               <ul className={ficha.zoneCards}>
                 {orderedOffers.map((offer) => {
                   const price = zonePrice(offer);
@@ -302,9 +308,19 @@ export function EventStage({
                   );
                 })}
               </ul>
-            </section>
-          )}
+              {announced > 0 ? (
+                <p className={styles.muted}>
+                  Total desde {priceLabel(announced)} · elige zona y cantidad en el siguiente paso
+                </p>
+              ) : null}
+              <button type="button" className={styles.primary} onClick={() => setStage('zona')}>
+                Continuar
+              </button>
+            </aside>
+          </div>
+        )}
 
+        <div className={ficha.fichaBelow}>
           {about ? (
             <section className={styles.panel} aria-labelledby="acerca-title">
               <h2 className={styles.h2} id="acerca-title">
@@ -341,20 +357,7 @@ export function EventStage({
               </dl>
             </section>
           ) : null}
-        </div>
 
-        <aside className={styles.fichaSide}>
-          {poster && poster !== hero ? (
-            <div className={styles.poster}>
-              <Image
-                src={poster}
-                alt={`Póster de ${title}`}
-                fill
-                sizes="(max-width: 720px) 100vw, 420px"
-                className={styles.cover}
-              />
-            </div>
-          ) : null}
           <section className={styles.venue}>
             <strong className={styles.venueName}>{venueName ?? 'Recinto por confirmar'}</strong>
             {venueAddress || venueCity ? (
@@ -362,11 +365,23 @@ export function EventStage({
                 {[venueAddress, venueCity].filter(Boolean).join(', ')}
               </span>
             ) : null}
-            {venueSlug ? (
-              <Link href={`/venues/${venueSlug}`} className={styles.textLink}>
-                Ver recinto
-              </Link>
-            ) : null}
+            <div className={styles.heroLinks}>
+              {venueAddress || venueCity ? (
+                <a
+                  className={styles.textLink}
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([venueAddress, venueName, venueCity].filter(Boolean).join(', '))}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Cómo llegar
+                </a>
+              ) : null}
+              {venueSlug ? (
+                <Link href={`/venues/${venueSlug}`} className={styles.textLink}>
+                  Ver recinto
+                </Link>
+              ) : null}
+            </div>
             <details className={styles.policyAccord}>
               <summary>Políticas del evento</summary>
               <ul>
@@ -391,7 +406,7 @@ export function EventStage({
               </ul>
             </details>
           </section>
-        </aside>
+        </div>
       </div>
 
       {canBuy ? (

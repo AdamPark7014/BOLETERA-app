@@ -152,7 +152,20 @@ export default async function ResalePage() {
                       )}
                     </div>
                     <div className={styles.side}>
-                      <strong>{formatPrice(price)}</strong>
+                      <div className={styles.breakdown} aria-label="Desglose del precio">
+                        <p className={styles.breakdownLine}>
+                          <span>Precio del vendedor</span>
+                          <span>{formatPrice(Number(l.askingPrice))}</span>
+                        </p>
+                        <p className={styles.breakdownLine}>
+                          <span>Cargo por servicio</span>
+                          <span>{formatPrice(Number(l.fee) || 0)}</span>
+                        </p>
+                        <p className={styles.breakdownTotal}>
+                          <span>Total</span>
+                          <strong>{formatPrice(price)}</strong>
+                        </p>
+                      </div>
                       {l.status === 'ACTIVE' ? (
                         <BuyResaleButton listingId={l.id} label="Comprar" />
                       ) : null}

@@ -140,6 +140,9 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
   /** Sin esto se dispararía una lectura sin credencial antes de leer el token. */
   const [tokenReady, setTokenReady] = useState(false);
   const [eventImage, setEventImage] = useState<string | null>(null);
+  const [walletByCode, setWalletByCode] = useState<
+    Record<string, { holderName?: string | null; gate?: string | null }>
+  >({});
 
   // El token del enlace se archiva al llegar: la siguiente visita desde este
   // dispositivo ya no depende de tener el correo a mano.
@@ -215,6 +218,36 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
     return () => controller.abort();
   }, [eventSlug]);
 
+  useEffect(() => {
+    if (state.phase !== 'ready' || state.order.status !== 'COMPLETED') return;
+    const controller = new AbortController();
+    const headers: HeadersInit = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    fetch(`${API}/orders/${encodeURIComponent(publicId)}/wallet`, {
+      headers,
+      credentials: 'include',
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(
+        (
+          data: {
+            tickets?: { code?: string; holderName?: string | null; gate?: string | null }[];
+          } | null
+        ) => {
+          if (!data?.tickets?.length) return;
+          const map: Record<string, { holderName?: string | null; gate?: string | null }> = {};
+          for (const t of data.tickets) {
+            if (t.code) map[t.code] = { holderName: t.holderName ?? null, gate: t.gate ?? null };
+          }
+          setWalletByCode(map);
+        }
+      )
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [state, publicId, token]);
+
   if (state.phase === 'loading') {
     return (
       <div className={styles.shell}>
@@ -242,7 +275,13 @@ export function OrderDetailClient({ publicId, urlToken }: { publicId: string; ur
   }
 
   const order = state.order;
-  const tickets = order.items.flatMap((i) => i.tickets);
+  const tickets = order.items
+    .flatMap((i) => i.tickets)
+    .map((t) => ({
+      ...t,
+      holderName: walletByCode[t.code]?.holderName ?? null,
+      gate: walletByCode[t.code]?.gate ?? null,
+    }));
   const when = order.event?.startsAt ? new Date(order.event.startsAt) : null;
   const cal = googleCalendarUrl(order, brand.name);
   const pendingMeta = order.pendingPayment?.metadata;

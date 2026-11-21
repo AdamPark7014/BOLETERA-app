@@ -88,11 +88,47 @@
 
 .mapPreviewFrame {
   position: relative;
-  height: min(52vw, 320px);
+  height: min(70vh, 640px);
+  min-height: 520px;
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--line);
   background: #0b0907;
+
+  @include bt.phone {
+    height: min(55vh, 420px);
+    min-height: 280px;
+  }
+}
+
+.fichaBuyGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: 32px;
+  align-items: start;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fichaSticky {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (max-width: 960px) {
+    position: static;
+  }
+}
+
+.fichaBelow {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .aboutBody {

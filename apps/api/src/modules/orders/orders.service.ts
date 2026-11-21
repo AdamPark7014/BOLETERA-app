@@ -50,6 +50,7 @@ import { TicketPdfService } from '../notification/ticket-pdf.service';
 import { BillingService } from '../billing/billing.service';
 import type { OrderRequester } from './orders.dto';
 import { maskClabe } from './clabe';
+import { walletTicketFields } from './ticket-wallet-fields';
 
 initDefaultProviders();
 
@@ -1020,7 +1021,7 @@ export class OrdersService {
         },
         event: {
           include: {
-            venue: { select: { name: true, city: true, address: true } },
+            venue: { select: { id: true, name: true, city: true, address: true } },
           },
         },
         payment: true,
@@ -1379,6 +1380,22 @@ export class OrdersService {
     const secret = requireTicketQrSecret();
     const tickets = await this.ticketsHeldByRequester(order, requester);
 
+    const venueId =
+      (order.event as { venueId?: string }).venueId ??
+      (order.event.venue as { id?: string } | undefined)?.id ??
+      null;
+    const accessZones = venueId
+      ? await this.prisma.accessZone.findMany({
+          where: { venueId },
+          select: { name: true, slug: true },
+        })
+      : [];
+    const offerByTicket = new Map(
+      order.items.flatMap((item) =>
+        item.tickets.map((t) => [t.id, item.offer?.zone ?? null] as const)
+      )
+    );
+
     return {
       publicId: order.publicId,
       event: {
@@ -1389,16 +1406,21 @@ export class OrdersService {
       },
       /** Segundos que dura cada ventana; el telefono usa el mismo valor. */
       rotationSeconds: QR_ROTATION_SECONDS,
-      tickets: tickets.map((t) => ({
-        id: t.id,
-        code: t.code,
-        section: t.section,
-        row: t.row,
-        seatNumber: t.seatNumber,
-        status: t.status,
-        /** Clave por boleto en hexadecimal. Guardala cifrada en el dispositivo. */
-        signingKey: deriveTicketKeyHex(t.id, order.eventId, secret, t.keyEpoch ?? 0),
-      })),
+      tickets: tickets.map((t) => {
+        const fields = walletTicketFields(t, offerByTicket.get(t.id) ?? null, accessZones);
+        return {
+          id: t.id,
+          code: t.code,
+          section: t.section,
+          row: t.row,
+          seatNumber: t.seatNumber,
+          status: t.status,
+          holderName: fields.holderName,
+          gate: fields.gate,
+          /** Clave por boleto en hexadecimal. Guardala cifrada en el dispositivo. */
+          signingKey: deriveTicketKeyHex(t.id, order.eventId, secret, t.keyEpoch ?? 0),
+        };
+      }),
     };
   }
 
@@ -1425,8 +1447,14 @@ export class OrdersService {
       },
       include: {
         event: {
-          select: { id: true, title: true, startsAt: true, venue: { select: { name: true } } },
+          select: {
+            id: true,
+            title: true,
+            startsAt: true,
+            venue: { select: { id: true, name: true } },
+          },
         },
+        offer: { select: { zone: true } },
       },
       orderBy: { event: { startsAt: 'asc' } },
       take: 200,
@@ -1443,6 +1471,22 @@ export class OrdersService {
       porEvento.set(t.event.id, grupo);
     }
 
+    const venueIds = [
+      ...new Set(tickets.map((t) => t.event.venue?.id).filter(Boolean)),
+    ] as string[];
+    const zones = venueIds.length
+      ? await this.prisma.accessZone.findMany({
+          where: { venueId: { in: venueIds } },
+          select: { venueId: true, name: true, slug: true },
+        })
+      : [];
+    const zonesByVenue = new Map<string, { name: string; slug: string }[]>();
+    for (const z of zones) {
+      const list = zonesByVenue.get(z.venueId) ?? [];
+      list.push({ name: z.name, slug: z.slug });
+      zonesByVenue.set(z.venueId, list);
+    }
+
     return {
       rotationSeconds: QR_ROTATION_SECONDS,
       events: [...porEvento.values()].map(({ event, tickets: ts }) => ({
@@ -1452,15 +1496,25 @@ export class OrdersService {
           startsAt: event.startsAt,
           venue: event.venue?.name ?? null,
         },
-        tickets: ts.map((t) => ({
-          id: t.id,
-          code: t.code,
-          section: t.section,
-          row: t.row,
-          seatNumber: t.seatNumber,
-          status: t.status,
-          signingKey: deriveTicketKeyHex(t.id, t.event.id, secret, t.keyEpoch ?? 0),
-        })),
+        tickets: ts.map((t) => {
+          const accessZones = event.venue?.id ? (zonesByVenue.get(event.venue.id) ?? []) : [];
+          const fields = walletTicketFields(
+            t,
+            (t as { offer?: { zone?: string } }).offer?.zone ?? null,
+            accessZones
+          );
+          return {
+            id: t.id,
+            code: t.code,
+            section: t.section,
+            row: t.row,
+            seatNumber: t.seatNumber,
+            status: t.status,
+            holderName: fields.holderName,
+            gate: fields.gate,
+            signingKey: deriveTicketKeyHex(t.id, t.event.id, secret, t.keyEpoch ?? 0),
+          };
+        }),
       })),
     };
   }

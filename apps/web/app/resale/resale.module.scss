@@ -209,6 +209,36 @@
   font: var(--caption);
 }
 
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  text-align: right;
+}
+
+.breakdownLine,
+.breakdownTotal {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font: var(--body-sm);
+  color: var(--text-secondary);
+}
+
+.breakdownTotal {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  font: var(--body);
+  font-weight: 560;
+
+  strong {
+    font: var(--money);
+  }
+}
 .side {
   display: flex;
   flex-direction: column;

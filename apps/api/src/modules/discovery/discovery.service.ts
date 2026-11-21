@@ -15,6 +15,8 @@ type ListParams = {
   when?: string;
   from?: string;
   to?: string;
+  /** Si true, incluye eventos con startsAt en el pasado. Por omisión no. */
+  includePast?: boolean;
   limit?: number;
   cursor?: string;
 };
@@ -38,6 +40,8 @@ export class DiscoveryService {
     const range = this.whenRange(params.when);
     const from = params.from ? new Date(params.from) : range?.gte;
     const to = params.to ? new Date(params.to) : range?.lte;
+    // Cartelera: sin includePast=true no se listan eventos ya pasados.
+    const effectiveFrom = from ?? (!params.includePast ? new Date() : undefined);
 
     const where: Prisma.EventWhereInput = {
       AND: [
@@ -52,10 +56,10 @@ export class DiscoveryService {
       ...(params.category && CATEGORIES.has(params.category as EventCategory)
         ? { category: params.category as EventCategory }
         : {}),
-      ...(from || to
+      ...(effectiveFrom || to
         ? {
             startsAt: {
-              ...(from ? { gte: from } : {}),
+              ...(effectiveFrom ? { gte: effectiveFrom } : {}),
               ...(to ? { lte: to } : {}),
             },
           }

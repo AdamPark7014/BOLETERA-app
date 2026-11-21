@@ -26,6 +26,8 @@ export type TicketSeat = {
   section?: string | null;
   row?: string | null;
   seatNumber?: string | null;
+  gate?: string | null;
+  holderName?: string | null;
 };
 
 export type TicketEvent = {
@@ -165,6 +167,8 @@ export function OrderQrCards({
           return (
             <li key={t.id}>
               <Stub
+                publicId={publicId}
+                accessToken={accessToken}
                 event={event}
                 seat={seat}
                 index={index}
@@ -175,7 +179,7 @@ export function OrderQrCards({
                 progress={progress}
                 allowTransfer={allowTransfer}
                 allowResale={allowResale}
-                holderName={holderName}
+                holderName={seat?.holderName ?? holderName}
               />
             </li>
           );
@@ -210,7 +214,27 @@ function calendarHref(event?: TicketEvent | null): string | null {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${stamp(start)}/${stamp(end)}&location=${encodeURIComponent(event.venueName || '')}`;
 }
 
+async function downloadTicketsPdf(publicId: string, accessToken?: string | null) {
+  const token = accessToken ?? readStoredOrderAccessToken(publicId);
+  const headers: HeadersInit = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API}/orders/${encodeURIComponent(publicId)}/tickets.pdf`, {
+    headers,
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('pdf');
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `boletos-${publicId}.pdf`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 function Stub({
+  publicId,
+  accessToken,
   event,
   seat,
   index,
@@ -224,6 +248,8 @@ function Stub({
   allowResale = true,
   holderName,
 }: {
+  publicId?: string;
+  accessToken?: string | null;
   event?: TicketEvent | null;
   seat?: TicketSeat;
   index: number;
@@ -237,9 +263,13 @@ function Stub({
   allowResale?: boolean;
   holderName?: string | null;
 }) {
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
   const general = !seat?.section && !seat?.row && !seat?.seatNumber;
   const facts = [
     ...(holderName ? [{ k: 'Titular', v: holderName }] : []),
+    ...(seat?.gate ? [{ k: 'Puerta', v: seat.gate }] : []),
     ...(general
       ? [{ k: 'Acceso', v: 'General' }]
       : [
@@ -342,6 +372,54 @@ function Stub({
             <Link href="/resale/vender" className={styles.stubButton}>
               Vender en reventa
             </Link>
+          ) : null}
+          {publicId ? (
+            <button
+              type="button"
+              className={styles.stubButton}
+              disabled={pdfBusy}
+              onClick={() => {
+                setPdfBusy(true);
+                void downloadTicketsPdf(publicId, accessToken)
+                  .catch(() => undefined)
+                  .finally(() => setPdfBusy(false));
+              }}
+            >
+              {pdfBusy ? 'Descargando…' : 'Descargar PDF'}
+            </button>
+          ) : null}
+          {publicId ? (
+            <button
+              type="button"
+              className={styles.stubButton}
+              disabled={resendBusy}
+              onClick={() => {
+                setResendBusy(true);
+                setResendMsg(null);
+                void fetchOrderResource<{ ok: boolean; sentTo?: string | null }>(
+                  API,
+                  publicId,
+                  '/resend',
+                  accessToken,
+                  { method: 'POST' }
+                )
+                  .then((result) => {
+                    if (result.ok) {
+                      setResendMsg(`Reenviado a ${result.data.sentTo ?? 'tu correo'}`);
+                    } else {
+                      setResendMsg(result.message || 'No se pudo reenviar');
+                    }
+                  })
+                  .finally(() => setResendBusy(false));
+              }}
+            >
+              {resendBusy ? 'Reenviando…' : 'Reenviar'}
+            </button>
+          ) : null}
+          {resendMsg ? (
+            <span className={styles.hint} role="status">
+              {resendMsg}
+            </span>
           ) : null}
         </div>
       ) : null}

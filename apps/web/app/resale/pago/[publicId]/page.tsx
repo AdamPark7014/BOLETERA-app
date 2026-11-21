@@ -170,7 +170,20 @@ export default function ReventaPagoPage() {
         ) : null}
 
         {checkout ? (
-          <dl className={purchase.stack}>
+          <dl className={purchase.stack} aria-label="Desglose del pago">
+            <div className={purchase.chips}>
+              <dt>Precio del vendedor</dt>
+              <dd>
+                {formatMoney(
+                  Math.max(0, Number(checkout.amount) - Number(checkout.fee || 0)),
+                  checkout.currency
+                )}
+              </dd>
+            </div>
+            <div className={purchase.chips}>
+              <dt>Cargo por servicio</dt>
+              <dd>{formatMoney(checkout.fee, checkout.currency)}</dd>
+            </div>
             <div className={purchase.chips}>
               <dt>Total</dt>
               <dd>
@@ -178,8 +191,8 @@ export default function ReventaPagoPage() {
               </dd>
             </div>
             <div className={purchase.caption}>
-              Incluye cargo por servicio de {formatMoney(checkout.fee, checkout.currency)}. El QR
-              del vendedor deja de valer y recibes uno nuevo.
+              Precio del vendedor + cargo por servicio = total. El QR del vendedor deja de valer y
+              recibes uno nuevo.
             </div>
           </dl>
         ) : null}
