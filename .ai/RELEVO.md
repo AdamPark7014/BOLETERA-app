@@ -3,31 +3,44 @@
 - **Último turno:** cursor
 - **Fecha:** 2026-11-22
 - **Rama:** main
-- **Cierre:** f11d1fd — reto antibots alineado; stubs 3D reparados
+- **Tarea:** Noche 22-11 — pulido Black-Ticket/BOLETERA: inventario huecos + 1–3 módulos con tests (sin push)
 
 ## Hecho
 
-- 2026-11-22 cursor — Paridad del reto antibots (fases 0–2 / día de venta) en web y Android con el contrato nuevo del API (`HumanChallengeService`): PoW `salt:challengeId:counter` → `POST /inventory/challenge/solve` → `clearanceToken` en holds (ya no `proof`/`challengeToken`). Web: `HumanChallenge.tsx` + `EventPurchaseClient` (parsea `challenge` del 428, manda `clearanceToken`, sesión de invitado al resolver). Android: `HumanChallenge.kt`, `BuyerApi`, `ApiClient`, `MainActivity`, tests. Docs: `docs/OPERACION-ONSALE.md` y `apps/mobile-native/README.md`. WIP showcase 3D: stubs inválidos (`__ticket` / `PLACEHOLDER_ONLY`) reparados en `venue3d/*`, `/venues/[slug]/3d` y `packages/venue-3d/src/index.ts` sin tocar compra/reventa. Verificado: API human-challenge + buyer-risk 10/10; Android `HumanChallengeTest` + `RotatingTicketCodeTest` OK; `@boletera/web` check-types OK.
-  Paridad: Web hecho · API hecho · Android hecho (hold/fila/reto) · iOS pendiente (no hay proyecto).
+- **Reto antibots alineado al API (PoW + clearanceToken):**
+  - Web: `HumanChallenge.tsx` resuelve PoW con `salt:challengeId:counter`, pide `clearanceToken`; `EventPurchaseClient` pasa el reto del 428 y limpia `pendingChallenge` al resolver.
+  - Android: `HumanChallenge.kt` / `BuyerApi` / `ApiClient` / `MainActivity` usan `clearanceToken` + `IssuedPowChallenge`; tests unitarios actualizados.
+  - Docs: `OPERACION-ONSALE.md` y `apps/mobile-native/README.md` (paridad fases 0–2 en Android; buscador NL pendiente en app).
+- **Typecheck API:** `inventory.controller.release.spec.ts` inyecta el 6.º mock (`HumanChallengeService`) que faltaba tras el WIP de rescate.
+- **Smart-search (módulo del WIP 7a02dd1):** nuevos `query-filters.spec.ts` y `smart-search.service.spec.ts` (consulta corta, assistantAvailable, rate limit 429).
+- **Verificación:** API 30 pruebas (human-challenge + release + interpreter + filters + service) en verde; `check-types` api+web OK; Android `HumanChallengeTest` BUILD SUCCESSFUL. **Sin push remoto.**
 
 ## A medias
 
-- Showcase 3D del recinto (`/venues/[slug]/3d`): ruta y contenedor válidos; el visor completo del recinto sigue en preparación (no bloquea compra).
-- Plan maestro: fases 0–2 en código; medición de carga 5k/20k con el código nuevo sigue pendiente (`docs/OPERACION-ONSALE.md`).
-- Buscador NL / asistente en Android (web ya tiene `/buscar` + smart-search del WIP rescatado).
+- Auto-reintento de hold en web tras resolver el reto (Android sí reintenta; web deja el `clearanceToken` y el comprador vuelve a apartar).
+- Ollama saturado por flota noche: `implement` MCP/shell hizo timeout; tickets locales + drafts en `.ai/drafts/noche-22-*` para los specs nuevos.
+- RELEVO histórico anterior (rediseño 14–21 nov) sigue siendo contexto; este archivo refleja el estado vivo del turno.
 
 ## Siguiente
 
-- iOS nativo (fase 4 del plan) o cerrar medición onsale.
-- Integrar `InstancedSeats` / `SectionPriceLabels` en el visor de compra si Adam quiere el mapa 3D enriquecido.
-- No CFDI PAC real ni Wallet sin pedido explícito.
+- Medición de carga 5k/20k con el código de Fase 2 (`docs/OPERACION-ONSALE.md`).
+- Buscador NL / asistente en Android (web ya tiene `/buscar` + smart-search).
+- iOS: no hay proyecto (`apps/mobile-native` solo Android).
+- Wallet Apple/Google; Turnstile en cliente web si `HUMAN_CHALLENGE_PROVIDER=turnstile`.
+- Eval smart-search (`node apps/api/src/modules/smart-search/eval/run.mjs`) cuando haya hueco en Ollama/CI local.
 
 ## No tocar
 
-- Compra/reventa/pago (salvo el contrato de reto ya alineado).
-- Credenciales, `.env` de demo, CFDI producción, Apple/Google Wallet.
-- `git push` en este turno (Adam: sin push).
+- Push a `origin` esta noche (pedido de Adam).
+- `apps/mobile-native/android/.kotlin/` (artefacto local).
+- Carpetas protegidas / secretos / deploy.
+- No matar la flota Ollama de otros productos.
 
-## Contexto previo (resumen)
+## Paridad al cierre
 
-- Fases 0–2 del plan maestro ya entraron (ficha/PDF, dinero/PROFECO/MSI/payouts, caché/fila/reto/ops en vivo). Taquilla pulida (pago mixto, alcance de caja). Android comprador al día en preventa/MSI/reventa/espera/transferir. Commits WIP de rescate previos pueden dejar archivos a medias; disco y `git log` ganan a la memoria.
+| Plataforma | Estado |
+|---|---|
+| Web | Hecho (PoW + clearance en compra; buscar/asistente ya en disco del WIP) |
+| API | Hecho (HumanChallengeService + specs smart-search; typecheck verde) |
+| Android | Hecho (mismo contrato hold/fila/reto) |
+| iOS | No aplica — no hay proyecto nativo |

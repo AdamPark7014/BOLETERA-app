@@ -897,6 +897,7 @@ export function EventPurchaseClient({
               challenge={pendingChallenge}
               onSolved={(token) => {
                 setClearanceToken(token);
+                setPendingChallenge(null);
                 setNeedChallenge(false);
                 setHoldError(null);
               }}

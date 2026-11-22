@@ -29,6 +29,8 @@ describe('InventoryController · soltar apartado de invitado', () => {
         issueChallengeToken: () => 't',
         verifyChallengeToken: () => true,
       } as never,
+      // HumanChallengeService (inyectado tras el riesgo en el controlador)
+      {} as never,
       { log: async () => undefined } as never
     );
     return { controller, releaseHold };
