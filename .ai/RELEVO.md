@@ -2,7 +2,7 @@
 
 - **Último turno:** cursor
 - **Fecha:** 2026-11-22
-- **Rama:** main (sin push)
+- **Rama:** main
 - **Cierre:** f11d1fd — reto antibots alineado; stubs 3D reparados
 
 ## Hecho
