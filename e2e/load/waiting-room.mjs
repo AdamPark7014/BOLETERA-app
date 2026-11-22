@@ -237,11 +237,12 @@ check(
 );
 
 if (pass) {
+  // El pase va firmado con memberId; inventory lo valida contra sessionId.
   const withPass = await post('/inventory/holds', {
     eventId: gated.event.id,
     offerId: gated.offer.id,
     quantity: 1,
-    sessionId: `s-ok-${stamp}`,
+    sessionId: admittedMember,
     queuePass: pass,
   });
   check('Con pase válido, la reserva funciona', withPass.ok, `HTTP ${withPass.status}`);
@@ -250,7 +251,7 @@ if (pass) {
     eventId: gated.event.id,
     offerId: gated.offer.id,
     quantity: 1,
-    sessionId: `s-bad-${stamp}`,
+    sessionId: admittedMember,
     queuePass: `${pass.split('.')[0]}.00000000000000000000000000000000`,
   });
   check('Un pase falsificado se rechaza', forged.status === 403, `HTTP ${forged.status}`);
@@ -259,7 +260,7 @@ if (pass) {
     eventId: plain.event.id,
     offerId: plain.offer.id,
     quantity: 1,
-    sessionId: `s-x-${stamp}`,
+    sessionId: admittedMember,
     queuePass: pass,
   });
   // El evento sin sala no exige pase; lo relevante es que el pase lleva el

@@ -3,10 +3,27 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class TenantService {
+  private readonly hostCache = new Map<
+    string,
+    { at: number; value: Awaited<ReturnType<TenantService['lookupByHost']>> }
+  >();
+  private static readonly HOST_TTL_MS = 30_000;
+
   constructor(private prisma: PrismaService) {}
 
   async resolveByHost(host: string) {
     const hostname = host.split(':')[0];
+    const cacheKey = hostname.toLowerCase();
+    const hit = this.hostCache.get(cacheKey);
+    if (hit && Date.now() - hit.at < TenantService.HOST_TTL_MS) {
+      return hit.value;
+    }
+    const value = await this.lookupByHost(hostname);
+    this.hostCache.set(cacheKey, { at: Date.now(), value });
+    return value;
+  }
+
+  private async lookupByHost(hostname: string) {
     const subdomain = hostname.split('.')[0];
     if (
       subdomain === 'localhost' ||

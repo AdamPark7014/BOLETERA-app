@@ -18,7 +18,13 @@ describe('OrdersService · acceso de invitado tras rotar el token', () => {
     {} as never,
     {} as never,
     {} as never,
-    {} as never
+    {} as never,
+    { assertCanBuy: async () => undefined } as never,
+    {
+      holdsHaveQueuePass: async () => true,
+      invalidateAvailabilityCache: async () => undefined,
+    } as never,
+    { isGated: async () => false, isSaleClosed: async () => false } as never
   );
   const assertAccess = (order: object, token: string) =>
     (

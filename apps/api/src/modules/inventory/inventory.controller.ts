@@ -7,9 +7,12 @@ import {
   Get,
   Header,
   Headers,
+  HttpException,
+  HttpStatus,
   Param,
   Post,
   Query,
+  Req,
   Sse,
   UseGuards,
 } from '@nestjs/common';
@@ -18,14 +21,17 @@ import { Throttle } from '@nestjs/throttler';
 import { GuestSessionService } from './guest-session.service';
 import { SalesChannel, TicketStatus } from '@prisma/client';
 import { parseSalesChannel } from '../../common/sales-channel';
+import { AuditService } from '../../common/audit.service';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { EventOrgAccessGuard } from '../auth/event-org-access.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { BuyerRiskService } from './buyer-risk.service';
 import { InventoryService } from './inventory.service';
 import { WaitingRoomService } from './waiting-room.service';
+import type { Request } from 'express';
 
 /** Roles con derecho a operar holds de canal staff (taquilla, cortesía, etc.). */
 const STAFF_ROLES = [
@@ -39,7 +45,12 @@ const STAFF_ROLES = [
 ];
 
 /** Los holds públicos se ratonean; el tope global (120/min) es demasiado laxo aquí. */
-const HOLD_THROTTLE = { default: { limit: 30, ttl: 60_000 } };
+const HOLD_THROTTLE = {
+  default: {
+    limit: positiveIntEnv('HOLD_THROTTLE_LIMIT', 30),
+    ttl: 60_000,
+  },
+};
 
 /**
  * Emisión de identidades de invitado.
@@ -81,7 +92,9 @@ export class InventoryController {
   constructor(
     private inventory: InventoryService,
     private waitingRoom: WaitingRoomService,
-    private guestSession: GuestSessionService
+    private guestSession: GuestSessionService,
+    private risk: BuyerRiskService,
+    private audit: AuditService
   ) {}
 
   /**
@@ -93,13 +106,48 @@ export class InventoryController {
    * sala configurada no pagan ningún costo: `isGated` sale en falso y no se
    * consulta nada más.
    */
-  private async assertQueuePass(eventId: string, pass?: string) {
+  private async assertQueuePass(eventId: string, pass: string | undefined, memberId: string) {
+    if (await this.waitingRoom.isSaleClosed(eventId)) {
+      throw new ForbiddenException('La venta de este evento está cerrada por el organizador.');
+    }
     if (!(await this.waitingRoom.isGated(eventId))) return;
-    if (!this.waitingRoom.verifyPass(pass, eventId)) {
+    if (!this.waitingRoom.verifyPass(pass, eventId, memberId)) {
       throw new ForbiddenException(
-        'Este evento tiene sala de espera: entra a la fila y espera tu turno para apartar lugares.'
+        'Este evento tiene sala de espera: entra a la fila con tu sesión y espera tu turno para apartar lugares.'
       );
     }
+  }
+
+  private async assertHumanOrChallenge(
+    req: Request,
+    sessionId: string | undefined,
+    challengeToken: string | undefined,
+    eventId: string
+  ) {
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '';
+    const ua = String(req.headers['user-agent'] || '');
+    const subject = sessionId || ip || 'anon';
+    if (challengeToken && this.risk.verifyChallengeToken(challengeToken, subject)) return;
+    const assessment = await this.risk.assess({ ip, userAgent: ua, sessionId, eventId });
+    if (assessment.level !== 'high') return;
+    await this.audit
+      .log({
+        action: 'BUYER_RISK_CHALLENGE',
+        entityType: 'Event',
+        entityId: eventId,
+        metadata: { score: assessment.score, reasons: assessment.reasons, ip },
+      })
+      .catch(() => undefined);
+    throw new HttpException(
+      {
+        statusCode: 428,
+        error: 'CHALLENGE_REQUIRED',
+        message: 'Confirma que eres una persona para continuar.',
+        challengeToken: this.risk.issueChallengeToken(subject),
+        reasons: assessment.reasons,
+      },
+      428 as HttpStatus
+    );
   }
 
   @Get(':eventId/map')
@@ -156,6 +204,23 @@ export class InventoryController {
    * donde limitar y contar el acaparamiento. Va limitada por IP: pedir mil
    * identidades por minuto no es un comprador.
    */
+  @Post('challenge/solve')
+  @ApiOperation({ summary: 'Confirmar reto antibots (prueba de trabajo ligera en el cliente)' })
+  solveChallenge(
+    @Body() body: { sessionId?: string; proof?: string; challengeToken?: string },
+    @Req() req: Request
+  ) {
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '';
+    const verified = this.guestSession.verify(body?.sessionId);
+    const subject = verified?.id || ip || 'anon';
+    // proof: el cliente manda un nonce; exigimos longitud mínima (POW ligera).
+    if (!body?.proof || body.proof.length < 8) {
+      throw new BadRequestException('Completa el reto «Soy una persona».');
+    }
+    const token = this.risk.issueChallengeToken(subject);
+    return { ok: true, challengeToken: token };
+  }
+
   @Post('session')
   @Throttle(SESSION_THROTTLE)
   @ApiOperation({ summary: 'Emitir identidad de invitado firmada por el servidor' })
@@ -168,6 +233,7 @@ export class InventoryController {
   @UseGuards(OptionalJwtAuthGuard)
   @Throttle(HOLD_THROTTLE)
   async createBestAvailable(
+    @Req() req: Request,
     @Body()
     body: {
       eventId: string;
@@ -175,9 +241,8 @@ export class InventoryController {
       quantity: number;
       sessionId?: string;
       contiguous?: boolean;
-      /** Pase emitido por la sala de espera, si el evento la tiene activa. */
       queuePass?: string;
-      /** Código de preventa o de socios que escribió el comprador. */
+      challengeToken?: string;
       accessCode?: string;
     },
     @CurrentUser() user: PublicUser,
@@ -187,8 +252,9 @@ export class InventoryController {
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
-    await this.assertQueuePass(body.eventId, body.queuePass);
-    return this.inventory.createBestAvailableHold({
+    await this.assertHumanOrChallenge(req, sessionId, body.challengeToken, body.eventId);
+    await this.assertQueuePass(body.eventId, body.queuePass, sessionId);
+    const result = await this.inventory.createBestAvailableHold({
       eventId: body.eventId,
       offerId: body.offerId,
       quantity: body.quantity,
@@ -199,12 +265,20 @@ export class InventoryController {
       idempotencyKey,
       accessCode: body.accessCode,
     });
+    if (body.queuePass && (await this.waitingRoom.isGated(body.eventId))) {
+      await this.inventory.markHoldsQueuePass(
+        result.holds.map((h) => h.id),
+        Math.ceil((result.expiresAt.getTime() - Date.now()) / 1000)
+      );
+    }
+    return result;
   }
 
   @Post('holds')
   @UseGuards(OptionalJwtAuthGuard)
   @Throttle(HOLD_THROTTLE)
   async createHold(
+    @Req() req: Request,
     @Body()
     body: {
       eventId: string;
@@ -212,9 +286,8 @@ export class InventoryController {
       offerId?: string;
       quantity?: number;
       sessionId?: string;
-      /** Pase emitido por la sala de espera, si el evento la tiene activa. */
       queuePass?: string;
-      /** Código de preventa o de socios que escribió el comprador. */
+      challengeToken?: string;
       accessCode?: string;
     },
     @CurrentUser() user: PublicUser,
@@ -224,9 +297,9 @@ export class InventoryController {
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
-    // Nada de `...body`: `channel`, `cashierId` y `userId` los pone el servidor.
-    await this.assertQueuePass(body.eventId, body.queuePass);
-    return this.inventory.createHold({
+    await this.assertHumanOrChallenge(req, sessionId, body.challengeToken, body.eventId);
+    await this.assertQueuePass(body.eventId, body.queuePass, sessionId);
+    const result = await this.inventory.createHold({
       eventId: body.eventId,
       seatIds: body.seatIds,
       offerId: body.offerId,
@@ -237,6 +310,13 @@ export class InventoryController {
       idempotencyKey,
       accessCode: body.accessCode,
     });
+    if (body.queuePass && (await this.waitingRoom.isGated(body.eventId))) {
+      await this.inventory.markHoldsQueuePass(
+        result.holds.map((h) => h.id),
+        Math.ceil((result.expiresAt.getTime() - Date.now()) / 1000)
+      );
+    }
+    return result;
   }
 
   /**

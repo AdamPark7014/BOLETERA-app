@@ -1,4 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
+import { PurchaseLimitsService } from '../inventory/purchase-limits.service';
+import { InventoryService } from '../inventory/inventory.service';
+import { WaitingRoomService } from '../inventory/waiting-room.service';
 import {
   BadRequestException,
   Logger,
@@ -120,7 +123,10 @@ export class OrdersService {
     private campaigns: CampaignExecutionService,
     private quotas: ChannelQuotaService,
     private ticketPdf: TicketPdfService,
-    private billing: BillingService
+    private billing: BillingService,
+    private purchaseLimits: PurchaseLimitsService,
+    private inventory: InventoryService,
+    private waitingRoom: WaitingRoomService
   ) {}
 
   async createOrder(dto: {
@@ -185,6 +191,25 @@ export class OrdersService {
     const holdIds = lineGroups.flatMap((g) => g.holdIds);
     const holds = lineGroups.flatMap((g) => g.holds);
     if (!holds.length) throw new BadRequestException('Invalid or expired holds');
+
+    if (await this.waitingRoom.isSaleClosed(dto.eventId)) {
+      throw new BadRequestException('La venta de este evento está cerrada por el organizador.');
+    }
+    if (await this.waitingRoom.isGated(dto.eventId)) {
+      const ok = await this.inventory.holdsHaveQueuePass(holdIds);
+      if (!ok) {
+        throw new BadRequestException(
+          'Este evento tiene sala de espera: el apartado debe hacerse con un pase válido de tu sesión.'
+        );
+      }
+    }
+    const ticketQty = holds.reduce((n, h) => n + (h.quantity || 1), 0);
+    await this.purchaseLimits.assertCanBuy({
+      eventId: dto.eventId,
+      quantity: ticketQty,
+      userId: dto.userId || dto.actorUserId,
+      email: dto.buyerEmail,
+    });
 
     const affiliateRef = normalizeAffiliateRef(dto.affiliateRef);
 

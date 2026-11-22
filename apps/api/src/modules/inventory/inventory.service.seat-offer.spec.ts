@@ -30,6 +30,11 @@ describe('InventoryService · asiento numerado y su oferta', () => {
     const service = new InventoryService(
       prisma as never,
       redis as never,
+      {
+        getOrSet: async (_k, _t, l) => l(),
+        invalidate: async () => undefined,
+        availabilityKey: (id) => id,
+      } as never,
       {} as never,
       {} as never,
       {} as never

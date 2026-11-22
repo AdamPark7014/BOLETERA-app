@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getGuestSessionId } from '@/lib/guest-session';
+import { ensureGuestSession } from '@/lib/guest-session';
 import {
   QueueError,
   clearStoredPass,
@@ -127,10 +127,9 @@ export function useWaitingRoom(eventId: string): WaitingRoomState {
     [clearTimer]
   );
 
-  const memberId = useCallback(() => {
-    // Una sola identidad por navegador: la misma que firma los holds. Dos
-    // claves distintas partirían la fila en dos y el pase no casaría.
-    if (!memberIdRef.current) memberIdRef.current = getGuestSessionId();
+  const memberId = useCallback(async () => {
+    // Misma identidad firmada que los holds: el pase queda atado a la sesión.
+    if (!memberIdRef.current) memberIdRef.current = await ensureGuestSession();
     return memberIdRef.current;
   }, []);
 
@@ -138,8 +137,8 @@ export function useWaitingRoom(eventId: string): WaitingRoomState {
     if (!aliveRef.current || admittedRef.current) return;
     try {
       const next = inQueueRef.current
-        ? await fetchQueueStatus(eventId, memberId())
-        : await joinQueue(eventId, memberId());
+        ? await fetchQueueStatus(eventId, await memberId())
+        : await joinQueue(eventId, await memberId());
       if (!aliveRef.current) return;
 
       backoffRef.current = 0;
@@ -275,7 +274,7 @@ export function useWaitingRoom(eventId: string): WaitingRoomState {
       // reentra después de la apertura va en FIFO, detrás de toda la pre-fila.
       if (!admittedRef.current || !inQueueRef.current) return;
       inQueueRef.current = false;
-      void leaveQueue(eventId, memberId(), { keepalive: true });
+      void memberId().then((id) => leaveQueue(eventId, id, { keepalive: true }));
     };
     window.addEventListener('pagehide', onPageHide);
     return () => window.removeEventListener('pagehide', onPageHide);
@@ -306,7 +305,7 @@ export function useWaitingRoom(eventId: string): WaitingRoomState {
     setStatus(null);
     setNotice(null);
     setPhase('left');
-    void leaveQueue(eventId, memberId());
+    void memberId().then((id) => leaveQueue(eventId, id));
   }, [clearTimer, eventId, memberId]);
 
   const rejoin = useCallback(() => {
@@ -320,7 +319,7 @@ export function useWaitingRoom(eventId: string): WaitingRoomState {
     // infla la espera de los demás.
     if (!inQueueRef.current) return;
     inQueueRef.current = false;
-    void leaveQueue(eventId, memberId());
+    void memberId().then((id) => leaveQueue(eventId, id));
   }, [eventId, memberId]);
 
   return {

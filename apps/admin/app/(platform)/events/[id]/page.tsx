@@ -14,6 +14,7 @@ import { ChannelsSection } from '../_ticket/ChannelsSection';
 import { EventSection } from '../_ticket/EventSection';
 import { ApartadosSection } from '../_ticket/ApartadosSection';
 import { ComplianceSection } from '../_ticket/ComplianceSection';
+import { OnsaleOpsSection } from '../_ticket/OnsaleOpsSection';
 import { PhasesSection } from '../_ticket/PhasesSection';
 import { ZonesSection } from '../_ticket/ZonesSection';
 import styles from '../_ticket/frame.module.scss';
@@ -156,6 +157,9 @@ function EventBody() {
     return (
       <ApartadosSection eventId={id} event={hub.event} token={token} canOperate={canInventory} />
     );
+  }
+  if (frame.section === 'operacion') {
+    return <OnsaleOpsSection eventId={id} token={token} canWrite={canManage} />;
   }
   if (frame.section === 'cumplimiento') {
     return <ComplianceSection eventId={id} token={token} canPublish={canManage} />;

@@ -6,6 +6,7 @@ import { ChannelManagementModule } from '../channel-management/channel-managemen
 import { FraudModule } from '../fraud/fraud.module';
 import { NotificationModule } from '../notification/notification.module';
 import { PaymentModule } from '../payment/payment.module';
+import { InventoryModule } from '../inventory/inventory.module';
 import { PricingModule } from '../pricing/pricing.module';
 import { BuyerSelfServiceService } from './buyer-self-service.service';
 import { OrdersController } from './orders.controller';
@@ -21,6 +22,7 @@ import { OrdersService } from './orders.service';
     FraudModule,
     NotificationModule,
     PaymentModule,
+    InventoryModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService, BuyerSelfServiceService],

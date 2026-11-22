@@ -3,7 +3,14 @@ import { DiscoveryService } from './discovery.service';
 describe('DiscoveryService.listEvents · eventos pasados', () => {
   const findMany = jest.fn().mockResolvedValue([]);
   const prisma = { event: { findMany } } as any;
-  const service = new DiscoveryService(prisma);
+  const service = new DiscoveryService(prisma, {
+    getOrSet: async (_k: string, _t: number, loader: () => Promise<unknown>) => loader(),
+    invalidate: async () => undefined,
+    catalogListKey: (_o: string, fp: string) => 'list:' + fp,
+    catalogSlugKey: (o: string, slug: string) => o + ':' + slug,
+    facetsKey: (o: string) => 'facets:' + o,
+    etagFor: () => 'etag',
+  } as never);
 
   beforeEach(() => {
     findMany.mockClear().mockResolvedValue([]);

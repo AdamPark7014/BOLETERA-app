@@ -8,13 +8,30 @@ import { WaitingRoomController } from './waiting-room.controller';
 import { GuestSessionService } from './guest-session.service';
 import { WaitingRoomService } from './waiting-room.service';
 import { InventoryService } from './inventory.service';
+import { BuyerRiskService } from './buyer-risk.service';
+import { PurchaseLimitsService } from './purchase-limits.service';
+import { OnsaleOpsService } from './onsale-ops.service';
+import { OnsaleOpsController } from './onsale-ops.controller';
 
 @Module({
   // AuthModule aporta JwtAuthGuard / RolesGuard / OptionalJwtAuthGuard: el canal
   // TAQUILLA y la propiedad de un hold se resuelven con el token, no con headers.
   imports: [AuthModule, ChannelManagementModule, WaitlistModule, EventManagementModule],
-  controllers: [WaitingRoomController, InventoryController],
-  providers: [GuestSessionService, WaitingRoomService, InventoryService],
-  exports: [WaitingRoomService, InventoryService],
+  controllers: [WaitingRoomController, InventoryController, OnsaleOpsController],
+  providers: [
+    GuestSessionService,
+    WaitingRoomService,
+    InventoryService,
+    BuyerRiskService,
+    PurchaseLimitsService,
+    OnsaleOpsService,
+  ],
+  exports: [
+    WaitingRoomService,
+    InventoryService,
+    BuyerRiskService,
+    PurchaseLimitsService,
+    OnsaleOpsService,
+  ],
 })
 export class InventoryModule {}

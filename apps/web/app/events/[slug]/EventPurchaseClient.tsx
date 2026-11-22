@@ -21,6 +21,7 @@ import { offerTones } from '@/lib/zone-tones';
 import { sortOffersForDisplay } from '@/lib/offer-order';
 import { WaitingRoomGate } from '@/components/waiting-room/WaitingRoomGate';
 import { isQueueRejection } from '@/components/waiting-room/queue-client';
+import { HumanChallenge } from '@/components/HumanChallenge';
 import { HoldStickyBar } from '@/components/HoldStickyBar';
 import { secondsUntil } from '@/lib/payment-window';
 import styles from './event.module.scss';
@@ -371,6 +372,9 @@ export function EventPurchaseClient({
    *  · `queuePass` en todo hold cuando la sala nos admitió. En eventos sin sala
    *    el API lo ignora; en eventos con sala, su ausencia es un 403.
    */
+  const [challengeToken, setChallengeToken] = useState<string | null>(null);
+  const [needChallenge, setNeedChallenge] = useState(false);
+
   const postHold = useCallback(
     async (endpoint: string, body: Record<string, unknown>): Promise<HoldResponse> => {
       for (let attempt = 0; attempt < 2; attempt++) {
@@ -386,6 +390,7 @@ export function EventPurchaseClient({
               sessionId,
               queuePass: getQueuePass(),
               accessCode: accessCode.trim() || undefined,
+              challengeToken: challengeToken || undefined,
             }),
           });
         } catch {
@@ -402,6 +407,16 @@ export function EventPurchaseClient({
         // perdió o la sala se activó mientras el comprador miraba el mapa.
         // Se le devuelve a la sala explicando qué pasó, en vez de enseñarle
         // «esa reserva pertenece a otra sesión», que no dice nada y asusta.
+        if (res.status === 428) {
+          setNeedChallenge(true);
+          const challengeError: InventoryError = {
+            kind: 'forbidden',
+            message: 'Confirma que eres una persona para continuar con la compra.',
+            selfHealing: false,
+            staleMap: false,
+          };
+          throw challengeError;
+        }
         if (isQueueRejection(res.status, payload)) {
           onQueueRejected();
           const queueError: InventoryError = {
@@ -419,7 +434,7 @@ export function EventPurchaseClient({
       }
       throw describeInventoryError(500);
     },
-    [getQueuePass, onQueueRejected, accessCode]
+    [getQueuePass, onQueueRejected, accessCode, challengeToken]
   );
 
   /** Un 409 no puede dejar al comprador mirando un spinner: se marca y se sigue. */
@@ -854,6 +869,17 @@ export function EventPurchaseClient({
                 ))}
               </ul>
             </div>
+          ) : null}
+
+          {needChallenge ? (
+            <HumanChallenge
+              sessionId={undefined}
+              onSolved={(token) => {
+                setChallengeToken(token);
+                setNeedChallenge(false);
+                setHoldError(null);
+              }}
+            />
           ) : null}
 
           {holdError ? (

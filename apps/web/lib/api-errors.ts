@@ -143,6 +143,17 @@ export async function readApiError(
     };
   }
 
+  if (res.status === 503) {
+    const retryAfterSeconds = parseRetryAfter(res) ?? 2;
+    return {
+      status: 503,
+      kind: 'rate-limit',
+      raw,
+      retryAfterSeconds,
+      message: `Hay mucha demanda. ${formatWaitHint(retryAfterSeconds)}`,
+    };
+  }
+
   if (res.status >= 500) {
     return {
       status: res.status,

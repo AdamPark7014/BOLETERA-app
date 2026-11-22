@@ -1,4 +1,15 @@
-import { Controller, Get, Header, Headers, NotFoundException, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Header,
+  Headers,
+  NotFoundException,
+  Param,
+  Query,
+  Res,
+} from '@nestjs/common';
+import type { Response } from 'express';
+import { ReadCacheService } from '../../common/read-cache.service';
 import { ApiTags } from '@nestjs/swagger';
 import { DiscoveryService } from './discovery.service';
 import { TenantService } from '../tenant/tenant.service';
@@ -12,8 +23,20 @@ const PUBLIC_READ_CACHE = 'public, s-maxage=30, stale-while-revalidate=120';
 export class DiscoveryController {
   constructor(
     private discovery: DiscoveryService,
-    private tenant: TenantService
+    private tenant: TenantService,
+    private readCache: ReadCacheService
   ) {}
+
+  private withEtag<T>(res: Response, inm: string | undefined, body: T): T | void {
+    if (!inm) return body;
+    const etag = `"${this.readCache.etagFor(body)}"`;
+    res.setHeader('ETag', etag);
+    if (inm === etag) {
+      res.status(304);
+      return;
+    }
+    return body;
+  }
 
   @Get('suggest')
   async suggest(
@@ -32,10 +55,15 @@ export class DiscoveryController {
 
   @Get('facets')
   @Header('Cache-Control', PUBLIC_READ_CACHE)
-  async facets(@Headers() headers: Record<string, string>) {
+  async facets(
+    @Headers() headers: Record<string, string>,
+    @Headers('if-none-match') inm: string | undefined,
+    @Res({ passthrough: true }) res: Response
+  ) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return { cities: [], categories: [] };
-    return this.discovery.facets(org.id);
+    const body = await this.discovery.facets(org.id);
+    return this.withEtag(res, inm, body);
   }
 
   @Get('venues')
@@ -66,6 +94,8 @@ export class DiscoveryController {
   @Header('Cache-Control', PUBLIC_READ_CACHE)
   async events(
     @Headers() headers: Record<string, string>,
+    @Headers('if-none-match') inm: string | undefined,
+    @Res({ passthrough: true }) res: Response,
     @Query('q') q?: string,
     @Query('city') city?: string,
     @Query('category') category?: string,
@@ -79,7 +109,7 @@ export class DiscoveryController {
   ) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
     if (!org) return [];
-    return this.discovery.listEvents({
+    const body = await this.discovery.listEvents({
       orgId: org.id,
       q,
       city: city && city !== 'ALL' ? city : undefined,
@@ -92,15 +122,21 @@ export class DiscoveryController {
       cursor,
       includePast: includePast === 'true' || includePast === '1',
     });
+    return this.withEtag(res, inm, body);
   }
 
   @Get('events/:slug')
   @Header('Cache-Control', PUBLIC_READ_CACHE)
-  async getEvent(@Headers() headers: Record<string, string>, @Param('slug') slug: string) {
+  async getEvent(
+    @Headers() headers: Record<string, string>,
+    @Headers('if-none-match') inm: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+    @Param('slug') slug: string
+  ) {
     const org = await this.tenant.resolveByHost(pickTenantHost(headers));
-    // Fail-closed: sin tenant resuelto no se sirve detalle cross-org.
     if (!org?.id) throw new NotFoundException('Event not found');
-    return this.discovery.getBySlug(slug, org.id);
+    const body = await this.discovery.getBySlug(slug, org.id);
+    return this.withEtag(res, inm, body);
   }
 
   @Get('site-content')

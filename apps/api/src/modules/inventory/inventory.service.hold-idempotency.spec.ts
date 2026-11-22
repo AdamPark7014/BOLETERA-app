@@ -2,6 +2,7 @@ import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { HoldStatus } from '@prisma/client';
 import { RedisService } from '../../common/redis.service';
+import { ReadCacheService } from '../../common/read-cache.service';
 import { ChannelQuotaService } from '../channel-management/channel-quota.service';
 import { SaleWindowService } from '../event-management/sale-window.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -88,6 +89,14 @@ describe('InventoryService hold idempotency', () => {
             }),
             increment: jest.fn(),
             decrement: jest.fn(),
+          },
+        },
+        {
+          provide: ReadCacheService,
+          useValue: {
+            getOrSet: async (_k: string, _t: number, loader: () => Promise<unknown>) => loader(),
+            invalidate: async () => undefined,
+            availabilityKey: (id: string) => `avail:${id}`,
           },
         },
         { provide: ChannelQuotaService, useValue: { assertAvailable: jest.fn() } },

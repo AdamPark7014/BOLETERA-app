@@ -8,36 +8,32 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
+import { GuestSessionService } from './guest-session.service';
 import { WaitingRoomService } from './waiting-room.service';
 
-/**
- * Tope de entradas a la fila por IP.
- *
- * Protege de que un bot cree miles de identidades y desplace a la gente real,
- * pero se puede subir por entorno: detrás de un NAT corporativo o de una
- * operadora móvil, cientos de personas legítimas comparten IP, y en pruebas de
- * carga el límite es justamente lo que estorba.
- */
 const JOIN_LIMIT = Number(process.env.WAITING_ROOM_JOIN_LIMIT) || 10;
 const STATUS_LIMIT = Number(process.env.WAITING_ROOM_STATUS_LIMIT) || 120;
 
+type PublicUser = { sub?: string } | undefined;
+
 /**
- * Sala de espera.
- *
- * Las rutas son públicas a propósito: la fila existe justo para la gente que
- * todavía no ha hecho nada, y exigir sesión para poder esperar convertiría el
- * registro en un cuello de botella en el peor momento posible. La identidad es
- * el `memberId` que el navegador guarda, igual que el `sessionId` de los holds.
+ * Sala de espera. El memberId ya no lo inventa el cliente: es el id de la
+ * sesión de invitado firmada o el `sub` de la cuenta.
  */
 @ApiTags('Waiting Room')
 @Controller('waiting-room')
 export class WaitingRoomController {
-  constructor(private readonly waitingRoom: WaitingRoomService) {}
+  constructor(
+    private readonly waitingRoom: WaitingRoomService,
+    private readonly guestSession: GuestSessionService
+  ) {}
 
-  /** Estado de la sala, para que el front sepa si debe mostrarla. */
   @Get(':eventId')
   @Header('Cache-Control', 'public, max-age=10')
   @ApiOperation({ summary: 'Waiting-room configuration for an event (public)' })
@@ -47,37 +43,61 @@ export class WaitingRoomController {
   }
 
   @Post(':eventId/join')
-  // Entrar a la fila es barato, pero no gratis: sin tope, un bot crea miles de
-  // identidades y desplaza a la gente real hacia el final.
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: JOIN_LIMIT, ttl: 60_000 } })
   @ApiOperation({ summary: 'Join the queue (idempotent: rejoining keeps your place)' })
-  async join(@Param('eventId') eventId: string, @Body() body: { memberId?: string }) {
-    return this.waitingRoom.join(eventId, this.requireMember(body?.memberId));
+  async join(
+    @Param('eventId') eventId: string,
+    @Body() body: { sessionId?: string; memberId?: string },
+    @CurrentUser() user: PublicUser
+  ) {
+    const memberId = this.requireMember(body?.sessionId ?? body?.memberId, user);
+    return this.waitingRoom.join(eventId, memberId);
   }
 
-  /**
-   * Sondeo. Es la ruta más golpeada de todo el sistema durante un onsale: la
-   * responde Redis con un `ZRANK`, sin tocar la base.
-   */
   @Get(':eventId/status')
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: STATUS_LIMIT, ttl: 60_000 } })
   @ApiOperation({ summary: 'Current position, estimated wait and admission pass' })
-  async status(@Param('eventId') eventId: string, @Query('memberId') memberId?: string) {
-    return this.waitingRoom.status(eventId, this.requireMember(memberId));
+  async status(
+    @Param('eventId') eventId: string,
+    @CurrentUser() user: PublicUser,
+    @Query('sessionId') sessionId?: string,
+    @Query('memberId') memberId?: string
+  ) {
+    const id = this.requireMember(sessionId ?? memberId, user);
+    return this.waitingRoom.status(eventId, id);
   }
 
-  /** Salir de la fila al terminar o abandonar, para no inflar la espera ajena. */
   @Delete(':eventId')
-  async leave(@Param('eventId') eventId: string, @Query('memberId') memberId?: string) {
-    await this.waitingRoom.leave(eventId, this.requireMember(memberId));
+  @UseGuards(OptionalJwtAuthGuard)
+  async leave(
+    @Param('eventId') eventId: string,
+    @CurrentUser() user: PublicUser,
+    @Query('sessionId') sessionId?: string,
+    @Query('memberId') memberId?: string
+  ) {
+    const id = this.requireMember(sessionId ?? memberId, user);
+    await this.waitingRoom.leave(eventId, id);
     return { left: true };
   }
 
-  private requireMember(memberId?: string): string {
-    const trimmed = memberId?.trim();
-    if (!trimmed) throw new BadRequestException('memberId es obligatorio');
-    // Acota la longitud: el identificador es una clave de Redis.
-    if (trimmed.length > 100) throw new BadRequestException('memberId demasiado largo');
-    return trimmed;
+  private requireMember(raw: string | undefined, user: PublicUser): string {
+    if (user?.sub) return user.sub;
+    const verified = this.guestSession.verify(raw);
+    if (verified?.id) return verified.id;
+    // Compat: memberId opaco viejo solo si STRICT está apagado y parece id corto.
+    const trimmed = raw?.trim();
+    if (trimmed && !trimmed.includes('.') && trimmed.length <= 100) {
+      if (process.env.GUEST_SESSION_STRICT === 'true') {
+        throw new BadRequestException(
+          'Necesitas una sesión de comprador firmada para entrar a la fila.'
+        );
+      }
+      return trimmed;
+    }
+    throw new BadRequestException(
+      'Necesitas iniciar sesión o pedir una sesión de invitado para entrar a la fila.'
+    );
   }
 }

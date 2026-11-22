@@ -177,8 +177,9 @@ export class WaitingRoomService {
       };
     }
 
-    const admittedSoFar = this.admittedCount(config);
-    const admitted = rank < admittedSoFar;
+    const paused = await this.isPaused(eventId);
+    const admittedSoFar = this.admittedCount(config, paused);
+    const admitted = !paused && rank < admittedSoFar;
     const ahead = Math.max(0, rank - admittedSoFar);
 
     return {
@@ -207,11 +208,34 @@ export class WaitingRoomService {
    * congelada con miles de personas mirando una pantalla que no avanza, y ése
    * es exactamente el fallo del que más se queja la gente.
    */
-  private admittedCount(config: WaitingRoomConfig): number {
+  private admittedCount(config: WaitingRoomConfig, paused = false): number {
+    if (paused) return 0;
     const elapsedMs = Date.now() - new Date(config.opensAt).getTime();
     if (elapsedMs < 0) return 0;
     const batches = Math.floor(elapsedMs / (config.batchIntervalSeconds * 1000)) + 1;
     return batches * config.batchSize;
+  }
+
+  private async isPaused(eventId: string): Promise<boolean> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { metadata: true },
+    });
+    const wr = (event?.metadata as Record<string, unknown> | null)?.waitingRoom as
+      | { paused?: boolean; saleClosed?: boolean }
+      | undefined;
+    return wr?.paused === true;
+  }
+
+  async isSaleClosed(eventId: string): Promise<boolean> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { metadata: true },
+    });
+    const wr = (event?.metadata as Record<string, unknown> | null)?.waitingRoom as
+      | { saleClosed?: boolean }
+      | undefined;
+    return wr?.saleClosed === true;
   }
 
   // --- pase de admisión -----------------------------------------------------
@@ -222,6 +246,7 @@ export class WaitingRoomService {
    * el costo de la fila en cada petición.
    */
   private signPass(eventId: string, memberId: string): string {
+    // Pase atado a la sesión/cuenta (memberId = id verificado de invitado o user.sub).
     const payload = `${eventId}:${memberId}`;
     const mac = createHmac('sha256', requireJwtSecret())
       .update(`waitroom:${payload}`)
@@ -230,28 +255,35 @@ export class WaitingRoomService {
     return `${Buffer.from(payload).toString('base64url')}.${mac}`;
   }
 
-  /** Verifica el pase en tiempo constante. */
-  verifyPass(pass: string | undefined, eventId: string): boolean {
-    if (!pass) return false;
+  /** Devuelve el memberId del pase si la firma y el evento cuadran. */
+  passMemberId(pass: string | undefined, eventId: string): string | null {
+    if (!pass) return null;
     const [encoded, mac] = pass.split('.');
-    if (!encoded || !mac) return false;
-
+    if (!encoded || !mac) return null;
     let payload: string;
     try {
       payload = Buffer.from(encoded, 'base64url').toString('utf8');
     } catch {
-      return false;
+      return null;
     }
-    if (!payload.startsWith(`${eventId}:`)) return false;
-
+    const prefix = `${eventId}:`;
+    if (!payload.startsWith(prefix)) return null;
     const expected = createHmac('sha256', requireJwtSecret())
       .update(`waitroom:${payload}`)
       .digest('hex')
       .slice(0, 32);
     const a = Buffer.from(expected, 'utf8');
     const b = Buffer.from(mac, 'utf8');
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+    return payload.slice(prefix.length) || null;
+  }
+
+  /** Verifica el pase y que pertenece a esta sesión/cuenta. */
+  verifyPass(pass: string | undefined, eventId: string, memberId?: string): boolean {
+    const mid = this.passMemberId(pass, eventId);
+    if (!mid) return false;
+    if (memberId && mid !== memberId) return false;
+    return true;
   }
 
   /**

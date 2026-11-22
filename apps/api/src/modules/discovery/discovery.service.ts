@@ -3,6 +3,8 @@ import { allInPrice, priceBreakdown, ratesFromSettings } from '../../common/pric
 import { EventCategory, EventStatus, Prisma } from '@prisma/client';
 import { isPublicCatalogEvent, publicCatalogEventWhere } from '../../common/event-visibility';
 import { PrismaService } from '../prisma/prisma.service';
+import { CATALOG_TTL_SECONDS, ReadCacheService } from '../../common/read-cache.service';
+import { createHash } from 'node:crypto';
 
 const CATEGORIES = new Set(Object.values(EventCategory));
 
@@ -23,7 +25,10 @@ type ListParams = {
 
 @Injectable()
 export class DiscoveryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readCache: ReadCacheService
+  ) {}
 
   private whenRange(when?: string): { gte?: Date; lte?: Date } | undefined {
     if (!when || when === 'ALL') return undefined;
@@ -37,6 +42,29 @@ export class DiscoveryService {
   }
 
   async listEvents(params: ListParams) {
+    const fp = createHash('sha1')
+      .update(
+        JSON.stringify({
+          q: params.q ?? '',
+          city: params.city ?? '',
+          category: params.category ?? '',
+          venueSlug: params.venueSlug ?? '',
+          when: params.when ?? '',
+          from: params.from ?? '',
+          to: params.to ?? '',
+          limit: params.limit ?? 40,
+          cursor: params.cursor ?? '',
+          includePast: !!params.includePast,
+        })
+      )
+      .digest('hex')
+      .slice(0, 16);
+    const orgId = params.orgId ?? 'none';
+    const key = this.readCache.catalogListKey(orgId, fp);
+    return this.readCache.getOrSet(key, CATALOG_TTL_SECONDS, () => this.listEventsUncached(params));
+  }
+
+  private async listEventsUncached(params: ListParams) {
     const range = this.whenRange(params.when);
     const from = params.from ? new Date(params.from) : range?.gte;
     const to = params.to ? new Date(params.to) : range?.lte;
@@ -152,6 +180,13 @@ export class DiscoveryService {
   }
 
   async getBySlug(slug: string, orgId: string) {
+    const key = this.readCache.catalogSlugKey(orgId, slug);
+    return this.readCache.getOrSet(key, CATALOG_TTL_SECONDS, () =>
+      this.getBySlugUncached(slug, orgId)
+    );
+  }
+
+  private async getBySlugUncached(slug: string, orgId: string) {
     const event = await this.prisma.event.findUnique({
       where: { slug },
       include: {
@@ -237,6 +272,11 @@ export class DiscoveryService {
   }
 
   async facets(orgId?: string) {
+    const key = this.readCache.facetsKey(orgId ?? 'none');
+    return this.readCache.getOrSet(key, CATALOG_TTL_SECONDS, () => this.facetsUncached(orgId));
+  }
+
+  private async facetsUncached(orgId?: string) {
     const events = await this.prisma.event.findMany({
       where: {
         AND: [

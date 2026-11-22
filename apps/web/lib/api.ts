@@ -54,15 +54,25 @@ export function clientTenantHostHeaders(): Record<string, string> {
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const tenantHeaders = await getTenantHostHeaders();
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...tenantHeaders,
-      ...init?.headers,
-    },
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json() as Promise<T>;
+  const maxAttempts = 4;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...tenantHeaders,
+        ...init?.headers,
+      },
+      cache: 'no-store',
+    });
+    if (res.status === 503) {
+      const ra = Number(res.headers.get('retry-after') || '2');
+      const waitMs = Math.max(500, (Number.isFinite(ra) ? ra : 2) * 1000);
+      await new Promise((r) => setTimeout(r, waitMs));
+      continue;
+    }
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<T>;
+  }
+  throw new Error('El servidor está saturado. Intenta de nuevo en unos segundos.');
 }

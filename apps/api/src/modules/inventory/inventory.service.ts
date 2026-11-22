@@ -14,6 +14,7 @@ import { isWebLikeChannel } from '../../common/sales-channel';
 import { randomUUID } from 'crypto';
 import { Observable, concatMap, filter, finalize, interval, map, shareReplay } from 'rxjs';
 import { RedisService } from '../../common/redis.service';
+import { AVAILABILITY_TTL_SECONDS, ReadCacheService } from '../../common/read-cache.service';
 import { ChannelQuotaService } from '../channel-management/channel-quota.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
@@ -69,6 +70,8 @@ type HoldMeta = {
   lockToken?: string;
   /** F1-11: boletos concretos que reclamó este hold de admisión general. */
   ticketIds?: string[];
+  /** Apartado hecho con pase de sala válido (sesión atada). */
+  queuePassOk?: boolean;
 };
 
 type TicketChange = {
@@ -126,6 +129,25 @@ type StoredHoldIdempotency = {
 
 @Injectable()
 export class InventoryService {
+  async markHoldsQueuePass(holdIds: string[], ttlSeconds: number): Promise<void> {
+    await Promise.all(
+      holdIds.map(async (id) => {
+        const key = holdMetaKey(id);
+        const meta = (await this.redis.getJson<HoldMeta>(key)) ?? {};
+        meta.queuePassOk = true;
+        await this.redis.setJson(key, meta, ttlSeconds + 60);
+      })
+    );
+  }
+
+  async holdsHaveQueuePass(holdIds: string[]): Promise<boolean> {
+    if (!holdIds.length) return false;
+    const metas = await Promise.all(
+      holdIds.map((id) => this.redis.getJson<HoldMeta>(holdMetaKey(id)))
+    );
+    return metas.every((m) => m?.queuePassOk === true);
+  }
+
   private readonly logger = new Logger(InventoryService.name);
 
   /**
@@ -149,6 +171,7 @@ export class InventoryService {
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
+    private readCache: ReadCacheService,
     private quotas: ChannelQuotaService,
     private waitlist: WaitlistService,
     private saleWindow: SaleWindowService
@@ -225,13 +248,23 @@ export class InventoryService {
     const cached = this.availabilityCache.get(eventId);
     if (cached && Date.now() - cached.at < AVAILABILITY_CACHE_MS) return cached.value;
 
-    const value = this.loadAvailability(eventId).catch((error: unknown) => {
-      this.availabilityCache.delete(eventId); // no cachear fallos
-      throw error;
-    });
+    const value = this.readCache
+      .getOrSet(this.readCache.availabilityKey(eventId), AVAILABILITY_TTL_SECONDS, () =>
+        this.loadAvailability(eventId)
+      )
+      .catch((error: unknown) => {
+        this.availabilityCache.delete(eventId);
+        throw error;
+      });
     this.availabilityCache.set(eventId, { at: Date.now(), value });
     this.pruneAvailabilityCache();
     return value;
+  }
+
+  /** Invalida disponibilidad tras vender o liberar. */
+  async invalidateAvailabilityCache(eventId: string): Promise<void> {
+    this.availabilityCache.delete(eventId);
+    await this.readCache.invalidate(this.readCache.availabilityKey(eventId));
   }
 
   /** Un evento visitado una vez no debe quedarse en memoria para siempre. */

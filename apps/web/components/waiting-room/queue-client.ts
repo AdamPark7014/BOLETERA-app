@@ -93,16 +93,17 @@ export function fetchWaitingRoomConfig(eventId: string): Promise<WaitingRoomConf
 
 /** Entrar es idempotente: volver a llamar NO reordena ni penaliza. */
 export function joinQueue(eventId: string, memberId: string): Promise<QueueStatus> {
+  // memberId = token de sesión de invitado firmada (o id legacy).
   return request<QueueStatus>(`/waiting-room/${encodeURIComponent(eventId)}/join`, {
     method: 'POST',
-    body: JSON.stringify({ memberId }),
+    body: JSON.stringify({ sessionId: memberId, memberId }),
     cache: 'no-store',
   });
 }
 
 export function fetchQueueStatus(eventId: string, memberId: string): Promise<QueueStatus> {
   return request<QueueStatus>(
-    `/waiting-room/${encodeURIComponent(eventId)}/status?memberId=${encodeURIComponent(memberId)}`,
+    `/waiting-room/${encodeURIComponent(eventId)}/status?sessionId=${encodeURIComponent(memberId)}&memberId=${encodeURIComponent(memberId)}`,
     { cache: 'no-store' }
   );
 }
@@ -118,7 +119,7 @@ export async function leaveQueue(
 ): Promise<void> {
   try {
     await fetch(
-      `${API}/waiting-room/${encodeURIComponent(eventId)}?memberId=${encodeURIComponent(memberId)}`,
+      `${API}/waiting-room/${encodeURIComponent(eventId)}?sessionId=${encodeURIComponent(memberId)}&memberId=${encodeURIComponent(memberId)}`,
       { method: 'DELETE', keepalive: options.keepalive ?? false }
     );
   } catch {

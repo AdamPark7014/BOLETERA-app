@@ -280,7 +280,7 @@ describe('OrdersService.authorizeBuyerAction (misma regla que GET /orders/:publi
       order: { findUnique: jest.fn(async () => found) },
       user: { findUnique: jest.fn(async () => (userEmail ? { email: userEmail } : null)) },
     };
-    const args = [prisma, ...Array(8).fill(undefined)] as unknown as ConstructorParameters<
+    const args = [prisma, ...Array(11).fill(undefined)] as unknown as ConstructorParameters<
       typeof OrdersService
     >;
     return new OrdersService(...args);

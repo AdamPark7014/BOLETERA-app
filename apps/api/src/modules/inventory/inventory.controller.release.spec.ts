@@ -20,7 +20,17 @@ describe('InventoryController · soltar apartado de invitado', () => {
 
   function build() {
     const releaseHold = jest.fn().mockResolvedValue({ released: true });
-    const controller = new InventoryController({ releaseHold } as never, {} as never, guestSession);
+    const controller = new InventoryController(
+      { releaseHold } as never,
+      {} as never,
+      guestSession,
+      {
+        assess: async () => ({ score: 0, level: 'low', reasons: [] }),
+        issueChallengeToken: () => 't',
+        verifyChallengeToken: () => true,
+      } as never,
+      { log: async () => undefined } as never
+    );
     return { controller, releaseHold };
   }
 

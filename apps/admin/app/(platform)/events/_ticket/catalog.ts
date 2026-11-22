@@ -248,6 +248,12 @@ export function eventItems(eventId: string): { main: IndexItem[]; more: IndexIte
     more: [
       { id: 'agenda', label: 'Agenda', href: `${base}?seccion=agenda` },
       { id: 'canales', label: 'Canales', href: `${base}?seccion=canales` },
+      {
+        id: 'operacion',
+        label: 'Operación en vivo',
+        href: `${base}?seccion=operacion`,
+        caps: ['events.manage'],
+      },
       { id: 'cumplimiento', label: 'Publicación', href: `${base}?seccion=cumplimiento` },
       {
         id: 'cancelar',
