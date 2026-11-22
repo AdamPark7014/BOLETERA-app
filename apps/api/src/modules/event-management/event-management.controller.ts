@@ -295,6 +295,62 @@ export class EventManagementController {
     return await this.eventService.updateAnnouncedHold(orgId, eventId, Number(body?.minutes));
   }
 
+  @Patch(':eventId')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Editar evento por sección (datos, horarios, políticas)' })
+  async updateEvent(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+    @Body()
+    data: {
+      title?: string;
+      description?: string | null;
+      imageUrl?: string | null;
+      bannerImageUrl?: string | null;
+      startDate?: string;
+      endDate?: string | null;
+      doorsAt?: string | null;
+      venueId?: string;
+      category?: string;
+      rating?: string | null;
+      salesStartAt?: string | null;
+      salesEndAt?: string | null;
+      totalCapacity?: number;
+      allowResale?: boolean;
+      transferAllowed?: boolean;
+      refundable?: boolean;
+      policies?: {
+        resaleMaxPercent?: number | null;
+        resaleDeadline?: string | null;
+        refundDeadline?: string | null;
+        transferDeadline?: string | null;
+      };
+      capacityExplanation?: string | null;
+    }
+  ) {
+    return await this.eventService.updateEvent(orgId, eventId, data);
+  }
+
+  @Post(':eventId/duplicate')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Duplicar evento a borrador con fecha nueva' })
+  async duplicateEvent(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string,
+    @Body() data: { startDate: string; title?: string; doorsAt?: string | null }
+  ) {
+    return await this.eventService.duplicateEvent(orgId, eventId, data);
+  }
+
+  @Post(':eventId/sync-capacity')
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Igualar cupo del evento a las butacas del mapa' })
+  async syncCapacity(
+    @CurrentUser('organizationId') orgId: string,
+    @Param('eventId') eventId: string
+  ) {
+    return await this.eventService.syncCapacityFromMap(orgId, eventId);
+  }
   @Put(':eventId/media')
   @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN')
   @ApiOperation({ summary: 'Actualizar imágenes del evento (póster y banner)' })

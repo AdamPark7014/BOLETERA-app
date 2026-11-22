@@ -3,12 +3,20 @@ import { enabledChannelAllocationTotal } from '../channel-management/channel-val
 
 export type PublishCheckStatus = 'ok' | 'warning' | 'blocker';
 
+export type PublishCheckAction = {
+  id: string;
+  label: string;
+  detail?: string;
+};
+
 export type PublishCheckItem = {
   id: string;
   label: string;
   status: PublishCheckStatus;
   message: string;
   detail?: string;
+  /** Qué puede hacer el organizador para resolver el aviso o el bloqueo. */
+  action?: PublishCheckAction;
 };
 
 export type EventPublishValidation = {
@@ -66,6 +74,23 @@ type BuildValidationInput = {
     layoutSeatCount: number;
     totalCapacity: number;
   };
+  /** Ventana de venta del evento (salesStartAt / salesEndAt). */
+  salesWindow: {
+    hasStart: boolean;
+    hasEnd: boolean;
+    valid: boolean;
+    message?: string;
+  };
+  /**
+   * Cupo declarado vs butacas del mapa. `null` si aún no hay mapa con asientos
+   * (entonces el check de inventario/mapa ya cubre el hueco).
+   */
+  capacityMatch: {
+    declared: number;
+    mapSeats: number;
+    matches: boolean;
+    hasExplanation: boolean;
+  } | null;
 };
 
 function item(
@@ -73,9 +98,10 @@ function item(
   label: string,
   status: PublishCheckStatus,
   message: string,
-  detail?: string
+  detail?: string,
+  action?: PublishCheckAction
 ): PublishCheckItem {
-  return { id, label, status, message, detail };
+  return { id, label, status, message, detail, action };
 }
 
 function readChannelConfig(metadata: Record<string, unknown> | null): ChannelConfigDto | null {
@@ -160,6 +186,35 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
           ? `Estado del layout: ${input.map.layoutPublishStatus}.`
           : undefined
       )
+    );
+  }
+
+  // --- Ventana de venta ---
+  if (!input.salesWindow.hasStart || !input.salesWindow.hasEnd) {
+    checks.push(
+      item(
+        'sales_window',
+        'Ventana de venta',
+        'blocker',
+        'Falta la ventana de venta (apertura y cierre).',
+        'Indica cuándo abre y cierra la venta antes de publicar.',
+        { id: 'edit_sales', label: 'Completar ventana de venta' }
+      )
+    );
+  } else if (!input.salesWindow.valid) {
+    checks.push(
+      item(
+        'sales_window',
+        'Ventana de venta',
+        'blocker',
+        input.salesWindow.message ?? 'La ventana de venta no es válida.',
+        undefined,
+        { id: 'edit_sales', label: 'Corregir ventana de venta' }
+      )
+    );
+  } else {
+    checks.push(
+      item('sales_window', 'Ventana de venta', 'ok', 'Apertura y cierre de venta definidos.')
     );
   }
 
@@ -269,9 +324,10 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
       item(
         'images',
         'Imágenes',
-        'warning',
-        'Sin imagen principal ni banner.',
-        'Sube event.image o bannerImage para la vitrina.'
+        'blocker',
+        'Falta la imagen del evento.',
+        'Agrega una imagen principal o un banner para la cartelera.',
+        { id: 'edit_image', label: 'Agregar imagen' }
       )
     );
   } else {
@@ -380,6 +436,46 @@ export function buildEventPublishValidation(input: BuildValidationInput): EventP
     );
   }
 
+  // --- Cupo vs aforo del mapa (antes vivía como error genérico de geometría) ---
+  if (input.capacityMatch) {
+    const { declared, mapSeats, matches, hasExplanation } = input.capacityMatch;
+    const declaredLabel = declared.toLocaleString('es-MX');
+    const seatsLabel = mapSeats.toLocaleString('es-MX');
+    if (matches) {
+      checks.push(item('capacity', 'Cupo y aforo', 'ok', `Cupo = aforo del mapa (${seatsLabel}).`));
+    } else if (hasExplanation) {
+      checks.push(
+        item(
+          'capacity',
+          'Cupo y aforo',
+          'warning',
+          `El cupo declarado (${declaredLabel}) no coincide con las butacas del mapa (${seatsLabel}).`,
+          'Hay una explicación guardada; igual puedes alinear el cupo al mapa.',
+          {
+            id: 'sync_capacity',
+            label: `Igualar cupo al mapa (${seatsLabel} butacas)`,
+            detail: 'PATCH totalCapacity = asientos del mapa',
+          }
+        )
+      );
+    } else {
+      checks.push(
+        item(
+          'capacity',
+          'Cupo y aforo',
+          'blocker',
+          `El cupo declarado (${declaredLabel}) no coincide con las butacas del mapa (${seatsLabel}).`,
+          'Iguala el cupo al mapa, o escribe una explicación de al menos 20 caracteres (capacityExplanation) si el desfase es intencional.',
+          {
+            id: 'sync_capacity',
+            label: `Igualar cupo al mapa (${seatsLabel} butacas)`,
+            detail: 'PATCH totalCapacity = asientos del mapa',
+          }
+        )
+      );
+    }
+  }
+
   const blockers = checks.filter((c) => c.status === 'blocker').length;
   const warnings = checks.filter((c) => c.status === 'warning').length;
   const passed = checks.filter((c) => c.status === 'ok').length;
@@ -430,4 +526,13 @@ export function hasDocumentedRefundTerms(metadata: Record<string, unknown> | nul
     return true;
   }
   return false;
+}
+
+/** Explicación del desfase cupo ≠ butacas del mapa (sin migración: vive en metadata). */
+export function hasCapacityExplanation(metadata: Record<string, unknown> | null): boolean {
+  if (!metadata) return false;
+  return (
+    typeof metadata.capacityExplanation === 'string' &&
+    metadata.capacityExplanation.trim().length >= 20
+  );
 }

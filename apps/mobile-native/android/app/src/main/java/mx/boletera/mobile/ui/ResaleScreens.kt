@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mx.boletera.mobile.data.ResaleCheckout
@@ -29,14 +31,19 @@ fun ResaleScreen(
     error: String?,
     lastCheckout: ResaleCheckout?,
     sellable: List<WalletTicket>,
+    clabeMasked: String?,
+    clabeMsg: String?,
+    clabeBusy: Boolean,
     onRefresh: () -> Unit,
     onBuy: (String) -> Unit,
     onSell: (ticketId: String, price: Double) -> Unit,
+    onSaveClabe: (String) -> Unit,
     onLoginHint: () -> Unit,
 ) {
     var tab by remember { mutableIntStateOf(0) }
     var priceText by remember { mutableStateOf("") }
     var selectedTicket by remember { mutableStateOf<WalletTicket?>(null) }
+    var clabeInput by remember { mutableStateOf("") }
 
     Column(Modifier.fillMaxSize().background(Marca.Fondo).padding(horizontal = 20.dp)) {
         Spacer(Modifier.height(20.dp))
@@ -167,7 +174,7 @@ fun ResaleScreen(
                                     containerColor = Marca.Dorado,
                                     contentColor = Marca.Negro,
                                 ),
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
                             ) { Text("Publicar anuncio") }
                         }
                     }
@@ -176,30 +183,85 @@ fun ResaleScreen(
             else -> {
                 if (!loggedIn) {
                     Text("Entra para ver tus ventas.", color = Marca.TintaSuave)
-                } else if (sales == null || sales.length() == 0) {
-                    Text("Aún no tienes ventas en reventa.", color = Marca.TintaSuave)
                 } else {
                     LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 88.dp)) {
-                        items(sales.length()) { i ->
-                            val o = sales.getJSONObject(i)
+                        item {
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(14.dp),
                                 color = Marca.Carbon,
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                             ) {
-                                Column(Modifier.padding(12.dp)) {
+                                Column(Modifier.padding(14.dp)) {
+                                    Text("CLABE para depósito", fontWeight = FontWeight.SemiBold, color = Marca.Tinta)
                                     Text(
-                                        o.optString("eventTitle", o.optString("status", "Venta")),
-                                        color = Marca.Tinta,
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
-                                    Text(
-                                        "Estado: ${o.optString("payoutStatus", o.optString("status"))}",
+                                        clabeMsg
+                                            ?: if (clabeMasked != null) "Guardada: $clabeMasked. Estado del depósito en cada venta."
+                                            else "La usamos solo para depositarte lo de tus ventas.",
+                                        fontSize = 12.sp,
                                         color = Marca.TintaSuave,
-                                        fontSize = 13.sp,
                                     )
-                                    if (o.has("sellerPayout") || o.has("askingPrice")) {
-                                        val price = o.optDouble("askingPrice", o.optDouble("sellerPayout", 0.0))
+                                    Spacer(Modifier.height(8.dp))
+                                    OutlinedTextField(
+                                        value = clabeInput,
+                                        onValueChange = {
+                                            clabeInput = it.filter { c -> c.isDigit() }.take(18)
+                                        },
+                                        label = { Text("18 dígitos") },
+                                        placeholder = { Text(clabeMasked ?: "CLABE") },
+                                        singleLine = true,
+                                        colors = btFieldColors(),
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { onSaveClabe(clabeInput) },
+                                        enabled = !clabeBusy && clabeInput.length == 18,
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Marca.Dorado,
+                                            contentColor = Marca.Negro,
+                                        ),
+                                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    ) {
+                                        Text(if (clabeBusy) "Guardando…" else "Guardar CLABE")
+                                    }
+                                }
+                            }
+                        }
+                        if (sales == null || sales.length() == 0) {
+                            item {
+                                Text("Aún no tienes ventas en reventa.", color = Marca.TintaSuave)
+                            }
+                        } else {
+                            items(sales.length()) { i ->
+                                val o = sales.getJSONObject(i)
+                                val payout = o.optJSONObject("payout")
+                                val payoutStatus = payout?.optString("status")
+                                    ?: o.optString("payoutStatus", o.optString("status"))
+                                val payoutLabel = when (payoutStatus.uppercase()) {
+                                    "PAID" -> "Depositado"
+                                    "PENDING" -> "Depósito en proceso"
+                                    else -> payoutStatus
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Marca.Carbon,
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                ) {
+                                    Column(Modifier.padding(12.dp)) {
+                                        Text(
+                                            o.optJSONObject("event")?.optString("title")
+                                                ?: o.optString("eventTitle", o.optString("status", "Venta")),
+                                            color = Marca.Tinta,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                        Text("Estado del anuncio: ${o.optString("status")}", color = Marca.TintaSuave, fontSize = 13.sp)
+                                        Text("Pago: $payoutLabel", color = Marca.DoradoSuave, fontSize = 13.sp)
+                                        val price = when {
+                                            payout != null && payout.has("amount") -> payout.optDouble("amount", 0.0)
+                                            o.has("askingPrice") -> o.optDouble("askingPrice", 0.0)
+                                            else -> o.optDouble("sellerPayout", 0.0)
+                                        }
                                         if (price > 0) Text(mxn.format(price), color = Marca.Dorado)
                                     }
                                 }

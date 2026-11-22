@@ -15,6 +15,19 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../../common/audit.service';
 import { requireTicketQrSecret } from '../auth/jwt-secret';
+import {
+  SCAN_REASON_ENTRY,
+  SCAN_REASON_EXIT,
+  SCAN_REASON_REENTRY,
+  accessConfigFromTicket,
+  assertGateAllows,
+  buildTicketPayload,
+  isEntryReason,
+  lastSuccessReason,
+  reentryCount,
+  summarizeGateTraffic,
+  ticketIsInside,
+} from './access.flow';
 
 /** Identidad del solicitante. Siempre sale del JWT, nunca del cuerpo (F2-14). */
 export type Requester = {
@@ -63,7 +76,7 @@ export class AccessService {
   ) {}
 
   /**
-   * Escaneo en puerta.
+   * Escaneo en puerta (entrada, salida o reingreso).
    *
    * F2-06: antes esto era leer-validar-escribir. Con varias puertas abiertas y
    * ~500 escaneos/minuto, dos escáneres leían `SOLD` antes de que ninguno
@@ -73,6 +86,9 @@ export class AccessService {
    *
    * La transición `SOLD → USED` es ahora un único `updateMany` condicionado al
    * estado: la base decide el ganador y el perdedor obtiene `count === 0`.
+   *
+   * Salida y reingreso se distinguen en `TicketScan.reason` (EXIT / REENTRY /
+   * ENTRY) sin migración. La config vive en `event.metadata.access`.
    */
   async scanTicket(params: {
     ticketCode?: string;
@@ -91,11 +107,14 @@ export class AccessService {
     /** Organización y rol del escáner (del JWT) para acotar `eventId`. */
     scannerOrganizationId?: string | null;
     scannerRole?: string;
+    /** ENTRY (omisión) o EXIT para registrar una salida. */
+    mode?: 'ENTRY' | 'EXIT';
   }) {
     if (params.eventId) {
       await this.assertGateEvent(params.eventId, params.scannerOrganizationId, params.scannerRole);
     }
     const scannedAt = params.scannedAt ?? new Date();
+    const mode = params.mode === 'EXIT' ? 'EXIT' : 'ENTRY';
     // Se valida antes de tocar el boleto: `TicketScan.zoneId` es clave foránea y
     // una zona inventada convertiría el registro del escaneo en un 500.
     const zoneId = await this.resolveZoneId(params.zoneId);
@@ -148,7 +167,7 @@ export class AccessService {
     const ticket = await this.prisma.ticket.findFirst({
       where: ticketId ? { id: ticketId } : { code: params.ticketCode },
       include: {
-        event: { select: { title: true } },
+        event: { select: { title: true, metadata: true } },
         offer: { select: { name: true, zone: true } },
       },
     });
@@ -167,6 +186,62 @@ export class AccessService {
         ticketCode: ticket.code,
         ticketEventTitle: ticket.event.title,
       });
+    }
+
+    const accessCfg = accessConfigFromTicket(ticket);
+    const gateCheck = assertGateAllows(zoneId, ticket, accessCfg);
+    if (gateCheck.ok === false) {
+      await this.recordScan(ticket.id, context, false, 'Wrong gate', scannedAt);
+      throw new BadRequestException({
+        statusCode: 400,
+        code: 'WRONG_GATE',
+        message: `Este boleto entra por la puerta ${gateCheck.label}`,
+        correctGateLabel: gateCheck.label,
+        ticketCode: ticket.code,
+      });
+    }
+
+    const payload = buildTicketPayload(ticket);
+
+    if (mode === 'EXIT') {
+      const inside = await ticketIsInside(this.prisma, ticket.id, ticket.status);
+      if (!inside) {
+        await this.recordScan(ticket.id, context, false, 'Not inside', scannedAt);
+        throw new BadRequestException({
+          statusCode: 400,
+          code: 'NOT_INSIDE',
+          message: 'Este boleto no está dentro del recinto',
+          ticketCode: ticket.code,
+        });
+      }
+      await this.recordScan(ticket.id, context, true, SCAN_REASON_EXIT, scannedAt);
+      await this.audit.log({
+        action: 'ticket.exit',
+        entityType: 'Ticket',
+        entityId: ticket.id,
+        userId: params.scannedBy,
+        metadata: { zoneId, channel: params.channel },
+      });
+      return { success: true, action: 'EXIT' as const, ticket: payload };
+    }
+
+    // Reingreso: ya USED, última acción fue salida, y el evento lo permite.
+    if (ticket.status === TicketStatus.USED) {
+      const last = await lastSuccessReason(this.prisma, ticket.id);
+      if (last === SCAN_REASON_EXIT && accessCfg.reentryAllowed) {
+        const used = await reentryCount(this.prisma, ticket.id);
+        if (used < accessCfg.maxReentries) {
+          await this.recordScan(ticket.id, context, true, SCAN_REASON_REENTRY, scannedAt);
+          await this.audit.log({
+            action: 'ticket.reentry',
+            entityType: 'Ticket',
+            entityId: ticket.id,
+            userId: params.scannedBy,
+            metadata: { zoneId, channel: params.channel, reentry: used + 1 },
+          });
+          return { success: true, action: 'REENTRY' as const, ticket: payload };
+        }
+      }
     }
 
     const claimed = await this.claimTicket(ticket.id, scannedAt);
@@ -193,7 +268,7 @@ export class AccessService {
       throw new BadRequestException(failure.message);
     }
 
-    await this.recordScan(ticket.id, context, true, undefined, scannedAt);
+    await this.recordScan(ticket.id, context, true, SCAN_REASON_ENTRY, scannedAt);
 
     await this.audit.log({
       action: 'ticket.scan',
@@ -205,17 +280,109 @@ export class AccessService {
 
     return {
       success: true,
-      ticket: {
-        code: ticket.code,
-        section: ticket.section,
-        row: ticket.row,
-        seatNumber: ticket.seatNumber,
-        eventTitle: ticket.event.title,
-        // Como en Presence/Eventbrite: la puerta ve a quién deja pasar y con qué boleto.
-        holderName: ticket.buyerName?.trim() || null,
-        ticketType: ticket.offer?.name || ticket.offer?.zone || null,
-      },
+      action: 'ENTRY' as const,
+      ticket: payload,
     };
+  }
+
+  /**
+   * Búsqueda manual por nombre, correo o folio para quien no trae el teléfono.
+   */
+  async searchTickets(
+    eventId: string,
+    q: string,
+    scope: { organizationId?: string | null; role?: string }
+  ) {
+    await this.assertGateEvent(eventId, scope.organizationId, scope.role);
+    const needle = q.trim();
+    if (needle.length < 2) {
+      throw new BadRequestException('Escribe al menos 2 caracteres para buscar');
+    }
+    const rows = await this.prisma.ticket.findMany({
+      where: {
+        eventId,
+        status: { in: [TicketStatus.SOLD, TicketStatus.USED, TicketStatus.RESOLD] },
+        OR: [
+          { code: { equals: needle, mode: 'insensitive' } },
+          { code: { contains: needle, mode: 'insensitive' } },
+          { buyerName: { contains: needle, mode: 'insensitive' } },
+          { buyerEmail: { contains: needle, mode: 'insensitive' } },
+        ],
+      },
+      take: 20,
+      orderBy: { buyerName: 'asc' },
+      include: { offer: { select: { name: true, zone: true } } },
+    });
+    return {
+      tickets: rows.map((t) => ({
+        id: t.id,
+        code: t.code,
+        buyerName: t.buyerName,
+        buyerEmail: t.buyerEmail,
+        section: t.section,
+        row: t.row,
+        seatNumber: t.seatNumber,
+        status: t.status,
+        holderName: t.buyerName?.trim() || null,
+        ticketType: t.offer?.name || t.offer?.zone || null,
+      })),
+    };
+  }
+
+  /**
+   * Admisión (o salida) tras confirmar el nombre del titular. Queda en bitácora.
+   */
+  async confirmManualAdmit(params: {
+    eventId: string;
+    ticketId: string;
+    confirmedName: string;
+    scannedBy: string;
+    zoneId?: string;
+    channel: string;
+    scannerOrganizationId?: string | null;
+    scannerRole?: string;
+    mode?: 'ENTRY' | 'EXIT';
+  }) {
+    await this.assertGateEvent(params.eventId, params.scannerOrganizationId, params.scannerRole);
+    const ticket = await this.prisma.ticket.findFirst({
+      where: { id: params.ticketId, eventId: params.eventId },
+      select: { id: true, code: true, buyerName: true },
+    });
+    if (!ticket) throw new NotFoundException('Ticket not found');
+
+    const expected = (ticket.buyerName ?? '').trim().toLowerCase();
+    const got = params.confirmedName.trim().toLowerCase();
+    if (!expected || expected !== got) {
+      throw new BadRequestException({
+        statusCode: 400,
+        code: 'CONFIRMED_NAME_MISMATCH',
+        message: 'El nombre no coincide con el titular del boleto',
+      });
+    }
+
+    await this.audit.log({
+      action: 'access.manual_lookup_admit',
+      entityType: 'Ticket',
+      entityId: ticket.id,
+      userId: params.scannedBy,
+      metadata: {
+        confirmedName: params.confirmedName.trim(),
+        mode: params.mode ?? 'ENTRY',
+        zoneId: params.zoneId,
+        channel: params.channel,
+      },
+    });
+
+    return this.scanTicket({
+      ticketCode: ticket.code,
+      zoneId: params.zoneId,
+      scannedBy: params.scannedBy,
+      channel: params.channel,
+      eventId: params.eventId,
+      scannerOrganizationId: params.scannerOrganizationId,
+      scannerRole: params.scannerRole,
+      mode: params.mode === 'EXIT' ? 'EXIT' : 'ENTRY',
+    });
   }
 
   /**
@@ -345,7 +512,7 @@ export class AccessService {
   async syncOfflineScans(params: {
     scannedBy: string;
     channel: string;
-    scans: { ticketId: string; scannedAt?: string | Date; zoneId?: string }[];
+    scans: { ticketId: string; scannedAt?: string | Date; zoneId?: string; mode?: string }[];
   }) {
     const scans = params.scans;
     if (!Array.isArray(scans) || scans.length === 0) {
@@ -389,10 +556,14 @@ export class AccessService {
         scannedBy: params.scannedBy,
         channel: params.channel,
       };
+      const mode = scan.mode?.toUpperCase() === 'EXIT' ? 'EXIT' : 'ENTRY';
 
       const ticket = await this.prisma.ticket.findUnique({
         where: { id: ticketId },
-        select: { id: true },
+        include: {
+          event: { select: { title: true, metadata: true } },
+          offer: { select: { name: true, zone: true } },
+        },
       });
       if (!ticket) {
         await this.recordScan(ticketId, context, false, 'Ticket not found', scannedAt);
@@ -400,33 +571,42 @@ export class AccessService {
         continue;
       }
 
-      const claimed = await this.claimTicket(ticketId, scannedAt);
-      if (claimed) {
-        await this.recordScan(ticketId, context, true, 'Offline sync', scannedAt);
-        accepted.push({ ticketId, scannedAt: scannedAt.toISOString() });
-        continue;
-      }
-
-      const failure = await this.describeFailedClaim(ticketId);
-      await this.recordScan(
-        ticketId,
-        context,
-        false,
-        `Offline sync · ${failure.reason}`,
-        scannedAt
-      );
-
-      if (failure.alreadyUsed) {
-        conflicts.push({
-          ticketId,
-          attemptedAt: scannedAt.toISOString(),
-          attemptedZoneId: scan.zoneId,
-          firstScanAt: failure.firstScanAt,
-          firstScanZoneId: failure.firstScanZoneId,
-          firstScanBy: failure.firstScanBy,
+      try {
+        // Sin eventId: el lote offline ya se acotó al descargar el manifiesto;
+        // assertGateEvent pediría organización y rompería la conciliación.
+        await this.scanTicket({
+          ticketCode: ticket.code,
+          zoneId: scan.zoneId,
+          scannedBy: params.scannedBy,
+          channel: params.channel,
+          scannedAt,
+          mode,
         });
-      } else {
-        rejected.push({ ticketId, reason: failure.reason });
+        accepted.push({ ticketId, scannedAt: scannedAt.toISOString() });
+      } catch (err) {
+        const code =
+          err && typeof err === 'object' && 'getResponse' in err
+            ? ((err as { getResponse: () => unknown }).getResponse() as { code?: string })?.code
+            : undefined;
+        if (code === 'TICKET_ALREADY_SCANNED') {
+          const failure = await this.describeFailedClaim(ticketId);
+          conflicts.push({
+            ticketId,
+            attemptedAt: scannedAt.toISOString(),
+            attemptedZoneId: scan.zoneId,
+            firstScanAt: failure.firstScanAt,
+            firstScanZoneId: failure.firstScanZoneId,
+            firstScanBy: failure.firstScanBy,
+          });
+        } else {
+          const reason =
+            err instanceof Error
+              ? err.message
+              : typeof err === 'object' && err && 'message' in err
+                ? String((err as { message: unknown }).message)
+                : 'Rejected';
+          rejected.push({ ticketId, reason });
+        }
       }
     }
 
@@ -512,12 +692,8 @@ export class AccessService {
   }
 
   /**
-   * La puerta sólo puede controlar funciones de SU organización: si no, un
-   * escáner de otro inquilino podría quemar boletos ajenos pidiendo su evento.
-   */
-  /**
-   * Totales en vivo de la puerta (como Ticketmaster Presence): cuántos entraron,
-   * cuántos faltan, por puerta y por minuto en los últimos 10 minutos.
+   * Totales en vivo: entraron, faltan, aforo dentro (entradas − salidas),
+   * por puerta y por minuto en los últimos 10 minutos.
    */
   async getLiveStats(
     eventId: string,
@@ -526,22 +702,29 @@ export class AccessService {
   ) {
     await this.assertGateEvent(eventId, scope.organizationId, scope.role);
     const since = new Date(now.getTime() - 10 * 60_000);
-    const [admitted, expected, byZone, recent] = await Promise.all([
+    const [admitted, expected, allScans, recent] = await Promise.all([
       this.prisma.ticket.count({ where: { eventId, status: 'USED' } }),
       this.prisma.ticket.count({
         where: { eventId, status: { in: ['SOLD', 'USED', 'RESOLD'] } },
       }),
-      this.prisma.ticketScan.groupBy({
-        by: ['zoneId'],
+      this.prisma.ticketScan.findMany({
         where: { success: true, ticket: { eventId } },
-        _count: { _all: true },
+        select: { zoneId: true, reason: true },
       }),
       this.prisma.ticketScan.findMany({
-        where: { success: true, ticket: { eventId }, scannedAt: { gte: since } },
-        select: { scannedAt: true },
+        where: {
+          success: true,
+          ticket: { eventId },
+          scannedAt: { gte: since },
+          OR: [{ reason: null }, { reason: SCAN_REASON_ENTRY }, { reason: SCAN_REASON_REENTRY }],
+        },
+        select: { scannedAt: true, reason: true },
       }),
     ]);
-    const zoneIds = byZone.map((z) => z.zoneId).filter((id): id is string => Boolean(id));
+    const traffic = summarizeGateTraffic(
+      allScans.map((s) => ({ zoneId: s.zoneId, reason: s.reason }))
+    );
+    const zoneIds = [...traffic.byZone.keys()].filter((id): id is string => Boolean(id));
     const zones = zoneIds.length
       ? await this.prisma.accessZone.findMany({
           where: { id: { in: zoneIds } },
@@ -551,6 +734,7 @@ export class AccessService {
     const zoneName = new Map(zones.map((z) => [z.id, z.name]));
     const perMinute = Array.from({ length: 10 }, () => 0);
     for (const r of recent) {
+      if (!isEntryReason(r.reason)) continue;
       const ago = Math.floor((now.getTime() - r.scannedAt.getTime()) / 60_000);
       if (ago >= 0 && ago < 10) perMinute[9 - ago] += 1;
     }
@@ -559,15 +743,19 @@ export class AccessService {
       admitted,
       expected,
       remaining: Math.max(0, expected - admitted),
+      insideNow: traffic.insideNow,
+      exited: traffic.exited,
       lastTenMinutes: recent.length,
       perMinute,
-      byGate: byZone
-        .map((z) => ({
-          zoneId: z.zoneId,
-          name: z.zoneId ? (zoneName.get(z.zoneId) ?? 'Puerta') : 'Sin puerta asignada',
-          admitted: z._count._all,
+      byGate: [...traffic.byZone.entries()]
+        .map(([zoneId, row]) => ({
+          zoneId,
+          name: zoneId ? (zoneName.get(zoneId) ?? 'Puerta') : 'Sin puerta asignada',
+          admitted: row.entries,
+          exited: row.exited,
+          inside: row.inside,
         }))
-        .sort((a, b) => b.admitted - a.admitted),
+        .sort((a, b) => b.inside - a.inside || b.admitted - a.admitted),
       at: now.toISOString(),
     };
   }

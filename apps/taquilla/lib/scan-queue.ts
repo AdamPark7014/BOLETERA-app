@@ -30,6 +30,8 @@ export type QueuedScan = {
   eventId: string;
   scannedAt: string;
   zoneId?: string;
+  /** ENTRY (omisión) o EXIT para conciliar salidas hechas sin red. */
+  mode?: 'ENTRY' | 'EXIT';
 };
 
 export type ScanConflict = {
@@ -112,6 +114,7 @@ export async function syncScans(zoneFallback?: string): Promise<SyncOutcome> {
           ticketId: s.ticketId,
           scannedAt: s.scannedAt,
           zoneId: s.zoneId ?? zoneFallback,
+          mode: s.mode,
         })),
       }),
     });

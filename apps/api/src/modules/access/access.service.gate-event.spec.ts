@@ -23,11 +23,18 @@ describe('AccessService · boleto de otra función y otra organización', () => 
           section: 'Luneta',
           row: 'A',
           seatNumber: '2',
-          event: { title: 'Ballet' },
+          status: 'SOLD',
+          buyerName: 'Ana',
+          event: { title: 'Ballet', metadata: {} },
+          offer: { name: 'General', zone: 'General' },
         }),
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
-      ticketScan: { create: jest.fn().mockResolvedValue({}) },
+      ticketScan: {
+        create: jest.fn().mockResolvedValue({}),
+        findFirst: jest.fn().mockResolvedValue(null),
+        count: jest.fn().mockResolvedValue(0),
+      },
       accessZone: { findUnique: jest.fn() },
     };
     const audit = { log: jest.fn().mockResolvedValue(undefined) };

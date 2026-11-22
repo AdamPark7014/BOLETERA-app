@@ -43,6 +43,7 @@ import {
   MetricsModule,
   MembershipsModule,
 } from './modules';
+import { TrackingLinksModule } from './modules/tracking-links/tracking-links.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -310,6 +311,7 @@ function parseRedisUrl(raw?: string): {
     SeasonModule,
     MetricsModule,
     MembershipsModule,
+    TrackingLinksModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

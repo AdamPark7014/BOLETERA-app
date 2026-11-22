@@ -1,5 +1,6 @@
 package mx.boletera.mobile.data
 
+import mx.boletera.mobile.BuildConfig
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -59,6 +60,12 @@ data class PaymentConfig(
     val methods: List<String>,
     val demo: Boolean,
     val msiMinTotal: Double,
+    val plans: List<Int> = listOf(1, 3, 6, 9, 12),
+)
+
+data class MsiConfig(
+    val minTotal: Double,
+    val plans: List<Int>,
 )
 
 data class ResaleListing(
@@ -85,6 +92,26 @@ data class WaitlistClaim(
     val holdIds: List<String>,
     val offerId: String?,
     val eventId: String?,
+)
+
+data class WaitingRoomConfig(
+    val enabled: Boolean,
+    val opensAt: String? = null,
+)
+
+data class QueueStatus(
+    val eventId: String,
+    val position: Int?,
+    val ahead: Int,
+    val total: Int,
+    val admitted: Boolean,
+    val estimatedWaitSeconds: Int,
+    val opensAt: String?,
+    val pass: String?,
+)
+
+data class SellerClabe(
+    val clabe: String?,
 )
 
 /**
@@ -116,6 +143,8 @@ class BuyerApi(
         offerId: String,
         quantity: Int,
         accessCode: String?,
+        queuePass: String? = null,
+        challengeToken: String? = null,
     ): HoldResult {
         val guest = session.ensureGuestSession(api)
         val body = JSONObject()
@@ -125,6 +154,8 @@ class BuyerApi(
             .put("contiguous", true)
             .put("sessionId", guest)
         if (!accessCode.isNullOrBlank()) body.put("accessCode", accessCode.trim())
+        if (!queuePass.isNullOrBlank()) body.put("queuePass", queuePass)
+        if (!challengeToken.isNullOrBlank()) body.put("challengeToken", challengeToken)
         val raw = api.post(
             "inventory/holds/best-available",
             body,
@@ -139,6 +170,8 @@ class BuyerApi(
         offerId: String,
         quantity: Int,
         accessCode: String?,
+        queuePass: String? = null,
+        challengeToken: String? = null,
     ): HoldResult {
         val guest = session.ensureGuestSession(api)
         val body = JSONObject()
@@ -147,6 +180,8 @@ class BuyerApi(
             .put("quantity", quantity)
             .put("sessionId", guest)
         if (!accessCode.isNullOrBlank()) body.put("accessCode", accessCode.trim())
+        if (!queuePass.isNullOrBlank()) body.put("queuePass", queuePass)
+        if (!challengeToken.isNullOrBlank()) body.put("challengeToken", challengeToken)
         val raw = api.post(
             "inventory/holds",
             body,
@@ -156,12 +191,36 @@ class BuyerApi(
         return parseHold(raw)
     }
 
+    suspend fun msiConfig(eventId: String?): MsiConfig {
+        val path = if (eventId.isNullOrBlank()) "payments/msi"
+        else "payments/msi?eventId=${java.net.URLEncoder.encode(eventId, "UTF-8")}"
+        val raw = runCatching { api.get(path, auth = false) }.getOrNull()
+        if (raw.isNullOrBlank()) {
+            return MsiConfig(minTotal = 1500.0, plans = listOf(1, 3, 6, 9, 12))
+        }
+        val o = JSONObject(raw)
+        val plansArr = o.optJSONArray("plans")
+        val plans = if (plansArr == null) listOf(1, 3, 6, 9, 12)
+        else (0 until plansArr.length()).mapNotNull {
+            plansArr.optInt(it).takeIf { n -> n in listOf(1, 3, 6, 9, 12) }
+        }.ifEmpty { listOf(1, 3, 6, 9, 12) }
+        val min = o.optDouble("minTotal", 1500.0).takeIf { it > 0 } ?: 1500.0
+        return MsiConfig(minTotal = min, plans = plans)
+    }
+
     suspend fun paymentConfig(eventId: String?): PaymentConfig {
         val path = if (eventId.isNullOrBlank()) "payments/config"
         else "payments/config?eventId=$eventId"
         val raw = runCatching { api.get(path, auth = false) }.getOrNull()
+        val msi = runCatching { msiConfig(eventId) }.getOrNull()
+            ?: MsiConfig(1500.0, listOf(1, 3, 6, 9, 12))
         if (raw.isNullOrBlank()) {
-            return PaymentConfig(listOf("CARD", "SPEI", "OXXO"), demo = true, msiMinTotal = 1500.0)
+            return PaymentConfig(
+                methods = listOf("CARD", "SPEI", "OXXO"),
+                demo = true,
+                msiMinTotal = msi.minTotal,
+                plans = msi.plans,
+            )
         }
         val o = JSONObject(raw)
         val methods = o.optJSONArray("methods")?.let { arr ->
@@ -170,8 +229,33 @@ class BuyerApi(
         return PaymentConfig(
             methods = methods,
             demo = o.optBoolean("demo", false),
-            msiMinTotal = o.optDouble("msiMinTotal", 1500.0),
+            msiMinTotal = msi.minTotal,
+            plans = msi.plans,
         )
+    }
+
+    suspend fun waitingRoomConfig(eventId: String): WaitingRoomConfig {
+        val raw = api.get("waiting-room/$eventId", auth = false)
+        val o = JSONObject(raw)
+        return WaitingRoomConfig(
+            enabled = o.optBoolean("enabled", false),
+            opensAt = o.optStringOrNull("opensAt"),
+        )
+    }
+
+    suspend fun joinWaitingRoom(eventId: String, sessionId: String): QueueStatus {
+        val body = JSONObject().put("sessionId", sessionId).put("memberId", sessionId)
+        val raw = api.post("waiting-room/$eventId/join", body, auth = false)
+        return parseQueueStatus(raw, eventId)
+    }
+
+    suspend fun waitingRoomStatus(eventId: String, sessionId: String): QueueStatus {
+        val q = java.net.URLEncoder.encode(sessionId, "UTF-8")
+        val raw = api.get(
+            "waiting-room/$eventId/status?sessionId=$q&memberId=$q",
+            auth = false,
+        )
+        return parseQueueStatus(raw, eventId)
     }
 
     suspend fun createOrder(
@@ -280,6 +364,18 @@ class BuyerApi(
         }
     }
 
+    suspend fun getResaleClabe(): SellerClabe {
+        val raw = api.get("resale/mine/clabe")
+        val o = JSONObject(raw)
+        return SellerClabe(clabe = o.optStringOrNull("clabe"))
+    }
+
+    suspend fun saveResaleClabe(clabe: String): SellerClabe {
+        val raw = api.post("resale/mine/clabe", JSONObject().put("clabe", clabe.trim()))
+        val o = JSONObject(raw)
+        return SellerClabe(clabe = o.optStringOrNull("clabe"))
+    }
+
     suspend fun createResaleListing(ticketId: String, askingPrice: Double): JSONObject {
         val body = JSONObject()
             .put("ticketId", ticketId)
@@ -343,6 +439,43 @@ class BuyerApi(
             }
         }
         api.post(path, JSONObject())
+    }
+
+    /** PDF de boletos de la orden (mismo endpoint que la web). */
+    suspend fun ticketsPdfBytes(publicId: String, accessToken: String?): ByteArray {
+        val path = buildString {
+            append("orders/$publicId/tickets.pdf")
+            if (!accessToken.isNullOrBlank()) {
+                append("?accessToken=")
+                append(java.net.URLEncoder.encode(accessToken, "UTF-8"))
+            }
+        }
+        return api.getBytes(path, auth = session.isLoggedIn() || accessToken.isNullOrBlank())
+    }
+
+    fun ticketsPdfUrl(publicId: String, accessToken: String?): String {
+        val base = BuildConfig.API_BASE_URL.trimEnd('/')
+        return buildString {
+            append("$base/orders/$publicId/tickets.pdf")
+            if (!accessToken.isNullOrBlank()) {
+                append("?accessToken=")
+                append(java.net.URLEncoder.encode(accessToken, "UTF-8"))
+            }
+        }
+    }
+
+    private fun parseQueueStatus(raw: String, fallbackEventId: String): QueueStatus {
+        val o = JSONObject(raw)
+        return QueueStatus(
+            eventId = o.optString("eventId", fallbackEventId),
+            position = if (o.has("position") && !o.isNull("position")) o.optInt("position") else null,
+            ahead = o.optInt("ahead", 0),
+            total = o.optInt("total", 0),
+            admitted = o.optBoolean("admitted", false),
+            estimatedWaitSeconds = o.optInt("estimatedWaitSeconds", 0),
+            opensAt = o.optStringOrNull("opensAt"),
+            pass = o.optStringOrNull("pass"),
+        )
     }
 
     private fun parseHold(raw: String): HoldResult {

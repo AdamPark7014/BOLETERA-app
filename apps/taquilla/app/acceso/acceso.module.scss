@@ -782,3 +782,83 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+.modeRow {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.modeBtn,
+.modeActive {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: var(--r-pill, 999px);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  @include focus;
+}
+
+.modeBtn {
+  border: 1px solid var(--line-strong, #34343a);
+  background: var(--card, #1a1a1a);
+  color: var(--text-secondary, #a8a29a);
+}
+
+.modeActive {
+  border: 1px solid transparent;
+  background: var(--gold, #a68a6b);
+  color: #000;
+}
+
+.lookupRow {
+  display: grid;
+  gap: 10px;
+}
+
+.lookupList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--card, #1a1a1a);
+    border: 1px solid var(--line, #26262a);
+  }
+
+  strong {
+    display: block;
+    font-size: 15px;
+  }
+
+  span {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--text-secondary, #a8a29a);
+  }
+}
+
+.confirmBox {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 1023px) {
+  .door {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    border-left: 0;
+    border-top: 1px solid var(--line, #26262a);
+  }
+}

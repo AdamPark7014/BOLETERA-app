@@ -6,6 +6,7 @@ import { VenueLayoutService } from '../venue-layout/venue-layout.service';
 import {
   buildEventPublishValidation,
   channelConfigFromMetadata,
+  hasCapacityExplanation,
   hasDocumentedRefundTerms,
   type EventPublishValidation,
 } from './event-publish-validation';
@@ -53,12 +54,14 @@ export class EventPublishValidationService {
         const geometry = validateGeometry(resolveGeometry(normalized), {
           declaredCapacity: event.totalCapacity,
         });
+        // capacity_mismatch se reporta en el check `capacity`, no como error de mapa.
+        const otherIssues = geometry.issues.filter((i) => i.code !== 'capacity_mismatch');
         const seatCount = normalized.sections.reduce((n, s) => n + s.seats.length, 0);
         mapSummary = {
           sectionCount: normalized.sections.length,
           seatCount,
-          geometryErrors: geometry.issues.filter((i) => i.severity === 'error').length,
-          geometryWarnings: geometry.issues.filter((i) => i.severity === 'warning').length,
+          geometryErrors: otherIssues.filter((i) => i.severity === 'error').length,
+          geometryWarnings: otherIssues.filter((i) => i.severity === 'warning').length,
           layoutPublishStatus: layoutPayload.layout.publishStatus ?? null,
         };
       } catch {
@@ -72,6 +75,36 @@ export class EventPublishValidationService {
 
     const payment = validateBanorteProductionConfig();
     const channels = channelConfigFromMetadata(metadata);
+
+    const salesStartAt = event.salesStartAt ? new Date(event.salesStartAt) : null;
+    const salesEndAt = event.salesEndAt ? new Date(event.salesEndAt) : null;
+    const startsAt = event.startsAt ? new Date(event.startsAt) : null;
+    let salesValid = true;
+    let salesMessage: string | undefined;
+    if (salesStartAt && salesEndAt) {
+      if (Number.isNaN(salesStartAt.getTime()) || Number.isNaN(salesEndAt.getTime())) {
+        salesValid = false;
+        salesMessage = 'La ventana de venta tiene fechas inválidas.';
+      } else if (salesEndAt <= salesStartAt) {
+        salesValid = false;
+        salesMessage = 'La venta no puede cerrar antes de abrir.';
+      } else if (startsAt && !Number.isNaN(startsAt.getTime()) && salesEndAt > startsAt) {
+        salesValid = false;
+        salesMessage =
+          'La venta no puede cerrar después de que empiece el evento; usa una fase de venta en puerta.';
+      }
+    }
+
+    const seatCount = mapSummary?.seatCount ?? 0;
+    const capacityMatch =
+      seatCount > 0
+        ? {
+            declared: event.totalCapacity,
+            mapSeats: seatCount,
+            matches: event.totalCapacity === seatCount,
+            hasExplanation: hasCapacityExplanation(metadata),
+          }
+        : null;
 
     return buildEventPublishValidation({
       eventId,
@@ -101,9 +134,16 @@ export class EventPublishValidationService {
       inventory: {
         published: Boolean(event.publishedAt ?? event.seatMap?.publishedAt),
         ticketCount: event._count.tickets,
-        layoutSeatCount: mapSummary?.seatCount ?? 0,
+        layoutSeatCount: seatCount,
         totalCapacity: event.totalCapacity,
       },
+      salesWindow: {
+        hasStart: Boolean(salesStartAt),
+        hasEnd: Boolean(salesEndAt),
+        valid: salesValid,
+        message: salesMessage,
+      },
+      capacityMatch,
     });
   }
 
@@ -118,7 +158,11 @@ export class EventPublishValidationService {
       throw new BadRequestException({
         message: 'El evento no cumple los requisitos para publicar.',
         validation: result,
-        blockers: blockers.map((b) => ({ id: b.id, message: b.message })),
+        blockers: blockers.map((b) => ({
+          id: b.id,
+          message: b.message,
+          action: b.action ?? null,
+        })),
       });
     }
     return result;

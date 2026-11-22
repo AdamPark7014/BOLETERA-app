@@ -1,13 +1,27 @@
-import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Request,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PermissionKey } from '@boletera/shared';
 import type { MetricsGranularity } from '@boletera/shared';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OrgAccessGuard } from '../auth/org-access.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { RequirePermissions } from '../auth/permissions.decorator';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { EventAnalyticsService } from './event-analytics.service';
 import { MetricsService } from './metrics.service';
 
 type ScopedRequest = {
@@ -29,7 +43,10 @@ type MetricsQuery = {
 @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'VENUE_MANAGER', 'FINANCE', 'MARKETING', 'AUDITOR')
 @RequirePermissions(PermissionKey.REPORTS_READ)
 export class MetricsController {
-  constructor(private metrics: MetricsService) {}
+  constructor(
+    private metrics: MetricsService,
+    private readonly liveAnalytics: EventAnalyticsService
+  ) {}
 
   private scope(req: ScopedRequest, query: MetricsQuery) {
     return this.metrics.resolveOrganizationId(
@@ -58,6 +75,52 @@ export class MetricsController {
       from: query.from,
       to: query.to,
     });
+  }
+
+  @Get('events/:eventId/analytics')
+  @ApiOperation({ summary: 'Analítica en vivo de un evento' })
+  getEventLiveAnalytics(
+    @Request() req: ScopedRequest,
+    @Param('eventId') eventId: string,
+    @Query() query: MetricsQuery
+  ) {
+    return this.liveAnalytics.getEventAnalytics({
+      organizationId: this.scope(req, query),
+      eventId,
+      from: query.from,
+      to: query.to,
+    });
+  }
+
+  @Get('events/:eventId/analytics.csv')
+  @ApiOperation({ summary: 'Exportar analítica del evento en CSV' })
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  async eventAnalyticsCsv(
+    @Request() req: ScopedRequest,
+    @Param('eventId') eventId: string,
+    @Query() query: MetricsQuery,
+    @Res() res: Response
+  ) {
+    const csv = await this.liveAnalytics.exportCsv(
+      this.scope(req, query),
+      eventId,
+      query.from,
+      query.to
+    );
+    res.setHeader('Content-Disposition', `attachment; filename="analitica-${eventId}.csv"`);
+    res.send(csv);
+  }
+
+  @Patch('events/:eventId/sales-goal')
+  @ApiOperation({ summary: 'Definir meta de venta del evento' })
+  @Roles('PROMOTER', 'ADMIN', 'SUPER_ADMIN', 'MARKETING')
+  setSalesGoal(
+    @Request() req: ScopedRequest,
+    @Param('eventId') eventId: string,
+    @Body() body: { tickets?: number | null; revenue?: number | null },
+    @Query() query: MetricsQuery
+  ) {
+    return this.liveAnalytics.setSalesGoal(this.scope(req, query), eventId, body ?? {});
   }
 
   @Get('inventory')
@@ -172,6 +235,22 @@ export class MetricsController {
       organizationId: this.scope(req, query),
       from: query.from,
       to: query.to,
+    });
+  }
+}
+
+/** Contador público de visitas a la ficha (sin sesión). */
+@ApiTags('Metrics')
+@Controller('metrics')
+export class MetricsPublicController {
+  constructor(private readonly liveAnalytics: EventAnalyticsService) {}
+
+  @Post('visit')
+  @ApiOperation({ summary: 'Registrar visita a la ficha de un evento' })
+  visit(@Body() body: { eventId?: string; slug?: string }) {
+    return this.liveAnalytics.recordVisit({
+      eventId: body?.eventId,
+      slug: body?.slug,
     });
   }
 }

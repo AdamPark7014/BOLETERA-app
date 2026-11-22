@@ -28,7 +28,6 @@ import java.time.Instant
 import java.util.Locale
 
 private val mxn = NumberFormat.getCurrencyInstance(Locale("es", "MX"))
-private val MSI_PLANS = listOf(1, 3, 6, 9, 12)
 
 @Composable
 fun CheckoutScreen(
@@ -57,6 +56,7 @@ fun CheckoutScreen(
     val methods = config?.methods?.ifEmpty { listOf("CARD", "SPEI", "OXXO") }
         ?: listOf("CARD", "SPEI", "OXXO")
     val msiMin = config?.msiMinTotal ?: 1500.0
+    val msiPlans = config?.plans?.ifEmpty { listOf(1, 3, 6, 9, 12) } ?: listOf(1, 3, 6, 9, 12)
     val showMsi = method == "CARD" && estimatedTotal >= msiMin
 
     var remain by remember { mutableIntStateOf(secondsUntil(expiresAt)) }
@@ -137,7 +137,7 @@ fun CheckoutScreen(
             Text("Meses sin intereses", fontWeight = FontWeight.SemiBold, color = Marca.Tinta)
             Text("Si el banco no los ofrece en este comercio, se cobra de contado.", fontSize = 12.sp, color = Marca.TintaSuave)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MSI_PLANS.forEach { plan ->
+                msiPlans.forEach { plan ->
                     val active = installments == plan
                     Surface(
                         shape = RoundedCornerShape(10.dp),

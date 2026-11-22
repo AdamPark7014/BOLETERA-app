@@ -163,6 +163,7 @@ private fun TarjetaEvento(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(boleto.ubicacion, fontSize = 15.sp, color = Marca.Tinta)
+                        boleto.holderName?.let { Text(it, fontSize = 12.sp, color = Marca.TintaSuave) }
                         boleto.gate?.let { Text("Puerta $it", fontSize = 12.sp, color = Marca.TintaSuave) }
                         Text(boleto.code, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = Marca.TintaSuave)
                     }

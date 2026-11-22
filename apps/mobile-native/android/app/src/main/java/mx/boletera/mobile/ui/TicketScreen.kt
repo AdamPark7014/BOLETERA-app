@@ -29,7 +29,13 @@ fun TicketScreen(
     boleto: WalletTicket,
     sincronizada: Boolean,
     titularFallback: String?,
+    pdfBusy: Boolean = false,
+    resendBusy: Boolean = false,
+    aviso: String? = null,
+    error: String? = null,
     onVolver: () -> Unit,
+    onDescargarPdf: (() -> Unit)? = null,
+    onReenviar: (() -> Unit)? = null,
 ) {
     val activity = LocalActivity.current
 
@@ -130,6 +136,37 @@ fun TicketScreen(
         }
         Text(boleto.code, fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = Marca.TintaSuave)
 
+        
+        Spacer(Modifier.height(12.dp))
+        aviso?.let { Text(it, color = Marca.Exito, fontSize = 13.sp, textAlign = TextAlign.Center) }
+        error?.let { Text(it, color = Marca.Peligro, fontSize = 13.sp, textAlign = TextAlign.Center) }
+        if (onDescargarPdf != null || onReenviar != null) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (onDescargarPdf != null) {
+                    OutlinedButton(
+                        onClick = onDescargarPdf,
+                        enabled = !pdfBusy,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Marca.Tinta),
+                    ) {
+                        Text(if (pdfBusy) "Descargando…" else "Descargar PDF")
+                    }
+                }
+                if (onReenviar != null) {
+                    Button(
+                        onClick = onReenviar,
+                        enabled = !resendBusy,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Marca.Dorado, contentColor = Marca.Negro),
+                    ) {
+                        Text(if (resendBusy) "Enviando…" else "Reenviar")
+                    }
+                }
+            }
+        }
         Spacer(Modifier.weight(1f))
         Surface(
             shape = RoundedCornerShape(12.dp),

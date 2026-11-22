@@ -2,6 +2,7 @@ import { Injectable, Logger, BadRequestException, NotFoundException } from '@nes
 import { PrismaService } from '../prisma/prisma.service';
 import {
   EventSeriesKind,
+  EventCategory,
   EventSeriesStatus,
   EventStatus,
   Prisma,
@@ -984,5 +985,340 @@ export class EventManagementService {
       saleWindow,
       metadata: event.metadata,
     };
+  }
+  // ==================== EDIT / DUPLICATE / SYNC CAPACITY (micro A) ====================
+
+  /**
+   * Actualiza el evento por sección. Políticas extra (tope %, fechas límite) viven
+   * en metadata.eventPolicies hasta que exista la migración dedicada.
+   */
+  async updateEvent(
+    orgId: string,
+    eventId: string,
+    patch: {
+      title?: string;
+      description?: string | null;
+      imageUrl?: string | null;
+      bannerImageUrl?: string | null;
+      startDate?: Date | string;
+      endDate?: Date | string | null;
+      doorsAt?: Date | string | null;
+      venueId?: string;
+      category?: string;
+      rating?: string | null;
+      salesStartAt?: Date | string | null;
+      salesEndAt?: Date | string | null;
+      totalCapacity?: number;
+      allowResale?: boolean;
+      transferAllowed?: boolean;
+      refundable?: boolean;
+      policies?: {
+        resaleMaxPercent?: number | null;
+        resaleDeadline?: string | null;
+        refundDeadline?: string | null;
+        transferDeadline?: string | null;
+      };
+      capacityExplanation?: string | null;
+    }
+  ) {
+    if (!orgId) throw new BadRequestException('Tu usuario no tiene organización');
+    const current = await this.prisma.event.findFirst({
+      where: { id: eventId, organizationId: orgId },
+    });
+    if (!current) throw new NotFoundException('Evento no encontrado');
+
+    const startsAt = patch.startDate !== undefined ? new Date(patch.startDate) : current.startsAt;
+    if (Number.isNaN(startsAt.getTime())) {
+      throw new BadRequestException('La fecha de inicio no es válida.');
+    }
+
+    const endsAt =
+      patch.endDate === undefined
+        ? current.endsAt
+        : patch.endDate === null || patch.endDate === ''
+          ? null
+          : new Date(patch.endDate);
+    if (endsAt && Number.isNaN(endsAt.getTime())) {
+      throw new BadRequestException('La fecha de fin no es válida.');
+    }
+    if (endsAt && endsAt <= startsAt) {
+      throw new BadRequestException('El fin es anterior o igual al inicio.');
+    }
+
+    const doorsAt =
+      patch.doorsAt === undefined
+        ? current.doorsAt
+        : patch.doorsAt === null || patch.doorsAt === ''
+          ? null
+          : new Date(patch.doorsAt);
+    if (doorsAt && Number.isNaN(doorsAt.getTime())) {
+      throw new BadRequestException('La hora de puertas no es válida.');
+    }
+
+    const salesStartAt =
+      patch.salesStartAt === undefined
+        ? current.salesStartAt
+        : patch.salesStartAt === null || patch.salesStartAt === ''
+          ? null
+          : new Date(patch.salesStartAt);
+    const salesEndAt =
+      patch.salesEndAt === undefined
+        ? current.salesEndAt
+        : patch.salesEndAt === null || patch.salesEndAt === ''
+          ? null
+          : new Date(patch.salesEndAt);
+    if (salesStartAt && Number.isNaN(salesStartAt.getTime())) {
+      throw new BadRequestException('La apertura de venta no es válida.');
+    }
+    if (salesEndAt && Number.isNaN(salesEndAt.getTime())) {
+      throw new BadRequestException('El cierre de venta no es válido.');
+    }
+    if (salesStartAt && salesEndAt && salesEndAt <= salesStartAt) {
+      throw new BadRequestException('La venta no puede cerrar antes de abrir');
+    }
+    if (salesEndAt && salesEndAt > startsAt) {
+      throw new BadRequestException(
+        'La venta no puede cerrar después de que empiece el evento; usa una fase de venta en puerta'
+      );
+    }
+
+    if (patch.totalCapacity !== undefined) {
+      if (!Number.isInteger(patch.totalCapacity) || patch.totalCapacity <= 0) {
+        throw new BadRequestException('El cupo tiene que ser mayor que cero.');
+      }
+    }
+
+    if (patch.venueId) {
+      const venue = await this.prisma.venue.findFirst({
+        where: { id: patch.venueId, organizationId: orgId },
+        select: { id: true },
+      });
+      if (!venue) throw new BadRequestException('El recinto no pertenece a tu organización.');
+    }
+
+    const categories = Object.values(EventCategory) as string[];
+    if (patch.category !== undefined && !categories.includes(patch.category)) {
+      throw new BadRequestException('Categoría no válida.');
+    }
+
+    const meta = { ...((current.metadata as EventMetadata) ?? {}) };
+    if (patch.policies) {
+      const prev =
+        meta.eventPolicies && typeof meta.eventPolicies === 'object'
+          ? (meta.eventPolicies as Record<string, unknown>)
+          : {};
+      meta.eventPolicies = { ...prev, ...patch.policies };
+    }
+    if (patch.capacityExplanation !== undefined) {
+      const text =
+        typeof patch.capacityExplanation === 'string' ? patch.capacityExplanation.trim() : '';
+      if (text === '') {
+        delete meta.capacityExplanation;
+      } else if (text.length < 20) {
+        throw new BadRequestException('La explicación del cupo necesita al menos 20 caracteres.');
+      } else {
+        meta.capacityExplanation = text;
+      }
+    }
+
+    const data: Prisma.EventUpdateInput = {
+      metadata: meta as Prisma.InputJsonValue,
+    };
+    if (patch.title !== undefined) {
+      const title = patch.title.trim();
+      if (title.length < 3)
+        throw new BadRequestException('El título necesita al menos 3 caracteres.');
+      data.title = title;
+    }
+    if (patch.description !== undefined) data.description = patch.description;
+    if (patch.imageUrl !== undefined) data.image = patch.imageUrl?.trim() || null;
+    if (patch.bannerImageUrl !== undefined) {
+      data.bannerImage = patch.bannerImageUrl?.trim() || null;
+    }
+    if (patch.startDate !== undefined) data.startsAt = startsAt;
+    if (patch.endDate !== undefined) data.endsAt = endsAt;
+    if (patch.doorsAt !== undefined) data.doorsAt = doorsAt;
+    if (patch.venueId !== undefined) {
+      data.venue = { connect: { id: patch.venueId } };
+    }
+    if (patch.category !== undefined) data.category = patch.category as EventCategory;
+    if (patch.rating !== undefined) data.rating = patch.rating;
+    if (patch.salesStartAt !== undefined) data.salesStartAt = salesStartAt;
+    if (patch.salesEndAt !== undefined) data.salesEndAt = salesEndAt;
+    if (patch.totalCapacity !== undefined) data.totalCapacity = patch.totalCapacity;
+    if (patch.allowResale !== undefined) data.allowResale = patch.allowResale;
+    if (patch.transferAllowed !== undefined) data.transferAllowed = patch.transferAllowed;
+    if (patch.refundable !== undefined) data.refundable = patch.refundable;
+
+    return this.prisma.event.update({
+      where: { id: eventId },
+      data,
+      include: { venue: true, offers: true, salePhases: true },
+    });
+  }
+
+  /**
+   * Clona el evento a un borrador con fecha nueva: zonas (offers), fases y políticas.
+   * No copia boletos ni mapa publicado.
+   */
+  async duplicateEvent(
+    orgId: string,
+    eventId: string,
+    data: { startDate: Date | string; title?: string; doorsAt?: Date | string | null }
+  ) {
+    if (!orgId) throw new BadRequestException('Tu usuario no tiene organización');
+    const source = await this.prisma.event.findFirst({
+      where: { id: eventId, organizationId: orgId },
+      include: { offers: true, salePhases: true },
+    });
+    if (!source) throw new NotFoundException('Evento no encontrado');
+
+    const newStart = new Date(data.startDate);
+    if (Number.isNaN(newStart.getTime())) {
+      throw new BadRequestException('La nueva fecha de inicio no es válida.');
+    }
+    const deltaMs = newStart.getTime() - source.startsAt.getTime();
+    const shift = (d: Date | null | undefined) => (d ? new Date(d.getTime() + deltaMs) : null);
+
+    const title = (data.title?.trim() || `${source.title} (copia)`).trim();
+    if (title.length < 3)
+      throw new BadRequestException('El título necesita al menos 3 caracteres.');
+
+    const doorsAt =
+      data.doorsAt !== undefined
+        ? data.doorsAt
+          ? new Date(data.doorsAt)
+          : null
+        : shift(source.doorsAt);
+
+    const meta = { ...((source.metadata as EventMetadata) ?? {}) };
+    meta.clonedFrom = source.id;
+    delete meta.capacityExplanation;
+
+    const cloned = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.event.create({
+        data: {
+          title,
+          description: source.description,
+          slug: this.slugify(title),
+          organizationId: orgId,
+          venueId: source.venueId,
+          startsAt: newStart,
+          endsAt: shift(source.endsAt) ?? undefined,
+          doorsAt: doorsAt ?? undefined,
+          salesStartAt: shift(source.salesStartAt),
+          salesEndAt: shift(source.salesEndAt),
+          timezone: source.timezone,
+          status: EventStatus.DRAFT,
+          image: source.image,
+          bannerImage: source.bannerImage,
+          category: source.category,
+          genre: source.genre,
+          rating: source.rating,
+          totalCapacity: source.totalCapacity,
+          currency: source.currency,
+          minPrice: source.minPrice,
+          maxPrice: source.maxPrice,
+          allowResale: source.allowResale,
+          transferAllowed: source.transferAllowed,
+          refundable: source.refundable,
+          nonTransferable: source.nonTransferable,
+          holdExpiration: source.holdExpiration,
+          enableDynamic: source.enableDynamic,
+          surgeThreshold: source.surgeThreshold,
+          surgePriceMultiplier: source.surgePriceMultiplier,
+          metadata: meta as Prisma.InputJsonValue,
+        },
+      });
+
+      for (const offer of source.offers) {
+        await tx.offer.create({
+          data: {
+            eventId: created.id,
+            name: offer.name,
+            zone: offer.zone,
+            description: offer.description,
+            basePrice: offer.basePrice,
+            fees: offer.fees,
+            currency: offer.currency,
+            totalQuantity: offer.totalQuantity,
+            remainingQuantity: offer.totalQuantity,
+            soldQuantity: 0,
+            holdQuantity: 0,
+            minPerOrder: offer.minPerOrder,
+            maxPerOrder: offer.maxPerOrder,
+            minAge: offer.minAge,
+            restrictedCards: offer.restrictedCards,
+            startDate: shift(offer.startDate) ?? newStart,
+            endDate: shift(offer.endDate) ?? newStart,
+            isAvailable: offer.isAvailable,
+          },
+        });
+      }
+
+      for (const phase of source.salePhases) {
+        if (phase.status === SalePhaseStatus.CANCELLED) continue;
+        await tx.salePhase.create({
+          data: {
+            eventId: created.id,
+            name: phase.name,
+            kind: phase.kind,
+            code: phase.code,
+            startsAt: shift(phase.startsAt) ?? newStart,
+            endsAt: shift(phase.endsAt) ?? newStart,
+            status: SalePhaseStatus.SCHEDULED,
+            channels: phase.channels,
+            allocationPercent: phase.allocationPercent,
+            maxPerOrder: phase.maxPerOrder,
+            discountPercent: phase.discountPercent,
+            priority: phase.priority,
+            notes: phase.notes,
+          },
+        });
+      }
+
+      return created;
+    });
+
+    this.logger.log(`Event duplicated: ${source.id} → ${cloned.id}`);
+    return this.prisma.event.findFirst({
+      where: { id: cloned.id },
+      include: { venue: true, offers: true, salePhases: true },
+    });
+  }
+
+  /** Iguala totalCapacity a las butacas del mapa activo del recinto. */
+  async syncCapacityFromMap(orgId: string, eventId: string) {
+    if (!orgId) throw new BadRequestException('Tu usuario no tiene organización');
+    const event = await this.prisma.event.findFirst({
+      where: { id: eventId, organizationId: orgId },
+      select: { id: true, venueId: true, metadata: true },
+    });
+    if (!event) throw new NotFoundException('Evento no encontrado');
+
+    const mapSeats = await this.prisma.seat.count({
+      where: {
+        section: { layout: { venueId: event.venueId, isActive: true } },
+      },
+    });
+    if (mapSeats <= 0) {
+      throw new BadRequestException(
+        'El recinto no tiene butacas en el mapa activo. Completa el plano antes de igualar el cupo.'
+      );
+    }
+
+    const meta = { ...((event.metadata as EventMetadata) ?? {}) };
+    delete meta.capacityExplanation;
+
+    const updated = await this.prisma.event.update({
+      where: { id: eventId },
+      data: {
+        totalCapacity: mapSeats,
+        metadata: meta as Prisma.InputJsonValue,
+      },
+      select: { id: true, totalCapacity: true },
+    });
+
+    return { ...updated, mapSeats, synced: true };
   }
 }

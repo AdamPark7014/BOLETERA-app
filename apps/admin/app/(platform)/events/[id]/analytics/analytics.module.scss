@@ -1,0 +1,102 @@
+// Piezas de la analítica del evento (SVG + formularios).
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.block {
+  margin-bottom: 32px;
+}
+
+.blockHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.blockTitle {
+  margin: 0;
+  color: var(--text);
+  font: var(--body-sm);
+  font-weight: var(--weight-medium);
+}
+
+.num {
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--body-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.amount {
+  margin: 0;
+  color: var(--text);
+  font: var(--money);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: 8px 0 16px;
+}
+
+.formRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-top: 16px;
+}
+
+.formRow > * {
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+
+.formRow button {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.seg [role='radio'] {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.link {
+  color: var(--text);
+  font: var(--body-sm);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 420px) {
+  .amount,
+  .num {
+    white-space: normal;
+  }
+}

@@ -28,6 +28,8 @@ export class AccessController {
       zoneId?: string;
       channel?: string;
       eventId?: string;
+      /** ENTRY (omisión) o EXIT para registrar salida. */
+      mode?: string;
     }
   ) {
     // Los campos se copian uno a uno a propósito. Antes se hacía `...body`, así
@@ -42,6 +44,7 @@ export class AccessController {
       eventId: typeof body.eventId === 'string' && body.eventId ? body.eventId : undefined,
       scannerOrganizationId: req.user.organizationId ?? null,
       scannerRole: req.user.role,
+      mode: body.mode?.toUpperCase() === 'EXIT' ? 'EXIT' : 'ENTRY',
     });
   }
 
@@ -58,7 +61,7 @@ export class AccessController {
     return this.access.getQrForTicket(id, req.user, { reason, ipAddress: req.ip });
   }
 
-  /** Totales en vivo de la función: entraron, faltan, por puerta y por minuto. */
+  /** Totales en vivo de la función: entraron, faltan, aforo dentro, por puerta y por minuto. */
   @Get('events/:eventId/live')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...GATE_ROLES)
@@ -67,6 +70,52 @@ export class AccessController {
     return this.access.getLiveStats(eventId, {
       organizationId: req.user.organizationId ?? null,
       role: req.user.role,
+    });
+  }
+
+  /** Búsqueda manual por nombre, correo o folio (quien no trae el teléfono). */
+  @Get('events/:eventId/lookup')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...GATE_ROLES)
+  @ApiBearerAuth()
+  lookup(
+    @Request() req: { user: JwtUser },
+    @Param('eventId') eventId: string,
+    @Query('q') q?: string
+  ) {
+    return this.access.searchTickets(eventId, q ?? '', {
+      organizationId: req.user.organizationId ?? null,
+      role: req.user.role,
+    });
+  }
+
+  /** Admite o registra salida tras confirmar la identidad a mano. */
+  @Post('events/:eventId/manual-admit')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...GATE_ROLES)
+  @ApiBearerAuth()
+  manualAdmit(
+    @Request() req: { user: JwtUser },
+    @Param('eventId') eventId: string,
+    @Body()
+    body: {
+      ticketId: string;
+      confirmedName: string;
+      zoneId?: string;
+      channel?: string;
+      mode?: string;
+    }
+  ) {
+    return this.access.confirmManualAdmit({
+      eventId,
+      ticketId: body.ticketId,
+      confirmedName: body.confirmedName,
+      zoneId: body.zoneId,
+      scannedBy: req.user.sub,
+      channel: body.channel ?? 'TAQUILLA',
+      scannerOrganizationId: req.user.organizationId ?? null,
+      scannerRole: req.user.role,
+      mode: body.mode?.toUpperCase() === 'EXIT' ? 'EXIT' : 'ENTRY',
     });
   }
 
@@ -96,7 +145,7 @@ export class AccessController {
     @Body()
     body: {
       channel?: string;
-      scans: { ticketId: string; scannedAt?: string; zoneId?: string }[];
+      scans: { ticketId: string; scannedAt?: string; zoneId?: string; mode?: string }[];
     }
   ) {
     return this.access.syncOfflineScans({

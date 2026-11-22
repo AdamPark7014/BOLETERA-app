@@ -11,20 +11,25 @@ describe('AccessService · totales en vivo', () => {
       ticket: {
         count: jest
           .fn()
-          .mockResolvedValueOnce(120) // entraron
+          .mockResolvedValueOnce(120) // entraron (USED)
           .mockResolvedValueOnce(500), // esperados
       },
       ticketScan: {
-        groupBy: jest.fn().mockResolvedValue([
-          { zoneId: 'z1', _count: { _all: 80 } },
-          { zoneId: 'z2', _count: { _all: 40 } },
-        ]),
         findMany: jest
           .fn()
-          .mockResolvedValue([
-            { scannedAt: new Date(now.getTime() - 30_000) },
-            { scannedAt: new Date(now.getTime() - 45_000) },
-            { scannedAt: new Date(now.getTime() - 5 * 60_000 - 1000) },
+          // allScans (aforo)
+          .mockResolvedValueOnce([
+            { zoneId: 'z1', reason: 'ENTRY' },
+            { zoneId: 'z1', reason: 'ENTRY' },
+            { zoneId: 'z1', reason: 'EXIT' },
+            { zoneId: 'z2', reason: 'ENTRY' },
+            { zoneId: 'z2', reason: null },
+          ])
+          // recent (por minuto, solo entradas)
+          .mockResolvedValueOnce([
+            { scannedAt: new Date(now.getTime() - 30_000), reason: 'ENTRY' },
+            { scannedAt: new Date(now.getTime() - 45_000), reason: 'ENTRY' },
+            { scannedAt: new Date(now.getTime() - 5 * 60_000 - 1000), reason: 'ENTRY' },
           ]),
       },
       accessZone: {
@@ -39,7 +44,7 @@ describe('AccessService · totales en vivo', () => {
     return service;
   }
 
-  it('cuenta entradas, faltantes, puertas y minuto a minuto', async () => {
+  it('cuenta entradas, faltantes, aforo dentro, puertas y minuto a minuto', async () => {
     const stats = await build().getLiveStats(
       'e1',
       { organizationId: 'org1', role: 'SCANNER' },
@@ -47,10 +52,18 @@ describe('AccessService · totales en vivo', () => {
     );
     expect(stats.admitted).toBe(120);
     expect(stats.remaining).toBe(380);
+    expect(stats.insideNow).toBe(3);
+    expect(stats.exited).toBe(1);
     expect(stats.lastTenMinutes).toBe(3);
     expect(stats.perMinute[9]).toBe(2);
     expect(stats.perMinute[4]).toBe(1);
-    expect(stats.byGate[0]).toEqual({ zoneId: 'z1', name: 'Puerta 1', admitted: 80 });
+    expect(stats.byGate.find((g) => g.zoneId === 'z1')).toEqual({
+      zoneId: 'z1',
+      name: 'Puerta 1',
+      admitted: 2,
+      exited: 1,
+      inside: 1,
+    });
   });
 
   it('otra organización no ve los totales', async () => {

@@ -11,6 +11,7 @@ import { fetchTenantCurrent, tenantThemeStyle } from '@/lib/tenant';
 import '@boletera/ui/src/styles/theme.scss';
 import './globals.css';
 import { blackTicketFontVars } from './fonts';
+import { TrackingBootstrap } from '@/lib/tracking';
 
 export async function generateMetadata(): Promise<Metadata> {
   const [tenant, origin] = await Promise.all([fetchTenantCurrent(), getSiteOrigin()]);
@@ -75,6 +76,7 @@ export default async function RootLayout({
       <body className={blackTicketFontVars}>
         <TenantBrandProvider value={brand}>
           <BlackTicketRoot density="compra" className="app-shell">
+            <TrackingBootstrap />
             <div className="app-shell__content">{children}</div>
             <SiteFooter />
           </BlackTicketRoot>

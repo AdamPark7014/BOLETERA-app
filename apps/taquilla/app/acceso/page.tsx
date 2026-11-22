@@ -52,11 +52,33 @@ type LiveStats = {
   admitted: number;
   expected: number;
   remaining: number;
+  insideNow?: number;
+  exited?: number;
   lastTenMinutes: number;
-  byGate: { zoneId: string | null; name: string; admitted: number }[];
+  byGate: {
+    zoneId: string | null;
+    name: string;
+    admitted: number;
+    exited?: number;
+    inside?: number;
+  }[];
+};
+
+type LookupTicket = {
+  id: string;
+  code: string;
+  buyerName: string | null;
+  buyerEmail: string | null;
+  section: string | null;
+  row: string | null;
+  seatNumber: string | null;
+  status: string;
+  holderName: string | null;
+  ticketType: string | null;
 };
 
 const ZONE_KEY = 'taquilla_access_zone';
+const MODE_KEY = 'taquilla_access_mode';
 
 function toneOf(o: ScanOutcomeView): 'ok' | 'bad' | 'warn' {
   if (o.verdict === 'OK' || o.verdict === 'OFFLINE_OK') return 'ok';
@@ -100,6 +122,13 @@ export default function AccesoPage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [online, setOnline] = useState(true);
+  const [scanMode, setScanMode] = useState<'ENTRY' | 'EXIT'>('ENTRY');
+  const [lookupQ, setLookupQ] = useState('');
+  const [lookupBusy, setLookupBusy] = useState(false);
+  const [lookupHits, setLookupHits] = useState<LookupTicket[]>([]);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [confirmName, setConfirmName] = useState('');
 
   useEffect(() => {
     const sync = () => {
@@ -128,6 +157,8 @@ export default function AccesoPage() {
 
   useEffect(() => {
     setZoneId(localStorage.getItem(ZONE_KEY) || '');
+    const savedMode = localStorage.getItem(MODE_KEY);
+    if (savedMode === 'EXIT' || savedMode === 'ENTRY') setScanMode(savedMode);
     apiJson<EventRow[]>('/taquilla/events')
       .then((data) => {
         const sorted = [...data].sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
@@ -267,6 +298,40 @@ export default function AccesoPage() {
         return;
       }
 
+      if (scanMode === 'EXIT') {
+        if (entry.st !== 'U') {
+          pushOutcome({
+            verdict: 'INVALID',
+            title: 'NO ESTÁ DENTRO',
+            detail: 'Sin red solo se puede registrar salida de boletos ya usados en la lista.',
+            at: Date.now(),
+          });
+          return;
+        }
+        pushOutcome({
+          verdict: 'OFFLINE_OK',
+          title: 'SALIDA',
+          detail: 'Salida registrada sin red; se subirá al volver la conexión.',
+          at: Date.now(),
+        });
+        await recordLocalScan({
+          ticketId: qr.ticketId,
+          eventId: qr.eventId,
+          scannedAt,
+          zoneId: zoneId || undefined,
+          outcome: 'ok',
+        });
+        await enqueueScan({
+          ticketId: qr.ticketId,
+          eventId: qr.eventId,
+          scannedAt,
+          zoneId: zoneId || undefined,
+          mode: 'EXIT',
+        });
+        refreshLocal();
+        return;
+      }
+
       if (entry.st === 'U') {
         pushOutcome({
           verdict: 'DUPLICATE',
@@ -297,10 +362,11 @@ export default function AccesoPage() {
         eventId: qr.eventId,
         scannedAt,
         zoneId: zoneId || undefined,
+        mode: 'ENTRY',
       });
       refreshLocal();
     },
-    [pushOutcome, zoneId, eventId, refreshLocal]
+    [pushOutcome, zoneId, eventId, refreshLocal, scanMode]
   );
 
   const scan = useCallback(
@@ -332,6 +398,7 @@ export default function AccesoPage() {
         try {
           // `scannedBy` YA NO se manda: el API lo saca del JWT (era falsificable).
           const data = await apiJson<{
+            action?: string;
             ticket?: {
               code?: string;
               section?: string | null;
@@ -343,13 +410,24 @@ export default function AccesoPage() {
             };
           }>('/access/scan', {
             method: 'POST',
-            body: JSON.stringify({ ...body, zoneId: zoneId || undefined, eventId }),
+            body: JSON.stringify({
+              ...body,
+              zoneId: zoneId || undefined,
+              eventId,
+              mode: scanMode,
+            }),
           });
           const t = data.ticket;
+          const action = data.action ?? 'ENTRY';
           pushOutcome({
             verdict: 'OK',
-            title: 'ADELANTE',
-            detail: t?.eventTitle || 'Acceso registrado',
+            title: action === 'EXIT' ? 'SALIDA' : action === 'REENTRY' ? 'REINGRESO' : 'ADELANTE',
+            detail:
+              action === 'EXIT'
+                ? t?.eventTitle || 'Salida registrada'
+                : action === 'REENTRY'
+                  ? t?.eventTitle || 'Reingreso permitido'
+                  : t?.eventTitle || 'Acceso registrado',
             extra: t?.code,
             code: t?.code,
             eventTitle: t?.eventTitle,
@@ -374,7 +452,31 @@ export default function AccesoPage() {
             message?: string;
             ticketEventTitle?: string;
             ticketCode?: string;
+            correctGateLabel?: string;
           };
+          if (err.status === 400 && payload.code === 'WRONG_GATE') {
+            pushOutcome({
+              verdict: 'INVALID',
+              title: 'PUERTA INCORRECTA',
+              detail:
+                payload.message ||
+                `Este boleto entra por la puerta ${payload.correctGateLabel ?? 'correcta'}`,
+              extra: 'Indica al portador la puerta correcta. El boleto no se marcó.',
+              code: payload.ticketCode,
+              at: Date.now(),
+            });
+            return;
+          }
+          if (err.status === 400 && payload.code === 'NOT_INSIDE') {
+            pushOutcome({
+              verdict: 'INVALID',
+              title: 'NO ESTÁ DENTRO',
+              detail: payload.message || 'Este boleto no está dentro del recinto.',
+              code: payload.ticketCode,
+              at: Date.now(),
+            });
+            return;
+          }
           if (err.status === 400 && payload.code === 'WRONG_EVENT') {
             pushOutcome({
               verdict: 'INVALID',
@@ -441,7 +543,94 @@ export default function AccesoPage() {
         inputRef.current?.focus();
       }
     },
-    [busy, zoneId, eventId, scanOffline, pushOutcome]
+    [busy, zoneId, eventId, scanOffline, pushOutcome, scanMode]
+  );
+
+  const runLookup = useCallback(async () => {
+    const q = lookupQ.trim();
+    if (!eventId || q.length < 2 || lookupBusy) return;
+    setLookupBusy(true);
+    setLookupError(null);
+    setLookupHits([]);
+    setConfirmId(null);
+    try {
+      if (!navigator.onLine) {
+        setLookupError('La búsqueda manual necesita red.');
+        return;
+      }
+      const data = await apiJson<{ tickets: LookupTicket[] }>(
+        `/access/events/${encodeURIComponent(eventId)}/lookup?q=${encodeURIComponent(q)}`
+      );
+      setLookupHits(data.tickets ?? []);
+      if (!(data.tickets ?? []).length) setLookupError('Sin resultados.');
+    } catch (err) {
+      setLookupError(friendlyError(err, 'No se pudo buscar'));
+    } finally {
+      setLookupBusy(false);
+    }
+  }, [lookupQ, eventId, lookupBusy]);
+
+  const admitManual = useCallback(
+    async (ticket: LookupTicket) => {
+      if (!eventId || !confirmName.trim()) return;
+      setLookupBusy(true);
+      try {
+        const data = await apiJson<{
+          action?: string;
+          ticket?: {
+            code?: string;
+            section?: string | null;
+            row?: string | null;
+            seatNumber?: string | null;
+            eventTitle?: string;
+            holderName?: string | null;
+            ticketType?: string | null;
+          };
+        }>(`/access/events/${encodeURIComponent(eventId)}/manual-admit`, {
+          method: 'POST',
+          body: JSON.stringify({
+            ticketId: ticket.id,
+            confirmedName: confirmName.trim(),
+            zoneId: zoneId || undefined,
+            mode: scanMode,
+          }),
+        });
+        const t = data.ticket;
+        const action = data.action ?? 'ENTRY';
+        pushOutcome({
+          verdict: 'OK',
+          title: action === 'EXIT' ? 'SALIDA' : action === 'REENTRY' ? 'REINGRESO' : 'ADELANTE',
+          detail: t?.eventTitle || 'Registrado a mano',
+          code: t?.code ?? ticket.code,
+          eventTitle: t?.eventTitle,
+          section: t?.section ?? ticket.section,
+          row: t?.row ?? ticket.row,
+          seat: t?.seatNumber ?? ticket.seatNumber,
+          holderName: t?.holderName ?? ticket.holderName,
+          ticketType: t?.ticketType ?? ticket.ticketType,
+          at: Date.now(),
+        });
+        setConfirmId(null);
+        setConfirmName('');
+        setLookupHits([]);
+        setLookupQ('');
+      } catch (err) {
+        if (err instanceof ApiError) {
+          const payload = (err.body ?? {}) as { code?: string; message?: string };
+          pushOutcome({
+            verdict: 'INVALID',
+            title: payload.code === 'CONFIRMED_NAME_MISMATCH' ? 'NO COINCIDE' : 'NO VÁLIDO',
+            detail: friendlyError(err, 'No se pudo registrar a mano.'),
+            at: Date.now(),
+          });
+        } else {
+          showToast(friendlyError(err, 'No se pudo registrar a mano'));
+        }
+      } finally {
+        setLookupBusy(false);
+      }
+    },
+    [eventId, confirmName, zoneId, scanMode, pushOutcome, showToast]
   );
 
   const hotkeys = useMemo<Hotkey[]>(
@@ -506,7 +695,7 @@ export default function AccesoPage() {
       escapeGoesBack={false}
       fill
       door
-      whoMain={`${zoneId.trim() ? `Puerta ${zoneId.trim()}` : 'Puerta'} · ${currentEvent?.title ?? 'Sin función'}`}
+      whoMain={`${scanMode === 'EXIT' ? 'Salida' : 'Entrada'} · ${zoneId.trim() ? `Puerta ${zoneId.trim()}` : 'Puerta'} · ${currentEvent?.title ?? 'Sin función'}`}
       whoSub={
         manifest
           ? `Lista descargada · ${String(manifest.count)} boletos${manifest.complete ? '' : ' (incompleta)'}`
@@ -534,6 +723,31 @@ export default function AccesoPage() {
             </p>
           ) : null}
 
+          <div className={styles.modeRow} role="group" aria-label="Modo de escaneo">
+            <button
+              type="button"
+              className={scanMode === 'ENTRY' ? styles.modeActive : styles.modeBtn}
+              aria-pressed={scanMode === 'ENTRY'}
+              onClick={() => {
+                setScanMode('ENTRY');
+                localStorage.setItem(MODE_KEY, 'ENTRY');
+              }}
+            >
+              Entrada
+            </button>
+            <button
+              type="button"
+              className={scanMode === 'EXIT' ? styles.modeActive : styles.modeBtn}
+              aria-pressed={scanMode === 'EXIT'}
+              onClick={() => {
+                setScanMode('EXIT');
+                localStorage.setItem(MODE_KEY, 'EXIT');
+              }}
+            >
+              Salida
+            </button>
+          </div>
+
           <form
             className={styles.scanRow}
             onSubmit={(event) => {
@@ -542,7 +756,7 @@ export default function AccesoPage() {
             }}
           >
             <label className={styles.scanField}>
-              <span>Código del boleto</span>
+              <span>{scanMode === 'EXIT' ? 'Código para salida' : 'Código del boleto'}</span>
               <input
                 ref={inputRef}
                 autoFocus
@@ -556,7 +770,7 @@ export default function AccesoPage() {
               />
             </label>
             <button type="submit" className={styles.validate} disabled={busy || !code.trim()}>
-              {busy ? 'Validando…' : 'Validar'}
+              {busy ? 'Validando…' : scanMode === 'EXIT' ? 'Registrar salida' : 'Validar'}
             </button>
           </form>
 
@@ -699,7 +913,7 @@ export default function AccesoPage() {
               <div className={styles.liveHead}>
                 <h2 className={styles.label}>Toda la función</h2>
                 <span className={styles.liveCount}>
-                  {live.admitted.toLocaleString('es-MX')} de {live.expected.toLocaleString('es-MX')}
+                  {(live.insideNow ?? live.admitted).toLocaleString('es-MX')} dentro
                 </span>
               </div>
               <div
@@ -707,31 +921,118 @@ export default function AccesoPage() {
                 role="progressbar"
                 aria-valuemin={0}
                 aria-valuemax={live.expected || 1}
-                aria-valuenow={live.admitted}
-                aria-label="Personas que ya entraron"
+                aria-valuenow={live.insideNow ?? live.admitted}
+                aria-label="Personas dentro del recinto"
               >
                 <span
                   style={{
-                    width: `${live.expected ? Math.min(100, (live.admitted / live.expected) * 100) : 0}%`,
+                    width: `${
+                      live.expected
+                        ? Math.min(100, ((live.insideNow ?? live.admitted) / live.expected) * 100)
+                        : 0
+                    }%`,
                   }}
                 />
               </div>
               <p className={styles.quiet}>
-                Faltan {live.remaining.toLocaleString('es-MX')} · {live.lastTenMinutes} en los
-                últimos 10 min
+                Entraron {live.admitted.toLocaleString('es-MX')} · salieron{' '}
+                {(live.exited ?? 0).toLocaleString('es-MX')} · faltan{' '}
+                {live.remaining.toLocaleString('es-MX')} · {live.lastTenMinutes} en 10 min
               </p>
-              {live.byGate.length > 1 ? (
+              {live.byGate.length > 0 ? (
                 <ul className={styles.gates}>
                   {live.byGate.map((g) => (
                     <li key={g.zoneId ?? 'none'}>
                       <span>{g.name}</span>
-                      <strong>{g.admitted.toLocaleString('es-MX')}</strong>
+                      <strong>
+                        {(g.inside ?? g.admitted).toLocaleString('es-MX')}
+                        {typeof g.exited === 'number' ? ` · −${g.exited}` : ''}
+                      </strong>
                     </li>
                   ))}
                 </ul>
               ) : null}
             </section>
           ) : null}
+
+          <details className={styles.settings}>
+            <summary>Buscar sin teléfono</summary>
+            <div className={styles.settingsBody}>
+              <p className={styles.quiet}>
+                Nombre, correo o folio. Confirma el nombre antes de dejar pasar.
+              </p>
+              <form
+                className={styles.lookupRow}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void runLookup();
+                }}
+              >
+                <Field
+                  id="access-lookup"
+                  label="Buscar"
+                  value={lookupQ}
+                  onChange={(e) => setLookupQ(e.target.value)}
+                  placeholder="Nombre, correo o folio"
+                  autoComplete="off"
+                />
+                <button
+                  type="submit"
+                  className={styles.pill}
+                  disabled={lookupBusy || lookupQ.trim().length < 2 || !eventId}
+                >
+                  {lookupBusy ? 'Buscando…' : 'Buscar'}
+                </button>
+              </form>
+              {lookupError ? <p className={styles.quiet}>{lookupError}</p> : null}
+              {lookupHits.length > 0 ? (
+                <ul className={styles.lookupList}>
+                  {lookupHits.map((t) => (
+                    <li key={t.id}>
+                      <div>
+                        <strong>{t.holderName || t.buyerName || 'Sin nombre'}</strong>
+                        <span>
+                          {t.code}
+                          {t.ticketType ? ` · ${t.ticketType}` : ''}
+                          {t.section ? ` · ${t.section}` : ''}
+                        </span>
+                      </div>
+                      {confirmId === t.id ? (
+                        <div className={styles.confirmBox}>
+                          <Field
+                            id={`confirm-${t.id}`}
+                            label="Escribe el nombre del titular"
+                            value={confirmName}
+                            onChange={(e) => setConfirmName(e.target.value)}
+                            autoComplete="off"
+                          />
+                          <button
+                            type="button"
+                            className={styles.validate}
+                            disabled={lookupBusy || !confirmName.trim()}
+                            onClick={() => void admitManual(t)}
+                          >
+                            Confirmar e {scanMode === 'EXIT' ? 'registrar salida' : 'admitir'}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.pill}
+                          onClick={() => {
+                            setConfirmId(t.id);
+                            setConfirmName(t.buyerName || '');
+                          }}
+                        >
+                          Elegir
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </details>
 
           <div className={styles.counters}>
             <div className={styles.counter}>

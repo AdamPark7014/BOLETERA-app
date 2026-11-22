@@ -374,6 +374,10 @@ function CreateBody() {
     <section>
       <header className={styles.sectionHead}>
         <h1 className={styles.sectionTitle}>Crear evento</h1>
+        <p className={styles.quiet}>
+          Tras crear, podrás editar, duplicar y revisar la lista de publicación en la ficha del
+          evento.
+        </p>
       </header>
       {draftFound ? (
         <div className={styles.stack}>

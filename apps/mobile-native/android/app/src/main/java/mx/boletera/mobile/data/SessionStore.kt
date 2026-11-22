@@ -8,7 +8,7 @@ import org.json.JSONObject
 import java.time.Instant
 
 /**
- * Sesión del comprador (JWT) e identidad de invitado para apartados.
+ * Sesión del comprador (JWT), identidad de invitado y pase de fila por evento.
  * Todo cifrado: el token abre la cartera completa.
  */
 class SessionStore(context: Context) {
@@ -54,6 +54,18 @@ class SessionStore(context: Context) {
             .apply()
     }
 
+    /** Pase de sala de espera atado a la sesión (y al evento). */
+    fun queuePass(eventId: String): String? =
+        prefs.getString(queueKey(eventId), null)?.takeIf { it.isNotBlank() }
+
+    fun saveQueuePass(eventId: String, pass: String) {
+        prefs.edit().putString(queueKey(eventId), pass).apply()
+    }
+
+    fun clearQueuePass(eventId: String) {
+        prefs.edit().remove(queueKey(eventId)).apply()
+    }
+
     /**
      * Garantiza un `sessionId` de invitado vigente para holds.
      * POST /inventory/session → { sessionId, expiresAt }.
@@ -96,6 +108,8 @@ class SessionStore(context: Context) {
             name = name,
         )
     }
+
+    private fun queueKey(eventId: String) = "queuePass:$eventId"
 
     private companion object {
         const val KEY_ACCESS = "accessToken"

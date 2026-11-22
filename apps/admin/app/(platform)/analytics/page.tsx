@@ -1,10 +1,7 @@
 'use client';
 
 /**
- * Analítica del promotor.
- *
- * `/analytics/promoters/:organizationId/dashboard` exige JWT, rol y pertenencia
- * a la organización. El API acepta `DAY | WEEK | MONTH` como periodo.
+ * Analítica del promotor + acceso a la analítica en vivo por evento.
  */
 
 import { formatDateLong as uiDateLong } from '@boletera/ui';
@@ -14,6 +11,7 @@ import Link from 'next/link';
 import { formatTicketAmount } from '@boletera/ui';
 import { adminApi } from '@/lib/api';
 import { hasCapability } from '@/lib/permissions';
+import { listEvents, type EventRow } from '@/lib/platform-api';
 import { AnonymousView, ApiErrorView, NoOrgView, useSession } from '../events/_shared/api-state';
 import { AdminFrame } from '../events/_ticket/AdminFrame';
 import { Segment } from '../events/_ticket/controls';
@@ -47,7 +45,6 @@ type PromoterDashboard = {
   topEvents?: { eventId: string; eventTitle: string; revenue: number; orders: number }[];
 };
 
-/** Monto completo con dos decimales; la moneda se nombra solo si no es MXN. */
 function money(value: number | null | undefined, currency: string): string {
   const n = typeof value === 'number' && Number.isFinite(value) ? value : 0;
   const body = formatTicketAmount(n);
@@ -78,6 +75,7 @@ function AnaliticaBody() {
   const session = useSession();
   const [period, setPeriod] = useState<Period>('MONTH');
   const [data, setData] = useState<PromoterDashboard | null>(null);
+  const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
   const [nonce, setNonce] = useState(0);
@@ -93,10 +91,20 @@ function AnaliticaBody() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    adminApi<PromoterDashboard>(`/analytics/promoters/${orgId}/dashboard?period=${period}`, token, {
-      signal: controller.signal,
-    })
-      .then((payload) => setData(payload))
+    Promise.all([
+      adminApi<PromoterDashboard>(
+        `/analytics/promoters/${orgId}/dashboard?period=${period}`,
+        token,
+        {
+          signal: controller.signal,
+        }
+      ),
+      listEvents(token).catch(() => [] as EventRow[]),
+    ])
+      .then(([payload, list]) => {
+        setData(payload);
+        setEvents(Array.isArray(list) ? list : []);
+      })
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
         setData(null);
@@ -152,7 +160,29 @@ function AnaliticaBody() {
           <div className={styles.skeleton} style={{ height: 200 }} />
         </div>
       ) : data ? (
-        <Resumen data={data} />
+        <>
+          <Resumen data={data} />
+          <div className={own.block}>
+            <div className={own.blockHead}>
+              <h2 className={own.blockTitle}>Analítica en vivo por evento</h2>
+            </div>
+            {!events.length ? (
+              <p className={styles.quiet}>No hay eventos todavía.</p>
+            ) : (
+              <div className={styles.rows}>
+                {events.slice(0, 20).map((event) => (
+                  <div key={event.id} className={styles.row}>
+                    <p className={styles.rowTitle}>{event.title}</p>
+                    <span />
+                    <Link className={own.link} href={`/events/${event.id}/analytics`}>
+                      Ver embudo y enlaces
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       ) : null}
     </section>
   );
@@ -226,7 +256,10 @@ function Resumen({ data }: { data: PromoterDashboard }) {
             {topEvents.map((event, index) => (
               <div key={event.eventId} className={styles.row}>
                 <p className={styles.rowTitle}>
-                  {index + 1}. {event.eventTitle}
+                  {index + 1}.{' '}
+                  <Link className={own.link} href={`/events/${event.eventId}/analytics`}>
+                    {event.eventTitle}
+                  </Link>
                 </p>
                 <p className={own.num}>{count(event.orders)}</p>
                 <p className={own.amount}>{money(event.revenue, currency)}</p>
