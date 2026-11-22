@@ -31,6 +31,12 @@ if value <= 0 then
 end
 return value`;
 
+/** GET + DEL atómico: uso único (reto antibots). Solo una petición gana la llave. */
+const GET_AND_DEL_LUA = `
+local v = redis.call("get", KEYS[1])
+if v then redis.call("del", KEYS[1]) end
+return v`;
+
 /**
  * `ACQUIRED` = el candado es nuestro.
  * `TAKEN`    = otro lo tiene (conflicto real de negocio).
@@ -144,6 +150,19 @@ export class RedisService implements OnModuleDestroy {
     try {
       return JSON.parse(raw) as T;
     } catch {
+      return null;
+    }
+  }
+
+  /** Lee y borra JSON de forma atómica (reto de un solo uso). */
+  async takeJson<T>(key: string): Promise<T | null> {
+    if (!this.client.isReady) return null;
+    try {
+      const result = await this.client.eval(GET_AND_DEL_LUA, { keys: [key] });
+      if (result == null || result === undefined) return null;
+      return JSON.parse(String(result)) as T;
+    } catch (error) {
+      this.logError(error as Error);
       return null;
     }
   }

@@ -9,6 +9,7 @@ import { GuestSessionService } from './guest-session.service';
 import { WaitingRoomService } from './waiting-room.service';
 import { InventoryService } from './inventory.service';
 import { BuyerRiskService } from './buyer-risk.service';
+import { HumanChallengeService } from './human-challenge.service';
 import { PurchaseLimitsService } from './purchase-limits.service';
 import { OnsaleOpsService } from './onsale-ops.service';
 import { OnsaleOpsController } from './onsale-ops.controller';
@@ -23,6 +24,7 @@ import { OnsaleOpsController } from './onsale-ops.controller';
     WaitingRoomService,
     InventoryService,
     BuyerRiskService,
+    HumanChallengeService,
     PurchaseLimitsService,
     OnsaleOpsService,
   ],
@@ -30,6 +32,7 @@ import { OnsaleOpsController } from './onsale-ops.controller';
     WaitingRoomService,
     InventoryService,
     BuyerRiskService,
+    HumanChallengeService,
     PurchaseLimitsService,
     OnsaleOpsService,
   ],

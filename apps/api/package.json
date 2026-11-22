@@ -40,6 +40,7 @@
     }
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.12.0",
     "@boletera/crypto": "workspace:*",
     "@boletera/database": "workspace:*",
     "@boletera/payments": "workspace:*",

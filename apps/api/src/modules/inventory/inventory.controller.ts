@@ -29,6 +29,8 @@ import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { BuyerRiskService } from './buyer-risk.service';
+import { HumanChallengeService } from './human-challenge.service';
+import { clientIp } from '../../common/client-ip';
 import { InventoryService } from './inventory.service';
 import { WaitingRoomService } from './waiting-room.service';
 import type { Request } from 'express';
@@ -94,6 +96,7 @@ export class InventoryController {
     private waitingRoom: WaitingRoomService,
     private guestSession: GuestSessionService,
     private risk: BuyerRiskService,
+    private challenge: HumanChallengeService,
     private audit: AuditService
   ) {}
 
@@ -120,15 +123,14 @@ export class InventoryController {
 
   private async assertHumanOrChallenge(
     req: Request,
-    sessionId: string | undefined,
-    challengeToken: string | undefined,
+    subject: string,
+    clearanceToken: string | undefined,
     eventId: string
   ) {
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '';
+    if (this.challenge.verifyClearance(clearanceToken, subject, eventId)) return;
+    const ip = clientIp(req);
     const ua = String(req.headers['user-agent'] || '');
-    const subject = sessionId || ip || 'anon';
-    if (challengeToken && this.risk.verifyChallengeToken(challengeToken, subject)) return;
-    const assessment = await this.risk.assess({ ip, userAgent: ua, sessionId, eventId });
+    const assessment = await this.risk.assess({ ip, userAgent: ua, sessionId: subject, eventId });
     if (assessment.level !== 'high') return;
     await this.audit
       .log({
@@ -138,17 +140,29 @@ export class InventoryController {
         metadata: { score: assessment.score, reasons: assessment.reasons, ip },
       })
       .catch(() => undefined);
+    const challenge = await this.challenge.issue(subject, eventId);
     throw new HttpException(
       {
         statusCode: 428,
-        error: 'CHALLENGE_REQUIRED',
+        code: 'HUMAN_CHALLENGE_REQUIRED',
         message: 'Confirma que eres una persona para continuar.',
-        challengeToken: this.risk.issueChallengeToken(subject),
+        challenge,
         reasons: assessment.reasons,
       },
       428 as HttpStatus
     );
   }
+
+  /** Sujeto del reto: solo sesión de invitado verificada o id de cuenta. */
+  private requireBuyerSubject(sessionId: string | undefined, user: PublicUser): string {
+    const verified = this.guestSession.verify(sessionId);
+    if (verified?.id) return verified.id;
+    if (user?.sub) return user.sub;
+    throw new BadRequestException(
+      'Se necesita una sesión de invitado o una cuenta para continuar.'
+    );
+  }
+
 
   @Get(':eventId/map')
   getMap(@Param('eventId') eventId: string) {
@@ -205,20 +219,40 @@ export class InventoryController {
    * identidades por minuto no es un comprador.
    */
   @Post('challenge/solve')
-  @ApiOperation({ summary: 'Confirmar reto antibots (prueba de trabajo ligera en el cliente)' })
-  solveChallenge(
-    @Body() body: { sessionId?: string; proof?: string; challengeToken?: string },
+  @Throttle(HOLD_THROTTLE)
+  @ApiOperation({ summary: 'Resolver reto antibots y emitir pase corto' })
+  async solveChallenge(
+    @Body()
+    body: {
+      sessionId?: string;
+      challengeId?: string;
+      counter?: string;
+      turnstileToken?: string;
+      eventId?: string;
+    },
     @Req() req: Request
   ) {
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '';
     const verified = this.guestSession.verify(body?.sessionId);
-    const subject = verified?.id || ip || 'anon';
-    // proof: el cliente manda un nonce; exigimos longitud mínima (POW ligera).
-    if (!body?.proof || body.proof.length < 8) {
-      throw new BadRequestException('Completa el reto «Soy una persona».');
+    if (!verified?.id) {
+      throw new BadRequestException('Se necesita una sesión de invitado válida.');
     }
-    const token = this.risk.issueChallengeToken(subject);
-    return { ok: true, challengeToken: token };
+    const subject = verified.id;
+    const ip = clientIp(req);
+
+    if (this.challenge.provider() === 'turnstile') {
+      const ok = await this.challenge.verifyTurnstile(body?.turnstileToken || '', ip);
+      if (!ok) throw new BadRequestException('No se pudo confirmar el reto.');
+      if (!body?.eventId) {
+        throw new BadRequestException('Falta eventId para emitir el pase.');
+      }
+      return this.challenge.issueClearance(subject, body.eventId);
+    }
+
+    if (!body?.challengeId || body.counter == null || body.counter === '') {
+      throw new BadRequestException('Faltan challengeId y counter del reto.');
+    }
+    const record = await this.challenge.verify(body.challengeId, String(body.counter), subject);
+    return this.challenge.issueClearance(subject, record.eventId);
   }
 
   @Post('session')
@@ -242,7 +276,7 @@ export class InventoryController {
       sessionId?: string;
       contiguous?: boolean;
       queuePass?: string;
-      challengeToken?: string;
+      clearanceToken?: string;
       accessCode?: string;
     },
     @CurrentUser() user: PublicUser,
@@ -252,7 +286,8 @@ export class InventoryController {
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
-    await this.assertHumanOrChallenge(req, sessionId, body.challengeToken, body.eventId);
+    const subject = this.requireBuyerSubject(body?.sessionId, user);
+    await this.assertHumanOrChallenge(req, subject, body.clearanceToken, body.eventId);
     await this.assertQueuePass(body.eventId, body.queuePass, sessionId);
     const result = await this.inventory.createBestAvailableHold({
       eventId: body.eventId,
@@ -287,7 +322,7 @@ export class InventoryController {
       quantity?: number;
       sessionId?: string;
       queuePass?: string;
-      challengeToken?: string;
+      clearanceToken?: string;
       accessCode?: string;
     },
     @CurrentUser() user: PublicUser,
@@ -297,7 +332,8 @@ export class InventoryController {
   ) {
     this.assertNoChannelSpoofing(channelHeader, cashierHeader);
     const sessionId = this.requireIdentity(body?.sessionId, user);
-    await this.assertHumanOrChallenge(req, sessionId, body.challengeToken, body.eventId);
+    const subject = this.requireBuyerSubject(body?.sessionId, user);
+    await this.assertHumanOrChallenge(req, subject, body.clearanceToken, body.eventId);
     await this.assertQueuePass(body.eventId, body.queuePass, sessionId);
     const result = await this.inventory.createHold({
       eventId: body.eventId,

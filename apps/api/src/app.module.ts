@@ -44,6 +44,7 @@ import {
   MembershipsModule,
 } from './modules';
 import { TrackingLinksModule } from './modules/tracking-links/tracking-links.module';
+import { SmartSearchModule } from './modules/smart-search/smart-search.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -312,6 +313,7 @@ function parseRedisUrl(raw?: string): {
     MetricsModule,
     MembershipsModule,
     TrackingLinksModule,
+    SmartSearchModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

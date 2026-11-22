@@ -1,0 +1,159 @@
+@use '../../styles/bt' as bt;
+
+.search {
+  grid-area: search;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px 0 14px;
+  border-radius: 999px;
+  background: #1a1a1a;
+  border: 1px solid var(--line);
+  color: var(--text-secondary);
+
+  &:focus-within {
+    border-color: rgba(255, 255, 255, 0.35);
+    color: var(--text);
+  }
+}
+
+.searchIcon {
+  flex-shrink: 0;
+}
+
+.combo {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.combo input {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+}
+
+.list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 40;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+  max-height: min(60vh, 360px);
+  overflow: auto;
+  background: #1a1a1a;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
+  cursor: pointer;
+
+  &[data-active],
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.optTitle {
+  grid-column: 1;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.optSub {
+  grid-column: 1;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.optType {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--text-secondary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    color: #a68a6b;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+.city {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-secondary);
+
+  select {
+    max-width: 110px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    min-height: 44px;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+  }
+
+  @include bt.phone {
+    display: none;
+  }
+}
+
+.more {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search,
+  .option {
+    transition: none;
+  }
+}

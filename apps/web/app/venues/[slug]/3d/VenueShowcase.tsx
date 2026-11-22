@@ -1,0 +1,1 @@
+export const __ticket=1

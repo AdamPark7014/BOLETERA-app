@@ -5,6 +5,7 @@ export * from './resolve';
 export * from './project';
 export * from './validate';
 export * from './sightlines';
+export * from './view-quality';
 export * from './svg-import';
 export * from './dxf-import';
 export * from './dxf-export';

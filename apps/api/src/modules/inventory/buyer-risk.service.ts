@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { RedisService } from '../../common/redis.service';
 
 export type RiskLevel = 'low' | 'medium' | 'high';
@@ -65,37 +64,5 @@ export class BuyerRiskService {
 
     const level: RiskLevel = score >= 60 ? 'high' : score >= 30 ? 'medium' : 'low';
     return { score: Math.min(100, score), level, reasons };
-  }
-
-  issueChallengeToken(subject: string): string {
-    const day = Math.floor(Date.now() / 86_400_000);
-    const payload = `challenge:${subject}:${day}`;
-    const mac = createHmac('sha256', this.secret()).update(payload).digest('base64url');
-    return `${Buffer.from(payload).toString('base64url')}.${mac}`;
-  }
-
-  verifyChallengeToken(token: string | undefined, subject: string): boolean {
-    if (!token) return false;
-    const [encoded, mac] = token.split('.');
-    if (!encoded || !mac) return false;
-    let payload: string;
-    try {
-      payload = Buffer.from(encoded, 'base64url').toString('utf8');
-    } catch {
-      return false;
-    }
-    const day = Math.floor(Date.now() / 86_400_000);
-    const expectedPayload = `challenge:${subject}:${day}`;
-    const prevPayload = `challenge:${subject}:${day - 1}`;
-    if (payload !== expectedPayload && payload !== prevPayload) return false;
-    const expected = createHmac('sha256', this.secret()).update(payload).digest('base64url');
-    const a = Buffer.from(expected);
-    const b = Buffer.from(mac);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-  }
-
-  private secret(): string {
-    return process.env.JWT_SECRET || process.env.GUEST_SESSION_SECRET || 'dev-risk';
   }
 }

@@ -6,6 +6,7 @@ import { Suspense, useEffect, useId, useState } from 'react';
 import { BrandLogo } from '@boletera/ui';
 import { getStoredUser, type AuthUser } from '@/lib/auth';
 import styles from './SiteHeader.module.scss';
+import { SearchBox } from '@/components/search/SearchBox';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -34,15 +35,7 @@ function initials(user: AuthUser): string {
 
 function SearchPill() {
   const params = useSearchParams();
-  const [q, setQ] = useState(params.get('q') ?? '');
-  const [city, setCity] = useState(params.get('city') ?? '');
   const [cities, setCities] = useState<string[]>([]);
-  const [shortPlaceholder, setShortPlaceholder] = useState(false);
-
-  useEffect(() => {
-    setQ(params.get('q') ?? '');
-    setCity(params.get('city') ?? '');
-  }, [params]);
 
   useEffect(() => {
     let alive = true;
@@ -57,72 +50,12 @@ function SearchPill() {
     };
   }, []);
 
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 479px)');
-    const sync = () => setShortPlaceholder(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
-
   return (
-    <form className={styles.search} action="/" method="get" role="search">
-      <svg
-        aria-hidden="true"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        className={styles.searchIcon}
-      >
-        <circle cx="11" cy="11" r="7" />
-        <path d="M20 20l-4-4" />
-      </svg>
-      <label htmlFor="bt-q" className="sr-only">
-        Buscar
-      </label>
-      <input
-        id="bt-q"
-        name="q"
-        type="search"
-        value={q}
-        onChange={(event) => setQ(event.target.value)}
-        placeholder={shortPlaceholder ? 'Buscar' : 'Artista, equipo o recinto'}
-        autoComplete="off"
-      />
-      <label className={styles.city}>
-        <svg
-          aria-hidden="true"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-        >
-          <path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z" />
-          <circle cx="12" cy="10" r="2.5" />
-        </svg>
-        <span className="sr-only">Ciudad</span>
-        <select
-          name="city"
-          value={city}
-          onChange={(event) => {
-            setCity(event.target.value);
-            event.currentTarget.form?.requestSubmit();
-          }}
-        >
-          <option value="">Todas</option>
-          {cities.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </label>
-    </form>
+    <SearchBox
+      initialQuery={params.get('q') ?? ''}
+      initialCity={params.get('city') ?? ''}
+      cities={cities}
+    />
   );
 }
 

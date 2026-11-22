@@ -33,10 +33,13 @@ describe('BuyerRiskService', () => {
     expect(last.score).toBeGreaterThanOrEqual(60);
   });
 
-  it('emite y verifica reto', () => {
+  it('sin automatización ni ritmo queda bajo', async () => {
     const svc = make();
-    const token = svc.issueChallengeToken('abc');
-    expect(svc.verifyChallengeToken(token, 'abc')).toBe(true);
-    expect(svc.verifyChallengeToken(token, 'otro')).toBe(false);
+    const result = await svc.assess({
+      ip: '2.2.2.2',
+      userAgent: 'Mozilla/5.0',
+      sessionId: 'solo',
+    });
+    expect(result.level).toBe('low');
   });
 });
