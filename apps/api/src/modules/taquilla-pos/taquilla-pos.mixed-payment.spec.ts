@@ -10,6 +10,7 @@ describe('TaquillaPosService · pago mixto', () => {
       posTerminal: { findUnique: jest.fn().mockResolvedValue({ organizationId: 'org-demo' }) },
       event: { findUnique: jest.fn().mockResolvedValue({ organizationId: 'org-demo' }) },
       seatHold: { findMany: jest.fn() },
+      order: { update: jest.fn().mockResolvedValue({}) },
     };
     const inventory = {
       createHold: jest.fn().mockResolvedValue({
@@ -153,5 +154,111 @@ describe('TaquillaPosService · pago mixto', () => {
     ]);
     expect(receipt.cashReceived).toBe(200);
     expect(receipt.changeGiven).toBe(100);
+  });
+  it('rechaza partes mixtas que no suman el total y aborta la orden', async () => {
+    const prisma = {
+      posTerminal: { findUnique: jest.fn().mockResolvedValue({ organizationId: 'org-demo' }) },
+      event: { findUnique: jest.fn().mockResolvedValue({ organizationId: 'org-demo' }) },
+      seatHold: { findMany: jest.fn() },
+      order: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'ord-1',
+          publicId: 'ORD-1',
+          items: [{ quantity: 1, offerId: 'of', tickets: [{ id: 't1' }] }],
+        }),
+        update: jest.fn(),
+      },
+      ticket: { update: jest.fn() },
+      offer: { update: jest.fn() },
+      $transaction: jest.fn(async (fn: (tx: {
+        order: { update: jest.Mock };
+        ticket: { update: jest.Mock };
+        offer: { update: jest.Mock };
+      }) => Promise<unknown>) =>
+        fn({
+          order: { update: jest.fn() },
+          ticket: { update: jest.fn() },
+          offer: { update: jest.fn() },
+        })
+      ),
+    };
+    const inventory = {
+      createHold: jest.fn().mockResolvedValue({
+        holds: [{ id: 'h1' }],
+        expiresAt: new Date(Date.now() + 60_000),
+      }),
+    };
+    const orders = {
+      createOrder: jest.fn().mockResolvedValue({
+        id: 'ord-1',
+        publicId: 'ORD-1',
+        totalAmount: 150,
+        subtotal: 150,
+        fees: 0,
+        taxAmount: 0,
+        status: 'COMPLETED',
+      }),
+    };
+    const service = new TaquillaPosService(prisma as never, inventory as never, orders as never);
+    await expect(
+      service.quickCheckout(
+        'term',
+        'ses',
+        {
+          eventId: 'ev',
+          offerId: 'of',
+          quantity: 1,
+          paymentMethod: 'CASH',
+          paymentParts: [
+            { method: 'CASH', amount: 40 },
+            { method: 'CARD', amount: 50 },
+          ],
+        },
+        'org-demo'
+      )
+    ).rejects.toThrow(/no suman el total/);
+    expect(prisma.$transaction).toHaveBeenCalled();
+  });
+
+  it('corrige una sola parte si el importe no coincide con el total', async () => {
+    const prisma = {
+      posTerminal: { findUnique: jest.fn().mockResolvedValue({ organizationId: 'org-demo' }) },
+      event: { findUnique: jest.fn().mockResolvedValue({ organizationId: 'org-demo' }) },
+      seatHold: { findMany: jest.fn() },
+      order: { update: jest.fn().mockResolvedValue({}) },
+    };
+    const inventory = {
+      createHold: jest.fn().mockResolvedValue({
+        holds: [{ id: 'h1' }],
+        expiresAt: new Date(Date.now() + 60_000),
+      }),
+    };
+    const orders = {
+      createOrder: jest.fn().mockResolvedValue({
+        id: 'ord-1',
+        publicId: 'ORD-1',
+        totalAmount: 150,
+        subtotal: 150,
+        fees: 0,
+        taxAmount: 0,
+        status: 'COMPLETED',
+        posOps: {},
+      }),
+    };
+    const service = new TaquillaPosService(prisma as never, inventory as never, orders as never);
+    const result = await service.quickCheckout(
+      'term',
+      'ses',
+      {
+        eventId: 'ev',
+        offerId: 'of',
+        quantity: 1,
+        paymentMethod: 'CASH',
+        paymentParts: [{ method: 'CASH', amount: 99 }],
+      },
+      'org-demo'
+    );
+    expect(result.paymentParts).toEqual([{ method: 'CASH', amount: 150 }]);
+    expect(prisma.order.update).toHaveBeenCalled();
   });
 });

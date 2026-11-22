@@ -51,9 +51,6 @@ import {
 import { buildEscPosReceipt, printEscPos, printViaSerial } from '@/lib/thermal';
 import styles from './corte.module.scss';
 
-/** Por encima de esta diferencia el cierre exige autorización de gerencia. */
-const VARIANCE_PIN_THRESHOLD = 50;
-
 /** `billLabel` ya rotula la moneda de 50 centavos como «50¢». */
 const denomLabel = billLabel;
 
@@ -141,7 +138,8 @@ export default function CortePage() {
   const shownVariance =
     closed && savedVariance != null ? savedVariance : round2(shownCounted - shownExpected);
   const hasCount = closed || countEntered;
-  const needsPin = hasCount && !closed && Math.abs(shownVariance) > VARIANCE_PIN_THRESHOLD;
+  const variancePinThreshold = report?.cashVariancePinThreshold ?? 50;
+  const needsPin = hasCount && !closed && Math.abs(shownVariance) > variancePinThreshold;
 
   // -------------------------------------------------------------------------
 
@@ -371,7 +369,7 @@ export default function CortePage() {
                   <NamedStatus status="pendiente" />
                 ) : shownVariance === 0 ? (
                   'Caja cuadrada'
-                ) : Math.abs(shownVariance) > VARIANCE_PIN_THRESHOLD ? (
+                ) : Math.abs(shownVariance) > variancePinThreshold ? (
                   `${shownVariance > 0 ? 'Sobrante' : 'Faltante'} · pide PIN`
                 ) : shownVariance > 0 ? (
                   'Sobrante'
@@ -632,7 +630,7 @@ export default function CortePage() {
         open={prompt === 'CLOSE'}
         title={`Cerrar turno con diferencia de ${money(shownVariance)}`}
         detail={`Esperado ${money(shownExpected)} · contado ${money(shownCounted)}. Una diferencia mayor a ${money(
-          VARIANCE_PIN_THRESHOLD
+          variancePinThreshold
         )} requiere autorización de gerencia.`}
         confirmLabel="Cerrar turno"
         danger

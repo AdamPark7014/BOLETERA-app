@@ -74,24 +74,34 @@ export class TaquillaPosController {
 
   @Post('terminal/init')
   @ApiOperation({ summary: 'Initialize POS terminal' })
-  async initTerminal(@Body() data: InitTerminalDto) {
-    return await this.posService.initializeTerminal(data);
+  async initTerminal(@Request() req: { user: JwtUser }, @Body() data: InitTerminalDto) {
+    const organizationId = posOrgScope(req.user, data.organizationId);
+    if (!organizationId) {
+      throw new ForbiddenException('Sin organización válida');
+    }
+    return await this.posService.initializeTerminal({ ...data, organizationId });
   }
 
   @Post('session/start')
   @ApiOperation({ summary: 'Start cashier session with opening cash float' })
-  async startSession(@Body() data: StartSessionDto) {
+  async startSession(@Request() req: { user: JwtUser }, @Body() data: StartSessionDto) {
+    // El turno es del cajero autenticado; el body no puede suplantar a otro.
+    const cashierId =
+      req.user.role === 'SUPER_ADMIN' && data.cashierId ? data.cashierId : req.user.sub;
     return await this.posService.startCashierSession(
       data.terminalId,
-      data.cashierId,
+      cashierId,
       data.openingCash ?? 0
     );
   }
 
   @Post('holds')
   @ApiOperation({ summary: 'Create taquilla holds (seats or GA) with short TTL' })
-  async createHold(@Body() data: CreateHoldDto) {
-    return await this.posService.createPosHold(data);
+  async createHold(@Request() req: { user: JwtUser }, @Body() data: CreateHoldDto) {
+    return await this.posService.createPosHold({
+      ...data,
+      organizationId: posOrgScope(req.user),
+    });
   }
 
   @Post('holds/release')
@@ -230,14 +240,25 @@ export class TaquillaPosController {
   @Post('manager-pin/verify')
   @Throttle({ default: { limit: 8, ttl: 60_000 } })
   @ApiOperation({ summary: 'Verify manager PIN' })
-  async verifyPin(@Body() data: VerifyPinDto) {
-    return await this.posService.verifyManagerPin(data.organizationId, data.pin);
+  async verifyPin(@Request() req: { user: JwtUser }, @Body() data: VerifyPinDto) {
+    const organizationId = posOrgScope(req.user, data.organizationId);
+    if (!organizationId) {
+      throw new ForbiddenException('Sin organización válida');
+    }
+    return await this.posService.verifyManagerPin(organizationId, data.pin);
   }
 
   @Get('z-reports')
   @ApiOperation({ summary: 'List archived Z-reports for organization' })
-  async zReports(@Query('organizationId') organizationId: string) {
-    return await this.posService.listZReports(organizationId);
+  async zReports(
+    @Request() req: { user: JwtUser },
+    @Query('organizationId') organizationId?: string
+  ) {
+    const orgId = posOrgScope(req.user, organizationId);
+    if (!orgId) {
+      throw new ForbiddenException('Sin organización válida');
+    }
+    return await this.posService.listZReports(orgId);
   }
 
   @Post('sync-inventory')
@@ -268,10 +289,12 @@ export class TaquillaPosController {
 
   @Post('session/end')
   @ApiOperation({ summary: 'End cashier session with cash count (Z-report)' })
-  async endSession(@Body() data: EndSessionDto) {
+  async endSession(@Request() req: { user: JwtUser }, @Body() data: EndSessionDto) {
+    const cashierId =
+      req.user.role === 'SUPER_ADMIN' && data.cashierId ? data.cashierId : req.user.sub;
     return await this.posService.endCashierSession(
       data.sessionId,
-      data.cashierId,
+      cashierId,
       data.closingCashCounted,
       data.managerPin
     );
@@ -279,8 +302,39 @@ export class TaquillaPosController {
 
   @Get('session/summary')
   @ApiOperation({ summary: 'Live shift summary for open session' })
-  async sessionSummary(@Query('sessionId') sessionId: string) {
-    return await this.posService.getSessionSummary(sessionId);
+  async sessionSummary(
+    @Request() req: { user: JwtUser },
+    @Query('sessionId') sessionId: string
+  ) {
+    return await this.posService.getSessionSummary(sessionId, posOrgScope(req.user));
+  }
+
+  @Get('settings')
+  @ApiOperation({ summary: 'POS settings for the cashier organization' })
+  async getPosSettings(@Request() req: { user: JwtUser }) {
+    const organizationId = posOrgScope(req.user);
+    if (!organizationId) {
+      throw new ForbiddenException('Sin organización válida');
+    }
+    return await this.posService.getPosSettings(organizationId);
+  }
+
+  @Post('settings')
+  @Roles('TAQUILLA_SUPERVISOR', 'VENUE_MANAGER', 'PROMOTER', 'ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Update POS settings (manager)' })
+  async updatePosSettings(
+    @Request() req: { user: JwtUser },
+    @Body()
+    data: {
+      posCashVariancePinThreshold?: number;
+      posEventsLookbackHours?: number;
+    }
+  ) {
+    const organizationId = posOrgScope(req.user);
+    if (!organizationId) {
+      throw new ForbiddenException('Sin organización válida');
+    }
+    return await this.posService.updatePosSettings(organizationId, data);
   }
 
   @Get('analytics/:terminalId/:period')

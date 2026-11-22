@@ -5,6 +5,11 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { EventStatus, Prisma, SalesChannel } from '@prisma/client';
 import { InventoryService } from '../inventory/inventory.service';
 import { OrdersService } from '../orders/orders.service';
+import {
+  mergePosOrgSettings,
+  posOrgSettingsFrom,
+  roundMoney2,
+} from './pos-org-settings';
 
 @Injectable()
 export class TaquillaPosService {
@@ -103,11 +108,19 @@ export class TaquillaPosService {
    * host) y un cajero de Arena Norte veía y vendía funciones de otra empresa.
    */
   async listPosEvents(organizationId?: string) {
+    let lookbackHours = posOrgSettingsFrom(null).eventsLookbackHours;
+    if (organizationId) {
+      const org = await this.prisma.organization.findUnique({
+        where: { id: organizationId },
+        select: { settings: true },
+      });
+      lookbackHours = posOrgSettingsFrom(org?.settings).eventsLookbackHours;
+    }
     const events = await this.prisma.event.findMany({
       where: {
         ...(organizationId ? { organizationId } : {}),
         status: { in: [EventStatus.SCHEDULED, EventStatus.LIVE] },
-        startsAt: { gte: new Date(Date.now() - 12 * 3600 * 1000) },
+        startsAt: { gte: new Date(Date.now() - lookbackHours * 3600 * 1000) },
       },
       orderBy: { startsAt: 'asc' },
       take: 100,
@@ -287,6 +300,36 @@ export class TaquillaPosService {
     });
     if (!order) throw new BadRequestException('No se pudo crear la orden');
 
+    // Las partes del cobro deben cuadrar con el total real (corte Z).
+    if (!isComp && paymentParts.length > 0) {
+      const total = roundMoney2(Number(order.totalAmount));
+      const partsSum = roundMoney2(paymentParts.reduce((s, p) => s + p.amount, 0));
+      if (Math.abs(partsSum - total) > 0.009) {
+        if (paymentParts.length >= 2) {
+          await this.abortFreshPosSale(order.id);
+          throw new BadRequestException('Las partes del pago no suman el total cobrado');
+        }
+        paymentParts[0] = { ...paymentParts[0], amount: total };
+        const prev = ((order as { posOps?: Record<string, unknown> }).posOps || {}) as Record<
+          string,
+          unknown
+        >;
+        const cashP = paymentParts.find((p) => p.method === 'CASH')?.amount ?? 0;
+        const cardP = paymentParts.find((p) => p.method === 'CARD')?.amount ?? 0;
+        await this.prisma.order.update({
+          where: { id: order.id },
+          data: {
+            posOps: {
+              ...prev,
+              paymentParts,
+              cashPart: cashP,
+              cardPart: cardP,
+            },
+          } as never,
+        });
+      }
+    }
+
     const processingTime = (Date.now() - startTime) / 1000;
     this.logger.log(`POS checkout ${processingTime.toFixed(2)}s → ${order.publicId}`);
 
@@ -317,7 +360,9 @@ export class TaquillaPosService {
     seatIds?: string[];
     quantity?: number;
     cashierId?: string;
+    organizationId?: string;
   }) {
+    await this.assertSaleScope(data.terminalId, data.eventId, data.organizationId);
     const result = await this.inventory.createHold({
       eventId: data.eventId,
       offerId: data.offerId,
@@ -681,11 +726,28 @@ export class TaquillaPosService {
     return { synced, failed: failed.length, errors: failed, mode: 'ONLINE' as const };
   }
 
-  async getSessionSummary(sessionId: string) {
+  async getSessionSummary(sessionId: string, organizationId?: string) {
     const session = await this.prisma.posCashierSession.findUnique({
       where: { id: sessionId },
+      include: { terminal: true },
     });
     if (!session) throw new BadRequestException('Session not found');
+    if (
+      organizationId &&
+      session.terminal?.organizationId &&
+      session.terminal.organizationId !== organizationId
+    ) {
+      throw new ForbiddenException('El turno es de otra organización');
+    }
+
+    let cashVariancePinThreshold = posOrgSettingsFrom(null).cashVariancePinThreshold;
+    if (session.terminal?.organizationId) {
+      const org = await this.prisma.organization.findUnique({
+        where: { id: session.terminal.organizationId },
+        select: { settings: true },
+      });
+      cashVariancePinThreshold = posOrgSettingsFrom(org?.settings).cashVariancePinThreshold;
+    }
 
     const meta = (session.metadata as Record<string, unknown>) || {};
     const openingCash = Number(meta.openingCash ?? 0);
@@ -764,6 +826,7 @@ export class TaquillaPosService {
       cashDrops,
       dropsTotal,
       expectedCash,
+      cashVariancePinThreshold,
       startTime: session.startedAt,
       endTime: new Date(),
       recentSales: orders.slice(0, 12).map((o) => ({
@@ -798,7 +861,12 @@ export class TaquillaPosService {
         : summary.expectedCash;
     const variance = counted - summary.expectedCash;
 
-    if (Math.abs(variance) > 50) {
+    const orgForPin = await this.prisma.organization.findUnique({
+      where: { id: session.terminal.organizationId },
+      select: { settings: true },
+    });
+    const varianceThreshold = posOrgSettingsFrom(orgForPin?.settings).cashVariancePinThreshold;
+    if (Math.abs(variance) > varianceThreshold) {
       await this.assertManagerPin(session.terminal.organizationId, managerPin);
     }
 
@@ -1155,6 +1223,73 @@ export class TaquillaPosService {
     if (!pin || this.hashPin(pin) !== expected) {
       throw new ForbiddenException('PIN de gerente inválido');
     }
+  }
+
+  async getPosSettings(organizationId: string) {
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { settings: true },
+    });
+    if (!org) throw new BadRequestException('Organization not found');
+    return posOrgSettingsFrom(org.settings);
+  }
+
+  async updatePosSettings(
+    organizationId: string,
+    patch: { posCashVariancePinThreshold?: number; posEventsLookbackHours?: number }
+  ) {
+    const org = await this.prisma.organization.findUnique({ where: { id: organizationId } });
+    if (!org) throw new BadRequestException('Organization not found');
+    let next: Record<string, unknown>;
+    try {
+      next = mergePosOrgSettings(
+        (org as { settings?: unknown }).settings,
+        patch
+      );
+    } catch (e) {
+      throw new BadRequestException((e as Error).message || 'Ajustes de taquilla inválidos');
+    }
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: { settings: next } as never,
+    });
+    return posOrgSettingsFrom(next);
+  }
+
+  /**
+   * Anula una venta recién creada cuando las partes de pago no cuadran.
+   * Sin PIN: es corrección de integridad del sistema, no un void de cajero.
+   */
+  private async abortFreshPosSale(orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: { include: { tickets: true } } },
+    });
+    if (!order) return;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: 'CANCELLED' },
+      });
+      for (const item of order.items) {
+        for (const ticket of item.tickets) {
+          await tx.ticket.update({
+            where: { id: ticket.id },
+            data: { status: 'AVAILABLE', orderItemId: null },
+          });
+        }
+        if (item.offerId) {
+          await tx.offer.update({
+            where: { id: item.offerId },
+            data: {
+              soldQuantity: { decrement: item.quantity },
+              remainingQuantity: { increment: item.quantity },
+            },
+          });
+        }
+      }
+    });
+    this.logger.warn(`POS abort ${order.publicId}: partes de pago no cuadran`);
   }
 
   async getTerminalAnalytics(terminalId: string, period: 'TODAY' | 'WEEK' | 'MONTH') {

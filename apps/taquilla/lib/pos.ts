@@ -78,6 +78,8 @@ export type SessionSummary = {
   cashDrops?: Array<{ amount: number; note?: string; at?: string }>;
   dropsTotal?: number;
   expectedCash: number;
+  /** Descuadre (MXN) a partir del cual el cierre pide PIN. Viene de settings. */
+  cashVariancePinThreshold?: number;
   startTime: string;
   endTime: string;
   recentSales: Array<{
@@ -788,4 +790,23 @@ export function clearFailedSync() {
 
 export function resolveOrgId() {
   return getOrgId() || getTaquillaUser()?.organizationId || 'org-demo';
+}
+
+export type PosOrgSettingsDto = {
+  cashVariancePinThreshold: number;
+  eventsLookbackHours: number;
+};
+
+export async function fetchPosSettings(): Promise<PosOrgSettingsDto> {
+  return apiJson<PosOrgSettingsDto>('/taquilla/settings');
+}
+
+export async function updatePosSettings(patch: {
+  posCashVariancePinThreshold?: number;
+  posEventsLookbackHours?: number;
+}): Promise<PosOrgSettingsDto> {
+  return apiJson<PosOrgSettingsDto>('/taquilla/settings', {
+    method: 'POST',
+    body: JSON.stringify(patch),
+  });
 }

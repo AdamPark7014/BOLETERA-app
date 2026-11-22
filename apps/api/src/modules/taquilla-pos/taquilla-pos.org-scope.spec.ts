@@ -200,6 +200,7 @@ describe('TaquillaPosService · cortesías en el corte', () => {
       in: ['TAQUILLA', 'COURTESY'],
     });
     expect(summary.compCount).toBe(1);
+    expect(summary.cashVariancePinThreshold).toBe(50);
     expect(summary.cashSales).toBe(0);
   });
 });

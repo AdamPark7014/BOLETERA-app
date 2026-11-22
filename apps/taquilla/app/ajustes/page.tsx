@@ -8,7 +8,7 @@ import { apiFetch, getOrgId, getTaquillaToken, getTaquillaUser, isManager } from
 import { PosShell } from '@/components/PosShell';
 import { connectSerialPrinter, getSerialPort, isSerialSupported } from '@/lib/thermal';
 import { listManifests, type ManifestMeta } from '@/lib/manifest';
-import { getLocalQuotas } from '@/lib/pos';
+import { fetchPosSettings, getLocalQuotas, updatePosSettings } from '@/lib/pos';
 import styles from './ajustes.module.scss';
 
 export default function AjustesPage() {
@@ -24,6 +24,9 @@ export default function AjustesPage() {
   const [manifests, setManifests] = useState<ManifestMeta[]>([]);
   const [quotas, setQuotas] = useState<Record<string, number>>({});
   const [savingPin, setSavingPin] = useState(false);
+  const [varianceThreshold, setVarianceThreshold] = useState('50');
+  const [lookbackHours, setLookbackHours] = useState('12');
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     if (!getTaquillaToken()) {
@@ -35,6 +38,14 @@ export default function AjustesPage() {
     setManager(isManager());
     setRole(getTaquillaUser()?.role ?? '');
     setQuotas(getLocalQuotas());
+    void fetchPosSettings()
+      .then((s) => {
+        setVarianceThreshold(String(s.cashVariancePinThreshold));
+        setLookbackHours(String(s.eventsLookbackHours));
+      })
+      .catch(() => {
+        /* sin red: se quedan los valores por omisión */
+      });
   }, [router]);
 
   const refreshManifests = useCallback(() => {
@@ -47,6 +58,23 @@ export default function AjustesPage() {
     const ok = await connectSerialPrinter();
     setSerialOk(ok);
     setMsg(ok ? 'Impresora conectada' : 'No se pudo conectar (requiere Chrome y permiso USB)');
+  }
+
+  async function savePosSettings() {
+    setSavingSettings(true);
+    try {
+      const saved = await updatePosSettings({
+        posCashVariancePinThreshold: Number(varianceThreshold),
+        posEventsLookbackHours: Number(lookbackHours),
+      });
+      setVarianceThreshold(String(saved.cashVariancePinThreshold));
+      setLookbackHours(String(saved.eventsLookbackHours));
+      setMsg('Ajustes de caja guardados');
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : 'No se pudieron guardar los ajustes');
+    } finally {
+      setSavingSettings(false);
+    }
   }
 
   async function savePin() {
@@ -120,6 +148,48 @@ export default function AjustesPage() {
 
       {/* El API exige rol de gerencia para cambiar el PIN. Ocultarlo al cajero
           evita que descubra por un 403 que existe una puerta que no le toca. */}
+      {manager ? (
+        <section className={styles.section}>
+          <h2>Caja y cartelera</h2>
+          <p>
+            Descuadre a partir del cual el corte pide PIN, y cuántas horas atrás se listan
+            funciones en venta.
+          </p>
+          <div className={styles.pinFields}>
+            <Input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="1"
+              placeholder="Descuadre (pesos)"
+              value={varianceThreshold}
+              onChange={(e) => setVarianceThreshold(e.target.value.replace(/[^\d.]/g, ''))}
+            />
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={168}
+              step="1"
+              placeholder="Horas de cartelera"
+              value={lookbackHours}
+              onChange={(e) => setLookbackHours(e.target.value.replace(/\D/g, ''))}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              loading={savingSettings}
+              loadingLabel="Guardando…"
+              disabled={!varianceThreshold || !lookbackHours}
+              onClick={() => void savePosSettings()}
+            >
+              Guardar ajustes de caja
+            </Button>
+          </div>
+        </section>
+      ) : null}
+
       {manager ? (
         <section className={styles.section}>
           <h2>PIN de gerente</h2>
