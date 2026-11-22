@@ -44,3 +44,5 @@
 | API | Hecho (HumanChallengeService + specs smart-search; typecheck verde) |
 | Android | Hecho (mismo contrato hold/fila/reto) |
 | iOS | No aplica — no hay proyecto nativo |
+
+- **Cierre relevo:** 2026-11-22 cursor (commit local 1ff625d; sin push).
