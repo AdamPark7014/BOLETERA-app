@@ -1,92 +1,32 @@
 # RELEVO
 
-- **2026-11-14 (claude-code) — Limpieza de documentación (Adam: «quita documentación y unifica»).** Borrados 0 documentos obsoletos sin referencias (auditorías, planes y prompts viejos; están en el historial de git). Índice único del repo: `docs/INDICE.md`; índice de todos los proyectos: `C:\dev\DOCS.md`; memoria compartida de Codex/Claude/Cursor/Grok: `C:\dev\.ai\memoria`.
-
-- **Último turno:** claude-code (con Cursor Agent)
-- **Fecha:** 2026-11-21
-- **Rama:** main
+- **Último turno:** cursor
+- **Fecha:** 2026-11-22
+- **Rama:** main (sin push)
 
 ## Hecho
 
-- 2026-11-21 claude-code (con Cursor Agent; pedido de Adam «ganarle a las mejores boleteras», benchmark en `docs/BENCHMARK-LIDERES.md`). **Compra:** preventa con código de punta a punta (`accessCode` en el hold, `CODE_REQUIRED`/`CODE_INVALID`); temporizador fijo del apartado (`HoldStickyBar`); meses sin intereses en el pago (`PaymentIntent.installments`, `common/msi.ts`; Banorte aún no recibe el plan); reenviar boletos desde la cuenta; caché y JSON-LD en cartelera, ciudad y categoría; firmas QR v1 apagadas. **Reventa oficial con cobro real:** `ResaleCheckoutService` (cobro externo del PaymentService, como membresías): `POST /resale/listings/:id/buy`, apartado de 15 min, al pagar el boleto pasa al comprador con código nuevo y `keyEpoch`+1, queda `sellerPayout` con `payoutStatus` PENDING; `/resale/pago/[publicId]`, «Mis ventas en reventa» en la cuenta; tope por organización (`settings.resaleMaxPercent`, 1.2 por omisión). **Lista de espera tipo DICE:** `WaitlistService.offerNext` aparta el boleto liberado 60 min al precio original y manda `/espera/[token]` (también tras reembolso). **Puerta:** el escaneo devuelve `holderName` y `ticketType`; `GET /access/events/:id/live` con entraron, faltan, por puerta y por minuto. **Taquilla:** pago mixto (partes en `posOps.paymentParts`), recibo de 80 mm, corte por método, catálogo y cupo sin red. **Web del comprador, rediseño 1 y 2:** portada a sangre, carruseles, tarjeta de evento única, filtros de fecha, menú móvil, ficha con mapa y tarjetas de zona con su precio, pago con métodos en tarjetas, boleto con anillo de 15 s, cuenta con pestañas, PWA. Migraciones nuevas: `20261117120000_resale_checkout` y `20261117140000_waitlist_claim_msi`. Verificado: tipos de las 4 apps, 266 pruebas del API, demo Docker reconstruida y vista a 1440 y 390 (sin desborde). Arreglo: `'use client'` de `SeatMapViewer` estaba en la línea 2 y rompía `next build`.
-  Paridad: Web hecho · API hecho · Android pendiente · iOS pendiente (`apps/mobile-native` no tiene preventa, reventa, lista de espera ni MSI).
-  Pendiente: pago al vendedor sin pantalla de finanzas en el admin; MSI sin enviar a Banorte; mapa de la ficha recortado en escritorio y columna derecha vacía; PDF/Reenviar dentro del boleto; Wallet de Apple/Google; CFDI con PAC real; admin de sala de espera; la demo necesita fechas futuras (se recorrieron 21 días a mano el 21-11).
-  Cursor: lanzarlo SOLO desde la herramienta PowerShell; desde Bash sus hooks bloquean la escritura. Sus cortes de red dejan trabajo a medias en commits «WIP: rescate».
+- 2026-11-22 cursor — Paridad del reto antibots (fases 0–2 / día de venta) en web y Android con el contrato nuevo del API (`HumanChallengeService`): PoW `salt:challengeId:counter` → `POST /inventory/challenge/solve` → `clearanceToken` en holds (ya no `proof`/`challengeToken`). Web: `HumanChallenge.tsx` + `EventPurchaseClient` (parsea `challenge` del 428, manda `clearanceToken`, sesión de invitado al resolver). Android: `HumanChallenge.kt`, `BuyerApi`, `ApiClient`, `MainActivity`, tests. Docs: `docs/OPERACION-ONSALE.md` y `apps/mobile-native/README.md`. WIP showcase 3D: stubs inválidos (`__ticket` / `PLACEHOLDER_ONLY`) reparados en `venue3d/*`, `/venues/[slug]/3d` y `packages/venue-3d/src/index.ts` sin tocar compra/reventa. Verificado: API human-challenge + buyer-risk 10/10; Android `HumanChallengeTest` + `RotatingTicketCodeTest` OK; `@boletera/web` check-types OK.
+  Paridad: Web hecho · API hecho · Android hecho (hold/fila/reto) · iOS pendiente (no hay proyecto).
 
-- 2026-11-16 claude-code (pasada 5 del admin, solo por código: Docker Desktop no arrancó por el socket `sailor-ingest.sock`; hace falta reiniciar Windows): `app/not-found` y `app/error` en español; sin red, `ApiError(0)`; login sin segundo titular ni «Mantener sesión» (no hacía nada); fuera leyendas y jerga (scope, sandbox, hold, checkout, TTL, no-show, offline, Hero, CAD lock, sightlines) y «MXN»/zona horaria crudos; dorado de selección a blanco en calendario, clientes, precios, agenda y controles; controles a 44 px (commits e0ea6ed, c21583f, 8b00371). Otra sesión edita a la vez en apps/admin (EventSection, frame.module.scss, controls.tsx, events/page, cancel, Cargos, Comisiones, IVA, payouts, pricing, waitlist, AdminFrame, scanner/page, InventoryBlocksPanel): no se tocaron. Pendiente: parche del marco (dorado del avatar, menú, logo, barras, `.chipGold`, y 44 px en menú, «Salir» y pestañas) listo en `C:\dev\tmp\boletera-demo\rediseno\pasada5\frame-patch.scss` para añadir al final de `frame.module.scss` cuando esa sesión lo suba; `EventSection.tsx(303)` tiene `fallback` sin usar (de esa sesión, rompe check-types); capturas de la pasada 5 con `pasada5\capturar.cjs` cuando haya demo; unas 40 pantallas aún usan `toLocale*` sin zona.
-- 2026-11-16 claude-code (tanda 3, con Cursor en la web): web del comprador con mapa sin leyendas y tonos neutros (dorado solo en tu selección; ninguna zona activa hasta tocarla, salvo si hay una sola), etiquetas de butaca desde 28 px, login y recuperar con error por campo, correo del comprador solo para su dueño, reventa y ciudades con PageTitle, «Ver boletos» igual en todas las tarjetas de cuenta. Taquilla sin teclas en el texto de los botones, recibo con formatDateTime. Verificado en la demo: 31 estados de web y 22 de taquilla a 1440 y 390 sin desborde ni errores salvo los 404 esperados. Capturas en `C:\dev\tmp\boletera-demo\rediseno\pasada4\`.
-- 2026-11-15 cursor (encargado y revisado por claude-code): segunda tanda del admin: crear evento con botón siempre activo y error por campo con foco; series vacías con TicketState; reembolsos sin leyenda Banorte, nota en «Detalle» y negativos con formatTicketAmount; orden con «Reenviar correo» como acción principal y reembolso secundario con confirmación; pagos «Falta la cuenta de depósito» / «Modo de prueba»; facturación «Pruebas/Real» y «Proveedor de facturación»; canales activos primero y «Mostrar todos»; patrocinios y automatizaciones «Próximamente»; recintos sin columnas vacías; integraciones y llaves sin jerga.
-- 2026-11-15 claude-code: pase del admin «profesional y simple» (pedido de Adam, flujo Cursor → Codex → Claude; Codex no se pudo lanzar desde la sesión). `lib/errors.ts`: el texto del API solo llega a pantalla si ya está en español. `ApiErrorView` con TicketState. «No encontramos…» para evento, orden y recinto inexistentes (`_ticket/NotFound.tsx`; el menú quita «Este evento»). API: la bitácora trae `actorName` y `entityName`. Clientes sin z-score, IDs ni ventas de mostrador `.local`; canal en selector; «Órdenes». Reventa sin sufijo MXN. Leyendas de programador fuera y términos en español (apartado, nivel, plano, entradas, socios). Precios: aplicar solo desde la vista previa. Organización con 5 campos y 3 listas. `ParameterCard` con control: nombre una vez, sin valor ni efecto repetidos (arregla la triple etiqueta en 31 pantallas); `effect` opcional.
-- 2026-11-15 claude-code: pasada «premium y limpio» (pedido de Adam): fuera la franja «Precio final…», garantías, leyendas y textos de ayuda en las tres apps; la divulgación de precio queda solo como «Incluye cargos e IVA» en gris junto al total del pago. Web con encabezado ligero, «Más filtros» y mapa con solo zoom y 3D (Vista/Salidas/Encajar siguen en el código); admin sin bordes ni notas, máximo 4 KPI por fila; taquilla con atajos en un botón «?». Capturas en `C:\dev\tmp\boletera-demo\rediseno\pasada2\`. Pendiente: el plano de Final Regional se ve chico y con etiquetas cortadas (geometría del plano).
-- 2026-11-15 claude-code: rediseño Black Ticket desde la maqueta de alta fidelidad (artifact «Boletera: propuesta de rediseño»; copia local en `C:\dev\tmp\boletera-demo\maqueta`). Sistema de diseño en `@boletera/ui` (paleta #000/#1A1A1A/#A68A6B, Roboto + Archivo con next/font en `app/fonts.ts` de cada app, `BrandLogo`, `StageArt`, botón dorado en píldora). Web: encabezado y pie nuevos, inicio con portada y cartelera, evento con mapa por zonas y vista desde el asiento, pago en una pantalla, boleto, fila, 404. Taquilla: venta rápida a pantalla completa y escáner verde/rojo. Admin: barra lateral por rol (FINANCE, TAQUILLA_SUPERVISOR, AFFILIATE en `lib/permissions.ts`), resumen del evento, tablero y todas las listas rehechas; tiempo real pide `auth/stream-ticket`. Capturas en `C:\dev\tmp\boletera-demo\rediseno\`. Arreglo: el token de invitado anterior vale 24 h tras rotarse en el correo (migración `20261115000000`).
-- 2026-11-14 claude-code: prueba al límite de web, admin, taquilla, rendimiento y carga sobre la demo Docker (reporte e inventario de capacidades fuera del repo: `C:\dev\tmp\boletera-demo\PRUEBA-AL-LIMITE.md` e `INVENTARIO.md`). Arreglado: compra GA bajo carga con `FOR UPDATE SKIP LOCKED` (2,000 compradores sin pérdidas), la zona del asiento manda el precio, soltar apartado de invitado (403 al dueño), saturación de BD → 503 + Retry-After, confirmación demo del comprador (órdenes y membresías; 404 en producción), reventa con dueño/vendedor verificados y QR invalidado, POS y puerta acotados a organización y función (WRONG_EVENT), rangos de rol en equipo e invitaciones (un PROMOTER se hacía SUPER_ADMIN), sesiones múltiples ya no se revocan, hash del enlace fuera de `GET /admin/orders/:id`, login de admin, 14 bugs de taquilla y varios de web.
-- 2026-11-14 claude-code: la plataforma completa corre en Docker Compose. Arreglados Dockerfile.api (build que fallaba en silencio, paquetes del workspace rotos), Dockerfile.web (CMD sin expandir APP_NAME), Dockerfile.worker, `.dockerignore` (metía `apps/api/.env` con secretos y pisaba DATABASE_URL; excluía turbo.json/pnpm-workspace.yaml) y build de paquetes con main en `dist/`. Web en SSR usa `API_INTERNAL_URL` si existe; fechas con `America/Mexico_City` (sin eso, error de hidratación #418 con el servidor en UTC).
-- 2026-11-14 claude-code: demo local en Docker (fuera del repo): `C:\dev\tmp\boletera-demo` (override con taquilla y nombres `boletera-demo-*`, `demo.env` con secretos aleatorios, galería de capturas). Levantar: `docker compose -p boletera-demo --env-file C:\dev\tmp\boletera-demo\demo.env -f docker-compose.yml -f C:\dev\tmp\boletera-demo\docker-compose.demo.yml up -d`; apagar: `docker compose -p boletera-demo down`.
+## A medias
 
-- 2026-11-13 claude-code: precios: solo ADMIN y SUPER_ADMIN aplican, generan, aprueban o rechazan (decisión de Adam); PROMOTER y VENUE_MANAGER consultan (403 en escritura, prueba de roles). La pantalla usa la misma lista y muestra aviso de solo lectura.
-- 2026-11-13 claude-code: doble ajuste de precio: si la última `applied_recommendation` de la oferta sigue igual a `basePrice` y está vigente, el checkout cobra `basePrice` sin surge ni multiplicador por tiempo (regla en `pricing.service.ts`).
-- 2026-11-13 claude-code: compra de membresías en web (`/membresias`, «Mi membresía» en `/cuenta`): `MembershipCheckout` (migración `20261113230000`) se cobra por el mismo camino que las órdenes (PaymentIntent Banorte → IPN o confirmación demo → Payment); punto de extensión en PaymentService sin cambiar el flujo de órdenes.
-- 2026-11-13 claude-code: migración `20261113000000` crea `TenantTheme.siteContent` (faltaba; IF NOT EXISTS). Con base vacía, `migrate deploy` + `migrate diff` contra el schema sale vacío.
-- 2026-11-13 claude-code: visor 3D distingue libre/elegido/apartado/vendido; la compra web pinta los asientos con el color de su zona; borrados los `.js` compilados viejos de `packages/venue-3d/src`.
-- 2026-11-13 claude-code: el editor del plano pedía `/layout/workflow` en bucle (429): callback por ref en LayoutPublishPanel.
-- 2026-11-13 claude-code: repaso de 107 rutas contra base nueva: sin errores salvo los esperados (abajo).
-
-- 2026-11-11 claude-code (2.ª tanda): series con lista, detalle, vista previa, extender y estado (`events/schedule/*`); crear serie ya guarda `EventSeries`.
-- 2026-11-11 claude-code: membresías (módulo nuevo, migración `20261111230000_memberships`) y recomendaciones de precio deterministas con cola de aprobación (migración `20261111231000_pricing_recommendations`). `update-dynamic`, `revenue-estimate` e historial de oferta ahora exigen sesión y organización.
-- 2026-11-11 claude-code: comprador: `POST /orders/:publicId/resend` (1/min, 3/h) y `PATCH /orders/:publicId/refunds/:refundId/clabe` con dígito verificador (migración `20261111220000_refund_payout_clabe`). `GET /admin/orders/:id` enmascara la CLABE salvo ADMIN, SUPER_ADMIN y FINANCE.
-- 2026-11-11 claude-code: IA del admin (`/ai/*`) calculada con datos reales, sin modelo de lenguaje; sin fuente responde vacío con `reason`.
-- 2026-11-11 claude-code: canales con campo numérico (Stepper `editable`); visor 3D con tokens BT; pósters con respaldo local y fotos de stock vigentes.
-- 2026-11-11 claude-code: `pnpm run lint` y `format:check` en verde (ESLint en api y web; Prettier desde la raíz con `.prettierignore`; formateo masivo en su propio commit).
-- 2026-11-11 claude-code: auditoría visual de las 107 pantallas (capturas antes/después fuera del repo, en `C:\dev\tmp\boletera-audit`).
-- 2026-11-11 claude-code: la cartelera salía vacía: `publicCatalogEventWhere` descartaba todo evento con metadata sin la llave `visibility` (NULL en Postgres). Arreglado con prueba.
-- 2026-11-11 claude-code: todo el admin queda en el índice Black Ticket. Oficios nuevos Venta, Lectura y Sistema, y Cancelación en el evento. Órdenes y reservaciones ya no rompen (sobre paginado); CRM y órdenes toman `expectedAmount` si falta `totalAmount`.
-- 2026-11-11 claude-code: login, recuperar y restablecer de admin en BT; recuperar/restablecer ya abren sin sesión (guarda en SessionProvider).
-- 2026-11-11 claude-code: web: carrito, cuenta, boleto, pago, reventa, recintos, ciudades, recuperar contraseña, ayuda, legales y pie en el lienzo oscuro (antes títulos hueso sobre blanco).
-- 2026-11-11 claude-code: taquilla: corte sin desborde, 50¢ rotulado, sin errores de hidratación en corte y ajustes; buscar en BT.
-
-- 2026-10-25 cursor: Equipo asigna a una persona uno de los 15 roles de Prisma; el catálogo y las llaves siguen en lectura.
-- 2026-10-25 cursor: el saldo de lealtad se guarda en User al pagar; si la campaña trae un número, ese valor se descuenta al cobrar por la misma vía que un código.
-- 2026-10-25 cursor: tarjeta, SPEI y OXXO se guardan en settings; si la clave no está, el método sigue activo.
-- 2026-10-25 cursor: cargo por servicio e IVA se guardan en settings de la organización; vacío sigue la tasa del entorno.
-- 2026-10-25 cursor: días para cerrar, días del banco y plazo de transferencia se guardan en settings de la organización; vacío sigue en 5, 10 y 7 días.
-- 2026-10-25 cursor: recinto y abonos se guardan en las columnas que ya existían; los días de reembolso y de transferencia siguen en lectura porque no hay columna.
-- 2026-10-25 cursor: el editor del plano queda en el lienzo admin; Guardar sección persiste la geometría que ya tenía.
-- 2026-10-25 cursor: Descuentos, cumplimiento, recinto, mapa, organización, marca, partners, abonos, espera, pagos y plataforma en fichas; se edita solo lo que el API ya guarda.
-- 2026-10-25 cursor: Fases se guardan; liquidaciones, facturación, reportes y fraude muestran lo que el API ya devuelve.
-- 2026-10-25 cursor: Equipo muestra los 15 roles de Prisma; el menú reconoce 8 y las llaves se leen, sin Guardar.
-- 2026-10-24 cursor: puerta en el lenguaje visual: zonas que ya devuelve el acceso, escáner de admin y acceso de taquilla.
-- 2026-10-24 cursor: el corte muestra esperado, contado y la diferencia; el descuadre se guarda en el reporte Z que ya existía.
-- 2026-10-24 cursor: el cargo del anuncio usa resaleCommission; vacío sigue en el 8% del servicio.
-- 2026-10-24 cursor: el apartado caduca con los minutos de holdExpiration; vacío sigue en 15 min web y 5 min taquilla.
-- 2026-10-24 cursor: fichas de Apartados (anuncio editable; caducidad real en lectura), Reembolsos y transferencias (plazos y cola en lectura; cierre manual).
-- 2026-10-24 cursor: fichas de Comisiones (editables), Cargos e IVA (lectura: tasas de entorno).
-- 2026-10-24 cursor: admin de eventos en lenguaje visual (lista, ficha, agenda, zonas, canales). El alta no crea Offer: el arreglo es del API.
-- 2026-10-24 cursor: el alta persiste Event en borrador y Offer (zona, precio MXN, cupo, vigencia de la función). minPrice y maxPrice quedan en ese precio.
-
-Lenguaje visual de Black Ticket en `@boletera/ui`.
-- Taquilla (`apps/taquilla`): lienzo `BlackTicketRoot` densidad taquilla, Cobrar fijo, folio tras el cobro.
-- Compra pública de `apps/web` redibujada con `BlackTicketRoot` densidad compra: cartelera, ficha, zona, apartado, datos, pago, boleto y cuenta. Reenvío y CLABE de reembolso no tienen API de comprador.
-
-- Tokens y tema oscuro único, opt-in con `data-black-ticket`. Densidades `compra`, `taquilla` y `admin` como datos y atributo: misma paleta.
-- Componentes: `TicketButton` (primario hueso), `Field`, `Money`, `NamedStatus`, `ParameterCard`, `BlackTicketRoot`.
-- `formatTicketAmount`: `$1,250.00` y `−$120.00`.
-- El `Button` anterior queda como está, para no cambiar las pantallas que ya lo usan.
+- Showcase 3D del recinto (`/venues/[slug]/3d`): ruta y contenedor válidos; el visor completo del recinto sigue en preparación (no bloquea compra).
+- Plan maestro: fases 0–2 en código; medición de carga 5k/20k con el código nuevo sigue pendiente (`docs/OPERACION-ONSALE.md`).
+- Buscador NL / asistente en Android (web ya tiene `/buscar` + smart-search del WIP rescatado).
 
 ## Siguiente
 
-Rediseño, lo que no llegó a la maqueta por falta de datos del API: nombre del titular al escanear, totales por puerta, aviso de supervisor, pago mixto, meta de venta, ventas por minuto, puntuación de asiento, «lo más vendido» (hoy «quedan menos boletos»), puerta en el boleto, meses sin intereses, globos de precio por sección en el mapa 2D. Precios y cola de aprobación, liquidaciones y lista de espera no se vieron con datos (la demo no los tiene). El editor de mapa del admin solo cambió textos.
+- iOS nativo (fase 4 del plan) o cerrar medición onsale.
+- Integrar `InstancedSeats` / `SectionPriceLabels` en el visor de compra si Adam quiere el mapa 3D enriquecido.
+- No CFDI PAC real ni Wallet sin pedido explícito.
 
-Prueba al límite, pendientes (detalle en `PRUEBA-AL-LIMITE.md`): preventa con código bloqueada (el apartado no manda el código y la web no lo captura); reventa sin cobro/pago ni compra en web; no existe `POST /admin/venues` (ni `auth/refresh`, `auth/logout`, `sponsorships/*`); ficha del evento sin edición/publicación; cupo ≠ aforo bloquea publicar; matriz de permisos del admin (FINANCE/AFFILIATE/SUPERVISOR sin menú, menú igual para todos); CFDI con UUID aleatorio; abono sin cobro; `GUEST_SESSION_STRICT=true` en producción; cartelera y ficha sin caché (~110/170 rps) y pool de 20 conexiones (385 × 503 con 5,000 compradores); `e2e/load/concurrent-hold` reusa la butaca ganada en su sub-prueba de idempotencia y `oversell` no falla con 5xx.
-Demo: «Simular pago» del comprador ya funciona (ruta demo); el API de la demo corre con throttle 100000.
+## No tocar
 
-Antes de desplegar: `prisma migrate deploy` (cinco migraciones nuevas desde el 11-11) y actualizar las fotos de eventos si la base vieja aún apunta a las de Unsplash que daban 404.
-Membresías: sin correo de confirmación (no hay plantilla); sus cobros no aparecen en conciliación ni reportes (se arman desde órdenes). SEASON vale 12 meses. `/membresias` no tiene enlace en la navegación.
-Repaso: quedan esperados el 401/404 de `auth/me`/`auth/refresh` en el login de admin (sondeo de sesión por cookie; no quitarlo: la sesión vive en cookie, no en localStorage), la serie del seed de otra organización (404) y `/venues/[id]/3d` que nunca llega a networkidle (worker de troika).
-Precios: `PATCH /pricing/rates` (cargos e IVA) sigue abierto a PROMOTER; no es aplicar precio de oferta, pero conviene confirmarlo con Adam.
-IA: sin chat ni acciones persistentes en el API (el chat es local, por plantillas). Aprobación de pagos, accesos, comparables, abandono e impacto estimado sin fuente.
-Series: `scheduling-api.ts` apunta a más rutas `events/schedule/*` que no existen (alta directa, funciones sueltas, ventanas, calendario, bloqueos); ninguna pantalla actual las llama. Crear serie no crea Offer.
-Visor 3D: también lo usan la compra web, InventoryPanel y venue-3d-studio; revisar ahí los colores nuevos. Quedan `.js` compilados viejos en `packages/venue-3d/src/`.
-Lint: 26 avisos (any, variables sin uso, dependencias de efectos), ningún error.
+- Compra/reventa/pago (salvo el contrato de reto ya alineado).
+- Credenciales, `.env` de demo, CFDI producción, Apple/Google Wallet.
+- `git push` en este turno (Adam: sin push).
 
-## Ajuste de reglas compartidas — Codex, 2026-10-31
-Se alinearon instrucciones genericas de Cursor con AGENT-POLICY y LOCAL-DELEGATION: instructores autonomos, main y un escritor por archivo; sin handoff automatico ni worktrees. Solo documentos de reglas; sin cambios de codigo. Se conservan A medias/Siguiente/No tocar anteriores. Verificacion: diff de reglas y comprobacion de rama.
+## Contexto previo (resumen)
+
+- Fases 0–2 del plan maestro ya entraron (ficha/PDF, dinero/PROFECO/MSI/payouts, caché/fila/reto/ops en vivo). Taquilla pulida (pago mixto, alcance de caja). Android comprador al día en preventa/MSI/reventa/espera/transferir. Commits WIP de rescate previos pueden dejar archivos a medias; disco y `git log` ganan a la memoria.

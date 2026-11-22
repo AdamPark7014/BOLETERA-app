@@ -19,6 +19,7 @@ class ApiException(
     val retryAfterSeconds: Int? = null,
     val body: String? = null,
     val challengeToken: String? = null,
+    val challenge: IssuedPowChallenge? = null,
 ) : Exception(message)
 
 /**
@@ -159,8 +160,10 @@ class ApiClient(private val session: SessionStore) {
                 }
             val errorCode = o?.optString("error")?.takeIf { it.isNotBlank() }
                 ?: o?.optString("errorCode")?.takeIf { it.isNotBlank() }
+                ?: o?.optString("code")?.takeIf { it.isNotBlank() }
             val reason = o?.optString("reason")?.takeIf { it.isNotBlank() } ?: errorCode
             val challengeToken = o?.optString("challengeToken")?.takeIf { it.isNotBlank() }
+            val challenge = parseChallengeFromBody(raw)
             return ApiException(
                 code = code,
                 message = message,
@@ -169,6 +172,7 @@ class ApiClient(private val session: SessionStore) {
                 retryAfterSeconds = retryAfterSeconds,
                 body = raw.takeIf { it.isNotBlank() },
                 challengeToken = challengeToken,
+                challenge = challenge,
             )
         }
     }

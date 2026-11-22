@@ -109,7 +109,7 @@ Regla: `PRISMA_CONNECTION_LIMIT * réplicas_api + worker < max_connections` de P
 
 ## Paridad
 
-- Web: caché SSR vía API, reintento 503, reto «Soy una persona», fila con sesión firmada
-- API: caché Redis, ETag, topes, pase en pago, ops en vivo
-- Android: pendiente (mismos contratos de hold/fila/reto)
+- Web: caché SSR vía API, reintento 503, reto «Soy una persona» con PoW + clearanceToken, fila con sesión firmada
+- API: caché Redis, ETag, topes, pase en pago, ops en vivo, HumanChallengeService (PoW/clearance)
+- Android: hold/fila/reto alineados (queuePass + clearanceToken + PoW del 428)
 - iOS: pendiente (no hay proyecto)

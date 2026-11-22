@@ -144,7 +144,7 @@ class BuyerApi(
         quantity: Int,
         accessCode: String?,
         queuePass: String? = null,
-        challengeToken: String? = null,
+        clearanceToken: String? = null,
     ): HoldResult {
         val guest = session.ensureGuestSession(api)
         val body = JSONObject()
@@ -155,7 +155,7 @@ class BuyerApi(
             .put("sessionId", guest)
         if (!accessCode.isNullOrBlank()) body.put("accessCode", accessCode.trim())
         if (!queuePass.isNullOrBlank()) body.put("queuePass", queuePass)
-        if (!challengeToken.isNullOrBlank()) body.put("challengeToken", challengeToken)
+        if (!clearanceToken.isNullOrBlank()) body.put("clearanceToken", clearanceToken)
         val raw = api.post(
             "inventory/holds/best-available",
             body,
@@ -171,7 +171,7 @@ class BuyerApi(
         quantity: Int,
         accessCode: String?,
         queuePass: String? = null,
-        challengeToken: String? = null,
+        clearanceToken: String? = null,
     ): HoldResult {
         val guest = session.ensureGuestSession(api)
         val body = JSONObject()
@@ -181,7 +181,7 @@ class BuyerApi(
             .put("sessionId", guest)
         if (!accessCode.isNullOrBlank()) body.put("accessCode", accessCode.trim())
         if (!queuePass.isNullOrBlank()) body.put("queuePass", queuePass)
-        if (!challengeToken.isNullOrBlank()) body.put("challengeToken", challengeToken)
+        if (!clearanceToken.isNullOrBlank()) body.put("clearanceToken", clearanceToken)
         val raw = api.post(
             "inventory/holds",
             body,

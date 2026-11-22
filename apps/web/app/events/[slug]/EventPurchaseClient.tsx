@@ -8,7 +8,7 @@ import {
   describeNetworkError,
   type InventoryError,
 } from '@/components/seatmap/errors';
-import { ensureGuestSession, renewGuestSession } from '@/components/seatmap/session';
+import { ensureGuestSession, renewGuestSession, peekGuestSessionId } from '@/components/seatmap/session';
 import { HoldErrorNotice } from '@/components/seatmap/HoldErrorNotice';
 import { flatSeats, normalizeSeatMap, resolveOfferForSection } from '@boletera/venue-engine';
 import type { Venue3DViewerProps } from '@boletera/venue-3d';
@@ -21,7 +21,7 @@ import { offerTones } from '@/lib/zone-tones';
 import { sortOffersForDisplay } from '@/lib/offer-order';
 import { WaitingRoomGate } from '@/components/waiting-room/WaitingRoomGate';
 import { isQueueRejection } from '@/components/waiting-room/queue-client';
-import { HumanChallenge } from '@/components/HumanChallenge';
+import { HumanChallenge, type IssuedPowChallenge } from '@/components/HumanChallenge';
 import { HoldStickyBar } from '@/components/HoldStickyBar';
 import { secondsUntil } from '@/lib/payment-window';
 import styles from './event.module.scss';
@@ -372,8 +372,9 @@ export function EventPurchaseClient({
    *  · `queuePass` en todo hold cuando la sala nos admitió. En eventos sin sala
    *    el API lo ignora; en eventos con sala, su ausencia es un 403.
    */
-  const [challengeToken, setChallengeToken] = useState<string | null>(null);
+  const [clearanceToken, setClearanceToken] = useState<string | null>(null);
   const [needChallenge, setNeedChallenge] = useState(false);
+  const [pendingChallenge, setPendingChallenge] = useState<IssuedPowChallenge | null>(null);
 
   const postHold = useCallback(
     async (endpoint: string, body: Record<string, unknown>): Promise<HoldResponse> => {
@@ -390,7 +391,7 @@ export function EventPurchaseClient({
               sessionId,
               queuePass: getQueuePass(),
               accessCode: accessCode.trim() || undefined,
-              challengeToken: challengeToken || undefined,
+              clearanceToken: clearanceToken || undefined,
             }),
           });
         } catch {
@@ -409,6 +410,25 @@ export function EventPurchaseClient({
         // «esa reserva pertenece a otra sesión», que no dice nada y asusta.
         if (res.status === 428) {
           setNeedChallenge(true);
+          const rawChallenge =
+            payload && typeof payload === 'object'
+              ? (payload as { challenge?: Partial<IssuedPowChallenge> }).challenge
+              : undefined;
+          if (
+            rawChallenge?.challengeId &&
+            rawChallenge.salt &&
+            typeof rawChallenge.bits === 'number' &&
+            rawChallenge.bits > 0
+          ) {
+            setPendingChallenge({
+              challengeId: rawChallenge.challengeId,
+              salt: rawChallenge.salt,
+              bits: rawChallenge.bits,
+              provider: rawChallenge.provider,
+            });
+          } else {
+            setPendingChallenge(null);
+          }
           const challengeError: InventoryError = {
             kind: 'forbidden',
             message: 'Confirma que eres una persona para continuar con la compra.',
@@ -434,7 +454,7 @@ export function EventPurchaseClient({
       }
       throw describeInventoryError(500);
     },
-    [getQueuePass, onQueueRejected, accessCode, challengeToken]
+    [getQueuePass, onQueueRejected, accessCode, clearanceToken]
   );
 
   /** Un 409 no puede dejar al comprador mirando un spinner: se marca y se sigue. */
@@ -873,9 +893,10 @@ export function EventPurchaseClient({
 
           {needChallenge ? (
             <HumanChallenge
-              sessionId={undefined}
+              sessionId={peekGuestSessionId() ?? undefined}
+              challenge={pendingChallenge}
               onSolved={(token) => {
-                setChallengeToken(token);
+                setClearanceToken(token);
                 setNeedChallenge(false);
                 setHoldError(null);
               }}

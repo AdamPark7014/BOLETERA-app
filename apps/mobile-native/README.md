@@ -101,7 +101,12 @@ dos minutos se rechaza, y una clave inventada no abre el boleto.
 ## Pendiente
 
 - **iOS.** El equivalente en Swift + SwiftUI, como en NEXARA.
-- **Transferencia de boletos** desde la app (el API ya tiene `ticket-transfer`).
+- **Buscador NL / asistente** (web ya tiene `/buscar` + smart-search; la app no).
 - **NFC** para entrada sin contacto donde el recinto tenga lectores.
 - **Iconos de tienda**: hoy hay un vector adaptativo; para publicar hacen falta
   los PNG por densidad.
+
+## Ya en Android (paridad fases 0–2)
+
+- Cartera con QR rotativo, cartelera/ficha, preventa, MSI, reventa, lista de espera,
+  transferir, reenviar, sala de espera (`queuePass`) y reto antibots (`clearanceToken`).

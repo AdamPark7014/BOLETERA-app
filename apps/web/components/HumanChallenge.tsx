@@ -3,37 +3,57 @@
 import { useState } from 'react';
 import { API_BASE, clientTenantHostHeaders } from '@/lib/api';
 
+export type IssuedPowChallenge = {
+  challengeId: string;
+  salt: string;
+  bits: number;
+  provider?: string;
+};
+
 type Props = {
   sessionId?: string;
-  onSolved: (challengeToken: string) => void;
+  challenge: IssuedPowChallenge | null;
+  onSolved: (clearanceToken: string) => void;
 };
 
 /**
- * Reto antibots: botón «Soy una persona» + prueba de trabajo ligera en el navegador.
+ * Reto antibots: botón «Soy una persona» + PoW alineada al HumanChallengeService del API.
  * Nunca bloquea sin ofrecer este reto.
  */
-export function HumanChallenge({ sessionId, onSolved }: Props) {
+export function HumanChallenge({ sessionId, challenge, onSolved }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function solve() {
+    if (!challenge?.challengeId || !challenge.salt || !(challenge.bits > 0)) {
+      setError('Falta el reto. Intenta apartar de nuevo.');
+      return;
+    }
+    if (challenge.provider === 'turnstile') {
+      setError('Turnstile no está disponible en este cliente.');
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {
-      // POW ligera: busca un nonce cuyo hash empiece con "00".
-      const proof = await lightPow();
+      const counter = await solvePow(challenge.salt, challenge.challengeId, challenge.bits);
       const res = await fetch(`${API_BASE}/inventory/challenge/solve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...clientTenantHostHeaders(),
         },
-        body: JSON.stringify({ sessionId, proof }),
+        body: JSON.stringify({
+          sessionId,
+          challengeId: challenge.challengeId,
+          counter,
+        }),
       });
       if (!res.ok) throw new Error('No se pudo confirmar el reto.');
-      const body = (await res.json()) as { challengeToken?: string };
-      if (!body.challengeToken) throw new Error('Respuesta incompleta del reto.');
-      onSolved(body.challengeToken);
+      const body = (await res.json()) as { clearanceToken?: string };
+      if (!body.clearanceToken) throw new Error('Respuesta incompleta del reto.');
+      onSolved(body.clearanceToken);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo confirmar.');
     } finally {
@@ -52,13 +72,36 @@ export function HumanChallenge({ sessionId, onSolved }: Props) {
   );
 }
 
-async function lightPow(): Promise<string> {
-  const enc = new TextEncoder();
-  for (let i = 0; i < 50_000; i++) {
-    const nonce = `bt-${Date.now()}-${i}`;
-    const digest = await crypto.subtle.digest('SHA-256', enc.encode(nonce));
-    const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
-    if (hex.startsWith('00')) return nonce;
+/** Misma regla que HumanChallengeService.leadingZeroBits en el API. */
+export function leadingZeroBits(bytes: Uint8Array): number {
+  let bits = 0;
+  for (const byte of bytes) {
+    if (byte === 0) {
+      bits += 8;
+      continue;
+    }
+    for (let i = 7; i >= 0; i--) {
+      if ((byte >> i) & 1) return bits;
+      bits++;
+    }
   }
-  return `bt-fallback-${Date.now()}`;
+  return bits;
+}
+
+/** Contador decimal tal que SHA-256(`${salt}:${challengeId}:${counter}`) tenga ≥ bits ceros iniciales. */
+export async function solvePow(
+  salt: string,
+  challengeId: string,
+  bits: number
+): Promise<string> {
+  const enc = new TextEncoder();
+  for (let counter = 0; counter < 5_000_000; counter++) {
+    const counterStr = String(counter);
+    const digest = await crypto.subtle.digest(
+      'SHA-256',
+      enc.encode(`${salt}:${challengeId}:${counterStr}`)
+    );
+    if (leadingZeroBits(new Uint8Array(digest)) >= bits) return counterStr;
+  }
+  throw new Error('Prueba de trabajo no completada en tiempo razonable');
 }

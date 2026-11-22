@@ -1,6 +1,8 @@
 package mx.boletera.mobile.data
 
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.security.MessageDigest
@@ -8,23 +10,32 @@ import java.security.MessageDigest
 class HumanChallengeTest {
 
     @Test
-    fun `lightPow devuelve nonce cuyo hash empieza con 00 o fallback`() = runBlocking {
-        val nonce = HumanChallengeSolver.lightPow()
-        assertTrue(nonce.startsWith("bt-"))
-        if (!nonce.startsWith("bt-fallback-")) {
-            val hex = MessageDigest.getInstance("SHA-256")
-                .digest(nonce.toByteArray(Charsets.UTF_8))
-                .joinToString("") { "%02x".format(it) }
-            assertTrue("el nonce debe cumplir la prueba de trabajo: $nonce -> $hex", hex.startsWith("00"))
-        }
+    fun `solvePow cumple bits pedidos`() = runBlocking {
+        val salt = "abc"
+        val challengeId = "def"
+        val bits = 8
+        val counter = HumanChallengeSolver.solvePow(salt, challengeId, bits)
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest("$salt:$challengeId:$counter".toByteArray(Charsets.UTF_8))
+        assertTrue(HumanChallengeSolver.leadingZeroBits(digest) >= bits)
     }
 
     @Test
-    fun `isChallengeRequired reconoce 428`() {
+    fun `parseChallengeFromBody lee challenge del 428`() {
+        val raw = """{"code":"HUMAN_CHALLENGE_REQUIRED","challenge":{"challengeId":"c1","salt":"s1","bits":10,"provider":"pow"}}"""
+        val parsed = parseChallengeFromBody(raw)
+        assertNotNull(parsed)
+        assertEquals("c1", parsed!!.challengeId)
+        assertEquals("s1", parsed.salt)
+        assertEquals(10, parsed.bits)
+    }
+
+    @Test
+    fun `isChallengeRequired reconoce 428 y HUMAN_CHALLENGE_REQUIRED`() {
         assertTrue(isChallengeRequired(ApiException(428, "Confirma que eres una persona")))
         assertTrue(
             isChallengeRequired(
-                ApiException(400, "reto", reason = "CHALLENGE_REQUIRED", errorCode = "CHALLENGE_REQUIRED"),
+                ApiException(400, "reto", reason = "HUMAN_CHALLENGE_REQUIRED", errorCode = "HUMAN_CHALLENGE_REQUIRED"),
             ),
         )
     }

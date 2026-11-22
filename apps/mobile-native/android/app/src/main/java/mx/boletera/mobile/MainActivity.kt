@@ -332,6 +332,7 @@ data class DetailState(
     val challengeBusy: Boolean = false,
     val challengeError: String? = null,
     val challengeToken: String? = null,
+    val pendingChallenge: IssuedPowChallenge? = null,
     val pendingOffer: OfferCard? = null,
     val pendingQty: Int = 1,
     val pendingCode: String = "",
@@ -586,12 +587,12 @@ class AppViewModel(context: android.content.Context) : ViewModel() {
                 val hold = if (best) {
                     buyer.createBestAvailableHold(
                         event.id, offer.id, qty, accessCode.ifBlank { null },
-                        queuePass = pass, challengeToken = token,
+                        queuePass = pass, clearanceToken = token,
                     )
                 } else {
                     buyer.createGaHold(
                         event.id, offer.id, qty, accessCode.ifBlank { null },
-                        queuePass = pass, challengeToken = token,
+                        queuePass = pass, clearanceToken = token,
                     )
                 }
                 val config = buyer.paymentConfig(event.id)
@@ -614,7 +615,7 @@ class AppViewModel(context: android.content.Context) : ViewModel() {
                         cargando = false,
                         challengeOpen = true,
                         challengeError = apiEx?.message ?: "Confirma que eres una persona para continuar.",
-                        challengeToken = apiEx?.challengeToken,
+                        pendingChallenge = apiEx?.challenge ?: parseChallengeFromBody(apiEx?.body),
                     )
                 } else {
                     _detalle.value = _detalle.value.copy(cargando = false, error = mensajeHoldError(e))
@@ -654,8 +655,15 @@ class AppViewModel(context: android.content.Context) : ViewModel() {
             _detalle.value = d.copy(challengeBusy = true, challengeError = null)
             try {
                 val guest = session.ensureGuestSession(api)
-                val token = HumanChallengeSolver.solve(api, guest)
-                _detalle.value = _detalle.value.copy(challengeToken = token, challengeBusy = false, challengeOpen = false)
+                val issued = d.pendingChallenge
+                    ?: throw Exception("Falta el reto. Intenta apartar de nuevo.")
+                val token = HumanChallengeSolver.solve(api, guest, issued)
+                _detalle.value = _detalle.value.copy(
+                    challengeToken = token,
+                    pendingChallenge = null,
+                    challengeBusy = false,
+                    challengeOpen = false,
+                )
                 apartar(event, offer, d.pendingQty, d.pendingCode, d.pendingBest, onOk)
             } catch (e: Exception) {
                 _detalle.value = _detalle.value.copy(

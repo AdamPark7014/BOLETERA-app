@@ -1,7 +1,9 @@
-export const __ticket=1
 export { Venue3DViewer } from './Venue3DViewer';
 export type { Seat3D, Venue3DViewerProps, Venue3DHeatMode } from './Venue3DViewer';
 export { SeatViewCamera } from './SeatViewCamera';
+export { InstancedSeats } from './InstancedSeats';
+export { SectionPriceLabels } from './SectionPriceLabels';
+export type { SectionPriceLabelsProps } from './SectionPriceLabels';
 export {
   layoutSeatsInBowl,
   layoutSeatsFromPublished,
