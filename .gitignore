@@ -19,3 +19,8 @@ coverage
 
 # Borradores locales de Ollama/Cursor (no se versionan)
 .ai/drafts/
+
+# Sembradores con cuentas: solo locales (copia en C:/dev/secrets/seeders/boletera). El repo es publico.
+packages/database/scripts/seed.ts
+packages/database/scripts/seed.js
+packages/database/scripts/seed.js.map

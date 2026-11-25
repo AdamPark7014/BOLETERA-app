@@ -5,6 +5,13 @@
 - **Rama:** main
 - **Tarea:** Noche 22-11 — pulido Black-Ticket/BOLETERA: inventario huecos + 1–3 módulos con tests (sin push)
 
+## 25-11-2026 (claude-code): sembradores con cuentas fuera del repo público
+
+- `packages/database/scripts/seed.ts`, `seed.js` y su mapa dejan de versionarse (pedido de Adam). Siguen en disco y
+  `pnpm db:seed` funciona igual en esta laptop; copia en `C:/dev/secrets/seeders/boletera`. `seed-permissions.ts` se queda.
+- En otra máquina hay que copiar ese archivo. La CI no siembra. Sin desplegar.
+- Pendiente: la contraseña demo también aparece en `apps/admin/app/login/page.tsx`, en `e2e/load` y en el prototipo Expo.
+
 ## Hecho
 
 - **Reto antibots alineado al API (PoW + clearanceToken):**
